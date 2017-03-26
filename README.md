@@ -5,6 +5,12 @@
 # MQTTnet
 MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server.
 
+## Supported frameworks
+
+* .NET Framework 4.5.2+
+* .NET Core 1.0+
+* Universal Windows (UWP) 10.0.10240+
+
 # MqttClient
 ## Example
 
@@ -81,4 +87,29 @@ while (true)
 # MqttServer
 
 ## Example 
-TBD
+
+```c#
+var options = new MqttServerOptions
+{
+    ConnectionValidator = p =>
+    {
+        if (p.ClientId == "SpecialClient")
+        {
+            if (p.Username != "USER" || p.Password != "PASS")
+            {
+                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+            }
+        }
+
+        return MqttConnectReturnCode.ConnectionAccepted;
+    }
+};
+
+var mqttServer = new MqttServerFactory().CreateMqttServer(options);
+mqttServer.Start();
+
+Console.WriteLine("Press any key to exit.");
+Console.ReadLine();
+
+mqttServer.Stop();
+```

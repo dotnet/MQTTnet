@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <Authors>Christian Kratky</Authors>
+    <Company>Christian Kratky</Company>
+    <Product>MQTTnet</Product>
+    <Description>MQTTnet for .NET Core</Description>
+    <Copyright>Copyright © Christian Kratky 2016-2017</Copyright>
+    <Version>2.0.4.0</Version>
+    <AssemblyVersion>2.0.4.0</AssemblyVersion>
+    <FileVersion>2.0.4.0</FileVersion>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <AssemblyName>MQTTnet</AssemblyName>
+    <RootNamespace>MQTTnet</RootNamespace>
+    <PackageId>MQTTnet</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MQTTnet.Core\MQTTnet.Core.csproj" />
+  </ItemGroup>
+
+</Project>

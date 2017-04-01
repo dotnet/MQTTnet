@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -216,7 +215,7 @@ namespace MQTTnet.Core.Serializer
 
                     default:
                         {
-                            throw new ProtocolViolationException();
+                            throw new MqttProtocolViolationException("Packet type not supported.");
                         }
                 }
             }
@@ -292,7 +291,7 @@ namespace MQTTnet.Core.Serializer
 
             if (Encoding.UTF8.GetString(protocolName, 0, protocolName.Length) != "MQTT")
             {
-                throw new ProtocolViolationException("Protocol name is not 'MQTT'.");
+                throw new MqttProtocolViolationException("Protocol name is not 'MQTT'.");
             }
 
             var protocolLevel = await reader.ReadRemainingDataByteAsync();
@@ -366,12 +365,12 @@ namespace MQTTnet.Core.Serializer
         {
             if (string.IsNullOrEmpty(packet.ClientId) && !packet.CleanSession)
             {
-                throw new ProtocolViolationException("CleanSession must be set if ClientId is empty [MQTT-3.1.3-7].");
+                throw new MqttProtocolViolationException("CleanSession must be set if ClientId is empty [MQTT-3.1.3-7].");
             }
 
             if (!string.IsNullOrEmpty(packet.ClientId) && !Regex.IsMatch(packet.ClientId, "^[a-zA-Z0-9]*$"))
             {
-                throw new ProtocolViolationException("ClientId contains invalid characters [MQTT-3.1.3-5].");
+                throw new MqttProtocolViolationException("ClientId contains invalid characters [MQTT-3.1.3-5].");
             }
         }
 
@@ -379,7 +378,7 @@ namespace MQTTnet.Core.Serializer
         {
             if (packet.QualityOfServiceLevel == 0 && packet.Dup)
             {
-                throw new ProtocolViolationException("Dup flag must be false for QoS 0 packets [MQTT-3.3.1-2].");
+                throw new MqttProtocolViolationException("Dup flag must be false for QoS 0 packets [MQTT-3.3.1-2].");
             }
         }
 

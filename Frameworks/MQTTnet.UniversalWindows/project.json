@@ -3,7 +3,8 @@
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0"
   },
   "frameworks": {
-    "uap10.0": {}
+    "uap10.0": {},
+    "netstandard1.1": {}
   },
   "runtimes": {
     "win10-arm": {},

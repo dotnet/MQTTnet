@@ -23,19 +23,20 @@ namespace MQTTnet.Core.Server
             _clientSessionManager = new MqttClientSessionManager(options);
         }
 
+        public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
+
         public void InjectClient(string identifier, IMqttCommunicationAdapter adapter)
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
+
+            if (_cancellationTokenSource == null) throw new InvalidOperationException("The MQTT server is not started.");
 
             OnClientConnected(this, new MqttClientConnectedEventArgs(identifier, adapter));
         }
 
         public void Start()
         {
-            if (_cancellationTokenSource != null)
-            {
-                throw new InvalidOperationException("The server is already started.");
-            }
+            if (_cancellationTokenSource != null) throw new InvalidOperationException("The MQTT server is already started.");
 
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -61,6 +62,8 @@ namespace MQTTnet.Core.Server
         private void OnClientConnected(object sender, MqttClientConnectedEventArgs eventArgs)
         {
             MqttTrace.Information(nameof(MqttServer), $"Client '{eventArgs.Identifier}': Connected.");
+            ClientConnected?.Invoke(this, eventArgs);
+
             Task.Run(async () => await _clientSessionManager.RunClientSessionAsync(eventArgs), _cancellationTokenSource.Token).Forget();
         }
     }

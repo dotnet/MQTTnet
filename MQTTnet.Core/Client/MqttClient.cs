@@ -66,7 +66,7 @@ namespace MQTTnet.Core.Client
             _packetDispatcher.Reset();
             IsConnected = true;
 
-            Task.Run(async () => await ReceivePackets(_cancellationTokenSource.Token), _cancellationTokenSource.Token).Forget();
+            Task.Run(() => ReceivePackets(_cancellationTokenSource.Token), _cancellationTokenSource.Token).Forget();
 
             var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket);
             if (response.ConnectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
@@ -76,7 +76,7 @@ namespace MQTTnet.Core.Client
 
             if (_options.KeepAlivePeriod != TimeSpan.Zero)
             {
-                Task.Run(async () => await SendKeepAliveMessagesAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token).Forget();
+                Task.Run(() => SendKeepAliveMessagesAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token).Forget();
             }
 
             Connected?.Invoke(this, EventArgs.Empty);
@@ -114,13 +114,7 @@ namespace MQTTnet.Core.Client
                 throw new MqttProtocolViolationException("The return codes are not matching the topic filters [MQTT-3.9.3-1].");
             }
 
-            var result = new List<MqttSubscribeResult>();
-            for (var i = 0; i < topicFilters.Count; i++)
-            {
-                result.Add(new MqttSubscribeResult(topicFilters[i], response.SubscribeReturnCodes[i]));
-            }
-
-            return result;
+            return topicFilters.Select((t, i) => new MqttSubscribeResult(t, response.SubscribeReturnCodes[i])).ToList();
         }
 
         public async Task Unsubscribe(params string[] topicFilters)

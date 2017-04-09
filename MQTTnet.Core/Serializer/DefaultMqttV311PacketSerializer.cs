@@ -12,7 +12,7 @@ namespace MQTTnet.Core.Serializer
 {
     public class DefaultMqttV311PacketSerializer : IMqttPacketSerializer
     {
-        public async Task SerializeAsync(MqttBasePacket packet, IMqttCommunicationChannel destination)
+        public Task SerializeAsync(MqttBasePacket packet, IMqttCommunicationChannel destination)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
@@ -20,99 +20,85 @@ namespace MQTTnet.Core.Serializer
             var connectPacket = packet as MqttConnectPacket;
             if (connectPacket != null)
             {
-                await SerializeAsync(connectPacket, destination);
-                return;
+                return SerializeAsync(connectPacket, destination);
             }
 
             var connAckPacket = packet as MqttConnAckPacket;
             if (connAckPacket != null)
             {
-                await SerializeAsync(connAckPacket, destination);
-                return;
+                return SerializeAsync(connAckPacket, destination);
             }
 
             var disconnectPacket = packet as MqttDisconnectPacket;
             if (disconnectPacket != null)
             {
-                await SerializeAsync(disconnectPacket, destination);
-                return;
+                return SerializeAsync(disconnectPacket, destination);
             }
 
             var pingReqPacket = packet as MqttPingReqPacket;
             if (pingReqPacket != null)
             {
-                await SerializeAsync(pingReqPacket, destination);
-                return;
+                return SerializeAsync(pingReqPacket, destination);
             }
 
             var pingRespPacket = packet as MqttPingRespPacket;
             if (pingRespPacket != null)
             {
-                await SerializeAsync(pingRespPacket, destination);
-                return;
+                return SerializeAsync(pingRespPacket, destination);
             }
 
             var publishPacket = packet as MqttPublishPacket;
             if (publishPacket != null)
             {
-                await SerializeAsync(publishPacket, destination);
-                return;
+                return SerializeAsync(publishPacket, destination);
             }
 
             var pubAckPacket = packet as MqttPubAckPacket;
             if (pubAckPacket != null)
             {
-                await SerializeAsync(pubAckPacket, destination);
-                return;
+                return SerializeAsync(pubAckPacket, destination);
             }
 
             var pubRecPacket = packet as MqttPubRecPacket;
             if (pubRecPacket != null)
             {
-                await SerializeAsync(pubRecPacket, destination);
-                return;
+                return SerializeAsync(pubRecPacket, destination);
             }
 
             var pubRelPacket = packet as MqttPubRelPacket;
             if (pubRelPacket != null)
             {
-                await SerializeAsync(pubRelPacket, destination);
-                return;
+                return SerializeAsync(pubRelPacket, destination);
             }
 
             var pubCompPacket = packet as MqttPubCompPacket;
             if (pubCompPacket != null)
             {
-                await SerializeAsync(pubCompPacket, destination);
-                return;
+                return SerializeAsync(pubCompPacket, destination);
             }
 
             var subscribePacket = packet as MqttSubscribePacket;
             if (subscribePacket != null)
             {
-                await SerializeAsync(subscribePacket, destination);
-                return;
+                return SerializeAsync(subscribePacket, destination);
             }
 
             var subAckPacket = packet as MqttSubAckPacket;
             if (subAckPacket != null)
             {
-                await SerializeAsync(subAckPacket, destination);
-                return;
+                return SerializeAsync(subAckPacket, destination);
             }
 
             var unsubscribePacket = packet as MqttUnsubscribePacket;
             if (unsubscribePacket != null)
             {
-                await SerializeAsync(unsubscribePacket, destination);
-                return;
+                return SerializeAsync(unsubscribePacket, destination);
             }
 
             var unsubAckPacket = packet as MqttUnsubAckPacket;
             if (unsubAckPacket != null)
             {
-                await SerializeAsync(unsubAckPacket, destination);
-                return;
+                return SerializeAsync(unsubAckPacket, destination);
             }
 
             throw new MqttProtocolViolationException("Packet type invalid.");
@@ -287,6 +273,7 @@ namespace MQTTnet.Core.Serializer
 
             await reader.ReadRemainingDataByteAsync();
             await reader.ReadRemainingDataByteAsync();
+
             var protocolName = await reader.ReadRemainingDataAsync(4);
 
             if (Encoding.UTF8.GetString(protocolName, 0, protocolName.Length) != "MQTT")
@@ -382,19 +369,17 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private async Task SerializeAsync(MqttConnectPacket packet, IMqttCommunicationChannel destination)
+        private static readonly byte[] MqttPrefix = Encoding.UTF8.GetBytes("MQTT");
+
+        private Task SerializeAsync(MqttConnectPacket packet, IMqttCommunicationChannel destination)
         {
             ValidateConnectPacket(packet);
 
             using (var output = new MqttPacketWriter())
             {
                 // Write variable header
-                output.Write(0x00); // 3.1.2.1 Protocol Name
-                output.Write(0x04); // ""
-                output.Write('M');
-                output.Write('Q');
-                output.Write('T');
-                output.Write('T');
+                output.Write(0x00, 0x04); // 3.1.2.1 Protocol Name
+                output.Write(MqttPrefix);
                 output.Write(0x04); // 3.1.2.2 Protocol Level
 
                 var connectFlags = new ByteWriter(); // 3.1.2.3 Connect Flags
@@ -404,7 +389,7 @@ namespace MQTTnet.Core.Serializer
 
                 if (packet.WillMessage != null)
                 {
-                    connectFlags.Write((byte)packet.WillMessage.QualityOfServiceLevel, 2);
+                    connectFlags.Write((int)packet.WillMessage.QualityOfServiceLevel, 2);
                     connectFlags.Write(packet.WillMessage.Retain);
                 }
                 else
@@ -412,7 +397,7 @@ namespace MQTTnet.Core.Serializer
                     connectFlags.Write(0, 2);
                     connectFlags.Write(false);
                 }
-
+                
                 connectFlags.Write(packet.Password != null);
                 connectFlags.Write(packet.Username != null);
 
@@ -437,11 +422,11 @@ namespace MQTTnet.Core.Serializer
                 }
 
                 output.InjectFixedHeader(MqttControlPacketType.Connect);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
 
-        private async Task SerializeAsync(MqttConnAckPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttConnAckPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
@@ -452,26 +437,26 @@ namespace MQTTnet.Core.Serializer
                 output.Write((byte)packet.ConnectReturnCode);
 
                 output.InjectFixedHeader(MqttControlPacketType.ConnAck);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
 
-        private async Task SerializeAsync(MqttDisconnectPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttDisconnectPacket packet, IMqttCommunicationChannel destination)
         {
-            await SerializeEmptyPacketAsync(MqttControlPacketType.Disconnect, destination);
+            return SerializeEmptyPacketAsync(MqttControlPacketType.Disconnect, destination);
         }
 
-        private async Task SerializeAsync(MqttPingReqPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttPingReqPacket packet, IMqttCommunicationChannel destination)
         {
-            await SerializeEmptyPacketAsync(MqttControlPacketType.PingReq, destination);
+            return SerializeEmptyPacketAsync(MqttControlPacketType.PingReq, destination);
         }
 
-        private async Task SerializeAsync(MqttPingRespPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttPingRespPacket packet, IMqttCommunicationChannel destination)
         {
-            await SerializeEmptyPacketAsync(MqttControlPacketType.PingResp, destination);
+            return SerializeEmptyPacketAsync(MqttControlPacketType.PingResp, destination);
         }
 
-        private async Task SerializeAsync(MqttPublishPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttPublishPacket packet, IMqttCommunicationChannel destination)
         {
             ValidatePublishPacket(packet);
 
@@ -502,29 +487,29 @@ namespace MQTTnet.Core.Serializer
                 fixedHeader.Write(packet.Dup);
 
                 output.InjectFixedHeader(MqttControlPacketType.Publish, fixedHeader.Value);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
 
-        private async Task SerializeAsync(MqttPubAckPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttPubAckPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
                 output.Write(packet.PacketIdentifier);
 
                 output.InjectFixedHeader(MqttControlPacketType.PubAck);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
 
-        private async Task SerializeAsync(MqttPubRecPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttPubRecPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
                 output.Write(packet.PacketIdentifier);
 
                 output.InjectFixedHeader(MqttControlPacketType.PubRec);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
 
@@ -539,24 +524,24 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private async Task SerializeAsync(MqttPubCompPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttPubCompPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
                 output.Write(packet.PacketIdentifier);
 
                 output.InjectFixedHeader(MqttControlPacketType.PubComp);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
 
-        private async Task SerializeAsync(MqttSubscribePacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttSubscribePacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
                 output.Write(packet.PacketIdentifier);
 
-                if (packet.TopicFilters?.Any() == true)
+                if (packet.TopicFilters?.Count > 0)
                 {
                     foreach (var topicFilter in packet.TopicFilters)
                     {
@@ -566,11 +551,11 @@ namespace MQTTnet.Core.Serializer
                 }
 
                 output.InjectFixedHeader(MqttControlPacketType.Subscribe, 0x02);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
 
-        private async Task SerializeAsync(MqttSubAckPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttSubAckPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
@@ -585,11 +570,11 @@ namespace MQTTnet.Core.Serializer
                 }
 
                 output.InjectFixedHeader(MqttControlPacketType.SubAck);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
 
-        private async Task SerializeAsync(MqttUnsubscribePacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttUnsubscribePacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
@@ -604,27 +589,27 @@ namespace MQTTnet.Core.Serializer
                 }
 
                 output.InjectFixedHeader(MqttControlPacketType.Unsubscibe, 0x02);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
 
-        private async Task SerializeAsync(MqttUnsubAckPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttUnsubAckPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
                 output.Write(packet.PacketIdentifier);
 
                 output.InjectFixedHeader(MqttControlPacketType.UnsubAck);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
 
-        private async Task SerializeEmptyPacketAsync(MqttControlPacketType type, IMqttCommunicationChannel destination)
+        private Task SerializeEmptyPacketAsync(MqttControlPacketType type, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
                 output.InjectFixedHeader(type);
-                await output.WriteToAsync(destination);
+                return output.WriteToAsync(destination);
             }
         }
     }

@@ -7,9 +7,9 @@
     <Product>MQTTnet</Product>
     <Description>MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</Description>
     <Copyright>Copyright © Christian Kratky 2016-2017</Copyright>
-    <Version>2.1.0.4</Version>
-    <AssemblyVersion>2.1.0.11</AssemblyVersion>
-    <FileVersion>2.1.0.11</FileVersion>
+    <Version>2.1.1.0</Version>
+    <AssemblyVersion>2.1.1.0</AssemblyVersion>
+    <FileVersion>2.1.1.0</FileVersion>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <AssemblyName>MQTTnet</AssemblyName>
     <RootNamespace>MQTTnet</RootNamespace>

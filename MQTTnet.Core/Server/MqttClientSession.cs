@@ -74,7 +74,7 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        public void DispatchPublishPacket(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
+        public void EnqueuePublishPacket(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
         {
             if (senderClientSession == null) throw new ArgumentNullException(nameof(senderClientSession));
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));

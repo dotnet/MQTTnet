@@ -13,8 +13,8 @@ namespace MQTTnet.Core.Server
 {
     public class MqttOutgoingPublicationsManager
     {
-        private readonly AutoResetEvent _resetEvent = new AutoResetEvent(false);
         private readonly List<MqttClientPublishPacketContext> _pendingPublishPackets = new List<MqttClientPublishPacketContext>();
+        private readonly AsyncGate _gate = new AsyncGate();
 
         private readonly MqttServerOptions _options;
         private CancellationTokenSource _cancellationTokenSource;
@@ -35,11 +35,12 @@ namespace MQTTnet.Core.Server
             _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
             _cancellationTokenSource = new CancellationTokenSource();
 
-            Task.Run(async () => await SendPendingPublishPacketsAsync(_cancellationTokenSource.Token)).Forget();
+            Task.Run(() => SendPendingPublishPacketsAsync(_cancellationTokenSource.Token)).Forget();
         }
 
         public void Stop()
         {
+            _adapter = null;
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource = null;
         }
@@ -52,7 +53,7 @@ namespace MQTTnet.Core.Server
             lock (_pendingPublishPackets)
             {
                 _pendingPublishPackets.Add(new MqttClientPublishPacketContext(senderClientSession, publishPacket));
-                _resetEvent.Set();
+                _gate.Set();
             }
         }
 
@@ -62,10 +63,15 @@ namespace MQTTnet.Core.Server
             {
                 try
                 {
-                    _resetEvent.WaitOne();
+                    await _gate.WaitOneAsync();
                     if (cancellationToken.IsCancellationRequested)
                     {
                         return;
+                    }
+
+                    if (_adapter == null)
+                    {
+                        continue;
                     }
 
                     List<MqttClientPublishPacketContext> pendingPublishPackets;

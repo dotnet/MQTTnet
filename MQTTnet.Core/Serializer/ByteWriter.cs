@@ -9,7 +9,7 @@ namespace MQTTnet.Core.Serializer
 
         public byte Value => (byte)_byte;
 
-        public void Write(byte @byte, int count)
+        public void Write(int @byte, int count)
         {
             for (var i = 0; i < count; i++)
             {

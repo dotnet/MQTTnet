@@ -17,6 +17,12 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 
 * 3.1.1
 
+## Nuget
+This library is available as a nuget package: https://www.nuget.org/packages/MQTTnet/
+
+## Contributions
+If you want to contribute to this project just create a pull request.
+
 # MqttClient
 ## Example
 

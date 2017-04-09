@@ -86,7 +86,7 @@ namespace MQTTnet.Core.Server
         {
             foreach (var clientSession in _clientSessions.Values.ToList())
             {
-                clientSession.DispatchPublishPacket(senderClientSession, publishPacket);
+                clientSession.EnqueuePublishPacket(senderClientSession, publishPacket);
             }
         }
     }

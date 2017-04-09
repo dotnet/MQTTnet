@@ -88,11 +88,11 @@ namespace MQTTnet.Core.Client
             await DisconnectInternalAsync();
         }
 
-        public async Task<IList<MqttSubscribeResult>> SubscribeAsync(params TopicFilter[] topicFilters)
+        public Task<IList<MqttSubscribeResult>> SubscribeAsync(params TopicFilter[] topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            return await SubscribeAsync(topicFilters.ToList());
+            return SubscribeAsync(topicFilters.ToList());
         }
 
         public async Task<IList<MqttSubscribeResult>> SubscribeAsync(IList<TopicFilter> topicFilters)
@@ -117,11 +117,11 @@ namespace MQTTnet.Core.Client
             return topicFilters.Select((t, i) => new MqttSubscribeResult(t, response.SubscribeReturnCodes[i])).ToList();
         }
 
-        public async Task Unsubscribe(params string[] topicFilters)
+        public Task Unsubscribe(params string[] topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            await Unsubscribe(topicFilters.ToList());
+            return Unsubscribe(topicFilters.ToList());
         }
 
         public async Task Unsubscribe(IList<string> topicFilters)
@@ -274,14 +274,14 @@ namespace MQTTnet.Core.Client
             FireApplicationMessageReceivedEvent(originalPublishPacket);
         }
 
-        private async Task SendAsync(MqttBasePacket packet)
+        private Task SendAsync(MqttBasePacket packet)
         {
-            await _adapter.SendPacketAsync(packet, _options.DefaultCommunicationTimeout);
+            return _adapter.SendPacketAsync(packet, _options.DefaultCommunicationTimeout);
         }
 
         private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket) where TResponsePacket : MqttBasePacket
         {
-            Func<MqttBasePacket, bool> responsePacketSelector = p =>
+            bool ResponsePacketSelector(MqttBasePacket p)
             {
                 var p1 = p as TResponsePacket;
                 if (p1 == null)
@@ -301,10 +301,10 @@ namespace MQTTnet.Core.Client
                 }
 
                 return true;
-            };
+            }
 
             await _adapter.SendPacketAsync(requestPacket, _options.DefaultCommunicationTimeout);
-            return (TResponsePacket)await _packetDispatcher.WaitForPacketAsync(responsePacketSelector, _options.DefaultCommunicationTimeout);
+            return (TResponsePacket)await _packetDispatcher.WaitForPacketAsync(ResponsePacketSelector, _options.DefaultCommunicationTimeout);
         }
 
         private ushort GetNewPacketIdentifier()
@@ -324,8 +324,9 @@ namespace MQTTnet.Core.Client
                     await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket());
                 }
             }
-            catch (MqttCommunicationException)
+            catch (MqttCommunicationException exception)
             {
+                MqttTrace.Warning(nameof(MqttClient), exception, "MQTT communication error while receiving packets.");
             }
             catch (Exception exception)
             {
@@ -351,8 +352,9 @@ namespace MQTTnet.Core.Client
                     Task.Run(() => ProcessReceivedPacket(mqttPacket), cancellationToken).Forget();
                 }
             }
-            catch (MqttCommunicationException)
+            catch (MqttCommunicationException exception)
             {
+                MqttTrace.Warning(nameof(MqttClient), exception, "MQTT communication error while receiving packets.");
             }
             catch (Exception exception)
             {

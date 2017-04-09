@@ -9,7 +9,7 @@ namespace MQTTnet.Core.Serializer
 {
     public sealed class MqttPacketWriter : IDisposable
     {
-        private readonly MemoryStream _buffer = new MemoryStream();
+        private readonly MemoryStream _buffer = new MemoryStream(512);
 
         public void InjectFixedHeader(byte fixedHeader)
         {
@@ -20,31 +20,28 @@ namespace MQTTnet.Core.Serializer
                 return;
             }
 
+            var backupBuffer = _buffer.ToArray();
             var remainingLength = (int)_buffer.Length;
-            using (var buffer = new MemoryStream())
+
+            _buffer.SetLength(0);
+
+            _buffer.WriteByte(fixedHeader);
+
+            // Alorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
+            var x = remainingLength;
+            do
             {
-                _buffer.WriteTo(buffer);
-                _buffer.SetLength(0);
-
-                _buffer.WriteByte(fixedHeader);
-
-                // Alorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
-                var x = remainingLength;
-                do
+                var encodedByte = x % 128;
+                x = x / 128;
+                if (x > 0)
                 {
-                    var encodedByte = (byte)(x % 128);
-                    x = x / 128;
-                    if (x > 0)
-                    {
-                        encodedByte = (byte)(encodedByte | 128);
-                    }
+                    encodedByte = encodedByte | 128;
+                }
 
-                    _buffer.WriteByte(encodedByte);
-                } while (x > 0);
+                _buffer.WriteByte((byte)encodedByte);
+            } while (x > 0);
 
-                buffer.Position = 0;
-                buffer.WriteTo(_buffer);
-            }
+            _buffer.Write(backupBuffer, 0, backupBuffer.Length);
         }
 
         public void InjectFixedHeader(MqttControlPacketType packetType, byte flags = 0)
@@ -59,11 +56,6 @@ namespace MQTTnet.Core.Serializer
             _buffer.WriteByte(value);
         }
 
-        public void Write(char value)
-        {
-            _buffer.WriteByte((byte)value);
-        }
-
         public void Write(ushort value)
         {
             var buffer = BitConverter.GetBytes(value);
@@ -73,11 +65,15 @@ namespace MQTTnet.Core.Serializer
 
         public void Write(ByteWriter value)
         {
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
             _buffer.WriteByte(value.Value);
         }
 
-        public void Write(byte[] value)
+        public void Write(params byte[] value)
         {
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
             _buffer.Write(value, 0, value.Length);
         }
 
@@ -94,14 +90,16 @@ namespace MQTTnet.Core.Serializer
             Write(value);
         }
 
+        public Task WriteToAsync(IMqttCommunicationChannel destination)
+        {
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
+
+            return destination.WriteAsync(_buffer.ToArray());
+        }
+
         public void Dispose()
         {
             _buffer?.Dispose();
-        }
-
-        public async Task WriteToAsync(IMqttCommunicationChannel destination)
-        {
-            await destination.WriteAsync(_buffer.ToArray());
         }
     }
 }

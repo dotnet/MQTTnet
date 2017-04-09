@@ -107,15 +107,16 @@ namespace MQTTnet.Core.Serializer
             return await ReadRemainingDataAsync(length);
         }
 
-        public async Task<byte[]> ReadRemainingDataAsync()
+        public Task<byte[]> ReadRemainingDataAsync()
         {
-            return await ReadRemainingDataAsync(RemainingLength - (int)_remainingData.Position);
+            return ReadRemainingDataAsync(RemainingLength - (int)_remainingData.Position);
         }
 
         public async Task<byte[]> ReadRemainingDataAsync(int length)
         {
             var buffer = new byte[length];
             await _remainingData.ReadAsync(buffer, 0, buffer.Length);
+
             return buffer;
         }
 

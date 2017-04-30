@@ -354,11 +354,6 @@ namespace MQTTnet.Core.Serializer
             {
                 throw new MqttProtocolViolationException("CleanSession must be set if ClientId is empty [MQTT-3.1.3-7].");
             }
-
-            if (!string.IsNullOrEmpty(packet.ClientId) && !Regex.IsMatch(packet.ClientId, "^[a-zA-Z0-9]*$"))
-            {
-                throw new MqttProtocolViolationException("ClientId contains invalid characters [MQTT-3.1.3-5].");
-            }
         }
 
         private void ValidatePublishPacket(MqttPublishPacket packet)

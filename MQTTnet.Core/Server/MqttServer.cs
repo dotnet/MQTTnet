@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Internal;
 
 namespace MQTTnet.Core.Server
 {
     public class MqttServer
     {
-        private readonly MqttClientSessionManager _clientSessionManager;
+        private readonly MqttClientSessionsManager _clientSessionsManager;
         private readonly IMqttServerAdapter _adapter;
         private readonly MqttServerOptions _options;
 
@@ -20,7 +20,12 @@ namespace MQTTnet.Core.Server
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
             
-            _clientSessionManager = new MqttClientSessionManager(options);
+            _clientSessionsManager = new MqttClientSessionsManager(options);
+        }
+
+        public IList<string> GetConnectedClients()
+        {
+            return _clientSessionsManager.GetConnectedClients();
         }
 
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
@@ -54,7 +59,7 @@ namespace MQTTnet.Core.Server
             _adapter.ClientConnected -= OnClientConnected;
             _adapter.Stop();
 
-            _clientSessionManager.Clear();
+            _clientSessionsManager.Clear();
 
             MqttTrace.Information(nameof(MqttServer), "Stopped.");
         }
@@ -64,7 +69,7 @@ namespace MQTTnet.Core.Server
             MqttTrace.Information(nameof(MqttServer), $"Client '{eventArgs.Identifier}': Connected.");
             ClientConnected?.Invoke(this, eventArgs);
 
-            Task.Run(async () => await _clientSessionManager.RunClientSessionAsync(eventArgs), _cancellationTokenSource.Token).Forget();
+            Task.Run(() => _clientSessionsManager.RunClientSessionAsync(eventArgs), _cancellationTokenSource.Token);
         }
     }
 }

@@ -33,7 +33,9 @@ namespace MQTTnet.TestMqttClient
             {
                 var options = new MqttClientOptions
                 {
-                    Server = "localhost"
+                    Server = "localhost",
+                    ClientId = "XYZ",
+                    CleanSession = true
                 };
 
                 var client = new MqttClientFactory().CreateMqttClient(options);

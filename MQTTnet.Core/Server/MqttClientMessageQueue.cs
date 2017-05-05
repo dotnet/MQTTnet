@@ -11,7 +11,7 @@ using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Server
 {
-    public class MqttOutgoingPublicationsManager
+    public class MqttClientMessageQueue
     {
         private readonly List<MqttClientPublishPacketContext> _pendingPublishPackets = new List<MqttClientPublishPacketContext>();
         private readonly AsyncGate _gate = new AsyncGate();
@@ -20,7 +20,7 @@ namespace MQTTnet.Core.Server
         private CancellationTokenSource _cancellationTokenSource;
         private IMqttCommunicationAdapter _adapter;
 
-        public MqttOutgoingPublicationsManager(MqttServerOptions options)
+        public MqttClientMessageQueue(MqttServerOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
@@ -29,13 +29,13 @@ namespace MQTTnet.Core.Server
         {
             if (_cancellationTokenSource != null)
             {
-                throw new InvalidOperationException($"{nameof(MqttOutgoingPublicationsManager)} already started.");
+                throw new InvalidOperationException($"{nameof(MqttClientMessageQueue)} already started.");
             }
 
             _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
             _cancellationTokenSource = new CancellationTokenSource();
 
-            Task.Run(() => SendPendingPublishPacketsAsync(_cancellationTokenSource.Token)).Forget();
+            Task.Run(() => SendPendingPublishPacketsAsync(_cancellationTokenSource.Token));
         }
 
         public void Stop()
@@ -87,7 +87,7 @@ namespace MQTTnet.Core.Server
                 }
                 catch (Exception e)
                 {
-                    MqttTrace.Error(nameof(MqttOutgoingPublicationsManager), e, "Error while sending pending publish packets.");
+                    MqttTrace.Error(nameof(MqttClientMessageQueue), e, "Error while sending pending publish packets.");
                 }
                 finally
                 {
@@ -112,11 +112,11 @@ namespace MQTTnet.Core.Server
             }
             catch (MqttCommunicationException exception)
             {
-                MqttTrace.Warning(nameof(MqttOutgoingPublicationsManager), exception, "Sending publish packet failed.");
+                MqttTrace.Warning(nameof(MqttClientMessageQueue), exception, "Sending publish packet failed.");
             }
             catch (Exception exception)
             {
-                MqttTrace.Error(nameof(MqttOutgoingPublicationsManager), exception, "Sending publish packet failed.");
+                MqttTrace.Error(nameof(MqttClientMessageQueue), exception, "Sending publish packet failed.");
             }
             finally
             {

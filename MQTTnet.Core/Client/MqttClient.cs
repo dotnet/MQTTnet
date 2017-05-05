@@ -53,6 +53,7 @@ namespace MQTTnet.Core.Client
                 ClientId = _options.ClientId,
                 Username = _options.UserName,
                 Password = _options.Password,
+                CleanSession = _options.CleanSession,
                 KeepAlivePeriod = (ushort)_options.KeepAlivePeriod.TotalSeconds,
                 WillMessage = willApplicationMessage
             };

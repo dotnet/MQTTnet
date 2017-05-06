@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MQTTnet.Core.Channel;
 using MQTTnet.Core.Exceptions;
@@ -201,7 +200,7 @@ namespace MQTTnet.Core.Serializer
 
                     default:
                         {
-                            throw new MqttProtocolViolationException("Packet type not supported.");
+                            throw new MqttProtocolViolationException($"Packet type ({(int)mqttPacketReader.ControlPacketType}) not supported.");
                         }
                 }
             }

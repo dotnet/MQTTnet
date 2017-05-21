@@ -2,6 +2,8 @@
 <img src="https://github.com/chkr1011/MQTTnet/blob/master/Images/Logo_128x128.png?raw=true" width="128">
 </p>
 
+[![Build Status](https://img.shields.io/nuget/v/MQTTnet.svg)](https://www.nuget.org/packages/MQTTnet/)
+
 # MQTTnet
 MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server. The implementation is based on the documentation from http://mqtt.org/.
 

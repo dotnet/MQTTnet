@@ -1,4 +1,5 @@
 ﻿using System;
+using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Server;
 
 namespace MQTTnet
@@ -8,8 +9,8 @@ namespace MQTTnet
         public MqttServer CreateMqttServer(MqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-
-            return new MqttServer(options, new MqttServerAdapter());
+            
+            return new MqttServer(options, options.UseSSL ? (IMqttServerAdapter)new MqttSslServerAdapter() : new MqttServerAdapter());
         }
     }
 }

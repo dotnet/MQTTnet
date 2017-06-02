@@ -1,4 +1,5 @@
 ﻿using System;
+using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Server;
 
 namespace MQTTnet
@@ -9,7 +10,8 @@ namespace MQTTnet
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            return new MqttServer(options, new MqttServerAdapter());
+            // The cast to IMqttServerAdapter is required... stupidly...
+            return new MqttServer(options, options.UseSSL ? (IMqttServerAdapter)new MqttSslServerAdapter() : new MqttServerAdapter());
         }
     }
 }

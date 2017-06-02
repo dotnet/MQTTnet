@@ -103,6 +103,9 @@
     <Compile Include="MqttClientFactory.cs" />
     <Compile Include="MqttServerAdapter.cs" />
     <Compile Include="MqttServerFactory.cs" />
+    <Compile Include="MqttClientSslChannel.cs" />
+    <Compile Include="MqttServerSslChannel.cs" />
+    <Compile Include="MqttSslServerAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MqttTcpChannel.cs" />
   </ItemGroup>

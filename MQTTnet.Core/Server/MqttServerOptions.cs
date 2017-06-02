@@ -13,5 +13,12 @@ namespace MQTTnet.Core.Server
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         public Func<MqttConnectPacket, MqttConnectReturnCode> ConnectionValidator { get; set; }
+
+        public bool UseSSL = false;
+
+        /// <summary>
+        /// The path to the X509 SSL certificate.
+        /// </summary>
+        public string CertificatePath = string.Empty;
     }
 }

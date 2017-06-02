@@ -21,11 +21,11 @@ namespace MQTTnet
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
         }
 
-        public async Task ConnectAsync(MqttClientOptions options)
+        public Task ConnectAsync(MqttClientOptions options)
         {
             try
             {
-                await _socket.ConnectAsync(options.Server, options.Port);
+                return _socket.ConnectAsync(options.Server, options.Port);
             }
             catch (SocketException exception)
             {
@@ -33,12 +33,12 @@ namespace MQTTnet
             }
         }
 
-        public async Task DisconnectAsync()
+        public Task DisconnectAsync()
         {
             try
             {
                 _socket.Dispose();
-                await Task.FromResult(0);
+                return Task.FromResult(0);
             }
             catch (SocketException exception)
             {
@@ -46,13 +46,13 @@ namespace MQTTnet
             }
         }
 
-        public async Task WriteAsync(byte[] buffer)
+        public Task WriteAsync(byte[] buffer)
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
             try
             {
-                await _socket.SendAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+                return _socket.SendAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
             }
             catch (SocketException exception)
             {
@@ -60,12 +60,12 @@ namespace MQTTnet
             }
         }
 
-        public async Task ReadAsync(byte[] buffer)
+        public Task ReadAsync(byte[] buffer)
         {
             try
             {
                 var buffer2 = new ArraySegment<byte>(buffer);
-                await _socket.ReceiveAsync(buffer2, SocketFlags.None);
+                return _socket.ReceiveAsync(buffer2, SocketFlags.None);
             }
             catch (SocketException exception)
             {

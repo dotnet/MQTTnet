@@ -77,14 +77,14 @@ namespace MQTTnet
         /// Asynchronously writes a sequence of bytes to the socket.
         /// </summary>
         /// <param name="buffer">The buffer to write data from.</param>
-        public async Task WriteAsync(byte[] buffer)
+        public Task WriteAsync(byte[] buffer)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
             try
             {
-                await _sslStream.WriteAsync(buffer, 0, buffer.Length);
+                return _sslStream.WriteAsync(buffer, 0, buffer.Length);
             }
             catch (Exception ex)
                 when (ex is SocketException || ex is IOException)
@@ -97,11 +97,11 @@ namespace MQTTnet
         /// Asynchronously reads a sequence of bytes from the socket.
         /// </summary>
         /// <param name="buffer">The buffer to write the data into.</param>
-        public async Task ReadAsync(byte[] buffer)
+        public Task ReadAsync(byte[] buffer)
         {
             try
             {
-                await _sslStream.ReadAsync(buffer, 0, buffer.Length);
+                return _sslStream.ReadAsync(buffer, 0, buffer.Length);
             }
             catch (Exception ex)
                 when (ex is SocketException || ex is IOException)

@@ -50,7 +50,6 @@ namespace MQTTnet
                 _sslStream = new SslStream(ns);
 
                 await _sslStream.AuthenticateAsClientAsync(options.Server, null, SslProtocols.Tls12, false);
-
             }
             catch (SocketException exception)
             {
@@ -61,11 +60,11 @@ namespace MQTTnet
         /// <summary>
         /// Asynchronously disconnects the client from the server.
         /// </summary>
-        public async Task DisconnectAsync()
+        public Task DisconnectAsync()
         {
             try
             {
-                await Task.Factory.FromAsync(_socket.BeginDisconnect, _socket.EndDisconnect, true, null);
+                return Task.Factory.FromAsync(_socket.BeginDisconnect, _socket.EndDisconnect, true, null);
             }
             catch (SocketException exception)
             {
@@ -77,14 +76,14 @@ namespace MQTTnet
         /// Asynchronously writes a sequence of bytes to the socket.
         /// </summary>
         /// <param name="buffer">The buffer to write data from.</param>
-        public async Task WriteAsync(byte[] buffer)
+        public Task WriteAsync(byte[] buffer)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
             try
             {
-                await _sslStream.WriteAsync(buffer, 0, buffer.Length);
+                return _sslStream.WriteAsync(buffer, 0, buffer.Length);
             }
             catch (Exception ex)
                 when (ex is SocketException || ex is IOException)
@@ -97,11 +96,11 @@ namespace MQTTnet
         /// Asynchronously reads a sequence of bytes from the socket.
         /// </summary>
         /// <param name="buffer">The buffer to write the data into.</param>
-        public async Task ReadAsync(byte[] buffer)
+        public Task ReadAsync(byte[] buffer)
         {
             try
             {
-                await _sslStream.ReadAsync(buffer, 0, buffer.Length);
+                return _sslStream.ReadAsync(buffer, 0, buffer.Length);
             }
             catch (Exception ex)
                 when (ex is SocketException || ex is IOException)

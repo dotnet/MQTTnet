@@ -21,11 +21,11 @@ namespace MQTTnet
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
         }
 
-        public async Task ConnectAsync(MqttClientOptions options)
+        public Task ConnectAsync(MqttClientOptions options)
         {
             try
             {
-                await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.Port, null);
+                return Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.Port, null);
             }
             catch (SocketException exception)
             {
@@ -33,11 +33,11 @@ namespace MQTTnet
             }
         }
 
-        public async Task DisconnectAsync()
+        public Task DisconnectAsync()
         {
             try
             {
-                await Task.Factory.FromAsync(_socket.BeginDisconnect, _socket.EndDisconnect, true, null);
+                return Task.Factory.FromAsync(_socket.BeginDisconnect, _socket.EndDisconnect, true, null);
             }
             catch (SocketException exception)
             {
@@ -45,13 +45,13 @@ namespace MQTTnet
             }
         }
 
-        public async Task WriteAsync(byte[] buffer)
+        public Task WriteAsync(byte[] buffer)
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
             try
             {
-                await Task.Factory.FromAsync(
+                return Task.Factory.FromAsync(
                     // ReSharper disable once AssignNullToNotNullAttribute
                     _socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, null, null),
                     _socket.EndSend);
@@ -62,11 +62,11 @@ namespace MQTTnet
             }
         }
 
-        public async Task ReadAsync(byte[] buffer)
+        public Task ReadAsync(byte[] buffer)
         {
             try
             {
-                await Task.Factory.FromAsync(
+                return Task.Factory.FromAsync(
                     // ReSharper disable once AssignNullToNotNullAttribute
                     _socket.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, null, null),
                     _socket.EndReceive);

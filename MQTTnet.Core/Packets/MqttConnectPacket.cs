@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Core.Packets
 {
-    public class MqttConnectPacket: MqttBasePacket
+    public sealed class MqttConnectPacket: MqttBasePacket
     {
         public string ClientId { get; set; }
 

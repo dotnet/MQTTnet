@@ -11,7 +11,7 @@ using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Server
 {
-    public class MqttClientMessageQueue
+    public sealed class MqttClientMessageQueue
     {
         private readonly List<MqttClientPublishPacketContext> _pendingPublishPackets = new List<MqttClientPublishPacketContext>();
         private readonly AsyncGate _gate = new AsyncGate();

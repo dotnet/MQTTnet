@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Core.Serializer
 {
-    public class ByteReader
+    public sealed class ByteReader
     {
         private readonly int _source;
         private int _index;

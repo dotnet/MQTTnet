@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Core.Diagnostics
 {
-    public class MqttTraceMessagePublishedEventArgs : EventArgs
+    public sealed class MqttTraceMessagePublishedEventArgs : EventArgs
     {
         public MqttTraceMessagePublishedEventArgs(int threadId, string source, MqttTraceLevel level, string message, Exception exception)
         {

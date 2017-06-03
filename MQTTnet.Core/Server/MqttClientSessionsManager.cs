@@ -10,7 +10,7 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Server
 {
-    public class MqttClientSessionsManager
+    public sealed class MqttClientSessionsManager
     {
         private readonly object _syncRoot = new object();
         private readonly Dictionary<string, MqttClientSession> _clientSessions = new Dictionary<string, MqttClientSession>();

@@ -101,13 +101,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MqttClientFactory.cs" />
-    <Compile Include="MqttServerAdapter.cs" />
     <Compile Include="MqttServerFactory.cs" />
-    <Compile Include="MqttClientSslChannel.cs" />
-    <Compile Include="MqttServerSslChannel.cs" />
-    <Compile Include="MqttSslServerAdapter.cs" />
+    <Compile Include="Implementations\MqttServerAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MqttTcpChannel.cs" />
+    <Compile Include="Implementations\MqttTcpChannel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\MQTTnet.Core\MQTTnet.Core.csproj">

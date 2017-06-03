@@ -2,6 +2,7 @@
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Serializer;
+using MQTTnet.Implementations;
 
 namespace MQTTnet
 {

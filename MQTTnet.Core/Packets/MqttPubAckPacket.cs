@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Core.Packets
 {
-    public class MqttPubAckPacket : MqttBasePublishPacket
+    public sealed class MqttPubAckPacket : MqttBasePublishPacket
     {
     }
 }

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace MQTTnet.Core.Packets
 {
-    public class MqttSubscribePacket : MqttBasePacket, IPacketWithIdentifier
+    public sealed class MqttSubscribePacket : MqttBasePacket, IPacketWithIdentifier
     {
         public ushort PacketIdentifier { get; set; }
         

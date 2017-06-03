@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Core.Internal
 {
-    public class AsyncGate
+    public sealed class AsyncGate
     {
         private readonly Queue<TaskCompletionSource<bool>> _waitingTasks = new Queue<TaskCompletionSource<bool>>();
 

@@ -3,7 +3,7 @@ using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Server
 {
-    public class MqttClientPublishPacketContext
+    public sealed class MqttClientPublishPacketContext
     {
         public MqttClientPublishPacketContext(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
         {

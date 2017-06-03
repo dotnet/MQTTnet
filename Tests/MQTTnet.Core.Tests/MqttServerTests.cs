@@ -1,5 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
@@ -46,11 +48,11 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public async Task MqttServer_WillMessage()
         {
-            var s = new MqttServer(new MqttServerOptions(), new TestMqttServerAdapter());
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { new TestMqttServerAdapter() });
             s.Start();
 
             var willMessage = new MqttApplicationMessage("My/last/will", new byte[0], MqttQualityOfServiceLevel.AtMostOnce, false);
-            var c1 = ConnectTestClient("c1", null,  s);
+            var c1 = ConnectTestClient("c1", null, s);
             var c2 = ConnectTestClient("c2", willMessage, s);
 
             var receivedMessagesCount = 0;
@@ -86,7 +88,7 @@ namespace MQTTnet.Core.Tests
             MqttQualityOfServiceLevel filterQualityOfServiceLevel,
             int expectedReceivedMessagesCount)
         {
-            var s = new MqttServer(new MqttServerOptions(), new TestMqttServerAdapter());
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { new TestMqttServerAdapter() });
             s.Start();
 
             var c1 = ConnectTestClient("c1", null, s);

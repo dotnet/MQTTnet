@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
@@ -9,16 +10,29 @@ using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
 
-namespace MQTTnet.TestMqttClient
+namespace MQTTnet.TestApp.NetFramework
 {
     public static class Program
     {
-        public static void Main(string[] arguments)
+        public static void Main(string[] args)
         {
-            Task.Run(() => Run(arguments)).Wait();
+            Console.WriteLine("MQTTnet - TestApp.NetFramework");
+            Console.WriteLine("1 = Start client");
+            Console.WriteLine("2 = Start server");
+            var pressedKey = Console.ReadKey(true);
+            if (pressedKey.Key == ConsoleKey.D1)
+            {
+                Task.Run(() => RunClientAsync(args));
+                Thread.Sleep(Timeout.Infinite);
+            }
+            else if (pressedKey.Key == ConsoleKey.D2)
+            {
+                Task.Run(() => RunServerAsync(args));
+                Thread.Sleep(Timeout.Infinite);
+            }
         }
 
-        private static async Task Run(string[] arguments)
+        private static async Task RunClientAsync(string[] arguments)
         {
             MqttTrace.TraceMessagePublished += (s, e) =>
             {
@@ -28,7 +42,7 @@ namespace MQTTnet.TestMqttClient
                     Console.WriteLine(e.Exception);
                 }
             };
-                       
+
             try
             {
                 var options = new MqttClientOptions
@@ -61,7 +75,7 @@ namespace MQTTnet.TestMqttClient
                     Console.WriteLine("### SUBSCRIBED ###");
                 };
 
-                client.Disconnected += async (s, e) => 
+                client.Disconnected += async (s, e) =>
                 {
                     Console.WriteLine("### DISCONNECTED FROM SERVER ###");
                     await Task.Delay(TimeSpan.FromSeconds(5));
@@ -80,9 +94,9 @@ namespace MQTTnet.TestMqttClient
                 {
                     await client.ConnectAsync();
                 }
-                catch
+                catch (Exception exception)
                 {
-                    Console.WriteLine("### CONNECTING FAILED ###");
+                    Console.WriteLine("### CONNECTING FAILED ###" + Environment.NewLine + exception);
                 }
 
                 Console.WriteLine("### WAITING FOR APPLICATION MESSAGES ###");
@@ -105,6 +119,51 @@ namespace MQTTnet.TestMqttClient
             {
                 Console.WriteLine(exception);
             }
+        }
+
+        private static async Task RunServerAsync(string[] arguments)
+        {
+            MqttTrace.TraceMessagePublished += (s, e) =>
+            {
+                Console.WriteLine($">> [{e.ThreadId}] [{e.Source}] [{e.Level}]: {e.Message}");
+                if (e.Exception != null)
+                {
+                    Console.WriteLine(e.Exception);
+                }
+            };
+
+            try
+            {
+                var options = new MqttServerOptions
+                {
+                    ConnectionValidator = p =>
+                    {
+                        if (p.ClientId == "SpecialClient")
+                        {
+                            if (p.Username != "USER" || p.Password != "PASS")
+                            {
+                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            }
+                        }
+
+                        return MqttConnectReturnCode.ConnectionAccepted;
+                    }
+                };
+
+                var mqttServer = new MqttServerFactory().CreateMqttServer(options);
+                mqttServer.Start();
+
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadLine();
+
+                mqttServer.Stop();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            Console.ReadLine();
         }
     }
 }

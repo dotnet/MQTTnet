@@ -67,7 +67,9 @@ namespace MQTTnet.Core.Client
             _packetDispatcher.Reset();
             IsConnected = true;
 
-            Task.Run(() => ReceivePackets(_cancellationTokenSource.Token), _cancellationTokenSource.Token).Forget();
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() => ReceivePackets(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
             var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket);
             if (response.ConnectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
@@ -77,7 +79,9 @@ namespace MQTTnet.Core.Client
 
             if (_options.KeepAlivePeriod != TimeSpan.Zero)
             {
-                Task.Run(() => SendKeepAliveMessagesAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token).Forget();
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                Task.Run(() => SendKeepAliveMessagesAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
 
             Connected?.Invoke(this, EventArgs.Empty);
@@ -350,7 +354,9 @@ namespace MQTTnet.Core.Client
                     var mqttPacket = await _adapter.ReceivePacketAsync(TimeSpan.Zero);
                     MqttTrace.Information(nameof(MqttClient), $"Received <<< {mqttPacket}");
 
-                    Task.Run(() => ProcessReceivedPacket(mqttPacket), cancellationToken).Forget();
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    Task.Run(() => ProcessReceivedPacket(mqttPacket), cancellationToken);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 }
             }
             catch (MqttCommunicationException exception)

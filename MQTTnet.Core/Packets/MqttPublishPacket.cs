@@ -3,7 +3,7 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Packets
 {
-    public class MqttPublishPacket : MqttBasePublishPacket
+    public sealed class MqttPublishPacket : MqttBasePublishPacket
     {
         public bool Retain { get; set; }
 

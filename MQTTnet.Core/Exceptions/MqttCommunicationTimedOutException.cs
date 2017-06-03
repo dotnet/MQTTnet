@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Core.Exceptions
 {
-    public class MqttCommunicationTimedOutException : MqttCommunicationException
+    public sealed class MqttCommunicationTimedOutException : MqttCommunicationException
     {
     }
 }

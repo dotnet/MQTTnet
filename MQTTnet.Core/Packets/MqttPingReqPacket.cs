@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Core.Packets
 {
-    public class MqttPingReqPacket : MqttBasePacket
+    public sealed class MqttPingReqPacket : MqttBasePacket
     {
         public override string ToString()
         {

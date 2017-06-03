@@ -112,9 +112,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MqttClientFactory.cs" />
-    <Compile Include="MqttServerAdapter.cs" />
+    <Compile Include="Implementations\MqttServerAdapter.cs" />
     <Compile Include="MqttServerFactory.cs" />
-    <Compile Include="MqttTcpChannel.cs" />
+    <Compile Include="Implementations\MqttTcpChannel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\MQTTnet.Universal.rd.xml" />
   </ItemGroup>

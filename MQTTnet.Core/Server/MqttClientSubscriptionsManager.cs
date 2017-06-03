@@ -5,7 +5,7 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Server
 {
-    public class MqttClientSubscriptionsManager
+    public sealed class MqttClientSubscriptionsManager
     {
         private readonly ConcurrentDictionary<string, MqttQualityOfServiceLevel> _subscribedTopics = new ConcurrentDictionary<string, MqttQualityOfServiceLevel>();
 

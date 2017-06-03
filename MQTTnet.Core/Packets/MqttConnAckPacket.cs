@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Core.Packets
 {
-    public class MqttConnAckPacket : MqttBasePacket
+    public sealed class MqttConnAckPacket : MqttBasePacket
     {
         public bool IsSessionPresent { get; set; }
 

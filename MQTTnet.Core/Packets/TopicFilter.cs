@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Core.Packets
 {
-    public class TopicFilter
+    public sealed class TopicFilter
     {
         public TopicFilter(string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {

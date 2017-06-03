@@ -7,18 +7,18 @@ using MQTTnet.Core.Diagnostics;
 
 namespace MQTTnet.Core.Server
 {
-    public class MqttServer
+    public sealed class MqttServer
     {
         private readonly MqttClientSessionsManager _clientSessionsManager;
-        private readonly IMqttServerAdapter _adapter;
+        private readonly ICollection<IMqttServerAdapter> _adapters;
         private readonly MqttServerOptions _options;
 
         private CancellationTokenSource _cancellationTokenSource;
 
-        public MqttServer(MqttServerOptions options, IMqttServerAdapter adapter)
+        public MqttServer(MqttServerOptions options, ICollection<IMqttServerAdapter> adapters)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
+            _adapters = adapters ?? throw new ArgumentNullException(nameof(adapters));
             
             _clientSessionsManager = new MqttClientSessionsManager(options);
         }
@@ -45,9 +45,12 @@ namespace MQTTnet.Core.Server
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _adapter.ClientConnected += OnClientConnected;
-            _adapter.Start(_options);
-
+            foreach (var adapter in _adapters)
+            {
+                adapter.ClientConnected += OnClientConnected;
+                adapter.Start(_options);
+            }
+            
             MqttTrace.Information(nameof(MqttServer), "Started.");
         }
 
@@ -56,8 +59,11 @@ namespace MQTTnet.Core.Server
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource = null;
 
-            _adapter.ClientConnected -= OnClientConnected;
-            _adapter.Stop();
+            foreach (var adapter in _adapters)
+            {
+                adapter.ClientConnected -= OnClientConnected;
+                adapter.Stop();
+            }
 
             _clientSessionsManager.Clear();
 

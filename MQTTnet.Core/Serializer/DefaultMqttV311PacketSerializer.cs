@@ -9,7 +9,7 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Serializer
 {
-    public class DefaultMqttV311PacketSerializer : IMqttPacketSerializer
+    public sealed class DefaultMqttV311PacketSerializer : IMqttPacketSerializer
     {
         public Task SerializeAsync(MqttBasePacket packet, IMqttCommunicationChannel destination)
         {

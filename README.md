@@ -17,7 +17,7 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 * Access to internal trace messages
 * Extensible client credential validation (server only)
 * Unit tested (48+ tests)
-* Lightweight (only the low level implementation of MQTT)
+* Lightweight (only the low level implementation of MQTT, no overhead)
 
 ## Supported frameworks
 * .NET Standard 1.1+
@@ -34,6 +34,13 @@ This library is available as a nuget package: https://www.nuget.org/packages/MQT
 
 ## Contributions
 If you want to contribute to this project just create a pull request.
+
+## References
+This library is used in the following projects:
+
+* HA4IoT (Open Source Home Automation system for .NET, https://github.com/chkr1011/HA4IoT)
+
+If you use this library and want to see your project here please let me know.
 
 # MqttClient
 ## Example

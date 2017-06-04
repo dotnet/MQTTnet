@@ -7,7 +7,33 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid Margin="10">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+            <TextBlock>Server:</TextBlock>
+            <TextBox x:Name="Server"></TextBox>
+            <TextBlock>User:</TextBlock>
+            <TextBox x:Name="User"></TextBox>
+            <TextBlock>Password:</TextBlock>
+            <TextBox x:Name="Password"></TextBox>
+            <TextBlock>ClientId:</TextBlock>
+            <TextBox x:Name="ClientId"></TextBox>
+
+            <CheckBox x:Name="UseSsl">Use SSL</CheckBox>
+            <Button Click="Connect">Connect</Button>
+            <TextBlock>Trace:</TextBlock>
+        </StackPanel>
+
+
+        <ScrollViewer Grid.Row="1" Background="Black" Foreground="WhiteSmoke" FontFamily="Consolas" HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+            <TextBlock x:Name="Trace"></TextBlock>
+        </ScrollViewer>
 
     </Grid>
+
 </Page>

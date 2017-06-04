@@ -74,6 +74,7 @@ namespace MQTTnet.Core.Client
             var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket);
             if (response.ConnectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
             {
+                await DisconnectAsync();
                 throw new MqttConnectingFailedException(response.ConnectReturnCode);
             }
 
@@ -190,7 +191,7 @@ namespace MQTTnet.Core.Client
             }
         }
 
-        private async void ProcessReceivedPacket(MqttBasePacket mqttPacket)
+        private async void ProcessReceivedPacketAsync(MqttBasePacket mqttPacket)
         {
             try
             {
@@ -355,7 +356,7 @@ namespace MQTTnet.Core.Client
                     MqttTrace.Information(nameof(MqttClient), $"Received <<< {mqttPacket}");
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    Task.Run(() => ProcessReceivedPacket(mqttPacket), cancellationToken);
+                    Task.Run(() => ProcessReceivedPacketAsync(mqttPacket), cancellationToken);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 }
             }

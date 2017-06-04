@@ -13,7 +13,7 @@ using MQTTnet.Core.Exceptions;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
+    public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
         private readonly StreamSocket _socket;
 
@@ -42,11 +42,10 @@ namespace MQTTnet.Implementations
 
                     if (!options.SslOptions.CheckCertificateRevocation)
                     {
-                        _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.Revoked);
                         _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.IncompleteChain);
                         _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.RevocationInformationMissing);
                     }
-                    
+
                     await _socket.ConnectAsync(new HostName(options.Server), options.GetPort().ToString(), SocketProtectionLevel.Tls12);
                 }
             }
@@ -90,7 +89,7 @@ namespace MQTTnet.Implementations
 
             try
             {
-                await _socket.InputStream.ReadAsync(buffer.AsBuffer(), (uint)buffer.Length, InputStreamOptions.Partial);
+                await _socket.InputStream.ReadAsync(buffer.AsBuffer(), (uint)buffer.Length, InputStreamOptions.None);
             }
             catch (SocketException exception)
             {

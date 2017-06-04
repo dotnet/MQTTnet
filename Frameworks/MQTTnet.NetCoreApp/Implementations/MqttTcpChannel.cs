@@ -10,7 +10,7 @@ using MQTTnet.Core.Exceptions;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
+    public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
         private readonly Socket _socket;
         private SslStream _sslStream;

@@ -121,7 +121,7 @@ namespace MQTTnet.TestApp.NetFramework
             }
         }
 
-        private static async Task RunServerAsync(string[] arguments)
+        private static void RunServerAsync(string[] arguments)
         {
             MqttTrace.TraceMessagePublished += (s, e) =>
             {

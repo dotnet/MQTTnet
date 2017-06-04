@@ -1,30 +1,63 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
+using MQTTnet.Core.Client;
+using MQTTnet.Core.Diagnostics;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class MainPage : Page
+    public sealed partial class MainPage
     {
+        private MqttClient _mqttClient;
+
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+
+            MqttTrace.TraceMessagePublished += OnTraceMessagePublished;
+        }
+
+        private async void OnTraceMessagePublished(object sender, MqttTraceMessagePublishedEventArgs e)
+        {
+            await Trace.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+            {
+                var text = $"[{DateTime.Now:O}] [{e.Level}] [{e.Source}] [{e.ThreadId}] [{e.Message}]{Environment.NewLine}";
+                if (e.Exception != null)
+                {
+                    text += $"{e.Exception}{Environment.NewLine}";
+                }
+
+                Trace.Text += text;
+            });
+        }
+
+        private async void Connect(object sender, RoutedEventArgs e)
+        {
+            var options = new MqttClientOptions
+            {
+                Server = Server.Text,
+                UserName = User.Text,
+                Password = Password.Text,
+                ClientId = ClientId.Text
+            };
+
+            options.SslOptions.UseSsl = UseSsl.IsChecked == true;
+
+            try
+            {
+                if (_mqttClient != null)
+                {
+                    await _mqttClient.DisconnectAsync();
+                }
+
+                var factory = new MqttClientFactory();
+                _mqttClient = factory.CreateMqttClient(options);
+                await _mqttClient.ConnectAsync();
+            }
+            catch (Exception exception)
+            {
+                Trace.Text += exception + Environment.NewLine;
+            }
         }
     }
 }

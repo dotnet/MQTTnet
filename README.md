@@ -10,7 +10,7 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 ## Features
 * MQTT client included
 * MQTT server (broker) included
-* SSL (TLS 1.2) support for Client and Server
+* TLS 1.2 support for Client and Server
 * Async support
 * List of connected clients available (server only)
 * Extensible communication channels (i.e. In-Memory, TCP, TCP+SSL, WebSockets (not included in this project))

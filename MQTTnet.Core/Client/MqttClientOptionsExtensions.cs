@@ -13,7 +13,7 @@ namespace MQTTnet.Core.Client
                 return options.Port.Value;
             }
 
-            return !options.SslOptions.UseSsl ? 1883 : 8883;
+            return !options.TlsOptions.UseTls ? 1883 : 8883;
         }
     }
 }

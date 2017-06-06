@@ -1,5 +1,4 @@
 using System;
-using System.Security.Cryptography.X509Certificates;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Serializer;
@@ -11,15 +10,15 @@ namespace MQTTnet.Implementations
     public class MqttServerAdapter : IMqttServerAdapter, IDisposable
     {
         private StreamSocketListener _defaultEndpointSocket;
-        private StreamSocketListener _sslEndpointSocket;
-        private X509Certificate2 _sslCertificate;
-
+        
         private bool _isRunning;
 
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
 
         public void Start(MqttServerOptions options)
         {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
             if (_isRunning) throw new InvalidOperationException("Server is already started.");
             _isRunning = true;
 
@@ -30,18 +29,9 @@ namespace MQTTnet.Implementations
                 _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;                
             }
 
-            if (options.SslEndpointOptions.IsEnabled)
+            if (options.TlsEndpointOptions.IsEnabled)
             {
-                if (options.SslEndpointOptions.Certificate == null)
-                {
-                    throw new ArgumentException("SSL certificate is not set.");
-                }
-
-                _sslCertificate = new X509Certificate2(options.SslEndpointOptions.Certificate);
-
-                _sslEndpointSocket = new StreamSocketListener();
-                _sslEndpointSocket.BindServiceNameAsync(options.GetSslEndpointPort().ToString(), SocketProtectionLevel.Tls12).GetAwaiter().GetResult();
-                _sslEndpointSocket.ConnectionReceived += AcceptSslEndpointConnectionsAsync;
+                throw new NotSupportedException("TLS servers are not supported for UWP apps.");
             }
         }
 
@@ -51,9 +41,6 @@ namespace MQTTnet.Implementations
 
             _defaultEndpointSocket?.Dispose();
             _defaultEndpointSocket = null;
-
-            _sslEndpointSocket?.Dispose();
-            _sslEndpointSocket = null;
         }
 
         public void Dispose()
@@ -71,19 +58,6 @@ namespace MQTTnet.Implementations
             catch (Exception exception)
             {
                 MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while acceping connection at default endpoint.");
-            }
-        }
-
-        private void AcceptSslEndpointConnectionsAsync(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
-        {
-            try
-            {
-                var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(args.Socket), new DefaultMqttV311PacketSerializer());
-                ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(args.Socket.Information.RemoteAddress.ToString(), clientAdapter));
-            }
-            catch (Exception exception)
-            {
-                MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while acceping connection at SSL endpoint.");
             }
         }
     }

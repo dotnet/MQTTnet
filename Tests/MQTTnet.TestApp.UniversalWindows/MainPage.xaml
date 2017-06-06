@@ -24,7 +24,7 @@
             <TextBlock>ClientId:</TextBlock>
             <TextBox x:Name="ClientId"></TextBox>
 
-            <CheckBox x:Name="UseSsl">Use SSL</CheckBox>
+            <CheckBox x:Name="UseTls">Use TLS</CheckBox>
             <Button Click="Connect">Connect</Button>
             <TextBlock>Trace:</TextBlock>
         </StackPanel>

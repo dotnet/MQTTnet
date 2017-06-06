@@ -4,16 +4,16 @@ namespace MQTTnet.Core.Server
 {
     public static class MqttServerOptionsExtensions
     {
-        public static int GetSslEndpointPort(this MqttServerOptions options)
+        public static int GetTlsEndpointPort(this MqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            if (!options.SslEndpointOptions.Port.HasValue)
+            if (!options.TlsEndpointOptions.Port.HasValue)
             {
                 return 8883;
             }
 
-            return options.SslEndpointOptions.Port.Value;
+            return options.TlsEndpointOptions.Port.Value;
         }
 
         public static int GetDefaultEndpointPort(this MqttServerOptions options)

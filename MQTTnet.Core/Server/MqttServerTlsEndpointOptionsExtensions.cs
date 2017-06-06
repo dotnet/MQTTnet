@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Core.Server
 {
-    public static class SslEndpointOptionsExtensions
+    public static class MqttServerTlsEndpointOptionsExtensions
     {
         public static int GetPort(this DefaultEndpointOptions options)
         {

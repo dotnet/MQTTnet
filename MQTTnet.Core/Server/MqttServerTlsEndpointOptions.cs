@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Core.Server
 {
-    public sealed class SslEndpointOptions
+    public sealed class MqttServerTlsEndpointOptions
     {
         public bool IsEnabled { get; set; }
 

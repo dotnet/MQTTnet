@@ -32,7 +32,7 @@ namespace MQTTnet.Implementations
             if (options == null) throw new ArgumentNullException(nameof(options));
             try
             {
-                if (!options.SslOptions.UseSsl)
+                if (!options.TlsOptions.UseTls)
                 {
                     await _socket.ConnectAsync(new HostName(options.Server), options.GetPort().ToString());
                 }
@@ -40,7 +40,7 @@ namespace MQTTnet.Implementations
                 {
                     _socket.Control.ClientCertificate = LoadCertificate(options);
 
-                    if (!options.SslOptions.CheckCertificateRevocation)
+                    if (!options.TlsOptions.CheckCertificateRevocation)
                     {
                         _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.IncompleteChain);
                         _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.RevocationInformationMissing);
@@ -104,17 +104,17 @@ namespace MQTTnet.Implementations
 
         private static Certificate LoadCertificate(MqttClientOptions options)
         {
-            if (options.SslOptions.Certificates == null || !options.SslOptions.Certificates.Any())
+            if (options.TlsOptions.Certificates == null || !options.TlsOptions.Certificates.Any())
             {
                 return null;
             }
 
-            if (options.SslOptions.Certificates.Count > 1)
+            if (options.TlsOptions.Certificates.Count > 1)
             {
                 throw new NotSupportedException("Only one client certificate is supported for UWP.");
             }
 
-            return new Certificate(options.SslOptions.Certificates.First().AsBuffer());
+            return new Certificate(options.TlsOptions.Certificates.First().AsBuffer());
         }
     }
 }

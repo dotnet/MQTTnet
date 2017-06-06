@@ -33,10 +33,10 @@ namespace MQTTnet.Implementations
             {
                 await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.GetPort(), null);
 
-                if (options.SslOptions.UseSsl)
+                if (options.TlsOptions.UseTls)
                 {
                     _sslStream = new SslStream(new NetworkStream(_socket, true));
-                    await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.SslOptions.CheckCertificateRevocation);
+                    await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation);
                 }
             }
             catch (SocketException exception)
@@ -113,12 +113,12 @@ namespace MQTTnet.Implementations
         private static X509CertificateCollection LoadCertificates(MqttClientOptions options)
         {
             var certificates = new X509CertificateCollection();
-            if (options.SslOptions.Certificates == null)
+            if (options.TlsOptions.Certificates == null)
             {
                 return certificates;
             }
 
-            foreach (var certificate in options.SslOptions.Certificates)
+            foreach (var certificate in options.TlsOptions.Certificates)
             {
                 certificates.Add(new X509Certificate(certificate));
             }

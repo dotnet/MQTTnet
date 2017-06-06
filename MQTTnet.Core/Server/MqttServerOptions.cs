@@ -8,7 +8,7 @@ namespace MQTTnet.Core.Server
     {
         public DefaultEndpointOptions DefaultEndpointOptions { get; } = new DefaultEndpointOptions();
 
-        public SslEndpointOptions SslEndpointOptions { get; } = new SslEndpointOptions();
+        public MqttServerTlsEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsEndpointOptions();
         
         public int ConnectionBacklog { get; set; } = 10;
 

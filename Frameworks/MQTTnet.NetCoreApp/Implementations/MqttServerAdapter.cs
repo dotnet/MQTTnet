@@ -17,8 +17,8 @@ namespace MQTTnet.Implementations
     {
         private CancellationTokenSource _cancellationTokenSource;
         private Socket _defaultEndpointSocket;
-        private Socket _sslEndpointSocket;
-        private X509Certificate2 _sslCertificate;
+        private Socket _tlsEndpointSocket;
+        private X509Certificate2 _tlsCertificate;
 
         private bool _isRunning;
 
@@ -40,20 +40,20 @@ namespace MQTTnet.Implementations
                 Task.Run(() => AcceptDefaultEndpointConnectionsAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
             }
 
-            if (options.SslEndpointOptions.IsEnabled)
+            if (options.TlsEndpointOptions.IsEnabled)
             {
-                if (options.SslEndpointOptions.Certificate == null)
+                if (options.TlsEndpointOptions.Certificate == null)
                 {
-                    throw new ArgumentException("SSL certificate is not set.");
+                    throw new ArgumentException("TLS certificate is not set.");
                 }
 
-                _sslCertificate = new X509Certificate2(options.SslEndpointOptions.Certificate);
+                _tlsCertificate = new X509Certificate2(options.TlsEndpointOptions.Certificate);
 
-                _sslEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                _sslEndpointSocket.Bind(new IPEndPoint(IPAddress.Any, options.GetSslEndpointPort()));
-                _sslEndpointSocket.Listen(options.ConnectionBacklog);
+                _tlsEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                _tlsEndpointSocket.Bind(new IPEndPoint(IPAddress.Any, options.GetTlsEndpointPort()));
+                _tlsEndpointSocket.Listen(options.ConnectionBacklog);
 
-                Task.Run(() => AcceptSslEndpointConnectionsAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
+                Task.Run(() => AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
             }
         }
 
@@ -67,8 +67,8 @@ namespace MQTTnet.Implementations
             _defaultEndpointSocket?.Dispose();
             _defaultEndpointSocket = null;
 
-            _sslEndpointSocket?.Dispose();
-            _sslEndpointSocket = null;
+            _tlsEndpointSocket?.Dispose();
+            _tlsEndpointSocket = null;
         }
 
         public void Dispose()
@@ -93,7 +93,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        private async Task AcceptSslEndpointConnectionsAsync(CancellationToken cancellationToken)
+        private async Task AcceptTlsEndpointConnectionsAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -102,14 +102,14 @@ namespace MQTTnet.Implementations
                     var clientSocket = await _defaultEndpointSocket.AcceptAsync();
 
                     var sslStream = new SslStream(new NetworkStream(clientSocket));
-                    await sslStream.AuthenticateAsServerAsync(_sslCertificate, false, SslProtocols.Tls12, false);
+                    await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false);
                     
                     var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, sslStream), new DefaultMqttV311PacketSerializer());
                     ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientSocket.RemoteEndPoint.ToString(), clientAdapter));
                 }
                 catch (Exception exception)
                 {
-                    MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while acceping connection at SSL endpoint.");
+                    MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while acceping connection at TLS endpoint.");
                 }
             }
         }

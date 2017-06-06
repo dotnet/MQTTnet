@@ -41,7 +41,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 ClientId = ClientId.Text
             };
 
-            options.SslOptions.UseSsl = UseSsl.IsChecked == true;
+            options.TlsOptions.UseTls = UseTls.IsChecked == true;
 
             try
             {

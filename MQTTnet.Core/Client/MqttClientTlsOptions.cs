@@ -2,9 +2,9 @@
 
 namespace MQTTnet.Core.Client
 {
-    public sealed class MqttClientSslOptions
+    public sealed class MqttClientTlsOptions
     {
-        public bool UseSsl { get; set; }
+        public bool UseTls { get; set; }
 
         public bool CheckCertificateRevocation { get; set; }
 

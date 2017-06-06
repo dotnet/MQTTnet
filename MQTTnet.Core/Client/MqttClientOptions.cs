@@ -8,7 +8,7 @@ namespace MQTTnet.Core.Client
 
         public int? Port { get; set; }
         
-        public MqttClientSslOptions SslOptions { get; } = new MqttClientSslOptions();
+        public MqttClientTlsOptions TlsOptions { get; } = new MqttClientTlsOptions();
 
         public string UserName { get; set; }
 

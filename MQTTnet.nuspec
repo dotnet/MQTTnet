@@ -14,7 +14,8 @@
 * [Core] Extended exception information when an invalid packet type is received.
 * [Server] Added TLS 1.2 support (but not for UWP) (thanks to Zazzmatazz)
 * [Client] Added TLS 1.2 support (thanks to Zazzmatazz)
-* [Core] Optimized async task management</releaseNotes>
+* [Core] Optimized async task management
+* [Nuget] Fixed x64 files</releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT MQTTClient MQTTServer MQTTBroker Broker</tags>
   </metadata>

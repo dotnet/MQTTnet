@@ -191,34 +191,30 @@ namespace MQTTnet.Core.Client
             }
         }
 
-        private async void ProcessReceivedPacketAsync(MqttBasePacket mqttPacket)
+        private Task ProcessReceivedPacketAsync(MqttBasePacket mqttPacket)
         {
             try
             {
                 if (mqttPacket is MqttPingReqPacket)
                 {
-                    await SendAsync(new MqttPingRespPacket());
-                    return;
+                    return SendAsync(new MqttPingRespPacket());
                 }
 
                 if (mqttPacket is MqttDisconnectPacket)
                 {
-                    await DisconnectAsync();
-                    return;
+                    return DisconnectAsync();
                 }
 
                 var publishPacket = mqttPacket as MqttPublishPacket;
                 if (publishPacket != null)
                 {
-                    await ProcessReceivedPublishPacket(publishPacket);
-                    return;
+                    return ProcessReceivedPublishPacket(publishPacket);
                 }
 
                 var pubRelPacket = mqttPacket as MqttPubRelPacket;
                 if (pubRelPacket != null)
                 {
-                    await ProcessReceivedPubRelPacket(pubRelPacket);
-                    return;
+                    return ProcessReceivedPubRelPacket(pubRelPacket);
                 }
 
                 _packetDispatcher.Dispatch(mqttPacket);
@@ -227,6 +223,8 @@ namespace MQTTnet.Core.Client
             {
                 MqttTrace.Error(nameof(MqttClient), exception, "Error while processing received packet.");
             }
+
+            return Task.FromResult(0);
         }
 
         private void FireApplicationMessageReceivedEvent(MqttPublishPacket publishPacket)
@@ -246,25 +244,27 @@ namespace MQTTnet.Core.Client
             ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(applicationMessage));
         }
 
-        private async Task ProcessReceivedPublishPacket(MqttPublishPacket publishPacket)
+        private Task ProcessReceivedPublishPacket(MqttPublishPacket publishPacket)
         {
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
                 FireApplicationMessageReceivedEvent(publishPacket);
+                return Task.FromResult(0);
             }
-            else
+
+            if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
             {
-                if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
-                {
-                    FireApplicationMessageReceivedEvent(publishPacket);
-                    await SendAsync(new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
-                }
-                else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
-                {
-                    _pendingExactlyOncePublishPackets[publishPacket.PacketIdentifier] = publishPacket;
-                    await SendAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
-                }
+                FireApplicationMessageReceivedEvent(publishPacket);
+                return SendAsync(new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
             }
+
+            if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
+            {
+                _pendingExactlyOncePublishPackets[publishPacket.PacketIdentifier] = publishPacket;
+                return SendAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
+            }
+
+            throw new InvalidOperationException();
         }
 
         private async Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket)

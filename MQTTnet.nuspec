@@ -12,8 +12,9 @@
     <description>MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
     <releaseNotes>* [Core] Any exception while accessing the underlying data source is now rethrown as "MqttCommunicationException".
 * [Core] Extended exception information when an invalid packet type is received.
-* [Server] Added TLS 1.2 support (thanks to Zazzmatazz)
-* [Client] Added TLS 1.2 support (thanks to Zazzmatazz)</releaseNotes>
+* [Server] Added TLS 1.2 support (but not for UWP) (thanks to Zazzmatazz)
+* [Client] Added TLS 1.2 support (thanks to Zazzmatazz)
+* [Core] Optimized async task management</releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT MQTTClient MQTTServer MQTTBroker Broker</tags>
   </metadata>

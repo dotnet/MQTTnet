@@ -44,8 +44,8 @@
     <file src=".\Frameworks\MQTTnet.NetFramework\bin\x86\Release\MQTTnet.Core.dll" target="lib\net45-x86"/>
     <file src=".\Frameworks\MQTTnet.NetFramework\bin\x86\Release\MQTTnet.dll" target="lib\net45-x86"/>
 
-    <file src=".\Frameworks\MQTTnet.NetFramework\bin\x86\Release\MQTTnet.Core.dll" target="lib\net45-x64"/>
-    <file src=".\Frameworks\MQTTnet.NetFramework\bin\x86\Release\MQTTnet.dll" target="lib\net45-x64"/>
+    <file src=".\Frameworks\MQTTnet.NetFramework\bin\x64\Release\MQTTnet.Core.dll" target="lib\net45-x64"/>
+    <file src=".\Frameworks\MQTTnet.NetFramework\bin\x64\Release\MQTTnet.dll" target="lib\net45-x64"/>
 
     <!-- .NET Core App -->
     <file src=".\Frameworks\MQTTnet.NetCoreApp\bin\Release\netcoreapp1.1\MQTTnet.Core.dll" target="lib\netcoreapp1.1"/>

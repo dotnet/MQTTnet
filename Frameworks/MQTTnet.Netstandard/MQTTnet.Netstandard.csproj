@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <AssemblyName>MQTTnet</AssemblyName>
+    <RootNamespace>MQTTnet</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\MQTTnet.NetCoreApp\Implementations\MqttServerAdapter.cs" Link="Implementations\MqttServerAdapter.cs" />
+    <Compile Include="..\MQTTnet.NetCoreApp\Implementations\MqttTcpChannel.cs" Link="Implementations\MqttTcpChannel.cs" />
+    <Compile Include="..\MQTTnet.NetCoreApp\MqttClientFactory.cs" Link="MqttClientFactory.cs" />
+    <Compile Include="..\MQTTnet.NetCoreApp\MqttServerFactory.cs" Link="MqttServerFactory.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MQTTnet.Core\MQTTnet.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Implementations\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Net.Security" Version="4.3.1" />
+  </ItemGroup>
+
+</Project>

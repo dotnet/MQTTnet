@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.3</TargetFramework>
+    <AssemblyName>MQTTnet</AssemblyName>
+    <RootNamespace>MQTTnet</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

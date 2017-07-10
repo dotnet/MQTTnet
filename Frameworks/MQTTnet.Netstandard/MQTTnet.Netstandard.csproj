@@ -6,6 +6,10 @@
     <RootNamespace>MQTTnet</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" />
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+
   <ItemGroup>
     <Compile Include="..\MQTTnet.NetCoreApp\Implementations\MqttServerAdapter.cs" Link="Implementations\MqttServerAdapter.cs" />
     <Compile Include="..\MQTTnet.NetCoreApp\Implementations\MqttTcpChannel.cs" Link="Implementations\MqttTcpChannel.cs" />

@@ -20,7 +20,7 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 * Lightweight (only the low level implementation of MQTT, no overhead)
 
 ## Supported frameworks
-* .NET Standard 1.1+
+* .NET Standard 1.3+
 * .NET Core 1.1+
 * .NET Core App 1.1+
 * .NET Framework 4.5.2+ (x86, x64, AnyCPU)
@@ -45,7 +45,7 @@ If you use this library and want to see your project here please let me know.
 # MqttClient
 ## Example
 
-```c#
+```csharp
 var options = new MqttClientOptions
 {
     Server = "localhost"
@@ -119,7 +119,7 @@ while (true)
 
 ## Example 
 
-```c#
+```csharp
 var options = new MqttServerOptions
 {
     ConnectionValidator = p =>

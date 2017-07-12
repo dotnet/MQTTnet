@@ -28,7 +28,18 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Any CPU|x86'" />
 
   <ItemGroup>
+    <Compile Include="..\MQTTnet.NetStandard\Implementations\MqttServerAdapter.cs" Link="Implementations\MqttServerAdapter.cs" />
+    <Compile Include="..\MQTTnet.NetStandard\Implementations\MqttTcpChannel.cs" Link="Implementations\MqttTcpChannel.cs" />
+    <Compile Include="..\MQTTnet.NetStandard\MqttClientFactory.cs" Link="MqttClientFactory.cs" />
+    <Compile Include="..\MQTTnet.NetStandard\MqttServerFactory.cs" Link="MqttServerFactory.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\MQTTnet.Core\MQTTnet.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Implementations\" />
   </ItemGroup>
 
 </Project>

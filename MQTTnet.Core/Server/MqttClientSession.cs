@@ -19,19 +19,22 @@ namespace MQTTnet.Core.Server
         private readonly MqttClientMessageQueue _messageQueue;
         private readonly Action<MqttClientSession, MqttPublishPacket> _publishPacketReceivedCallback;
         private readonly MqttServerOptions _options;
-
+        
         private CancellationTokenSource _cancellationTokenSource;
         private IMqttCommunicationAdapter _adapter;
         private string _identifier;
         private MqttApplicationMessage _willApplicationMessage;
 
-        public MqttClientSession(MqttServerOptions options, Action<MqttClientSession, MqttPublishPacket> publishPacketReceivedCallback)
+        public MqttClientSession(string clientId, MqttServerOptions options, Action<MqttClientSession, MqttPublishPacket> publishPacketReceivedCallback)
         {
+            ClientId = clientId;
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _publishPacketReceivedCallback = publishPacketReceivedCallback ?? throw new ArgumentNullException(nameof(publishPacketReceivedCallback));
 
             _messageQueue = new MqttClientMessageQueue(options);
         }
+
+        public string ClientId { get; }
 
         public bool IsConnected => _adapter != null;
 

@@ -1,13 +1,16 @@
 ﻿using System;
 
-namespace MQTTnet.Core
+namespace MQTTnet.Core.Server
 {
     public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     {
-        public MqttApplicationMessageReceivedEventArgs(MqttApplicationMessage applicationMessage)
+        public MqttApplicationMessageReceivedEventArgs(string clientId, MqttApplicationMessage applicationMessage)
         {
+            ClientId = clientId;
             ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
         }
+
+        public string ClientId { get; }
 
         public MqttApplicationMessage ApplicationMessage { get; }
     }

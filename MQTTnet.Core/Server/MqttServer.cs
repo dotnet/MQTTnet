@@ -21,6 +21,7 @@ namespace MQTTnet.Core.Server
             _adapters = adapters ?? throw new ArgumentNullException(nameof(adapters));
             
             _clientSessionsManager = new MqttClientSessionsManager(options);
+            _clientSessionsManager.ApplicationMessageReceived += (s, e) => ApplicationMessageReceived?.Invoke(s, e);
         }
 
         public IList<string> GetConnectedClients()
@@ -29,6 +30,8 @@ namespace MQTTnet.Core.Server
         }
 
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
+
+        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
         public void InjectClient(string identifier, IMqttCommunicationAdapter adapter)
         {

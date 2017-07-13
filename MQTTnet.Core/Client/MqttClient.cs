@@ -234,13 +234,7 @@ namespace MQTTnet.Core.Client
                 _processedPublishPackets.Add(publishPacket.PacketIdentifier);
             }
 
-            var applicationMessage = new MqttApplicationMessage(
-                publishPacket.Topic,
-                publishPacket.Payload,
-                publishPacket.QualityOfServiceLevel,
-                publishPacket.Retain
-            );
-
+            var applicationMessage = publishPacket.ToApplicationMessage();
             ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(applicationMessage));
         }
 

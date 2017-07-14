@@ -17,8 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Core", "MQTTnet.Cor
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{002203AF-2565-4C0D-95ED-027FDEFE0C35}"
 	ProjectSection(SolutionItems) = preProject
-		build.ps1 = build.ps1
-		MQTTnet.nuspec = MQTTnet.nuspec
+		Build\build.ps1 = Build\build.ps1
+		Build\MQTTnet.nuspec = Build\MQTTnet.nuspec
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.TestApp.NetFramework", "Tests\MQTTnet.TestApp.NetFramework\MQTTnet.TestApp.NetFramework.csproj", "{D9D74F33-6943-49B2-B765-7BD589082098}"

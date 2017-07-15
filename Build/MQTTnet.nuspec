@@ -10,7 +10,8 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* [.NET Standard] Added support for .NET Standard 1.3 (Thanks to 1iveowl)</releaseNotes>
+    <releaseNotes>* [.NET Standard] Added support for .NET Standard 1.3 (Thanks to 1iveowl)
+* [Server] Added an even which allows processing of all received messages from the clients</releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT MQTTClient MQTTServer MQTTBroker Broker</tags> 
     <dependencies>

@@ -15,17 +15,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frameworks", "Frameworks", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Core", "MQTTnet.Core\MQTTnet.Core.csproj", "{2ECB99E4-72D0-4C23-99BA-93D511D3967D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{002203AF-2565-4C0D-95ED-027FDEFE0C35}"
-	ProjectSection(SolutionItems) = preProject
-		build.ps1 = build.ps1
-		MQTTnet.nuspec = MQTTnet.nuspec
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.TestApp.NetFramework", "Tests\MQTTnet.TestApp.NetFramework\MQTTnet.TestApp.NetFramework.csproj", "{D9D74F33-6943-49B2-B765-7BD589082098}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.TestApp.UniversalWindows", "Tests\MQTTnet.TestApp.UniversalWindows\MQTTnet.TestApp.UniversalWindows.csproj", "{FF1F72D6-9524-4422-9497-3CC0002216ED}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.NetStandard", "Frameworks\MQTTnet.Netstandard\MQTTnet.NetStandard.csproj", "{3587E506-55A2-4EB3-99C7-DC01E42D25D2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{67C28AC1-BC3A-420A-BE9C-FA2401431CF9}"
+	ProjectSection(SolutionItems) = preProject
+		Build\build.ps1 = Build\build.ps1
+		Build\MQTTnet.nuspec = Build\MQTTnet.nuspec
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

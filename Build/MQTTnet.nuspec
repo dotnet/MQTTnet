@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>MQTTnet</id>
-    <version>0</version>
+    <version>2.1.4</version>
     <authors>Christian Kratky</authors>
     <owners>Christian Kratky</owners>
     <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>

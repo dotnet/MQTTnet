@@ -185,7 +185,10 @@ namespace MQTTnet.Core.Client
             }
             finally
             {
-                _cancellationTokenSource?.Cancel();
+                _cancellationTokenSource?.Cancel(false);
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+
                 IsConnected = false;
                 Disconnected?.Invoke(this, EventArgs.Empty);
             }
@@ -234,13 +237,7 @@ namespace MQTTnet.Core.Client
                 _processedPublishPackets.Add(publishPacket.PacketIdentifier);
             }
 
-            var applicationMessage = new MqttApplicationMessage(
-                publishPacket.Topic,
-                publishPacket.Payload,
-                publishPacket.QualityOfServiceLevel,
-                publishPacket.Retain
-            );
-
+            var applicationMessage = publishPacket.ToApplicationMessage();
             ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(applicationMessage));
         }
 

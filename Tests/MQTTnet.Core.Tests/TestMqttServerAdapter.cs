@@ -8,6 +8,11 @@ namespace MQTTnet.Core.Tests
     {
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
 
+        public void FireClientConnectedEvent(MqttClientConnectedEventArgs eventArgs)
+        {
+            ClientConnected?.Invoke(this, eventArgs);
+        }
+
         public void Start(MqttServerOptions options)
         {
         }

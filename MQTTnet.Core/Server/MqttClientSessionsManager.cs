@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
+using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 
@@ -20,6 +21,8 @@ namespace MQTTnet.Core.Server
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
+
+        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived; 
 
         public async Task RunClientSessionAsync(MqttClientConnectedEventArgs eventArgs)
         {
@@ -114,7 +117,7 @@ namespace MQTTnet.Core.Server
                 {
                     isExistingSession = false;
 
-                    clientSession = new MqttClientSession(_options, DispatchPublishPacket);
+                    clientSession = new MqttClientSession(connectPacket.ClientId, _options, DispatchPublishPacket);
                     _clientSessions[connectPacket.ClientId] = clientSession;
 
                     MqttTrace.Verbose(nameof(MqttClientSessionsManager), $"Created a new session for client '{connectPacket.ClientId}'.");
@@ -126,6 +129,9 @@ namespace MQTTnet.Core.Server
 
         private void DispatchPublishPacket(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
         {
+            var eventArgs = new MqttApplicationMessageReceivedEventArgs(senderClientSession.ClientId, publishPacket.ToApplicationMessage());
+            ApplicationMessageReceived?.Invoke(this, eventArgs);
+
             foreach (var clientSession in _clientSessions.Values.ToList())
             {
                 clientSession.EnqueuePublishPacket(senderClientSession, publishPacket);

@@ -61,6 +61,7 @@ namespace MQTTnet.Implementations
         {
             _isRunning = false;
 
+            _cancellationTokenSource?.Cancel(false);
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
 

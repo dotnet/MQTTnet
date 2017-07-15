@@ -5,20 +5,20 @@
     <AssemblyName>MQTTnet.Core</AssemblyName>
     <RootNamespace>MQTTnet.Core</RootNamespace>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <Description>MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</Description>
-    <Product>MQTTnet</Product>
-    <Company>Christian Kratky</Company>
-    <Authors>Christian Kratky</Authors>
-    <Version>2.1.2.0</Version>
-    <PackageId>MQTTnet.Core</PackageId>
-    <Copyright>Copyright © Christian Kratky 2016-2017</Copyright>
-    <PackageProjectUrl>https://github.com/chkr1011/MQTTnet</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</PackageIconUrl>
-    <RepositoryUrl>https://github.com/chkr1011/MQTTnet</RepositoryUrl>
-    <PackageTags>MQTT MQTTClient MQTTServer MQTTBroker Broker</PackageTags>
-    <FileVersion>2.1.2.0</FileVersion>
-    <AssemblyVersion>2.1.2.0</AssemblyVersion>
-    <PackageLicenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</PackageLicenseUrl>
+    <Description></Description>
+    <Product></Product>
+    <Company></Company>
+    <Authors></Authors>
+    <Version>0.0.0.0</Version>
+    <PackageId></PackageId>
+    <Copyright></Copyright>
+    <PackageProjectUrl></PackageProjectUrl>
+    <PackageIconUrl></PackageIconUrl>
+    <RepositoryUrl></RepositoryUrl>
+    <PackageTags></PackageTags>
+    <FileVersion>2.1.4.0</FileVersion>
+    <AssemblyVersion>2.1.4.0</AssemblyVersion>
+    <PackageLicenseUrl></PackageLicenseUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Any CPU|AnyCPU'" />

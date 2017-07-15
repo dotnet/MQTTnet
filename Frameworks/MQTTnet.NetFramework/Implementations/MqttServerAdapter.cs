@@ -63,6 +63,7 @@ namespace MQTTnet.Implementations
         {
             _isRunning = false;
 
+            _cancellationTokenSource?.Cancel(false);
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
 
@@ -88,7 +89,7 @@ namespace MQTTnet.Implementations
                     var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, null), new DefaultMqttV311PacketSerializer());
                     ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientSocket.RemoteEndPoint.ToString(), clientAdapter));
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!(exception is ObjectDisposedException))
                 {
                     MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while acceping connection at default endpoint.");
                 }

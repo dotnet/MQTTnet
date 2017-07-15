@@ -59,7 +59,8 @@ namespace MQTTnet.Core.Server
 
         public void Stop()
         {
-            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Cancel(false);
+            _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
 
             foreach (var adapter in _adapters)

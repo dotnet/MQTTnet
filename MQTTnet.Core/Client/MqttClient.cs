@@ -185,7 +185,10 @@ namespace MQTTnet.Core.Client
             }
             finally
             {
-                _cancellationTokenSource?.Cancel();
+                _cancellationTokenSource?.Cancel(false);
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+
                 IsConnected = false;
                 Disconnected?.Invoke(this, EventArgs.Empty);
             }

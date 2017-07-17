@@ -2,7 +2,7 @@
 <img src="https://github.com/chkr1011/MQTTnet/blob/master/Images/Logo_128x128.png?raw=true" width="128">
 </p>
 
-[![Build Status](https://img.shields.io/nuget/v/MQTTnet.svg)](https://www.nuget.org/packages/MQTTnet/)
+[![NuGet Badge](https://buildstats.info/nuget/MQTTnet)](https://www.nuget.org/packages/MQTTnet)
 
 # MQTTnet
 MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server. The implementation is based on the documentation from http://mqtt.org/.
@@ -12,6 +12,7 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 * MQTT server (broker) included
 * TLS 1.2 support for client and server (but not UWP servers)
 * Async support
+* Rx support (via another project)
 * List of connected clients available (server only)
 * Extensible communication channels (i.e. In-Memory, TCP, TCP+SSL, WebSockets (not included in this project))
 * Access to internal trace messages
@@ -38,6 +39,7 @@ If you want to contribute to this project just create a pull request.
 ## References
 This library is used in the following projects:
 
+* MQTT Client Rx (Wrapper for Reactive Extensions, https://github.com/1iveowl/MQTTClient.rx)
 * HA4IoT (Open Source Home Automation system for .NET, https://github.com/chkr1011/HA4IoT)
 
 If you use this library and want to see your project here please let me know.

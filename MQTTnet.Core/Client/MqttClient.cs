@@ -238,7 +238,15 @@ namespace MQTTnet.Core.Client
             }
 
             var applicationMessage = publishPacket.ToApplicationMessage();
-            ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(applicationMessage));
+
+            try
+            {
+                ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(applicationMessage));
+            }
+            catch (Exception exception)
+            {
+                MqttTrace.Error(nameof(MqttClient), exception, "Unhandled exception while handling application message.");    
+            }
         }
 
         private Task ProcessReceivedPublishPacket(MqttPublishPacket publishPacket)

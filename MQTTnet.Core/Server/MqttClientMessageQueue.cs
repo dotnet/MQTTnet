@@ -35,7 +35,7 @@ namespace MQTTnet.Core.Server
             _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
             _cancellationTokenSource = new CancellationTokenSource();
 
-            Task.Run(() => SendPendingPublishPacketsAsync(_cancellationTokenSource.Token));
+            Task.Run(() => SendPendingPublishPacketsAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
         }
 
         public void Stop()
@@ -45,14 +45,13 @@ namespace MQTTnet.Core.Server
             _cancellationTokenSource = null;
         }
 
-        public void Enqueue(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
+        public void Enqueue(MqttPublishPacket publishPacket)
         {
-            if (senderClientSession == null) throw new ArgumentNullException(nameof(senderClientSession));
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 
             lock (_pendingPublishPackets)
             {
-                _pendingPublishPackets.Add(new MqttClientPublishPacketContext(senderClientSession, publishPacket));
+                _pendingPublishPackets.Add(new MqttClientPublishPacketContext(publishPacket));
                 _gate.Set();
             }
         }

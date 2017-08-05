@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Core.Server
 {
-    public sealed class DefaultEndpointOptions
+    public sealed class MqttServerDefaultEndpointOptions
     {
         public bool IsEnabled { get; set; } = true;
 

@@ -8,7 +8,7 @@ namespace MQTTnet
 {
     public class MqttClientFactory
     {
-        public MqttClient CreateMqttClient(MqttClientOptions options)
+        public IMqttClient CreateMqttClient(MqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

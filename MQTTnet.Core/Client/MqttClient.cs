@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -13,10 +12,9 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Client
 {
-    public class MqttClient
+    public class MqttClient : IMqttClient
     {
-        private readonly ConcurrentDictionary<ushort, MqttPublishPacket> _pendingExactlyOncePublishPackets = new ConcurrentDictionary<ushort, MqttPublishPacket>();
-        private readonly HashSet<ushort> _processedPublishPackets = new HashSet<ushort>();
+        private readonly HashSet<ushort> _unacknowledgedPublishPackets = new HashSet<ushort>();
 
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         private readonly MqttClientOptions _options;
@@ -63,7 +61,6 @@ namespace MQTTnet.Core.Client
 
             _cancellationTokenSource = new CancellationTokenSource();
             _latestPacketIdentifier = 0;
-            _processedPublishPackets.Clear();
             _packetDispatcher.Reset();
             IsConnected = true;
 
@@ -105,6 +102,7 @@ namespace MQTTnet.Core.Client
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
             if (!topicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
+
             ThrowIfNotConnected();
 
             var subscribePacket = new MqttSubscribePacket
@@ -154,6 +152,7 @@ namespace MQTTnet.Core.Client
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
+                // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
                 await SendAsync(publishPacket);
             }
             else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
@@ -164,8 +163,8 @@ namespace MQTTnet.Core.Client
             else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
             {
                 publishPacket.PacketIdentifier = GetNewPacketIdentifier();
-                await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket);
-                await SendAsync(publishPacket.CreateResponse<MqttPubCompPacket>());
+                var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket);
+                await SendAndReceiveAsync<MqttPubCompPacket>(pubRecPacket.CreateResponse<MqttPubRelPacket>());
             }
         }
 
@@ -208,14 +207,12 @@ namespace MQTTnet.Core.Client
                     return DisconnectAsync();
                 }
 
-                var publishPacket = mqttPacket as MqttPublishPacket;
-                if (publishPacket != null)
+                if (mqttPacket is MqttPublishPacket publishPacket)
                 {
                     return ProcessReceivedPublishPacket(publishPacket);
                 }
 
-                var pubRelPacket = mqttPacket as MqttPubRelPacket;
-                if (pubRelPacket != null)
+                if (mqttPacket is MqttPubRelPacket pubRelPacket)
                 {
                     return ProcessReceivedPubRelPacket(pubRelPacket);
                 }
@@ -232,13 +229,16 @@ namespace MQTTnet.Core.Client
 
         private void FireApplicationMessageReceivedEvent(MqttPublishPacket publishPacket)
         {
-            if (publishPacket.QualityOfServiceLevel != MqttQualityOfServiceLevel.AtMostOnce)
-            {
-                _processedPublishPackets.Add(publishPacket.PacketIdentifier);
-            }
-
             var applicationMessage = publishPacket.ToApplicationMessage();
-            ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(applicationMessage));
+
+            try
+            {
+                ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(applicationMessage));
+            }
+            catch (Exception exception)
+            {
+                MqttTrace.Error(nameof(MqttClient), exception, "Unhandled exception while handling application message.");    
+            }
         }
 
         private Task ProcessReceivedPublishPacket(MqttPublishPacket publishPacket)
@@ -257,7 +257,13 @@ namespace MQTTnet.Core.Client
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
             {
-                _pendingExactlyOncePublishPackets[publishPacket.PacketIdentifier] = publishPacket;
+                // QoS 2 is implement as method "B" [4.3.3 QoS 2: Exactly once delivery]
+                lock (_unacknowledgedPublishPackets)
+                {
+                    _unacknowledgedPublishPackets.Add(publishPacket.PacketIdentifier);
+                }
+
+                FireApplicationMessageReceivedEvent(publishPacket);
                 return SendAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
             }
 
@@ -266,15 +272,12 @@ namespace MQTTnet.Core.Client
 
         private async Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket)
         {
-            MqttPublishPacket originalPublishPacket;
-            if (!_pendingExactlyOncePublishPackets.TryRemove(pubRelPacket.PacketIdentifier, out originalPublishPacket))
+            lock (_unacknowledgedPublishPackets)
             {
-                throw new MqttCommunicationException();
+                _unacknowledgedPublishPackets.Remove(pubRelPacket.PacketIdentifier);
             }
-
-            await SendAsync(originalPublishPacket.CreateResponse<MqttPubCompPacket>());
-
-            FireApplicationMessageReceivedEvent(originalPublishPacket);
+            
+            await SendAsync(pubRelPacket.CreateResponse<MqttPubCompPacket>());
         }
 
         private Task SendAsync(MqttBasePacket packet)
@@ -292,8 +295,8 @@ namespace MQTTnet.Core.Client
                     return false;
                 }
 
-                var pi1 = requestPacket as IPacketWithIdentifier;
-                var pi2 = p as IPacketWithIdentifier;
+                var pi1 = requestPacket as IMqttPacketWithIdentifier;
+                var pi2 = p as IMqttPacketWithIdentifier;
 
                 if (pi1 != null && pi2 != null)
                 {

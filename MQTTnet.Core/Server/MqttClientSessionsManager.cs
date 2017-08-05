@@ -22,7 +22,7 @@ namespace MQTTnet.Core.Server
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived; 
+        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
         public async Task RunClientSessionAsync(MqttClientConnectedEventArgs eventArgs)
         {
@@ -127,14 +127,24 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        private void DispatchPublishPacket(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
+        public void DispatchPublishPacket(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
         {
-            var eventArgs = new MqttApplicationMessageReceivedEventArgs(senderClientSession.ClientId, publishPacket.ToApplicationMessage());
-            ApplicationMessageReceived?.Invoke(this, eventArgs);
-
-            foreach (var clientSession in _clientSessions.Values.ToList())
+            try
             {
-                clientSession.EnqueuePublishPacket(senderClientSession, publishPacket);
+                var eventArgs = new MqttApplicationMessageReceivedEventArgs(senderClientSession?.ClientId, publishPacket.ToApplicationMessage());
+                ApplicationMessageReceived?.Invoke(this, eventArgs);
+            }
+            catch (Exception exception)
+            {
+                MqttTrace.Error(nameof(MqttClientSessionsManager), exception, "Error while processing application message");
+            }
+
+            lock (_syncRoot)
+            {
+                foreach (var clientSession in _clientSessions.Values.ToList())
+                {
+                    clientSession.EnqueuePublishPacket(publishPacket);
+                }
             }
         }
     }

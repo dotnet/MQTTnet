@@ -4,7 +4,7 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Packets
 {
-    public sealed class MqttSubAckPacket : MqttBasePacket, IPacketWithIdentifier
+    public sealed class MqttSubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
         public ushort PacketIdentifier { get; set; }
 

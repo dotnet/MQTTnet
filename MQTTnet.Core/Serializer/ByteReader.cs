@@ -24,7 +24,7 @@ namespace MQTTnet.Core.Serializer
             return result;
         }
 
-        public byte Read(int count)
+        public int Read(int count)
         {
             if (_index + count > 8)
             {
@@ -42,7 +42,7 @@ namespace MQTTnet.Core.Serializer
                 _index++;
             }
 
-            return (byte)result;
+            return result;
         }
     }
 }

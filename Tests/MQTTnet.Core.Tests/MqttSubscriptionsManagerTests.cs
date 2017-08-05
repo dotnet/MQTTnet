@@ -24,7 +24,7 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
             };
 
-            Assert.IsTrue(sm.IsTopicSubscribed(pp));
+            Assert.IsTrue(sm.IsSubscribed(pp));
         }
 
         [TestMethod]
@@ -43,7 +43,7 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
             };
 
-            Assert.IsFalse(sm.IsTopicSubscribed(pp));
+            Assert.IsFalse(sm.IsSubscribed(pp));
         }
 
         [TestMethod]
@@ -62,13 +62,13 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
             };
 
-            Assert.IsTrue(sm.IsTopicSubscribed(pp));
+            Assert.IsTrue(sm.IsSubscribed(pp));
 
             var up = new MqttUnsubscribePacket();
             up.TopicFilters.Add("A/B/C");
             sm.Unsubscribe(up);
 
-            Assert.IsFalse(sm.IsTopicSubscribed(pp));
+            Assert.IsFalse(sm.IsSubscribed(pp));
         }
     }
 }

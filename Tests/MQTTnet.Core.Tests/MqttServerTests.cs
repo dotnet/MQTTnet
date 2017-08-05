@@ -68,7 +68,64 @@ namespace MQTTnet.Core.Tests
             Assert.AreEqual(1, receivedMessagesCount);
         }
 
-        private MqttClient ConnectTestClient(string clientId, MqttApplicationMessage willMessage, MqttServer server)
+        [TestMethod]
+        public async Task MqttServer_Unsubscribe()
+        {
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { new TestMqttServerAdapter() });
+            s.Start();
+
+            var c1 = ConnectTestClient("c1", null, s);
+            var c2 = ConnectTestClient("c2", null, s);
+
+            var receivedMessagesCount = 0;
+            c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
+            
+            var message = new MqttApplicationMessage("a", new byte[0], MqttQualityOfServiceLevel.AtLeastOnce, false);
+
+            await c2.PublishAsync(message);
+            Assert.AreEqual(0, receivedMessagesCount);
+
+            await c1.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
+            await c2.PublishAsync(message);
+
+            await Task.Delay(500);
+            Assert.AreEqual(1, receivedMessagesCount);
+
+            await c1.Unsubscribe("a");
+            await c2.PublishAsync(message);
+
+            await Task.Delay(500);
+            Assert.AreEqual(1, receivedMessagesCount);
+
+            s.Stop();
+            await Task.Delay(500);
+
+            Assert.AreEqual(1, receivedMessagesCount);
+        }
+
+        [TestMethod]
+        public async Task MqttServer_Publish()
+        {
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { new TestMqttServerAdapter() });
+            s.Start();
+
+            var c1 = ConnectTestClient("c1", null, s);
+
+            var receivedMessagesCount = 0;
+            c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
+
+            var message = new MqttApplicationMessage("a", new byte[0], MqttQualityOfServiceLevel.AtLeastOnce, false);
+            await c1.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
+
+            s.Publish(message);
+            await Task.Delay(500);
+
+            s.Stop();
+
+            Assert.AreEqual(1, receivedMessagesCount);
+        }
+
+        private static MqttClient ConnectTestClient(string clientId, MqttApplicationMessage willMessage, MqttServer server)
         {
             var adapterA = new TestMqttCommunicationAdapter();
             var adapterB = new TestMqttCommunicationAdapter();

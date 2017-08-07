@@ -153,13 +153,16 @@ namespace MQTTnet.Core.Server
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
                 _publishPacketReceivedCallback(this, publishPacket);
+                return Task.FromResult(0);
             }
-            else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
+
+            if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
             {
                 _publishPacketReceivedCallback(this, publishPacket);
                 return _adapter.SendPacketAsync(new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier }, _options.DefaultCommunicationTimeout);
             }
-            else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
+
+            if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
             {
                 // QoS 2 is implement as method "B" [4.3.3 QoS 2: Exactly once delivery]
                 lock (_unacknowledgedPublishPackets)
@@ -172,7 +175,7 @@ namespace MQTTnet.Core.Server
                 return _adapter.SendPacketAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier }, _options.DefaultCommunicationTimeout);
             }
 
-            throw new MqttCommunicationException("Received not supported QoS level.");
+            throw new MqttCommunicationException("Received a not supported QoS level.");
         }
 
         private Task HandleIncomingPubRelPacketAsync(MqttPubRelPacket pubRelPacket)

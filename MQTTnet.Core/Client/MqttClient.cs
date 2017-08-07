@@ -267,7 +267,7 @@ namespace MQTTnet.Core.Client
                 return SendAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
             }
 
-            throw new InvalidOperationException();
+            throw new MqttCommunicationException("Received a not supported QoS level.");
         }
 
         private async Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket)

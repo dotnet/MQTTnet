@@ -405,7 +405,7 @@ namespace MQTTnet.Core.Tests
 
         private void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value)
         {
-            var serializer = new DefaultMqttV311PacketSerializer();
+            var serializer = new MqttV311PacketSerializer();
             var channel = new TestChannel();
             serializer.SerializeAsync(packet, channel).Wait();
             var buffer = channel.ToArray();
@@ -415,7 +415,7 @@ namespace MQTTnet.Core.Tests
 
         private void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value)
         {
-            var serializer = new DefaultMqttV311PacketSerializer();
+            var serializer = new MqttV311PacketSerializer();
 
             var channel1 = new TestChannel();
             serializer.SerializeAsync(packet, channel1).Wait();

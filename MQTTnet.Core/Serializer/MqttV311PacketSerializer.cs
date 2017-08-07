@@ -9,8 +9,10 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Serializer
 {
-    public sealed class DefaultMqttV311PacketSerializer : IMqttPacketSerializer
+    public sealed class MqttV311PacketSerializer : IMqttPacketSerializer
     {
+        private static readonly byte[] MqttV311Prefix = Encoding.UTF8.GetBytes("MQTT");
+
         public Task SerializeAsync(MqttBasePacket packet, IMqttCommunicationChannel destination)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
@@ -351,8 +353,6 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private static readonly byte[] MqttPrefix = Encoding.UTF8.GetBytes("MQTT");
-
         private static Task SerializeAsync(MqttConnectPacket packet, IMqttCommunicationChannel destination)
         {
             ValidateConnectPacket(packet);
@@ -361,7 +361,7 @@ namespace MQTTnet.Core.Serializer
             {
                 // Write variable header
                 output.Write(0x00, 0x04); // 3.1.2.1 Protocol Name
-                output.Write(MqttPrefix);
+                output.Write(MqttV311Prefix);
                 output.Write(0x04); // 3.1.2.2 Protocol Level
 
                 var connectFlags = new ByteWriter(); // 3.1.2.3 Connect Flags

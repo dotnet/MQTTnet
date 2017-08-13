@@ -9,13 +9,13 @@ namespace MQTTnet.Core.Serializer
 {
     public sealed class MqttPacketWriter : IDisposable
     {
-        private readonly MemoryStream _buffer = new MemoryStream(512);
+        private readonly MemoryStream _buffer = new MemoryStream(1024);
 
         public void InjectFixedHeader(MqttControlPacketType packetType, byte flags = 0)
         {
-            var fixedHeader = (byte)((byte)packetType << 4);
+            var fixedHeader = (int)packetType << 4;
             fixedHeader |= flags;
-            InjectFixedHeader(fixedHeader);
+            InjectFixedHeader((byte)fixedHeader);
         }
 
         public void Write(byte value)

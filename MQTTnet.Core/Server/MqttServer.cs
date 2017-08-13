@@ -25,7 +25,7 @@ namespace MQTTnet.Core.Server
             _clientSessionsManager.ApplicationMessageReceived += (s, e) => ApplicationMessageReceived?.Invoke(s, e);
         }
 
-        public IList<string> GetConnectedClients()
+        public IList<ConnectedMqttClient> GetConnectedClients()
         {
             return _clientSessionsManager.GetConnectedClients();
         }

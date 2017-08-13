@@ -12,8 +12,23 @@ using MQTTnet.Core.Serializer;
 namespace MQTTnet.Core.Tests
 {
     [TestClass]
-    public class DefaultMqttV311PacketSerializerTests
+    public class MqttPacketSerializerTests
     {
+        [TestMethod]
+        public void SerializeV310_MqttConnectPacket()
+        {
+            var p = new MqttConnectPacket
+            {
+                ClientId = "XYZ",
+                Password = "PASS",
+                Username = "USER",
+                KeepAlivePeriod = 123,
+                CleanSession = true
+            };
+
+            SerializeAndCompare(p, "EB0ABE1RSXNkcAPCAHsAA1hZWgAEVVNFUgAEUEFTUw==", MqttProtocolVersion.V310);
+        }
+
         [TestMethod]
         public void SerializeV311_MqttConnectPacket()
         {
@@ -94,6 +109,17 @@ namespace MQTTnet.Core.Tests
             };
 
             SerializeAndCompare(p, "IAIBBQ==");
+        }
+
+        [TestMethod]
+        public void SerializeV310_MqttConnAckPacket()
+        {
+            var p = new MqttConnAckPacket
+            {
+                ConnectReturnCode = MqttConnectReturnCode.ConnectionAccepted
+            };
+
+            SerializeAndCompare(p, "IAIAAA==", MqttProtocolVersion.V310);
         }
 
         [TestMethod]
@@ -403,9 +429,9 @@ namespace MQTTnet.Core.Tests
             }
         }
 
-        private void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value)
+        private void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
-            var serializer = new MqttV311PacketSerializer();
+            var serializer = new MqttPacketSerializer { ProtocolVersion = protocolVersion };
             var channel = new TestChannel();
             serializer.SerializeAsync(packet, channel).Wait();
             var buffer = channel.ToArray();
@@ -415,7 +441,7 @@ namespace MQTTnet.Core.Tests
 
         private void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value)
         {
-            var serializer = new MqttV311PacketSerializer();
+            var serializer = new MqttPacketSerializer();
 
             var channel1 = new TestChannel();
             serializer.SerializeAsync(packet, channel1).Wait();

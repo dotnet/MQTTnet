@@ -11,14 +11,15 @@ namespace MQTTnet.Core.Adapter
 {
     public class MqttChannelCommunicationAdapter : IMqttCommunicationAdapter
     {
-        private readonly IMqttPacketSerializer _serializer;
         private readonly IMqttCommunicationChannel _channel;
 
         public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer)
         {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
-            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+            PacketSerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
+
+        public IMqttPacketSerializer PacketSerializer { get; }
 
         public async Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {
@@ -41,7 +42,7 @@ namespace MQTTnet.Core.Adapter
             bool hasTimeout;
             try
             {
-                var task = _serializer.SerializeAsync(packet, _channel);
+                var task = PacketSerializer.SerializeAsync(packet, _channel);
                 hasTimeout = await Task.WhenAny(Task.Delay(timeout), task) != task;
             }
             catch (Exception exception)
@@ -60,7 +61,7 @@ namespace MQTTnet.Core.Adapter
             MqttBasePacket packet;
             if (timeout > TimeSpan.Zero)
             {
-                var workerTask = _serializer.DeserializeAsync(_channel);
+                var workerTask = PacketSerializer.DeserializeAsync(_channel);
                 var timeoutTask = Task.Delay(timeout);
                 var hasTimeout = Task.WhenAny(timeoutTask, workerTask) == timeoutTask;
 
@@ -73,7 +74,7 @@ namespace MQTTnet.Core.Adapter
             }
             else
             {
-                packet = await _serializer.DeserializeAsync(_channel);
+                packet = await PacketSerializer.DeserializeAsync(_channel);
             }
 
             if (packet == null)

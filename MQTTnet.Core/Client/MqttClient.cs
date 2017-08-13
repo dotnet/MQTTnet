@@ -27,6 +27,8 @@ namespace MQTTnet.Core.Client
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
+
+            _adapter.PacketSerializer.ProtocolVersion = options.ProtocolVersion;
         }
 
         public event EventHandler Connected;

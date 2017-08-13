@@ -12,7 +12,7 @@ namespace MQTTnet
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            return new MqttClient(options, new MqttChannelCommunicationAdapter(new MqttTcpChannel(), new MqttV311PacketSerializer()));
+            return new MqttClient(options, new MqttChannelCommunicationAdapter(new MqttTcpChannel(), new MqttPacketSerializer()));
         }
     }
 }

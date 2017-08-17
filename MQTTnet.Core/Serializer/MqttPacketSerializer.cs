@@ -9,8 +9,13 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Serializer
 {
-    public sealed class DefaultMqttV311PacketSerializer : IMqttPacketSerializer
+    public sealed class MqttPacketSerializer : IMqttPacketSerializer
     {
+        private static byte[] ProtocolVersionV311Name { get; } = Encoding.UTF8.GetBytes("MQTT");
+        private static byte[] ProtocolVersionV310Name { get; } = Encoding.UTF8.GetBytes("MQIs");
+
+        public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
+
         public Task SerializeAsync(MqttBasePacket packet, IMqttCommunicationChannel destination)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
@@ -255,12 +260,21 @@ namespace MQTTnet.Core.Serializer
         private static async Task<MqttBasePacket> DeserializeConnectAsync(MqttPacketReader reader)
         {
             await reader.ReadRemainingDataAsync(2); // Skip 2 bytes
-            
-            var protocolName = await reader.ReadRemainingDataAsync(4);
 
-            if (Encoding.UTF8.GetString(protocolName, 0, protocolName.Length) != "MQTT")
+            MqttProtocolVersion protocolVersion;
+            var protocolName = await reader.ReadRemainingDataAsync(4);
+            if (protocolName.SequenceEqual(ProtocolVersionV310Name))
             {
-                throw new MqttProtocolViolationException("Protocol name is not 'MQTT'.");
+                await reader.ReadRemainingDataAsync(2);
+                protocolVersion = MqttProtocolVersion.V310;
+            }
+            else if (protocolName.SequenceEqual(ProtocolVersionV311Name))
+            {
+                protocolVersion = MqttProtocolVersion.V311;
+            }
+            else
+            {
+                throw new MqttProtocolViolationException("Protocol name is not supported.");
             }
 
             var protocolLevel = await reader.ReadRemainingDataByteAsync();
@@ -271,6 +285,7 @@ namespace MQTTnet.Core.Serializer
 
             var packet = new MqttConnectPacket
             {
+                ProtocolVersion = protocolVersion,
                 CleanSession = connectFlagsReader.Read()
             };
 
@@ -351,9 +366,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private static readonly byte[] MqttPrefix = Encoding.UTF8.GetBytes("MQTT");
-
-        private static Task SerializeAsync(MqttConnectPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttConnectPacket packet, IMqttCommunicationChannel destination)
         {
             ValidateConnectPacket(packet);
 
@@ -361,9 +374,19 @@ namespace MQTTnet.Core.Serializer
             {
                 // Write variable header
                 output.Write(0x00, 0x04); // 3.1.2.1 Protocol Name
-                output.Write(MqttPrefix);
-                output.Write(0x04); // 3.1.2.2 Protocol Level
-
+                if (ProtocolVersion == MqttProtocolVersion.V311)
+                {
+                    output.Write(ProtocolVersionV311Name);
+                    output.Write(0x04); // 3.1.2.2 Protocol Level (4)
+                }
+                else
+                {
+                    output.Write(ProtocolVersionV310Name);
+                    output.Write(0x64);
+                    output.Write(0x70);
+                    output.Write(0x03); // Protocol Level (3)
+                }
+                
                 var connectFlags = new ByteWriter(); // 3.1.2.3 Connect Flags
                 connectFlags.Write(false); // Reserved
                 connectFlags.Write(packet.CleanSession);
@@ -408,18 +431,33 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private static Task SerializeAsync(MqttConnAckPacket packet, IMqttCommunicationChannel destination)
+        private Task SerializeAsync(MqttConnAckPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
                 var connectAcknowledgeFlags = new ByteWriter();
-                connectAcknowledgeFlags.Write(packet.IsSessionPresent);
 
+                if (ProtocolVersion == MqttProtocolVersion.V311)
+                {
+                    connectAcknowledgeFlags.Write(packet.IsSessionPresent);
+                }
+                
                 output.Write(connectAcknowledgeFlags);
                 output.Write((byte)packet.ConnectReturnCode);
 
                 output.InjectFixedHeader(MqttControlPacketType.ConnAck);
                 return output.WriteToAsync(destination);
+            }
+        }
+
+        private static async Task SerializeAsync(MqttPubRelPacket packet, IMqttCommunicationChannel destination)
+        {
+            using (var output = new MqttPacketWriter())
+            {
+                output.Write(packet.PacketIdentifier);
+
+                output.InjectFixedHeader(MqttControlPacketType.PubRel, 0x02);
+                await output.WriteToAsync(destination);
             }
         }
 
@@ -492,17 +530,6 @@ namespace MQTTnet.Core.Serializer
 
                 output.InjectFixedHeader(MqttControlPacketType.PubRec);
                 return output.WriteToAsync(destination);
-            }
-        }
-
-        private static async Task SerializeAsync(MqttPubRelPacket packet, IMqttCommunicationChannel destination)
-        {
-            using (var output = new MqttPacketWriter())
-            {
-                output.Write(packet.PacketIdentifier);
-
-                output.InjectFixedHeader(MqttControlPacketType.PubRel, 0x02);
-                await output.WriteToAsync(destination);
             }
         }
 

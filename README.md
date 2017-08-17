@@ -5,40 +5,47 @@
 [![NuGet Badge](https://buildstats.info/nuget/MQTTnet)](https://www.nuget.org/packages/MQTTnet)
 
 # MQTTnet
-MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server. The implementation is based on the documentation from http://mqtt.org/.
+MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker). The implementation is based on the documentation from http://mqtt.org/.
 
-## Features
-* MQTT client included
-* MQTT server (broker) included
-* TLS 1.2 support for client and server (but not UWP servers)
+# Features
+
+## General
 * Async support
-* Rx support (via another project)
-* List of connected clients available (server only)
+* TLS 1.2 support for client and server (but not UWP servers)
 * Extensible communication channels (i.e. In-Memory, TCP, TCP+SSL, WebSockets (not included in this project))
-* Server is able to publish its own messages (no loopback client required)
-* Access to internal trace messages
-* Extensible client credential validation (server only)
-* Unit tested (50+ tests)
-* Lightweight (only the low level implementation of MQTT, no overhead)
 * Interfaces included for mocking and testing
+* Lightweight (only the low level implementation of MQTT, no overhead)
+* Access to internal trace messages
+* Unit tested (50+ tests)
 
-## Supported frameworks
+## Client
+* Rx support (via another project)
+
+## Server (broker)
+* List of connected clients available
+* Supports connected clients with different protocol versions at the same time
+* Able to publish its own messages (no loopback client required)
+* Able to receive every messages (no loopback client required)
+* Extensible client credential validation
+
+# Supported frameworks
 * .NET Standard 1.3+
 * .NET Core 1.1+
 * .NET Core App 1.1+
 * .NET Framework 4.5.2+ (x86, x64, AnyCPU)
 * Universal Windows (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU)
 
-## Supported MQTT versions
+# Supported MQTT versions
 * 3.1.1
+* 3.1.0
 
-## Nuget
+# Nuget
 This library is available as a nuget package: https://www.nuget.org/packages/MQTTnet/
 
-## Contributions
+# Contributions
 If you want to contribute to this project just create a pull request.
 
-## References
+# References
 This library is used in the following projects:
 
 * MQTT Client Rx (Wrapper for Reactive Extensions, https://github.com/1iveowl/MQTTClient.rx)
@@ -46,8 +53,8 @@ This library is used in the following projects:
 
 If you use this library and want to see your project here please let me know.
 
-# MqttClient
-## Example
+# Examples
+## MqttClient
 
 ```csharp
 var options = new MqttClientOptions
@@ -119,9 +126,7 @@ while (true)
 }
 ```
 
-# MqttServer
-
-## Example 
+## MqttServer
 
 ```csharp
 var options = new MqttServerOptions

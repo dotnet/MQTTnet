@@ -1,4 +1,5 @@
 ﻿using System;
+using MQTTnet.Core.Serializer;
 
 namespace MQTTnet.Core.Client
 {
@@ -7,8 +8,8 @@ namespace MQTTnet.Core.Client
         public string Server { get; set; }
 
         public int? Port { get; set; }
-        
-        public MqttClientTlsOptions TlsOptions { get; } = new MqttClientTlsOptions();
+
+        public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
 
         public string UserName { get; set; }
 
@@ -21,5 +22,7 @@ namespace MQTTnet.Core.Client
         public TimeSpan KeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(5);
 
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
+
+        public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
     }
 }

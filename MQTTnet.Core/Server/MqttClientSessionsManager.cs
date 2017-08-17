@@ -34,6 +34,9 @@ namespace MQTTnet.Core.Server
                     throw new MqttProtocolViolationException("The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
                 }
 
+                // Switch to the required protocol version before sending any response.
+                eventArgs.ClientAdapter.PacketSerializer.ProtocolVersion = connectPacket.ProtocolVersion;
+
                 var connectReturnCode = ValidateConnection(connectPacket);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
@@ -73,11 +76,15 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        public IList<string> GetConnectedClients()
+        public IList<ConnectedMqttClient> GetConnectedClients()
         {
             lock (_syncRoot)
             {
-                return _clientSessions.Where(s => s.Value.IsConnected).Select(s => s.Key).ToList();
+                return _clientSessions.Where(s => s.Value.IsConnected).Select(s => new ConnectedMqttClient
+                {
+                    ClientId = s.Value.ClientId,
+                    ProtocolVersion = s.Value.Adapter.PacketSerializer.ProtocolVersion
+                }).ToList();
             }
         }
 

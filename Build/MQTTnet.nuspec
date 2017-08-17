@@ -14,6 +14,7 @@
 * [Server] Providing the used protocol version of connected clients
 * [Client] Added support for protocol version 3.1.0
 * [Core] Several minor performance improvements
+* [Core] Fixed an issue with connection management (Thanks to wuzhenda; Zuendelmeister)
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT MQTTClient MQTTServer MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Queue Hardware Arduino</tags> 

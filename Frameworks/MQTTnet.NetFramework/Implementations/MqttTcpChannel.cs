@@ -12,12 +12,11 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
-        private readonly Socket _socket;
+        private Socket _socket;
         private SslStream _sslStream;
 
         public MqttTcpChannel()
         {
-            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
         }
 
         public MqttTcpChannel(Socket socket, SslStream sslStream)
@@ -31,6 +30,11 @@ namespace MQTTnet.Implementations
             if (options == null) throw new ArgumentNullException(nameof(options));
             try
             {
+                if (_socket == null)
+                {
+                    _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                }
+
                 await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.GetPort(), null);
 
                 if (options.TlsOptions.UseTls)
@@ -49,8 +53,7 @@ namespace MQTTnet.Implementations
         {
             try
             {
-                _sslStream.Dispose();
-                _socket.Dispose();
+                Dispose();
                 return Task.FromResult(0);
             }
             catch (SocketException exception)
@@ -108,6 +111,9 @@ namespace MQTTnet.Implementations
         {
             _socket?.Dispose();
             _sslStream?.Dispose();
+
+            _socket = null;
+            _sslStream = null;
         }
 
         private static X509CertificateCollection LoadCertificates(MqttClientOptions options)

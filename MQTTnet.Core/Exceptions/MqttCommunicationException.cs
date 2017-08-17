@@ -4,7 +4,7 @@ namespace MQTTnet.Core.Exceptions
 {
     public class MqttCommunicationException : Exception
     {
-        public MqttCommunicationException()
+        protected MqttCommunicationException()
         {
         }
 
@@ -15,6 +15,11 @@ namespace MQTTnet.Core.Exceptions
 
         public MqttCommunicationException(string message)
             : base(message)
+        {
+        }
+
+        public MqttCommunicationException(string message, Exception innerException)
+            : base(message, innerException)
         {
         }
     }

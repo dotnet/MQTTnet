@@ -20,6 +20,7 @@ namespace MQTTnet.Core.Client
         private readonly MqttClientOptions _options;
         private readonly IMqttCommunicationAdapter _adapter;
 
+        private bool _disconnectedEventSuspended;
         private int _latestPacketIdentifier;
         private CancellationTokenSource _cancellationTokenSource;
 
@@ -48,49 +49,64 @@ namespace MQTTnet.Core.Client
                 throw new MqttProtocolViolationException("It is not allowed to connect with a server after the connection is established.");
             }
 
-            var connectPacket = new MqttConnectPacket
+            try
             {
-                ClientId = _options.ClientId,
-                Username = _options.UserName,
-                Password = _options.Password,
-                CleanSession = _options.CleanSession,
-                KeepAlivePeriod = (ushort)_options.KeepAlivePeriod.TotalSeconds,
-                WillMessage = willApplicationMessage
-            };
+                _disconnectedEventSuspended = false;
 
-            await _adapter.ConnectAsync(_options, _options.DefaultCommunicationTimeout);
-            MqttTrace.Verbose(nameof(MqttClient), "Connection with server established.");
+                await _adapter.ConnectAsync(_options, _options.DefaultCommunicationTimeout);
 
-            _cancellationTokenSource = new CancellationTokenSource();
-            _latestPacketIdentifier = 0;
-            _packetDispatcher.Reset();
-            IsConnected = true;
+                MqttTrace.Verbose(nameof(MqttClient), "Connection with server established.");
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(() => ReceivePackets(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                var connectPacket = new MqttConnectPacket
+                {
+                    ClientId = _options.ClientId,
+                    Username = _options.UserName,
+                    Password = _options.Password,
+                    CleanSession = _options.CleanSession,
+                    KeepAlivePeriod = (ushort)_options.KeepAlivePeriod.TotalSeconds,
+                    WillMessage = willApplicationMessage
+                };
 
-            var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket);
-            if (response.ConnectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
-            {
-                await DisconnectAsync();
-                throw new MqttConnectingFailedException(response.ConnectReturnCode);
+                _cancellationTokenSource = new CancellationTokenSource();
+                _latestPacketIdentifier = 0;
+                _packetDispatcher.Reset();
+
+                StartReceivePackets();
+
+                var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket);
+                if (response.ConnectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
+                {
+                    await DisconnectInternalAsync();
+                    throw new MqttConnectingFailedException(response.ConnectReturnCode);
+                }
+
+                if (_options.KeepAlivePeriod != TimeSpan.Zero)
+                {
+                    StartSendKeepAliveMessages();
+                }
+
+                MqttTrace.Verbose(nameof(MqttClient), "MQTT connection with server established.");
+
+                IsConnected = true;
+                Connected?.Invoke(this, EventArgs.Empty);
             }
-
-            if (_options.KeepAlivePeriod != TimeSpan.Zero)
+            catch (Exception)
             {
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                Task.Run(() => SendKeepAliveMessagesAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                await DisconnectInternalAsync();
+                throw;
             }
-
-            Connected?.Invoke(this, EventArgs.Empty);
         }
 
         public async Task DisconnectAsync()
         {
-            await SendAsync(new MqttDisconnectPacket());
-            await DisconnectInternalAsync();
+            try
+            {
+                await SendAsync(new MqttDisconnectPacket());
+            }
+            finally
+            {
+                await DisconnectInternalAsync();
+            }
         }
 
         public Task<IList<MqttSubscribeResult>> SubscribeAsync(params TopicFilter[] topicFilters)
@@ -181,8 +197,9 @@ namespace MQTTnet.Core.Client
             {
                 await _adapter.DisconnectAsync();
             }
-            catch
+            catch (Exception exception)
             {
+                MqttTrace.Warning(nameof(MqttClient), exception, "Error while disconnecting.");
             }
             finally
             {
@@ -191,7 +208,12 @@ namespace MQTTnet.Core.Client
                 _cancellationTokenSource = null;
 
                 IsConnected = false;
-                Disconnected?.Invoke(this, EventArgs.Empty);
+
+                if (!_disconnectedEventSuspended)
+                {
+                    _disconnectedEventSuspended = true;
+                    Disconnected?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -239,7 +261,7 @@ namespace MQTTnet.Core.Client
             }
             catch (Exception exception)
             {
-                MqttTrace.Error(nameof(MqttClient), exception, "Unhandled exception while handling application message.");    
+                MqttTrace.Error(nameof(MqttClient), exception, "Unhandled exception while handling application message.");
             }
         }
 
@@ -278,7 +300,7 @@ namespace MQTTnet.Core.Client
             {
                 _unacknowledgedPublishPackets.Remove(pubRelPacket.PacketIdentifier);
             }
-            
+
             await SendAsync(pubRelPacket.CreateResponse<MqttPubCompPacket>());
         }
 
@@ -300,15 +322,12 @@ namespace MQTTnet.Core.Client
                 var pi1 = requestPacket as IMqttPacketWithIdentifier;
                 var pi2 = p as IMqttPacketWithIdentifier;
 
-                if (pi1 != null && pi2 != null)
+                if (pi1 == null || pi2 == null)
                 {
-                    if (pi1.PacketIdentifier != pi2.PacketIdentifier)
-                    {
-                        return false;
-                    }
+                    return true;
                 }
 
-                return true;
+                return pi1.PacketIdentifier == pi2.PacketIdentifier;
             }
 
             await _adapter.SendPacketAsync(requestPacket, _options.DefaultCommunicationTimeout);
@@ -335,15 +354,16 @@ namespace MQTTnet.Core.Client
             catch (MqttCommunicationException exception)
             {
                 MqttTrace.Warning(nameof(MqttClient), exception, "MQTT communication error while receiving packets.");
+                await DisconnectInternalAsync();
             }
             catch (Exception exception)
             {
                 MqttTrace.Warning(nameof(MqttClient), exception, "Error while sending/receiving keep alive packets.");
+                await DisconnectInternalAsync();
             }
             finally
             {
                 MqttTrace.Information(nameof(MqttClient), "Stopped sending keep alive packets.");
-                await DisconnectInternalAsync();
             }
         }
 
@@ -354,27 +374,47 @@ namespace MQTTnet.Core.Client
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var mqttPacket = await _adapter.ReceivePacketAsync(TimeSpan.Zero);
-                    MqttTrace.Information(nameof(MqttClient), $"Received <<< {mqttPacket}");
+                    var packet = await _adapter.ReceivePacketAsync(TimeSpan.Zero);
+                    MqttTrace.Information(nameof(MqttClient), $"Received <<< {packet}");
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    Task.Run(() => ProcessReceivedPacketAsync(mqttPacket), cancellationToken);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    StartProcessReceivedPacket(packet, cancellationToken);
                 }
             }
             catch (MqttCommunicationException exception)
             {
-                MqttTrace.Warning(nameof(MqttClient), exception, "MQTT communication error while receiving packets.");
+                MqttTrace.Warning(nameof(MqttClient), exception, "MQTT communication exception while receiving packets.");
+                await DisconnectInternalAsync();
             }
             catch (Exception exception)
             {
-                MqttTrace.Error(nameof(MqttClient), exception, "Error while receiving packets.");
+                MqttTrace.Error(nameof(MqttClient), exception, "Unhandled exception while receiving packets.");
+                await DisconnectInternalAsync();
             }
             finally
             {
                 MqttTrace.Information(nameof(MqttClient), "Stopped receiving packets.");
-                await DisconnectInternalAsync();
             }
+        }
+
+        private void StartProcessReceivedPacket(MqttBasePacket packet, CancellationToken cancellationToken)
+        {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() => ProcessReceivedPacketAsync(packet), cancellationToken);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        }
+
+        private void StartReceivePackets()
+        {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() => ReceivePackets(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        }
+
+        private void StartSendKeepAliveMessages()
+        {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() => SendKeepAliveMessagesAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
     }
 }

@@ -57,7 +57,7 @@ namespace MQTTnet.Implementations
             }
             catch (Exception exception)
             {
-                MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while acceping connection at default endpoint.");
+                MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at default endpoint.");
             }
         }
     }

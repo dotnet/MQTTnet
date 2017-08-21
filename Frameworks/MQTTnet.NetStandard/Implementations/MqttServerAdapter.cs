@@ -90,6 +90,9 @@ namespace MQTTnet.Implementations
                 catch (Exception exception)
                 {
                     MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while acceping connection at default endpoint.");
+
+                    //excessive CPU consumed if in endless loop of socket errors
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
                 }
             }
         }
@@ -100,7 +103,7 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
-                    var clientSocket = await _defaultEndpointSocket.AcceptAsync();
+                    var clientSocket = await _tlsEndpointSocket.AcceptAsync();
 
                     var sslStream = new SslStream(new NetworkStream(clientSocket));
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false);
@@ -111,6 +114,9 @@ namespace MQTTnet.Implementations
                 catch (Exception exception)
                 {
                     MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while acceping connection at TLS endpoint.");
+
+                    //excessive CPU consumed if in endless loop of socket errors
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
                 }
             }
         }

@@ -8,7 +8,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 {
     public sealed partial class MainPage
     {
-        private MqttClient _mqttClient;
+        private IMqttClient _mqttClient;
 
         public MainPage()
         {

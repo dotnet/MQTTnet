@@ -9,93 +9,84 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Serializer
 {
-    public sealed class DefaultMqttV311PacketSerializer : IMqttPacketSerializer
+    public sealed class MqttPacketSerializer : IMqttPacketSerializer
     {
+        private static byte[] ProtocolVersionV311Name { get; } = Encoding.UTF8.GetBytes("MQTT");
+        private static byte[] ProtocolVersionV310Name { get; } = Encoding.UTF8.GetBytes("MQIs");
+
+        public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
+
         public Task SerializeAsync(MqttBasePacket packet, IMqttCommunicationChannel destination)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
 
-            var connectPacket = packet as MqttConnectPacket;
-            if (connectPacket != null)
+            if (packet is MqttConnectPacket connectPacket)
             {
                 return SerializeAsync(connectPacket, destination);
             }
 
-            var connAckPacket = packet as MqttConnAckPacket;
-            if (connAckPacket != null)
+            if (packet is MqttConnAckPacket connAckPacket)
             {
                 return SerializeAsync(connAckPacket, destination);
             }
 
-            var disconnectPacket = packet as MqttDisconnectPacket;
-            if (disconnectPacket != null)
+            if (packet is MqttDisconnectPacket disconnectPacket)
             {
                 return SerializeAsync(disconnectPacket, destination);
             }
 
-            var pingReqPacket = packet as MqttPingReqPacket;
-            if (pingReqPacket != null)
+            if (packet is MqttPingReqPacket pingReqPacket)
             {
                 return SerializeAsync(pingReqPacket, destination);
             }
 
-            var pingRespPacket = packet as MqttPingRespPacket;
-            if (pingRespPacket != null)
+            if (packet is MqttPingRespPacket pingRespPacket)
             {
                 return SerializeAsync(pingRespPacket, destination);
             }
 
-            var publishPacket = packet as MqttPublishPacket;
-            if (publishPacket != null)
+            if (packet is MqttPublishPacket publishPacket)
             {
                 return SerializeAsync(publishPacket, destination);
             }
 
-            var pubAckPacket = packet as MqttPubAckPacket;
-            if (pubAckPacket != null)
+            if (packet is MqttPubAckPacket pubAckPacket)
             {
                 return SerializeAsync(pubAckPacket, destination);
             }
 
-            var pubRecPacket = packet as MqttPubRecPacket;
-            if (pubRecPacket != null)
+            if (packet is MqttPubRecPacket pubRecPacket)
             {
                 return SerializeAsync(pubRecPacket, destination);
             }
 
-            var pubRelPacket = packet as MqttPubRelPacket;
-            if (pubRelPacket != null)
+            if (packet is MqttPubRelPacket pubRelPacket)
             {
                 return SerializeAsync(pubRelPacket, destination);
             }
 
-            var pubCompPacket = packet as MqttPubCompPacket;
-            if (pubCompPacket != null)
+            if (packet is MqttPubCompPacket pubCompPacket)
             {
                 return SerializeAsync(pubCompPacket, destination);
             }
 
-            var subscribePacket = packet as MqttSubscribePacket;
-            if (subscribePacket != null)
+            if (packet is MqttSubscribePacket subscribePacket)
             {
                 return SerializeAsync(subscribePacket, destination);
             }
 
-            var subAckPacket = packet as MqttSubAckPacket;
-            if (subAckPacket != null)
+            if (packet is MqttSubAckPacket subAckPacket)
             {
                 return SerializeAsync(subAckPacket, destination);
             }
 
-            var unsubscribePacket = packet as MqttUnsubscribePacket;
-            if (unsubscribePacket != null)
+            if (packet is MqttUnsubscribePacket unsubscribePacket)
             {
                 return SerializeAsync(unsubscribePacket, destination);
             }
 
-            var unsubAckPacket = packet as MqttUnsubAckPacket;
-            if (unsubAckPacket != null)
+            if (packet is MqttUnsubAckPacket unsubAckPacket)
             {
                 return SerializeAsync(unsubAckPacket, destination);
             }
@@ -206,7 +197,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private async Task<MqttBasePacket> DeserializeUnsubscribeAsync(MqttPacketReader reader)
+        private static async Task<MqttBasePacket> DeserializeUnsubscribeAsync(MqttPacketReader reader)
         {
             var packet = new MqttUnsubscribePacket
             {
@@ -221,7 +212,7 @@ namespace MQTTnet.Core.Serializer
             return packet;
         }
 
-        private async Task<MqttBasePacket> DeserializeSubscribeAsync(MqttPacketReader reader)
+        private static async Task<MqttBasePacket> DeserializeSubscribeAsync(MqttPacketReader reader)
         {
             var packet = new MqttSubscribePacket
             {
@@ -238,7 +229,7 @@ namespace MQTTnet.Core.Serializer
             return packet;
         }
 
-        private async Task<MqttBasePacket> DeserializePublishAsync(MqttPacketReader reader)
+        private static async Task<MqttBasePacket> DeserializePublishAsync(MqttPacketReader reader)
         {
             var fixedHeader = new ByteReader(reader.FixedHeader);
             var retain = fixedHeader.Read();
@@ -266,18 +257,24 @@ namespace MQTTnet.Core.Serializer
             return packet;
         }
 
-        private async Task<MqttBasePacket> DeserializeConnectAsync(MqttPacketReader reader)
+        private static async Task<MqttBasePacket> DeserializeConnectAsync(MqttPacketReader reader)
         {
-            var packet = new MqttConnectPacket();
+            await reader.ReadRemainingDataAsync(2); // Skip 2 bytes
 
-            await reader.ReadRemainingDataByteAsync();
-            await reader.ReadRemainingDataByteAsync();
-
+            MqttProtocolVersion protocolVersion;
             var protocolName = await reader.ReadRemainingDataAsync(4);
-
-            if (Encoding.UTF8.GetString(protocolName, 0, protocolName.Length) != "MQTT")
+            if (protocolName.SequenceEqual(ProtocolVersionV310Name))
             {
-                throw new MqttProtocolViolationException("Protocol name is not 'MQTT'.");
+                await reader.ReadRemainingDataAsync(2);
+                protocolVersion = MqttProtocolVersion.V310;
+            }
+            else if (protocolName.SequenceEqual(ProtocolVersionV311Name))
+            {
+                protocolVersion = MqttProtocolVersion.V311;
+            }
+            else
+            {
+                throw new MqttProtocolViolationException("Protocol name is not supported.");
             }
 
             var protocolLevel = await reader.ReadRemainingDataByteAsync();
@@ -285,7 +282,13 @@ namespace MQTTnet.Core.Serializer
 
             var connectFlagsReader = new ByteReader(connectFlags);
             connectFlagsReader.Read(); // Reserved.
-            packet.CleanSession = connectFlagsReader.Read();
+
+            var packet = new MqttConnectPacket
+            {
+                ProtocolVersion = protocolVersion,
+                CleanSession = connectFlagsReader.Read()
+            };
+
             var willFlag = connectFlagsReader.Read();
             var willQoS = connectFlagsReader.Read(2);
             var willRetain = connectFlagsReader.Read();
@@ -318,7 +321,7 @@ namespace MQTTnet.Core.Serializer
             return packet;
         }
 
-        private async Task<MqttBasePacket> DeserializeSubAck(MqttPacketReader reader)
+        private static async Task<MqttBasePacket> DeserializeSubAck(MqttPacketReader reader)
         {
             var packet = new MqttSubAckPacket
             {
@@ -333,7 +336,7 @@ namespace MQTTnet.Core.Serializer
             return packet;
         }
 
-        private async Task<MqttBasePacket> DeserializeConnAck(MqttPacketReader reader)
+        private static async Task<MqttBasePacket> DeserializeConnAck(MqttPacketReader reader)
         {
             var variableHeader1 = await reader.ReadRemainingDataByteAsync();
             var variableHeader2 = await reader.ReadRemainingDataByteAsync();
@@ -347,7 +350,7 @@ namespace MQTTnet.Core.Serializer
             return packet;
         }
 
-        private void ValidateConnectPacket(MqttConnectPacket packet)
+        private static void ValidateConnectPacket(MqttConnectPacket packet)
         {
             if (string.IsNullOrEmpty(packet.ClientId) && !packet.CleanSession)
             {
@@ -355,15 +358,13 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private void ValidatePublishPacket(MqttPublishPacket packet)
+        private static void ValidatePublishPacket(MqttPublishPacket packet)
         {
             if (packet.QualityOfServiceLevel == 0 && packet.Dup)
             {
                 throw new MqttProtocolViolationException("Dup flag must be false for QoS 0 packets [MQTT-3.3.1-2].");
             }
         }
-
-        private static readonly byte[] MqttPrefix = Encoding.UTF8.GetBytes("MQTT");
 
         private Task SerializeAsync(MqttConnectPacket packet, IMqttCommunicationChannel destination)
         {
@@ -373,9 +374,19 @@ namespace MQTTnet.Core.Serializer
             {
                 // Write variable header
                 output.Write(0x00, 0x04); // 3.1.2.1 Protocol Name
-                output.Write(MqttPrefix);
-                output.Write(0x04); // 3.1.2.2 Protocol Level
-
+                if (ProtocolVersion == MqttProtocolVersion.V311)
+                {
+                    output.Write(ProtocolVersionV311Name);
+                    output.Write(0x04); // 3.1.2.2 Protocol Level (4)
+                }
+                else
+                {
+                    output.Write(ProtocolVersionV310Name);
+                    output.Write(0x64);
+                    output.Write(0x70);
+                    output.Write(0x03); // Protocol Level (3)
+                }
+                
                 var connectFlags = new ByteWriter(); // 3.1.2.3 Connect Flags
                 connectFlags.Write(false); // Reserved
                 connectFlags.Write(packet.CleanSession);
@@ -425,8 +436,12 @@ namespace MQTTnet.Core.Serializer
             using (var output = new MqttPacketWriter())
             {
                 var connectAcknowledgeFlags = new ByteWriter();
-                connectAcknowledgeFlags.Write(packet.IsSessionPresent);
 
+                if (ProtocolVersion == MqttProtocolVersion.V311)
+                {
+                    connectAcknowledgeFlags.Write(packet.IsSessionPresent);
+                }
+                
                 output.Write(connectAcknowledgeFlags);
                 output.Write((byte)packet.ConnectReturnCode);
 
@@ -435,22 +450,33 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private Task SerializeAsync(MqttDisconnectPacket packet, IMqttCommunicationChannel destination)
+        private static async Task SerializeAsync(MqttPubRelPacket packet, IMqttCommunicationChannel destination)
+        {
+            using (var output = new MqttPacketWriter())
+            {
+                output.Write(packet.PacketIdentifier);
+
+                output.InjectFixedHeader(MqttControlPacketType.PubRel, 0x02);
+                await output.WriteToAsync(destination);
+            }
+        }
+
+        private static Task SerializeAsync(MqttDisconnectPacket packet, IMqttCommunicationChannel destination)
         {
             return SerializeEmptyPacketAsync(MqttControlPacketType.Disconnect, destination);
         }
 
-        private Task SerializeAsync(MqttPingReqPacket packet, IMqttCommunicationChannel destination)
+        private static Task SerializeAsync(MqttPingReqPacket packet, IMqttCommunicationChannel destination)
         {
             return SerializeEmptyPacketAsync(MqttControlPacketType.PingReq, destination);
         }
 
-        private Task SerializeAsync(MqttPingRespPacket packet, IMqttCommunicationChannel destination)
+        private static Task SerializeAsync(MqttPingRespPacket packet, IMqttCommunicationChannel destination)
         {
             return SerializeEmptyPacketAsync(MqttControlPacketType.PingResp, destination);
         }
 
-        private Task SerializeAsync(MqttPublishPacket packet, IMqttCommunicationChannel destination)
+        private static Task SerializeAsync(MqttPublishPacket packet, IMqttCommunicationChannel destination)
         {
             ValidatePublishPacket(packet);
 
@@ -485,7 +511,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private Task SerializeAsync(MqttPubAckPacket packet, IMqttCommunicationChannel destination)
+        private static Task SerializeAsync(MqttPubAckPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
@@ -496,7 +522,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private Task SerializeAsync(MqttPubRecPacket packet, IMqttCommunicationChannel destination)
+        private static Task SerializeAsync(MqttPubRecPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
@@ -507,18 +533,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private async Task SerializeAsync(MqttPubRelPacket packet, IMqttCommunicationChannel destination)
-        {
-            using (var output = new MqttPacketWriter())
-            {
-                output.Write(packet.PacketIdentifier);
-
-                output.InjectFixedHeader(MqttControlPacketType.PubRel, 0x02);
-                await output.WriteToAsync(destination);
-            }
-        }
-
-        private Task SerializeAsync(MqttPubCompPacket packet, IMqttCommunicationChannel destination)
+        private static Task SerializeAsync(MqttPubCompPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
@@ -529,7 +544,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private Task SerializeAsync(MqttSubscribePacket packet, IMqttCommunicationChannel destination)
+        private static Task SerializeAsync(MqttSubscribePacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
@@ -549,7 +564,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private Task SerializeAsync(MqttSubAckPacket packet, IMqttCommunicationChannel destination)
+        private static Task SerializeAsync(MqttSubAckPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
@@ -568,7 +583,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private Task SerializeAsync(MqttUnsubscribePacket packet, IMqttCommunicationChannel destination)
+        private static Task SerializeAsync(MqttUnsubscribePacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
@@ -587,7 +602,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private Task SerializeAsync(MqttUnsubAckPacket packet, IMqttCommunicationChannel destination)
+        private static Task SerializeAsync(MqttUnsubAckPacket packet, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {
@@ -598,7 +613,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
-        private Task SerializeEmptyPacketAsync(MqttControlPacketType type, IMqttCommunicationChannel destination)
+        private static Task SerializeEmptyPacketAsync(MqttControlPacketType type, IMqttCommunicationChannel destination)
         {
             using (var output = new MqttPacketWriter())
             {

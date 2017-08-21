@@ -8,11 +8,11 @@ namespace MQTTnet
 {
     public class MqttClientFactory
     {
-        public MqttClient CreateMqttClient(MqttClientOptions options)
+        public IMqttClient CreateMqttClient(MqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            return new MqttClient(options, new MqttChannelCommunicationAdapter(new MqttTcpChannel(), new DefaultMqttV311PacketSerializer()));
+            return new MqttClient(options, new MqttChannelCommunicationAdapter(new MqttTcpChannel(), new MqttPacketSerializer()));
         }
     }
 }

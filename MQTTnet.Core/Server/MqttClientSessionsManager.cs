@@ -22,7 +22,7 @@ namespace MQTTnet.Core.Server
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived; 
+        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
         public async Task RunClientSessionAsync(MqttClientConnectedEventArgs eventArgs)
         {
@@ -33,6 +33,9 @@ namespace MQTTnet.Core.Server
                 {
                     throw new MqttProtocolViolationException("The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
                 }
+
+                // Switch to the required protocol version before sending any response.
+                eventArgs.ClientAdapter.PacketSerializer.ProtocolVersion = connectPacket.ProtocolVersion;
 
                 var connectReturnCode = ValidateConnection(connectPacket);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
@@ -73,11 +76,15 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        public IList<string> GetConnectedClients()
+        public IList<ConnectedMqttClient> GetConnectedClients()
         {
             lock (_syncRoot)
             {
-                return _clientSessions.Where(s => s.Value.IsConnected).Select(s => s.Key).ToList();
+                return _clientSessions.Where(s => s.Value.IsConnected).Select(s => new ConnectedMqttClient
+                {
+                    ClientId = s.Value.ClientId,
+                    ProtocolVersion = s.Value.Adapter.PacketSerializer.ProtocolVersion
+                }).ToList();
             }
         }
 
@@ -127,14 +134,24 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        private void DispatchPublishPacket(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
+        public void DispatchPublishPacket(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
         {
-            var eventArgs = new MqttApplicationMessageReceivedEventArgs(senderClientSession.ClientId, publishPacket.ToApplicationMessage());
-            ApplicationMessageReceived?.Invoke(this, eventArgs);
-
-            foreach (var clientSession in _clientSessions.Values.ToList())
+            try
             {
-                clientSession.EnqueuePublishPacket(senderClientSession, publishPacket);
+                var eventArgs = new MqttApplicationMessageReceivedEventArgs(senderClientSession?.ClientId, publishPacket.ToApplicationMessage());
+                ApplicationMessageReceived?.Invoke(this, eventArgs);
+            }
+            catch (Exception exception)
+            {
+                MqttTrace.Error(nameof(MqttClientSessionsManager), exception, "Error while processing application message");
+            }
+
+            lock (_syncRoot)
+            {
+                foreach (var clientSession in _clientSessions.Values.ToList())
+                {
+                    clientSession.EnqueuePublishPacket(publishPacket);
+                }
             }
         }
     }

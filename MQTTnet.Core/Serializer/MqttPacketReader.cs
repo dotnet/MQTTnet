@@ -10,7 +10,7 @@ namespace MQTTnet.Core.Serializer
 {
     public sealed class MqttPacketReader : IDisposable
     {
-        private readonly MemoryStream _remainingData = new MemoryStream();
+        private readonly MemoryStream _remainingData = new MemoryStream(1024);
         private readonly IMqttCommunicationChannel _source;
 
         private int _remainingLength;

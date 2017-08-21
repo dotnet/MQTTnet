@@ -15,11 +15,10 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
-        private readonly StreamSocket _socket;
+        private StreamSocket _socket;
 
         public MqttTcpChannel()
         {
-            _socket = new StreamSocket();
         }
 
         public MqttTcpChannel(StreamSocket socket)
@@ -32,6 +31,11 @@ namespace MQTTnet.Implementations
             if (options == null) throw new ArgumentNullException(nameof(options));
             try
             {
+                if (_socket == null)
+                {
+                    _socket = new StreamSocket();
+                }
+
                 if (!options.TlsOptions.UseTls)
                 {
                     await _socket.ConnectAsync(new HostName(options.Server), options.GetPort().ToString());
@@ -59,7 +63,7 @@ namespace MQTTnet.Implementations
         {
             try
             {
-                _socket.Dispose();
+                Dispose();
                 return Task.FromResult(0);
             }
             catch (SocketException exception)
@@ -100,6 +104,8 @@ namespace MQTTnet.Implementations
         public void Dispose()
         {
             _socket?.Dispose();
+
+            _socket = null;
         }
 
         private static Certificate LoadCertificate(MqttClientOptions options)

@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Core.Packets
 {
-    public interface IPacketWithIdentifier
+    public interface IMqttPacketWithIdentifier
     {
         ushort PacketIdentifier { get; set; }
     }

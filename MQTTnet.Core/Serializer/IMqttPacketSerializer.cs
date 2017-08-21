@@ -6,6 +6,8 @@ namespace MQTTnet.Core.Serializer
 {
     public interface IMqttPacketSerializer
     {
+        MqttProtocolVersion ProtocolVersion { get; set; }
+
         Task SerializeAsync(MqttBasePacket mqttPacket, IMqttCommunicationChannel destination);
 
         Task<MqttBasePacket> DeserializeAsync(IMqttCommunicationChannel source);

@@ -5,13 +5,10 @@ namespace MQTTnet.Core.Server
 {
     public sealed class MqttClientPublishPacketContext
     {
-        public MqttClientPublishPacketContext(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
+        public MqttClientPublishPacketContext(MqttPublishPacket publishPacket)
         {
-            SenderClientSession = senderClientSession ?? throw new ArgumentNullException(nameof(senderClientSession));
             PublishPacket = publishPacket ?? throw new ArgumentNullException(nameof(publishPacket));
         }
-
-        public MqttClientSession SenderClientSession { get; }
 
         public MqttPublishPacket PublishPacket { get; }
 

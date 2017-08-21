@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Packets;
+using MQTTnet.Core.Serializer;
 
 namespace MQTTnet.Core.Tests
 {
@@ -12,6 +13,8 @@ namespace MQTTnet.Core.Tests
         private readonly BlockingCollection<MqttBasePacket> _incomingPackets = new BlockingCollection<MqttBasePacket>();
 
         public TestMqttCommunicationAdapter Partner { get; set; }
+
+        public IMqttPacketSerializer PacketSerializer { get; } = new MqttPacketSerializer();
 
         public async Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {

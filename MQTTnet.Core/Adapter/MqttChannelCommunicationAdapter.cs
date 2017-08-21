@@ -11,22 +11,19 @@ namespace MQTTnet.Core.Adapter
 {
     public class MqttChannelCommunicationAdapter : IMqttCommunicationAdapter
     {
-        private readonly IMqttPacketSerializer _serializer;
         private readonly IMqttCommunicationChannel _channel;
 
         public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer)
         {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
-            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+            PacketSerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
+
+        public IMqttPacketSerializer PacketSerializer { get; }
 
         public async Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {
-            var task = _channel.ConnectAsync(options);
-            if (await Task.WhenAny(Task.Delay(timeout), task) != task)
-            {
-                throw new MqttCommunicationTimedOutException();
-            }
+            await ExecuteWithTimeoutAsync(_channel.ConnectAsync(options), timeout);
         }
 
         public async Task DisconnectAsync()
@@ -38,21 +35,7 @@ namespace MQTTnet.Core.Adapter
         {
             MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), $"TX >>> {packet} [Timeout={timeout}]");
 
-            bool hasTimeout;
-            try
-            {
-                var task = _serializer.SerializeAsync(packet, _channel);
-                hasTimeout = await Task.WhenAny(Task.Delay(timeout), task) != task;
-            }
-            catch (Exception exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
-
-            if (hasTimeout)
-            {
-                throw new MqttCommunicationTimedOutException();
-            }
+            await ExecuteWithTimeoutAsync(PacketSerializer.SerializeAsync(packet, _channel), timeout);
         }
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout)
@@ -60,20 +43,11 @@ namespace MQTTnet.Core.Adapter
             MqttBasePacket packet;
             if (timeout > TimeSpan.Zero)
             {
-                var workerTask = _serializer.DeserializeAsync(_channel);
-                var timeoutTask = Task.Delay(timeout);
-                var hasTimeout = Task.WhenAny(timeoutTask, workerTask) == timeoutTask;
-
-                if (hasTimeout)
-                {
-                    throw new MqttCommunicationTimedOutException();
-                }
-
-                packet = workerTask.Result;
+                packet = await ExecuteWithTimeoutAsync(PacketSerializer.DeserializeAsync(_channel), timeout);
             }
             else
             {
-                packet = await _serializer.DeserializeAsync(_channel);
+                packet = await PacketSerializer.DeserializeAsync(_channel);
             }
 
             if (packet == null)
@@ -83,6 +57,36 @@ namespace MQTTnet.Core.Adapter
 
             MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), $"RX <<< {packet}");
             return packet;
+        }
+
+        private static async Task<TResult> ExecuteWithTimeoutAsync<TResult>(Task<TResult> task, TimeSpan timeout)
+        {
+            var timeoutTask = Task.Delay(timeout);
+            if (await Task.WhenAny(timeoutTask, task) == timeoutTask)
+            {
+                throw new MqttCommunicationTimedOutException();
+            }
+
+            if (task.IsFaulted)
+            {
+                throw new MqttCommunicationException(task.Exception);
+            }
+
+            return task.Result;
+        }
+
+        private static async Task ExecuteWithTimeoutAsync(Task task, TimeSpan timeout)
+        {
+            var timeoutTask = Task.Delay(timeout);
+            if (await Task.WhenAny(timeoutTask, task) == timeoutTask)
+            {
+                throw new MqttCommunicationTimedOutException();
+            }
+
+            if (task.IsFaulted)
+            {
+                throw new MqttCommunicationException(task.Exception);
+            }
         }
     }
 }

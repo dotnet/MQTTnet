@@ -4,10 +4,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Diagnostics;
+using MQTTnet.Core.Internal;
 
 namespace MQTTnet.Core.Server
 {
-    public sealed class MqttServer
+    public sealed class MqttServer : IMqttServer
     {
         private readonly MqttClientSessionsManager _clientSessionsManager;
         private readonly ICollection<IMqttServerAdapter> _adapters;
@@ -24,7 +25,7 @@ namespace MQTTnet.Core.Server
             _clientSessionsManager.ApplicationMessageReceived += (s, e) => ApplicationMessageReceived?.Invoke(s, e);
         }
 
-        public IList<string> GetConnectedClients()
+        public IList<ConnectedMqttClient> GetConnectedClients()
         {
             return _clientSessionsManager.GetConnectedClients();
         }
@@ -32,6 +33,13 @@ namespace MQTTnet.Core.Server
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
 
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
+
+        public void Publish(MqttApplicationMessage applicationMessage)
+        {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
+            _clientSessionsManager.DispatchPublishPacket(null, applicationMessage.ToPublishPacket());
+        }
 
         public void InjectClient(string identifier, IMqttCommunicationAdapter adapter)
         {

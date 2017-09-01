@@ -24,5 +24,7 @@ namespace MQTTnet.Core.Client
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
+
+        public ConnectionTypes ConnectionType { get; set; } = ConnectionTypes.TCP;
     }
 }

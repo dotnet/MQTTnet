@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.TestApp.NetCore
 {
-    class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {

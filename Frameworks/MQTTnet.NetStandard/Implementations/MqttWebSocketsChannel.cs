@@ -10,12 +10,12 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttWebSocketsChannel : IMqttCommunicationChannel, IDisposable
     {
-        private ClientWebSocket _webSocket = null;
+        private ClientWebSocket _webSocket;
         private const int BufferSize = 4096;
         private const int BufferAmplifier = 20;
-        private byte[] WebSocketBuffer = new byte[BufferSize * BufferAmplifier];
-        private int WebSocketBufferSize = 0;
-        private int WebSocketBufferOffset = 0;
+        private readonly byte[] WebSocketBuffer = new byte[BufferSize * BufferAmplifier];
+        private int WebSocketBufferSize;
+        private int WebSocketBufferOffset;
 
         public MqttWebSocketsChannel()
         {
@@ -36,9 +36,6 @@ namespace MQTTnet.Implementations
             {
                 throw new MqttCommunicationException(exception);
             }
-            finally
-            {
-            }
         }
 
         public async Task DisconnectAsync()
@@ -49,7 +46,9 @@ namespace MQTTnet.Implementations
         public void Dispose()
         {
             if (_webSocket != null)
+            {
                 _webSocket.Dispose();
+            }
         }
 
         public Task ReadAsync(byte[] buffer)
@@ -102,9 +101,10 @@ namespace MQTTnet.Implementations
 
         public Task WriteAsync(byte[] buffer)
         {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            if (buffer == null) {
+                throw new ArgumentNullException(nameof(buffer));
+            }
 
-            var writeBuffer = System.Text.Encoding.ASCII.GetString(buffer);
             try
             {
                 return _webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Binary, true,

@@ -11,12 +11,14 @@ namespace MQTTnet
     {
         public IMqttClient CreateMqttClient(MqttClientOptions options)
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (options == null) {
+                throw new ArgumentNullException(nameof(options));
+            }
 
             return new MqttClient(options, new MqttChannelCommunicationAdapter(GetMqttCommunicationChannel(options), new MqttPacketSerializer()));
         }
 
-        private IMqttCommunicationChannel GetMqttCommunicationChannel(MqttClientOptions options)
+        private static IMqttCommunicationChannel GetMqttCommunicationChannel(MqttClientOptions options)
         {
             switch (options.ConnectionType)
             {

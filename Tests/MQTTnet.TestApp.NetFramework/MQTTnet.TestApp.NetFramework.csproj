@@ -90,7 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Frameworks\MQTTnet.NetFramework\MQTTnet.NetFramework.csproj">
-      <Project>{A480EF90-0EAA-4D9A-B271-47A9C47F6F7D}</Project>
+      <Project>{a480ef90-0eaa-4d9a-b271-47a9c47f6f7d}</Project>
       <Name>MQTTnet.NetFramework</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\MQTTnet.Core\MQTTnet.Core.csproj">

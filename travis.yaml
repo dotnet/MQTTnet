@@ -1,0 +1,10 @@
+language: csharp
+solution: MQTTnet.sln
+
+matrix:
+  include:
+    dotnet: 1.0.1
+      mono: none
+      dist: trusty
+      env: DOTNETCORE=1  # optional, can be used to take different code paths in your script
+    mono: latest

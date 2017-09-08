@@ -35,12 +35,12 @@ namespace MQTTnet.Implementations
                     _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 }
 
-                await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.GetPort(), null);
+                await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.GetPort(), null).ConfigureAwait(false);
 
                 if (options.TlsOptions.UseTls)
                 {
                     _sslStream = new SslStream(new NetworkStream(_socket, true));
-                    await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation);
+                    await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
                 }
             }
             catch (SocketException exception)

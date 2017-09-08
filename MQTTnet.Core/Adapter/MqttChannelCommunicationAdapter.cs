@@ -23,19 +23,19 @@ namespace MQTTnet.Core.Adapter
 
         public async Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {
-            await ExecuteWithTimeoutAsync(_channel.ConnectAsync(options), timeout);
+            await ExecuteWithTimeoutAsync(_channel.ConnectAsync(options), timeout).ConfigureAwait(false);
         }
 
         public async Task DisconnectAsync()
         {
-            await _channel.DisconnectAsync();
+            await _channel.DisconnectAsync().ConfigureAwait(false);
         }
 
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout)
         {
             MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), $"TX >>> {packet} [Timeout={timeout}]");
 
-            await ExecuteWithTimeoutAsync(PacketSerializer.SerializeAsync(packet, _channel), timeout);
+            await ExecuteWithTimeoutAsync(PacketSerializer.SerializeAsync(packet, _channel), timeout).ConfigureAwait(false);
         }
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout)
@@ -43,11 +43,11 @@ namespace MQTTnet.Core.Adapter
             MqttBasePacket packet;
             if (timeout > TimeSpan.Zero)
             {
-                packet = await ExecuteWithTimeoutAsync(PacketSerializer.DeserializeAsync(_channel), timeout);
+                packet = await ExecuteWithTimeoutAsync(PacketSerializer.DeserializeAsync(_channel), timeout).ConfigureAwait(false);
             }
             else
             {
-                packet = await PacketSerializer.DeserializeAsync(_channel);
+                packet = await PacketSerializer.DeserializeAsync(_channel).ConfigureAwait(false);
             }
 
             if (packet == null)
@@ -62,7 +62,7 @@ namespace MQTTnet.Core.Adapter
         private static async Task<TResult> ExecuteWithTimeoutAsync<TResult>(Task<TResult> task, TimeSpan timeout)
         {
             var timeoutTask = Task.Delay(timeout);
-            if (await Task.WhenAny(timeoutTask, task) == timeoutTask)
+            if (await Task.WhenAny(timeoutTask, task).ConfigureAwait(false) == timeoutTask)
             {
                 throw new MqttCommunicationTimedOutException();
             }
@@ -78,7 +78,7 @@ namespace MQTTnet.Core.Adapter
         private static async Task ExecuteWithTimeoutAsync(Task task, TimeSpan timeout)
         {
             var timeoutTask = Task.Delay(timeout);
-            if (await Task.WhenAny(timeoutTask, task) == timeoutTask)
+            if (await Task.WhenAny(timeoutTask, task).ConfigureAwait(false) == timeoutTask)
             {
                 throw new MqttCommunicationTimedOutException();
             }

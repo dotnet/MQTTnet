@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>MQTTnet</id>
-    <version>2.2.1</version>
+    <version>2.3.0</version>
     <authors>Christian Kratky</authors>
     <owners>Christian Kratky</owners>
     <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>
@@ -10,7 +10,7 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* [Server] Fixed a bug in connection management (Thanks to rydergillen-compacSort)
+    <releaseNotes>*
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT MQTTClient MQTTServer MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Queue Hardware Arduino</tags> 

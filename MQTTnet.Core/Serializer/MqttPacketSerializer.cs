@@ -100,18 +100,18 @@ namespace MQTTnet.Core.Serializer
 
             using (var mqttPacketReader = new MqttPacketReader(source))
             {
-                await mqttPacketReader.ReadToEndAsync();
+                await mqttPacketReader.ReadToEndAsync().ConfigureAwait(false);
 
                 switch (mqttPacketReader.ControlPacketType)
                 {
                     case MqttControlPacketType.Connect:
                         {
-                            return await DeserializeConnectAsync(mqttPacketReader);
+                            return await DeserializeConnectAsync(mqttPacketReader).ConfigureAwait(false);
                         }
 
                     case MqttControlPacketType.ConnAck:
                         {
-                            return await DeserializeConnAck(mqttPacketReader);
+                            return await DeserializeConnAck(mqttPacketReader).ConfigureAwait(false);
                         }
 
                     case MqttControlPacketType.Disconnect:
@@ -121,14 +121,14 @@ namespace MQTTnet.Core.Serializer
 
                     case MqttControlPacketType.Publish:
                         {
-                            return await DeserializePublishAsync(mqttPacketReader);
+                            return await DeserializePublishAsync(mqttPacketReader).ConfigureAwait(false);
                         }
 
                     case MqttControlPacketType.PubAck:
                         {
                             return new MqttPubAckPacket
                             {
-                                PacketIdentifier = await mqttPacketReader.ReadRemainingDataUShortAsync()
+                                PacketIdentifier = await mqttPacketReader.ReadRemainingDataUShortAsync().ConfigureAwait(false)
                             };
                         }
 
@@ -136,7 +136,7 @@ namespace MQTTnet.Core.Serializer
                         {
                             return new MqttPubRecPacket
                             {
-                                PacketIdentifier = await mqttPacketReader.ReadRemainingDataUShortAsync()
+                                PacketIdentifier = await mqttPacketReader.ReadRemainingDataUShortAsync().ConfigureAwait(false)
                             };
                         }
 
@@ -144,7 +144,7 @@ namespace MQTTnet.Core.Serializer
                         {
                             return new MqttPubRelPacket
                             {
-                                PacketIdentifier = await mqttPacketReader.ReadRemainingDataUShortAsync()
+                                PacketIdentifier = await mqttPacketReader.ReadRemainingDataUShortAsync().ConfigureAwait(false)
                             };
                         }
 
@@ -152,7 +152,7 @@ namespace MQTTnet.Core.Serializer
                         {
                             return new MqttPubCompPacket
                             {
-                                PacketIdentifier = await mqttPacketReader.ReadRemainingDataUShortAsync()
+                                PacketIdentifier = await mqttPacketReader.ReadRemainingDataUShortAsync().ConfigureAwait(false)
                             };
                         }
 
@@ -168,24 +168,24 @@ namespace MQTTnet.Core.Serializer
 
                     case MqttControlPacketType.Subscribe:
                         {
-                            return await DeserializeSubscribeAsync(mqttPacketReader);
+                            return await DeserializeSubscribeAsync(mqttPacketReader).ConfigureAwait(false);
                         }
 
                     case MqttControlPacketType.SubAck:
                         {
-                            return await DeserializeSubAck(mqttPacketReader);
+                            return await DeserializeSubAck(mqttPacketReader).ConfigureAwait(false);
                         }
 
                     case MqttControlPacketType.Unsubscibe:
                         {
-                            return await DeserializeUnsubscribeAsync(mqttPacketReader);
+                            return await DeserializeUnsubscribeAsync(mqttPacketReader).ConfigureAwait(false);
                         }
 
                     case MqttControlPacketType.UnsubAck:
                         {
                             return new MqttUnsubAckPacket
                             {
-                                PacketIdentifier = await mqttPacketReader.ReadRemainingDataUShortAsync()
+                                PacketIdentifier = await mqttPacketReader.ReadRemainingDataUShortAsync().ConfigureAwait(false)
                             };
                         }
 
@@ -201,12 +201,12 @@ namespace MQTTnet.Core.Serializer
         {
             var packet = new MqttUnsubscribePacket
             {
-                PacketIdentifier = await reader.ReadRemainingDataUShortAsync(),
+                PacketIdentifier = await reader.ReadRemainingDataUShortAsync().ConfigureAwait(false),
             };
 
             while (!reader.EndOfRemainingData)
             {
-                packet.TopicFilters.Add(await reader.ReadRemainingDataStringWithLengthPrefixAsync());
+                packet.TopicFilters.Add(await reader.ReadRemainingDataStringWithLengthPrefixAsync().ConfigureAwait(false));
             }
 
             return packet;
@@ -216,14 +216,14 @@ namespace MQTTnet.Core.Serializer
         {
             var packet = new MqttSubscribePacket
             {
-                PacketIdentifier = await reader.ReadRemainingDataUShortAsync(),
+                PacketIdentifier = await reader.ReadRemainingDataUShortAsync().ConfigureAwait(false),
             };
 
             while (!reader.EndOfRemainingData)
             {
                 packet.TopicFilters.Add(new TopicFilter(
                     await reader.ReadRemainingDataStringWithLengthPrefixAsync(),
-                    (MqttQualityOfServiceLevel)await reader.ReadRemainingDataByteAsync()));
+                    (MqttQualityOfServiceLevel)await reader.ReadRemainingDataByteAsync().ConfigureAwait(false)));
             }
 
             return packet;
@@ -236,12 +236,12 @@ namespace MQTTnet.Core.Serializer
             var qualityOfServiceLevel = (MqttQualityOfServiceLevel)fixedHeader.Read(2);
             var dup = fixedHeader.Read();
 
-            var topic = await reader.ReadRemainingDataStringWithLengthPrefixAsync();
+            var topic = await reader.ReadRemainingDataStringWithLengthPrefixAsync().ConfigureAwait(false);
 
             ushort packetIdentifier = 0;
             if (qualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
             {
-                packetIdentifier = await reader.ReadRemainingDataUShortAsync();
+                packetIdentifier = await reader.ReadRemainingDataUShortAsync().ConfigureAwait(false);
             }
 
             var packet = new MqttPublishPacket
@@ -250,7 +250,7 @@ namespace MQTTnet.Core.Serializer
                 QualityOfServiceLevel = qualityOfServiceLevel,
                 Dup = dup,
                 Topic = topic,
-                Payload = await reader.ReadRemainingDataAsync(),
+                Payload = await reader.ReadRemainingDataAsync().ConfigureAwait(false),
                 PacketIdentifier = packetIdentifier
             };
 
@@ -259,13 +259,13 @@ namespace MQTTnet.Core.Serializer
 
         private static async Task<MqttBasePacket> DeserializeConnectAsync(MqttPacketReader reader)
         {
-            await reader.ReadRemainingDataAsync(2); // Skip 2 bytes
+            await reader.ReadRemainingDataAsync(2).ConfigureAwait(false); // Skip 2 bytes
 
             MqttProtocolVersion protocolVersion;
-            var protocolName = await reader.ReadRemainingDataAsync(4);
+            var protocolName = await reader.ReadRemainingDataAsync(4).ConfigureAwait(false);
             if (protocolName.SequenceEqual(ProtocolVersionV310Name))
             {
-                await reader.ReadRemainingDataAsync(2);
+                await reader.ReadRemainingDataAsync(2).ConfigureAwait(false);
                 protocolVersion = MqttProtocolVersion.V310;
             }
             else if (protocolName.SequenceEqual(ProtocolVersionV311Name))
@@ -277,8 +277,8 @@ namespace MQTTnet.Core.Serializer
                 throw new MqttProtocolViolationException("Protocol name is not supported.");
             }
 
-            var protocolLevel = await reader.ReadRemainingDataByteAsync();
-            var connectFlags = await reader.ReadRemainingDataByteAsync();
+            var protocolLevel = await reader.ReadRemainingDataByteAsync().ConfigureAwait(false);
+            var connectFlags = await reader.ReadRemainingDataByteAsync().ConfigureAwait(false);
 
             var connectFlagsReader = new ByteReader(connectFlags);
             connectFlagsReader.Read(); // Reserved.
@@ -295,26 +295,26 @@ namespace MQTTnet.Core.Serializer
             var passwordFlag = connectFlagsReader.Read();
             var usernameFlag = connectFlagsReader.Read();
 
-            packet.KeepAlivePeriod = await reader.ReadRemainingDataUShortAsync();
-            packet.ClientId = await reader.ReadRemainingDataStringWithLengthPrefixAsync();
+            packet.KeepAlivePeriod = await reader.ReadRemainingDataUShortAsync().ConfigureAwait(false);
+            packet.ClientId = await reader.ReadRemainingDataStringWithLengthPrefixAsync().ConfigureAwait(false);
 
             if (willFlag)
             {
                 packet.WillMessage = new MqttApplicationMessage(
-                    await reader.ReadRemainingDataStringWithLengthPrefixAsync(),
-                    await reader.ReadRemainingDataWithLengthPrefixAsync(),
+                    await reader.ReadRemainingDataStringWithLengthPrefixAsync().ConfigureAwait(false),
+                    await reader.ReadRemainingDataWithLengthPrefixAsync().ConfigureAwait(false),
                     (MqttQualityOfServiceLevel)willQoS,
                     willRetain);
             }
 
             if (usernameFlag)
             {
-                packet.Username = await reader.ReadRemainingDataStringWithLengthPrefixAsync();
+                packet.Username = await reader.ReadRemainingDataStringWithLengthPrefixAsync().ConfigureAwait(false);
             }
 
             if (passwordFlag)
             {
-                packet.Password = await reader.ReadRemainingDataStringWithLengthPrefixAsync();
+                packet.Password = await reader.ReadRemainingDataStringWithLengthPrefixAsync().ConfigureAwait(false);
             }
 
             ValidateConnectPacket(packet);
@@ -325,12 +325,12 @@ namespace MQTTnet.Core.Serializer
         {
             var packet = new MqttSubAckPacket
             {
-                PacketIdentifier = await reader.ReadRemainingDataUShortAsync()
+                PacketIdentifier = await reader.ReadRemainingDataUShortAsync().ConfigureAwait(false)
             };
 
             while (!reader.EndOfRemainingData)
             {
-                packet.SubscribeReturnCodes.Add((MqttSubscribeReturnCode)await reader.ReadRemainingDataByteAsync());
+                packet.SubscribeReturnCodes.Add((MqttSubscribeReturnCode)await reader.ReadRemainingDataByteAsync().ConfigureAwait(false));
             }
 
             return packet;
@@ -338,8 +338,8 @@ namespace MQTTnet.Core.Serializer
 
         private static async Task<MqttBasePacket> DeserializeConnAck(MqttPacketReader reader)
         {
-            var variableHeader1 = await reader.ReadRemainingDataByteAsync();
-            var variableHeader2 = await reader.ReadRemainingDataByteAsync();
+            var variableHeader1 = await reader.ReadRemainingDataByteAsync().ConfigureAwait(false);
+            var variableHeader2 = await reader.ReadRemainingDataByteAsync().ConfigureAwait(false);
 
             var packet = new MqttConnAckPacket
             {
@@ -457,7 +457,7 @@ namespace MQTTnet.Core.Serializer
                 output.Write(packet.PacketIdentifier);
 
                 output.InjectFixedHeader(MqttControlPacketType.PubRel, 0x02);
-                await output.WriteToAsync(destination);
+                await output.WriteToAsync(destination).ConfigureAwait(false);
             }
         }
 

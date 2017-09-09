@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Core;
+﻿using MQTTnet.Core;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace MQTTnet.TestApp.NetFramework
+namespace MQTTnet.TestApp.NetCore
 {
     public static class Program
     {
@@ -50,7 +50,8 @@ namespace MQTTnet.TestApp.NetFramework
                 {
                     Server = "localhost",
                     ClientId = "XYZ",
-                    CleanSession = true
+                    CleanSession = true,
+                    ConnectionType = ConnectionTypes.WS 
                 };
 
                 var client = new MqttClientFactory().CreateMqttClient(options);

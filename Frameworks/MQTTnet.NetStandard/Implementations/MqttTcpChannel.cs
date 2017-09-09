@@ -45,13 +45,13 @@ namespace MQTTnet.Implementations
                     _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 }
 
-                await _socket.ConnectAsync(options.Server, options.GetPort());
+                await _socket.ConnectAsync(options.Server, options.GetPort()).ConfigureAwait(false);
 
                 if (options.TlsOptions.UseTls)
                 {
                     _sslStream = new SslStream(new NetworkStream(_socket, true));
                     _dataStream = _sslStream;
-                    await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation);
+                    await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
                 }
                 else
                 {

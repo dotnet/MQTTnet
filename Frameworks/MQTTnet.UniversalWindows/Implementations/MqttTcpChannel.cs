@@ -104,7 +104,6 @@ namespace MQTTnet.Implementations
         public void Dispose()
         {
             _socket?.Dispose();
-
             _socket = null;
         }
 

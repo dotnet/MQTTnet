@@ -102,7 +102,7 @@ namespace MQTTnet.Implementations
 
                 do
                 {
-                    var read = await _dataStream.ReadAsync(buffer, totalBytes, buffer.Length - totalBytes);
+                    var read = await _dataStream.ReadAsync(buffer, totalBytes, buffer.Length - totalBytes).ConfigureAwait(false);
 
                     if (read == 0)
                     {

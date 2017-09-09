@@ -8,19 +8,14 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Implementations
 {
-    public sealed class MqttWebSocketsChannel : IMqttCommunicationChannel, IDisposable
+    public sealed class MqttWebSocketChannel : IMqttCommunicationChannel, IDisposable
     {
-        private ClientWebSocket _webSocket;
+        private ClientWebSocket _webSocket = new ClientWebSocket();
         private const int BufferSize = 4096;
         private const int BufferAmplifier = 20;
         private readonly byte[] WebSocketBuffer = new byte[BufferSize * BufferAmplifier];
         private int WebSocketBufferSize;
         private int WebSocketBufferOffset;
-
-        public MqttWebSocketsChannel()
-        {
-            _webSocket = new ClientWebSocket();
-        }
 
         public async Task ConnectAsync(MqttClientOptions options)
         {
@@ -45,10 +40,7 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            if (_webSocket != null)
-            {
-                _webSocket.Dispose();
-            }
+            _webSocket?.Dispose();
         }
 
         public Task ReadAsync(byte[] buffer)
@@ -70,8 +62,7 @@ namespace MQTTnet.Implementations
                     WebSocketReceiveResult response;
                     do
                     {
-                        response =
-                            await _webSocket.ReceiveAsync(new ArraySegment<byte>(temporaryBuffer), CancellationToken.None);
+                        response = await _webSocket.ReceiveAsync(new ArraySegment<byte>(temporaryBuffer), CancellationToken.None);
 
                         temporaryBuffer.CopyTo(WebSocketBuffer, offset);
                         offset += response.Count;

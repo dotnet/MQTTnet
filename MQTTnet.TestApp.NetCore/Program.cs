@@ -51,7 +51,7 @@ namespace MQTTnet.TestApp.NetCore
                     Server = "localhost",
                     ClientId = "XYZ",
                     CleanSession = true,
-                    ConnectionType = ConnectionTypes.WS 
+                    ConnectionType = MqttConnectionType.Ws 
                 };
 
                 var client = new MqttClientFactory().CreateMqttClient(options);

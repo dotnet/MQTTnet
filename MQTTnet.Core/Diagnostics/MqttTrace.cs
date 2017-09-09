@@ -38,7 +38,14 @@ namespace MQTTnet.Core.Diagnostics
 
         private static void Publish(string source, MqttTraceLevel traceLevel, Exception exception, string message)
         {
-            TraceMessagePublished?.Invoke(null, new MqttTraceMessagePublishedEventArgs(Environment.CurrentManagedThreadId, source, traceLevel, message, exception));
+            var handler = TraceMessagePublished;
+            if (handler == null)
+            {
+                return;
+            }
+
+            message = string.Format(message, 1);
+            handler.Invoke(null, new MqttTraceMessagePublishedEventArgs(Environment.CurrentManagedThreadId, source, traceLevel, message, exception));
         }
     }
 }

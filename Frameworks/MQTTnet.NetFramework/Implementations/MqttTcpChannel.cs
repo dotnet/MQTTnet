@@ -17,14 +17,23 @@ namespace MQTTnet.Implementations
         private Socket _socket;
         private SslStream _sslStream;
 
+        /// <summary>
+        /// called on client sockets are created in connect
+        /// </summary>
         public MqttTcpChannel()
         {
+            
         }
 
+        /// <summary>
+        /// called on server, sockets are passed in
+        /// connect will not be called
+        /// </summary>
         public MqttTcpChannel(Socket socket, SslStream sslStream)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _sslStream = sslStream;
+            _dataStream = (Stream)sslStream ?? new NetworkStream(socket);
         }
 
         public async Task ConnectAsync(MqttClientOptions options)

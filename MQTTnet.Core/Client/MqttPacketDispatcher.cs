@@ -41,7 +41,7 @@ namespace MQTTnet.Core.Client
             {
                 if (packetAwaiter.PacketSelector(packet))
                 {
-                    packetAwaiter.SetResult(packet);
+                    packetAwaiter.TrySetResult(packet);
                     packetDispatched = true;
                     break;
                 }

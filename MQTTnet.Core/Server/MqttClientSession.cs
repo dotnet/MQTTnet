@@ -76,7 +76,7 @@ namespace MQTTnet.Core.Server
                 _cancellationTokenSource.Cancel();
                 Adapter = null;
 
-                MqttTrace.Information(nameof(MqttClientSession), $"Client '{_identifier}': Disconnected.");
+                MqttTrace.Information(nameof(MqttClientSession), "Client '{0}': Disconnected.", _identifier);
             }
         }
 

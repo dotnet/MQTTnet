@@ -13,8 +13,7 @@ namespace MQTTnet.Core.Packets
         public override string ToString()
         {
             var subscribeReturnCodesText = string.Join(",", SubscribeReturnCodes.Select(f => f.ToString()));
-            return
-                $"{nameof(MqttSubAckPacket)} [PacketIdentifier={PacketIdentifier}] [SubscribeReturnCodes={subscribeReturnCodesText}]";
+            return nameof(MqttSubAckPacket) + ": [PacketIdentifier=" + PacketIdentifier + "] [SubscribeReturnCodes=" + subscribeReturnCodesText + "]";
         }
     }
 }

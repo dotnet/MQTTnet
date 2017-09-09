@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Core.Packets
 {
-    public sealed class MqttConnectPacket: MqttBasePacket
+    public sealed class MqttConnectPacket : MqttBasePacket
     {
         public MqttProtocolVersion ProtocolVersion { get; set; }
 
@@ -20,7 +20,7 @@ namespace MQTTnet.Core.Packets
 
         public override string ToString()
         {
-            return $"{nameof(MqttConnectPacket)} [ClientId={ClientId}] [Username={Username}] [Password={Password}] [KeepAlivePeriod={KeepAlivePeriod}] [CleanSession={CleanSession}]";
+            return nameof(MqttConnectPacket) + ": [ClientId=" + ClientId + "] [Username=" + Username + "] [Password=" + Password + "] [KeepAlivePeriod=" + KeepAlivePeriod + "] [CleanSession=" + CleanSession + "]";
         }
     }
 }

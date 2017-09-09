@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿using System;
 using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Packets
@@ -17,8 +17,13 @@ namespace MQTTnet.Core.Packets
 
         public override string ToString()
         {
-            return
-                $"{nameof(MqttPublishPacket)} [Topic={Topic}] [Payload={Encoding.UTF8.GetString(Payload, 0, Payload.Length)}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
+            return nameof(MqttPublishPacket) + 
+                ": [Topic=" + Topic + "]" +
+                " [Payload=" + Convert.ToBase64String(Payload) + "]" +
+                " [QoSLevel=" + QualityOfServiceLevel + "]" +
+                " [Dup=" + Dup + "]" +
+                " [Retain=" + Retain + "]" +
+                " [PacketIdentifier=" + PacketIdentifier + "]";
         }
     }
 }

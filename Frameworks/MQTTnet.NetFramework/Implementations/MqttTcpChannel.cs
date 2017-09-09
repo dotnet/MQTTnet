@@ -7,22 +7,33 @@ using System.Threading.Tasks;
 using MQTTnet.Core.Channel;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Exceptions;
+using System.IO;
 
 namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
+        private Stream _dataStream;
         private Socket _socket;
         private SslStream _sslStream;
 
+        /// <summary>
+        /// called on client sockets are created in connect
+        /// </summary>
         public MqttTcpChannel()
         {
+            
         }
 
+        /// <summary>
+        /// called on server, sockets are passed in
+        /// connect will not be called
+        /// </summary>
         public MqttTcpChannel(Socket socket, SslStream sslStream)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _sslStream = sslStream;
+            _dataStream = (Stream)sslStream ?? new NetworkStream(socket);
         }
 
         public async Task ConnectAsync(MqttClientOptions options)
@@ -40,7 +51,13 @@ namespace MQTTnet.Implementations
                 if (options.TlsOptions.UseTls)
                 {
                     _sslStream = new SslStream(new NetworkStream(_socket, true));
-                    await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation);
+                    
+                    _dataStream = _sslStream;
+                    await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
+                }
+                else
+                {
+                    _dataStream = new NetworkStream(_socket);
                 }
             }
             catch (SocketException exception)
@@ -68,16 +85,7 @@ namespace MQTTnet.Implementations
 
             try
             {
-                if (_sslStream != null)
-                {
-                    return _sslStream.WriteAsync(buffer, 0, buffer.Length);
-                }
-
-                return Task.Factory.FromAsync(
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    _socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, null, null),
-                    _socket.EndSend);
-
+                return _dataStream.WriteAsync(buffer, 0, buffer.Length);
             }
             catch (SocketException exception)
             {
@@ -85,21 +93,26 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public Task ReadAsync(byte[] buffer)
+        public async Task ReadAsync(byte[] buffer)
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
             try
             {
-                if (_sslStream != null)
-                {
-                    return _sslStream.ReadAsync(buffer, 0, buffer.Length);
-                }
+                int totalBytes = 0;
 
-                return Task.Factory.FromAsync(
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    _socket.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, null, null),
-                    _socket.EndReceive);
+                do
+                {
+                    var read = await _dataStream.ReadAsync(buffer, totalBytes, buffer.Length - totalBytes).ConfigureAwait(false);
+
+                    if (read == 0)
+                    {
+                        throw new MqttCommunicationException(new SocketException((int)SocketError.Disconnecting));
+                    }
+
+                    totalBytes += read;
+                }
+                while (totalBytes < buffer.Length);
             }
             catch (SocketException exception)
             {

@@ -10,7 +10,7 @@ namespace MQTTnet.Core.Client
     public class MqttPacketDispatcher
     {
         private readonly object _syncRoot = new object();
-        private readonly List<MqttBasePacket> _receivedPackets = new List<MqttBasePacket>();
+        private readonly HashSet<MqttBasePacket> _receivedPackets = new HashSet<MqttBasePacket>();
         private readonly List<MqttPacketAwaiter> _packetAwaiters = new List<MqttPacketAwaiter>();
 
         public async Task<MqttBasePacket> WaitForPacketAsync(Func<MqttBasePacket, bool> selector, TimeSpan timeout)

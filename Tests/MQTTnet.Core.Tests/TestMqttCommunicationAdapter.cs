@@ -18,12 +18,12 @@ namespace MQTTnet.Core.Tests
 
         public async Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {
-            await Task.FromResult(0).ConfigureAwait(false);
+            await Task.FromResult(0);
         }
 
         public async Task DisconnectAsync()
         {
-            await Task.FromResult(0).ConfigureAwait(false);
+            await Task.FromResult(0);
         }
 
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout)
@@ -31,14 +31,14 @@ namespace MQTTnet.Core.Tests
             ThrowIfPartnerIsNull();
 
             Partner.SendPacketInternal(packet);
-            await Task.FromResult(0).ConfigureAwait(false);
+            await Task.FromResult(0);
         }
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout)
         {
             ThrowIfPartnerIsNull();
 
-            return await Task.Run(() => _incomingPackets.Take()).ConfigureAwait(false);
+            return await Task.Run(() => _incomingPackets.Take());
         }
 
         private void SendPacketInternal(MqttBasePacket packet)

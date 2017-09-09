@@ -111,11 +111,11 @@ namespace MQTTnet.Core.Server
                         _clientSessions.Remove(connectPacket.ClientId);
                         clientSession.Dispose();
                         clientSession = null;
-                        MqttTrace.Verbose(nameof(MqttClientSessionsManager), $"Disposed existing session of client '{connectPacket.ClientId}'.");
+                        MqttTrace.Verbose(nameof(MqttClientSessionsManager), "Disposed existing session of client '{0}'.", connectPacket.ClientId);
                     }
                     else
                     {
-                        MqttTrace.Verbose(nameof(MqttClientSessionsManager), $"Reusing existing session of client '{connectPacket.ClientId}'.");
+                        MqttTrace.Verbose(nameof(MqttClientSessionsManager), "Reusing existing session of client '{0}'.", connectPacket.ClientId);
                     }
                 }
 
@@ -127,7 +127,7 @@ namespace MQTTnet.Core.Server
                     clientSession = new MqttClientSession(connectPacket.ClientId, _options, DispatchPublishPacket);
                     _clientSessions[connectPacket.ClientId] = clientSession;
 
-                    MqttTrace.Verbose(nameof(MqttClientSessionsManager), $"Created a new session for client '{connectPacket.ClientId}'.");
+                    MqttTrace.Verbose(nameof(MqttClientSessionsManager), "Created a new session for client '{0}'.", connectPacket.ClientId);
                 }
 
                 return new GetOrCreateClientSessionResult { IsExistingSession = isExistingSession, Session = clientSession };

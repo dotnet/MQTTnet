@@ -16,29 +16,29 @@ namespace MQTTnet.Core.Tests
 
         public IMqttPacketSerializer PacketSerializer { get; } = new MqttPacketSerializer();
 
-        public async Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
+        public Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {
-            await Task.FromResult(0);
+            return Task.FromResult(0);
         }
 
-        public async Task DisconnectAsync()
+        public Task DisconnectAsync()
         {
-            await Task.FromResult(0);
+            return Task.FromResult(0);
         }
 
-        public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout)
+        public Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout)
         {
             ThrowIfPartnerIsNull();
 
             Partner.SendPacketInternal(packet);
-            await Task.FromResult(0);
+            return Task.FromResult(0);
         }
 
-        public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout)
+        public Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout)
         {
             ThrowIfPartnerIsNull();
 
-            return await Task.Run(() => _incomingPackets.Take());
+            return Task.Run(() => _incomingPackets.Take());
         }
 
         private void SendPacketInternal(MqttBasePacket packet)

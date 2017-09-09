@@ -62,7 +62,7 @@ namespace MQTTnet.Core.Server
             {
                 try
                 {
-                    await _gate.WaitOneAsync();
+                    await _gate.WaitOneAsync().ConfigureAwait(false);
                     if (cancellationToken.IsCancellationRequested)
                     {
                         return;
@@ -81,7 +81,7 @@ namespace MQTTnet.Core.Server
 
                     foreach (var publishPacket in pendingPublishPackets)
                     {
-                        await TrySendPendingPublishPacketAsync(publishPacket);
+                        await TrySendPendingPublishPacketAsync(publishPacket).ConfigureAwait(false);
                     }
                 }
                 catch (Exception e)
@@ -105,7 +105,7 @@ namespace MQTTnet.Core.Server
                 }
 
                 publishPacketContext.PublishPacket.Dup = publishPacketContext.SendTries > 0;
-                await _adapter.SendPacketAsync(publishPacketContext.PublishPacket, _options.DefaultCommunicationTimeout);
+                await _adapter.SendPacketAsync(publishPacketContext.PublishPacket, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
 
                 publishPacketContext.IsSent = true;
             }

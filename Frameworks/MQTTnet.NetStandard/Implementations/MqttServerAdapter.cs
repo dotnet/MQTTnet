@@ -83,7 +83,7 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
-                    var clientSocket = await _defaultEndpointSocket.AcceptAsync();
+                    var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
                     var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer());
                     ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientSocket.RemoteEndPoint.ToString(), clientAdapter));
                 }
@@ -92,7 +92,7 @@ namespace MQTTnet.Implementations
                     MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at default endpoint.");
 
                     //excessive CPU consumed if in endless loop of socket errors
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -103,10 +103,10 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
-                    var clientSocket = await _tlsEndpointSocket.AcceptAsync();
+                    var clientSocket = await _tlsEndpointSocket.AcceptAsync().ConfigureAwait(false);
 
                     var sslStream = new SslStream(new NetworkStream(clientSocket));
-                    await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false);
+                    await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
                     
                     var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer());
                     ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientSocket.RemoteEndPoint.ToString(), clientAdapter));
@@ -116,7 +116,7 @@ namespace MQTTnet.Implementations
                     MqttTrace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at TLS endpoint.");
 
                     //excessive CPU consumed if in endless loop of socket errors
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }
         }

@@ -28,7 +28,7 @@ namespace MQTTnet.Core.Server
         {
             try
             {
-                var connectPacket = await eventArgs.ClientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout) as MqttConnectPacket;
+                var connectPacket = await eventArgs.ClientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false) as MqttConnectPacket;
                 if (connectPacket == null)
                 {
                     throw new MqttProtocolViolationException("The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
@@ -43,7 +43,7 @@ namespace MQTTnet.Core.Server
                     await eventArgs.ClientAdapter.SendPacketAsync(new MqttConnAckPacket
                     {
                         ConnectReturnCode = connectReturnCode
-                    }, _options.DefaultCommunicationTimeout);
+                    }, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
 
                     return;
                 }
@@ -54,9 +54,9 @@ namespace MQTTnet.Core.Server
                 {
                     ConnectReturnCode = connectReturnCode,
                     IsSessionPresent = clientSession.IsExistingSession
-                }, _options.DefaultCommunicationTimeout);
+                }, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
 
-                await clientSession.Session.RunAsync(eventArgs.Identifier, connectPacket.WillMessage, eventArgs.ClientAdapter);
+                await clientSession.Session.RunAsync(eventArgs.Identifier, connectPacket.WillMessage, eventArgs.ClientAdapter).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -64,7 +64,7 @@ namespace MQTTnet.Core.Server
             }
             finally
             {
-                await eventArgs.ClientAdapter.DisconnectAsync();
+                await eventArgs.ClientAdapter.DisconnectAsync().ConfigureAwait(false);
             }
         }
 

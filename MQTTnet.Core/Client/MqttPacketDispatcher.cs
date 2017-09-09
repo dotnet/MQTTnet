@@ -20,7 +20,7 @@ namespace MQTTnet.Core.Client
             var packetAwaiter = AddPacketAwaiter(selector);
             DispatchPendingPackets();
 
-            var hasTimeout = await Task.WhenAny(Task.Delay(timeout), packetAwaiter.Task) != packetAwaiter.Task;
+            var hasTimeout = await Task.WhenAny(Task.Delay(timeout), packetAwaiter.Task).ConfigureAwait(false) != packetAwaiter.Task;
             RemovePacketAwaiter(packetAwaiter);
 
             if (hasTimeout)

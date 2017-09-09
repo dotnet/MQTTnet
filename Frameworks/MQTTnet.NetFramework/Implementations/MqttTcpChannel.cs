@@ -46,7 +46,7 @@ namespace MQTTnet.Implementations
                     _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 }
 
-                await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.GetPort(), null);
+                await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.GetPort(), null).ConfigureAwait(false);
 
                 if (options.TlsOptions.UseTls)
                 {
@@ -99,12 +99,11 @@ namespace MQTTnet.Implementations
 
             try
             {
-                int totalBytes = 0;
+                var totalBytes = 0;
 
                 do
                 {
                     var read = await _dataStream.ReadAsync(buffer, totalBytes, buffer.Length - totalBytes).ConfigureAwait(false);
-
                     if (read == 0)
                     {
                         throw new MqttCommunicationException(new SocketException((int)SocketError.Disconnecting));

@@ -403,24 +403,24 @@ namespace MQTTnet.Core.Tests
                 _stream.Position = 0;
             }
 
-            public async Task ConnectAsync(MqttClientOptions options)
+            public Task ConnectAsync(MqttClientOptions options)
             {
-                await Task.FromResult(0);
+                return Task.FromResult(0);
             }
 
-            public async Task DisconnectAsync()
+            public Task DisconnectAsync()
             {
-                await Task.FromResult(0);
+                return Task.FromResult(0);
             }
 
-            public async Task WriteAsync(byte[] buffer)
+            public Task WriteAsync(byte[] buffer)
             {
-                await _stream.WriteAsync(buffer, 0, buffer.Length);
+                return _stream.WriteAsync(buffer, 0, buffer.Length);
             }
 
-            public async Task ReadAsync(byte[] buffer)
+            public Task ReadAsync(byte[] buffer)
             {
-                await _stream.ReadAsync(buffer, 0, buffer.Length);
+                return _stream.ReadAsync(buffer, 0, buffer.Length);
             }
 
             public byte[] ToArray()
@@ -429,7 +429,7 @@ namespace MQTTnet.Core.Tests
             }
         }
 
-        private void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
+        private static void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
             var serializer = new MqttPacketSerializer { ProtocolVersion = protocolVersion };
             var channel = new TestChannel();
@@ -439,7 +439,7 @@ namespace MQTTnet.Core.Tests
             Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(buffer));
         }
 
-        private void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value)
+        private static void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value)
         {
             var serializer = new MqttPacketSerializer();
 

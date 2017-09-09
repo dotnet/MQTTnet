@@ -13,36 +13,36 @@ namespace MQTTnet.Core.Tests
     public class MqttServerTests
     {
         [TestMethod]
-        public async Task MqttServer_PublishSimple_AtMostOnce()
+        public void MqttServer_PublishSimple_AtMostOnce()
         {
-            await TestPublishAsync(
+            TestPublishAsync(
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtMostOnce,
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtMostOnce,
-                1);
+                1).Wait();
         }
 
         [TestMethod]
-        public async Task MqttServer_PublishSimple_AtLeastOnce()
+        public void MqttServer_PublishSimple_AtLeastOnce()
         {
-            await TestPublishAsync(
+            TestPublishAsync(
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtLeastOnce,
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtLeastOnce,
-                1);
+                1).Wait();
         }
 
         [TestMethod]
-        public async Task MqttServer_PublishSimple_ExactlyOnce()
+        public void MqttServer_PublishSimple_ExactlyOnce()
         {
-            await TestPublishAsync(
+            TestPublishAsync(
                 "A/B/C",
                 MqttQualityOfServiceLevel.ExactlyOnce,
                 "A/B/C",
                 MqttQualityOfServiceLevel.ExactlyOnce,
-                1);
+                1).Wait();
         }
 
         [TestMethod]

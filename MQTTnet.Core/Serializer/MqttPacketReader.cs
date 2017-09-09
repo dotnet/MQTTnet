@@ -28,8 +28,8 @@ namespace MQTTnet.Core.Serializer
 
         public async Task ReadToEndAsync()
         {
-            await ReadFixedHeaderAsync();
-            await ReadRemainingLengthAsync();
+            await ReadFixedHeaderAsync().ConfigureAwait(false);
+            await ReadRemainingLengthAsync().ConfigureAwait(false);
 
             if (_remainingLength == 0)
             {
@@ -37,7 +37,7 @@ namespace MQTTnet.Core.Serializer
             }
 
             var buffer = new byte[_remainingLength];
-            await ReadFromSourceAsync(buffer);
+            await ReadFromSourceAsync(buffer).ConfigureAwait(false);
             
             _remainingData.Write(buffer, 0, buffer.Length);
             _remainingData.Position = 0;
@@ -91,7 +91,7 @@ namespace MQTTnet.Core.Serializer
             byte encodedByte;
             do
             {
-                encodedByte = await ReadStreamByteAsync();
+                encodedByte = await ReadStreamByteAsync().ConfigureAwait(false);
                 value += (encodedByte & 127) * multiplier;
                 multiplier *= 128;
                 if (multiplier > 128 * 128 * 128)
@@ -118,13 +118,13 @@ namespace MQTTnet.Core.Serializer
         private async Task<byte> ReadStreamByteAsync()
         {
             var buffer = new byte[1];
-            await ReadFromSourceAsync(buffer);
+            await ReadFromSourceAsync(buffer).ConfigureAwait(false);
             return buffer[0];
         }
 
         private async Task ReadFixedHeaderAsync()
         {
-            FixedHeader = await ReadStreamByteAsync();
+            FixedHeader = await ReadStreamByteAsync().ConfigureAwait(false);
 
             var byteReader = new ByteReader(FixedHeader);
             byteReader.Read(4);

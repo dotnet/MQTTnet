@@ -54,8 +54,8 @@ namespace MQTTnet.Core.Server
                 _messageQueue.Start(adapter);
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    var packet = await adapter.ReceivePacketAsync(TimeSpan.Zero);
-                    await HandleIncomingPacketAsync(packet);
+                    var packet = await adapter.ReceivePacketAsync(TimeSpan.Zero).ConfigureAwait(false);
+                    await HandleIncomingPacketAsync(packet).ConfigureAwait(false);
                 }
             }
             catch (MqttCommunicationException)

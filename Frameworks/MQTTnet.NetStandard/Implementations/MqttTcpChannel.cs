@@ -38,6 +38,7 @@ namespace MQTTnet.Implementations
         public async Task ConnectAsync(MqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
+
             try
             {
                 if (_socket == null)
@@ -97,12 +98,11 @@ namespace MQTTnet.Implementations
 
             try
             {
-                int totalBytes = 0;
+                var totalBytes = 0;
 
                 do
                 {
                     var read = await _dataStream.ReadAsync(buffer, totalBytes, buffer.Length - totalBytes).ConfigureAwait(false);
-
                     if (read == 0)
                     {
                         throw new MqttCommunicationException(new SocketException((int)SocketError.Disconnecting));

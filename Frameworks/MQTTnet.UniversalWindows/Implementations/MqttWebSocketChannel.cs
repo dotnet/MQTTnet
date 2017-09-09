@@ -17,15 +17,14 @@ namespace MQTTnet.Implementations
         private int WebSocketBufferSize;
         private int WebSocketBufferOffset;
 
-        public async Task ConnectAsync(MqttClientOptions options)
+        public Task ConnectAsync(MqttClientOptions options)
         {
             _webSocket = null;
 
             try
             {
                 _webSocket = new ClientWebSocket();
-
-                await _webSocket.ConnectAsync(new Uri(options.Server), CancellationToken.None);
+                return _webSocket.ConnectAsync(new Uri(options.Server), CancellationToken.None);
             }
             catch (WebSocketException exception)
             {
@@ -33,9 +32,9 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public async Task DisconnectAsync()
+        public Task DisconnectAsync()
         {
-            await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+            return _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
         }
 
         public void Dispose()

@@ -457,7 +457,7 @@ namespace MQTTnet.Core.Serializer
                 output.Write(packet.PacketIdentifier);
 
                 output.InjectFixedHeader(MqttControlPacketType.PubRel, 0x02);
-                await output.WriteToAsync(destination);
+                await output.WriteToAsync(destination).ConfigureAwait(false);
             }
         }
 

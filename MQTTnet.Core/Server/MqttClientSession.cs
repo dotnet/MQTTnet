@@ -63,7 +63,7 @@ namespace MQTTnet.Core.Server
             }
             catch (Exception exception)
             {
-                MqttTrace.Error(nameof(MqttClientSession), exception, $"Client '{_identifier}': Unhandled exception while processing client packets.");
+                MqttTrace.Error(nameof(MqttClientSession), exception, "Client '{0}': Unhandled exception while processing client packets.", _identifier);
             }
             finally
             {
@@ -90,7 +90,7 @@ namespace MQTTnet.Core.Server
             }
 
             _messageQueue.Enqueue(publishPacket);
-            MqttTrace.Verbose(nameof(MqttClientSession), $"Client '{_identifier}: Enqueued pending publish packet.");
+            MqttTrace.Verbose(nameof(MqttClientSession), "Client '{0}': Enqueued pending publish packet.", _identifier);
         }
 
         public void Dispose()
@@ -143,7 +143,7 @@ namespace MQTTnet.Core.Server
                 return Task.FromResult((object)null);
             }
 
-            MqttTrace.Warning(nameof(MqttClientSession), $"Client '{_identifier}': Received not supported packet ({packet}). Closing connection.");
+            MqttTrace.Warning(nameof(MqttClientSession), "Client '{0}': Received not supported packet ({1}). Closing connection.", _identifier, packet);
             _cancellationTokenSource.Cancel();
 
             return Task.FromResult((object)null);

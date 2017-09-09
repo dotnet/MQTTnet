@@ -22,15 +22,15 @@ namespace MQTTnet
         {
             switch (options.ConnectionType)
             {
-                case ConnectionTypes.TCP:
-                case ConnectionTypes.TLS:
+                case MqttConnectionType.Tcp:
+                case MqttConnectionType.Tls:
                     return new MqttTcpChannel();
-                case ConnectionTypes.WS:
-                case ConnectionTypes.WSS:
-                    return new MqttWebSocketsChannel();
+                case MqttConnectionType.Ws:
+                case MqttConnectionType.Wss:
+                    return new MqttWebSocketChannel();
 
                 default:
-                    return null;
+                    throw new NotSupportedException();
             }
         }
     }

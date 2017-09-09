@@ -84,7 +84,7 @@ namespace MQTTnet.Core.Server
 
         private void OnClientConnected(object sender, MqttClientConnectedEventArgs eventArgs)
         {
-            MqttTrace.Information(nameof(MqttServer), $"Client '{eventArgs.Identifier}': Connected.");
+            MqttTrace.Information(nameof(MqttServer), "Client '{0}': Connected.", eventArgs.Identifier);
             ClientConnected?.Invoke(this, eventArgs);
 
             Task.Run(() => _clientSessionsManager.RunClientSessionAsync(eventArgs), _cancellationTokenSource.Token);

@@ -21,21 +21,21 @@ namespace MQTTnet.Core.Adapter
 
         public IMqttPacketSerializer PacketSerializer { get; }
 
-        public async Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
+        public Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {
-            await ExecuteWithTimeoutAsync(_channel.ConnectAsync(options), timeout).ConfigureAwait(false);
+            return ExecuteWithTimeoutAsync(_channel.ConnectAsync(options), timeout);
         }
 
-        public async Task DisconnectAsync()
+        public Task DisconnectAsync()
         {
-            await _channel.DisconnectAsync().ConfigureAwait(false);
+            return _channel.DisconnectAsync();
         }
 
-        public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout)
+        public Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout)
         {
-            MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), $"TX >>> {packet} [Timeout={timeout}]");
+            MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "TX >>> {0} [Timeout={1}]", packet, timeout);
 
-            await ExecuteWithTimeoutAsync(PacketSerializer.SerializeAsync(packet, _channel), timeout).ConfigureAwait(false);
+            return ExecuteWithTimeoutAsync(PacketSerializer.SerializeAsync(packet, _channel), timeout);
         }
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout)
@@ -43,11 +43,11 @@ namespace MQTTnet.Core.Adapter
             MqttBasePacket packet;
             if (timeout > TimeSpan.Zero)
             {
-                packet = await ExecuteWithTimeoutAsync(PacketSerializer.DeserializeAsync(_channel), timeout).ConfigureAwait(false);
+                packet = await ExecuteWithTimeoutAsync(PacketSerializer.DeserializeAsync(_channel), timeout);
             }
             else
             {
-                packet = await PacketSerializer.DeserializeAsync(_channel).ConfigureAwait(false);
+                packet = await PacketSerializer.DeserializeAsync(_channel);
             }
 
             if (packet == null)
@@ -55,14 +55,14 @@ namespace MQTTnet.Core.Adapter
                 throw new MqttProtocolViolationException("Received malformed packet.");
             }
 
-            MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), $"RX <<< {packet}");
+            MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "RX <<< {0}", packet);
             return packet;
         }
 
         private static async Task<TResult> ExecuteWithTimeoutAsync<TResult>(Task<TResult> task, TimeSpan timeout)
         {
             var timeoutTask = Task.Delay(timeout);
-            if (await Task.WhenAny(timeoutTask, task).ConfigureAwait(false) == timeoutTask)
+            if (await Task.WhenAny(timeoutTask, task) == timeoutTask)
             {
                 throw new MqttCommunicationTimedOutException();
             }
@@ -78,7 +78,7 @@ namespace MQTTnet.Core.Adapter
         private static async Task ExecuteWithTimeoutAsync(Task task, TimeSpan timeout)
         {
             var timeoutTask = Task.Delay(timeout);
-            if (await Task.WhenAny(timeoutTask, task).ConfigureAwait(false) == timeoutTask)
+            if (await Task.WhenAny(timeoutTask, task) == timeoutTask)
             {
                 throw new MqttCommunicationTimedOutException();
             }

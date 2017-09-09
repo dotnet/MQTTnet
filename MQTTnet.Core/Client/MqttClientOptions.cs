@@ -25,6 +25,6 @@ namespace MQTTnet.Core.Client
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
-        public ConnectionTypes ConnectionType { get; set; } = ConnectionTypes.TCP;
+        public MqttConnectionType ConnectionType { get; set; } = MqttConnectionType.Tcp;
     }
 }

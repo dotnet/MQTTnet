@@ -49,13 +49,13 @@ namespace MQTTnet.Core.Serializer
             return ReadBytes(_header.BodyLength - (int)BaseStream.Position);
         }
 
-        public static async Task<MqttPacketHeader> ReadHeaderFromSourceAsync(IMqttCommunicationChannel source)
+        public static async Task<MqttPacketHeader> ReadHeaderFromSourceAsync(IMqttCommunicationChannel source, byte[] buffer)
         {
-            var fixedHeader = await ReadStreamByteAsync(source).ConfigureAwait(false);
+            var fixedHeader = await ReadStreamByteAsync(source, buffer).ConfigureAwait(false);
             var byteReader = new ByteReader(fixedHeader);
             byteReader.Read(4);
             var controlPacketType = (MqttControlPacketType)byteReader.Read(4);
-            var bodyLength = await ReadBodyLengthFromSourceAsync(source).ConfigureAwait(false);
+            var bodyLength = await ReadBodyLengthFromSourceAsync(source, buffer).ConfigureAwait(false);
 
             return new MqttPacketHeader()
             {
@@ -65,18 +65,17 @@ namespace MQTTnet.Core.Serializer
             };
         }
 
-        private static async Task<byte> ReadStreamByteAsync(IMqttCommunicationChannel source)
+        private static async Task<byte> ReadStreamByteAsync(IMqttCommunicationChannel source, byte[] readBuffer)
         {
-            var buffer = new byte[1];
-            await ReadFromSourceAsync(source, buffer).ConfigureAwait(false);
-            return buffer[0];
+            var result = await ReadFromSourceAsync(source, 1, readBuffer).ConfigureAwait(false);
+            return result.Array[result.Offset];
         }
 
-        public static async Task ReadFromSourceAsync(IMqttCommunicationChannel source, byte[] buffer)
+        public static async Task<ArraySegment<byte>> ReadFromSourceAsync(IMqttCommunicationChannel source, int length, byte[] buffer)
         {
             try
             {
-                await source.ReadAsync(buffer);
+                return await source.ReadAsync(length, buffer);
             }
             catch (Exception exception)
             {
@@ -84,7 +83,7 @@ namespace MQTTnet.Core.Serializer
             }
         }
         
-        private static async Task<int> ReadBodyLengthFromSourceAsync(IMqttCommunicationChannel source)
+        private static async Task<int> ReadBodyLengthFromSourceAsync(IMqttCommunicationChannel source, byte[] buffer)
         {
             // Alorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
             var multiplier = 1;
@@ -92,7 +91,7 @@ namespace MQTTnet.Core.Serializer
             byte encodedByte;
             do
             {
-                encodedByte = await ReadStreamByteAsync(source).ConfigureAwait(false);
+                encodedByte = await ReadStreamByteAsync(source, buffer).ConfigureAwait(false);
                 value += (encodedByte & 127) * multiplier;
                 multiplier *= 128;
                 if (multiplier > 128 * 128 * 128)

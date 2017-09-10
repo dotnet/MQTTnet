@@ -29,7 +29,8 @@ namespace MQTTnet.TestApp.NetFramework
                 {
                     Server = "localhost",
                     ClientId = "XYZ",
-                    CleanSession = true
+                    CleanSession = true,
+                    DefaultCommunicationTimeout = TimeSpan.FromMinutes(10)
                 };
 
                 var client = new MqttClientFactory().CreateMqttClient(options);
@@ -128,7 +129,8 @@ namespace MQTTnet.TestApp.NetFramework
                         }
 
                         return MqttConnectReturnCode.ConnectionAccepted;
-                    }
+                    },
+                    DefaultCommunicationTimeout = TimeSpan.FromMinutes(10)
                 };
                 
                 var mqttServer = new MqttServerFactory().CreateMqttServer(options);

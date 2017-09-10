@@ -17,6 +17,7 @@ namespace MQTTnet.Core.Serializer
         private static byte[] ProtocolVersionV310Name { get; } = Encoding.UTF8.GetBytes("MQIs");
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
+        private byte[] _readBuffer = new byte[BufferConstants.Size]; 
 
         public async Task SerializeAsync(MqttBasePacket packet, IMqttCommunicationChannel destination)
         {
@@ -115,17 +116,13 @@ namespace MQTTnet.Core.Serializer
         public async Task<MqttBasePacket> DeserializeAsync(IMqttCommunicationChannel source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            
-            var header = await MqttPacketReader.ReadHeaderFromSourceAsync(source).ConfigureAwait(false);
 
-            var body = new byte[header.BodyLength];
-            if (header.BodyLength > 0)
+            var header = await MqttPacketReader.ReadHeaderFromSourceAsync(source, _readBuffer).ConfigureAwait(false);
+
+            var body = await GetBody(source, header).ConfigureAwait(false);
+
+            using (var mqttPacketReader = new MqttPacketReader(body, header))
             {
-                await MqttPacketReader.ReadFromSourceAsync(source, body).ConfigureAwait(false);
-            }
-
-            using (var mqttPacketReader = new MqttPacketReader(new MemoryStream(body), header))
-            {                
                 switch (header.ControlPacketType)
                 {
                     case MqttControlPacketType.Connect:
@@ -219,6 +216,17 @@ namespace MQTTnet.Core.Serializer
                         }
                 }
             }
+        }
+
+        private async Task<MemoryStream> GetBody(IMqttCommunicationChannel source, MqttPacketHeader header)
+        {
+            if (header.BodyLength > 0)
+            {
+                var segment = await MqttPacketReader.ReadFromSourceAsync(source, header.BodyLength, _readBuffer).ConfigureAwait(false);
+                return new MemoryStream(segment.Array, segment.Offset, segment.Count);
+            }
+
+            return new MemoryStream();
         }
 
         private static MqttBasePacket DeserializeUnsubscribe(MqttPacketReader reader)

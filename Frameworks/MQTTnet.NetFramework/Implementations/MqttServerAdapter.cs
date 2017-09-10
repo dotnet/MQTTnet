@@ -10,6 +10,7 @@ using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Serializer;
 using MQTTnet.Core.Server;
+using MQTTnet.Core.Channel;
 
 namespace MQTTnet.Implementations
 {
@@ -86,7 +87,7 @@ namespace MQTTnet.Implementations
                 try
                 {
                     var clientSocket = await Task.Factory.FromAsync(_defaultEndpointSocket.BeginAccept, _defaultEndpointSocket.EndAccept, null).ConfigureAwait(false);
-                    var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer());
+                    var clientAdapter = new MqttChannelCommunicationAdapter(new BufferedCommunicationChannel(new MqttTcpChannel(clientSocket, null)), new MqttPacketSerializer());
                     ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientSocket.RemoteEndPoint.ToString(), clientAdapter));
                 }
                 catch (Exception exception) when (!(exception is ObjectDisposedException))

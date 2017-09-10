@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.TestApp.NetFramework
 {
-    public class PerformanceTest
+    public static class PerformanceTest
     {
         public static async Task RunAsync()
         {
             var server = Task.Run(() => RunServerAsync());
             var client = Task.Run(() => RunClientAsync(50, TimeSpan.FromMilliseconds(10)));
 
-            await Task.WhenAll(server, client);
+            await Task.WhenAll(server, client).ConfigureAwait(false);
         }
 
         private static async Task RunClientAsync( int msgChunkSize, TimeSpan interval )
@@ -102,7 +102,7 @@ namespace MQTTnet.TestApp.NetFramework
                         last = now;
                     }
 
-                    await Task.Delay(interval);
+                    await Task.Delay(interval).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

@@ -71,7 +71,7 @@ namespace MQTTnet.Core.Client
 
         private List<MqttPacketAwaiter> GetPacketAwaiters()
         {
-            lock (_packetAwaiters)
+            lock (_syncRoot)
             {
                 return new List<MqttPacketAwaiter>(_packetAwaiters);
             }

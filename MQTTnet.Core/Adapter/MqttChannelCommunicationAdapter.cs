@@ -1,10 +1,12 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Channel;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
+using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Serializer;
 
@@ -24,7 +26,7 @@ namespace MQTTnet.Core.Adapter
 
         public Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {
-            return ExecuteWithTimeoutAsync(_channel.ConnectAsync(options), timeout);
+            return _channel.ConnectAsync(options).TimeoutAfter(timeout);
         }
 
         public Task DisconnectAsync()
@@ -38,7 +40,7 @@ namespace MQTTnet.Core.Adapter
 
             var writeBuffer = PacketSerializer.Serialize(packet);
             _sendTask = SendAsync( writeBuffer );
-            return ExecuteWithTimeoutAsync(_sendTask, timeout);
+            return _sendTask.TimeoutAfter(timeout);
         }
 
         private Task _sendTask = Task.FromResult(0); // this task is used to prevent overlapping write
@@ -54,7 +56,7 @@ namespace MQTTnet.Core.Adapter
             Tuple<MqttPacketHeader, MemoryStream> tuple;
             if (timeout > TimeSpan.Zero)
             {
-                tuple = await ExecuteWithTimeoutAsync(ReceiveAsync(), timeout).ConfigureAwait(false);
+                tuple = await ReceiveAsync().TimeoutAfter(timeout).ConfigureAwait(false);
             }
             else
             {
@@ -95,36 +97,6 @@ namespace MQTTnet.Core.Adapter
             }
 
             return Tuple.Create(header, body);
-        }
-
-        private static async Task<TResult> ExecuteWithTimeoutAsync<TResult>(Task<TResult> task, TimeSpan timeout)
-        {
-            var timeoutTask = Task.Delay(timeout);
-            if (await Task.WhenAny(timeoutTask, task).ConfigureAwait(false) == timeoutTask)
-            {
-                throw new MqttCommunicationTimedOutException();
-            }
-
-            if (task.IsFaulted)
-            {
-                throw new MqttCommunicationException(task.Exception);
-            }
-
-            return task.Result;
-        }
-
-        private static async Task ExecuteWithTimeoutAsync(Task task, TimeSpan timeout)
-        {
-            var timeoutTask = Task.Delay(timeout);
-            if (await Task.WhenAny(timeoutTask, task).ConfigureAwait(false) == timeoutTask)
-            {
-                throw new MqttCommunicationTimedOutException();
-            }
-
-            if (task.IsFaulted)
-            {
-                throw new MqttCommunicationException(task.Exception);
-            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using MQTTnet.Core.Client;
+using System;
 
 namespace MQTTnet.Core.Channel
 {
@@ -11,6 +12,11 @@ namespace MQTTnet.Core.Channel
 
         Task WriteAsync(byte[] buffer);
 
-        Task ReadAsync(byte[] buffer);
+        /// <summary>
+        /// get the currently available number of bytes without reading them
+        /// </summary>
+        int Peek();
+
+        Task<ArraySegment<byte>> ReadAsync(int length, byte[] buffer);
     }
 }

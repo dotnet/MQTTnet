@@ -418,14 +418,20 @@ namespace MQTTnet.Core.Tests
                 return _stream.WriteAsync(buffer, 0, buffer.Length);
             }
 
-            public Task ReadAsync(byte[] buffer)
+            public async Task<ArraySegment<byte>> ReadAsync(int length, byte[] buffer)
             {
-                return _stream.ReadAsync(buffer, 0, buffer.Length);
+                await _stream.ReadAsync(buffer, 0, length);
+                return new ArraySegment<byte>(buffer, 0, length);
             }
 
             public byte[] ToArray()
             {
                 return _stream.ToArray();
+            }
+
+            public int Peek()
+            {
+                return (int)_stream.Length - (int)_stream.Position;
             }
         }
 

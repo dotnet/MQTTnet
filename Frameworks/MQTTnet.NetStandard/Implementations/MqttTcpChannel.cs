@@ -92,17 +92,15 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public async Task ReadAsync(byte[] buffer)
+        public async Task<ArraySegment<byte>> ReadAsync(int length, byte[] buffer)
         {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
-
             try
             {
                 var totalBytes = 0;
 
                 do
                 {
-                    var read = await _dataStream.ReadAsync(buffer, totalBytes, buffer.Length - totalBytes).ConfigureAwait(false);
+                    var read = await _dataStream.ReadAsync(buffer, totalBytes, length - totalBytes).ConfigureAwait(false);
                     if (read == 0)
                     {
                         throw new MqttCommunicationException(new SocketException((int)SocketError.Disconnecting));
@@ -110,7 +108,8 @@ namespace MQTTnet.Implementations
 
                     totalBytes += read;
                 }
-                while (totalBytes < buffer.Length);
+                while (totalBytes < length);
+                return new ArraySegment<byte>(buffer, 0, length);
             }
             catch (SocketException exception)
             {
@@ -141,6 +140,11 @@ namespace MQTTnet.Implementations
             }
 
             return certificates;
+        }
+
+        public int Peek()
+        {
+            return _socket.Available;
         }
     }
 }

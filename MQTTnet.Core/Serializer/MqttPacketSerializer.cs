@@ -38,6 +38,7 @@ namespace MQTTnet.Core.Serializer
                 Buffer.BlockCopy( body, 0, writeBuffer, headerArray.Length, body.Length );
 
                 _sendTask = Send( writeBuffer, destination );
+                await _sendTask.ConfigureAwait( false );
             }
         }
 
@@ -286,14 +287,8 @@ namespace MQTTnet.Core.Serializer
             var retain = fixedHeader.Read();
             var qualityOfServiceLevel = (MqttQualityOfServiceLevel)fixedHeader.Read(2);
             var dup = fixedHeader.Read();
-
-
-            var length = reader.ReadUInt16();
-            if (length != 5)
-            {
-                
-            }
-            var topic = Encoding.UTF8.GetString( reader.ReadBytes( length ), 0, length );
+            
+            var topic = reader.ReadStringWithLengthPrefix();
 
             ushort packetIdentifier = 0;
             if (qualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)

@@ -512,12 +512,21 @@ namespace MQTTnet.Core.Serializer
                 writer.Write(packet.Payload);
             }
 
-            var fixedHeader = new ByteWriter();
-            fixedHeader.Write(packet.Retain);
-            fixedHeader.Write((byte)packet.QualityOfServiceLevel, 2);
-            fixedHeader.Write(packet.Dup);
+            byte fixedHeader = 0;
 
-            return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Publish, fixedHeader.Value);
+            if (packet.Retain)
+            {
+                fixedHeader |= 0x01;
+            }
+
+            fixedHeader |= (byte)((byte)packet.QualityOfServiceLevel << 1);
+
+            if ( packet.Dup )
+            {
+                fixedHeader |= 0x08;
+            }
+            
+            return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Publish, fixedHeader);
         }
 
         private static byte Serialize(MqttPubAckPacket packet, MqttPacketWriter writer)

@@ -52,9 +52,7 @@ namespace MQTTnet.Core.Serializer
         public static MqttPacketHeader ReadHeaderFromSource(Stream stream)
         {
             var fixedHeader = (byte)stream.ReadByte();
-            var byteReader = new ByteReader(fixedHeader);
-            byteReader.Read(4);
-            var controlPacketType = (MqttControlPacketType)byteReader.Read(4);
+            var controlPacketType = (MqttControlPacketType)(fixedHeader >> 4);
             var bodyLength = ReadBodyLengthFromSource(stream);
 
             return new MqttPacketHeader()

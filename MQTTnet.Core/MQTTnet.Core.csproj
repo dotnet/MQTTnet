@@ -5,6 +5,7 @@
     <AssemblyName>MQTTnet.Core</AssemblyName>
     <RootNamespace>MQTTnet.Core</RootNamespace>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <DebugType>Full</DebugType>
     <Description></Description>
     <Product></Product>
     <Company></Company>

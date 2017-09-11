@@ -17,6 +17,9 @@ namespace MQTTnet.Implementations
         private Socket _socket;
         private SslStream _sslStream;
 
+
+        public Stream Stream => _dataStream;
+
         /// <summary>
         /// called on client sockets are created in connect
         /// </summary>
@@ -71,45 +74,6 @@ namespace MQTTnet.Implementations
             {
                 Dispose();
                 return Task.FromResult(0);
-            }
-            catch (SocketException exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
-        }
-
-        public async Task WriteAsync(byte[] buffer)
-        {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
-
-            try
-            {
-                await _dataStream.WriteAsync(buffer, 0, buffer.Length);
-            }
-            catch (SocketException exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
-        }
-
-        public async Task<ArraySegment<byte>> ReadAsync(int length, byte[] buffer)
-        {
-            try
-            {
-                var totalBytes = 0;
-
-                do
-                {
-                    var read = await _dataStream.ReadAsync(buffer, totalBytes, length - totalBytes).ConfigureAwait(false);
-                    if (read == 0)
-                    {
-                        throw new MqttCommunicationException(new SocketException((int)SocketError.Disconnecting));
-                    }
-
-                    totalBytes += read;
-                }
-                while (totalBytes < length);
-                return new ArraySegment<byte>(buffer, 0, length);
             }
             catch (SocketException exception)
             {

@@ -22,7 +22,8 @@ namespace MQTTnet
             {
                 case MqttConnectionType.Tcp:
                 case MqttConnectionType.Tls:
-                    return new BufferedCommunicationChannel( new MqttTcpChannel() );
+                    var tcp = new MqttTcpChannel();
+                    return tcp;
                 case MqttConnectionType.Ws:
                 case MqttConnectionType.Wss:
                     return new MqttWebSocketChannel();

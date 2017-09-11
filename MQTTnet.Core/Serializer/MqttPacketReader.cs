@@ -14,7 +14,7 @@ namespace MQTTnet.Core.Serializer
         private readonly MqttPacketHeader _header;
 
         public MqttPacketReader(Stream stream, MqttPacketHeader header)
-            : base(stream)
+            : base(stream, Encoding.UTF8, true)
         {
             _header = header;
         }
@@ -49,13 +49,13 @@ namespace MQTTnet.Core.Serializer
             return ReadBytes(_header.BodyLength - (int)BaseStream.Position);
         }
 
-        public static MqttPacketHeader ReadHeaderFromSource(IMqttCommunicationChannel source)
+        public static MqttPacketHeader ReadHeaderFromSource(Stream stream)
         {
-            var fixedHeader = (byte)source.Stream.ReadByte();
+            var fixedHeader = (byte)stream.ReadByte();
             var byteReader = new ByteReader(fixedHeader);
             byteReader.Read(4);
             var controlPacketType = (MqttControlPacketType)byteReader.Read(4);
-            var bodyLength = ReadBodyLengthFromSource(source);
+            var bodyLength = ReadBodyLengthFromSource(stream);
 
             return new MqttPacketHeader()
             {
@@ -65,7 +65,7 @@ namespace MQTTnet.Core.Serializer
             };
         }
         
-        private static int ReadBodyLengthFromSource(IMqttCommunicationChannel source)
+        private static int ReadBodyLengthFromSource(Stream stream)
         {
             // Alorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
             var multiplier = 1;
@@ -73,7 +73,7 @@ namespace MQTTnet.Core.Serializer
             byte encodedByte;
             do
             {
-                encodedByte = (byte)source.Stream.ReadByte();
+                encodedByte = (byte)stream.ReadByte();
                 value += (encodedByte & 127) * multiplier;
                 multiplier *= 128;
                 if (multiplier > 128 * 128 * 128)

@@ -424,9 +424,7 @@ namespace MQTTnet.Core.Tests
         private static void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
             var serializer = new MqttPacketSerializer { ProtocolVersion = protocolVersion };
-            var channel = new TestChannel();
-            serializer.SerializeAsync(packet, channel).Wait();
-            var buffer = channel.ToArray();
+            var buffer = serializer.Serialize(packet);
 
             Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(buffer));
         }
@@ -434,19 +432,21 @@ namespace MQTTnet.Core.Tests
         private static void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value)
         {
             var serializer = new MqttPacketSerializer();
+            
+            var buffer1 = serializer.Serialize(packet);
 
-            var channel1 = new TestChannel();
-            serializer.SerializeAsync(packet, channel1).Wait();
-            var buffer1 = channel1.ToArray();
+            using (var headerStream = new MemoryStream( buffer1 ))
+            {
+                var header = MqttPacketReader.ReadHeaderFromSource( headerStream );
 
-            var channel2 = new TestChannel(buffer1);
-            var deserializedPacket = serializer.DeserializeAsync(channel2).Result;
-            var buffer2 = channel2.ToArray();
+                using (var bodyStream = new MemoryStream( buffer1, (int)headerStream.Position, header.BodyLength ))
+                {
+                    var deserializedPacket = serializer.Deserialize(header, bodyStream);
+                    var buffer2 = serializer.Serialize( deserializedPacket );
 
-            var channel3 = new TestChannel(buffer2);
-            serializer.SerializeAsync(deserializedPacket, channel3).Wait();
-
-            Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(channel3.ToArray()));
+                    Assert.AreEqual( expectedBase64Value, Convert.ToBase64String( buffer2 ) );
+                } 
+            }
         }
     }
 }

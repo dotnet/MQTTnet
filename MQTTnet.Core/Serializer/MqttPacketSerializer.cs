@@ -17,12 +17,10 @@ namespace MQTTnet.Core.Serializer
         private static byte[] ProtocolVersionV310Name { get; } = Encoding.UTF8.GetBytes("MQIs");
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
-        private Task _sendTask = Task.FromResult( 0 );
 
-        public async Task SerializeAsync(MqttBasePacket packet, IMqttCommunicationChannel destination)
+        public byte[] Serialize(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
-            if (destination == null) throw new ArgumentNullException(nameof(destination));
 
             using (var stream = new MemoryStream())
             using (var writer = new MqttPacketWriter(stream))
@@ -37,15 +35,8 @@ namespace MQTTnet.Core.Serializer
                 Buffer.BlockCopy( headerArray, 0, writeBuffer, 0, headerArray.Length );
                 Buffer.BlockCopy( body, 0, writeBuffer, headerArray.Length, body.Length );
 
-                _sendTask = Send( writeBuffer, destination );
-                await _sendTask.ConfigureAwait( false );
+                return writeBuffer;
             }
-        }
-
-        private async Task Send(byte[] buffer, IMqttCommunicationChannel destination )
-        {
-            await _sendTask.ConfigureAwait( false );
-            await destination.Stream.WriteAsync( buffer, 0, buffer.Length ).ConfigureAwait( false );
         }
 
         private byte SerializePacket(MqttBasePacket packet, MqttPacketWriter writer)
@@ -123,29 +114,11 @@ namespace MQTTnet.Core.Serializer
             throw new MqttProtocolViolationException("Packet type invalid.");
         }
 
-        public async Task<MqttBasePacket> DeserializeAsync(IMqttCommunicationChannel source)
+        public MqttBasePacket Deserialize(MqttPacketHeader header, MemoryStream body)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (header == null) throw new ArgumentNullException(nameof(header));
+            if (body == null) throw new ArgumentNullException(nameof(body));
             
-            var header = MqttPacketReader.ReadHeaderFromSource(source);
-            
-            MemoryStream body = null;
-            if ( header.BodyLength > 0 )
-            {
-                var totalRead = 0;
-                var readBuffer = new byte[header.BodyLength];
-                do
-                {
-                    var read = await source.Stream.ReadAsync( readBuffer, totalRead, header.BodyLength - totalRead ).ConfigureAwait(false);
-                    totalRead += read;
-                } while ( totalRead < header.BodyLength );
-                body = new MemoryStream( readBuffer, 0, header.BodyLength );
-            }
-            else
-            {
-                body = new MemoryStream();
-            }
-
             using (var reader = new MqttPacketReader(body, header))
             {
                 return Deserialize( header, reader );

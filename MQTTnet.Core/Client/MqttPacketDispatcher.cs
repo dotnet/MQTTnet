@@ -10,7 +10,7 @@ namespace MQTTnet.Core.Client
     public class MqttPacketDispatcher
     {
         private readonly object _syncRoot = new object();
-        private readonly List<MqttBasePacket> _receivedPackets = new List<MqttBasePacket>();
+        private readonly HashSet<MqttBasePacket> _receivedPackets = new HashSet<MqttBasePacket>();
         private readonly List<MqttPacketAwaiter> _packetAwaiters = new List<MqttPacketAwaiter>();
 
         public async Task<MqttBasePacket> WaitForPacketAsync(Func<MqttBasePacket, bool> selector, TimeSpan timeout)
@@ -41,7 +41,7 @@ namespace MQTTnet.Core.Client
             {
                 if (packetAwaiter.PacketSelector(packet))
                 {
-                    packetAwaiter.SetResult(packet);
+                    packetAwaiter.TrySetResult(packet);
                     packetDispatched = true;
                     break;
                 }
@@ -71,7 +71,7 @@ namespace MQTTnet.Core.Client
 
         private List<MqttPacketAwaiter> GetPacketAwaiters()
         {
-            lock (_packetAwaiters)
+            lock (_syncRoot)
             {
                 return new List<MqttPacketAwaiter>(_packetAwaiters);
             }

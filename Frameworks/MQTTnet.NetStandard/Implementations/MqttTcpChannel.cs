@@ -19,6 +19,7 @@ namespace MQTTnet.Implementations
 
 
         public Stream ReceiveStream => _dataStream;
+        public Stream RawStream => _dataStream;
         public Stream SendStream => _dataStream;
 
         /// <summary>

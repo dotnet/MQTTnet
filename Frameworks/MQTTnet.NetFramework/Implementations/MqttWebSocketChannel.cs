@@ -12,10 +12,11 @@ namespace MQTTnet.Implementations
     public sealed class MqttWebSocketChannel : IMqttCommunicationChannel, IDisposable
     {
         private ClientWebSocket _webSocket = new ClientWebSocket();
-        
-        public Stream ReceiveStream { get; private set; }
 
-        public Stream SendStream { get; private set; }
+        public Stream RawStream { get; private set; }
+
+        public Stream SendStream => RawStream;
+        public Stream ReceiveStream => RawStream;
 
         public async Task ConnectAsync(MqttClientOptions options)
         {
@@ -26,7 +27,7 @@ namespace MQTTnet.Implementations
                 _webSocket = new ClientWebSocket();
                 await _webSocket.ConnectAsync(new Uri(options.Server), CancellationToken.None);
 
-                ReceiveStream = SendStream = new WebSocketStream(_webSocket);
+                RawStream = new WebSocketStream(_webSocket);
             }
             catch (WebSocketException exception)
             {
@@ -36,7 +37,7 @@ namespace MQTTnet.Implementations
 
         public Task DisconnectAsync()
         {
-            ReceiveStream = null;
+            RawStream = null;
             return _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
         }
 

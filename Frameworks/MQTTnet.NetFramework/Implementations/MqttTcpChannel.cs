@@ -13,13 +13,15 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
-        private Stream _receiveStream;
+        private Stream _rawStream;
         private Stream _sendStream;
+        private Stream _receiveStream;
         private Socket _socket;
         private SslStream _sslStream;
 
-        public Stream ReceiveStream => _receiveStream;
+        public Stream RawStream => _rawStream;
         public Stream SendStream => _sendStream;
+        public Stream ReceiveStream => _receiveStream;
 
         /// <summary>
         /// called on client sockets are created in connect
@@ -92,8 +94,9 @@ namespace MQTTnet.Implementations
         private void CreateCommStreams( Socket socket, SslStream sslStream )
         {
             //cannot use this as default buffering prevents from receiving the first connect message
-            _receiveStream = (Stream)sslStream ?? new NetworkStream( socket );
-            _sendStream = new BufferedStream( _receiveStream, BufferConstants.Size );
+            _rawStream = (Stream)sslStream ?? new NetworkStream( socket );
+            _sendStream = new BufferedStream( _rawStream, BufferConstants.Size );
+            _receiveStream = new BufferedStream( _rawStream, BufferConstants.Size );
         }
 
         private static X509CertificateCollection LoadCertificates(MqttClientOptions options)

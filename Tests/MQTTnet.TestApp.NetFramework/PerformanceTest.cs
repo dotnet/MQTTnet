@@ -17,7 +17,7 @@ namespace MQTTnet.TestApp.NetFramework
         public static async Task RunAsync()
         {
             var server = Task.Run(() => RunServerAsync());
-            var client = Task.Run(() => RunClientAsync(500, TimeSpan.FromMilliseconds(10)));
+            var client = Task.Run(() => RunClientAsync(300, TimeSpan.FromMilliseconds(10)));
 
             await Task.WhenAll(server, client).ConfigureAwait(false);
         }

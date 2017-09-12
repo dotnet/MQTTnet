@@ -50,7 +50,7 @@ namespace MQTTnet.Core.Adapter
                 }
             }
 
-            await _sendTask.ConfigureAwait( false );
+            await _sendTask; // configure await false geneates stackoverflow
             await _channel.SendStream.FlushAsync().TimeoutAfter( timeout ).ConfigureAwait( false );
         }
 
@@ -61,11 +61,11 @@ namespace MQTTnet.Core.Adapter
             Tuple<MqttPacketHeader, MemoryStream> tuple;
             if (timeout > TimeSpan.Zero)
             {
-                tuple = await ReceiveAsync().TimeoutAfter(timeout).ConfigureAwait(false);
+                tuple = await ReceiveAsync(_channel.RawStream).TimeoutAfter(timeout).ConfigureAwait(false);
             }
             else
             {
-                tuple = await ReceiveAsync().ConfigureAwait(false);
+                tuple = await ReceiveAsync(_channel.RawStream).ConfigureAwait(false);
             }
 
             var packet = PacketSerializer.Deserialize(tuple.Item1, tuple.Item2);
@@ -79,9 +79,8 @@ namespace MQTTnet.Core.Adapter
             return packet;
         }
 
-        private async Task<Tuple<MqttPacketHeader, MemoryStream>> ReceiveAsync()
+        private async Task<Tuple<MqttPacketHeader, MemoryStream>> ReceiveAsync(Stream stream)
         {
-            var stream = _channel.ReceiveStream;
             var header = MqttPacketReader.ReadHeaderFromSource(stream);
 
             MemoryStream body = null;

@@ -13,5 +13,7 @@ namespace MQTTnet.Core.Channel
         Stream SendStream { get; }
 
         Stream ReceiveStream { get; }
+
+        Stream RawStream { get; }
     }
 }

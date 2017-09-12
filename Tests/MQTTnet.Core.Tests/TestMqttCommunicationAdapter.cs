@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Client;
@@ -44,6 +45,11 @@ namespace MQTTnet.Core.Tests
             ThrowIfPartnerIsNull();
 
             return Task.Run(() => _incomingPackets.Take());
+        }
+
+        public IEnumerable<MqttBasePacket> ReceivePackets( CancellationToken cancellationToken )
+        {
+            return _incomingPackets.GetConsumingEnumerable();
         }
 
         private void SendPacketInternal(MqttBasePacket packet)

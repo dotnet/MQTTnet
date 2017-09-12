@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Client;
@@ -26,11 +27,15 @@ namespace MQTTnet.Core.Tests
             return Task.FromResult(0);
         }
 
-        public Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout)
+        public Task SendPacketsAsync(TimeSpan timeout, IEnumerable<MqttBasePacket> packets)
         {
             ThrowIfPartnerIsNull();
 
-            Partner.SendPacketInternal(packet);
+            foreach (var packet in packets)
+            {
+                Partner.SendPacketInternal(packet);
+            }
+
             return Task.FromResult(0);
         }
 

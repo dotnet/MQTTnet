@@ -10,6 +10,8 @@ namespace MQTTnet.Core.Channel
 
         Task DisconnectAsync();
         
-        Stream Stream { get; }
+        Stream SendStream { get; }
+
+        Stream ReceiveStream { get; }
     }
 }

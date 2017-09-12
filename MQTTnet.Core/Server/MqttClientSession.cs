@@ -103,12 +103,12 @@ namespace MQTTnet.Core.Server
         {
             if (packet is MqttSubscribePacket subscribePacket)
             {
-                return Adapter.SendPacketAsync(_subscriptionsManager.Subscribe(subscribePacket), _options.DefaultCommunicationTimeout);
+                return Adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _subscriptionsManager.Subscribe(subscribePacket));
             }
 
             if (packet is MqttUnsubscribePacket unsubscribePacket)
             {
-                return Adapter.SendPacketAsync(_subscriptionsManager.Unsubscribe(unsubscribePacket), _options.DefaultCommunicationTimeout);
+                return Adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _subscriptionsManager.Unsubscribe(unsubscribePacket));
             }
 
             if (packet is MqttPublishPacket publishPacket)
@@ -123,7 +123,7 @@ namespace MQTTnet.Core.Server
 
             if (packet is MqttPubRecPacket pubRecPacket)
             {
-                return Adapter.SendPacketAsync(pubRecPacket.CreateResponse<MqttPubRelPacket>(), _options.DefaultCommunicationTimeout);
+                return Adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, pubRecPacket.CreateResponse<MqttPubRelPacket>());
             }
 
             if (packet is MqttPubAckPacket || packet is MqttPubCompPacket)
@@ -134,7 +134,7 @@ namespace MQTTnet.Core.Server
 
             if (packet is MqttPingReqPacket)
             {
-                return Adapter.SendPacketAsync(new MqttPingRespPacket(), _options.DefaultCommunicationTimeout);
+                return Adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new MqttPingRespPacket());
             }
 
             if (packet is MqttDisconnectPacket || packet is MqttConnectPacket)
@@ -160,7 +160,7 @@ namespace MQTTnet.Core.Server
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
             {
                 _publishPacketReceivedCallback(this, publishPacket);
-                return Adapter.SendPacketAsync(new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier }, _options.DefaultCommunicationTimeout);
+                return Adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
             }
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
@@ -173,7 +173,7 @@ namespace MQTTnet.Core.Server
 
                 _publishPacketReceivedCallback(this, publishPacket);
 
-                return Adapter.SendPacketAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier }, _options.DefaultCommunicationTimeout);
+                return Adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
             }
 
             throw new MqttCommunicationException("Received a not supported QoS level.");
@@ -186,7 +186,7 @@ namespace MQTTnet.Core.Server
                 _unacknowledgedPublishPackets.Remove(pubRelPacket.PacketIdentifier);
             }
 
-            return Adapter.SendPacketAsync(new MqttPubCompPacket { PacketIdentifier = pubRelPacket.PacketIdentifier }, _options.DefaultCommunicationTimeout);
+            return Adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new MqttPubCompPacket { PacketIdentifier = pubRelPacket.PacketIdentifier });
         }
     }
 }

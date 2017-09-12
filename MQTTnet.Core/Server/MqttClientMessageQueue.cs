@@ -105,7 +105,7 @@ namespace MQTTnet.Core.Server
                 }
 
                 publishPacketContext.PublishPacket.Dup = publishPacketContext.SendTries > 0;
-                await _adapter.SendPacketAsync(publishPacketContext.PublishPacket, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                await _adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, publishPacketContext.PublishPacket).ConfigureAwait(false);
 
                 publishPacketContext.IsSent = true;
             }

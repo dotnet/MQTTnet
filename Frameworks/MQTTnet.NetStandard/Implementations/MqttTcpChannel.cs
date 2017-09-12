@@ -18,7 +18,8 @@ namespace MQTTnet.Implementations
         private SslStream _sslStream;
 
 
-        public Stream Stream => _dataStream;
+        public Stream ReceiveStream => _dataStream;
+        public Stream SendStream => _dataStream;
 
         /// <summary>
         /// called on client sockets are created in connect

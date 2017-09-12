@@ -78,21 +78,37 @@ namespace MQTTnet.TestApp.NetFramework
                 Console.WriteLine("### WAITING FOR APPLICATION MESSAGES ###");
 
                 var last = DateTime.Now;
-                var msgs = 0;
+                var msgCount = 0;
 
                 while (true)
                 {
-                    var sendTasks = Enumerable.Range( 0, msgChunkSize )
-                        .Select( i => PublishSingleMessage( client, ref msgs ) )
+                    var msgs = Enumerable.Range( 0, msgChunkSize )
+                        .Select( i => CreateMessage() )
                         .ToList();
 
-                    await Task.WhenAll( sendTasks );
+                    if (false)
+                    {
+                        //send concurrent (test for raceconditions)
+                        var sendTasks = msgs
+                            .Select( msg => PublishSingleMessage( client, msg, ref msgCount ) )
+                            .ToList();
+
+                        await Task.WhenAll( sendTasks );
+                    }
+                    else
+                    {
+                        await client.PublishAsync( msgs );
+                        msgCount += msgs.Count;
+                        //send multiple
+                    }
+
+                    
 
                     var now = DateTime.Now;
                     if (last < now - TimeSpan.FromSeconds(1))
                     {
-                        Console.WriteLine( $"sending {msgs} inteded {msgChunkSize / interval.TotalSeconds}" );
-                        msgs = 0;
+                        Console.WriteLine( $"sending {msgCount} inteded {msgChunkSize / interval.TotalSeconds}" );
+                        msgCount = 0;
                         last = now;
                     }
 
@@ -105,19 +121,21 @@ namespace MQTTnet.TestApp.NetFramework
             }
         }
 
-        private static Task PublishSingleMessage( IMqttClient client, ref int count )
+        private static MqttApplicationMessage CreateMessage()
+        {
+            return new MqttApplicationMessage(
+                "A/B/C",
+                Encoding.UTF8.GetBytes( "Hello World" ),
+                MqttQualityOfServiceLevel.AtMostOnce,
+                false
+            );
+        }
+
+        private static Task PublishSingleMessage( IMqttClient client, MqttApplicationMessage applicationMessage, ref int count )
         {
             Interlocked.Increment( ref count );
             return Task.Run( () =>
             {
-                var applicationMessage = new MqttApplicationMessage(
-                    "A/B/C",
-                    Encoding.UTF8.GetBytes( "Hello World" ),
-                    MqttQualityOfServiceLevel.AtLeastOnce,
-                    false
-                );
-
-                //do not await to send as much messages as possible 
                 return client.PublishAsync( applicationMessage );
             } );
         }

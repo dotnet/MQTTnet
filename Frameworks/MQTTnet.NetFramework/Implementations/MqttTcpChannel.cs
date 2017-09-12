@@ -13,11 +13,13 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
-        private Stream _dataStream;
+        private Stream _receiveStream;
+        private Stream _sendStream;
         private Socket _socket;
         private SslStream _sslStream;
 
-        public Stream Stream => _dataStream;
+        public Stream ReceiveStream => _receiveStream;
+        public Stream SendStream => _sendStream;
 
         /// <summary>
         /// called on client sockets are created in connect
@@ -35,7 +37,7 @@ namespace MQTTnet.Implementations
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _sslStream = sslStream;
-            _dataStream = (Stream)sslStream ?? new NetworkStream(socket);
+            CreateCommStreams( socket, sslStream );
         }
 
         public async Task ConnectAsync(MqttClientOptions options)
@@ -54,13 +56,10 @@ namespace MQTTnet.Implementations
                 {
                     _sslStream = new SslStream(new NetworkStream(_socket, true));
                     
-                    _dataStream = _sslStream;
                     await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
                 }
-                else
-                {
-                    _dataStream = new NetworkStream(_socket);
-                }
+
+                CreateCommStreams( _socket, _sslStream );
             }
             catch (SocketException exception)
             {
@@ -88,6 +87,13 @@ namespace MQTTnet.Implementations
 
             _socket = null;
             _sslStream = null;
+        }
+
+        private void CreateCommStreams( Socket socket, SslStream sslStream )
+        {
+            //cannot use this as default buffering prevents from receiving the first connect message
+            _receiveStream = (Stream)sslStream ?? new NetworkStream( socket );
+            _sendStream = new BufferedStream( _receiveStream, BufferConstants.Size );
         }
 
         private static X509CertificateCollection LoadCertificates(MqttClientOptions options)

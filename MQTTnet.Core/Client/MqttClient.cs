@@ -161,32 +161,43 @@ namespace MQTTnet.Core.Client
             return SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket);
         }
 
-        public Task PublishAsync(MqttApplicationMessage applicationMessage)
+        public async Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
             ThrowIfNotConnected();
 
-            var publishPacket = applicationMessage.ToPublishPacket();
+            var publishPackets = applicationMessages.Select(m => m.ToPublishPacket());
 
-            if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
+            foreach (var qosGroup in publishPackets.GroupBy(p => p.QualityOfServiceLevel))
             {
-                // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
-                return SendAsync(publishPacket);
+                var qosPackets = qosGroup.ToArray();
+                switch ( qosGroup.Key )
+                {
+                    case MqttQualityOfServiceLevel.AtMostOnce:
+                        // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
+                        await _adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, qosPackets);
+                        break;
+                    case MqttQualityOfServiceLevel.AtLeastOnce:
+                    {
+                        foreach (var publishPacket in qosPackets)
+                        {
+                            publishPacket.PacketIdentifier = GetNewPacketIdentifier();
+                            await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket);
+                        }
+                        break;
+                    }
+                    case MqttQualityOfServiceLevel.ExactlyOnce:
+                    {
+                        foreach (var publishPacket in qosPackets)
+                        {
+                            publishPacket.PacketIdentifier = GetNewPacketIdentifier();
+                            await PublishExactlyOncePacketAsync( publishPacket );
+                        }
+                        break;
+                    }
+                    default:
+                        throw new InvalidOperationException();
+                }
             }
-
-            if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
-            {
-                publishPacket.PacketIdentifier = GetNewPacketIdentifier();
-                return SendAndReceiveAsync<MqttPubAckPacket>(publishPacket);
-            }
-
-            if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
-            {
-                publishPacket.PacketIdentifier = GetNewPacketIdentifier();
-                return PublishExactlyOncePacketAsync(publishPacket);
-            }
-
-            throw new InvalidOperationException();
         }
 
         private async Task PublishExactlyOncePacketAsync(MqttBasePacket publishPacket)
@@ -312,14 +323,13 @@ namespace MQTTnet.Core.Client
 
         private Task SendAsync(MqttBasePacket packet)
         {
-            return _adapter.SendPacketAsync(packet, _options.DefaultCommunicationTimeout);
+            return _adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, packet);
         }
 
         private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket) where TResponsePacket : MqttBasePacket
         {
-            await _adapter.SendPacketAsync(requestPacket, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
-
-            return (TResponsePacket)await _packetDispatcher.WaitForPacketAsync(requestPacket, typeof(TResponsePacket), _options.DefaultCommunicationTimeout).ConfigureAwait(false);
+            await _adapter.SendPacketsAsync( _options.DefaultCommunicationTimeout, requestPacket ).ConfigureAwait(false);
+            return (TResponsePacket)await _packetDispatcher.WaitForPacketAsync(requestPacket, typeof( TResponsePacket ), _options.DefaultCommunicationTimeout).ConfigureAwait(false);
         }
 
         private ushort GetNewPacketIdentifier()

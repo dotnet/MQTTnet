@@ -391,7 +391,9 @@ namespace MQTTnet.Core.Tests
         {
             private readonly MemoryStream _stream = new MemoryStream();
 
-            public Stream Stream => _stream;
+            public Stream ReceiveStream => _stream;
+
+            public Stream SendStream => _stream;
 
             public bool IsConnected { get; } = true;
 

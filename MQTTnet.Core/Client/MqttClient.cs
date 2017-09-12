@@ -317,23 +317,9 @@ namespace MQTTnet.Core.Client
 
         private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket) where TResponsePacket : MqttBasePacket
         {
-            bool ResponsePacketSelector(MqttBasePacket p)
-            {
-                if (!(p is TResponsePacket p1))
-                {
-                    return false;
-                }
-
-                if (!(requestPacket is IMqttPacketWithIdentifier pi1) || !(p is IMqttPacketWithIdentifier pi2))
-                {
-                    return true;
-                }
-
-                return pi1.PacketIdentifier == pi2.PacketIdentifier;
-            }
-
             await _adapter.SendPacketAsync(requestPacket, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
-            return (TResponsePacket)await _packetDispatcher.WaitForPacketAsync(ResponsePacketSelector, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
+
+            return (TResponsePacket)await _packetDispatcher.WaitForPacketAsync(requestPacket, typeof(TResponsePacket), _options.DefaultCommunicationTimeout).ConfigureAwait(false);
         }
 
         private ushort GetNewPacketIdentifier()

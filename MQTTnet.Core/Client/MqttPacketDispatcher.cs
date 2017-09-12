@@ -44,13 +44,13 @@ namespace MQTTnet.Core.Client
             {
                 if (_packetByIdentifier.TryRemove(withIdentifier.PacketIdentifier, out var tcs))
                 {
-                    packetAwaiter.TrySetResult(packet);
+                    tcs.TrySetResult(packet);
                     packetDispatched = true;
                 }
             }
             else if (_packetByResponseType.TryRemove(packet.GetType(), out var tcs) )
             {
-                tcs.SetResult(packet);
+                tcs.TrySetResult( packet);
                 packetDispatched = true;
             }
 

@@ -16,6 +16,7 @@ namespace MQTTnet.Core.Adapter
     public class MqttChannelCommunicationAdapter : IMqttCommunicationAdapter
     {
         private readonly IMqttCommunicationChannel _channel;
+        private readonly byte[] _readBuffer = new byte[BufferConstants.Size];
 
         public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer)
         {
@@ -37,12 +38,16 @@ namespace MQTTnet.Core.Adapter
 
         public async Task SendPacketsAsync( TimeSpan timeout, IEnumerable<MqttBasePacket> packets )
         {
-            foreach (var packet in packets )
+            lock ( _channel )
             {
-                MqttTrace.Information( nameof( MqttChannelCommunicationAdapter ), "TX >>> {0} [Timeout={1}]", packet, timeout );
+                foreach (var packet in packets )
+                {
+                    MqttTrace.Information( nameof( MqttChannelCommunicationAdapter ), "TX >>> {0} [Timeout={1}]", packet, timeout );
 
-                var writeBuffer = PacketSerializer.Serialize(packet);
-                _sendTask = SendAsync( writeBuffer );
+                    var writeBuffer = PacketSerializer.Serialize(packet);
+                
+                    _sendTask = _sendTask.ContinueWith( p => _channel.SendStream.WriteAsync( writeBuffer, 0, writeBuffer.Length ) );
+                }
             }
 
             await _sendTask.ConfigureAwait( false );
@@ -50,12 +55,6 @@ namespace MQTTnet.Core.Adapter
         }
 
         private Task _sendTask = Task.FromResult(0); // this task is used to prevent overlapping write
-
-        private async Task SendAsync(byte[] buffer)
-        {
-            await _sendTask.ConfigureAwait(false);
-            await _channel.SendStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait( false );
-        }
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout)
         {
@@ -82,20 +81,20 @@ namespace MQTTnet.Core.Adapter
 
         private async Task<Tuple<MqttPacketHeader, MemoryStream>> ReceiveAsync()
         {
-            var header = MqttPacketReader.ReadHeaderFromSource(_channel.ReceiveStream);
+            var stream = _channel.ReceiveStream;
+            var header = MqttPacketReader.ReadHeaderFromSource(stream);
 
             MemoryStream body = null;
             if (header.BodyLength > 0)
             {
                 var totalRead = 0;
-                var readBuffer = new byte[header.BodyLength];
                 do
                 {
-                    var read = await _channel.ReceiveStream.ReadAsync(readBuffer, totalRead, header.BodyLength - totalRead)
+                    var read = await stream.ReadAsync(_readBuffer, totalRead, header.BodyLength - totalRead)
                         .ConfigureAwait( false );
                     totalRead += read;
                 } while (totalRead < header.BodyLength);
-                body = new MemoryStream(readBuffer, 0, header.BodyLength);
+                body = new MemoryStream(_readBuffer, 0, header.BodyLength);
             }
             else
             {

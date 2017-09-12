@@ -78,13 +78,13 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public Task WriteAsync(byte[] buffer)
+        public async Task WriteAsync(byte[] buffer)
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
             try
             {
-                return _dataStream.WriteAsync(buffer, 0, buffer.Length);
+                await _dataStream.WriteAsync(buffer, 0, buffer.Length);
             }
             catch (SocketException exception)
             {

@@ -200,16 +200,15 @@ namespace MQTTnet.Core.Client
             if (!IsConnected) throw new MqttCommunicationException("The client is not connected.");
         }
 
-        private Task DisconnectInternalAsync()
+        private async Task DisconnectInternalAsync()
         {
             try
             {
-                return _adapter.DisconnectAsync();
+                await _adapter.DisconnectAsync();
             }
             catch (Exception exception)
             {
                 MqttTrace.Warning(nameof(MqttClient), exception, "Error while disconnecting.");
-                return Task.FromResult(0);
             }
             finally
             {
@@ -227,28 +226,28 @@ namespace MQTTnet.Core.Client
             }
         }
 
-        private Task ProcessReceivedPacketAsync(MqttBasePacket mqttPacket)
+        private async Task ProcessReceivedPacketAsync(MqttBasePacket mqttPacket)
         {
             try
             {
                 if (mqttPacket is MqttPingReqPacket)
                 {
-                    return SendAsync(new MqttPingRespPacket());
+                    await SendAsync(new MqttPingRespPacket());
                 }
 
                 if (mqttPacket is MqttDisconnectPacket)
                 {
-                    return DisconnectAsync();
+                    await DisconnectAsync();
                 }
 
                 if (mqttPacket is MqttPublishPacket publishPacket)
                 {
-                    return ProcessReceivedPublishPacket(publishPacket);
+                    await ProcessReceivedPublishPacket(publishPacket);
                 }
 
                 if (mqttPacket is MqttPubRelPacket pubRelPacket)
                 {
-                    return ProcessReceivedPubRelPacket(pubRelPacket);
+                    await ProcessReceivedPubRelPacket(pubRelPacket);
                 }
 
                 _packetDispatcher.Dispatch(mqttPacket);
@@ -257,8 +256,6 @@ namespace MQTTnet.Core.Client
             {
                 MqttTrace.Error(nameof(MqttClient), exception, "Error while processing received packet.");
             }
-
-            return Task.FromResult(0);
         }
 
         private void FireApplicationMessageReceivedEvent(MqttPublishPacket publishPacket)
@@ -275,18 +272,17 @@ namespace MQTTnet.Core.Client
             }
         }
 
-        private Task ProcessReceivedPublishPacket(MqttPublishPacket publishPacket)
+        private async Task ProcessReceivedPublishPacket(MqttPublishPacket publishPacket)
         {
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
                 FireApplicationMessageReceivedEvent(publishPacket);
-                return Task.FromResult(0);
             }
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
             {
                 FireApplicationMessageReceivedEvent(publishPacket);
-                return SendAsync(new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
+                await SendAsync(new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
             }
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
@@ -298,7 +294,7 @@ namespace MQTTnet.Core.Client
                 }
 
                 FireApplicationMessageReceivedEvent(publishPacket);
-                return SendAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
+                await SendAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
             }
 
             throw new MqttCommunicationException("Received a not supported QoS level.");

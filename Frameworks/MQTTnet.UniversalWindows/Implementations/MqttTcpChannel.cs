@@ -87,13 +87,19 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public async Task ReadAsync(byte[] buffer)
+        public int Peek()
+        {
+            
+        }
+
+        public async Task<ArraySegment<byte>> ReadAsync(int length, byte[] buffer)
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
             try
             {
-                await _socket.InputStream.ReadAsync(buffer.AsBuffer(), (uint)buffer.Length, InputStreamOptions.None);
+                var result = await _socket.InputStream.ReadAsync(buffer.AsBuffer(), (uint)buffer.Length, InputStreamOptions.None);
+                return new ArraySegment<byte>(buffer, 0, (int)result.Length);
             }
             catch (SocketException exception)
             {

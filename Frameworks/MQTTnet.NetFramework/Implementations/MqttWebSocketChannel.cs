@@ -14,14 +14,14 @@ namespace MQTTnet.Implementations
         private int WebSocketBufferSize;
         private int WebSocketBufferOffset;
 
-        public Task ConnectAsync(MqttClientOptions options)
+        public async Task ConnectAsync(MqttClientOptions options)
         {
             _webSocket = null;
 
             try
             {
                 _webSocket = new ClientWebSocket();
-                return _webSocket.ConnectAsync(new Uri(options.Server), CancellationToken.None);
+                await _webSocket.ConnectAsync(new Uri(options.Server), CancellationToken.None);
             }
             catch (WebSocketException exception)
             {
@@ -75,7 +75,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public Task WriteAsync(byte[] buffer)
+        public async Task WriteAsync(byte[] buffer)
         {
             if (buffer == null) {
                 throw new ArgumentNullException(nameof(buffer));
@@ -83,8 +83,7 @@ namespace MQTTnet.Implementations
 
             try
             {
-                return _webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Binary, true,
-                 CancellationToken.None);
+                await _webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Binary, true, CancellationToken.None);
             }
             catch (WebSocketException exception)
             {

@@ -11,11 +11,8 @@ namespace MQTTnet.Implementations
     public sealed class MqttWebSocketChannel : IMqttCommunicationChannel, IDisposable
     {
         private ClientWebSocket _webSocket = new ClientWebSocket();
-        private const int BufferSize = 4096;
-        private const int BufferAmplifier = 20;
-        private readonly byte[] WebSocketBuffer = new byte[BufferSize * BufferAmplifier];
-        private int WebSocketBufferSize;
-        private int WebSocketBufferOffset;
+        private int _bufferSize;
+        private int _bufferOffset;
 
         public async Task ConnectAsync(MqttClientOptions options)
         {
@@ -42,50 +39,40 @@ namespace MQTTnet.Implementations
             _webSocket?.Dispose();
         }
 
-        public Task ReadAsync(byte[] buffer)
+        public async Task<ArraySegment<byte>> ReadAsync(int length, byte[] buffer)
         {
-            return Task.WhenAll(ReadToBufferAsync(buffer));
+            await ReadToBufferAsync(length, buffer).ConfigureAwait(false);
+
+            var result = new ArraySegment<byte>(buffer, _bufferOffset, length);
+            _bufferSize -= length;
+            _bufferOffset += length;
+
+            return result;
         }
 
-        private async Task ReadToBufferAsync(byte[] buffer)
+        private async Task ReadToBufferAsync(int length, byte[] buffer)
         {
-            var temporaryBuffer = new byte[BufferSize];
-            var offset = 0;
-
-            while (_webSocket.State == WebSocketState.Open)
+            if (_bufferSize > 0)
             {
-                if (WebSocketBufferSize == 0)
-                {
-                    WebSocketBufferOffset = 0;
-
-                    WebSocketReceiveResult response;
-                    do
-                    {
-                        response = await _webSocket.ReceiveAsync(new ArraySegment<byte>(temporaryBuffer), CancellationToken.None);
-
-                        temporaryBuffer.CopyTo(WebSocketBuffer, offset);
-                        offset += response.Count;
-                        temporaryBuffer = new byte[BufferSize];
-                    } while (!response.EndOfMessage);
-
-                    WebSocketBufferSize = response.Count;
-                    if (response.MessageType == WebSocketMessageType.Close)
-                    {
-                        await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-                    }
-
-                    Buffer.BlockCopy(WebSocketBuffer, 0, buffer, 0, buffer.Length);
-                    WebSocketBufferSize -= buffer.Length;
-                    WebSocketBufferOffset += buffer.Length;
-                }
-                else
-                {
-                    Buffer.BlockCopy(WebSocketBuffer, WebSocketBufferOffset, buffer, 0, buffer.Length);
-                    WebSocketBufferSize -= buffer.Length;
-                    WebSocketBufferOffset += buffer.Length;
-                }
-
                 return;
+            }
+
+            var offset = 0;
+            while (_webSocket.State == WebSocketState.Open && _bufferSize < length)
+            {
+                WebSocketReceiveResult response;
+                do
+                {
+                    response = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer, offset, buffer.Length - offset), CancellationToken.None).ConfigureAwait(false);
+                    offset += response.Count;
+                } while (!response.EndOfMessage);
+
+                _bufferSize = response.Count;
+
+                if (response.MessageType == WebSocketMessageType.Close)
+                {
+                    await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
+                }
             }
         }
 
@@ -104,6 +91,11 @@ namespace MQTTnet.Implementations
             {
                 throw new MqttCommunicationException(exception);
             }
+        }
+
+        public int Peek()
+        {
+            return _bufferSize;
         }
     }
 }

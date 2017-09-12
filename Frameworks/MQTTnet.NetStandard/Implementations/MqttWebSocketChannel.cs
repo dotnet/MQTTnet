@@ -11,8 +11,8 @@ namespace MQTTnet.Implementations
     public sealed class MqttWebSocketChannel : IMqttCommunicationChannel, IDisposable
     {
         private ClientWebSocket _webSocket = new ClientWebSocket();
-        private int WebSocketBufferSize;
-        private int WebSocketBufferOffset;
+        private int _bufferSize;
+        private int _bufferOffset;
 
         public async Task ConnectAsync(MqttClientOptions options)
         {
@@ -43,22 +43,22 @@ namespace MQTTnet.Implementations
         {
             await ReadToBufferAsync(length, buffer).ConfigureAwait(false);
 
-            var result = new ArraySegment<byte>(buffer, WebSocketBufferOffset, length);
-            WebSocketBufferSize -= length;
-            WebSocketBufferOffset += length;
+            var result = new ArraySegment<byte>(buffer, _bufferOffset, length);
+            _bufferSize -= length;
+            _bufferOffset += length;
 
             return result;
         }
 
         private async Task ReadToBufferAsync(int length, byte[] buffer)
         {
-            if (WebSocketBufferSize > 0)
+            if (_bufferSize > 0)
             {
                 return;
             }
 
             var offset = 0;
-            while (_webSocket.State == WebSocketState.Open && WebSocketBufferSize < length)
+            while (_webSocket.State == WebSocketState.Open && _bufferSize < length)
             {
                 WebSocketReceiveResult response;
                 do
@@ -67,7 +67,8 @@ namespace MQTTnet.Implementations
                     offset += response.Count;
                 } while (!response.EndOfMessage);
 
-                WebSocketBufferSize = response.Count;
+                _bufferSize = response.Count;
+
                 if (response.MessageType == WebSocketMessageType.Close)
                 {
                     await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
@@ -94,7 +95,7 @@ namespace MQTTnet.Implementations
 
         public int Peek()
         {
-            return WebSocketBufferSize;
+            return _bufferSize;
         }
     }
 }

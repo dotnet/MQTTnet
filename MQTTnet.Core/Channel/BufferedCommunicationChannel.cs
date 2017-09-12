@@ -6,9 +6,9 @@ namespace MQTTnet.Core.Channel
 {
     public class BufferedCommunicationChannel : IMqttCommunicationChannel
     {
-        private IMqttCommunicationChannel _inner { get; }
-        private int _bufferSize = 0;
-        private int _bufferOffset = 0;
+        private readonly IMqttCommunicationChannel _inner;
+        private int _bufferSize;
+        private int _bufferOffset;
 
         public BufferedCommunicationChannel(IMqttCommunicationChannel inner)
         {

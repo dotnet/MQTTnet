@@ -89,7 +89,7 @@ namespace MQTTnet.Implementations
 
         public int Peek()
         {
-            
+            return 0;
         }
 
         public async Task<ArraySegment<byte>> ReadAsync(int length, byte[] buffer)

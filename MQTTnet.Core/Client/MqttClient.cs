@@ -288,12 +288,14 @@ namespace MQTTnet.Core.Client
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
                 FireApplicationMessageReceivedEvent(publishPacket);
+                return;
             }
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
             {
                 FireApplicationMessageReceivedEvent(publishPacket);
                 await SendAsync(new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
+                return;
             }
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
@@ -306,6 +308,7 @@ namespace MQTTnet.Core.Client
 
                 FireApplicationMessageReceivedEvent(publishPacket);
                 await SendAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
+                return;
             }
 
             throw new MqttCommunicationException("Received a not supported QoS level.");

@@ -65,7 +65,7 @@ namespace MQTTnet.Core.Adapter
             }
             else
             {
-                tuple = await ReceiveAsync(_channel.RawStream).ConfigureAwait(false);
+                tuple = await ReceiveAsync(_channel.ReceiveStream).ConfigureAwait(false);
             }
 
             var packet = PacketSerializer.Deserialize(tuple.Item1, tuple.Item2);

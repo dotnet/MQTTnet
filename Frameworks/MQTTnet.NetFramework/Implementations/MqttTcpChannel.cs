@@ -93,8 +93,10 @@ namespace MQTTnet.Implementations
 
         private void CreateCommStreams( Socket socket, SslStream sslStream )
         {
-            //cannot use this as default buffering prevents from receiving the first connect message
             _rawStream = (Stream)sslStream ?? new NetworkStream( socket );
+
+            //cannot use this as default buffering prevents from receiving the first connect message
+            //need two streams otherwise read and write have to be synchronized
             _sendStream = new BufferedStream( _rawStream, BufferConstants.Size );
             _receiveStream = new BufferedStream( _rawStream, BufferConstants.Size );
         }
@@ -113,11 +115,6 @@ namespace MQTTnet.Implementations
             }
 
             return certificates;
-        }
-
-        public int Peek()
-        {
-            return _socket.Available;
         }
     }
 }

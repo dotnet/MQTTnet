@@ -107,10 +107,5 @@ namespace MQTTnet.Implementations
 
             return certificates;
         }
-
-        public int Peek()
-        {
-            return _socket.Available;
-        }
     }
 }

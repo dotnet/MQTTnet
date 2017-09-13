@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
+using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using System.Collections.Concurrent;
 
@@ -22,16 +23,19 @@ namespace MQTTnet.Core.Client
             var packetAwaiter = AddPacketAwaiter(request, responseType);
             DispatchPendingPackets();
 
-            var hasTimeout = await Task.WhenAny(Task.Delay(timeout), packetAwaiter.Task).ConfigureAwait(false) != packetAwaiter.Task;
-            RemovePacketAwaiter(request, responseType);
-
-            if (hasTimeout)
+            try
             {
-                MqttTrace.Warning(nameof(MqttPacketDispatcher), "Timeout while waiting for packet.");
-                throw new MqttCommunicationTimedOutException();
+                return await packetAwaiter.Task.TimeoutAfter( timeout );
             }
-
-            return packetAwaiter.Task.Result;
+            catch ( MqttCommunicationTimedOutException )
+            {
+                MqttTrace.Warning( nameof( MqttPacketDispatcher ), "Timeout while waiting for packet." );
+                throw;
+            }
+            finally
+            {
+                RemovePacketAwaiter(request, responseType);
+            }
         }
 
         public void Dispatch(MqttBasePacket packet)

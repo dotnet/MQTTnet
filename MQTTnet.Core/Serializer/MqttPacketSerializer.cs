@@ -17,12 +17,10 @@ namespace MQTTnet.Core.Serializer
         private static byte[] ProtocolVersionV310Name { get; } = Encoding.UTF8.GetBytes("MQIs");
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
-        private byte[] _readBuffer = new byte[BufferConstants.Size]; 
 
-        public async Task SerializeAsync(MqttBasePacket packet, IMqttCommunicationChannel destination)
+        public byte[] Serialize(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
-            if (destination == null) throw new ArgumentNullException(nameof(destination));
 
             using (var stream = new MemoryStream())
             using (var writer = new MqttPacketWriter(stream))
@@ -32,9 +30,12 @@ namespace MQTTnet.Core.Serializer
 
                 var body = stream.ToArray();
                 MqttPacketWriter.BuildLengthHeader(body.Length, header);
-                
-                await destination.WriteAsync(header.ToArray()).ConfigureAwait(false);
-                await destination.WriteAsync(body).ConfigureAwait(false);
+                var headerArray = header.ToArray();
+                var writeBuffer = new byte[header.Count + body.Length];
+                Buffer.BlockCopy( headerArray, 0, writeBuffer, 0, headerArray.Length );
+                Buffer.BlockCopy( body, 0, writeBuffer, headerArray.Length, body.Length );
+
+                return writeBuffer;
             }
         }
 
@@ -113,120 +114,112 @@ namespace MQTTnet.Core.Serializer
             throw new MqttProtocolViolationException("Packet type invalid.");
         }
 
-        public async Task<MqttBasePacket> DeserializeAsync(IMqttCommunicationChannel source)
+        public MqttBasePacket Deserialize(MqttPacketHeader header, MemoryStream body)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-
-            var header = await MqttPacketReader.ReadHeaderFromSourceAsync(source, _readBuffer).ConfigureAwait(false);
-
-            var body = await GetBody(source, header).ConfigureAwait(false);
-
-            using (var mqttPacketReader = new MqttPacketReader(body, header))
+            if (header == null) throw new ArgumentNullException(nameof(header));
+            if (body == null) throw new ArgumentNullException(nameof(body));
+            
+            using (var reader = new MqttPacketReader(body, header))
             {
-                switch (header.ControlPacketType)
-                {
-                    case MqttControlPacketType.Connect:
-                        {
-                            return DeserializeConnect(mqttPacketReader);
-                        }
-
-                    case MqttControlPacketType.ConnAck:
-                        {
-                            return DeserializeConnAck(mqttPacketReader);
-                        }
-
-                    case MqttControlPacketType.Disconnect:
-                        {
-                            return new MqttDisconnectPacket();
-                        }
-
-                    case MqttControlPacketType.Publish:
-                        {
-                            return DeserializePublish(mqttPacketReader, header);
-                        }
-
-                    case MqttControlPacketType.PubAck:
-                        {
-                            return new MqttPubAckPacket
-                            {
-                                PacketIdentifier = mqttPacketReader.ReadUInt16()
-                            };
-                        }
-
-                    case MqttControlPacketType.PubRec:
-                        {
-                            return new MqttPubRecPacket
-                            {
-                                PacketIdentifier = mqttPacketReader.ReadUInt16()
-                            };
-                        }
-
-                    case MqttControlPacketType.PubRel:
-                        {
-                            return new MqttPubRelPacket
-                            {
-                                PacketIdentifier = mqttPacketReader.ReadUInt16()
-                            };
-                        }
-
-                    case MqttControlPacketType.PubComp:
-                        {
-                            return new MqttPubCompPacket
-                            {
-                                PacketIdentifier = mqttPacketReader.ReadUInt16()
-                            };
-                        }
-
-                    case MqttControlPacketType.PingReq:
-                        {
-                            return new MqttPingReqPacket();
-                        }
-
-                    case MqttControlPacketType.PingResp:
-                        {
-                            return new MqttPingRespPacket();
-                        }
-
-                    case MqttControlPacketType.Subscribe:
-                        {
-                            return DeserializeSubscribe(mqttPacketReader);
-                        }
-
-                    case MqttControlPacketType.SubAck:
-                        {
-                            return DeserializeSubAck(mqttPacketReader);
-                        }
-
-                    case MqttControlPacketType.Unsubscibe:
-                        {
-                            return DeserializeUnsubscribe(mqttPacketReader);
-                        }
-
-                    case MqttControlPacketType.UnsubAck:
-                        {
-                            return new MqttUnsubAckPacket
-                            {
-                                PacketIdentifier = mqttPacketReader.ReadUInt16()
-                            };
-                        }
-
-                    default:
-                        {
-                            throw new MqttProtocolViolationException($"Packet type ({(int)header.ControlPacketType}) not supported.");
-                        }
-                }
+                return Deserialize( header, reader );
             }
         }
 
-        private async Task<MemoryStream> GetBody(IMqttCommunicationChannel source, MqttPacketHeader header)
+        private static MqttBasePacket Deserialize(MqttPacketHeader header, MqttPacketReader reader)
         {
-            if (header.BodyLength > 0)
+            switch (header.ControlPacketType)
             {
-                var segment = await MqttPacketReader.ReadFromSourceAsync(source, header.BodyLength, _readBuffer).ConfigureAwait(false);
-                return new MemoryStream(segment.Array, segment.Offset, segment.Count);
-            }
+                case MqttControlPacketType.Connect:
+                {
+                    return DeserializeConnect( reader );
+                }
 
-            return new MemoryStream();
+                case MqttControlPacketType.ConnAck:
+                {
+                    return DeserializeConnAck( reader );
+                }
+
+                case MqttControlPacketType.Disconnect:
+                {
+                    return new MqttDisconnectPacket();
+                }
+
+                case MqttControlPacketType.Publish:
+                {
+                    return DeserializePublish( reader, header );
+                }
+
+                case MqttControlPacketType.PubAck:
+                {
+                    return new MqttPubAckPacket
+                    {
+                        PacketIdentifier = reader.ReadUInt16()
+                    };
+                }
+
+                case MqttControlPacketType.PubRec:
+                {
+                    return new MqttPubRecPacket
+                    {
+                        PacketIdentifier = reader.ReadUInt16()
+                    };
+                }
+
+                case MqttControlPacketType.PubRel:
+                {
+                    return new MqttPubRelPacket
+                    {
+                        PacketIdentifier = reader.ReadUInt16()
+                    };
+                }
+
+                case MqttControlPacketType.PubComp:
+                {
+                    return new MqttPubCompPacket
+                    {
+                        PacketIdentifier = reader.ReadUInt16()
+                    };
+                }
+
+                case MqttControlPacketType.PingReq:
+                {
+                    return new MqttPingReqPacket();
+                }
+
+                case MqttControlPacketType.PingResp:
+                {
+                    return new MqttPingRespPacket();
+                }
+
+                case MqttControlPacketType.Subscribe:
+                {
+                    return DeserializeSubscribe( reader );
+                }
+
+                case MqttControlPacketType.SubAck:
+                {
+                    return DeserializeSubAck( reader );
+                }
+
+                case MqttControlPacketType.Unsubscibe:
+                {
+                    return DeserializeUnsubscribe( reader );
+                }
+
+                case MqttControlPacketType.UnsubAck:
+                {
+                    return new MqttUnsubAckPacket
+                    {
+                        PacketIdentifier = reader.ReadUInt16()
+                    };
+                }
+
+                default:
+                {
+                    throw new MqttProtocolViolationException(
+                        $"Packet type ({(int) header.ControlPacketType}) not supported." );
+                }
+            }
         }
 
         private static MqttBasePacket DeserializeUnsubscribe(MqttPacketReader reader)
@@ -267,7 +260,7 @@ namespace MQTTnet.Core.Serializer
             var retain = fixedHeader.Read();
             var qualityOfServiceLevel = (MqttQualityOfServiceLevel)fixedHeader.Read(2);
             var dup = fixedHeader.Read();
-
+            
             var topic = reader.ReadStringWithLengthPrefix();
 
             ushort packetIdentifier = 0;
@@ -519,12 +512,21 @@ namespace MQTTnet.Core.Serializer
                 writer.Write(packet.Payload);
             }
 
-            var fixedHeader = new ByteWriter();
-            fixedHeader.Write(packet.Retain);
-            fixedHeader.Write((byte)packet.QualityOfServiceLevel, 2);
-            fixedHeader.Write(packet.Dup);
+            byte fixedHeader = 0;
 
-            return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Publish, fixedHeader.Value);
+            if (packet.Retain)
+            {
+                fixedHeader |= 0x01;
+            }
+
+            fixedHeader |= (byte)((byte)packet.QualityOfServiceLevel << 1);
+
+            if ( packet.Dup )
+            {
+                fixedHeader |= 0x08;
+            }
+            
+            return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Publish, fixedHeader);
         }
 
         private static byte Serialize(MqttPubAckPacket packet, MqttPacketWriter writer)

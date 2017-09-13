@@ -15,10 +15,18 @@ namespace MQTTnet.Core.Client
 
         Task ConnectAsync(MqttApplicationMessage willApplicationMessage = null);
         Task DisconnectAsync();
-        Task PublishAsync(MqttApplicationMessage applicationMessage);
+        Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages);
         Task<IList<MqttSubscribeResult>> SubscribeAsync(IList<TopicFilter> topicFilters);
         Task<IList<MqttSubscribeResult>> SubscribeAsync(params TopicFilter[] topicFilters);
         Task Unsubscribe(IList<string> topicFilters);
         Task Unsubscribe(params string[] topicFilters);
+    }
+
+    public static class IMqttClientExtensions
+    {
+        public static Task PublishAsync( this IMqttClient client, params MqttApplicationMessage[] applicationMessages )
+        {
+            return client.PublishAsync( applicationMessages );
+        }
     }
 }

@@ -40,21 +40,21 @@ namespace MQTTnet.Core.Server
                 var connectReturnCode = ValidateConnection(connectPacket);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
-                    await eventArgs.ClientAdapter.SendPacketAsync(new MqttConnAckPacket
+                    await eventArgs.ClientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new MqttConnAckPacket
                     {
                         ConnectReturnCode = connectReturnCode
-                    }, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
 
                     return;
                 }
 
                 var clientSession = GetOrCreateClientSession(connectPacket);
 
-                await eventArgs.ClientAdapter.SendPacketAsync(new MqttConnAckPacket
+                await eventArgs.ClientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new MqttConnAckPacket
                 {
                     ConnectReturnCode = connectReturnCode,
                     IsSessionPresent = clientSession.IsExistingSession
-                }, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                }).ConfigureAwait(false);
 
                 await clientSession.Session.RunAsync(eventArgs.Identifier, connectPacket.WillMessage, eventArgs.ClientAdapter).ConfigureAwait(false);
             }

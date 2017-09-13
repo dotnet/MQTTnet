@@ -13,9 +13,15 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
-        private Stream _dataStream;
+        private Stream _rawStream;
+        private Stream _sendStream;
+        private Stream _receiveStream;
         private Socket _socket;
         private SslStream _sslStream;
+
+        public Stream RawStream => _rawStream;
+        public Stream SendStream => _sendStream;
+        public Stream ReceiveStream => _receiveStream;
 
         /// <summary>
         /// called on client sockets are created in connect
@@ -33,7 +39,7 @@ namespace MQTTnet.Implementations
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _sslStream = sslStream;
-            _dataStream = (Stream)sslStream ?? new NetworkStream(socket);
+            CreateCommStreams( socket, sslStream );
         }
 
         public async Task ConnectAsync(MqttClientOptions options)
@@ -52,13 +58,10 @@ namespace MQTTnet.Implementations
                 {
                     _sslStream = new SslStream(new NetworkStream(_socket, true));
                     
-                    _dataStream = _sslStream;
                     await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
                 }
-                else
-                {
-                    _dataStream = new NetworkStream(_socket);
-                }
+
+                CreateCommStreams( _socket, _sslStream );
             }
             catch (SocketException exception)
             {
@@ -79,45 +82,6 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public async Task WriteAsync(byte[] buffer)
-        {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
-
-            try
-            {
-                await _dataStream.WriteAsync(buffer, 0, buffer.Length);
-            }
-            catch (SocketException exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
-        }
-
-        public async Task<ArraySegment<byte>> ReadAsync(int length, byte[] buffer)
-        {
-            try
-            {
-                var totalBytes = 0;
-
-                do
-                {
-                    var read = await _dataStream.ReadAsync(buffer, totalBytes, length - totalBytes).ConfigureAwait(false);
-                    if (read == 0)
-                    {
-                        throw new MqttCommunicationException(new SocketException((int)SocketError.Disconnecting));
-                    }
-
-                    totalBytes += read;
-                }
-                while (totalBytes < length);
-                return new ArraySegment<byte>(buffer, 0, length);
-            }
-            catch (SocketException exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
-        }
-
         public void Dispose()
         {
             _socket?.Dispose();
@@ -125,6 +89,16 @@ namespace MQTTnet.Implementations
 
             _socket = null;
             _sslStream = null;
+        }
+
+        private void CreateCommStreams( Socket socket, SslStream sslStream )
+        {
+            _rawStream = (Stream)sslStream ?? new NetworkStream( socket );
+
+            //cannot use this as default buffering prevents from receiving the first connect message
+            //need two streams otherwise read and write have to be synchronized
+            _sendStream = new BufferedStream( _rawStream, BufferConstants.Size );
+            _receiveStream = new BufferedStream( _rawStream, BufferConstants.Size );
         }
 
         private static X509CertificateCollection LoadCertificates(MqttClientOptions options)
@@ -141,11 +115,6 @@ namespace MQTTnet.Implementations
             }
 
             return certificates;
-        }
-
-        public int Peek()
-        {
-            return _socket.Available;
         }
     }
 }

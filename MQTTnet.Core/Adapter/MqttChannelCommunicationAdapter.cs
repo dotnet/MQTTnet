@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Channel;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
+using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Serializer;
 
@@ -12,6 +16,7 @@ namespace MQTTnet.Core.Adapter
     public class MqttChannelCommunicationAdapter : IMqttCommunicationAdapter
     {
         private readonly IMqttCommunicationChannel _channel;
+        private readonly byte[] _readBuffer = new byte[BufferConstants.Size];
 
         public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer)
         {
@@ -23,7 +28,7 @@ namespace MQTTnet.Core.Adapter
 
         public Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {
-            return ExecuteWithTimeoutAsync(_channel.ConnectAsync(options), timeout);
+            return _channel.ConnectAsync(options).TimeoutAfter(timeout);
         }
 
         public Task DisconnectAsync()
@@ -31,24 +36,39 @@ namespace MQTTnet.Core.Adapter
             return _channel.DisconnectAsync();
         }
 
-        public Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout)
+        public async Task SendPacketsAsync( TimeSpan timeout, IEnumerable<MqttBasePacket> packets )
         {
-            MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "TX >>> {0} [Timeout={1}]", packet, timeout);
+            lock ( _channel )
+            {
+                foreach (var packet in packets )
+                {
+                    MqttTrace.Information( nameof( MqttChannelCommunicationAdapter ), "TX >>> {0} [Timeout={1}]", packet, timeout );
 
-            return ExecuteWithTimeoutAsync(PacketSerializer.SerializeAsync(packet, _channel), timeout);
+                    var writeBuffer = PacketSerializer.Serialize(packet);
+                
+                    _sendTask = _sendTask.ContinueWith( p => _channel.SendStream.WriteAsync( writeBuffer, 0, writeBuffer.Length ) );
+                }
+            }
+
+            await _sendTask; // configure await false geneates stackoverflow
+            await _channel.SendStream.FlushAsync().TimeoutAfter( timeout ).ConfigureAwait( false );
         }
+
+        private Task _sendTask = Task.FromResult(0); // this task is used to prevent overlapping write
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout)
         {
-            MqttBasePacket packet;
+            Tuple<MqttPacketHeader, MemoryStream> tuple;
             if (timeout > TimeSpan.Zero)
             {
-                packet = await ExecuteWithTimeoutAsync(PacketSerializer.DeserializeAsync(_channel), timeout).ConfigureAwait(false);
+                tuple = await ReceiveAsync(_channel.RawStream).TimeoutAfter(timeout).ConfigureAwait(false);
             }
             else
             {
-                packet = await PacketSerializer.DeserializeAsync(_channel).ConfigureAwait(false);
+                tuple = await ReceiveAsync(_channel.ReceiveStream).ConfigureAwait(false);
             }
+
+            var packet = PacketSerializer.Deserialize(tuple.Item1, tuple.Item2);
 
             if (packet == null)
             {
@@ -59,34 +79,28 @@ namespace MQTTnet.Core.Adapter
             return packet;
         }
 
-        private static async Task<TResult> ExecuteWithTimeoutAsync<TResult>(Task<TResult> task, TimeSpan timeout)
+        private async Task<Tuple<MqttPacketHeader, MemoryStream>> ReceiveAsync(Stream stream)
         {
-            var timeoutTask = Task.Delay(timeout);
-            if (await Task.WhenAny(timeoutTask, task).ConfigureAwait(false) == timeoutTask)
+            var header = MqttPacketReader.ReadHeaderFromSource(stream);
+
+            MemoryStream body = null;
+            if (header.BodyLength > 0)
             {
-                throw new MqttCommunicationTimedOutException();
+                var totalRead = 0;
+                do
+                {
+                    var read = await stream.ReadAsync(_readBuffer, totalRead, header.BodyLength - totalRead)
+                        .ConfigureAwait( false );
+                    totalRead += read;
+                } while (totalRead < header.BodyLength);
+                body = new MemoryStream(_readBuffer, 0, header.BodyLength);
+            }
+            else
+            {
+                body = new MemoryStream();
             }
 
-            if (task.IsFaulted)
-            {
-                throw new MqttCommunicationException(task.Exception);
-            }
-
-            return task.Result;
-        }
-
-        private static async Task ExecuteWithTimeoutAsync(Task task, TimeSpan timeout)
-        {
-            var timeoutTask = Task.Delay(timeout);
-            if (await Task.WhenAny(timeoutTask, task).ConfigureAwait(false) == timeoutTask)
-            {
-                throw new MqttCommunicationTimedOutException();
-            }
-
-            if (task.IsFaulted)
-            {
-                throw new MqttCommunicationException(task.Exception);
-            }
+            return Tuple.Create(header, body);
         }
     }
 }

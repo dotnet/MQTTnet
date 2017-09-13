@@ -13,8 +13,8 @@ namespace MQTTnet.Core.Serializer
     {
         private readonly MqttPacketHeader _header;
 
-        public MqttPacketReader(Stream stream, MqttPacketHeader header)
-            : base(stream)
+        public MqttPacketReader(MqttPacketHeader header, Stream body)
+            : base(body)
         {
             _header = header;
         }
@@ -54,10 +54,11 @@ namespace MQTTnet.Core.Serializer
             var fixedHeader = await ReadStreamByteAsync(source, buffer).ConfigureAwait(false);
             var byteReader = new ByteReader(fixedHeader);
             byteReader.Read(4);
+
             var controlPacketType = (MqttControlPacketType)byteReader.Read(4);
             var bodyLength = await ReadBodyLengthFromSourceAsync(source, buffer).ConfigureAwait(false);
 
-            return new MqttPacketHeader()
+            return new MqttPacketHeader
             {
                 FixedHeader = fixedHeader,
                 ControlPacketType = controlPacketType,

@@ -17,7 +17,7 @@ namespace MQTTnet.Core.Serializer
         private static byte[] ProtocolVersionV310Name { get; } = Encoding.UTF8.GetBytes("MQIs");
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
-        private byte[] _readBuffer = new byte[BufferConstants.Size]; 
+        private byte[] _readBuffer = new byte[BufferConstants.Size];  // TODO: What happens if the message is bigger?
 
         public async Task SerializeAsync(MqttBasePacket packet, IMqttCommunicationChannel destination)
         {
@@ -27,9 +27,7 @@ namespace MQTTnet.Core.Serializer
             using (var stream = new MemoryStream())
             using (var writer = new MqttPacketWriter(stream))
             {
-                var header = new List<byte>();
-                header.Add(SerializePacket(packet, writer));
-
+                var header = new List<byte> { SerializePacket(packet, writer) };
                 var body = stream.ToArray();
                 MqttPacketWriter.BuildLengthHeader(body.Length, header);
                 
@@ -118,10 +116,9 @@ namespace MQTTnet.Core.Serializer
             if (source == null) throw new ArgumentNullException(nameof(source));
 
             var header = await MqttPacketReader.ReadHeaderFromSourceAsync(source, _readBuffer).ConfigureAwait(false);
-
             var body = await GetBody(source, header).ConfigureAwait(false);
 
-            using (var mqttPacketReader = new MqttPacketReader(body, header))
+            using (var mqttPacketReader = new MqttPacketReader(header, body))
             {
                 switch (header.ControlPacketType)
                 {
@@ -225,7 +222,7 @@ namespace MQTTnet.Core.Serializer
                 var segment = await MqttPacketReader.ReadFromSourceAsync(source, header.BodyLength, _readBuffer).ConfigureAwait(false);
                 return new MemoryStream(segment.Array, segment.Offset, segment.Count);
             }
-
+           
             return new MemoryStream();
         }
 
@@ -412,9 +409,7 @@ namespace MQTTnet.Core.Serializer
             else
             {
                 writer.Write(ProtocolVersionV310Name);
-                writer.Write(0x64);
-                writer.Write(0x70);
-                writer.Write(0x03); // Protocol Level (3)
+                writer.Write(0x64, 0x70, 0x03); // Protocol Level (0x03)
             }
 
             var connectFlags = new ByteWriter(); // 3.1.2.3 Connect Flags

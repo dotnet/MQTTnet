@@ -24,13 +24,17 @@ namespace MQTTnet.Core.Serializer
         public override void Write(ushort value)
         {
             var buffer = BitConverter.GetBytes(value);
-            Write(buffer[1]);
-            Write(buffer[0]);
+            Write(buffer[1], buffer[0]);
         }
 
         public new void Write(params byte[] values)
         {
             base.Write(values);
+        }
+
+        public new void Write(byte value)
+        {
+            base.Write(value);
         }
 
         public void Write(ByteWriter value)

@@ -101,6 +101,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Implementations\MqttWebSocketChannel.cs" />
+    <Compile Include="Implementations\WebSocketStream.cs" />
     <Compile Include="MqttClientFactory.cs" />
     <Compile Include="MqttServerFactory.cs" />
     <Compile Include="Implementations\MqttServerAdapter.cs" />

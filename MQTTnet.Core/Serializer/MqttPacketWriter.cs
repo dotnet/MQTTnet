@@ -8,10 +8,9 @@ namespace MQTTnet.Core.Serializer
 {
     public sealed class MqttPacketWriter : BinaryWriter
     {
-        public MqttPacketWriter( Stream stream )
+        public MqttPacketWriter(Stream stream)
             : base(stream)
         {
-
         }
 
         public static byte BuildFixedHeader(MqttControlPacketType packetType, byte flags = 0)
@@ -20,7 +19,7 @@ namespace MQTTnet.Core.Serializer
             fixedHeader |= flags;
             return (byte)fixedHeader;
         }
-        
+
         public override void Write(ushort value)
         {
             var buffer = BitConverter.GetBytes(value);
@@ -43,7 +42,7 @@ namespace MQTTnet.Core.Serializer
 
             Write(value.Value);
         }
-        
+
         public void WriteWithLengthPrefix(string value)
         {
             WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value ?? string.Empty));

@@ -17,7 +17,7 @@ namespace MQTTnet.Core.Packets
 
         public override string ToString()
         {
-            return nameof(MqttPublishPacket) + 
+            return nameof(MqttPublishPacket) +
                 ": [Topic=" + Topic + "]" +
                 " [Payload=" + Convert.ToBase64String(Payload) + "]" +
                 " [QoSLevel=" + QualityOfServiceLevel + "]" +

@@ -27,6 +27,7 @@ namespace MQTTnet.Implementations
         public void Start(MqttServerOptions options)
         {
             if (_isRunning) throw new InvalidOperationException("Server is already started.");
+
             _isRunning = true;
 
             _cancellationTokenSource = new CancellationTokenSource();
@@ -107,7 +108,7 @@ namespace MQTTnet.Implementations
 
                     var sslStream = new SslStream(new NetworkStream(clientSocket));
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
-                    
+
                     var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer());
                     ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientSocket.RemoteEndPoint.ToString(), clientAdapter));
                 }

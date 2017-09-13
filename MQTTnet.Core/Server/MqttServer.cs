@@ -20,7 +20,7 @@ namespace MQTTnet.Core.Server
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _adapters = adapters ?? throw new ArgumentNullException(nameof(adapters));
-            
+
             _clientSessionsManager = new MqttClientSessionsManager(options);
             _clientSessionsManager.ApplicationMessageReceived += (s, e) => ApplicationMessageReceived?.Invoke(s, e);
         }
@@ -61,7 +61,7 @@ namespace MQTTnet.Core.Server
                 adapter.ClientConnected += OnClientConnected;
                 adapter.Start(_options);
             }
-            
+
             MqttTrace.Information(nameof(MqttServer), "Started.");
         }
 

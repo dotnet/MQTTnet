@@ -9,7 +9,7 @@ namespace MQTTnet.Core.Server
         public MqttServerDefaultEndpointOptions DefaultEndpointOptions { get; } = new MqttServerDefaultEndpointOptions();
 
         public MqttServerTlsEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsEndpointOptions();
-        
+
         public int ConnectionBacklog { get; set; } = 10;
 
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(15);

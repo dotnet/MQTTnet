@@ -116,6 +116,7 @@
     <Compile Include="MqttServerFactory.cs" />
     <Compile Include="Implementations\MqttTcpChannel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Implementations\WebSocketStream.cs" />
     <EmbeddedResource Include="Properties\MQTTnet.Universal.rd.xml" />
   </ItemGroup>
   <ItemGroup>

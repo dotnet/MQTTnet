@@ -10,7 +10,7 @@ namespace MQTTnet.Implementations
     public class MqttServerAdapter : IMqttServerAdapter, IDisposable
     {
         private StreamSocketListener _defaultEndpointSocket;
-        
+
         private bool _isRunning;
 
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
@@ -20,13 +20,14 @@ namespace MQTTnet.Implementations
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             if (_isRunning) throw new InvalidOperationException("Server is already started.");
+
             _isRunning = true;
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _defaultEndpointSocket = new StreamSocketListener();
                 _defaultEndpointSocket.BindServiceNameAsync(options.GetDefaultEndpointPort().ToString(), SocketProtectionLevel.PlainSocket).GetAwaiter().GetResult();
-                _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;                
+                _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
             }
 
             if (options.TlsEndpointOptions.IsEnabled)

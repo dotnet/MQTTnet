@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using MQTTnet.Core.Channel;
+﻿using System.IO;
 using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Serializer
@@ -8,8 +7,8 @@ namespace MQTTnet.Core.Serializer
     {
         MqttProtocolVersion ProtocolVersion { get; set; }
 
-        Task SerializeAsync(MqttBasePacket mqttPacket, IMqttCommunicationChannel destination);
+        byte[] Serialize(MqttBasePacket mqttPacket);
 
-        Task<MqttBasePacket> DeserializeAsync(IMqttCommunicationChannel source);
+        MqttBasePacket Deserialize(MqttPacketHeader header, MemoryStream stream);
     }
 }

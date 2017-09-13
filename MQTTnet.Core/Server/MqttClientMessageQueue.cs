@@ -1,20 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
-using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Server
 {
     public sealed class MqttClientMessageQueue
     {
-        private readonly List<MqttClientPublishPacketContext> _pendingPublishPackets = new List<MqttClientPublishPacketContext>();
-        private readonly AsyncGate _gate = new AsyncGate();
+        private readonly BlockingCollection<MqttClientPublishPacketContext> _pendingPublishPackets = new BlockingCollection<MqttClientPublishPacketContext>();
 
         private readonly MqttServerOptions _options;
         private CancellationTokenSource _cancellationTokenSource;
@@ -43,26 +40,22 @@ namespace MQTTnet.Core.Server
             _adapter = null;
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource = null;
+            _pendingPublishPackets?.Dispose();
         }
 
         public void Enqueue(MqttPublishPacket publishPacket)
         {
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 
-            lock (_pendingPublishPackets)
-            {
-                _pendingPublishPackets.Add(new MqttClientPublishPacketContext(publishPacket));
-                _gate.Set();
-            }
+            _pendingPublishPackets.Add(new MqttClientPublishPacketContext(publishPacket));
         }
 
         private async Task SendPendingPublishPacketsAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            foreach (var publishPacket in _pendingPublishPackets.GetConsumingEnumerable(cancellationToken))
             {
                 try
                 {
-                    await _gate.WaitOneAsync().ConfigureAwait(false);
                     if (cancellationToken.IsCancellationRequested)
                     {
                         return;
@@ -73,25 +66,12 @@ namespace MQTTnet.Core.Server
                         continue;
                     }
 
-                    List<MqttClientPublishPacketContext> pendingPublishPackets;
-                    lock (_pendingPublishPackets)
-                    {
-                        pendingPublishPackets = _pendingPublishPackets.ToList();
-                    }
-
-                    foreach (var publishPacket in pendingPublishPackets)
-                    {
-                        await TrySendPendingPublishPacketAsync(publishPacket).ConfigureAwait(false);
-                    }
+                    await TrySendPendingPublishPacketAsync(publishPacket).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
                     MqttTrace.Error(nameof(MqttClientMessageQueue), e, "Error while sending pending publish packets.");
                 }
-                finally
-                {
-                    Cleanup();
-                }               
             }
         }
 
@@ -105,29 +85,23 @@ namespace MQTTnet.Core.Server
                 }
 
                 publishPacketContext.PublishPacket.Dup = publishPacketContext.SendTries > 0;
-                await _adapter.SendPacketAsync(publishPacketContext.PublishPacket, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                await _adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, publishPacketContext.PublishPacket).ConfigureAwait(false);
 
                 publishPacketContext.IsSent = true;
             }
             catch (MqttCommunicationException exception)
             {
                 MqttTrace.Warning(nameof(MqttClientMessageQueue), exception, "Sending publish packet failed.");
+                _pendingPublishPackets.Add(publishPacketContext);
             }
             catch (Exception exception)
             {
                 MqttTrace.Error(nameof(MqttClientMessageQueue), exception, "Sending publish packet failed.");
+                _pendingPublishPackets.Add(publishPacketContext);
             }
             finally
             {
                 publishPacketContext.SendTries++;
-            }
-        }
-
-        private void Cleanup()
-        {
-            lock (_pendingPublishPackets)
-            {
-                _pendingPublishPackets.RemoveAll(p => p.IsSent);
             }
         }
     }

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet.TestApp.NetFramework
@@ -17,12 +18,12 @@ namespace MQTTnet.TestApp.NetFramework
         public static async Task RunAsync()
         {
             var server = Task.Run(() => RunServerAsync());
-            var client = Task.Run(() => RunClientAsync(1000, 50000, TimeSpan.FromMilliseconds(10)));
+            var client = Task.Run(() => RunClientAsync(300, TimeSpan.FromMilliseconds(10)));
 
             await Task.WhenAll(server, client).ConfigureAwait(false);
         }
 
-        private static async Task RunClientAsync(int messageChunkSize, int totalMessageCount, TimeSpan interval)
+        private static async Task RunClientAsync( int msgChunkSize, TimeSpan interval )
         {
             try
             {
@@ -77,38 +78,88 @@ namespace MQTTnet.TestApp.NetFramework
 
                 Console.WriteLine("### WAITING FOR APPLICATION MESSAGES ###");
 
-                var applicationMessage = new MqttApplicationMessage(
-                    "A/B/C",
-                    Encoding.UTF8.GetBytes("Hello World"),
-                    MqttQualityOfServiceLevel.AtLeastOnce,
-                    false
-                );
-
-                var overallCount = 0;
-                while (overallCount < totalMessageCount)
+                var testMessageCount = 1000;
+                var message = CreateMessage();
+                var stopwatch = Stopwatch.StartNew();
+                for (var i = 0; i < testMessageCount; i++)
                 {
-                    var stopwatch = Stopwatch.StartNew();
-                    var count = 0;
-                    for (var i = 0; i < messageChunkSize; i++)
-                    {
-                        //do not await to send as much messages as possible 
-                        await client.PublishAsync(applicationMessage).ConfigureAwait(false);
-                        count++;
-                        overallCount++;
-                    }
-
-                    stopwatch.Stop();
-
-                    Console.WriteLine($"Sent {count} messages within {stopwatch.ElapsedMilliseconds} ms ({stopwatch.ElapsedMilliseconds / (float)count} ms / message).");
-                    await Task.Delay(interval).ConfigureAwait(false);
+                    await client.PublishAsync(message);
                 }
 
-                Console.WriteLine($"Completed sending {totalMessageCount} messages.");
+                stopwatch.Stop();
+                Console.WriteLine($"Sent 1000 messages within {stopwatch.ElapsedMilliseconds} ms ({stopwatch.ElapsedMilliseconds / (float)testMessageCount} ms / message).");
+                
+                stopwatch.Restart();
+                var sentMessagesCount = 0;
+                while (stopwatch.ElapsedMilliseconds < 1000)
+                {
+                    await client.PublishAsync(message);
+                    sentMessagesCount++;
+                }
+
+                Console.WriteLine($"Sending {sentMessagesCount} messages per second.");
+
+                var last = DateTime.Now;
+                var msgCount = 0;
+
+                while (true)
+                {
+                    var msgs = Enumerable.Range( 0, msgChunkSize )
+                        .Select( i => CreateMessage() )
+                        .ToList();
+
+                    if (false)
+                    {
+                        //send concurrent (test for raceconditions)
+                        var sendTasks = msgs
+                            .Select( msg => PublishSingleMessage( client, msg, ref msgCount ) )
+                            .ToList();
+
+                        await Task.WhenAll( sendTasks );
+                    }
+                    else
+                    {
+                        await client.PublishAsync( msgs );
+                        msgCount += msgs.Count;
+                        //send multiple
+                    }
+
+                    
+
+                    var now = DateTime.Now;
+                    if (last < now - TimeSpan.FromSeconds(1))
+                    {
+                        Console.WriteLine( $"sending {msgCount} inteded {msgChunkSize / interval.TotalSeconds}" );
+                        msgCount = 0;
+                        last = now;
+                    }
+
+                    await Task.Delay(interval).ConfigureAwait(false);
+                }
             }
             catch (Exception exception)
             {
                 Console.WriteLine(exception);
             }
+        }
+
+        private static MqttApplicationMessage CreateMessage()
+        {
+            return new MqttApplicationMessage(
+                "A/B/C",
+                Encoding.UTF8.GetBytes( "Hello World" ),
+                MqttQualityOfServiceLevel.AtMostOnce,
+                false
+            );
+        }
+
+        private static Task PublishSingleMessage( IMqttClient client, MqttApplicationMessage applicationMessage, ref int count )
+        {
+            Interlocked.Increment( ref count );
+            return Task.Run( () =>
+            {
+                return client.PublishAsync( applicationMessage );
+            } );
         }
 
         private static void RunServerAsync()
@@ -133,12 +184,12 @@ namespace MQTTnet.TestApp.NetFramework
                 };
                 
                 var mqttServer = new MqttServerFactory().CreateMqttServer(options);
-                var last = DateTime.UtcNow;
+                var last = DateTime.Now;
                 var msgs = 0;
                 mqttServer.ApplicationMessageReceived += (sender, args) => 
                 {
                     msgs++;
-                    var now = DateTime.UtcNow;
+                    var now = DateTime.Now;
                     if (last < now - TimeSpan.FromSeconds(1))
                     {
                         Console.WriteLine($"received {msgs}");

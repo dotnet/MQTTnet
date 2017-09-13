@@ -86,6 +86,7 @@
   <ItemGroup>
     <Compile Include="ByteReaderTests.cs" />
     <Compile Include="ByteWriterTests.cs" />
+    <Compile Include="ExtensionTests.cs" />
     <Compile Include="MqttPacketSerializerTests.cs" />
     <Compile Include="MqttServerTests.cs" />
     <Compile Include="MqttSubscriptionsManagerTests.cs" />

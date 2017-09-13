@@ -13,9 +13,12 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
-        private Stream _dataStream;
         private Socket _socket;
         private SslStream _sslStream;
+        
+        public Stream ReceiveStream { get; private set; }
+        public Stream RawStream => ReceiveStream;
+        public Stream SendStream => ReceiveStream;
 
         /// <summary>
         /// called on client sockets are created in connect
@@ -32,7 +35,7 @@ namespace MQTTnet.Implementations
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _sslStream = sslStream;
-            _dataStream = (Stream)sslStream ?? new NetworkStream(socket);
+            ReceiveStream = (Stream)sslStream ?? new NetworkStream(socket);
         }
 
         public async Task ConnectAsync(MqttClientOptions options)
@@ -51,12 +54,12 @@ namespace MQTTnet.Implementations
                 if (options.TlsOptions.UseTls)
                 {
                     _sslStream = new SslStream(new NetworkStream(_socket, true));
-                    _dataStream = _sslStream;
+                    ReceiveStream = _sslStream;
                     await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
                 }
                 else
                 {
-                    _dataStream = new NetworkStream(_socket);
+                    ReceiveStream = new NetworkStream(_socket);
                 }
             }
             catch (SocketException exception)
@@ -71,45 +74,6 @@ namespace MQTTnet.Implementations
             {
                 Dispose();
                 return Task.FromResult(0);
-            }
-            catch (SocketException exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
-        }
-
-        public async Task WriteAsync(byte[] buffer)
-        {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
-
-            try
-            {
-                await _dataStream.WriteAsync(buffer, 0, buffer.Length);
-            }
-            catch (SocketException exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
-        }
-
-        public async Task<ArraySegment<byte>> ReadAsync(int length, byte[] buffer)
-        {
-            try
-            {
-                var totalBytes = 0;
-
-                do
-                {
-                    var read = await _dataStream.ReadAsync(buffer, totalBytes, length - totalBytes).ConfigureAwait(false);
-                    if (read == 0)
-                    {
-                        throw new MqttCommunicationException(new SocketException((int)SocketError.Disconnecting));
-                    }
-
-                    totalBytes += read;
-                }
-                while (totalBytes < length);
-                return new ArraySegment<byte>(buffer, 0, length);
             }
             catch (SocketException exception)
             {
@@ -140,11 +104,6 @@ namespace MQTTnet.Implementations
             }
 
             return certificates;
-        }
-
-        public int Peek()
-        {
-            return _socket.Available;
         }
     }
 }

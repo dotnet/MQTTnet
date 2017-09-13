@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
+using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using System.Collections.Concurrent;
 
@@ -13,7 +14,7 @@ namespace MQTTnet.Core.Client
         private readonly object _syncRoot = new object();
         private readonly HashSet<MqttBasePacket> _receivedPackets = new HashSet<MqttBasePacket>();
         private readonly ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>> _packetByResponseType = new ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>>();
-        private readonly ConcurrentDictionary<ushort,TaskCompletionSource<MqttBasePacket>> _packetByIdentifier = new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>();
+        private readonly ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>> _packetByIdentifier = new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>();
 
         public async Task<MqttBasePacket> WaitForPacketAsync(MqttBasePacket request, Type responseType, TimeSpan timeout)
         {
@@ -22,16 +23,19 @@ namespace MQTTnet.Core.Client
             var packetAwaiter = AddPacketAwaiter(request, responseType);
             DispatchPendingPackets();
 
-            var hasTimeout = await Task.WhenAny(Task.Delay(timeout), packetAwaiter.Task).ConfigureAwait(false) != packetAwaiter.Task;
-            RemovePacketAwaiter(request, responseType);
-
-            if (hasTimeout)
+            try
+            {
+                return await packetAwaiter.Task.TimeoutAfter(timeout);
+            }
+            catch (MqttCommunicationTimedOutException)
             {
                 MqttTrace.Warning(nameof(MqttPacketDispatcher), "Timeout while waiting for packet.");
-                throw new MqttCommunicationTimedOutException();
+                throw;
             }
-
-            return packetAwaiter.Task.Result;
+            finally
+            {
+                RemovePacketAwaiter(request, responseType);
+            }
         }
 
         public void Dispatch(MqttBasePacket packet)
@@ -48,9 +52,9 @@ namespace MQTTnet.Core.Client
                     packetDispatched = true;
                 }
             }
-            else if (_packetByResponseType.TryRemove(packet.GetType(), out var tcs) )
+            else if (_packetByResponseType.TryRemove(packet.GetType(), out var tcs))
             {
-                tcs.TrySetResult( packet);
+                tcs.TrySetResult(packet);
                 packetDispatched = true;
             }
 
@@ -96,11 +100,11 @@ namespace MQTTnet.Core.Client
         {
             if (request is IMqttPacketWithIdentifier withIdent)
             {
-                _packetByIdentifier.TryRemove(withIdent.PacketIdentifier, out var tcs);
+                _packetByIdentifier.TryRemove(withIdent.PacketIdentifier, out var _);
             }
             else
             {
-                _packetByResponseType.TryRemove(responseType, out var tcs);
+                _packetByResponseType.TryRemove(responseType, out var _);
             }
         }
 

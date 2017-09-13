@@ -13,16 +13,19 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
-        private Stream _dataStream;
         private Socket _socket;
         private SslStream _sslStream;
+
+        public Stream RawStream { get; private set; }
+        public Stream SendStream { get; private set; }
+        public Stream ReceiveStream { get; private set; }
 
         /// <summary>
         /// called on client sockets are created in connect
         /// </summary>
         public MqttTcpChannel()
         {
-            
+
         }
 
         /// <summary>
@@ -33,7 +36,7 @@ namespace MQTTnet.Implementations
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _sslStream = sslStream;
-            _dataStream = (Stream)sslStream ?? new NetworkStream(socket);
+            CreateCommStreams(socket, sslStream);
         }
 
         public async Task ConnectAsync(MqttClientOptions options)
@@ -51,14 +54,11 @@ namespace MQTTnet.Implementations
                 if (options.TlsOptions.UseTls)
                 {
                     _sslStream = new SslStream(new NetworkStream(_socket, true));
-                    
-                    _dataStream = _sslStream;
+
                     await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
                 }
-                else
-                {
-                    _dataStream = new NetworkStream(_socket);
-                }
+
+                CreateCommStreams(_socket, _sslStream);
             }
             catch (SocketException exception)
             {
@@ -79,45 +79,6 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public async Task WriteAsync(byte[] buffer)
-        {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
-
-            try
-            {
-                await _dataStream.WriteAsync(buffer, 0, buffer.Length);
-            }
-            catch (SocketException exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
-        }
-
-        public async Task<ArraySegment<byte>> ReadAsync(int length, byte[] buffer)
-        {
-            try
-            {
-                var totalBytes = 0;
-
-                do
-                {
-                    var read = await _dataStream.ReadAsync(buffer, totalBytes, length - totalBytes).ConfigureAwait(false);
-                    if (read == 0)
-                    {
-                        throw new MqttCommunicationException(new SocketException((int)SocketError.Disconnecting));
-                    }
-
-                    totalBytes += read;
-                }
-                while (totalBytes < length);
-                return new ArraySegment<byte>(buffer, 0, length);
-            }
-            catch (SocketException exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
-        }
-
         public void Dispose()
         {
             _socket?.Dispose();
@@ -125,6 +86,16 @@ namespace MQTTnet.Implementations
 
             _socket = null;
             _sslStream = null;
+        }
+
+        private void CreateCommStreams(Socket socket, SslStream sslStream)
+        {
+            RawStream = (Stream)sslStream ?? new NetworkStream(socket);
+
+            //cannot use this as default buffering prevents from receiving the first connect message
+            //need two streams otherwise read and write have to be synchronized
+            SendStream = new BufferedStream(RawStream, BufferConstants.Size);
+            ReceiveStream = new BufferedStream(RawStream, BufferConstants.Size);
         }
 
         private static X509CertificateCollection LoadCertificates(MqttClientOptions options)
@@ -141,11 +112,6 @@ namespace MQTTnet.Implementations
             }
 
             return certificates;
-        }
-
-        public int Peek()
-        {
-            return _socket.Available;
         }
     }
 }

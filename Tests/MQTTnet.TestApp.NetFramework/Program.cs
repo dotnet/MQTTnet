@@ -33,7 +33,7 @@ namespace MQTTnet.TestApp.NetFramework
             }
             else if (pressedKey.Key == ConsoleKey.D3)
             {
-                Task.Run(() => PerformanceTest.RunAsync());
+                Task.Run(PerformanceTest.RunAsync);
                 Thread.Sleep(Timeout.Infinite);
             }
         }

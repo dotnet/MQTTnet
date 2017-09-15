@@ -11,14 +11,16 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 # Features
 
 ### General
-* Performance optimized (publishing ~18.000 messages per second on local machine)
 * Async support
 * TLS 1.2 support for client and server (but not UWP servers)
 * Extensible communication channels (i.e. In-Memory, TCP, TCP+TLS, WS)
-* Interfaces included for mocking and testing
+* Performance optimized (processing ~20.000 messages / second)*
 * Lightweight (only the low level implementation of MQTT, no overhead)
+* Interfaces included for mocking and testing
 * Access to internal trace messages
 * Unit tested (55+ tests)
+
+\* Tested on local machine with MQTTnet client and server running in the same process.
 
 ### Client
 * Rx support (via another project)

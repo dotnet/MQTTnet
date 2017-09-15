@@ -26,11 +26,19 @@ namespace MQTTnet.Core.Adapter
 
         public IMqttPacketSerializer PacketSerializer { get; }
 
-        public Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
+        public async Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {
             try
             {
-                return _channel.ConnectAsync(options).TimeoutAfter(timeout);
+                await _channel.ConnectAsync(options).TimeoutAfter(timeout);
+            }
+            catch (MqttCommunicationTimedOutException)
+            {
+                throw;
+            }
+            catch (MqttCommunicationException)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -38,11 +46,19 @@ namespace MQTTnet.Core.Adapter
             }
         }
 
-        public Task DisconnectAsync()
+        public async Task DisconnectAsync()
         {
             try
             {
-                return _channel.DisconnectAsync();
+                await _channel.DisconnectAsync();
+            }
+            catch (MqttCommunicationTimedOutException)
+            {
+                throw;
+            }
+            catch (MqttCommunicationException)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -67,6 +83,14 @@ namespace MQTTnet.Core.Adapter
 
                 await _sendTask; // configure await false geneates stackoverflow
                 await _channel.SendStream.FlushAsync().TimeoutAfter(timeout).ConfigureAwait(false);
+            }
+            catch (MqttCommunicationTimedOutException)
+            {
+                throw;
+            }
+            catch (MqttCommunicationException)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -97,13 +121,21 @@ namespace MQTTnet.Core.Adapter
                 MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "RX <<< {0}", packet);
                 return packet;
             }
+            catch (MqttCommunicationTimedOutException)
+            {
+                throw;
+            }
+            catch (MqttCommunicationException)
+            {
+                throw;
+            }
             catch (Exception exception)
             {
                 throw new MqttCommunicationException(exception);
             }
         }
 
-        private async Task<ReceivedMqttPacket> ReceiveAsync(Stream stream)
+        private static async Task<ReceivedMqttPacket> ReceiveAsync(Stream stream)
         {
             var header = MqttPacketReader.ReadHeaderFromSource(stream);
 

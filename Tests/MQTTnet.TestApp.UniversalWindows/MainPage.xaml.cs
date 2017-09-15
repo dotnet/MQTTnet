@@ -36,13 +36,14 @@ namespace MQTTnet.TestApp.UniversalWindows
             var options = new MqttClientOptions
             {
                 Server = Server.Text,
+                Port = 8080,
                 UserName = User.Text,
                 Password = Password.Text,
-                ClientId = ClientId.Text
+                ClientId = ClientId.Text,
+                TlsOptions = { UseTls = UseTls.IsChecked == true },
+                ConnectionType = MqttConnectionType.Ws
             };
-
-            options.TlsOptions.UseTls = UseTls.IsChecked == true;
-
+            
             try
             {
                 if (_mqttClient != null)

@@ -1,6 +1,5 @@
 ﻿using MQTTnet.Core.Channel;
 using MQTTnet.Core.Client;
-using MQTTnet.Core.Exceptions;
 using System;
 using System.IO;
 using System.Net.WebSockets;
@@ -19,19 +18,9 @@ namespace MQTTnet.Implementations
 
         public async Task ConnectAsync(MqttClientOptions options)
         {
-            _webSocket = null;
-
-            try
-            {
-                _webSocket = new ClientWebSocket();
-                await _webSocket.ConnectAsync(new Uri(options.Server), CancellationToken.None);
-
-                RawStream = new WebSocketStream(_webSocket);
-            }
-            catch (WebSocketException exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
+            _webSocket = new ClientWebSocket();
+            await _webSocket.ConnectAsync(new Uri(options.Server), CancellationToken.None);
+            RawStream = new WebSocketStream(_webSocket);
         }
 
         public Task DisconnectAsync()

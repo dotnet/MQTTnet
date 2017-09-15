@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
@@ -11,18 +10,14 @@ namespace MQTTnet.Core.Client
 {
     public class MqttPacketDispatcher
     {
-        private readonly object _syncRoot = new object();
-        private readonly HashSet<MqttBasePacket> _receivedPackets = new HashSet<MqttBasePacket>();
         private readonly ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>> _packetByResponseType = new ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>>();
-        private readonly ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>> _packetByIdentifier = new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>();
+        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<ushort,TaskCompletionSource<MqttBasePacket>>> _packetByResponseTypeAndIdentifier = new ConcurrentDictionary<Type, ConcurrentDictionary<ushort,TaskCompletionSource<MqttBasePacket>>>();
 
         public async Task<MqttBasePacket> WaitForPacketAsync(MqttBasePacket request, Type responseType, TimeSpan timeout)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
 
             var packetAwaiter = AddPacketAwaiter(request, responseType);
-            DispatchPendingPackets();
-
             try
             {
                 return await packetAwaiter.Task.TimeoutAfter(timeout);
@@ -42,43 +37,27 @@ namespace MQTTnet.Core.Client
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
-            var packetDispatched = false;
-
+            var type = packet.GetType();
             if (packet is IMqttPacketWithIdentifier withIdentifier)
             {
-                if (_packetByIdentifier.TryRemove(withIdentifier.PacketIdentifier, out var tcs))
+                if (_packetByResponseTypeAndIdentifier.TryGetValue(type, out var byid))
                 {
-                    tcs.TrySetResult(packet);
-                    packetDispatched = true;
+                    if (byid.TryRemove( withIdentifier.PacketIdentifier, out var tcs))
+                    {
+                        tcs.TrySetResult( packet );
+                    }
                 }
             }
-            else if (_packetByResponseType.TryRemove(packet.GetType(), out var tcs))
+            else if (_packetByResponseType.TryRemove(type, out var tcs))
             {
                 tcs.TrySetResult(packet);
-                packetDispatched = true;
-            }
-
-            lock (_syncRoot)
-            {
-                if (!packetDispatched)
-                {
-                    _receivedPackets.Add(packet);
-                }
-                else
-                {
-                    _receivedPackets.Remove(packet);
-                }
             }
         }
 
         public void Reset()
         {
-            lock (_syncRoot)
-            {
-                _receivedPackets.Clear();
-            }
-
-            _packetByIdentifier.Clear();
+            _packetByResponseTypeAndIdentifier.Clear();
+            _packetByResponseType.Clear();
         }
 
         private TaskCompletionSource<MqttBasePacket> AddPacketAwaiter(MqttBasePacket request, Type responseType)
@@ -86,7 +65,8 @@ namespace MQTTnet.Core.Client
             var tcs = new TaskCompletionSource<MqttBasePacket>();
             if (request is IMqttPacketWithIdentifier withIdent)
             {
-                _packetByIdentifier[withIdent.PacketIdentifier] = tcs;
+                var byId = _packetByResponseTypeAndIdentifier.GetOrAdd(responseType, key => new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>());
+                byId[withIdent.PacketIdentifier] = tcs;
             }
             else
             {
@@ -100,25 +80,12 @@ namespace MQTTnet.Core.Client
         {
             if (request is IMqttPacketWithIdentifier withIdent)
             {
-                _packetByIdentifier.TryRemove(withIdent.PacketIdentifier, out var _);
+                var byId = _packetByResponseTypeAndIdentifier.GetOrAdd(responseType, key => new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>());
+                byId.TryRemove(withIdent.PacketIdentifier, out var _);
             }
             else
             {
                 _packetByResponseType.TryRemove(responseType, out var _);
-            }
-        }
-
-        private void DispatchPendingPackets()
-        {
-            List<MqttBasePacket> receivedPackets;
-            lock (_syncRoot)
-            {
-                receivedPackets = new List<MqttBasePacket>(_receivedPackets);
-            }
-
-            foreach (var pendingPacket in receivedPackets)
-            {
-                Dispatch(pendingPacket);
             }
         }
     }

@@ -11,7 +11,7 @@ namespace MQTTnet.Core.Client
     public class MqttPacketDispatcher
     {
         private readonly ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>> _packetByResponseType = new ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>>();
-        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<ushort,TaskCompletionSource<MqttBasePacket>>> _packetByResponseTypeAndIdentifier = new ConcurrentDictionary<Type, ConcurrentDictionary<ushort,TaskCompletionSource<MqttBasePacket>>>();
+        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>> _packetByResponseTypeAndIdentifier = new ConcurrentDictionary<Type, ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>>();
 
         public async Task<MqttBasePacket> WaitForPacketAsync(MqttBasePacket request, Type responseType, TimeSpan timeout)
         {
@@ -24,7 +24,7 @@ namespace MQTTnet.Core.Client
             }
             catch (MqttCommunicationTimedOutException)
             {
-                MqttTrace.Warning(nameof(MqttPacketDispatcher), "Timeout while waiting for packet.");
+                MqttTrace.Warning(nameof(MqttPacketDispatcher), "Timeout while waiting for packet of type '{0}'.", responseType.Name);
                 throw;
             }
             finally
@@ -42,16 +42,20 @@ namespace MQTTnet.Core.Client
             {
                 if (_packetByResponseTypeAndIdentifier.TryGetValue(type, out var byid))
                 {
-                    if (byid.TryRemove( withIdentifier.PacketIdentifier, out var tcs))
+                    if (byid.TryRemove(withIdentifier.PacketIdentifier, out var tcs))
                     {
-                        tcs.TrySetResult( packet );
+                        tcs.TrySetResult(packet);
+                        return;
                     }
                 }
             }
             else if (_packetByResponseType.TryRemove(type, out var tcs))
             {
                 tcs.TrySetResult(packet);
+                return;
             }
+
+            throw new InvalidOperationException($"Packet of type '{type.Name}' not handled or dispatched.");
         }
 
         public void Reset()

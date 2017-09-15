@@ -6,7 +6,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using MQTTnet.Core.Channel;
 using MQTTnet.Core.Client;
-using MQTTnet.Core.Exceptions;
 using System.IO;
 
 namespace MQTTnet.Implementations
@@ -15,10 +14,6 @@ namespace MQTTnet.Implementations
     {
         private Socket _socket;
         private SslStream _sslStream;
-
-        public Stream RawStream { get; private set; }
-        public Stream SendStream { get; private set; }
-        public Stream ReceiveStream { get; private set; }
 
         /// <summary>
         /// called on client sockets are created in connect
@@ -36,61 +31,61 @@ namespace MQTTnet.Implementations
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _sslStream = sslStream;
-            CreateCommStreams(socket, sslStream);
+            CreateStreams(socket, sslStream);
         }
+
+        public Stream RawStream { get; private set; }
+        public Stream SendStream { get; private set; }
+        public Stream ReceiveStream { get; private set; }
 
         public async Task ConnectAsync(MqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            try
+
+            if (_socket == null)
             {
-                if (_socket == null)
-                {
-                    _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                }
-
-                await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.GetPort(), null).ConfigureAwait(false);
-
-                if (options.TlsOptions.UseTls)
-                {
-                    _sslStream = new SslStream(new NetworkStream(_socket, true));
-
-                    await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
-                }
-
-                CreateCommStreams(_socket, _sslStream);
+                _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             }
-            catch (SocketException exception)
+
+            await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.GetPort(), null).ConfigureAwait(false);
+
+            if (options.TlsOptions.UseTls)
             {
-                throw new MqttCommunicationException(exception);
+                _sslStream = new SslStream(new NetworkStream(_socket, true));
+
+                await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
             }
+
+            CreateStreams(_socket, _sslStream);
         }
 
         public Task DisconnectAsync()
         {
-            try
-            {
-                Dispose();
-                return Task.FromResult(0);
-            }
-            catch (SocketException exception)
-            {
-                throw new MqttCommunicationException(exception);
-            }
+            Dispose();
+            return Task.FromResult(0);
         }
 
         public void Dispose()
         {
-            _socket?.Dispose();
-            _sslStream?.Dispose();
+            RawStream?.Dispose();
+            RawStream = null;
 
+            ReceiveStream?.Dispose();
+            ReceiveStream = null;
+
+            SendStream?.Dispose();
+            SendStream = null;
+
+            _socket?.Dispose();
             _socket = null;
+
+            _sslStream?.Dispose();
             _sslStream = null;
         }
 
-        private void CreateCommStreams(Socket socket, SslStream sslStream)
+        private void CreateStreams(Socket socket, Stream sslStream)
         {
-            RawStream = (Stream)sslStream ?? new NetworkStream(socket);
+            RawStream = sslStream ?? new NetworkStream(socket);
 
             //cannot use this as default buffering prevents from receiving the first connect message
             //need two streams otherwise read and write have to be synchronized

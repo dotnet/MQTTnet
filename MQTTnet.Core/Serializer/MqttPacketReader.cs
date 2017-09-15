@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Packets;
@@ -9,15 +10,29 @@ namespace MQTTnet.Core.Serializer
 {
     public sealed class MqttPacketReader : BinaryReader
     {
-        private readonly MqttPacketHeader _header;
-
-        public MqttPacketReader(Stream stream, MqttPacketHeader header)
-            : base(stream, Encoding.UTF8, true)
+        private readonly ReceivedMqttPacket _receivedMqttPacket;
+        
+        public MqttPacketReader(ReceivedMqttPacket receivedMqttPacket)
+            : base(receivedMqttPacket.Body, Encoding.UTF8, true)
         {
-            _header = header;
+            _receivedMqttPacket = receivedMqttPacket;
         }
 
-        public bool EndOfRemainingData => BaseStream.Position == _header.BodyLength;
+        public bool EndOfRemainingData => BaseStream.Position == _receivedMqttPacket.Header.BodyLength;
+
+        public static MqttPacketHeader ReadHeaderFromSource(Stream stream)
+        {
+            var fixedHeader = (byte)stream.ReadByte();
+            var controlPacketType = (MqttControlPacketType)(fixedHeader >> 4);
+            var bodyLength = ReadBodyLengthFromSource(stream);
+
+            return new MqttPacketHeader
+            {
+                FixedHeader = fixedHeader,
+                ControlPacketType = controlPacketType,
+                BodyLength = bodyLength
+            };
+        }
 
         public override ushort ReadUInt16()
         {
@@ -44,21 +59,7 @@ namespace MQTTnet.Core.Serializer
 
         public byte[] ReadRemainingData()
         {
-            return ReadBytes(_header.BodyLength - (int)BaseStream.Position);
-        }
-
-        public static MqttPacketHeader ReadHeaderFromSource(Stream stream)
-        {
-            var fixedHeader = (byte)stream.ReadByte();
-            var controlPacketType = (MqttControlPacketType)(fixedHeader >> 4);
-            var bodyLength = ReadBodyLengthFromSource(stream);
-
-            return new MqttPacketHeader
-            {
-                FixedHeader = fixedHeader,
-                ControlPacketType = controlPacketType,
-                BodyLength = bodyLength
-            };
+            return ReadBytes(_receivedMqttPacket.Header.BodyLength - (int)BaseStream.Position);
         }
 
         private static int ReadBodyLengthFromSource(Stream stream)
@@ -74,7 +75,7 @@ namespace MQTTnet.Core.Serializer
                 multiplier *= 128;
                 if (multiplier > 128 * 128 * 128)
                 {
-                    throw new MqttProtocolViolationException("Remaining length is ivalid.");
+                    throw new MqttProtocolViolationException("Remaining length is invalid.");
                 }
             } while ((encodedByte & 128) != 0);
             return value;

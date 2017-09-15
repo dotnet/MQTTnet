@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
@@ -110,14 +111,13 @@ namespace MQTTnet.Core.Serializer
             throw new MqttProtocolViolationException("Packet type invalid.");
         }
 
-        public MqttBasePacket Deserialize(MqttPacketHeader header, MemoryStream body)
+        public MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket)
         {
-            if (header == null) throw new ArgumentNullException(nameof(header));
-            if (body == null) throw new ArgumentNullException(nameof(body));
+            if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
 
-            using (var reader = new MqttPacketReader(body, header))
+            using (var reader = new MqttPacketReader(receivedMqttPacket))
             {
-                return Deserialize(header, reader);
+                return Deserialize(receivedMqttPacket.Header, reader);
             }
         }
 

@@ -25,20 +25,22 @@ namespace MQTTnet.Core.Internal
 
                 try
                 {
-                    cancellationTokenSource.CancelAfter(timeout);
+                    #pragma warning disable 4014
                     task.ContinueWith(t =>
-                   {
-                       if (t.IsFaulted)
-                       {
-                           tcs.TrySetException(t.Exception);
-                       }
+                    #pragma warning restore 4014
+                    {
+                        if (t.IsFaulted)
+                        {
+                            tcs.TrySetException(t.Exception);
+                        }
 
-                       if (t.IsCompleted)
-                       {
-                           tcs.TrySetResult(t.Result);
-                       }
-                   }, cancellationTokenSource.Token);
+                        if (t.IsCompleted)
+                        {
+                            tcs.TrySetResult(t.Result);
+                        }
+                    }, cancellationTokenSource.Token);
 
+                    cancellationTokenSource.CancelAfter(timeout);
                     return await tcs.Task;
                 }
                 catch (TaskCanceledException)

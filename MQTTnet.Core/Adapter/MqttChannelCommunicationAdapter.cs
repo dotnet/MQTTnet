@@ -15,7 +15,6 @@ namespace MQTTnet.Core.Adapter
     public class MqttChannelCommunicationAdapter : IMqttCommunicationAdapter
     {
         private readonly IMqttCommunicationChannel _channel;
-        private readonly byte[] _readBuffer = new byte[BufferConstants.Size];
 
         private Task _sendTask = Task.FromResult(0); // this task is used to prevent overlapping write
 
@@ -29,76 +28,105 @@ namespace MQTTnet.Core.Adapter
 
         public Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
         {
-            return _channel.ConnectAsync(options).TimeoutAfter(timeout);
+            try
+            {
+                return _channel.ConnectAsync(options).TimeoutAfter(timeout);
+            }
+            catch (Exception exception)
+            {
+                throw new MqttCommunicationException(exception);
+            }
         }
 
         public Task DisconnectAsync()
         {
-            return _channel.DisconnectAsync();
+            try
+            {
+                return _channel.DisconnectAsync();
+            }
+            catch (Exception exception)
+            {
+                throw new MqttCommunicationException(exception);
+            }
         }
 
         public async Task SendPacketsAsync(TimeSpan timeout, IEnumerable<MqttBasePacket> packets)
         {
-            lock (_channel)
+            try
             {
-                foreach (var packet in packets)
+                lock (_channel)
                 {
-                    MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "TX >>> {0} [Timeout={1}]", packet, timeout);
+                    foreach (var packet in packets)
+                    {
+                        MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "TX >>> {0} [Timeout={1}]", packet, timeout);
 
-                    var writeBuffer = PacketSerializer.Serialize(packet);
-
-                    _sendTask = _sendTask.ContinueWith(p => _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length));
+                        var writeBuffer = PacketSerializer.Serialize(packet);
+                        _sendTask = _sendTask.ContinueWith(p => _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length));
+                    }
                 }
-            }
 
-            await _sendTask; // configure await false geneates stackoverflow
-            await _channel.SendStream.FlushAsync().TimeoutAfter(timeout).ConfigureAwait(false);
+                await _sendTask; // configure await false geneates stackoverflow
+                await _channel.SendStream.FlushAsync().TimeoutAfter(timeout).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                throw new MqttCommunicationException(exception);
+            }
         }
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout)
         {
-            Tuple<MqttPacketHeader, MemoryStream> tuple;
-            if (timeout > TimeSpan.Zero)
+            try
             {
-                tuple = await ReceiveAsync(_channel.RawStream).TimeoutAfter(timeout).ConfigureAwait(false);
+                ReceivedMqttPacket receivedMqttPacket;
+                if (timeout > TimeSpan.Zero)
+                {
+                    receivedMqttPacket = await ReceiveAsync(_channel.RawStream).TimeoutAfter(timeout).ConfigureAwait(false);
+                }
+                else
+                {
+                    receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream).ConfigureAwait(false);
+                }
+
+                var packet = PacketSerializer.Deserialize(receivedMqttPacket);
+                if (packet == null)
+                {
+                    throw new MqttProtocolViolationException("Received malformed packet.");
+                }
+
+                MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "RX <<< {0}", packet);
+                return packet;
             }
-            else
+            catch (Exception exception)
             {
-                tuple = await ReceiveAsync(_channel.ReceiveStream).ConfigureAwait(false);
+                throw new MqttCommunicationException(exception);
             }
-
-            var packet = PacketSerializer.Deserialize(tuple.Item1, tuple.Item2);
-
-            if (packet == null)
-            {
-                throw new MqttProtocolViolationException("Received malformed packet.");
-            }
-
-            MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "RX <<< {0}", packet);
-            return packet;
         }
 
-        private async Task<Tuple<MqttPacketHeader, MemoryStream>> ReceiveAsync(Stream stream)
+        private async Task<ReceivedMqttPacket> ReceiveAsync(Stream stream)
         {
             var header = MqttPacketReader.ReadHeaderFromSource(stream);
 
-            MemoryStream body;
-            if (header.BodyLength > 0)
+            if (header.BodyLength == 0)
             {
-                var totalRead = 0;
-                do
-                {
-                    var read = await stream.ReadAsync(_readBuffer, totalRead, header.BodyLength - totalRead).ConfigureAwait(false);
-                    totalRead += read;
-                } while (totalRead < header.BodyLength);
-                body = new MemoryStream(_readBuffer, 0, header.BodyLength);
-            }
-            else
-            {
-                body = new MemoryStream();
+                return new ReceivedMqttPacket(header, new MemoryStream(0));
             }
 
-            return Tuple.Create(header, body);
+            var body = new byte[header.BodyLength];
+
+            var offset = 0;
+            do
+            {
+                var readBytesCount = await stream.ReadAsync(body, offset, body.Length - offset).ConfigureAwait(false);
+                offset += readBytesCount;
+            } while (offset < header.BodyLength);
+
+            if (offset > header.BodyLength)
+            {
+                throw new MqttCommunicationException($"Read more body bytes than required ({offset}/{header.BodyLength}).");
+            }
+
+            return new ReceivedMqttPacket(header, new MemoryStream(body, 0, body.Length));
         }
     }
 }

@@ -14,7 +14,6 @@ namespace MQTTnet.Implementations
         private ClientWebSocket _webSocket = new ClientWebSocket();
 
         public Stream RawStream { get; private set; }
-
         public Stream SendStream => RawStream;
         public Stream ReceiveStream => RawStream;
 

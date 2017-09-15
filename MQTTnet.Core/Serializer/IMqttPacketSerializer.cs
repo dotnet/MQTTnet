@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Serializer
@@ -9,6 +9,6 @@ namespace MQTTnet.Core.Serializer
 
         byte[] Serialize(MqttBasePacket mqttPacket);
 
-        MqttBasePacket Deserialize(MqttPacketHeader header, MemoryStream stream);
+        MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket);
     }
 }

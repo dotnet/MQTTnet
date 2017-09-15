@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Channel;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Packets;
@@ -436,20 +437,20 @@ namespace MQTTnet.Core.Tests
         private static void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value)
         {
             var serializer = new MqttPacketSerializer();
-            
+
             var buffer1 = serializer.Serialize(packet);
 
-            using (var headerStream = new MemoryStream( buffer1 ))
+            using (var headerStream = new MemoryStream(buffer1))
             {
-                var header = MqttPacketReader.ReadHeaderFromSource( headerStream );
+                var header = MqttPacketReader.ReadHeaderFromSource(headerStream);
 
-                using (var bodyStream = new MemoryStream( buffer1, (int)headerStream.Position, header.BodyLength ))
+                using (var bodyStream = new MemoryStream(buffer1, (int)headerStream.Position, header.BodyLength))
                 {
-                    var deserializedPacket = serializer.Deserialize(header, bodyStream);
-                    var buffer2 = serializer.Serialize( deserializedPacket );
+                    var deserializedPacket = serializer.Deserialize(new ReceivedMqttPacket(header, bodyStream));
+                    var buffer2 = serializer.Serialize(deserializedPacket);
 
-                    Assert.AreEqual( expectedBase64Value, Convert.ToBase64String( buffer2 ) );
-                } 
+                    Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(buffer2));
+                }
             }
         }
     }

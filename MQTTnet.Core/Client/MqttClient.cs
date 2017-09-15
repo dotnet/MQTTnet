@@ -99,6 +99,11 @@ namespace MQTTnet.Core.Client
 
         public async Task DisconnectAsync()
         {
+            if (!IsConnected)
+            {
+                return;
+            }
+
             try
             {
                 await SendAsync(new MqttDisconnectPacket()).ConfigureAwait(false);

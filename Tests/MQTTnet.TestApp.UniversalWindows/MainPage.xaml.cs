@@ -36,7 +36,6 @@ namespace MQTTnet.TestApp.UniversalWindows
             var options = new MqttClientOptions
             {
                 Server = Server.Text,
-                Port = 8080,
                 UserName = User.Text,
                 Password = Password.Text,
                 ClientId = ClientId.Text,

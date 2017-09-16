@@ -25,9 +25,9 @@ namespace MQTTnet.Core.Internal
 
                 try
                 {
-                    #pragma warning disable 4014
+#pragma warning disable 4014
                     task.ContinueWith(t =>
-                    #pragma warning restore 4014
+#pragma warning restore 4014
                     {
                         if (t.IsFaulted)
                         {

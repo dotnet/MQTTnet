@@ -30,7 +30,7 @@ namespace MQTTnet.Core.Adapter
         {
             try
             {
-                await _channel.ConnectAsync(options).TimeoutAfter(timeout);
+                await _channel.ConnectAsync(options).TimeoutAfter(timeout).ConfigureAwait(false);
             }
             catch (MqttCommunicationTimedOutException)
             {
@@ -50,7 +50,7 @@ namespace MQTTnet.Core.Adapter
         {
             try
             {
-                await _channel.DisconnectAsync();
+                await _channel.DisconnectAsync().ConfigureAwait(false);
             }
             catch (MqttCommunicationTimedOutException)
             {
@@ -82,7 +82,15 @@ namespace MQTTnet.Core.Adapter
                 }
 
                 await _sendTask; // configure await false geneates stackoverflow
-                await _channel.SendStream.FlushAsync().TimeoutAfter(timeout).ConfigureAwait(false);
+
+                if (timeout > TimeSpan.Zero)
+                {
+                    await _channel.SendStream.FlushAsync().TimeoutAfter(timeout).ConfigureAwait(false);
+                }
+                else
+                {
+                    await _channel.SendStream.FlushAsync().ConfigureAwait(false);
+                }             
             }
             catch (MqttCommunicationTimedOutException)
             {

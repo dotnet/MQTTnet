@@ -19,14 +19,20 @@ namespace MQTTnet.Implementations
         public async Task ConnectAsync(MqttClientOptions options)
         {
             _webSocket = new ClientWebSocket();
-            await _webSocket.ConnectAsync(new Uri(options.Server), CancellationToken.None);
+            await _webSocket.ConnectAsync(new Uri(options.Server), CancellationToken.None).ConfigureAwait(false);
             RawStream = new WebSocketStream(_webSocket);
         }
 
-        public Task DisconnectAsync()
+        public async Task DisconnectAsync()
         {
             RawStream = null;
-            return _webSocket?.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+
+            if (_webSocket == null)
+            {
+                return;
+            }
+
+            await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
         }
 
         public void Dispose()

@@ -249,21 +249,25 @@ namespace MQTTnet.Core.Client
                 if (mqttPacket is MqttPingReqPacket)
                 {
                     await SendAsync(new MqttPingRespPacket());
+                    return;
                 }
 
                 if (mqttPacket is MqttDisconnectPacket)
                 {
                     await DisconnectAsync();
+                    return;
                 }
 
                 if (mqttPacket is MqttPublishPacket publishPacket)
                 {
                     await ProcessReceivedPublishPacket(publishPacket);
+                    return;
                 }
 
                 if (mqttPacket is MqttPubRelPacket pubRelPacket)
                 {
                     await ProcessReceivedPubRelPacket(pubRelPacket);
+                    return;
                 }
 
                 _packetDispatcher.Dispatch(mqttPacket);

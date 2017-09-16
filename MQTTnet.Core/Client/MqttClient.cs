@@ -249,21 +249,25 @@ namespace MQTTnet.Core.Client
                 if (mqttPacket is MqttPingReqPacket)
                 {
                     await SendAsync(new MqttPingRespPacket());
+                    return;
                 }
 
                 if (mqttPacket is MqttDisconnectPacket)
                 {
                     await DisconnectAsync();
+                    return;
                 }
 
                 if (mqttPacket is MqttPublishPacket publishPacket)
                 {
                     await ProcessReceivedPublishPacket(publishPacket);
+                    return;
                 }
 
                 if (mqttPacket is MqttPubRelPacket pubRelPacket)
                 {
                     await ProcessReceivedPubRelPacket(pubRelPacket);
+                    return;
                 }
 
                 _packetDispatcher.Dispatch(mqttPacket);
@@ -336,8 +340,9 @@ namespace MQTTnet.Core.Client
 
         private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket) where TResponsePacket : MqttBasePacket
         {
+            var wait = _packetDispatcher.WaitForPacketAsync(requestPacket, typeof(TResponsePacket), _options.DefaultCommunicationTimeout);
             await _adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, requestPacket).ConfigureAwait(false);
-            return (TResponsePacket)await _packetDispatcher.WaitForPacketAsync(requestPacket, typeof(TResponsePacket), _options.DefaultCommunicationTimeout).ConfigureAwait(false);
+            return (TResponsePacket)await wait.ConfigureAwait(false);
         }
 
         private ushort GetNewPacketIdentifier()

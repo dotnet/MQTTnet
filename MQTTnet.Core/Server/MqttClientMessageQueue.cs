@@ -54,6 +54,12 @@ namespace MQTTnet.Core.Server
             var consumable = _pendingPublishPackets.GetConsumingEnumerable();
             while (!cancellationToken.IsCancellationRequested)
             {
+                if (_pendingPublishPackets.Count == 0)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(5));
+                    continue;
+                }
+
                 var packets = consumable.Take(_pendingPublishPackets.Count).ToList();
                 try
                 {

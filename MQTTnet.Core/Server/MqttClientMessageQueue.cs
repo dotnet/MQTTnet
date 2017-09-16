@@ -56,7 +56,7 @@ namespace MQTTnet.Core.Server
             {
                 if (_pendingPublishPackets.Count == 0)
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(5));
+                    await Task.Delay(TimeSpan.FromMilliseconds(5)).ConfigureAwait(false);
                     continue;
                 }
 

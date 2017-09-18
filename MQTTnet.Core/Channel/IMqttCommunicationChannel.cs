@@ -6,14 +6,11 @@ namespace MQTTnet.Core.Channel
 {
     public interface IMqttCommunicationChannel
     {
-        Task ConnectAsync(MqttClientOptions options);
-
-        Task DisconnectAsync();
-        
         Stream SendStream { get; }
-
         Stream ReceiveStream { get; }
+        Stream RawReceiveStream { get; }
 
-        Stream RawStream { get; }
+        Task ConnectAsync(MqttClientOptions options);
+        Task DisconnectAsync();
     }
 }

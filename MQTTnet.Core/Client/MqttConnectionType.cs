@@ -3,8 +3,6 @@
     public enum MqttConnectionType
     {
         Tcp,
-        Tls,
-        Ws,
-        Wss
+        Ws
     }
 }

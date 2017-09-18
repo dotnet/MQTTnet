@@ -26,7 +26,7 @@ namespace MQTTnet.Implementations
 
         public Stream SendStream { get; private set; }
         public Stream ReceiveStream { get; private set; }
-        public Stream RawStream { get; private set; }
+        public Stream RawReceiveStream { get; private set; }
 
         public async Task ConnectAsync(MqttClientOptions options)
         {
@@ -56,7 +56,7 @@ namespace MQTTnet.Implementations
 
             ReceiveStream = _socket.InputStream.AsStreamForRead();
             SendStream = _socket.OutputStream.AsStreamForWrite();
-            RawStream = ReceiveStream;
+            RawReceiveStream = ReceiveStream;
         }
 
         public Task DisconnectAsync()
@@ -67,8 +67,8 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            RawStream?.Dispose();
-            RawStream = null;
+            RawReceiveStream?.Dispose();
+            RawReceiveStream = null;
 
             SendStream?.Dispose();
             SendStream = null;

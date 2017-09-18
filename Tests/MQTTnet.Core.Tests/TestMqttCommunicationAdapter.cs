@@ -18,12 +18,12 @@ namespace MQTTnet.Core.Tests
 
         public IMqttPacketSerializer PacketSerializer { get; } = new MqttPacketSerializer();
 
-        public Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
+        public Task ConnectAsync(TimeSpan timeout, MqttClientOptions options)
         {
             return Task.FromResult(0);
         }
 
-        public Task DisconnectAsync()
+        public Task DisconnectAsync(TimeSpan timeout)
         {
             return Task.FromResult(0);
         }
@@ -47,7 +47,7 @@ namespace MQTTnet.Core.Tests
             return Task.Run(() => _incomingPackets.Take());
         }
 
-        public IEnumerable<MqttBasePacket> ReceivePackets( CancellationToken cancellationToken )
+        public IEnumerable<MqttBasePacket> ReceivePackets(CancellationToken cancellationToken)
         {
             return _incomingPackets.GetConsumingEnumerable();
         }

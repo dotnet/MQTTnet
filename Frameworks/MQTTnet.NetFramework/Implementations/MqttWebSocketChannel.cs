@@ -12,20 +12,32 @@ namespace MQTTnet.Implementations
     {
         private ClientWebSocket _webSocket;
 
-        public Stream RawStream { get; private set; }
-        public Stream SendStream => RawStream;
-        public Stream ReceiveStream => RawStream;
+        public Stream RawReceiveStream { get; private set; }
+        public Stream SendStream => RawReceiveStream;
+        public Stream ReceiveStream => RawReceiveStream;
 
         public async Task ConnectAsync(MqttClientOptions options)
         {
+            var uri = options.Server;
+            if (!uri.StartsWith("ws://", StringComparison.OrdinalIgnoreCase))
+            {
+                uri = "ws://" + uri;
+            }
+
+            if (options.Port.HasValue)
+            {
+                uri += ":" + options.Port;
+            }
+            
             _webSocket = new ClientWebSocket();
-            await _webSocket.ConnectAsync(new Uri(options.Server), CancellationToken.None).ConfigureAwait(false);
-            RawStream = new WebSocketStream(_webSocket);
+            _webSocket.Options.KeepAliveInterval = options.KeepAlivePeriod;
+            await _webSocket.ConnectAsync(new Uri(uri), CancellationToken.None).ConfigureAwait(false);
+            RawReceiveStream = new WebSocketStream(_webSocket);
         }
 
         public async Task DisconnectAsync()
         {
-            RawStream = null;
+            RawReceiveStream = null;
 
             if (_webSocket == null)
             {

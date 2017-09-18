@@ -21,11 +21,9 @@ namespace MQTTnet
             switch (options.ConnectionType)
             {
                 case MqttConnectionType.Tcp:
-                case MqttConnectionType.Tls:
-                    return new MqttTcpChannel();
+                return new MqttTcpChannel();
                 case MqttConnectionType.Ws:
-                case MqttConnectionType.Wss:
-                    return new MqttWebSocketChannel();
+                return new MqttWebSocketChannel();
 
                 default:
                     throw new NotSupportedException();

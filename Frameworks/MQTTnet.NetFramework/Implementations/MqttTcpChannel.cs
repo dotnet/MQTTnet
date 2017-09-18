@@ -12,6 +12,10 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
+        public static int BufferSize { get; set; } = 4096 * 20; // Can be changed for fine tuning by library user.
+
         private Socket _socket;
         private SslStream _sslStream;
 
@@ -34,9 +38,9 @@ namespace MQTTnet.Implementations
             CreateStreams(socket, sslStream);
         }
 
-        public Stream RawStream { get; private set; }
         public Stream SendStream { get; private set; }
         public Stream ReceiveStream { get; private set; }
+        public Stream RawReceiveStream { get; private set; }
 
         public async Task ConnectAsync(MqttClientOptions options)
         {
@@ -67,8 +71,8 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            RawStream?.Dispose();
-            RawStream = null;
+            RawReceiveStream?.Dispose();
+            RawReceiveStream = null;
 
             ReceiveStream?.Dispose();
             ReceiveStream = null;
@@ -85,12 +89,12 @@ namespace MQTTnet.Implementations
 
         private void CreateStreams(Socket socket, Stream sslStream)
         {
-            RawStream = sslStream ?? new NetworkStream(socket);
+            RawReceiveStream = sslStream ?? new NetworkStream(socket);
 
             //cannot use this as default buffering prevents from receiving the first connect message
             //need two streams otherwise read and write have to be synchronized
-            SendStream = new BufferedStream(RawStream, BufferConstants.Size);
-            ReceiveStream = new BufferedStream(RawStream, BufferConstants.Size);
+            SendStream = new BufferedStream(RawReceiveStream, BufferSize);
+            ReceiveStream = new BufferedStream(RawReceiveStream, BufferSize);
         }
 
         private static X509CertificateCollection LoadCertificates(MqttClientOptions options)

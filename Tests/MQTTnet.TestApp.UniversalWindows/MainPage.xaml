@@ -24,6 +24,11 @@
             <TextBlock>ClientId:</TextBlock>
             <TextBox x:Name="ClientId"></TextBox>
 
+            <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="UseTcp" IsChecked="True">TCP</RadioButton>
+                <RadioButton x:Name="UseWs" >WS</RadioButton>
+            </StackPanel>
+
             <CheckBox x:Name="UseTls">Use TLS</CheckBox>
             <Button Click="Connect">Connect</Button>
             <TextBlock>Trace:</TextBlock>

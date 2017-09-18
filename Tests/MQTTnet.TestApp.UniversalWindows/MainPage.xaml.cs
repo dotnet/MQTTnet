@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using MQTTnet.Core.Client;
@@ -40,7 +41,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 Password = Password.Text,
                 ClientId = ClientId.Text,
                 TlsOptions = { UseTls = UseTls.IsChecked == true },
-                ConnectionType = MqttConnectionType.Ws
+                ConnectionType = UseTcp.IsChecked == true ? MqttConnectionType.Tcp : MqttConnectionType.Ws
             };
             
             try

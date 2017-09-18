@@ -394,7 +394,7 @@ namespace MQTTnet.Core.Tests
 
             public Stream ReceiveStream => _stream;
 
-            public Stream RawStream => _stream;
+            public Stream RawReceiveStream => _stream;
 
             public Stream SendStream => _stream;
 

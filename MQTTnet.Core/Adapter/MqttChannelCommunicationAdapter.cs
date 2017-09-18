@@ -26,11 +26,11 @@ namespace MQTTnet.Core.Adapter
 
         public IMqttPacketSerializer PacketSerializer { get; }
 
-        public async Task ConnectAsync(MqttClientOptions options, TimeSpan timeout)
+        public async Task ConnectAsync(TimeSpan timeout, MqttClientOptions options)
         {
             try
             {
-                await _channel.ConnectAsync(options).TimeoutAfter(timeout).ConfigureAwait(false);
+                await _channel.ConnectAsync(options).TimeoutAfter(timeout);
             }
             catch (MqttCommunicationTimedOutException)
             {
@@ -46,11 +46,11 @@ namespace MQTTnet.Core.Adapter
             }
         }
 
-        public async Task DisconnectAsync()
+        public async Task DisconnectAsync(TimeSpan timeout)
         {
             try
             {
-                await _channel.DisconnectAsync().ConfigureAwait(false);
+                await _channel.DisconnectAsync().TimeoutAfter(timeout).ConfigureAwait(false);
             }
             catch (MqttCommunicationTimedOutException)
             {
@@ -113,7 +113,7 @@ namespace MQTTnet.Core.Adapter
                 ReceivedMqttPacket receivedMqttPacket;
                 if (timeout > TimeSpan.Zero)
                 {
-                    receivedMqttPacket = await ReceiveAsync(_channel.RawStream).TimeoutAfter(timeout).ConfigureAwait(false);
+                    receivedMqttPacket = await ReceiveAsync(_channel.RawReceiveStream).TimeoutAfter(timeout).ConfigureAwait(false);
                 }
                 else
                 {

@@ -33,10 +33,10 @@ namespace MQTTnet.Implementations
             ReceiveStream = (Stream)sslStream ?? new NetworkStream(socket);
         }
 
-        public Stream ReceiveStream { get; private set; }
-        public Stream RawStream => ReceiveStream;
         public Stream SendStream => ReceiveStream;
-
+        public Stream ReceiveStream { get; private set; }
+        public Stream RawReceiveStream => ReceiveStream;
+        
         public async Task ConnectAsync(MqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));

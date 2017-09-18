@@ -53,7 +53,7 @@ namespace MQTTnet.Core.Client
             {
                 _disconnectedEventSuspended = false;
 
-                await _adapter.ConnectAsync(_options, _options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                await _adapter.ConnectAsync(_options.DefaultCommunicationTimeout, _options).ConfigureAwait(false);
 
                 MqttTrace.Verbose(nameof(MqttClient), "Connection with server established.");
 
@@ -220,7 +220,7 @@ namespace MQTTnet.Core.Client
         {
             try
             {
-                await _adapter.DisconnectAsync();
+                await _adapter.DisconnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
             }
             catch (Exception exception)
             {

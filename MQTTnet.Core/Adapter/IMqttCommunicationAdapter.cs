@@ -9,14 +9,14 @@ namespace MQTTnet.Core.Adapter
 {
     public interface IMqttCommunicationAdapter
     {
-        Task ConnectAsync(MqttClientOptions options, TimeSpan timeout);
+        IMqttPacketSerializer PacketSerializer { get; }
 
-        Task DisconnectAsync();
+        Task ConnectAsync(TimeSpan timeout, MqttClientOptions options);
+
+        Task DisconnectAsync(TimeSpan timeout);
 
         Task SendPacketsAsync(TimeSpan timeout, IEnumerable<MqttBasePacket> packets);
 
         Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout);
-
-        IMqttPacketSerializer PacketSerializer { get; }
     }
 }

@@ -64,7 +64,7 @@ namespace MQTTnet.Core.Server
             }
             finally
             {
-                await eventArgs.ClientAdapter.DisconnectAsync().ConfigureAwait(false);
+                await eventArgs.ClientAdapter.DisconnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
             }
         }
 

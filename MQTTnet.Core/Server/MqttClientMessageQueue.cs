@@ -56,7 +56,7 @@ namespace MQTTnet.Core.Server
             {
                 if (_pendingPublishPackets.Count == 0)
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(5)).ConfigureAwait(false);
+                    await Task.Delay(TimeSpan.FromMilliseconds(5), cancellationToken).ConfigureAwait(false);
                     continue;
                 }
 
@@ -71,7 +71,7 @@ namespace MQTTnet.Core.Server
                     foreach (var publishPacket in packets)
                     {
                         publishPacket.Dup = true;
-                        _pendingPublishPackets.Add(publishPacket);
+                        _pendingPublishPackets.Add(publishPacket, cancellationToken);
                     }
                 }
                 catch (Exception exception)
@@ -80,7 +80,7 @@ namespace MQTTnet.Core.Server
                     foreach (var publishPacket in packets)
                     {
                         publishPacket.Dup = true;
-                        _pendingPublishPackets.Add(publishPacket);
+                        _pendingPublishPackets.Add(publishPacket, cancellationToken);
                     }
                 }
             }

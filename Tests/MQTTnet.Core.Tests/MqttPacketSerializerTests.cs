@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Core.Adapter;
@@ -442,7 +443,7 @@ namespace MQTTnet.Core.Tests
 
             using (var headerStream = new MemoryStream(buffer1))
             {
-                var header = MqttPacketReader.ReadHeaderFromSource(headerStream);
+                var header = MqttPacketReader.ReadHeaderFromSource(headerStream, CancellationToken.None);
 
                 using (var bodyStream = new MemoryStream(buffer1, (int)headerStream.Position, header.BodyLength))
                 {

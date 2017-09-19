@@ -91,7 +91,7 @@ namespace MQTTnet.Core.Tests
             await Task.Delay(500);
             Assert.AreEqual(1, receivedMessagesCount);
 
-            await c1.Unsubscribe("a");
+            await c1.UnsubscribeAsync("a");
             await c2.PublishAsync(message);
 
             await Task.Delay(500);
@@ -158,7 +158,7 @@ namespace MQTTnet.Core.Tests
             await c2.PublishAsync(new MqttApplicationMessage(topic, new byte[0], qualityOfServiceLevel, false));
 
             await Task.Delay(500);
-            await c1.Unsubscribe(topicFilter);
+            await c1.UnsubscribeAsync(topicFilter);
 
             await Task.Delay(500);
 

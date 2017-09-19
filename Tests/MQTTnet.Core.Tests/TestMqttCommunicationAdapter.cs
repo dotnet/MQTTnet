@@ -28,7 +28,7 @@ namespace MQTTnet.Core.Tests
             return Task.FromResult(0);
         }
 
-        public Task SendPacketsAsync(TimeSpan timeout, IEnumerable<MqttBasePacket> packets)
+        public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets)
         {
             ThrowIfPartnerIsNull();
 
@@ -40,16 +40,11 @@ namespace MQTTnet.Core.Tests
             return Task.FromResult(0);
         }
 
-        public Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout)
+        public Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfPartnerIsNull();
 
-            return Task.Run(() => _incomingPackets.Take());
-        }
-
-        public IEnumerable<MqttBasePacket> ReceivePackets(CancellationToken cancellationToken)
-        {
-            return _incomingPackets.GetConsumingEnumerable();
+            return Task.Run(() => _incomingPackets.Take(), cancellationToken);
         }
 
         private void SendPacketInternal(MqttBasePacket packet)

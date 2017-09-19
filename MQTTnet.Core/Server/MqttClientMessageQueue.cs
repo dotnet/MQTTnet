@@ -63,7 +63,7 @@ namespace MQTTnet.Core.Server
                 var packets = consumable.Take(_pendingPublishPackets.Count).ToList();
                 try
                 {
-                    await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, packets).ConfigureAwait(false);
+                    await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, packets).ConfigureAwait(false);
                 }
                 catch (MqttCommunicationException exception)
                 {

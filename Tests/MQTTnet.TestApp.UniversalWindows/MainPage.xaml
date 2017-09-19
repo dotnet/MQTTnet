@@ -2,9 +2,10 @@
     x:Class="MQTTnet.TestApp.UniversalWindows.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:MQTTnet.TestApp.UniversalWindows"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="800"
+    d:DesignWidth="800"
     mc:Ignorable="d">
 
     <Grid Margin="10">
@@ -12,33 +13,86 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-            <TextBlock>Server:</TextBlock>
-            <TextBox x:Name="Server"></TextBox>
-            <TextBlock>User:</TextBlock>
-            <TextBox x:Name="User"></TextBox>
-            <TextBlock>Password:</TextBlock>
-            <TextBox x:Name="Password"></TextBox>
-            <TextBlock>ClientId:</TextBlock>
-            <TextBox x:Name="ClientId"></TextBox>
+        <Pivot Grid.Row="0" >
+            <PivotItem Header="Connection">
+                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <TextBlock>Server:</TextBlock>
+                    <TextBox x:Name="Server"></TextBox>
+                    <TextBlock>User:</TextBlock>
+                    <TextBox x:Name="User"></TextBox>
+                    <TextBlock>Password:</TextBlock>
+                    <TextBox x:Name="Password"></TextBox>
+                    <TextBlock>ClientId:</TextBlock>
+                    <TextBox x:Name="ClientId"></TextBox>
 
-            <StackPanel Orientation="Horizontal">
-                <RadioButton x:Name="UseTcp" IsChecked="True">TCP</RadioButton>
-                <RadioButton x:Name="UseWs" >WS</RadioButton>
-            </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="connection">TCP</RadioButton>
+                        <RadioButton x:Name="UseWs" GroupName="connection">WS</RadioButton>
+                        <CheckBox x:Name="UseTls">Use TLS</CheckBox>
+                    </StackPanel>
 
-            <CheckBox x:Name="UseTls">Use TLS</CheckBox>
-            <Button Click="Connect">Connect</Button>
-            <TextBlock>Trace:</TextBlock>
-        </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Click="Connect" Width="120" Margin="0,0,10,0">Connect</Button>
+                        <Button Click="Disconnect" Width="120">Disconnect</Button>
+                    </StackPanel>
+                </StackPanel>
 
+            </PivotItem>
+            <PivotItem Header="Publish">
+                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <TextBlock>Topic:</TextBlock>
+                    <TextBox x:Name="Topic"></TextBox>
 
-        <ScrollViewer Grid.Row="1" Background="Black" Foreground="WhiteSmoke" FontFamily="Consolas" HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
-            <TextBlock x:Name="Trace"></TextBlock>
+                    <TextBlock>Payload:</TextBlock>
+                    <TextBox x:Name="Payload"></TextBox>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="Text" IsChecked="True" GroupName="payload">Text</RadioButton>
+                        <RadioButton x:Name="Base64" GroupName="payload">Base64</RadioButton>
+                    </StackPanel>
+
+                    <TextBlock>Retain:</TextBlock>
+                    <CheckBox x:Name="Retain"></CheckBox>
+
+                    <TextBlock>QoS:</TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Margin="0,0,10,0" x:Name="QoS0" IsChecked="True" GroupName="qos">0 (At most once)</RadioButton>
+                        <RadioButton Margin="0,0,10,0" x:Name="QoS1" GroupName="qos">1 (At least once)</RadioButton>
+                        <RadioButton Margin="0,0,10,0" x:Name="QoS2" GroupName="qos">2 (Exactly once)</RadioButton>
+                    </StackPanel>
+                    <Button Click="Publish" Width="120">Publish</Button>
+                </StackPanel>
+            </PivotItem>
+
+            <PivotItem Header="Subscribe">
+                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <TextBlock>Topic:</TextBlock>
+                    <TextBox x:Name="SubscribeTopic"></TextBox>
+
+                    <TextBlock>QoS:</TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Margin="0,0,10,0" x:Name="SubscribeQoS0" IsChecked="True" GroupName="sqos">0 (At most once)</RadioButton>
+                        <RadioButton Margin="0,0,10,0" x:Name="SubscribeQoS1" GroupName="sqos">1 (At least once)</RadioButton>
+                        <RadioButton Margin="0,0,10,0" x:Name="SubscribeQoS2" GroupName="sqos">2 (Exactly once)</RadioButton>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Click="Subscribe" Width="120" Margin="0,0,10,0">Subscribe</Button>
+                        <Button Click="Unsubscribe" Width="120">Unsubscribe</Button>
+                    </StackPanel>
+                </StackPanel>
+            </PivotItem>
+        </Pivot>
+
+        <ScrollViewer Margin="12,10,12,0" Grid.Row="1" Background="Black" Foreground="WhiteSmoke" FontFamily="Consolas" HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+            <TextBlock x:Name="Trace" FontSize="11"></TextBlock>
         </ScrollViewer>
 
+        <StackPanel Margin="12,0,12,10" Grid.Row="2">
+            <Button Click="Clear" Width="120">Clear</Button>
+        </StackPanel>
     </Grid>
 
 </Page>

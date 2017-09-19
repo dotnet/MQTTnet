@@ -7,7 +7,7 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet
 {
-    public class MqttClientFactory
+    public class MqttClientFactory : IMqttClientFactory
     {
         public IMqttClient CreateMqttClient(MqttClientOptions options)
         {
@@ -21,9 +21,9 @@ namespace MQTTnet
             switch (options.ConnectionType)
             {
                 case MqttConnectionType.Tcp:
-                return new MqttTcpChannel();
+                    return new MqttTcpChannel();
                 case MqttConnectionType.Ws:
-                return new MqttWebSocketChannel();
+                    return new MqttWebSocketChannel();
 
                 default:
                     throw new NotSupportedException();

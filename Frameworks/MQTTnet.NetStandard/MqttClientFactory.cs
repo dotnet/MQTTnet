@@ -1,13 +1,13 @@
 ﻿using System;
 using MQTTnet.Core.Adapter;
+using MQTTnet.Core.Channel;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Serializer;
 using MQTTnet.Implementations;
-using MQTTnet.Core.Channel;
 
 namespace MQTTnet
 {
-    public class MqttClientFactory
+    public class MqttClientFactory : IMqttClientFactory
     {
         public IMqttClient CreateMqttClient(MqttClientOptions options)
         {

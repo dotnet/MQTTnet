@@ -6,7 +6,7 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet
 {
-    public class MqttServerFactory
+    public class MqttServerFactory : IMqttServerFactory
     {
         public IMqttServer CreateMqttServer(MqttServerOptions options)
         {

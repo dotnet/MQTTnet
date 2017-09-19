@@ -7,7 +7,7 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet
 {
-    public class MqttClientFactory
+    public class MqttClientFactory : IMqttClientFactory
     {
         public IMqttClient CreateMqttClient(MqttClientOptions options)
         {

@@ -28,10 +28,11 @@ namespace MQTTnet.Implementations
             {
                 uri += ":" + options.Port;
             }
-
+            
             _webSocket = new ClientWebSocket();
             _webSocket.Options.KeepAliveInterval = options.KeepAlivePeriod;
             await _webSocket.ConnectAsync(new Uri(uri), CancellationToken.None).ConfigureAwait(false);
+
             RawReceiveStream = new WebSocketStream(_webSocket);
         }
 

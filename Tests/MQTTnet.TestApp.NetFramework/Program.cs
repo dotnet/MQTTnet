@@ -78,8 +78,6 @@ namespace MQTTnet.TestApp.NetFramework
                     {
                         new TopicFilter("#", MqttQualityOfServiceLevel.AtMostOnce)
                     });
-
-                    Console.WriteLine("### SUBSCRIBED ###");
                 };
 
                 client.Disconnected += async (s, e) =>
@@ -108,17 +106,12 @@ namespace MQTTnet.TestApp.NetFramework
 
                 Console.WriteLine("### WAITING FOR APPLICATION MESSAGES ###");
 
+                var messageFactory = new MqttApplicationMessageFactory();
                 while (true)
                 {
                     Console.ReadLine();
 
-                    var applicationMessage = new MqttApplicationMessage(
-                        "A/B/C",
-                        Encoding.UTF8.GetBytes("Hello World"),
-                        MqttQualityOfServiceLevel.AtLeastOnce,
-                        false
-                    );
-
+                    var applicationMessage = messageFactory.CreateApplicationMessage("myTopic", "Hello World", MqttQualityOfServiceLevel.AtLeastOnce);
                     await client.PublishAsync(applicationMessage);
                 }
             }

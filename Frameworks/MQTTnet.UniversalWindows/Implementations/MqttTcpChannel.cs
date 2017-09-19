@@ -54,8 +54,8 @@ namespace MQTTnet.Implementations
                 await _socket.ConnectAsync(new HostName(options.Server), options.GetPort().ToString(), SocketProtectionLevel.Tls12);
             }
 
-            ReceiveStream = _socket.InputStream.AsStreamForRead();
             SendStream = _socket.OutputStream.AsStreamForWrite();
+            ReceiveStream = _socket.InputStream.AsStreamForRead();
             RawReceiveStream = ReceiveStream;
         }
 

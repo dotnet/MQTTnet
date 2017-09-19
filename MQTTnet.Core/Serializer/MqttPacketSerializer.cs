@@ -546,6 +546,8 @@ namespace MQTTnet.Core.Serializer
 
         private static byte Serialize(MqttSubscribePacket packet, MqttPacketWriter writer)
         {
+            if (!packet.TopicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
+
             writer.Write(packet.PacketIdentifier);
 
             if (packet.TopicFilters?.Count > 0)
@@ -577,6 +579,8 @@ namespace MQTTnet.Core.Serializer
 
         private static byte Serialize(MqttUnsubscribePacket packet, MqttPacketWriter writer)
         {
+            if (!packet.TopicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.10.3-2].");
+
             writer.Write(packet.PacketIdentifier);
 
             if (packet.TopicFilters?.Any() == true)

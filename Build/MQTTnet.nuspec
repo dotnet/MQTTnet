@@ -13,9 +13,13 @@
     <releaseNotes>* [Client] Added support for web socket communication channel (thanks to nowakpiotr)
 * [Core] Huge performance optimizations (thanks to JanEggers)
 * [Client] Fixed an issue when calling _DisconnectAsync_ and the connection is already closed.
+* [Core] Added several new interfaces
+* [Core] Added a factory for creation of application messages
+* [Core] Fixed issues in connection handling
+* [Client] Fixed issues with subscribing/unsubscribing (breaking change!)
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
-    <tags>MQTT MQTTClient MQTTServer MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Queue Hardware Arduino</tags> 
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M</tags> 
     <dependencies>
 
       <group targetFramework="netstandard1.3">
@@ -24,7 +28,7 @@
       </group>
       
       <group targetFramework="uap10.0">
-        <dependency id="Microsoft.NETCore.UniversalWindowsPlatform" version="5.3.3" />
+        <dependency id="Microsoft.NETCore.UniversalWindowsPlatform" version="5.4.0" />
       </group>
 
     </dependencies>

@@ -80,14 +80,12 @@ client.ApplicationMessageReceived += (s, e) =>
 
 client.Connected += async (s, e) =>
 {
-    Console.WriteLine("### CONNECTED WITH SERVER ###");
+    Console.WriteLine("### CONNECTED WITH SERVER, SUBSCRIBING ###");
 
     await client.SubscribeAsync(new List<TopicFilter>
     {
         new TopicFilter("#", MqttQualityOfServiceLevel.AtMostOnce)
     });
-
-    Console.WriteLine("### SUBSCRIBED ###");
 };
 
 client.Disconnected += async (s, e) => 
@@ -116,17 +114,12 @@ catch
 
 Console.WriteLine("### WAITING FOR APPLICATION MESSAGES ###");
 
+var messageFactory = new MqttApplicationMessageFactory();
 while (true)
 {
     Console.ReadLine();
 
-    var applicationMessage = new MqttApplicationMessage(
-        "A/B/C",
-        Encoding.UTF8.GetBytes("Hello World"),
-        MqttQualityOfServiceLevel.AtLeastOnce,
-        false
-    );
-
+    var applicationMessage = messageFactory.CreateApplicationMessage("myTopic", "Hello World", MqttQualityOfServiceLevel.AtLeastOnce);
     await client.PublishAsync(applicationMessage);
 }
 ```

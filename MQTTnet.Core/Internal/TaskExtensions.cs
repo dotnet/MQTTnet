@@ -12,7 +12,7 @@ namespace MQTTnet.Core.Internal
             var timeoutTask = Task.Delay(timeout);
             var finishedTask = await Task.WhenAny(timeoutTask, task).ConfigureAwait(false);
 
-            if (finishedTask == timeoutTask || task.IsCanceled)
+            if (finishedTask == timeoutTask)
             {
                 throw new MqttCommunicationTimedOutException();
             }
@@ -24,7 +24,7 @@ namespace MQTTnet.Core.Internal
 
             if (task.IsFaulted)
             {
-                throw new MqttCommunicationException(task.Exception);
+                throw new MqttCommunicationException(task.Exception.GetBaseException());
             }
 
             ////return TimeoutAfter(task.ContinueWith(t => 0), timeout);
@@ -47,7 +47,7 @@ namespace MQTTnet.Core.Internal
             
             if (task.IsFaulted)
             {
-                throw new MqttCommunicationException(task.Exception);
+                throw new MqttCommunicationException(task.Exception.GetBaseException());
             }
 
             return task.Result;

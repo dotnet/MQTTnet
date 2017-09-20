@@ -1,4 +1,5 @@
 exclude:
+- /Frameworks/.*
 - /MQTTnet.TestApp.NetCore/Program.cs
 - /Tests/MQTTnet.TestApp.NetFramework/.*
 - /Tests/MQTTnet.TestApp.UniversalWindows/.*

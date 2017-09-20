@@ -75,15 +75,15 @@ namespace MQTTnet.Core.Tests
             var tasks = Enumerable.Range(0, 100000)
                 .Select(i => Task.Delay(TimeSpan.FromMilliseconds(1)).TimeoutAfter(TimeSpan.FromMinutes(1)));
 
-            await Task.WhenAll( tasks );
-            AssertIsLess( 3_000_000, GC.GetTotalMemory( true ) );
+            await Task.WhenAll(tasks);
+            AssertIsLess(3_000_000, GC.GetTotalMemory(true));
         }
 
-        private void AssertIsLess( long bound, long actual )
+        private static void AssertIsLess(long bound, long actual)
         {
-            if ( bound < actual )
+            if (bound < actual)
             {
-                Assert.Fail( $"value must be less than {bound:N0} but is {actual:N0}" );
+                Assert.Fail($"value must be less than {bound:N0} but is {actual:N0}");
             }
         }
     }

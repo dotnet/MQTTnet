@@ -352,6 +352,11 @@ namespace MQTTnet.Core.Client
             }
             catch (MqttCommunicationException exception)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 MqttTrace.Warning(nameof(MqttClient), exception, "MQTT communication exception while sending/receiving keep alive packets.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
             }
@@ -388,6 +393,11 @@ namespace MQTTnet.Core.Client
             }
             catch (MqttCommunicationException exception)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 MqttTrace.Warning(nameof(MqttClient), exception, "MQTT communication exception while receiving packets.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
             }

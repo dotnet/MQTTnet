@@ -7,91 +7,68 @@ namespace MQTTnet.Core.Internal
 {
     public static class TaskExtensions
     {
-        public static async Task TimeoutAfter(this Task task, TimeSpan timeout)
+        public static async Task TimeoutAfter( this Task task, TimeSpan timeout )
         {
-            var timeoutTask = Task.Delay(timeout);
-            var finishedTask = await Task.WhenAny(timeoutTask, task).ConfigureAwait(false);
-
-            if (finishedTask == timeoutTask)
+            using ( var cancellationTokenSource = new CancellationTokenSource() )
             {
-                throw new MqttCommunicationTimedOutException();
-            }
+                try
+                {
+                    var timeoutTask = Task.Delay(timeout, cancellationTokenSource.Token);
+                    var finishedTask = await Task.WhenAny(timeoutTask, task).ConfigureAwait(false);
 
-            if (task.IsCanceled)
-            {
-                throw new TaskCanceledException();
-            }
+                    if ( finishedTask == timeoutTask )
+                    {
+                        throw new MqttCommunicationTimedOutException();
+                    }
 
-            if (task.IsFaulted)
-            {
-                throw new MqttCommunicationException(task.Exception.GetBaseException());
-            }
+                    if ( task.IsCanceled )
+                    {
+                        throw new TaskCanceledException();
+                    }
 
-            ////return TimeoutAfter(task.ContinueWith(t => 0), timeout);
+                    if ( task.IsFaulted )
+                    {
+                        throw new MqttCommunicationException( task.Exception.GetBaseException() );
+                    }
+                }
+                finally
+                {
+                    cancellationTokenSource.Cancel();
+                }
+            }
         }
 
-        public static async Task<TResult> TimeoutAfter<TResult>(this Task<TResult> task, TimeSpan timeout)
+        public static async Task<TResult> TimeoutAfter<TResult>( this Task<TResult> task, TimeSpan timeout )
         {
-            var timeoutTask = Task.Delay(timeout);
-            var finishedTask = await Task.WhenAny(timeoutTask, task).ConfigureAwait(false);
-
-            if (finishedTask == timeoutTask)
+            using ( var cancellationTokenSource = new CancellationTokenSource() )
             {
-                throw new MqttCommunicationTimedOutException();
+                try
+                {
+                    var timeoutTask = Task.Delay(timeout, cancellationTokenSource.Token);
+                    var finishedTask = await Task.WhenAny(timeoutTask, task).ConfigureAwait(false);
+
+                    if ( finishedTask == timeoutTask )
+                    {
+                        throw new MqttCommunicationTimedOutException();
+                    }
+
+                    if ( task.IsCanceled )
+                    {
+                        throw new TaskCanceledException();
+                    }
+
+                    if ( task.IsFaulted )
+                    {
+                        throw new MqttCommunicationException( task.Exception.GetBaseException() );
+                    }
+
+                    return task.Result;
+                }
+                finally
+                {
+                    cancellationTokenSource.Cancel();
+                }
             }
-
-            if (task.IsCanceled)
-            {
-                throw new TaskCanceledException();
-            }
-            
-            if (task.IsFaulted)
-            {
-                throw new MqttCommunicationException(task.Exception.GetBaseException());
-            }
-
-            return task.Result;
-
-            ////            using (var cancellationTokenSource = new CancellationTokenSource())
-            ////            {
-            ////                var tcs = new TaskCompletionSource<TResult>();
-
-            ////                cancellationTokenSource.Token.Register(() =>
-            ////                {
-            ////                    tcs.TrySetCanceled();
-            ////                });
-
-            ////                try
-            ////                {
-            ////#pragma warning disable 4014
-            ////                    task.ContinueWith(t =>
-            ////#pragma warning restore 4014
-            ////                    {
-            ////                        if (t.IsFaulted)
-            ////                        {
-            ////                            tcs.TrySetException(t.Exception);
-            ////                        }
-
-            ////                        if (t.IsCompleted)
-            ////                        {
-            ////                            tcs.TrySetResult(t.Result);
-            ////                        }
-
-            ////                        return t.Result;
-            ////                    }, cancellationTokenSource.Token).ConfigureAwait(false);
-
-            ////                    cancellationTokenSource.CancelAfter(timeout);
-            ////                    return await tcs.Task.ConfigureAwait(false);
-            ////                }
-            ////                catch (TaskCanceledException)
-            ////                {
-            ////                    throw new MqttCommunicationTimedOutException();
-            ////                }
-            ////                catch (Exception e)
-            ////                {
-            ////                    throw new MqttCommunicationException(e);
-            ////                }
-            ////            }
         }
     }
 }

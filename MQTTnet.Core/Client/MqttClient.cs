@@ -42,13 +42,13 @@ namespace MQTTnet.Core.Client
 
             try
             {
-                MqttTrace.Verbose(nameof(MqttClient), "Trying to connect with server.");
-                await _adapter.ConnectAsync(_options.DefaultCommunicationTimeout, _options).ConfigureAwait(false);
-                MqttTrace.Verbose(nameof(MqttClient), "Connection with server established.");
-
                 _cancellationTokenSource = new CancellationTokenSource();
                 _latestPacketIdentifier = 0;
                 _packetDispatcher.Reset();
+
+                MqttTrace.Verbose(nameof(MqttClient), "Trying to connect with server.");
+                await _adapter.ConnectAsync(_options.DefaultCommunicationTimeout, _options).ConfigureAwait(false);
+                MqttTrace.Verbose(nameof(MqttClient), "Connection with server established.");
 
                 StartReceivePackets(_cancellationTokenSource.Token);
 
@@ -69,12 +69,13 @@ namespace MQTTnet.Core.Client
                 }
 
                 MqttTrace.Verbose(nameof(MqttClient), "MQTT connection with server established.");
-                Connected?.Invoke(this, EventArgs.Empty);
 
                 if (_options.KeepAlivePeriod != TimeSpan.Zero)
                 {
                     StartSendKeepAliveMessages(_cancellationTokenSource.Token);
                 }
+
+                Connected?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception)
             {

@@ -24,7 +24,7 @@
 
       <group targetFramework="netstandard1.3">
         <dependency id="NETStandard.Library" version="1.6.1" />
-        <dependency id="System.Net.Security" version="4.3.1" />
+        <dependency id="System.Net.Security" version="4.3.2" />
       </group>
       
       <group targetFramework="uap10.0">

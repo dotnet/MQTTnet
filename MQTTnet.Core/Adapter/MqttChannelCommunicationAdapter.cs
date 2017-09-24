@@ -83,7 +83,7 @@ namespace MQTTnet.Core.Adapter
                 {
                     foreach (var packet in packets)
                     {
-                        if (packet == null) {continue};
+                        if (packet == null) {continue; }
 
                         MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), $"TX >>> {packet} [Timeout={timeout}]");
 

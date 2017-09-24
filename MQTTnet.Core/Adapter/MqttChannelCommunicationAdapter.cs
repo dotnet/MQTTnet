@@ -83,7 +83,7 @@ namespace MQTTnet.Core.Adapter
                 {
                     foreach (var packet in packets)
                     {
-                        if (packet == null) continue;
+                        if (packet == null) {continue};
 
                         MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), $"TX >>> {packet} [Timeout={timeout}]");
 
@@ -93,7 +93,7 @@ namespace MQTTnet.Core.Adapter
 
                     if (timeout > TimeSpan.Zero)
                     {
-                        _sendTask = _sendTask.ContinueWith(c => _channel.SendStream.FlushAsync(cancellationToken).TimeoutAfter(timeout), cancellationToken);// _channel.SendStream.FlushAsync(cancellationToken).TimeoutAfter(timeout);//.ConfigureAwait(false);
+                        _sendTask = _sendTask.ContinueWith(c => _channel.SendStream.FlushAsync(cancellationToken).TimeoutAfter(timeout), cancellationToken).ConfigureAwait(false);
                     }
                     else
                     {
@@ -105,17 +105,17 @@ namespace MQTTnet.Core.Adapter
                 await _sendTask; // configure await false generates stackoverflow
 
             }
-            catch (TaskCanceledException ex)
+            catch (TaskCanceledException)
             {
-                throw ex;
+                throw;
             }
-            catch (MqttCommunicationTimedOutException ex)
+            catch (MqttCommunicationTimedOutException)
             {
-                throw ex;
+                throw;
             }
-            catch (MqttCommunicationException ex)
+            catch (MqttCommunicationException)
             {
-                throw ex;
+                throw;
             }
             catch (Exception exception)
             {

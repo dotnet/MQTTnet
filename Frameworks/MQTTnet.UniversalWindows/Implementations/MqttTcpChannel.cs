@@ -22,6 +22,7 @@ namespace MQTTnet.Implementations
         public MqttTcpChannel(StreamSocket socket)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            CreateStreams();
         }
 
         public Stream SendStream { get; private set; }
@@ -54,9 +55,7 @@ namespace MQTTnet.Implementations
                 await _socket.ConnectAsync(new HostName(options.Server), options.GetPort().ToString(), SocketProtectionLevel.Tls12);
             }
 
-            SendStream = _socket.OutputStream.AsStreamForWrite();
-            ReceiveStream = _socket.InputStream.AsStreamForRead();
-            RawReceiveStream = ReceiveStream;
+            CreateStreams();
         }
 
         public Task DisconnectAsync()
@@ -78,6 +77,13 @@ namespace MQTTnet.Implementations
 
             _socket?.Dispose();
             _socket = null;
+        }
+
+        private void CreateStreams()
+        {
+            SendStream = _socket.OutputStream.AsStreamForWrite();
+            ReceiveStream = _socket.InputStream.AsStreamForRead();
+            RawReceiveStream = ReceiveStream;
         }
 
         private static Certificate LoadCertificate(MqttClientOptions options)

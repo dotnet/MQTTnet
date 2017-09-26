@@ -415,21 +415,21 @@ namespace MQTTnet.Core.Client
         private void StartProcessReceivedPacket(MqttBasePacket packet, CancellationToken cancellationToken)
         {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(async () => await ProcessReceivedPacketAsync(packet), cancellationToken).ConfigureAwait(false);
+            Task.Run(() => ProcessReceivedPacketAsync(packet), cancellationToken).ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         private void StartReceivePackets(CancellationToken cancellationToken)
         {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(async () => await ReceivePackets(cancellationToken), cancellationToken).ConfigureAwait(false); ;
+            Task.Run(() => ReceivePackets(cancellationToken), cancellationToken).ConfigureAwait(false); ;
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         private void StartSendKeepAliveMessages(CancellationToken cancellationToken)
         {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(async () => await SendKeepAliveMessagesAsync(cancellationToken), cancellationToken).ConfigureAwait(false);
+            Task.Run(() => SendKeepAliveMessagesAsync(cancellationToken), cancellationToken).ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
     }

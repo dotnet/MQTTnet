@@ -63,6 +63,7 @@ namespace MQTTnet.Core.Client
                 };
 
                 var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket).ConfigureAwait(false);
+                
                 if (response.ConnectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
                     throw new MqttConnectingFailedException(response.ConnectReturnCode);

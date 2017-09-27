@@ -1,0 +1,8 @@
+exclude:
+- /Frameworks/.*
+- /MQTTnet.TestApp.NetCore/Program.cs
+- /Tests/MQTTnet.TestApp.NetFramework/.*
+- /Tests/MQTTnet.TestApp.UniversalWindows/.*
+component_depth: 1
+languages:
+- csharp

@@ -20,7 +20,7 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 * Access to internal trace messages
 * Unit tested (57+ tests)
 
-\* Tested on local machine with MQTTnet client and server running in the same process and using TCP channel.
+\* Tested on local machine with MQTTnet client and server running on the same machine using the TCP channel.
 
 ### Client
 * Rx support (via another project)

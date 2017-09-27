@@ -20,7 +20,7 @@ namespace MQTTnet.Core.Client
             var packetAwaiter = AddPacketAwaiter(request, responseType);
             try
             {
-                return await packetAwaiter.Task.TimeoutAfter(timeout);
+                return await packetAwaiter.Task.TimeoutAfter(timeout).ConfigureAwait(false);
             }
             catch (MqttCommunicationTimedOutException)
             {
@@ -67,10 +67,11 @@ namespace MQTTnet.Core.Client
         private TaskCompletionSource<MqttBasePacket> AddPacketAwaiter(MqttBasePacket request, Type responseType)
         {
             var tcs = new TaskCompletionSource<MqttBasePacket>();
-            if (request is IMqttPacketWithIdentifier withIdent)
+
+            if (request is IMqttPacketWithIdentifier requestWithIdentifier)
             {
                 var byId = _packetByResponseTypeAndIdentifier.GetOrAdd(responseType, key => new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>());
-                byId[withIdent.PacketIdentifier] = tcs;
+                byId[requestWithIdentifier.PacketIdentifier] = tcs;
             }
             else
             {
@@ -82,10 +83,10 @@ namespace MQTTnet.Core.Client
 
         private void RemovePacketAwaiter(MqttBasePacket request, Type responseType)
         {
-            if (request is IMqttPacketWithIdentifier withIdent)
+            if (request is IMqttPacketWithIdentifier requestWithIdentifier)
             {
                 var byId = _packetByResponseTypeAndIdentifier.GetOrAdd(responseType, key => new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>());
-                byId.TryRemove(withIdent.PacketIdentifier, out var _);
+                byId.TryRemove(requestWithIdentifier.PacketIdentifier, out var _);
             }
             else
             {

@@ -18,7 +18,7 @@ namespace MQTTnet.Core.Adapter
     {
         private readonly IMqttCommunicationChannel _channel;
 
-        private readonly ConcurrentQueue<byte[]> _writePendingData = new ConcurrentQueue<byte[]>();
+        private readonly ConcurrentQueue<byte[]> _pendingMessageQueue = new ConcurrentQueue<byte[]>();
         private bool _isWritingToStream;
 
         public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer)
@@ -81,7 +81,7 @@ namespace MQTTnet.Core.Adapter
         {
             try
             {
-                byte[] buffer;
+                byte[] message;
 
                 using (var bufferStream = new MemoryStream())
                 {
@@ -93,10 +93,10 @@ namespace MQTTnet.Core.Adapter
 
                         bufferStream.Write(writeBuffer, 0, writeBuffer.Length);
                     }
-                    buffer = bufferStream.ToArray();
+                    message = bufferStream.ToArray();
                 }
 
-                await QueuedAndWriteBufferToStreamAsync(_channel.SendStream, buffer, timeout, cancellationToken).ConfigureAwait(false);
+                await QueuedAndWriteBufferToStreamAsync(_channel.SendStream, message, timeout, cancellationToken).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
             {
@@ -183,16 +183,16 @@ namespace MQTTnet.Core.Adapter
             return new ReceivedMqttPacket(header, new MemoryStream(body, 0, body.Length));
         }
 
-        private async Task QueuedAndWriteBufferToStreamAsync(Stream stream, byte[] frame, TimeSpan timeout, CancellationToken cancellationToken)
+        private async Task QueuedAndWriteBufferToStreamAsync(Stream stream, byte[] message, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            if (frame == null)
+            if (message == null)
             {
                 return;
             }
 
-            _writePendingData.Enqueue(frame);
+            _pendingMessageQueue.Enqueue(message);
 
-            lock (_writePendingData)
+            lock (_pendingMessageQueue)
             {
                 if (_isWritingToStream)
                 {
@@ -204,9 +204,9 @@ namespace MQTTnet.Core.Adapter
             try
             {
 
-                if (_writePendingData.Count > 0 && _writePendingData.TryDequeue(out byte[] bufferFromQueue))
+                if (_pendingMessageQueue.Count > 0 && _pendingMessageQueue.TryDequeue(out var messageFromQueue))
                 {
-                    await stream.WriteAsync(bufferFromQueue, 0, bufferFromQueue.Length, cancellationToken).ConfigureAwait(false);
+                    await stream.WriteAsync(messageFromQueue, 0, messageFromQueue.Length, cancellationToken).ConfigureAwait(false);
 
                     if (timeout > TimeSpan.Zero)
                     {
@@ -219,7 +219,7 @@ namespace MQTTnet.Core.Adapter
                 }
                 else
                 {
-                    lock (_writePendingData)
+                    lock (_pendingMessageQueue)
                     {
                         _isWritingToStream = false;
                     }
@@ -227,7 +227,7 @@ namespace MQTTnet.Core.Adapter
             }
             catch (Exception)
             {
-                lock (_writePendingData)
+                lock (_pendingMessageQueue)
                 {
                     _isWritingToStream = false;
                 }
@@ -236,7 +236,7 @@ namespace MQTTnet.Core.Adapter
             }
             finally
             {
-                lock (_writePendingData)
+                lock (_pendingMessageQueue)
                 {
                     _isWritingToStream = false;
                 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -17,7 +18,8 @@ namespace MQTTnet.Core.Adapter
     {
         private readonly IMqttCommunicationChannel _channel;
 
-        private Task _sendTask = Task.FromResult(0); // this task is used to prevent overlapping write
+        private readonly ConcurrentQueue<byte[]> _writePendingData = new ConcurrentQueue<byte[]>();
+        private bool _isWritingToStream;
 
         public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer)
         {
@@ -79,27 +81,22 @@ namespace MQTTnet.Core.Adapter
         {
             try
             {
-                lock (_channel)
+                byte[] buffer;
+
+                using (var bufferStream = new MemoryStream())
                 {
                     foreach (var packet in packets)
                     {
                         MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "TX >>> {0} [Timeout={1}]", packet, timeout);
 
                         var writeBuffer = PacketSerializer.Serialize(packet);
-                        _sendTask = _sendTask.ContinueWith(p => _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length, cancellationToken).ConfigureAwait(false), cancellationToken);
+
+                        bufferStream.Write(writeBuffer, 0, writeBuffer.Length);
                     }
+                    buffer = bufferStream.ToArray();
                 }
 
-                await _sendTask; // configure await false generates stackoverflow
-
-                if (timeout > TimeSpan.Zero)
-                {
-                    await _channel.SendStream.FlushAsync(cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
-                }
-                else
-                {
-                    await _channel.SendStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-                }
+                await QueuedAndWriteBufferToStreamAsync(_channel.SendStream, buffer, timeout, cancellationToken).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
             {
@@ -184,6 +181,66 @@ namespace MQTTnet.Core.Adapter
             } while (offset < header.BodyLength);
 
             return new ReceivedMqttPacket(header, new MemoryStream(body, 0, body.Length));
+        }
+
+        private async Task QueuedAndWriteBufferToStreamAsync(Stream stream, byte[] frame, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            if (frame == null)
+            {
+                return;
+            }
+
+            _writePendingData.Enqueue(frame);
+
+            lock (_writePendingData)
+            {
+                if (_isWritingToStream)
+                {
+                    return;
+                }
+                _isWritingToStream = true;
+            }
+
+            try
+            {
+
+                if (_writePendingData.Count > 0 && _writePendingData.TryDequeue(out byte[] bufferFromQueue))
+                {
+                    await stream.WriteAsync(bufferFromQueue, 0, bufferFromQueue.Length, cancellationToken).ConfigureAwait(false);
+
+                    if (timeout > TimeSpan.Zero)
+                    {
+                        await stream.FlushAsync(cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await stream.FlushAsync(cancellationToken);
+                    }
+                }
+                else
+                {
+                    lock (_writePendingData)
+                    {
+                        _isWritingToStream = false;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                lock (_writePendingData)
+                {
+                    _isWritingToStream = false;
+                }
+
+                throw;
+            }
+            finally
+            {
+                lock (_writePendingData)
+                {
+                    _isWritingToStream = false;
+                }
+            }
         }
     }
 }

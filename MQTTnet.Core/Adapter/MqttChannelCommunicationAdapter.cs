@@ -16,8 +16,7 @@ namespace MQTTnet.Core.Adapter
     public class MqttChannelCommunicationAdapter : IMqttCommunicationAdapter
     {
         private readonly IMqttCommunicationChannel _channel;
-
-        private readonly Task _waitTask = Task.FromResult(0); // this task is used to prevent overlapping write
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer)
         {
@@ -77,32 +76,31 @@ namespace MQTTnet.Core.Adapter
 
         public async Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets)
         {
+            await _semaphore.WaitAsync(cancellationToken);
+
             try
             {
-                var waitTask = _waitTask;
-
                 foreach (var packet in packets)
                 {
-                    if (packet == null) { continue; }
-
-                    MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), $"TX >>> {packet} [Timeout={timeout}]");
-
-                    var writeBuffer = PacketSerializer.Serialize(packet);
-
-                    waitTask = waitTask.ContinueWith(t => _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length, cancellationToken).ConfigureAwait(false), cancellationToken);
-                }
-
-                waitTask = waitTask.ContinueWith(t =>
-                {
-                    if (timeout > TimeSpan.Zero)
+                    if (packet == null)
                     {
-                        return _channel.SendStream.FlushAsync(cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
+                        continue;
                     }
 
-                    return _channel.SendStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-                }, cancellationToken);
+                    MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), $"TX >>> {0} [Timeout={1}]", packet, timeout);
 
-                await waitTask; // configure await false generates stackoverflow
+                    var writeBuffer = PacketSerializer.Serialize(packet);
+                    await _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length, cancellationToken).ConfigureAwait(false);
+                }
+
+                if (timeout > TimeSpan.Zero)
+                {
+                    await _channel.SendStream.FlushAsync(cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
+                }
+                else
+                {
+                    await _channel.SendStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                }
             }
             catch (TaskCanceledException)
             {
@@ -119,6 +117,10 @@ namespace MQTTnet.Core.Adapter
             catch (Exception exception)
             {
                 throw new MqttCommunicationException(exception);
+            }
+            finally
+            {
+                _semaphore.Release();
             }
         }
 

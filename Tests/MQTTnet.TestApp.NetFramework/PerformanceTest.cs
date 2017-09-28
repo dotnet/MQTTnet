@@ -113,16 +113,16 @@ namespace MQTTnet.TestApp.NetFramework
                         .Select(i => CreateMessage())
                         .ToList();
 
-                    ////if (false)
-                    ////{
-                    ////    //send concurrent (test for raceconditions)
-                    ////    var sendTasks = msgs
-                    ////        .Select(msg => PublishSingleMessage(client, msg, ref msgCount))
-                    ////        .ToList();
+                    if (true)
+                    {
+                        //send concurrent (test for raceconditions)
+                        var sendTasks = msgs
+                            .Select(msg => PublishSingleMessage(client, msg, ref msgCount))
+                            .ToList();
 
-                    ////    await Task.WhenAll(sendTasks);
-                    ////}
-                    ////else
+                        await Task.WhenAll(sendTasks);
+                    }
+                    else
                     {
                         await client.PublishAsync(msgs);
                         msgCount += msgs.Count;
@@ -134,7 +134,7 @@ namespace MQTTnet.TestApp.NetFramework
                     var now = DateTime.Now;
                     if (last < now - TimeSpan.FromSeconds(1))
                     {
-                        Console.WriteLine($"sending {msgCount} inteded {msgChunkSize / interval.TotalSeconds}");
+                        Console.WriteLine($"sending {msgCount} intended {msgChunkSize / interval.TotalSeconds}");
                         msgCount = 0;
                         last = now;
                     }

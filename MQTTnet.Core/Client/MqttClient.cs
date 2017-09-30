@@ -370,7 +370,7 @@ namespace MQTTnet.Core.Client
                     await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket()).ConfigureAwait(false);
                 }
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
             }
             catch (MqttCommunicationException exception)
@@ -413,7 +413,7 @@ namespace MQTTnet.Core.Client
                     StartProcessReceivedPacket(packet, cancellationToken);
                 }
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
             }
             catch (MqttCommunicationException exception)

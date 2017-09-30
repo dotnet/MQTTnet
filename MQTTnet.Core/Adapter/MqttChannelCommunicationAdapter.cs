@@ -36,6 +36,10 @@ namespace MQTTnet.Core.Adapter
             {
                 throw;
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (MqttCommunicationTimedOutException)
             {
                 throw;
@@ -57,6 +61,10 @@ namespace MQTTnet.Core.Adapter
                 await _channel.DisconnectAsync().TimeoutAfter(timeout).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
+            {
+                throw;
+            }
+            catch (OperationCanceledException)
             {
                 throw;
             }
@@ -87,7 +95,7 @@ namespace MQTTnet.Core.Adapter
                         continue;
                     }
 
-                    MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), $"TX >>> {0} [Timeout={1}]", packet, timeout);
+                    MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "TX >>> {0} [Timeout={1}]", packet, timeout);
 
                     var writeBuffer = PacketSerializer.Serialize(packet);
                     await _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length, cancellationToken).ConfigureAwait(false);
@@ -103,6 +111,10 @@ namespace MQTTnet.Core.Adapter
                 }
             }
             catch (TaskCanceledException)
+            {
+                throw;
+            }
+            catch (OperationCanceledException)
             {
                 throw;
             }
@@ -153,6 +165,10 @@ namespace MQTTnet.Core.Adapter
                 return packet;
             }
             catch (TaskCanceledException)
+            {
+                throw;
+            }
+            catch (OperationCanceledException)
             {
                 throw;
             }

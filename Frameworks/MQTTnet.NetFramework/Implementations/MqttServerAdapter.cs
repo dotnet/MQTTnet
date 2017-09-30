@@ -24,7 +24,7 @@ namespace MQTTnet.Implementations
 
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
 
-        public void Start(MqttServerOptions options)
+        public Task StartAsync(MqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -57,9 +57,11 @@ namespace MQTTnet.Implementations
 
                 Task.Run(() => AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
             }
+
+            return Task.FromResult(0);
         }
 
-        public void Stop()
+        public Task StopAsync()
         {
             _isRunning = false;
 
@@ -72,11 +74,13 @@ namespace MQTTnet.Implementations
 
             _tlsEndpointSocket?.Dispose();
             _tlsEndpointSocket = null;
+
+            return Task.FromResult(0);
         }
 
         public void Dispose()
         {
-            Stop();
+            StopAsync();
         }
 
         private async Task AcceptDefaultEndpointConnectionsAsync(CancellationToken cancellationToken)

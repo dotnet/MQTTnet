@@ -49,7 +49,7 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_WillMessage()
         {
             var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { new TestMqttServerAdapter() });
-            s.Start();
+            s.StartAsync();
 
             var willMessage = new MqttApplicationMessage("My/last/will", new byte[0], MqttQualityOfServiceLevel.AtMostOnce, false);
             var c1 = ConnectTestClient("c1", null, s);
@@ -63,7 +63,7 @@ namespace MQTTnet.Core.Tests
 
             await Task.Delay(1000);
 
-            s.Stop();
+            s.StopAsync();
 
             Assert.AreEqual(1, receivedMessagesCount);
         }
@@ -72,7 +72,7 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_Unsubscribe()
         {
             var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { new TestMqttServerAdapter() });
-            s.Start();
+            s.StartAsync();
 
             var c1 = ConnectTestClient("c1", null, s);
             var c2 = ConnectTestClient("c2", null, s);
@@ -97,7 +97,7 @@ namespace MQTTnet.Core.Tests
             await Task.Delay(500);
             Assert.AreEqual(1, receivedMessagesCount);
 
-            s.Stop();
+            s.StopAsync();
             await Task.Delay(500);
 
             Assert.AreEqual(1, receivedMessagesCount);
@@ -107,7 +107,7 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_Publish()
         {
             var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { new TestMqttServerAdapter() });
-            s.Start();
+            s.StartAsync();
 
             var c1 = ConnectTestClient("c1", null, s);
 
@@ -120,7 +120,7 @@ namespace MQTTnet.Core.Tests
             s.Publish(message);
             await Task.Delay(500);
 
-            s.Stop();
+            s.StopAsync();
 
             Assert.AreEqual(1, receivedMessagesCount);
         }
@@ -146,7 +146,7 @@ namespace MQTTnet.Core.Tests
             int expectedReceivedMessagesCount)
         {
             var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { new TestMqttServerAdapter() });
-            s.Start();
+            s.StartAsync();
 
             var c1 = ConnectTestClient("c1", null, s);
             var c2 = ConnectTestClient("c2", null, s);
@@ -162,7 +162,7 @@ namespace MQTTnet.Core.Tests
 
             await Task.Delay(500);
 
-            s.Stop();
+            s.StopAsync();
 
             Assert.AreEqual(expectedReceivedMessagesCount, receivedMessagesCount);
         }

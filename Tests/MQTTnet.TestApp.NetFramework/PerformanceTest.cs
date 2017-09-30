@@ -167,7 +167,7 @@ namespace MQTTnet.TestApp.NetFramework
            });
         }
 
-        private static void RunServerAsync()
+        private static async Task RunServerAsync()
         {
             try
             {
@@ -201,12 +201,12 @@ namespace MQTTnet.TestApp.NetFramework
                         stopwatch.Restart();
                     }
                 };
-                mqttServer.Start();
+                await mqttServer.StartAsync();
 
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
 
-                mqttServer.Stop();
+                await mqttServer.StopAsync();
             }
             catch (Exception e)
             {

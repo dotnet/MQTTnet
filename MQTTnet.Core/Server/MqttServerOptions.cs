@@ -15,5 +15,7 @@ namespace MQTTnet.Core.Server
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(15);
 
         public Func<MqttConnectPacket, MqttConnectReturnCode> ConnectionValidator { get; set; }
+
+        public IMqttServerStorage Storage { get; set; }
     }
 }

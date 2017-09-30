@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using MQTTnet.Core.Server;
 
 namespace MQTTnet.Core.Adapter
@@ -7,8 +8,7 @@ namespace MQTTnet.Core.Adapter
     {
         event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
 
-        void Start(MqttServerOptions options);
-
-        void Stop();
+        Task StartAsync(MqttServerOptions options);
+        Task StopAsync();
     }
 }

@@ -121,7 +121,7 @@ namespace MQTTnet.TestApp.NetFramework
             }
         }
 
-        private static void RunServerAsync(string[] arguments)
+        private static async Task RunServerAsync(string[] arguments)
         {
             MqttTrace.TraceMessagePublished += (s, e) =>
             {
@@ -151,12 +151,12 @@ namespace MQTTnet.TestApp.NetFramework
                 };
 
                 var mqttServer = new MqttServerFactory().CreateMqttServer(options);
-                mqttServer.Start();
+                await mqttServer.StartAsync();
 
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
 
-                mqttServer.Stop();
+                await mqttServer.StopAsync();
             }
             catch (Exception e)
             {

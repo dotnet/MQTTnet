@@ -11,7 +11,7 @@ namespace MQTTnet.Core.Packets
 
         public override string ToString()
         {
-            var topicFiltersText = string.Join(",", TopicFilters.Select(f => $"{f.Topic}@{f.QualityOfServiceLevel}"));
+            var topicFiltersText = string.Join(",", TopicFilters.Select(f => f.Topic + "@" + f.QualityOfServiceLevel));
             return nameof(MqttSubscribePacket) + ": [PacketIdentifier=" + PacketIdentifier + "] [TopicFilters=" + topicFiltersText + "]";
         }
     }

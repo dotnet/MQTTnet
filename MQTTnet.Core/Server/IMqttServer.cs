@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 
 namespace MQTTnet.Core.Server
@@ -12,7 +13,8 @@ namespace MQTTnet.Core.Server
         IList<ConnectedMqttClient> GetConnectedClients();
         void InjectClient(string identifier, IMqttCommunicationAdapter adapter);
         void Publish(MqttApplicationMessage applicationMessage);
-        void Start();
-        void Stop();
+
+        Task StartAsync();
+        Task StopAsync();
     }
 }

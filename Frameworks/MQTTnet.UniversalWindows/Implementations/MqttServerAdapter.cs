@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Serializer;
@@ -15,7 +16,7 @@ namespace MQTTnet.Implementations
 
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
 
-        public void Start(MqttServerOptions options)
+        public async Task StartAsync(MqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -26,7 +27,7 @@ namespace MQTTnet.Implementations
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _defaultEndpointSocket = new StreamSocketListener();
-                _defaultEndpointSocket.BindServiceNameAsync(options.GetDefaultEndpointPort().ToString(), SocketProtectionLevel.PlainSocket).GetAwaiter().GetResult();
+                await _defaultEndpointSocket.BindServiceNameAsync(options.GetDefaultEndpointPort().ToString(), SocketProtectionLevel.PlainSocket);
                 _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
             }
 
@@ -36,17 +37,19 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public void Stop()
+        public Task StopAsync()
         {
             _isRunning = false;
 
             _defaultEndpointSocket?.Dispose();
             _defaultEndpointSocket = null;
+
+            return Task.FromResult(0);
         }
 
         public void Dispose()
         {
-            Stop();
+            StopAsync();
         }
 
         private void AcceptDefaultEndpointConnectionsAsync(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)

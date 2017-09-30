@@ -212,8 +212,7 @@ namespace MQTTnet.Core.Serializer
 
                 default:
                     {
-                        throw new MqttProtocolViolationException(
-                            $"Packet type ({(int)header.ControlPacketType}) not supported.");
+                        throw new MqttProtocolViolationException($"Packet type ({(int)header.ControlPacketType}) not supported.");
                     }
             }
         }

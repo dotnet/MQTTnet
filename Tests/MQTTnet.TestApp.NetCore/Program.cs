@@ -153,12 +153,12 @@ namespace MQTTnet.TestApp.NetCore
                 };
 
                 var mqttServer = new MqttServerFactory().CreateMqttServer(options);
-                mqttServer.Start();
+                mqttServer.StartAsync();
 
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
 
-                mqttServer.Stop();
+                mqttServer.StopAsync();
             }
             catch (Exception e)
             {

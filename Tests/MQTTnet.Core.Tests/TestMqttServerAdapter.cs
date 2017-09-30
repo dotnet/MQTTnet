@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Server;
 
@@ -13,12 +14,14 @@ namespace MQTTnet.Core.Tests
             ClientConnected?.Invoke(this, eventArgs);
         }
 
-        public void Start(MqttServerOptions options)
+        public Task StartAsync(MqttServerOptions options)
         {
+            return Task.FromResult(0);
         }
 
-        public void Stop()
-        {                 
+        public Task StopAsync()
+        {
+            return Task.FromResult(0);
         }
     }
 }

@@ -49,6 +49,9 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 # Nuget
 This library is available as a nuget package: https://www.nuget.org/packages/MQTTnet/
 
+# Examples
+Please find examples and the documentation at the Wiki of this repository (https://github.com/chkr1011/MQTTnet/wiki).
+
 # Contributions
 If you want to contribute to this project just create a pull request.
 
@@ -59,6 +62,3 @@ This library is used in the following projects:
 * HA4IoT (Open Source Home Automation system for .NET, https://github.com/chkr1011/HA4IoT)
 
 If you use this library and want to see your project here please let me know.
-
-# Examples
-Please find examples and the documentation at the Wiki of this repository (https://github.com/chkr1011/MQTTnet/wiki).

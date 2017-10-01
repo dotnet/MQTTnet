@@ -32,6 +32,7 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 * Able to publish its own messages (no loopback client required)
 * Able to receive every messages (no loopback client required)
 * Extensible client credential validation
+* Retained messages are supported including persisting via interface methods (own implementation required)
 
 # Supported frameworks
 * .NET Standard 1.3+
@@ -39,6 +40,7 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 * .NET Core App 1.1+
 * .NET Framework 4.5.2+ (x86, x64, AnyCPU)
 * Universal Windows (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU)
+* Mono 
 
 # Supported MQTT versions
 * 3.1.1

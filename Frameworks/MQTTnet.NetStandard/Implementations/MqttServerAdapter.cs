@@ -22,7 +22,7 @@ namespace MQTTnet.Implementations
 
         private bool _isRunning;
 
-        public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
+        public event Action<IMqttCommunicationAdapter> ClientAccepted;
 
         public Task StartAsync(MqttServerOptions options)
         {
@@ -90,7 +90,7 @@ namespace MQTTnet.Implementations
                 {
                     var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
                     var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer());
-                    ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientSocket.RemoteEndPoint.ToString(), clientAdapter));
+                    ClientAccepted?.Invoke(clientAdapter);
                 }
                 catch (Exception exception)
                 {
@@ -114,7 +114,7 @@ namespace MQTTnet.Implementations
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
 
                     var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer());
-                    ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientSocket.RemoteEndPoint.ToString(), clientAdapter));
+                    ClientAccepted?.Invoke(clientAdapter);
                 }
                 catch (Exception exception)
                 {

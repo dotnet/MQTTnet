@@ -12,7 +12,7 @@ namespace MQTTnet.Core.Server
         event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
 
         IList<ConnectedMqttClient> GetConnectedClients();
-        void InjectClient(string identifier, IMqttCommunicationAdapter adapter);
+        void InjectClient(IMqttCommunicationAdapter adapter);
         void Publish(MqttApplicationMessage applicationMessage);
 
         Task StartAsync();

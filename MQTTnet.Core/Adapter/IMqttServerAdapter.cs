@@ -6,7 +6,7 @@ namespace MQTTnet.Core.Adapter
 {
     public interface IMqttServerAdapter
     {
-        event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
+        event Action<IMqttCommunicationAdapter> ClientAccepted;
 
         Task StartAsync(MqttServerOptions options);
         Task StopAsync();

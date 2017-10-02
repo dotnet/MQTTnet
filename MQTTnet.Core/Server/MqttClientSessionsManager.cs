@@ -104,7 +104,7 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        public IList<ConnectedMqttClient> GetConnectedClients()
+        public IReadOnlyList<ConnectedMqttClient> GetConnectedClients()
         {
             lock (_clientSessions)
             {

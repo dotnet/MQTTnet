@@ -27,7 +27,7 @@ namespace MQTTnet.Core.Server
             _clientSessionsManager.ClientDisconnected += OnClientDisconnected;
         }
 
-        public IList<ConnectedMqttClient> GetConnectedClients()
+        public IReadOnlyList<ConnectedMqttClient> GetConnectedClients()
         {
             return _clientSessionsManager.GetConnectedClients();
         }
@@ -41,14 +41,6 @@ namespace MQTTnet.Core.Server
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
             _clientSessionsManager.DispatchPublishPacket(null, applicationMessage.ToPublishPacket());
-        }
-
-        public void InjectClient(IMqttCommunicationAdapter adapter)
-        {
-            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
-            if (_cancellationTokenSource == null) throw new InvalidOperationException("The MQTT server is not started.");
-
-            OnClientAccepted(adapter);
         }
 
         public async Task StartAsync()

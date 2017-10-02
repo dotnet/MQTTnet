@@ -157,12 +157,12 @@ namespace MQTTnet.Core.Server
             }
             else if (packet is MqttDisconnectPacket || packet is MqttConnectPacket)
             {
-                _cancellationTokenSource.Cancel();
+                Stop();
             }
             else
             {
                 MqttTrace.Warning(nameof(MqttClientSession), "Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
-                _cancellationTokenSource.Cancel();
+                Stop();
             }
         }
 

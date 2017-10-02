@@ -9,6 +9,7 @@ namespace MQTTnet.Core.Server
     {
         event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
         event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
+        event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
 
         IList<ConnectedMqttClient> GetConnectedClients();
         void InjectClient(string identifier, IMqttCommunicationAdapter adapter);

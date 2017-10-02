@@ -40,7 +40,7 @@ MQTTnet is a .NET library for MQTT based communication. It provides a MQTT clien
 * .NET Core App 1.1+
 * .NET Framework 4.5.2+ (x86, x64, AnyCPU)
 * Universal Windows (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU)
-* Mono 
+* Mono 5.2+
 
 # Supported MQTT versions
 * 3.1.1

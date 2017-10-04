@@ -6,7 +6,6 @@ using MQTTnet.Core.Client;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
-using System;
 
 namespace MQTTnet.Core.Tests
 {

@@ -72,6 +72,9 @@ namespace MQTTnet.Core.Server
                 {
                     MqttTrace.Warning(nameof(MqttClientPendingMessagesQueue), exception, "Sending publish packet failed due to communication exception.");
                 }
+                if (exception is OperationCanceledException)
+                {
+                }
                 else
                 {
                     MqttTrace.Error(nameof(MqttClientPendingMessagesQueue), exception, "Sending publish packet failed.");

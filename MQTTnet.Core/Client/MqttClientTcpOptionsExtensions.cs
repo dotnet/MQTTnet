@@ -2,9 +2,9 @@
 
 namespace MQTTnet.Core.Client
 {
-    public static class MqttClientOptionsExtensions
+    public static class MqttClientTcpOptionsExtensions
     {
-        public static int GetPort(this MqttClientOptions options)
+        public static int GetPort(this MqttClientTcpOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

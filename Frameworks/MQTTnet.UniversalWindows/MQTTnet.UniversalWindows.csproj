@@ -110,6 +110,7 @@
     <DocumentationFile>bin\x64\Release\MQTTnet.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Implementations\MqttCommunicationAdapterFactory.cs" />
     <Compile Include="Implementations\MqttWebSocketChannel.cs" />
     <Compile Include="MqttClientFactory.cs" />
     <Compile Include="Implementations\MqttServerAdapter.cs" />

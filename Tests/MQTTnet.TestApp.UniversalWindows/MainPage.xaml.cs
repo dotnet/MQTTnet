@@ -37,15 +37,32 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void Connect(object sender, RoutedEventArgs e)
         {
-            var options = new MqttClientOptions
+            MqttClientOptions options = null;
+            if (UseTcp.IsChecked == true)
             {
-                Server = Server.Text,
-                UserName = User.Text,
-                Password = Password.Text,
-                ClientId = ClientId.Text,
-                TlsOptions = { UseTls = UseTls.IsChecked == true },
-                ConnectionType = UseTcp.IsChecked == true ? MqttConnectionType.Tcp : MqttConnectionType.Ws
-            };
+                options = new MqttClientTcpOptions
+                {
+                    Server = Server.Text
+                };
+            }
+
+            if (UseWs.IsChecked == true)
+            {
+                options = new MqttClientWebSocketOptions
+                {
+                    Uri = Server.Text
+                };
+            }
+
+            if (options == null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            options.UserName = User.Text;
+            options.Password = Password.Text;
+            options.ClientId = ClientId.Text;
+            options.TlsOptions.UseTls = UseTls.IsChecked == true;
             
             try
             {
@@ -56,7 +73,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 
                 var factory = new MqttClientFactory();
                 _mqttClient = factory.CreateMqttClient(options);
-                await _mqttClient.ConnectAsync();
+                await _mqttClient.ConnectAsync(options);
             }
             catch (Exception exception)
             {

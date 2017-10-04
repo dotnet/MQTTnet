@@ -13,10 +13,12 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
+        private readonly MqttClientTcpOptions _options;
         private StreamSocket _socket;
 
-        public MqttTcpChannel()
+        public MqttTcpChannel(MqttClientTcpOptions options)
         {
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         public MqttTcpChannel(StreamSocket socket)
@@ -29,30 +31,28 @@ namespace MQTTnet.Implementations
         public Stream ReceiveStream { get; private set; }
         public Stream RawReceiveStream { get; private set; }
 
-        public async Task ConnectAsync(MqttClientOptions options)
+        public async Task ConnectAsync()
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
             if (_socket == null)
             {
                 _socket = new StreamSocket();
             }
 
-            if (!options.TlsOptions.UseTls)
+            if (!_options.TlsOptions.UseTls)
             {
-                await _socket.ConnectAsync(new HostName(options.Server), options.GetPort().ToString());
+                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString());
             }
             else
             {
-                _socket.Control.ClientCertificate = LoadCertificate(options);
+                _socket.Control.ClientCertificate = LoadCertificate(_options);
 
-                if (!options.TlsOptions.CheckCertificateRevocation)
+                if (!_options.TlsOptions.CheckCertificateRevocation)
                 {
                     _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.IncompleteChain);
                     _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.RevocationInformationMissing);
                 }
 
-                await _socket.ConnectAsync(new HostName(options.Server), options.GetPort().ToString(), SocketProtectionLevel.Tls12);
+                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), SocketProtectionLevel.Tls12);
             }
 
             CreateStreams();

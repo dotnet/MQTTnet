@@ -9,6 +9,7 @@ using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
+using MQTTnet.Core.Serializer;
 
 namespace MQTTnet.Core.Server
 {
@@ -24,9 +25,7 @@ namespace MQTTnet.Core.Server
         }
 
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
-
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
-
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
 
         public MqttClientRetainedMessagesManager RetainedMessagesManager { get; }
@@ -111,7 +110,7 @@ namespace MQTTnet.Core.Server
                 return _clientSessions.Where(s => s.Value.IsConnected).Select(s => new ConnectedMqttClient
                 {
                     ClientId = s.Value.ClientId,
-                    ProtocolVersion = s.Value.Adapter.PacketSerializer.ProtocolVersion
+                    ProtocolVersion = s.Value.ProtocolVersion ?? MqttProtocolVersion.V311
                 }).ToList();
             }
         }

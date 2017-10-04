@@ -12,14 +12,17 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
+        private readonly MqttClientTcpOptions _options;
+
         private Socket _socket;
         private SslStream _sslStream;
         
         /// <summary>
         /// called on client sockets are created in connect
         /// </summary>
-        public MqttTcpChannel()
+        public MqttTcpChannel(MqttClientTcpOptions options)
         {
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         /// <summary>
@@ -37,22 +40,20 @@ namespace MQTTnet.Implementations
         public Stream ReceiveStream { get; private set; }
         public Stream RawReceiveStream => ReceiveStream;
         
-        public async Task ConnectAsync(MqttClientOptions options)
+        public async Task ConnectAsync()
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
             if (_socket == null)
             {
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             }
 
-            await _socket.ConnectAsync(options.Server, options.GetPort()).ConfigureAwait(false);
+            await _socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
 
-            if (options.TlsOptions.UseTls)
+            if (_options.TlsOptions.UseTls)
             {
                 _sslStream = new SslStream(new NetworkStream(_socket, true));
                 ReceiveStream = _sslStream;
-                await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
+                await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(_options), SslProtocols.Tls12, _options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
             }
             else
             {

@@ -32,7 +32,7 @@ namespace MQTTnet.TestApp.NetFramework
         {
             try
             {
-                var options = new MqttClientOptions
+                var options = new MqttClientTcpOptions
                 {
                     Server = "localhost",
                     ClientId = "XYZ",
@@ -64,7 +64,7 @@ namespace MQTTnet.TestApp.NetFramework
 
                     try
                     {
-                        await client.ConnectAsync();
+                        await client.ConnectAsync(options);
                     }
                     catch
                     {
@@ -74,7 +74,7 @@ namespace MQTTnet.TestApp.NetFramework
 
                 try
                 {
-                    await client.ConnectAsync();
+                    await client.ConnectAsync(options);
                 }
                 catch (Exception exception)
                 {

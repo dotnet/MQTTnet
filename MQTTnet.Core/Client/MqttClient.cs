@@ -16,19 +16,17 @@ namespace MQTTnet.Core.Client
     {
         private readonly HashSet<ushort> _unacknowledgedPublishPackets = new HashSet<ushort>();
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
-        private readonly MqttClientOptions _options;
-        private readonly IMqttCommunicationAdapter _adapter;
+        private readonly IMqttCommunicationAdapterFactory _communicationChannelFactory;
 
+        private MqttClientOptions _options;
         private bool _isReceivingPackets;
         private int _latestPacketIdentifier;
         private CancellationTokenSource _cancellationTokenSource;
+        private IMqttCommunicationAdapter _adapter;
 
-        public MqttClient(MqttClientOptions options, IMqttCommunicationAdapter adapter)
+        public MqttClient(IMqttCommunicationAdapterFactory communicationChannelFactory)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-            _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
-
-            _adapter.PacketSerializer.ProtocolVersion = options.ProtocolVersion;
+            _communicationChannelFactory = communicationChannelFactory;
         }
 
         public event EventHandler Connected;
@@ -37,22 +35,27 @@ namespace MQTTnet.Core.Client
 
         public bool IsConnected => _cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested;
 
-        public async Task ConnectAsync(MqttApplicationMessage willApplicationMessage = null)
+        public async Task ConnectAsync(MqttClientOptions options)
         {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
             ThrowIfConnected("It is not allowed to connect with a server after the connection is established.");
 
             try
             {
+                _options = options;
                 _cancellationTokenSource = new CancellationTokenSource();
                 _latestPacketIdentifier = 0;
                 _packetDispatcher.Reset();
 
+                _adapter = _communicationChannelFactory.CreateMqttCommunicationAdapter(options);
+                
                 MqttTrace.Verbose(nameof(MqttClient), "Trying to connect with server.");
-                await _adapter.ConnectAsync(_options.DefaultCommunicationTimeout, _options).ConfigureAwait(false);
+                await _adapter.ConnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
                 MqttTrace.Verbose(nameof(MqttClient), "Connection with server established.");
 
                 await SetupIncomingPacketProcessingAsync();
-                await AuthenticateAsync(willApplicationMessage);
+                await AuthenticateAsync(options.WillMessage);
 
                 MqttTrace.Verbose(nameof(MqttClient), "MQTT connection with server established.");
 

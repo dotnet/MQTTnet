@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Channel;
-using MQTTnet.Core.Client;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Serializer;
@@ -411,7 +410,7 @@ namespace MQTTnet.Core.Tests
                 _stream.Position = 0;
             }
 
-            public Task ConnectAsync(MqttClientOptions options)
+            public Task ConnectAsync()
             {
                 return Task.FromResult(0);
             }

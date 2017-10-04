@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using MQTTnet.Core.Client;
 using System.IO;
 
 namespace MQTTnet.Core.Channel
@@ -10,7 +9,7 @@ namespace MQTTnet.Core.Channel
         Stream ReceiveStream { get; }
         Stream RawReceiveStream { get; }
 
-        Task ConnectAsync(MqttClientOptions options);
+        Task ConnectAsync();
         Task DisconnectAsync();
     }
 }

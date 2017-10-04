@@ -3,13 +3,11 @@ using MQTTnet.Core.Serializer;
 
 namespace MQTTnet.Core.Client
 {
-    public sealed class MqttClientOptions
+    public abstract class MqttClientOptions
     {
-        public string Server { get; set; }
-
-        public int? Port { get; set; }
-
         public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
+
+        public MqttApplicationMessage WillMessage { get; set; }
 
         public string UserName { get; set; }
 
@@ -24,7 +22,5 @@ namespace MQTTnet.Core.Client
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
-
-        public MqttConnectionType ConnectionType { get; set; } = MqttConnectionType.Tcp;
     }
 }

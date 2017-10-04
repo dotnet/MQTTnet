@@ -12,6 +12,8 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
     {
+        private readonly MqttClientTcpOptions _options;
+
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
         public static int BufferSize { get; set; } = 4096 * 20; // Can be changed for fine tuning by library user.
@@ -22,9 +24,9 @@ namespace MQTTnet.Implementations
         /// <summary>
         /// called on client sockets are created in connect
         /// </summary>
-        public MqttTcpChannel()
+        public MqttTcpChannel(MqttClientTcpOptions options)
         {
-
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         /// <summary>
@@ -42,22 +44,20 @@ namespace MQTTnet.Implementations
         public Stream ReceiveStream { get; private set; }
         public Stream RawReceiveStream { get; private set; }
 
-        public async Task ConnectAsync(MqttClientOptions options)
+        public async Task ConnectAsync()
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
             if (_socket == null)
             {
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             }
 
-            await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, options.Server, options.GetPort(), null).ConfigureAwait(false);
+            await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
 
-            if (options.TlsOptions.UseTls)
+            if (_options.TlsOptions.UseTls)
             {
                 _sslStream = new SslStream(new NetworkStream(_socket, true));
 
-                await _sslStream.AuthenticateAsClientAsync(options.Server, LoadCertificates(options), SslProtocols.Tls12, options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
+                await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(_options), SslProtocols.Tls12, _options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
             }
 
             CreateStreams(_socket, _sslStream);

@@ -52,12 +52,17 @@ namespace MQTTnet.TestApp.NetFramework
 
             try
             {
-                var options = new MqttClientOptions
+                var options = new MqttClientWebSocketOptions
                 {
-                    Server = "localhost",
-                    ClientId = "XYZ",
-                    CleanSession = true
+                    Uri = "broker.hivemq.com:8000/mqtt"                    
                 };
+
+                ////var options = new MqttClientOptions
+                ////{
+                ////    Server = "localhost",
+                ////    ClientId = "XYZ",
+                ////    CleanSession = true
+                ////};
 
                 var client = new MqttClientFactory().CreateMqttClient(options);
                 client.ApplicationMessageReceived += (s, e) =>
@@ -87,7 +92,7 @@ namespace MQTTnet.TestApp.NetFramework
 
                     try
                     {
-                        await client.ConnectAsync();
+                        await client.ConnectAsync(options);
                     }
                     catch
                     {
@@ -97,7 +102,7 @@ namespace MQTTnet.TestApp.NetFramework
 
                 try
                 {
-                    await client.ConnectAsync();
+                    await client.ConnectAsync(options);
                 }
                 catch (Exception exception)
                 {

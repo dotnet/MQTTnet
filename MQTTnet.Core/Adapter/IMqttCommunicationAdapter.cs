@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Core.Client;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Serializer;
 
@@ -12,7 +11,7 @@ namespace MQTTnet.Core.Adapter
     {
         IMqttPacketSerializer PacketSerializer { get; }
 
-        Task ConnectAsync(TimeSpan timeout, MqttClientOptions options);
+        Task ConnectAsync(TimeSpan timeout);
 
         Task DisconnectAsync(TimeSpan timeout);
 

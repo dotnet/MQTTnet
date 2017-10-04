@@ -46,12 +46,11 @@ namespace MQTTnet.TestApp.NetCore
 
             try
             {
-                var options = new MqttClientOptions
+                var options = new MqttClientWebSocketOptions
                 {
-                    Server = "localhost",
+                    Uri = "localhost",
                     ClientId = "XYZ",
-                    CleanSession = true,
-                    ConnectionType = MqttConnectionType.Ws 
+                    CleanSession = true
                 };
 
                 var client = new MqttClientFactory().CreateMqttClient(options);
@@ -84,7 +83,7 @@ namespace MQTTnet.TestApp.NetCore
 
                     try
                     {
-                        await client.ConnectAsync();
+                        await client.ConnectAsync(options);
                     }
                     catch
                     {
@@ -94,7 +93,7 @@ namespace MQTTnet.TestApp.NetCore
 
                 try
                 {
-                    await client.ConnectAsync();
+                    await client.ConnectAsync(options);
                 }
                 catch (Exception exception)
                 {

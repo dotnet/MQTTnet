@@ -26,11 +26,11 @@ namespace MQTTnet.Core.Adapter
 
         public IMqttPacketSerializer PacketSerializer { get; }
 
-        public async Task ConnectAsync(TimeSpan timeout, MqttClientOptions options)
+        public async Task ConnectAsync(TimeSpan timeout)
         {
             try
             {
-                await _channel.ConnectAsync(options).TimeoutAfter(timeout).ConfigureAwait(false);
+                await _channel.ConnectAsync().TimeoutAfter(timeout).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
             {

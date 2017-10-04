@@ -17,10 +17,11 @@ namespace MQTTnet.Core.Tests
             adapterA.Partner = adapterB;
             adapterB.Partner = adapterA;
 
-            var client = new MqttClient(new MqttClientOptions() { ClientId = clientId }, adapterA);
+            var client = new MqttClient(new MqttCommunicationAdapterFactory(adapterA));
             var connected = WaitForClientToConnect(server, clientId);
+
             FireClientAcceptedEvent(adapterB);
-            await client.ConnectAsync(willMessage);
+            await client.ConnectAsync(new MqttClientTcpOptions { ClientId = clientId, WillMessage = willMessage });
             await connected;
 
             return client;
@@ -30,17 +31,16 @@ namespace MQTTnet.Core.Tests
         {
             var tcs = new TaskCompletionSource<object>();
 
-            EventHandler<MqttClientConnectedEventArgs> handler = null;
-            handler = (sender, args) =>
+            void Handler(object sender, MqttClientConnectedEventArgs args)
             {
                 if (args.Client.ClientId == clientId)
                 {
-                    s.ClientConnected -= handler;
+                    s.ClientConnected -= Handler;
                     tcs.SetResult(null);
                 }
-            };
+            }
 
-            s.ClientConnected += handler;
+            s.ClientConnected += Handler;
 
             return tcs.Task;
         }

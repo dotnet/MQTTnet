@@ -100,6 +100,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Implementations\MqttCommunicationAdapterFactory.cs" />
     <Compile Include="Implementations\MqttWebSocketChannel.cs" />
     <Compile Include="Implementations\WebSocketStream.cs" />
     <Compile Include="MqttClientFactory.cs" />

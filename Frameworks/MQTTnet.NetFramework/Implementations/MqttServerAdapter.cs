@@ -22,7 +22,7 @@ namespace MQTTnet.Implementations
 
         private bool _isRunning;
 
-        public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
+        public event Action<IMqttCommunicationAdapter> ClientAccepted;
 
         public Task StartAsync(MqttServerOptions options)
         {
@@ -93,7 +93,7 @@ namespace MQTTnet.Implementations
 
                     var tcpChannel = new MqttTcpChannel(clientSocket, null);
                     var clientAdapter = new MqttChannelCommunicationAdapter(tcpChannel, new MqttPacketSerializer());
-                    ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientSocket.RemoteEndPoint.ToString(), clientAdapter));
+                    ClientAccepted?.Invoke(clientAdapter);
                 }
                 catch (Exception exception) when (!(exception is ObjectDisposedException))
                 {
@@ -118,7 +118,7 @@ namespace MQTTnet.Implementations
 
                     var tcpChannel = new MqttTcpChannel(clientSocket, sslStream);
                     var clientAdapter = new MqttChannelCommunicationAdapter(tcpChannel, new MqttPacketSerializer());
-                    ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientSocket.RemoteEndPoint.ToString(), clientAdapter));
+                    ClientAccepted?.Invoke(clientAdapter);
                 }
                 catch (Exception exception)
                 {

@@ -25,16 +25,18 @@ namespace MQTTnet.Core.Server
 
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
+        public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
+
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
 
         public MqttClientRetainedMessagesManager RetainedMessagesManager { get; }
 
-        public async Task RunClientSessionAsync(MqttClientConnectedEventArgs eventArgs)
+        public async Task RunClientSessionAsync(IMqttCommunicationAdapter clientAdapter)
         {
             var clientId = string.Empty;
             try
             {
-                if (!(await eventArgs.ClientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false) is MqttConnectPacket connectPacket))
+                if (!(await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false) is MqttConnectPacket connectPacket))
                 {
                     throw new MqttProtocolViolationException("The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
                 }
@@ -42,12 +44,12 @@ namespace MQTTnet.Core.Server
                 clientId = connectPacket.ClientId;
 
                 // Switch to the required protocol version before sending any response.
-                eventArgs.ClientAdapter.PacketSerializer.ProtocolVersion = connectPacket.ProtocolVersion;
+                clientAdapter.PacketSerializer.ProtocolVersion = connectPacket.ProtocolVersion;
                 
                 var connectReturnCode = ValidateConnection(connectPacket);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
-                    await eventArgs.ClientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, CancellationToken.None, new MqttConnAckPacket
+                    await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, CancellationToken.None, new MqttConnAckPacket
                     {
                         ConnectReturnCode = connectReturnCode
                     }).ConfigureAwait(false);
@@ -57,13 +59,19 @@ namespace MQTTnet.Core.Server
 
                 var clientSession = GetOrCreateClientSession(connectPacket);
 
-                await eventArgs.ClientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, CancellationToken.None, new MqttConnAckPacket
+                await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, CancellationToken.None, new MqttConnAckPacket
                 {
                     ConnectReturnCode = connectReturnCode,
                     IsSessionPresent = clientSession.IsExistingSession
                 }).ConfigureAwait(false);
 
-                await clientSession.Session.RunAsync(eventArgs.Identifier, connectPacket.WillMessage, eventArgs.ClientAdapter).ConfigureAwait(false);
+                ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(new ConnectedMqttClient
+                {
+                    ClientId = clientId,
+                    ProtocolVersion = clientAdapter.PacketSerializer.ProtocolVersion
+                }));
+
+                await clientSession.Session.RunAsync(connectPacket.WillMessage, clientAdapter).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -71,8 +79,20 @@ namespace MQTTnet.Core.Server
             }
             finally
             {
-                await eventArgs.ClientAdapter.DisconnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
-                ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientId, eventArgs.ClientAdapter));
+                try
+                {
+                    await clientAdapter.DisconnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    //ignored
+                }
+
+                ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(new ConnectedMqttClient
+                {
+                    ClientId = clientId,
+                    ProtocolVersion = clientAdapter.PacketSerializer.ProtocolVersion
+                }));
             }
         }
 
@@ -84,7 +104,7 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        public IList<ConnectedMqttClient> GetConnectedClients()
+        public IReadOnlyList<ConnectedMqttClient> GetConnectedClients()
         {
             lock (_clientSessions)
             {

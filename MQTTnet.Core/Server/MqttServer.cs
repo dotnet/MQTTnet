@@ -23,10 +23,11 @@ namespace MQTTnet.Core.Server
 
             _clientSessionsManager = new MqttClientSessionsManager(options);
             _clientSessionsManager.ApplicationMessageReceived += (s, e) => ApplicationMessageReceived?.Invoke(s, e);
+            _clientSessionsManager.ClientConnected += OnClientConnected;
             _clientSessionsManager.ClientDisconnected += OnClientDisconnected;
         }
 
-        public IList<ConnectedMqttClient> GetConnectedClients()
+        public IReadOnlyList<ConnectedMqttClient> GetConnectedClients()
         {
             return _clientSessionsManager.GetConnectedClients();
         }
@@ -42,14 +43,6 @@ namespace MQTTnet.Core.Server
             _clientSessionsManager.DispatchPublishPacket(null, applicationMessage.ToPublishPacket());
         }
 
-        public void InjectClient(string identifier, IMqttCommunicationAdapter adapter)
-        {
-            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
-            if (_cancellationTokenSource == null) throw new InvalidOperationException("The MQTT server is not started.");
-
-            OnClientConnected(this, new MqttClientConnectedEventArgs(identifier, adapter));
-        }
-
         public async Task StartAsync()
         {
             if (_cancellationTokenSource != null) throw new InvalidOperationException("The MQTT server is already started.");
@@ -60,7 +53,7 @@ namespace MQTTnet.Core.Server
 
             foreach (var adapter in _adapters)
             {
-                adapter.ClientConnected += OnClientConnected;
+                adapter.ClientAccepted += OnClientAccepted;
                 await adapter.StartAsync(_options);
             }
 
@@ -75,7 +68,7 @@ namespace MQTTnet.Core.Server
 
             foreach (var adapter in _adapters)
             {
-                adapter.ClientConnected -= OnClientConnected;
+                adapter.ClientAccepted -= OnClientAccepted;
                 await adapter.StopAsync();
             }
 
@@ -84,17 +77,20 @@ namespace MQTTnet.Core.Server
             MqttTrace.Information(nameof(MqttServer), "Stopped.");
         }
 
+        private void OnClientAccepted(IMqttCommunicationAdapter adapter)
+        {
+            Task.Run(() =>_clientSessionsManager.RunClientSessionAsync(adapter), _cancellationTokenSource.Token);
+        }
+
         private void OnClientConnected(object sender, MqttClientConnectedEventArgs eventArgs)
         {
-            MqttTrace.Information(nameof(MqttServer), "Client '{0}': Connected.", eventArgs.Identifier);
+            MqttTrace.Information(nameof(MqttServer), "Client '{0}': Connected.", eventArgs.Client.ClientId);
             ClientConnected?.Invoke(this, eventArgs);
-
-            Task.Run(() => _clientSessionsManager.RunClientSessionAsync(eventArgs), _cancellationTokenSource.Token);
         }
 
         private void OnClientDisconnected(object sender, MqttClientDisconnectedEventArgs eventArgs)
         {
-            MqttTrace.Information(nameof(MqttServer), "Client '{0}': Disconnected.", eventArgs.Identifier);
+            MqttTrace.Information(nameof(MqttServer), "Client '{0}': Disconnected.", eventArgs.Client.ClientId);
             ClientDisconnected?.Invoke(this, eventArgs);
         }
     }

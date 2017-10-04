@@ -1,17 +1,15 @@
-﻿using System;
+﻿using MQTTnet.Core.Server;
+using System;
 
 namespace MQTTnet.Core.Adapter
 {
     public class MqttClientConnectedEventArgs : EventArgs
     {
-        public MqttClientConnectedEventArgs(string identifier, IMqttCommunicationAdapter clientAdapter)
+        public MqttClientConnectedEventArgs(ConnectedMqttClient client)
         {
-            Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
-            ClientAdapter = clientAdapter ?? throw new ArgumentNullException(nameof(clientAdapter));
+            Client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
-        public string Identifier { get; }
-
-        public IMqttCommunicationAdapter ClientAdapter { get; }
+        public ConnectedMqttClient Client { get; }
     }
 }

@@ -19,8 +19,7 @@ namespace MQTTnet.Core.Server
         private readonly MqttClientSessionsManager _mqttClientSessionsManager;
         private readonly MqttClientPendingMessagesQueue _pendingMessagesQueue;
         private readonly MqttServerOptions _options;
-
-        private string _identifier;
+        
         private CancellationTokenSource _cancellationTokenSource;
         private MqttApplicationMessage _willMessage;
 
@@ -38,7 +37,7 @@ namespace MQTTnet.Core.Server
 
         public IMqttCommunicationAdapter Adapter { get; private set; }
 
-        public async Task RunAsync(string identifier, MqttApplicationMessage willMessage, IMqttCommunicationAdapter adapter)
+        public async Task RunAsync(MqttApplicationMessage willMessage, IMqttCommunicationAdapter adapter)
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 
@@ -46,7 +45,6 @@ namespace MQTTnet.Core.Server
 
             try
             {
-                _identifier = identifier;
                 Adapter = adapter;
                 _cancellationTokenSource = new CancellationTokenSource();
 
@@ -58,11 +56,11 @@ namespace MQTTnet.Core.Server
             }
             catch (MqttCommunicationException exception)
             {
-                MqttTrace.Warning(nameof(MqttClientSession), exception, "Client '{0}': Communication exception while processing client packets.", _identifier);
+                MqttTrace.Warning(nameof(MqttClientSession), exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
             }
             catch (Exception exception)
             {
-                MqttTrace.Error(nameof(MqttClientSession), exception, "Client '{0}': Unhandled exception while processing client packets.", _identifier);
+                MqttTrace.Error(nameof(MqttClientSession), exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
             }
         }
 
@@ -79,7 +77,7 @@ namespace MQTTnet.Core.Server
 
             Adapter = null;
 
-            MqttTrace.Information(nameof(MqttClientSession), "Client '{0}': Disconnected.", _identifier);
+            MqttTrace.Information(nameof(MqttClientSession), "Client '{0}': Disconnected.", ClientId);
         }
 
         public void EnqueuePublishPacket(MqttPublishPacket publishPacket)
@@ -92,7 +90,7 @@ namespace MQTTnet.Core.Server
             }
 
             _pendingMessagesQueue.Enqueue(publishPacket);
-            MqttTrace.Verbose(nameof(MqttClientSession), "Client '{0}': Enqueued pending publish packet.", _identifier);
+            MqttTrace.Verbose(nameof(MqttClientSession), "Client '{0}': Enqueued pending publish packet.", ClientId);
         }
 
         public void Dispose()
@@ -116,12 +114,12 @@ namespace MQTTnet.Core.Server
             }
             catch (MqttCommunicationException exception)
             {
-                MqttTrace.Warning(nameof(MqttClientSession), exception, "Client '{0}': Communication exception while processing client packets.", _identifier);
+                MqttTrace.Warning(nameof(MqttClientSession), exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
                 Stop();
             }
             catch (Exception exception)
             {
-                MqttTrace.Error(nameof(MqttClientSession), exception, "Client '{0}': Unhandled exception while processing client packets.", _identifier);
+                MqttTrace.Error(nameof(MqttClientSession), exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
                 Stop();
             }
         }
@@ -159,12 +157,12 @@ namespace MQTTnet.Core.Server
             }
             else if (packet is MqttDisconnectPacket || packet is MqttConnectPacket)
             {
-                _cancellationTokenSource.Cancel();
+                Stop();
             }
             else
             {
-                MqttTrace.Warning(nameof(MqttClientSession), "Client '{0}': Received not supported packet ({1}). Closing connection.", _identifier, packet);
-                _cancellationTokenSource.Cancel();
+                MqttTrace.Warning(nameof(MqttClientSession), "Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
+                Stop();
             }
         }
 
@@ -181,7 +179,7 @@ namespace MQTTnet.Core.Server
         {
             if (publishPacket.Retain)
             {
-                await _mqttClientSessionsManager.RetainedMessagesManager.HandleMessageAsync(_identifier, publishPacket);
+                await _mqttClientSessionsManager.RetainedMessagesManager.HandleMessageAsync(ClientId, publishPacket);
             }
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)

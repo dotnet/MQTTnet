@@ -14,7 +14,7 @@ namespace MQTTnet.Implementations
 
         private bool _isRunning;
 
-        public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
+        public event Action<IMqttCommunicationAdapter> ClientAccepted;
 
         public async Task StartAsync(MqttServerOptions options)
         {
@@ -57,7 +57,7 @@ namespace MQTTnet.Implementations
             try
             {
                 var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(args.Socket), new MqttPacketSerializer());
-                ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(args.Socket.Information.RemoteAddress.ToString(), clientAdapter));
+                ClientAccepted?.Invoke(clientAdapter);
             }
             catch (Exception exception)
             {

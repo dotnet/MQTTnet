@@ -20,6 +20,11 @@ namespace MQTTnet.Core.Server
 
         public async Task LoadMessagesAsync()
         {
+            if (_options.Storage == null)
+            {
+                return;
+            }
+
             try
             {
                 var retainedMessages = await _options.Storage.LoadRetainedMessagesAsync();

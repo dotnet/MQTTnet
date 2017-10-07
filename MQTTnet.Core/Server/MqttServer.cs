@@ -57,7 +57,7 @@ namespace MQTTnet.Core.Server
                 await adapter.StartAsync(_options);
             }
 
-            MqttTrace.Information(nameof(MqttServer), "Started.");
+            MqttNetTrace.Information(nameof(MqttServer), "Started.");
         }
 
         public async Task StopAsync()
@@ -74,7 +74,7 @@ namespace MQTTnet.Core.Server
 
             _clientSessionsManager.Clear();
 
-            MqttTrace.Information(nameof(MqttServer), "Stopped.");
+            MqttNetTrace.Information(nameof(MqttServer), "Stopped.");
         }
 
         private void OnClientAccepted(IMqttCommunicationAdapter adapter)
@@ -84,13 +84,13 @@ namespace MQTTnet.Core.Server
 
         private void OnClientConnected(object sender, MqttClientConnectedEventArgs eventArgs)
         {
-            MqttTrace.Information(nameof(MqttServer), "Client '{0}': Connected.", eventArgs.Client.ClientId);
+            MqttNetTrace.Information(nameof(MqttServer), "Client '{0}': Connected.", eventArgs.Client.ClientId);
             ClientConnected?.Invoke(this, eventArgs);
         }
 
         private void OnClientDisconnected(object sender, MqttClientDisconnectedEventArgs eventArgs)
         {
-            MqttTrace.Information(nameof(MqttServer), "Client '{0}': Disconnected.", eventArgs.Client.ClientId);
+            MqttNetTrace.Information(nameof(MqttServer), "Client '{0}': Disconnected.", eventArgs.Client.ClientId);
             ClientDisconnected?.Invoke(this, eventArgs);
         }
     }

@@ -18,10 +18,10 @@ namespace MQTTnet.TestApp.UniversalWindows
         {
             InitializeComponent();
 
-            MqttTrace.TraceMessagePublished += OnTraceMessagePublished;
+            MqttNetTrace.TraceMessagePublished += OnTraceMessagePublished;
         }
 
-        private async void OnTraceMessagePublished(object sender, MqttTraceMessagePublishedEventArgs e)
+        private async void OnTraceMessagePublished(object sender, MqttNetTraceMessagePublishedEventArgs e)
         {
             await Trace.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {

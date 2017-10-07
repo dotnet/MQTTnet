@@ -2,9 +2,9 @@
 
 namespace MQTTnet.Core.Diagnostics
 {
-    public sealed class MqttTraceMessagePublishedEventArgs : EventArgs
+    public sealed class MqttNetTraceMessagePublishedEventArgs : EventArgs
     {
-        public MqttTraceMessagePublishedEventArgs(int threadId, string source, MqttTraceLevel level, string message, Exception exception)
+        public MqttNetTraceMessagePublishedEventArgs(int threadId, string source, MqttNetTraceLevel level, string message, Exception exception)
         {
             ThreadId = threadId;
             Source = source;
@@ -17,7 +17,7 @@ namespace MQTTnet.Core.Diagnostics
 
         public string Source { get; }
 
-        public MqttTraceLevel Level { get; }
+        public MqttNetTraceLevel Level { get; }
 
         public string Message { get; }
 

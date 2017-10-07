@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Core.Diagnostics
 {
-    public enum MqttTraceLevel
+    public enum MqttNetTraceLevel
     {
         Verbose,
         Information,

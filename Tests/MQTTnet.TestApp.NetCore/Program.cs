@@ -35,7 +35,7 @@ namespace MQTTnet.TestApp.NetCore
         private static async Task RunClientAsync(string[] arguments)
         {
 
-            MqttTrace.TraceMessagePublished += (s, e) =>
+            MqttNetTrace.TraceMessagePublished += (s, e) =>
             {
                 Console.WriteLine($">> [{e.ThreadId}] [{e.Source}] [{e.Level}]: {e.Message}");
                 if (e.Exception != null)
@@ -124,7 +124,7 @@ namespace MQTTnet.TestApp.NetCore
 
         private static void RunServerAsync(string[] arguments)
         {
-            MqttTrace.TraceMessagePublished += (s, e) =>
+            MqttNetTrace.TraceMessagePublished += (s, e) =>
             {
                 Console.WriteLine($">> [{e.ThreadId}] [{e.Source}] [{e.Level}]: {e.Message}");
                 if (e.Exception != null)

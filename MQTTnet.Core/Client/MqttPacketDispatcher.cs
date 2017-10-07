@@ -24,7 +24,7 @@ namespace MQTTnet.Core.Client
             }
             catch (MqttCommunicationTimedOutException)
             {
-                MqttTrace.Warning(nameof(MqttPacketDispatcher), "Timeout while waiting for packet of type '{0}'.", responseType.Name);
+                MqttNetTrace.Warning(nameof(MqttPacketDispatcher), "Timeout while waiting for packet of type '{0}'.", responseType.Name);
                 throw;
             }
             finally

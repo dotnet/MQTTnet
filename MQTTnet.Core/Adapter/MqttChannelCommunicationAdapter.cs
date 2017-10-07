@@ -4,7 +4,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Channel;
-using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Internal;
@@ -95,7 +94,7 @@ namespace MQTTnet.Core.Adapter
                         continue;
                     }
 
-                    MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "TX >>> {0} [Timeout={1}]", packet, timeout);
+                    MqttNetTrace.Information(nameof(MqttChannelCommunicationAdapter), "TX >>> {0} [Timeout={1}]", packet, timeout);
 
                     var writeBuffer = PacketSerializer.Serialize(packet);
                     await _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length, cancellationToken).ConfigureAwait(false);
@@ -161,7 +160,7 @@ namespace MQTTnet.Core.Adapter
                     throw new MqttProtocolViolationException("Received malformed packet.");
                 }
 
-                MqttTrace.Information(nameof(MqttChannelCommunicationAdapter), "RX <<< {0}", packet);
+                MqttNetTrace.Information(nameof(MqttChannelCommunicationAdapter), "RX <<< {0}", packet);
                 return packet;
             }
             catch (TaskCanceledException)

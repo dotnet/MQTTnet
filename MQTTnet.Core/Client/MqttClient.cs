@@ -26,7 +26,7 @@ namespace MQTTnet.Core.Client
 
         public MqttClient(IMqttCommunicationAdapterFactory communicationChannelFactory)
         {
-            _communicationChannelFactory = communicationChannelFactory;
+            _communicationChannelFactory = communicationChannelFactory ?? throw new ArgumentNullException(nameof(communicationChannelFactory));
         }
 
         public event EventHandler Connected;
@@ -50,14 +50,14 @@ namespace MQTTnet.Core.Client
 
                 _adapter = _communicationChannelFactory.CreateMqttCommunicationAdapter(options);
                 
-                MqttTrace.Verbose(nameof(MqttClient), "Trying to connect with server.");
+                MqttNetTrace.Verbose(nameof(MqttClient), "Trying to connect with server.");
                 await _adapter.ConnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
-                MqttTrace.Verbose(nameof(MqttClient), "Connection with server established.");
+                MqttNetTrace.Verbose(nameof(MqttClient), "Connection with server established.");
 
                 await SetupIncomingPacketProcessingAsync();
                 await AuthenticateAsync(options.WillMessage);
 
-                MqttTrace.Verbose(nameof(MqttClient), "MQTT connection with server established.");
+                MqttNetTrace.Verbose(nameof(MqttClient), "MQTT connection with server established.");
 
                 if (_options.KeepAlivePeriod != TimeSpan.Zero)
                 {
@@ -235,11 +235,11 @@ namespace MQTTnet.Core.Client
             try
             {
                 await _adapter.DisconnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
-                MqttTrace.Information(nameof(MqttClient), "Disconnected from adapter.");
+                MqttNetTrace.Information(nameof(MqttClient), "Disconnected from adapter.");
             }
             catch (Exception exception)
             {
-                MqttTrace.Warning(nameof(MqttClient), exception, "Error while disconnecting from adapter.");
+                MqttNetTrace.Warning(nameof(MqttClient), exception, "Error while disconnecting from adapter.");
             }
             finally
             {
@@ -251,7 +251,7 @@ namespace MQTTnet.Core.Client
         {
             try
             {
-                MqttTrace.Information(nameof(MqttClient), "Received <<< {0}", packet);
+                MqttNetTrace.Information(nameof(MqttClient), "Received <<< {0}", packet);
 
                 if (packet is MqttPingReqPacket)
                 {
@@ -281,7 +281,7 @@ namespace MQTTnet.Core.Client
             }
             catch (Exception exception)
             {
-                MqttTrace.Error(nameof(MqttClient), exception, "Unhandled exception while processing received packet.");
+                MqttNetTrace.Error(nameof(MqttClient), exception, "Unhandled exception while processing received packet.");
             }
         }
 
@@ -294,7 +294,7 @@ namespace MQTTnet.Core.Client
             }
             catch (Exception exception)
             {
-                MqttTrace.Error(nameof(MqttClient), exception, "Unhandled exception while handling application message.");
+                MqttNetTrace.Error(nameof(MqttClient), exception, "Unhandled exception while handling application message.");
             }
         }
 
@@ -358,7 +358,7 @@ namespace MQTTnet.Core.Client
 
         private async Task SendKeepAliveMessagesAsync(CancellationToken cancellationToken)
         {
-            MqttTrace.Information(nameof(MqttClient), "Start sending keep alive packets.");
+            MqttNetTrace.Information(nameof(MqttClient), "Start sending keep alive packets.");
 
             try
             {
@@ -383,23 +383,23 @@ namespace MQTTnet.Core.Client
                     return;
                 }
 
-                MqttTrace.Warning(nameof(MqttClient), exception, "MQTT communication exception while sending/receiving keep alive packets.");
+                MqttNetTrace.Warning(nameof(MqttClient), exception, "MQTT communication exception while sending/receiving keep alive packets.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                MqttTrace.Warning(nameof(MqttClient), exception, "Unhandled exception while sending/receiving keep alive packets.");
+                MqttNetTrace.Warning(nameof(MqttClient), exception, "Unhandled exception while sending/receiving keep alive packets.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
             }
             finally
             {
-                MqttTrace.Information(nameof(MqttClient), "Stopped sending keep alive packets.");
+                MqttNetTrace.Information(nameof(MqttClient), "Stopped sending keep alive packets.");
             }
         }
 
         private async Task ReceivePackets(CancellationToken cancellationToken)
         {
-            MqttTrace.Information(nameof(MqttClient), "Start receiving packets.");
+            MqttNetTrace.Information(nameof(MqttClient), "Start receiving packets.");
 
             try
             {
@@ -426,17 +426,17 @@ namespace MQTTnet.Core.Client
                     return;
                 }
 
-                MqttTrace.Warning(nameof(MqttClient), exception, "MQTT communication exception while receiving packets.");
+                MqttNetTrace.Warning(nameof(MqttClient), exception, "MQTT communication exception while receiving packets.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                MqttTrace.Error(nameof(MqttClient), exception, "Unhandled exception while receiving packets.");
+                MqttNetTrace.Error(nameof(MqttClient), exception, "Unhandled exception while receiving packets.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
             }
             finally
             {
-                MqttTrace.Information(nameof(MqttClient), "Stopped receiving packets.");
+                MqttNetTrace.Information(nameof(MqttClient), "Stopped receiving packets.");
             }
         }
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MQTTnet.Core.Channel;
 using MQTTnet.Core.Client;
 using System.IO;
+using System.Linq;
 
 namespace MQTTnet.Implementations
 {
@@ -57,7 +58,7 @@ namespace MQTTnet.Implementations
             if (_options.TlsOptions.UseTls)
             {
                 _sslStream = new SslStream(new NetworkStream(_socket, true), false, UserCertificateValidationCallback);
-                await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(_options), SslProtocols.Tls12, _options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
+                await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(_options), SslProtocols.Tls12, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
             }
 
             CreateStreams(_socket, _sslStream);
@@ -99,12 +100,28 @@ namespace MQTTnet.Implementations
 
         private bool UserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateChainErrors) != 0)
+            if (sslPolicyErrors == SslPolicyErrors.None)
             {
-                return _options.TlsOptions.IgnoreCertificateChainErrors;
+                return true;
             }
 
-            return false;
+            if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.RevocationStatusUnknown))
+            {
+                if (!_options.TlsOptions.IgnoreCertificateRevocationErrors)
+                {
+                    return false;
+                }
+            }
+
+            if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.PartialChain))
+            {
+                if (!_options.TlsOptions.IgnoreCertificateChainErrors)
+                {
+                    return false;
+                }
+            }
+            
+            return _options.TlsOptions.AllowUntrustedCertificates;
         }
 
         private static X509CertificateCollection LoadCertificates(MqttClientOptions options)

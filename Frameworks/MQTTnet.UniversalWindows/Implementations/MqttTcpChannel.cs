@@ -47,10 +47,11 @@ namespace MQTTnet.Implementations
             {
                 _socket.Control.ClientCertificate = LoadCertificate(_options);
 
-                if (!_options.TlsOptions.CheckCertificateRevocation)
+                if (_options.TlsOptions.IgnoreCertificateRevocationErrors)
                 {
                     _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.RevocationInformationMissing);
-                    _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.Revoked);
+                    //_socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.Revoked); Not supported.
+                    _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.RevocationFailure);
                 }
 
                 if (_options.TlsOptions.IgnoreCertificateChainErrors)
@@ -58,6 +59,11 @@ namespace MQTTnet.Implementations
                     _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.IncompleteChain);
                 }
 
+                if (_options.TlsOptions.AllowUntrustedCertificates)
+                {
+                    _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.Untrusted);
+                }
+                
                 await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), SocketProtectionLevel.Tls12);
             }
 

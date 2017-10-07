@@ -63,6 +63,9 @@ namespace MQTTnet.TestApp.UniversalWindows
             options.Password = Password.Text;
             options.ClientId = ClientId.Text;
             options.TlsOptions.UseTls = UseTls.IsChecked == true;
+            options.TlsOptions.IgnoreCertificateChainErrors = true;
+            options.TlsOptions.IgnoreCertificateRevocationErrors = true;
+            options.TlsOptions.AllowUntrustedCertificates = true;
             
             try
             {

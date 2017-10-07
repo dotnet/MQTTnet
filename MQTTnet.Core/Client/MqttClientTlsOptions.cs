@@ -8,6 +8,8 @@ namespace MQTTnet.Core.Client
 
         public bool CheckCertificateRevocation { get; set; }
 
+        public bool IgnoreCertificateChainErrors { get; set; }
+
         public List<byte[]> Certificates { get; set; }
     }
 }

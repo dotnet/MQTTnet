@@ -51,7 +51,7 @@ namespace MQTTnet.Implementations
 
             if (_options.TlsOptions.UseTls)
             {
-                _sslStream = new SslStream(new NetworkStream(_socket, true));
+                _sslStream = new SslStream(new NetworkStream(_socket, true), false, UserCertificateValidationCallback);
                 ReceiveStream = _sslStream;
                 await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(_options), SslProtocols.Tls12, _options.TlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
             }
@@ -74,6 +74,16 @@ namespace MQTTnet.Implementations
 
             _sslStream?.Dispose();
             _sslStream = null;
+        }
+
+        private bool UserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateChainErrors) != 0)
+            {
+                return _options.TlsOptions.IgnoreCertificateChainErrors;
+            }
+
+            return false;
         }
 
         private static X509CertificateCollection LoadCertificates(MqttClientOptions options)

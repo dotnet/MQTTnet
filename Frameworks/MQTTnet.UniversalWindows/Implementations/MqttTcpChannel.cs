@@ -24,6 +24,7 @@ namespace MQTTnet.Implementations
         public MqttTcpChannel(StreamSocket socket)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+
             CreateStreams();
         }
 
@@ -48,8 +49,13 @@ namespace MQTTnet.Implementations
 
                 if (!_options.TlsOptions.CheckCertificateRevocation)
                 {
-                    _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.IncompleteChain);
                     _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.RevocationInformationMissing);
+                    _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.Revoked);
+                }
+
+                if (_options.TlsOptions.IgnoreCertificateChainErrors)
+                {
+                    _socket.Control.IgnorableServerCertificateErrors.Add(ChainValidationResult.IncompleteChain);
                 }
 
                 await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), SocketProtectionLevel.Tls12);

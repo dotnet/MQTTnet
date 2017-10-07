@@ -81,7 +81,7 @@ namespace MQTTnet.Core.Tests
 
             var receivedMessagesCount = 0;
             c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
-            
+
             var message = new MqttApplicationMessage("a", new byte[0], MqttQualityOfServiceLevel.AtLeastOnce, false);
 
             await c2.PublishAsync(message);
@@ -126,9 +126,124 @@ namespace MQTTnet.Core.Tests
             await s.StopAsync();
 
             Assert.AreEqual(1, receivedMessagesCount);
-        }        
+        }
 
-        private async Task TestPublishAsync(
+        [TestMethod]
+        public async Task MqttServer_NoRetainedMessage()
+        {
+            var serverAdapter = new TestMqttServerAdapter();
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter });
+            await s.StartAsync();
+
+            var c1 = await serverAdapter.ConnectTestClient(s, "c1");
+            await c1.PublishAsync(new MqttApplicationMessage("retained", new byte[3], MqttQualityOfServiceLevel.AtLeastOnce, false));
+            await c1.DisconnectAsync();
+
+            var c2 = await serverAdapter.ConnectTestClient(s, "c2");
+            var receivedMessagesCount = 0;
+            c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
+            await c2.SubscribeAsync(new TopicFilter("retained", MqttQualityOfServiceLevel.AtLeastOnce));
+
+            await Task.Delay(500);
+
+            await s.StopAsync();
+
+            Assert.AreEqual(0, receivedMessagesCount);
+        }
+
+        [TestMethod]
+        public async Task MqttServer_RetainedMessage()
+        {
+            var serverAdapter = new TestMqttServerAdapter();
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter });
+            await s.StartAsync();
+
+            var c1 = await serverAdapter.ConnectTestClient(s, "c1");
+            await c1.PublishAsync(new MqttApplicationMessage("retained", new byte[3], MqttQualityOfServiceLevel.AtLeastOnce, true));
+            await c1.DisconnectAsync();
+
+            var c2 = await serverAdapter.ConnectTestClient(s, "c2");
+            var receivedMessagesCount = 0;
+            c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
+            await c2.SubscribeAsync(new TopicFilter("retained", MqttQualityOfServiceLevel.AtLeastOnce));
+
+            await Task.Delay(500);
+
+            await s.StopAsync();
+
+            Assert.AreEqual(1, receivedMessagesCount);
+        }
+
+        [TestMethod]
+        public async Task MqttServer_ClearRetainedMessage()
+        {
+            var serverAdapter = new TestMqttServerAdapter();
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter });
+            await s.StartAsync();
+
+            var c1 = await serverAdapter.ConnectTestClient(s, "c1");
+            await c1.PublishAsync(new MqttApplicationMessage("retained", new byte[3], MqttQualityOfServiceLevel.AtLeastOnce, true));
+            await c1.DisconnectAsync();
+
+            var c2 = await serverAdapter.ConnectTestClient(s, "c2");
+            var receivedMessagesCount = 0;
+            c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
+            await c2.SubscribeAsync(new TopicFilter("retained", MqttQualityOfServiceLevel.AtLeastOnce));
+
+            await Task.Delay(500);
+
+            await s.StopAsync();
+
+            Assert.AreEqual(1, receivedMessagesCount);
+        }
+
+        [TestMethod]
+        public async Task MqttServer_PersistRetainedMessage()
+        {
+            var storage = new TestStorage();
+
+            var serverAdapter = new TestMqttServerAdapter();
+            var s = new MqttServer(new MqttServerOptions { Storage = storage }, new List<IMqttServerAdapter> { serverAdapter });
+            await s.StartAsync();
+
+            var c1 = await serverAdapter.ConnectTestClient(s, "c1");
+            await c1.PublishAsync(new MqttApplicationMessage("retained", new byte[3], MqttQualityOfServiceLevel.AtLeastOnce, true));
+            await c1.DisconnectAsync();
+
+            await s.StopAsync();
+
+            s = new MqttServer(new MqttServerOptions { Storage = storage }, new List<IMqttServerAdapter> { serverAdapter });
+            await s.StartAsync();
+
+            var c2 = await serverAdapter.ConnectTestClient(s, "c2");
+            var receivedMessagesCount = 0;
+            c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
+            await c2.SubscribeAsync(new TopicFilter("retained", MqttQualityOfServiceLevel.AtLeastOnce));
+
+            await Task.Delay(500);
+
+            await s.StopAsync();
+
+            Assert.AreEqual(1, receivedMessagesCount);
+        }
+
+        private class TestStorage : IMqttServerStorage
+        {
+            private IList<MqttApplicationMessage> _messages = new List<MqttApplicationMessage>();
+
+            public Task SaveRetainedMessagesAsync(IList<MqttApplicationMessage> messages)
+            {
+                _messages = messages;
+                return Task.FromResult(0);
+            }
+
+            public Task<IList<MqttApplicationMessage>> LoadRetainedMessagesAsync()
+            {
+                return Task.FromResult(_messages);
+            }
+        }
+
+        private static async Task TestPublishAsync(
             string topic,
             MqttQualityOfServiceLevel qualityOfServiceLevel,
             string topicFilter,

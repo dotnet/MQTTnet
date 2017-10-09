@@ -183,6 +183,7 @@ namespace MQTTnet.Core.Tests
 
             var c1 = await serverAdapter.ConnectTestClient(s, "c1");
             await c1.PublishAsync(new MqttApplicationMessage("retained", new byte[3], MqttQualityOfServiceLevel.AtLeastOnce, true));
+            await c1.PublishAsync(new MqttApplicationMessage("retained", new byte[0], MqttQualityOfServiceLevel.AtLeastOnce, true));
             await c1.DisconnectAsync();
 
             var c2 = await serverAdapter.ConnectTestClient(s, "c2");
@@ -194,7 +195,7 @@ namespace MQTTnet.Core.Tests
 
             await s.StopAsync();
 
-            Assert.AreEqual(1, receivedMessagesCount);
+            Assert.AreEqual(0, receivedMessagesCount);
         }
 
         [TestMethod]

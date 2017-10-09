@@ -40,7 +40,9 @@ namespace MQTTnet.Implementations
         public Stream SendStream => ReceiveStream;
         public Stream ReceiveStream { get; private set; }
         public Stream RawReceiveStream => ReceiveStream;
-        
+
+        public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
+
         public async Task ConnectAsync()
         {
             if (_socket == null)
@@ -52,7 +54,7 @@ namespace MQTTnet.Implementations
 
             if (_options.TlsOptions.UseTls)
             {
-                _sslStream = new SslStream(new NetworkStream(_socket, true), false, UserCertificateValidationCallback);
+                _sslStream = new SslStream(new NetworkStream(_socket, true), false, InternalUserCertificateValidationCallback);
                 ReceiveStream = _sslStream;
                 await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(_options), SslProtocols.Tls12, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
             }
@@ -77,8 +79,13 @@ namespace MQTTnet.Implementations
             _sslStream = null;
         }
 
-        private bool UserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        private bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
+            if (CustomCertificateValidationCallback != null)
+            {
+                return CustomCertificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _options);
+            }
+
             if (sslPolicyErrors == SslPolicyErrors.None)
             {
                 return true;

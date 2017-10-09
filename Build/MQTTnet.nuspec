@@ -17,9 +17,10 @@
 * [Server] Fixed handling of _Dup_ flag (Thanks to haeberle)
 * [Core] Optimized exception handling
 * [Core] Mono is now also supported (Thanks to JTrotta)
-* [Client] The options are now passed in _ConnectAsync_ (Breaking change!)
+* [Client] The options are now passed in _ConnectAsync_ (Breaking change! Read Wiki for examples)
 * [Core] Trace class renamed to _MqttNetTrace_ (Breaking change!)
 * [Client] Extended certificate validation options (Breaking change!)
+* [Client] Added static certificate validation callback (NetFramework, NetStandard) / ignorable certificate errors (UniversalWindows) to _MqttTcpChannel_
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M</tags> 

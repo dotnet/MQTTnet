@@ -10,7 +10,7 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* [Server] Added an event which is fired when a client has disconnected.
+    <releaseNotes>* [Server] Added an event which is fired when a client has disconnected
 * [Server] Added support for retained application messages
 * [Server] Added support for saving and loading retained messages
 * [Server] The client connection is now closed if sending of one pending application message has failed

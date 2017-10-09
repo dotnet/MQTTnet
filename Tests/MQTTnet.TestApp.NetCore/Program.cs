@@ -53,7 +53,7 @@ namespace MQTTnet.TestApp.NetCore
                     CleanSession = true
                 };
 
-                var client = new MqttClientFactory().CreateMqttClient(options);
+                var client = new MqttClientFactory().CreateMqttClient();
                 client.ApplicationMessageReceived += (s, e) =>
                 {
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");

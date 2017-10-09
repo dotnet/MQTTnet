@@ -9,6 +9,7 @@ using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.TestApp.NetFramework
 {
@@ -54,7 +55,7 @@ namespace MQTTnet.TestApp.NetFramework
             {
                 var options = new MqttClientWebSocketOptions
                 {
-                    Uri = "broker.hivemq.com:8000/mqtt"                    
+                    Uri = "broker.hivemq.com:8000/mqtt"
                 };
 
                 ////var options = new MqttClientOptions
@@ -64,8 +65,8 @@ namespace MQTTnet.TestApp.NetFramework
                 ////    CleanSession = true
                 ////};
 
-                var client = new MqttClientFactory().CreateMqttClient(options);
-                client.ApplicationMessageReceived += (s, e) =>
+                var mqttClient = new MqttClientFactory().CreateMqttClient();
+                mqttClient.ApplicationMessageReceived += (s, e) =>
                 {
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
                     Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
@@ -75,24 +76,24 @@ namespace MQTTnet.TestApp.NetFramework
                     Console.WriteLine();
                 };
 
-                client.Connected += async (s, e) =>
+                mqttClient.Connected += async (s, e) =>
                 {
                     Console.WriteLine("### CONNECTED WITH SERVER ###");
 
-                    await client.SubscribeAsync(new List<TopicFilter>
+                    await mqttClient.SubscribeAsync(new List<TopicFilter>
                     {
                         new TopicFilter("#", MqttQualityOfServiceLevel.AtMostOnce)
                     });
                 };
 
-                client.Disconnected += async (s, e) =>
+                mqttClient.Disconnected += async (s, e) =>
                 {
                     Console.WriteLine("### DISCONNECTED FROM SERVER ###");
                     await Task.Delay(TimeSpan.FromSeconds(5));
 
                     try
                     {
-                        await client.ConnectAsync(options);
+                        await mqttClient.ConnectAsync(options);
                     }
                     catch
                     {
@@ -102,7 +103,7 @@ namespace MQTTnet.TestApp.NetFramework
 
                 try
                 {
-                    await client.ConnectAsync(options);
+                    await mqttClient.ConnectAsync(options);
                 }
                 catch (Exception exception)
                 {
@@ -117,7 +118,7 @@ namespace MQTTnet.TestApp.NetFramework
                     Console.ReadLine();
 
                     var applicationMessage = messageFactory.CreateApplicationMessage("myTopic", "Hello World", MqttQualityOfServiceLevel.AtLeastOnce);
-                    await client.PublishAsync(applicationMessage);
+                    await mqttClient.PublishAsync(applicationMessage);
                 }
             }
             catch (Exception exception)
@@ -169,6 +170,20 @@ namespace MQTTnet.TestApp.NetFramework
             }
 
             Console.ReadLine();
+        }
+
+        private static async Task WikiCode()
+        {
+            // For .NET Framwork & netstandard apps:
+            MqttTcpChannel.CustomCertificateValidationCallback = (x509Certificate, x509Chain, sslPolicyErrors, mqttClientTcpOptions) =>
+            {
+                if (mqttClientTcpOptions.Server == "server_with_revoked_cert")
+                {
+                    return true;
+                }
+
+                return false;
+            };
         }
     }
 }

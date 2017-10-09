@@ -40,7 +40,7 @@ namespace MQTTnet.TestApp.NetFramework
                     DefaultCommunicationTimeout = TimeSpan.FromMinutes(10)
                 };
 
-                var client = new MqttClientFactory().CreateMqttClient(options);
+                var client = new MqttClientFactory().CreateMqttClient();
                 client.ApplicationMessageReceived += (s, e) =>
                 {
                 };

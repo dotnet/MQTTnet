@@ -33,7 +33,7 @@ namespace MQTTnet.Implementations
         public Stream ReceiveStream { get; private set; }
         public Stream RawReceiveStream { get; private set; }
 
-        public Func<MqttClientTcpOptions, IEnumerable<ChainValidationResult>> CustomIgnorableServerCertificateErrorsResolver { get; set; }
+        public static Func<MqttClientTcpOptions, IEnumerable<ChainValidationResult>> CustomIgnorableServerCertificateErrorsResolver { get; set; }
 
         public async Task ConnectAsync()
         {

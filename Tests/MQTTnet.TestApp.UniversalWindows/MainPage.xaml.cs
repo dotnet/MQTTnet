@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Text;
+using System.Threading.Tasks;
+using Windows.Security.Cryptography.Certificates;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using MQTTnet.Core;
@@ -7,6 +9,8 @@ using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
+using MQTTnet.Core.Server;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
@@ -66,7 +70,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             options.TlsOptions.IgnoreCertificateChainErrors = true;
             options.TlsOptions.IgnoreCertificateRevocationErrors = true;
             options.TlsOptions.AllowUntrustedCertificates = true;
-            
+
             try
             {
                 if (_mqttClient != null)
@@ -75,7 +79,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 }
 
                 var factory = new MqttClientFactory();
-                _mqttClient = factory.CreateMqttClient(options);
+                _mqttClient = factory.CreateMqttClient();
                 await _mqttClient.ConnectAsync(options);
             }
             catch (Exception exception)
@@ -189,6 +193,100 @@ namespace MQTTnet.TestApp.UniversalWindows
             {
                 Trace.Text += exception + Environment.NewLine;
             }
+        }
+
+        private async Task WikiCode()
+        {
+            var mqttClient = new MqttClientFactory().CreateMqttClient();
+
+            // ----------------------------------
+
+            var tcpOptions = new MqttClientTcpOptions
+            {
+                Server = "broker.hivemq.org",
+                ClientId = "TestClient"
+            };
+
+            await mqttClient.ConnectAsync(tcpOptions);
+
+            // ----------------------------------
+
+            var secureTcpOptions = new MqttClientTcpOptions
+            {
+                Server = "broker.hivemq.org",
+                ClientId = "TestClient",
+                TlsOptions = new MqttClientTlsOptions
+                {
+                    UseTls = true,
+                    IgnoreCertificateChainErrors = true,
+                    IgnoreCertificateRevocationErrors = true,
+                    AllowUntrustedCertificates = true
+                }
+            };
+
+            // ----------------------------------
+
+            var wsOptions = new MqttClientWebSocketOptions
+            {
+                Uri = "broker.hivemq.com:8000/mqtt",
+                ClientId = "TestClient"
+            };
+
+            await mqttClient.ConnectAsync(wsOptions);
+
+            // ----------------------------------
+            {
+                var options = new MqttServerOptions();
+
+                var mqttServer = new MqttServerFactory().CreateMqttServer(options);
+                await mqttServer.StartAsync();
+
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadLine();
+
+                await mqttServer.StopAsync();
+            }
+
+            // ----------------------------------
+
+            {
+                var options = new MqttServerOptions
+                {
+                    ConnectionValidator = c =>
+                    {
+                        if (c.ClientId.Length < 10)
+                        {
+                            return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        }
+
+                        if (c.Username != "mySecretUser")
+                        {
+                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        }
+
+                        if (c.Password != "mySecretPassword")
+                        {
+                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        }
+
+                        return MqttConnectReturnCode.ConnectionAccepted;
+                    }
+                };
+            }
+
+            // ----------------------------------
+
+            // For UWP apps:
+            MqttTcpChannel.CustomIgnorableServerCertificateErrorsResolver = o =>
+            {
+                if (o.Server == "server_with_revoked_cert")
+                {
+                    return new[] { ChainValidationResult.Revoked };
+                }
+
+                return new ChainValidationResult[0];
+            };
+
         }
     }
 }

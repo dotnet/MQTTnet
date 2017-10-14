@@ -40,7 +40,6 @@ namespace MQTTnet.TestApp.NetCore
 
         private static async Task RunClientAsync(string[] arguments)
         {
-
             MqttNetTrace.TraceMessagePublished += (s, e) =>
             {
                 Console.WriteLine($">> [{e.ThreadId}] [{e.Source}] [{e.Level}]: {e.Message}");

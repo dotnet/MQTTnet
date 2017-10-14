@@ -17,8 +17,8 @@
     <PackageIconUrl></PackageIconUrl>
     <RepositoryUrl></RepositoryUrl>
     <PackageTags></PackageTags>
-    <FileVersion>2.4.0.0</FileVersion>
-    <AssemblyVersion>2.4.0.0</AssemblyVersion>
+    <FileVersion>2.5.0.0</FileVersion>
+    <AssemblyVersion>2.5.0.0</AssemblyVersion>
     <PackageLicenseUrl></PackageLicenseUrl>
   </PropertyGroup>
 

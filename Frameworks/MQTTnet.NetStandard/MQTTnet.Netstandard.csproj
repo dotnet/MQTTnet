@@ -4,8 +4,8 @@
     <TargetFrameworks>netstandard1.3;net45</TargetFrameworks>
     <AssemblyName>MQTTnet</AssemblyName>
     <RootNamespace>MQTTnet</RootNamespace>
-    <AssemblyVersion>2.4.0.0</AssemblyVersion>
-    <FileVersion>2.4.0.0</FileVersion>
+    <AssemblyVersion>2.5.0.0</AssemblyVersion>
+    <FileVersion>2.5.0.0</FileVersion>
     <Version>0.0.0.0</Version>
     <Company />
     <Product />

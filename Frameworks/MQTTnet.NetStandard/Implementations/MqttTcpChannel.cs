@@ -50,7 +50,11 @@ namespace MQTTnet.Implementations
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             }
 
+#if NET45
+            await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
+#else
             await _socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
+#endif
 
             if (_options.TlsOptions.UseTls)
             {

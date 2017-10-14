@@ -19,6 +19,7 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("MQTTnet - TestApp.NetFramework");
             Console.WriteLine("1 = Start client");
             Console.WriteLine("2 = Start server");
+            Console.WriteLine("3 = Start performance test");
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.Key == ConsoleKey.D1)
             {
@@ -28,6 +29,11 @@ namespace MQTTnet.TestApp.NetCore
             else if (pressedKey.Key == ConsoleKey.D2)
             {
                 Task.Run(() => RunServerAsync(args));
+                Thread.Sleep(Timeout.Infinite);
+            }
+            else if (pressedKey.Key == ConsoleKey.D3)
+            {
+                Task.Run(PerformanceTest.RunAsync);
                 Thread.Sleep(Timeout.Infinite);
             }
         }

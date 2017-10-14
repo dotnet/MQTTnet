@@ -88,7 +88,11 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
+#if NET45
+                    var clientSocket = await Task.Factory.FromAsync(_defaultEndpointSocket.BeginAccept, _defaultEndpointSocket.EndAccept, null).ConfigureAwait(false);
+#else
                     var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
+#endif
                     var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer());
                     ClientAccepted?.Invoke(clientAdapter);
                 }
@@ -108,7 +112,11 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
+#if NET45
+                    var clientSocket = await Task.Factory.FromAsync(_tlsEndpointSocket.BeginAccept, _tlsEndpointSocket.EndAccept, null).ConfigureAwait(false);
+#else
                     var clientSocket = await _tlsEndpointSocket.AcceptAsync().ConfigureAwait(false);
+#endif
 
                     var sslStream = new SslStream(new NetworkStream(clientSocket));
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);

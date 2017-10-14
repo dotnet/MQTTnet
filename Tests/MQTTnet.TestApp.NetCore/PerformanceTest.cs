@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.TestApp.NetFramework
+namespace MQTTnet.TestApp.NetCore
 {
     public static class PerformanceTest
     {

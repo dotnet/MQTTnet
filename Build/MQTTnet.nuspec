@@ -48,8 +48,8 @@
     <file src="..\Frameworks\MQTTnet.UniversalWindows\bin\Release\MQTTnet.*" target="lib\uap10.0\"/>
 
     <!-- .NET Framework -->
-    <file src="..\Frameworks\MQTTnet.NetFramework\bin\Release\MQTTnet.Core.*" target="lib\net45\"/>
-    <file src="..\Frameworks\MQTTnet.NetFramework\bin\Release\MQTTnet.*" target="lib\net45\"/>
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net45\MQTTnet.Core.*" target="lib\net45\"/>
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net45\MQTTnet.*" target="lib\net45\"/>
     
   </files>
 </package>

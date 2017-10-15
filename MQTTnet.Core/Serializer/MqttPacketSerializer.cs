@@ -36,6 +36,16 @@ namespace MQTTnet.Core.Serializer
             }
         }
 
+        public MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket)
+        {
+            if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
+
+            using (var reader = new MqttPacketReader(receivedMqttPacket))
+            {
+                return Deserialize(receivedMqttPacket.Header, reader);
+            }
+        }
+
         private byte SerializePacket(MqttBasePacket packet, MqttPacketWriter writer)
         {
             if (packet is MqttConnectPacket connectPacket)
@@ -50,17 +60,17 @@ namespace MQTTnet.Core.Serializer
 
             if (packet is MqttDisconnectPacket disconnectPacket)
             {
-                return Serialize(disconnectPacket, writer);
+                return Serialize(disconnectPacket);
             }
 
             if (packet is MqttPingReqPacket pingReqPacket)
             {
-                return Serialize(pingReqPacket, writer);
+                return Serialize(pingReqPacket);
             }
 
             if (packet is MqttPingRespPacket pingRespPacket)
             {
-                return Serialize(pingRespPacket, writer);
+                return Serialize(pingRespPacket);
             }
 
             if (packet is MqttPublishPacket publishPacket)
@@ -111,110 +121,66 @@ namespace MQTTnet.Core.Serializer
             throw new MqttProtocolViolationException("Packet type invalid.");
         }
 
-        public MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket)
-        {
-            if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
-
-            using (var reader = new MqttPacketReader(receivedMqttPacket))
-            {
-                return Deserialize(receivedMqttPacket.Header, reader);
-            }
-        }
-
         private static MqttBasePacket Deserialize(MqttPacketHeader header, MqttPacketReader reader)
         {
             switch (header.ControlPacketType)
             {
-                case MqttControlPacketType.Connect:
-                    {
-                        return DeserializeConnect(reader);
-                    }
-
-                case MqttControlPacketType.ConnAck:
-                    {
-                        return DeserializeConnAck(reader);
-                    }
-
-                case MqttControlPacketType.Disconnect:
-                    {
-                        return new MqttDisconnectPacket();
-                    }
-
-                case MqttControlPacketType.Publish:
-                    {
-                        return DeserializePublish(reader, header);
-                    }
-
-                case MqttControlPacketType.PubAck:
-                    {
-                        return new MqttPubAckPacket
-                        {
-                            PacketIdentifier = reader.ReadUInt16()
-                        };
-                    }
-
-                case MqttControlPacketType.PubRec:
-                    {
-                        return new MqttPubRecPacket
-                        {
-                            PacketIdentifier = reader.ReadUInt16()
-                        };
-                    }
-
-                case MqttControlPacketType.PubRel:
-                    {
-                        return new MqttPubRelPacket
-                        {
-                            PacketIdentifier = reader.ReadUInt16()
-                        };
-                    }
-
-                case MqttControlPacketType.PubComp:
-                    {
-                        return new MqttPubCompPacket
-                        {
-                            PacketIdentifier = reader.ReadUInt16()
-                        };
-                    }
-
-                case MqttControlPacketType.PingReq:
-                    {
-                        return new MqttPingReqPacket();
-                    }
-
-                case MqttControlPacketType.PingResp:
-                    {
-                        return new MqttPingRespPacket();
-                    }
-
-                case MqttControlPacketType.Subscribe:
-                    {
-                        return DeserializeSubscribe(reader);
-                    }
-
-                case MqttControlPacketType.SubAck:
-                    {
-                        return DeserializeSubAck(reader);
-                    }
-
-                case MqttControlPacketType.Unsubscibe:
-                    {
-                        return DeserializeUnsubscribe(reader);
-                    }
-
-                case MqttControlPacketType.UnsubAck:
-                    {
-                        return new MqttUnsubAckPacket
-                        {
-                            PacketIdentifier = reader.ReadUInt16()
-                        };
-                    }
-
-                default:
-                    {
-                        throw new MqttProtocolViolationException($"Packet type ({(int)header.ControlPacketType}) not supported.");
-                    }
+                case MqttControlPacketType.Connect: return DeserializeConnect(reader);
+                case MqttControlPacketType.ConnAck: return DeserializeConnAck(reader);
+                case MqttControlPacketType.Disconnect: return new MqttDisconnectPacket();
+                case MqttControlPacketType.Publish: return DeserializePublish(reader, header);
+                case MqttControlPacketType.PubAck: return DeserializePubAck(reader);
+                case MqttControlPacketType.PubRec: return DeserializePubRec(reader);
+                case MqttControlPacketType.PubRel: return DeserializePubRel(reader);
+                case MqttControlPacketType.PubComp: return DeserializePubComp(reader);
+                case MqttControlPacketType.PingReq: return new MqttPingReqPacket();
+                case MqttControlPacketType.PingResp: return new MqttPingRespPacket();
+                case MqttControlPacketType.Subscribe: return DeserializeSubscribe(reader);
+                case MqttControlPacketType.SubAck: return DeserializeSubAck(reader);
+                case MqttControlPacketType.Unsubscibe: return DeserializeUnsubscribe(reader);
+                case MqttControlPacketType.UnsubAck: return DeserializeUnsubAck(reader);
+                default: throw new MqttProtocolViolationException($"Packet type ({(int)header.ControlPacketType}) not supported.");
             }
+        }
+
+        private static MqttBasePacket DeserializeUnsubAck(MqttPacketReader reader)
+        {
+            return new MqttUnsubAckPacket
+            {
+                PacketIdentifier = reader.ReadUInt16()
+            };
+        }
+
+        private static MqttBasePacket DeserializePubComp(MqttPacketReader reader)
+        {
+            return new MqttPubCompPacket
+            {
+                PacketIdentifier = reader.ReadUInt16()
+            };
+        }
+
+        private static MqttBasePacket DeserializePubRel(MqttPacketReader reader)
+        {
+            return new MqttPubRelPacket
+            {
+                PacketIdentifier = reader.ReadUInt16()
+            };
+        }
+
+        private static MqttBasePacket DeserializePubRec(MqttPacketReader reader)
+        {
+            return new MqttPubRecPacket
+            {
+                PacketIdentifier = reader.ReadUInt16()
+            };
+        }
+
+        private static MqttBasePacket DeserializePubAck(MqttPacketReader reader)
+        {
+            return new MqttPubAckPacket
+            {
+                PacketIdentifier = reader.ReadUInt16()
+            };
         }
 
         private static MqttBasePacket DeserializeUnsubscribe(MqttPacketReader reader)
@@ -297,7 +263,7 @@ namespace MQTTnet.Core.Serializer
                 throw new MqttProtocolViolationException("Protocol name is not supported.");
             }
 
-            var protocolLevel = reader.ReadByte();
+            reader.ReadByte(); // Skip protocol level
             var connectFlags = reader.ReadByte();
 
             var connectFlagsReader = new ByteReader(connectFlags);
@@ -467,19 +433,19 @@ namespace MQTTnet.Core.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRel, 0x02);
         }
 
-        private static byte Serialize(MqttDisconnectPacket packet, MqttPacketWriter writer)
+        private static byte Serialize(MqttDisconnectPacket packet)
         {
-            return SerializeEmptyPacketAsync(MqttControlPacketType.Disconnect, writer);
+            return SerializeEmptyPacket(MqttControlPacketType.Disconnect);
         }
 
-        private static byte Serialize(MqttPingReqPacket packet, MqttPacketWriter writer)
+        private static byte Serialize(MqttPingReqPacket packet)
         {
-            return SerializeEmptyPacketAsync(MqttControlPacketType.PingReq, writer);
+            return SerializeEmptyPacket(MqttControlPacketType.PingReq);
         }
 
-        private static byte Serialize(MqttPingRespPacket packet, MqttPacketWriter writer)
+        private static byte Serialize(MqttPingRespPacket packet)
         {
-            return SerializeEmptyPacketAsync(MqttControlPacketType.PingResp, writer);
+            return SerializeEmptyPacket(MqttControlPacketType.PingResp);
         }
 
         private static byte Serialize(MqttPublishPacket packet, MqttPacketWriter writer)
@@ -593,14 +559,13 @@ namespace MQTTnet.Core.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Unsubscibe, 0x02);
         }
 
-        private static byte Serialize(MqttUnsubAckPacket packet, MqttPacketWriter writer)
+        private static byte Serialize(IMqttPacketWithIdentifier packet, BinaryWriter writer)
         {
             writer.Write(packet.PacketIdentifier);
-
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.UnsubAck);
         }
 
-        private static byte SerializeEmptyPacketAsync(MqttControlPacketType type, MqttPacketWriter writer)
+        private static byte SerializeEmptyPacket(MqttControlPacketType type)
         {
             return MqttPacketWriter.BuildFixedHeader(type);
         }

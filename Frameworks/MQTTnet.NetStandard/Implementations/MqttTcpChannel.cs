@@ -15,6 +15,13 @@ namespace MQTTnet.Implementations
     {
         private readonly MqttClientTcpOptions _options;
 
+//todo: this can be used with min dependency NetStandard1.6
+#if NET45
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
+        public static int BufferSize { get; set; } = 4096 * 20; // Can be changed for fine tuning by library user.
+#endif
+
         private Socket _socket;
         private SslStream _sslStream;
         
@@ -34,12 +41,14 @@ namespace MQTTnet.Implementations
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _sslStream = sslStream;
-            ReceiveStream = (Stream)sslStream ?? new NetworkStream(socket);
+
+            CreateStreams(socket, sslStream);
         }
 
-        public Stream SendStream => ReceiveStream;
+        public Stream SendStream { get; private set; }
         public Stream ReceiveStream { get; private set; }
-        public Stream RawReceiveStream => ReceiveStream;
+        public Stream RawReceiveStream { get; private set; }
+
 
         public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
 
@@ -50,6 +59,7 @@ namespace MQTTnet.Implementations
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             }
 
+//todo: else brach can be used with min dependency NET46
 #if NET45
             await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
 #else
@@ -59,13 +69,10 @@ namespace MQTTnet.Implementations
             if (_options.TlsOptions.UseTls)
             {
                 _sslStream = new SslStream(new NetworkStream(_socket, true), false, InternalUserCertificateValidationCallback);
-                ReceiveStream = _sslStream;
                 await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(_options), SslProtocols.Tls12, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
             }
-            else
-            {
-                ReceiveStream = new NetworkStream(_socket);
-            }
+
+            CreateStreams(_socket, _sslStream);
         }
 
         public Task DisconnectAsync()
@@ -129,5 +136,24 @@ namespace MQTTnet.Implementations
 
             return certificates;
         }
+
+        private void CreateStreams(Socket socket, Stream sslStream)
+        {
+            RawReceiveStream = sslStream ?? new NetworkStream(socket);
+
+
+            //cannot use this as default buffering prevents from receiving the first connect message
+            //need two streams otherwise read and write have to be synchronized
+
+//todo: if branch can be used with min dependency NetStandard1.6
+#if NET45
+            SendStream = new BufferedStream(RawReceiveStream, BufferSize);
+            ReceiveStream = new BufferedStream(RawReceiveStream, BufferSize);
+#else
+            SendStream = RawReceiveStream;
+            ReceiveStream = RawReceiveStream;
+#endif
+        }
+
     }
 }

@@ -88,6 +88,7 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
+//todo: else branch can be used with min dependency NET46
 #if NET45
                     var clientSocket = await Task.Factory.FromAsync(_defaultEndpointSocket.BeginAccept, _defaultEndpointSocket.EndAccept, null).ConfigureAwait(false);
 #else

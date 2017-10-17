@@ -18,23 +18,124 @@ namespace MQTTnet.TestApp.NetCore
         {
             Console.WriteLine("MQTTnet - TestApp.NetFramework");
             Console.WriteLine("1 = Start client");
-            Console.WriteLine("2 = Start server");
-            Console.WriteLine("3 = Start performance test");
+            Console.WriteLine("2 = Start queued client");
+            Console.WriteLine("3 = Start server");
+            Console.WriteLine("4 = Start performance test");
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.Key == ConsoleKey.D1)
             {
                 Task.Run(() => RunClientAsync(args));
                 Thread.Sleep(Timeout.Infinite);
             }
-            else if (pressedKey.Key == ConsoleKey.D2)
+            if (pressedKey.Key == ConsoleKey.D2)
             {
-                Task.Run(() => RunServerAsync(args));
+                Task.Run(() => RunClientQueuedAsync(args));
                 Thread.Sleep(Timeout.Infinite);
             }
             else if (pressedKey.Key == ConsoleKey.D3)
             {
+                Task.Run(() => RunServerAsync(args));
+                Thread.Sleep(Timeout.Infinite);
+            }
+            else if (pressedKey.Key == ConsoleKey.D4)
+            {
                 Task.Run(PerformanceTest.RunAsync);
                 Thread.Sleep(Timeout.Infinite);
+            }
+        }
+
+        private static async Task RunClientQueuedAsync(string[] arguments)
+        {
+            MqttNetTrace.TraceMessagePublished += (s, e) =>
+            {
+                Console.WriteLine($">> [{e.ThreadId}] [{e.Source}] [{e.Level}]: {e.Message}");
+                if (e.Exception != null)
+                {
+                    Console.WriteLine(e.Exception);
+                }
+            };
+
+            try
+            {
+                var options = new MqttClientTcpOptions
+                {
+                    Server = "192.168.0.14",
+                    ClientId = "XYZ",
+                    CleanSession = true,
+                    UserName = "lobu",
+                    Password = "passworda",
+                    KeepAlivePeriod = TimeSpan.FromSeconds(31),
+                    DefaultCommunicationTimeout = TimeSpan.FromSeconds(20),
+
+                };
+
+                var client = new MqttClientFactory().CreateMqttQueuedClient();
+                client.ApplicationMessageReceived += (s, e) =>
+                {
+                    Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
+                    Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
+                    Console.WriteLine($"+ Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                    Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
+                    Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
+                    Console.WriteLine();
+                };
+
+                client.Connected += async (s, e) =>
+                {
+                    Console.WriteLine("### CONNECTED WITH SERVER ###");
+
+                    await client.SubscribeAsync(new List<TopicFilter>
+                    {
+                        new TopicFilter("#", MqttQualityOfServiceLevel.AtMostOnce)
+                    });
+
+                    Console.WriteLine("### SUBSCRIBED ###");
+                };
+
+                client.Disconnected += async (s, e) =>
+                {
+                    Console.WriteLine("### DISCONNECTED FROM SERVER ###");
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+
+                    try
+                    {
+                        await client.ConnectAsync(options);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("### RECONNECTING FAILED ###");
+                    }
+                };
+
+                try
+                {
+                    await client.ConnectAsync(options);
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine("### CONNECTING FAILED ###" + Environment.NewLine + exception);
+                }
+
+                Console.WriteLine("### WAITING FOR APPLICATION MESSAGES ###");
+
+                int i = 0;
+                while (true)
+                {
+                    Console.ReadLine();
+                    i++;
+                    var applicationMessage = new MqttApplicationMessage(
+                        "PLNMAIN",
+                        Encoding.UTF8.GetBytes(string.Format("Hello World {0}", i)),
+                        MqttQualityOfServiceLevel.ExactlyOnce,
+                        false
+                    );
+
+                    await client.PublishAsync(applicationMessage);
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
             }
         }
 
@@ -55,7 +156,7 @@ namespace MQTTnet.TestApp.NetCore
                 {
                     Uri = "localhost",
                     ClientId = "XYZ",
-                    CleanSession = true
+                    CleanSession = true,
                 };
 
                 var client = new MqttClientFactory().CreateMqttClient();

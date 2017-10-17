@@ -32,4 +32,10 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Any CPU|x86'" />
 
+  <ItemGroup>
+    <Compile Remove="DiskQueue\**" />
+    <EmbeddedResource Remove="DiskQueue\**" />
+    <None Remove="DiskQueue\**" />
+  </ItemGroup>
+
 </Project>

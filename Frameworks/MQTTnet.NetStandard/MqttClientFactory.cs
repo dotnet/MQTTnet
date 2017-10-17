@@ -9,5 +9,10 @@ namespace MQTTnet
         {
             return new MqttClient(new MqttCommunicationAdapterFactory());
         }
+
+        public IMqttClient CreateMqttQueuedClient()
+        {
+            return new MqttClientQueued(new MqttCommunicationAdapterFactory());
+        }
     }
 }

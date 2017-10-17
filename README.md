@@ -53,12 +53,12 @@ This library is available as a nuget package: https://www.nuget.org/packages/MQT
 Please find examples and the documentation at the Wiki of this repository (https://github.com/chkr1011/MQTTnet/wiki).
 
 # Contributions
-If you want to contribute to this project just create a pull request.
+If you want to contribute to this project just create a pull request. But only pull requests which are matching the code style of this library will be accepted. Before creating a pull request please have a look at the library to get an overview of the required style.
 
 # References
 This library is used in the following projects:
 
 * MQTT Client Rx (Wrapper for Reactive Extensions, https://github.com/1iveowl/MQTTClient.rx)
-* HA4IoT (Open Source Home Automation system for .NET, https://github.com/chkr1011/HA4IoT)
+* Wirehome (Open Source Home Automation system for .NET, https://github.com/chkr1011/Wirehome)
 
 If you use this library and want to see your project here please let me know.

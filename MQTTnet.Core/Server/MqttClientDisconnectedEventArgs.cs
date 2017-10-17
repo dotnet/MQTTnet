@@ -1,7 +1,6 @@
-﻿using MQTTnet.Core.Server;
-using System;
+﻿using System;
 
-namespace MQTTnet.Core.Adapter
+namespace MQTTnet.Core.Server
 {
     public class MqttClientDisconnectedEventArgs : EventArgs
     {

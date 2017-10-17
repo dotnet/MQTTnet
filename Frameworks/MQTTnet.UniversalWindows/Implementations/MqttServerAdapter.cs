@@ -12,18 +12,14 @@ namespace MQTTnet.Implementations
     {
         private StreamSocketListener _defaultEndpointSocket;
 
-        private bool _isRunning;
-
-        public event Action<IMqttCommunicationAdapter> ClientAccepted;
+        public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
         public async Task StartAsync(MqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            if (_isRunning) throw new InvalidOperationException("Server is already started.");
-
-            _isRunning = true;
-
+            if (_defaultEndpointSocket != null) throw new InvalidOperationException("Server is already started.");
+            
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _defaultEndpointSocket = new StreamSocketListener();
@@ -39,8 +35,6 @@ namespace MQTTnet.Implementations
 
         public Task StopAsync()
         {
-            _isRunning = false;
-
             _defaultEndpointSocket?.Dispose();
             _defaultEndpointSocket = null;
 
@@ -57,7 +51,7 @@ namespace MQTTnet.Implementations
             try
             {
                 var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(args.Socket), new MqttPacketSerializer());
-                ClientAccepted?.Invoke(clientAdapter);
+                ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }
             catch (Exception exception)
             {

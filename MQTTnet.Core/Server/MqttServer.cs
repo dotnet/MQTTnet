@@ -77,9 +77,9 @@ namespace MQTTnet.Core.Server
             MqttNetTrace.Information(nameof(MqttServer), "Stopped.");
         }
 
-        private void OnClientAccepted(IMqttCommunicationAdapter adapter)
+        private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
-            Task.Run(() =>_clientSessionsManager.RunClientSessionAsync(adapter), _cancellationTokenSource.Token);
+            Task.Run(() =>_clientSessionsManager.RunClientSessionAsync(eventArgs.Client), _cancellationTokenSource.Token);
         }
 
         private void OnClientConnected(object sender, MqttClientConnectedEventArgs eventArgs)

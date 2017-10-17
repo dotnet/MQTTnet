@@ -20,15 +20,11 @@ namespace MQTTnet.Implementations
         private Socket _tlsEndpointSocket;
         private X509Certificate2 _tlsCertificate;
 
-        private bool _isRunning;
-
-        public event Action<IMqttCommunicationAdapter> ClientAccepted;
+        public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
         public Task StartAsync(MqttServerOptions options)
         {
-            if (_isRunning) throw new InvalidOperationException("Server is already started.");
-
-            _isRunning = true;
+            if (_cancellationTokenSource != null) throw new InvalidOperationException("Server is already started.");
 
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -49,6 +45,10 @@ namespace MQTTnet.Implementations
                 }
 
                 _tlsCertificate = new X509Certificate2(options.TlsEndpointOptions.Certificate);
+                if (!_tlsCertificate.HasPrivateKey)
+                {
+                    throw new InvalidOperationException("The certificate for TLS encryption must contain the private key.");
+                }
 
                 _tlsEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 _tlsEndpointSocket.Bind(new IPEndPoint(IPAddress.Any, options.GetTlsEndpointPort()));
@@ -62,8 +62,6 @@ namespace MQTTnet.Implementations
 
         public Task StopAsync()
         {
-            _isRunning = false;
-
             _cancellationTokenSource?.Cancel(false);
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
@@ -71,6 +69,8 @@ namespace MQTTnet.Implementations
             _defaultEndpointSocket?.Dispose();
             _defaultEndpointSocket = null;
 
+            _tlsCertificate = null;
+            
             _tlsEndpointSocket?.Dispose();
             _tlsEndpointSocket = null;
 
@@ -88,14 +88,14 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
-//todo: else branch can be used with min dependency NET46
+                    //todo: else branch can be used with min dependency NET46
 #if NET45
                     var clientSocket = await Task.Factory.FromAsync(_defaultEndpointSocket.BeginAccept, _defaultEndpointSocket.EndAccept, null).ConfigureAwait(false);
 #else
                     var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
 #endif
                     var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer());
-                    ClientAccepted?.Invoke(clientAdapter);
+                    ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }
                 catch (Exception exception)
                 {
@@ -123,7 +123,7 @@ namespace MQTTnet.Implementations
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
 
                     var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer());
-                    ClientAccepted?.Invoke(clientAdapter);
+                    ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }
                 catch (Exception exception)
                 {

@@ -6,6 +6,7 @@ using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,7 +43,7 @@ namespace MQTTnet.TestApp.NetCore
         {
             MqttNetTrace.TraceMessagePublished += (s, e) =>
             {
-                Console.WriteLine($">> [{e.ThreadId}] [{e.Source}] [{e.Level}]: {e.Message}");
+                Console.WriteLine($">> [{DateTime.Now:O}] [{e.ThreadId}] [{e.Source}] [{e.Level}]: {e.Message}");
                 if (e.Exception != null)
                 {
                     Console.WriteLine(e.Exception);
@@ -155,6 +156,9 @@ namespace MQTTnet.TestApp.NetCore
                         return MqttConnectReturnCode.ConnectionAccepted;
                     }
                 };
+
+                var certificate = new X509Certificate(@"C:\certs\test\test.cer", "");
+                options.TlsEndpointOptions.Certificate = certificate.Export(X509ContentType.Cert);
 
                 var mqttServer = new MqttServerFactory().CreateMqttServer(options);
                 mqttServer.StartAsync();

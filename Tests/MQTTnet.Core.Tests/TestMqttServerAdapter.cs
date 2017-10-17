@@ -8,7 +8,7 @@ namespace MQTTnet.Core.Tests
 {
     public class TestMqttServerAdapter : IMqttServerAdapter
     {
-        public event Action<IMqttCommunicationAdapter> ClientAccepted;
+        public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
         public async Task<MqttClient> ConnectTestClient(IMqttServer server, string clientId, MqttApplicationMessage willMessage = null)
         {
@@ -47,7 +47,7 @@ namespace MQTTnet.Core.Tests
 
         private void FireClientAcceptedEvent(IMqttCommunicationAdapter adapter)
         {
-            ClientAccepted?.Invoke(adapter);
+            ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(adapter));
         }
 
         public Task StartAsync(MqttServerOptions options)

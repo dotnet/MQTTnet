@@ -7,7 +7,7 @@ namespace MQTTnet.Implementations
 {
     public class MqttCommunicationAdapterFactory : IMqttCommunicationAdapterFactory
     {
-        public IMqttCommunicationAdapter CreateMqttCommunicationAdapter(MqttClientOptions options)
+        public IMqttCommunicationAdapter CreateMqttCommunicationAdapter(MqttClientQueuedOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

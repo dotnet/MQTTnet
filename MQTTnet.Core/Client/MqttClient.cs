@@ -21,8 +21,8 @@ namespace MQTTnet.Core.Client
         private MqttClientOptions _options;
         private bool _isReceivingPackets;
         private int _latestPacketIdentifier;
-        private CancellationTokenSource _cancellationTokenSource;
-        private IMqttCommunicationAdapter _adapter;
+        internal CancellationTokenSource _cancellationTokenSource;
+        internal IMqttCommunicationAdapter _adapter;
 
         public MqttClient(IMqttCommunicationAdapterFactory communicationChannelFactory)
         {
@@ -344,7 +344,7 @@ namespace MQTTnet.Core.Client
             return _adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, packet);
         }
 
-        private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket) where TResponsePacket : MqttBasePacket
+        internal async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket) where TResponsePacket : MqttBasePacket
         {
             var packetAwaiter = _packetDispatcher.WaitForPacketAsync(requestPacket, typeof(TResponsePacket), _options.DefaultCommunicationTimeout);
             await _adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, requestPacket).ConfigureAwait(false);

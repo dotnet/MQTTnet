@@ -41,7 +41,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void Connect(object sender, RoutedEventArgs e)
         {
-            MqttClientOptions options = null;
+            MqttClientQueuedOptions options = null;
             if (UseTcp.IsChecked == true)
             {
                 options = new MqttClientTcpOptions

@@ -6,6 +6,7 @@ using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,7 +58,7 @@ namespace MQTTnet.TestApp.NetCore
 
             try
             {
-                var options = new MqttClientTcpOptions
+                var options = new MqttClientQueuedOptions
                 {
                     Server = "192.168.0.14",
                     ClientId = "XYZ",
@@ -66,7 +67,8 @@ namespace MQTTnet.TestApp.NetCore
                     Password = "passworda",
                     KeepAlivePeriod = TimeSpan.FromSeconds(31),
                     DefaultCommunicationTimeout = TimeSpan.FromSeconds(20),
-
+                    UsePersistence = true,
+                    Storage = new TestStorage(),
                 };
 
                 var client = new MqttClientFactory().CreateMqttQueuedClient();
@@ -271,6 +273,71 @@ namespace MQTTnet.TestApp.NetCore
             }
 
             Console.ReadLine();
+        }
+
+        [Serializable]
+        public sealed class TemporaryApplicationMessage
+        {
+            public TemporaryApplicationMessage(string topic, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
+            {
+                Topic = topic ?? throw new ArgumentNullException(nameof(topic));
+                Payload = payload ?? throw new ArgumentNullException(nameof(payload));
+                QualityOfServiceLevel = qualityOfServiceLevel;
+                Retain = retain;
+            }
+
+            public string Topic { get; }
+
+            public byte[] Payload { get; }
+
+            public MqttQualityOfServiceLevel QualityOfServiceLevel { get; }
+
+            public bool Retain { get; }
+        }
+
+        private class TestStorage : IMqttClientQueuedStorage
+        {
+            string serializationFile = Path.Combine(Environment.CurrentDirectory, "messages.bin");
+            private IList<MqttApplicationMessage> _messages = new List<MqttApplicationMessage>();
+
+            public Task<IList<MqttApplicationMessage>> LoadInflightMessagesAsync()
+            {
+                //deserialize
+                // MqttApplicationMessage is not serializable
+                if (File.Exists(serializationFile))
+                {
+                    using (Stream stream = File.Open(serializationFile, FileMode.Open))
+                    {
+                        var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+
+                        var temp = (List<TemporaryApplicationMessage>)bformatter.Deserialize(stream);
+                        foreach (var a in temp)
+                        {
+                            _messages.Add(new MqttApplicationMessage(a.Topic, a.Payload, a.QualityOfServiceLevel, a.Retain));
+                        }
+                    }
+                }
+                return Task.FromResult(_messages);
+            }
+
+            public Task SaveInflightMessagesAsync(IList<MqttApplicationMessage> messages)
+            {
+                _messages = messages;
+                //serialize
+                // MqttApplicationMessage is not serializable
+                using (System.IO.Stream stream = File.Open(serializationFile, FileMode.Create))
+                {
+                    var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                    IList<TemporaryApplicationMessage> temp = new List<TemporaryApplicationMessage>();
+                    foreach (var m in _messages)
+                    {
+                        temp.Add(new TemporaryApplicationMessage(m.Topic, m.Payload, m.QualityOfServiceLevel, m.Retain));
+                    }
+                    bformatter.Serialize(stream, temp);
+                }
+
+                return Task.FromResult(0);
+            }
         }
     }
 }

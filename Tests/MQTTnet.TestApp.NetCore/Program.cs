@@ -6,7 +6,6 @@ using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -297,16 +296,16 @@ namespace MQTTnet.TestApp.NetCore
 
         private class TestStorage : IMqttClientQueuedStorage
         {
-            string serializationFile = Path.Combine(Environment.CurrentDirectory, "messages.bin");
+            string serializationFile = System.IO.Path.Combine(Environment.CurrentDirectory, "messages.bin");
             private IList<MqttApplicationMessage> _messages = new List<MqttApplicationMessage>();
 
             public Task<IList<MqttApplicationMessage>> LoadInflightMessagesAsync()
             {
                 //deserialize
                 // MqttApplicationMessage is not serializable
-                if (File.Exists(serializationFile))
+                if (System.IO.File.Exists(serializationFile))
                 {
-                    using (Stream stream = File.Open(serializationFile, FileMode.Open))
+                    using (System.IO.Stream stream = System.IO.File.Open(serializationFile, System.IO.FileMode.Open))
                     {
                         var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 
@@ -325,7 +324,7 @@ namespace MQTTnet.TestApp.NetCore
                 _messages = messages;
                 //serialize
                 // MqttApplicationMessage is not serializable
-                using (System.IO.Stream stream = File.Open(serializationFile, FileMode.Create))
+                using (System.IO.Stream stream = System.IO.File.Open(serializationFile, System.IO.FileMode.Create))
                 {
                     var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
                     IList<TemporaryApplicationMessage> temp = new List<TemporaryApplicationMessage>();

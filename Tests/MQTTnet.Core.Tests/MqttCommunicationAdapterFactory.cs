@@ -12,7 +12,7 @@ namespace MQTTnet.Core.Tests
             _adapter = adapter;
         }
 
-        public IMqttCommunicationAdapter CreateMqttCommunicationAdapter(MqttClientQueuedOptions options)
+        public IMqttCommunicationAdapter CreateMqttCommunicationAdapter(MqttClientOptions options)
         {
             return _adapter;
         }

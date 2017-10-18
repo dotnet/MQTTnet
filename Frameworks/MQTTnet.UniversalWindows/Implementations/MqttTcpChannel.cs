@@ -89,7 +89,7 @@ namespace MQTTnet.Implementations
             RawReceiveStream = ReceiveStream;
         }
 
-        private static Certificate LoadCertificate(MqttClientQueuedOptions options)
+        private static Certificate LoadCertificate(MqttClientOptions options)
         {
             if (options.TlsOptions.Certificates == null || !options.TlsOptions.Certificates.Any())
             {

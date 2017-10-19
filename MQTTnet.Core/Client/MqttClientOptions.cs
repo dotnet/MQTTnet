@@ -1,26 +1,26 @@
-﻿using System;
-using MQTTnet.Core.Serializer;
+﻿using MQTTnet.Core.Serializer;
+using System;
 
 namespace MQTTnet.Core.Client
 {
-    public abstract class MqttClientOptions
+    public interface IMqttClientOptions
     {
-        public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
+        MqttClientTlsOptions TlsOptions { get; set; }
 
-        public MqttApplicationMessage WillMessage { get; set; }
+        MqttApplicationMessage WillMessage { get; set; }
 
-        public string UserName { get; set; }
+        string UserName { get; set; }
 
-        public string Password { get; set; }
+        string Password { get; set; }
 
-        public string ClientId { get; set; } = Guid.NewGuid().ToString().Replace("-", string.Empty);
+        string ClientId { get; set; }
 
-        public bool CleanSession { get; set; } = true;
+        bool CleanSession { get; set; }
 
-        public TimeSpan KeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(5);
+        TimeSpan KeepAlivePeriod { get; set; }
 
-        public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        TimeSpan DefaultCommunicationTimeout { get; set; }
 
-        public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
+        MqttProtocolVersion ProtocolVersion { get; set; }
     }
 }

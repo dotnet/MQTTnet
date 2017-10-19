@@ -3,5 +3,7 @@
     public interface IMqttClientFactory
     {
         IMqttClient CreateMqttClient();
+
+        IMqttClientManaged CreateMqttManagedClient();
     }
 }

@@ -10,9 +10,9 @@ namespace MQTTnet.Core.Client
     public class MqttClientQueuedPersistentMessagesManager
     {
         private readonly IList<MqttApplicationMessage> _persistedMessages = new List<MqttApplicationMessage>();
-        private readonly MqttClientQueuedOptions _options;
+        private readonly MqttClientManagedOptions _options;
 
-        public MqttClientQueuedPersistentMessagesManager(MqttClientQueuedOptions options)
+        public MqttClientQueuedPersistentMessagesManager(MqttClientManagedOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
@@ -21,7 +21,7 @@ namespace MQTTnet.Core.Client
         {
             try
             {
-                var persistentMessages = await _options.Storage.LoadInflightMessagesAsync();
+                var persistentMessages = await _options.Storage.LoadQueuedMessagesAsync();
                 lock (_persistedMessages)
                 {
                     _persistedMessages.Clear();
@@ -50,7 +50,7 @@ namespace MQTTnet.Core.Client
             {               
                 if (_options.Storage != null)
                 {
-                    await _options.Storage.SaveInflightMessagesAsync(_persistedMessages);
+                    await _options.Storage.SaveQueuedMessagesAsync(_persistedMessages);
                 }
             }
             catch (Exception exception)

@@ -4,6 +4,6 @@
     {
         IMqttClient CreateMqttClient();
 
-        IMqttClientQueued CreateMqttQueuedClient();
+        IMqttClientManaged CreateMqttManagedClient();
     }
 }

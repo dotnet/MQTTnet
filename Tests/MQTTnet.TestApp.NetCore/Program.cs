@@ -57,7 +57,7 @@ namespace MQTTnet.TestApp.NetCore
 
             try
             {
-                var options = new MqttClientQueuedOptions
+                var options = new MqttClientManagedOptions
                 {
                     Server = "192.168.0.14",
                     ClientId = "XYZ",
@@ -66,11 +66,10 @@ namespace MQTTnet.TestApp.NetCore
                     Password = "passworda",
                     KeepAlivePeriod = TimeSpan.FromSeconds(31),
                     DefaultCommunicationTimeout = TimeSpan.FromSeconds(20),
-                    UsePersistence = true,
                     Storage = new TestStorage(),
                 };
 
-                var client = new MqttClientFactory().CreateMqttQueuedClient();
+                var client = new MqttClientFactory().CreateMqttManagedClient();
                 client.ApplicationMessageReceived += (s, e) =>
                 {
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
@@ -177,7 +176,7 @@ namespace MQTTnet.TestApp.NetCore
 
                     await client.SubscribeAsync(new List<TopicFilter>
                     {
-                        new TopicFilter("#", MqttQualityOfServiceLevel.AtMostOnce)
+                        new TopicFilter("#", MqttQualityOfServiceLevel.ExactlyOnce)
                     });
 
                     Console.WriteLine("### SUBSCRIBED ###");
@@ -299,7 +298,7 @@ namespace MQTTnet.TestApp.NetCore
             string serializationFile = System.IO.Path.Combine(Environment.CurrentDirectory, "messages.bin");
             private IList<MqttApplicationMessage> _messages = new List<MqttApplicationMessage>();
 
-            public Task<IList<MqttApplicationMessage>> LoadInflightMessagesAsync()
+            public Task<IList<MqttApplicationMessage>> LoadQueuedMessagesAsync()
             {
                 //deserialize
                 // MqttApplicationMessage is not serializable
@@ -319,7 +318,7 @@ namespace MQTTnet.TestApp.NetCore
                 return Task.FromResult(_messages);
             }
 
-            public Task SaveInflightMessagesAsync(IList<MqttApplicationMessage> messages)
+            public Task SaveQueuedMessagesAsync(IList<MqttApplicationMessage> messages)
             {
                 _messages = messages;
                 //serialize

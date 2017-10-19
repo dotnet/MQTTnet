@@ -18,7 +18,7 @@ namespace MQTTnet.Core.Client
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         private readonly IMqttCommunicationAdapterFactory _communicationChannelFactory;
 
-        private MqttClientOptions _options;
+        private IMqttClientOptions _options;
         private bool _isReceivingPackets;
         private int _latestPacketIdentifier;
         internal CancellationTokenSource _cancellationTokenSource;
@@ -35,7 +35,8 @@ namespace MQTTnet.Core.Client
 
         public bool IsConnected => _cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested;
 
-        public async Task ConnectAsync(MqttClientOptions options)
+
+        public async Task ConnectAsync(IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

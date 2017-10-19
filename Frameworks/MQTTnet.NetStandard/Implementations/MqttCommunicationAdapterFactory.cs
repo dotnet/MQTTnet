@@ -7,7 +7,7 @@ namespace MQTTnet.Implementations
 {
     public class MqttCommunicationAdapterFactory : IMqttCommunicationAdapterFactory
     {
-        public IMqttCommunicationAdapter CreateMqttCommunicationAdapter(MqttClientOptions options)
+        public IMqttCommunicationAdapter CreateMqttCommunicationAdapter(IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -21,7 +21,7 @@ namespace MQTTnet.Implementations
                 return new MqttChannelCommunicationAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion });
             }
 
-            if (options is MqttClientQueuedOptions queuedOptions)
+            if (options is MqttClientManagedOptions queuedOptions)
             {
                 return new MqttChannelCommunicationAdapter(new MqttTcpChannel(queuedOptions), new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion });
             }

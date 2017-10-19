@@ -121,7 +121,7 @@ namespace MQTTnet.Implementations
             return _options.TlsOptions.AllowUntrustedCertificates;
         }
 
-        private static X509CertificateCollection LoadCertificates(MqttClientOptions options)
+        private static X509CertificateCollection LoadCertificates(IMqttClientOptions options)
         {
             var certificates = new X509CertificateCollection();
             if (options.TlsOptions.Certificates == null)

@@ -3,7 +3,7 @@ using MQTTnet.Core.Serializer;
 
 namespace MQTTnet.Core.Client
 {
-    public abstract class MqttClientOptions
+    public abstract class BaseMqttClientOptions : IMqttClientOptions
     {
         public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
 
@@ -13,7 +13,7 @@ namespace MQTTnet.Core.Client
 
         public string Password { get; set; }
 
-        public string ClientId { get; set; } = Guid.NewGuid().ToString().Replace("-", string.Empty);
+        public string ClientId { get; set; } = Guid.NewGuid().ToString("N");
 
         public bool CleanSession { get; set; } = true;
 

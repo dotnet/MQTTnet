@@ -8,13 +8,6 @@ namespace MQTTnet.Core
 {
     public class MqttApplicationMessageFactory
     {
-        public MqttApplicationMessage CreateApplicationMessage(string topic, MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce, bool retain = false)
-        {
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-
-            return CreateApplicationMessage(topic, new byte[0], qualityOfServiceLevel, retain);
-        }
-
         public MqttApplicationMessage CreateApplicationMessage(string topic, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce, bool retain = false)
         {
             if (topic == null) throw new ArgumentNullException(nameof(topic));

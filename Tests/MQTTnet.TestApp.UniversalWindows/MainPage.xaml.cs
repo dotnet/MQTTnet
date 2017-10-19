@@ -41,7 +41,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void Connect(object sender, RoutedEventArgs e)
         {
-            MqttClientOptions options = null;
+            BaseMqttClientOptions options = null;
             if (UseTcp.IsChecked == true)
             {
                 options = new MqttClientTcpOptions
@@ -195,6 +195,8 @@ namespace MQTTnet.TestApp.UniversalWindows
             }
         }
 
+        // This code is for the Wiki at GitHub!
+        // ReSharper disable once UnusedMember.Local
         private async Task WikiCode()
         {
             var mqttClient = new MqttClientFactory().CreateMqttClient();

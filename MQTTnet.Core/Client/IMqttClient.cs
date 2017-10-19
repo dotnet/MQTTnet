@@ -11,9 +11,9 @@ namespace MQTTnet.Core.Client
 
         event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
         event EventHandler Connected;
-        event EventHandler Disconnected;
+        event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
-        Task ConnectAsync(MqttClientOptions options);
+        Task ConnectAsync(IMqttClientOptions options);
         Task DisconnectAsync();
 
         Task<IList<MqttSubscribeResult>> SubscribeAsync(IEnumerable<TopicFilter> topicFilters);

@@ -48,8 +48,7 @@ namespace MQTTnet.Implementations
         public Stream SendStream { get; private set; }
         public Stream ReceiveStream { get; private set; }
         public Stream RawReceiveStream { get; private set; }
-
-
+        
         public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
 
         public async Task ConnectAsync()
@@ -121,7 +120,7 @@ namespace MQTTnet.Implementations
             return _options.TlsOptions.AllowUntrustedCertificates;
         }
 
-        private static X509CertificateCollection LoadCertificates(MqttClientOptions options)
+        private static X509CertificateCollection LoadCertificates(IMqttClientOptions options)
         {
             var certificates = new X509CertificateCollection();
             if (options.TlsOptions.Certificates == null)

@@ -58,7 +58,7 @@
 
                     <TextBlock>QoS:</TextBlock>
                     <StackPanel Orientation="Horizontal">
-                        <RadioButton Margin="0,0,10,0" x:Name="QoS0" IsChecked="True" GroupName="qos">0 (At most once)</RadioButton>
+                        <RadioButton Margin="0,0,10,0" IsChecked="True" GroupName="qos">0 (At most once)</RadioButton>
                         <RadioButton Margin="0,0,10,0" x:Name="QoS1" GroupName="qos">1 (At least once)</RadioButton>
                         <RadioButton Margin="0,0,10,0" x:Name="QoS2" GroupName="qos">2 (Exactly once)</RadioButton>
                     </StackPanel>
@@ -73,7 +73,7 @@
 
                     <TextBlock>QoS:</TextBlock>
                     <StackPanel Orientation="Horizontal">
-                        <RadioButton Margin="0,0,10,0" x:Name="SubscribeQoS0" IsChecked="True" GroupName="sqos">0 (At most once)</RadioButton>
+                        <RadioButton Margin="0,0,10,0" IsChecked="True" GroupName="sqos">0 (At most once)</RadioButton>
                         <RadioButton Margin="0,0,10,0" x:Name="SubscribeQoS1" GroupName="sqos">1 (At least once)</RadioButton>
                         <RadioButton Margin="0,0,10,0" x:Name="SubscribeQoS2" GroupName="sqos">2 (Exactly once)</RadioButton>
                     </StackPanel>

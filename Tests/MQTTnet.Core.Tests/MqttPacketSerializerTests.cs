@@ -2,10 +2,8 @@
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Channel;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Serializer;
@@ -385,45 +383,6 @@ namespace MQTTnet.Core.Tests
             };
 
             DeserializeAndCompare(p, "sAIAew==");
-        }
-
-
-        public class TestChannel : IMqttCommunicationChannel
-        {
-            private readonly MemoryStream _stream = new MemoryStream();
-
-            public Stream ReceiveStream => _stream;
-
-            public Stream RawReceiveStream => _stream;
-
-            public Stream SendStream => _stream;
-
-            public bool IsConnected { get; } = true;
-
-            public TestChannel()
-            {
-            }
-
-            public TestChannel(byte[] initialData)
-            {
-                _stream.Write(initialData, 0, initialData.Length);
-                _stream.Position = 0;
-            }
-
-            public Task ConnectAsync()
-            {
-                return Task.FromResult(0);
-            }
-
-            public Task DisconnectAsync()
-            {
-                return Task.FromResult(0);
-            }
-
-            public byte[] ToArray()
-            {
-                return _stream.ToArray();
-            }
         }
 
         private static void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)

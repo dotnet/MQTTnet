@@ -32,4 +32,8 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Any CPU|x86'" />
 
+  <ItemGroup>
+    <Folder Include="ManagedClient\" />
+  </ItemGroup>
+
 </Project>

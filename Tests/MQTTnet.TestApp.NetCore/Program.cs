@@ -6,16 +6,18 @@ using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace MQTTnet.TestApp.NetCore
 {
     public static class Program
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
             Console.WriteLine("MQTTnet - TestApp.NetFramework");
             Console.WriteLine("1 = Start client");
@@ -24,12 +26,12 @@ namespace MQTTnet.TestApp.NetCore
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.Key == ConsoleKey.D1)
             {
-                Task.Run(() => RunClientAsync(args));
+                Task.Run(RunClientAsync);
                 Thread.Sleep(Timeout.Infinite);
             }
             else if (pressedKey.Key == ConsoleKey.D2)
             {
-                Task.Run(() => RunServerAsync(args));
+                Task.Run(() => RunServerAsync());
                 Thread.Sleep(Timeout.Infinite);
             }
             else if (pressedKey.Key == ConsoleKey.D3)
@@ -39,7 +41,7 @@ namespace MQTTnet.TestApp.NetCore
             }
         }
 
-        private static async Task RunClientAsync(string[] arguments)
+        private static async Task RunClientAsync()
         {
             MqttNetTrace.TraceMessagePublished += (s, e) =>
             {
@@ -128,7 +130,7 @@ namespace MQTTnet.TestApp.NetCore
             }
         }
 
-        private static void RunServerAsync(string[] arguments)
+        private static Task RunServerAsync()
         {
             MqttNetTrace.TraceMessagePublished += (s, e) =>
             {
@@ -157,10 +159,21 @@ namespace MQTTnet.TestApp.NetCore
                     }
                 };
 
+                options.Storage = new RetainedMessageHandler();
+
+
                 var certificate = new X509Certificate(@"C:\certs\test\test.cer", "");
                 options.TlsEndpointOptions.Certificate = certificate.Export(X509ContentType.Cert);
+                options.ConnectionBacklog = 5;
+                options.DefaultEndpointOptions.IsEnabled = true;
+                options.TlsEndpointOptions.IsEnabled = false;
 
                 var mqttServer = new MqttServerFactory().CreateMqttServer(options);
+                mqttServer.ClientDisconnected += (s, e) =>
+                {
+                    Console.Write("Client disconnected event fired.");
+                };
+
                 mqttServer.StartAsync();
 
                 Console.WriteLine("Press any key to exit.");
@@ -174,6 +187,34 @@ namespace MQTTnet.TestApp.NetCore
             }
 
             Console.ReadLine();
+            return Task.FromResult(0);
+        }
+    }
+
+    public class RetainedMessageHandler : IMqttServerStorage
+    {
+        private const string Filename = "C:\\MQTT\\RetainedMessages.json";
+
+        public Task SaveRetainedMessagesAsync(IList<MqttApplicationMessage> messages)
+        {
+            File.WriteAllText(Filename, JsonConvert.SerializeObject(messages));
+            return Task.FromResult(0);
+        }
+
+        public Task<IList<MqttApplicationMessage>> LoadRetainedMessagesAsync()
+        {
+            IList<MqttApplicationMessage> retainedMessages;
+            if (File.Exists(Filename))
+            {
+                var json = File.ReadAllText(Filename);
+                retainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(json);
+            }
+            else
+            {
+                retainedMessages = new List<MqttApplicationMessage>();
+            }
+            
+            return Task.FromResult(retainedMessages);
         }
     }
 }

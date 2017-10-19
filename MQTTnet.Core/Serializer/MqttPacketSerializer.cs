@@ -58,19 +58,19 @@ namespace MQTTnet.Core.Serializer
                 return Serialize(connAckPacket, writer);
             }
 
-            if (packet is MqttDisconnectPacket disconnectPacket)
+            if (packet is MqttDisconnectPacket)
             {
-                return Serialize(disconnectPacket);
+                return SerializeEmptyPacket(MqttControlPacketType.Disconnect);
             }
 
-            if (packet is MqttPingReqPacket pingReqPacket)
+            if (packet is MqttPingReqPacket)
             {
-                return Serialize(pingReqPacket);
+                return SerializeEmptyPacket(MqttControlPacketType.PingReq);
             }
 
-            if (packet is MqttPingRespPacket pingRespPacket)
+            if (packet is MqttPingRespPacket)
             {
-                return Serialize(pingRespPacket);
+                return SerializeEmptyPacket(MqttControlPacketType.PingResp);
             }
 
             if (packet is MqttPublishPacket publishPacket)
@@ -338,6 +338,8 @@ namespace MQTTnet.Core.Serializer
 
         private static void ValidateConnectPacket(MqttConnectPacket packet)
         {
+            if (packet == null) throw new ArgumentNullException(nameof(packet));
+
             if (string.IsNullOrEmpty(packet.ClientId) && !packet.CleanSession)
             {
                 throw new MqttProtocolViolationException("CleanSession must be set if ClientId is empty [MQTT-3.1.3-7].");
@@ -346,6 +348,8 @@ namespace MQTTnet.Core.Serializer
 
         private static void ValidatePublishPacket(MqttPublishPacket packet)
         {
+            if (packet == null) throw new ArgumentNullException(nameof(packet));
+
             if (packet.QualityOfServiceLevel == 0 && packet.Dup)
             {
                 throw new MqttProtocolViolationException("Dup flag must be false for QoS 0 packets [MQTT-3.3.1-2].");
@@ -431,21 +435,6 @@ namespace MQTTnet.Core.Serializer
             writer.Write(packet.PacketIdentifier);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRel, 0x02);
-        }
-
-        private static byte Serialize(MqttDisconnectPacket packet)
-        {
-            return SerializeEmptyPacket(MqttControlPacketType.Disconnect);
-        }
-
-        private static byte Serialize(MqttPingReqPacket packet)
-        {
-            return SerializeEmptyPacket(MqttControlPacketType.PingReq);
-        }
-
-        private static byte Serialize(MqttPingRespPacket packet)
-        {
-            return SerializeEmptyPacket(MqttControlPacketType.PingResp);
         }
 
         private static byte Serialize(MqttPublishPacket packet, MqttPacketWriter writer)

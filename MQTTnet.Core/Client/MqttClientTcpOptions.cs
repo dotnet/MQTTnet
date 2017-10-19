@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Core.Client
 {
-    public class MqttClientTcpOptions : MqttClientOptions
+    public class MqttClientTcpOptions : BaseMqttClientOptions
     {
         public string Server { get; set; }
 

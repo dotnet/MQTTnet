@@ -113,7 +113,8 @@ namespace MQTTnet.TestApp.NetCore
                         .Select(i => CreateMessage())
                         .ToList();
 
-                    if (true)
+                    Console.WriteLine("Press 'c' for concurrent sends. Otherwise in one batch.");
+                    if (Console.ReadKey().KeyChar == 'c')
                     {
                         //send concurrent (test for raceconditions)
                         var sendTasks = msgs
@@ -161,10 +162,7 @@ namespace MQTTnet.TestApp.NetCore
         private static Task PublishSingleMessage(IMqttClient client, MqttApplicationMessage applicationMessage, ref int count)
         {
             Interlocked.Increment(ref count);
-            return Task.Run(() =>
-           {
-               return client.PublishAsync(applicationMessage);
-           });
+            return Task.Run(() => client.PublishAsync(applicationMessage));
         }
 
         private static async Task RunServerAsync()

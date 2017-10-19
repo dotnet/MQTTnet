@@ -18,7 +18,7 @@ namespace MQTTnet.Core.Client
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         private readonly IMqttCommunicationAdapterFactory _communicationChannelFactory;
 
-        private MqttClientOptions _options;
+        private IMqttClientOptions _options;
         private bool _isReceivingPackets;
         private int _latestPacketIdentifier;
         private CancellationTokenSource _cancellationTokenSource;
@@ -30,12 +30,12 @@ namespace MQTTnet.Core.Client
         }
 
         public event EventHandler Connected;
-        public event EventHandler Disconnected;
+        public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
-        public bool IsConnected => _cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested;
+        public bool IsConnected { get; private set; }
 
-        public async Task ConnectAsync(MqttClientOptions options)
+        public async Task ConnectAsync(IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -64,6 +64,7 @@ namespace MQTTnet.Core.Client
                     StartSendKeepAliveMessages(_cancellationTokenSource.Token);
                 }
 
+                IsConnected = true;
                 Connected?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception)
@@ -222,6 +223,9 @@ namespace MQTTnet.Core.Client
 
         private async Task DisconnectInternalAsync()
         {
+            var clientWasConnected = IsConnected;
+            IsConnected = false;
+
             var cts = _cancellationTokenSource;
             if (cts == null || cts.IsCancellationRequested)
             {
@@ -243,7 +247,7 @@ namespace MQTTnet.Core.Client
             }
             finally
             {
-                Disconnected?.Invoke(this, EventArgs.Empty);
+                Disconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientWasConnected));
             }
         }
 

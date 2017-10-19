@@ -4,6 +4,6 @@ namespace MQTTnet.Core.Client
 {
     public interface IMqttCommunicationAdapterFactory
     {
-        IMqttCommunicationAdapter CreateMqttCommunicationAdapter(MqttClientOptions options);
+        IMqttCommunicationAdapter CreateMqttCommunicationAdapter(IMqttClientOptions options);
     }
 }

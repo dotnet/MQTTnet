@@ -27,7 +27,7 @@ namespace MQTTnet.Core.Server
             _clientSessionsManager.ClientDisconnected += OnClientDisconnected;
         }
 
-        public IReadOnlyList<ConnectedMqttClient> GetConnectedClients()
+        public IList<ConnectedMqttClient> GetConnectedClients()
         {
             return _clientSessionsManager.GetConnectedClients();
         }

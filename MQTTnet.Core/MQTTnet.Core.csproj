@@ -22,15 +22,7 @@
     <PackageLicenseUrl></PackageLicenseUrl>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Any CPU|AnyCPU'" />
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Any CPU|x64'" />
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" />
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" />
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Any CPU|x86'" />
 
   <ItemGroup>
     <Folder Include="ManagedClient\" />

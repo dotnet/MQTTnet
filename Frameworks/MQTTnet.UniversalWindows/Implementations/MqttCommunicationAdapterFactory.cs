@@ -21,6 +21,12 @@ namespace MQTTnet.Implementations
                 return new MqttChannelCommunicationAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion });
             }
 
+            if (options is MqttClientManagedOptions queuedOptions)
+            {
+                return new MqttChannelCommunicationAdapter(new MqttTcpChannel(queuedOptions), new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion });
+            }
+
+
             throw new NotSupportedException();
         }
     }

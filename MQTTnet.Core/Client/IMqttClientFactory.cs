@@ -1,9 +1,11 @@
-﻿namespace MQTTnet.Core.Client
+﻿using MQTTnet.Core.ManagedClient;
+
+namespace MQTTnet.Core.Client
 {
     public interface IMqttClientFactory
     {
         IMqttClient CreateMqttClient();
 
-        IMqttClientManaged CreateMqttManagedClient();
+        ManagedMqttClient CreateManagedMqttClient();
     }
 }

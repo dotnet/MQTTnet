@@ -1,4 +1,5 @@
 ﻿using MQTTnet.Core.Client;
+using MQTTnet.Core.ManagedClient;
 using MQTTnet.Implementations;
 
 namespace MQTTnet
@@ -10,9 +11,9 @@ namespace MQTTnet
             return new MqttClient(new MqttCommunicationAdapterFactory());
         }
 
-        public IMqttClientManaged CreateMqttManagedClient()
+        public ManagedMqttClient CreateManagedMqttClient()
         {
-            return new MqttClientManaged(new MqttCommunicationAdapterFactory());
+            return new ManagedMqttClient(new MqttCommunicationAdapterFactory());
         }
     }
 }

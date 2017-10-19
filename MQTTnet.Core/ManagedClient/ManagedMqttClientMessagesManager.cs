@@ -1,18 +1,16 @@
-﻿using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Packets;
-using System;
-using System.Linq;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Core.Diagnostics;
 
-namespace MQTTnet.Core.Client
+namespace MQTTnet.Core.ManagedClient
 {
-    public class MqttClientQueuedPersistentMessagesManager
+    public class ManagedMqttClientMessagesManager
     {
         private readonly IList<MqttApplicationMessage> _persistedMessages = new List<MqttApplicationMessage>();
-        private readonly MqttClientManagedOptions _options;
+        private readonly ManagedMqttClientOptions _options;
 
-        public MqttClientQueuedPersistentMessagesManager(MqttClientManagedOptions options)
+        public ManagedMqttClientMessagesManager(ManagedMqttClientOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
@@ -33,7 +31,7 @@ namespace MQTTnet.Core.Client
             }
             catch (Exception exception)
             {
-                MqttNetTrace.Error(nameof(MqttClientQueuedPersistentMessagesManager), exception, "Unhandled exception while loading persistent messages.");
+                MqttNetTrace.Error(nameof(ManagedMqttClientMessagesManager), exception, "Unhandled exception while loading persistent messages.");
             }
         }
 
@@ -55,7 +53,7 @@ namespace MQTTnet.Core.Client
             }
             catch (Exception exception)
             {
-                MqttNetTrace.Error(nameof(MqttClientQueuedPersistentMessagesManager), exception, "Unhandled exception while saving persistent messages.");
+                MqttNetTrace.Error(nameof(ManagedMqttClientMessagesManager), exception, "Unhandled exception while saving persistent messages.");
             }
         }
 

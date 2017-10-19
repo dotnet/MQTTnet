@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Core.Client
+namespace MQTTnet.Core.ManagedClient
 {
-    public interface IMqttClientQueuedStorage
+    public interface IManagedMqttClientStorage
     {
         Task SaveQueuedMessagesAsync(IList<MqttApplicationMessage> messages);
 

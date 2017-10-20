@@ -8,11 +8,11 @@ namespace MQTTnet.Implementations
 {
     public class WebSocketStream : Stream
     {
-        private readonly ClientWebSocket _webSocket;
+        private readonly WebSocket _webSocket;
         
-        public WebSocketStream(ClientWebSocket webSocket)
+        public WebSocketStream(WebSocket webSocket)
         {
-            _webSocket = webSocket;
+            _webSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
         }
 
         public override bool CanRead => true;

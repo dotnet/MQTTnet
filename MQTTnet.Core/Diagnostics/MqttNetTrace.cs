@@ -6,9 +6,9 @@ namespace MQTTnet.Core.Diagnostics
     {
         private readonly IMqttNetTraceHandler _traceHandler;
 
-        public MqttNetTrace(IMqttNetTraceHandler traceHandler = null)
+        public MqttNetTrace(IMqttNetTraceHandler customTraceHandler = null)
         {
-            _traceHandler = traceHandler ?? this;
+            _traceHandler = customTraceHandler ?? this;
         }
         
         public static event EventHandler<MqttNetTraceMessagePublishedEventArgs> TraceMessagePublished;

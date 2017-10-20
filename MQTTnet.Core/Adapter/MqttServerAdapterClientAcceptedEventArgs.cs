@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Core.Adapter
 {
@@ -10,5 +11,7 @@ namespace MQTTnet.Core.Adapter
         }
 
         public IMqttCommunicationAdapter Client { get; }
+
+        public Task SessionTask { get; set; }
     }
 }

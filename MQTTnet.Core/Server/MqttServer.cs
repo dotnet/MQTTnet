@@ -81,7 +81,7 @@ namespace MQTTnet.Core.Server
 
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
-            Task.Run(() =>_clientSessionsManager.RunClientSessionAsync(eventArgs.Client), _cancellationTokenSource.Token);
+            eventArgs.SessionTask = Task.Run(async () => await _clientSessionsManager.RunClientSessionAsync(eventArgs.Client), _cancellationTokenSource.Token);
         }
 
         private void OnClientConnected(object sender, MqttClientConnectedEventArgs eventArgs)

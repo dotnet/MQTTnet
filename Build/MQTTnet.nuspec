@@ -9,11 +9,12 @@
     <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
+    <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
     <releaseNotes>* [Core] Merged the .NET Framwork and netstandard projects (Thanks to @JanEggers)
 * [Core] Migrated the trace to a non-static approach (Breaking Change!)
 * [Core] Added a builder for application messages using a fluent API
 * [Client] Added a first version of a managed client which will manage the connection, subscription etc. automatically (Thanks to @JTrotta)
+* [Server] Added support for WebSockets via ASP.NET Core 2.0 (Thanks to @ChristianRiedl)
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M</tags> 

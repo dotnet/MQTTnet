@@ -30,9 +30,10 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * List of connected clients available
 * Supports connected clients with different protocol versions at the same time
 * Able to publish its own messages (no loopback client required)
-* Able to receive every messages (no loopback client required)
+* Able to receive every message (no loopback client required)
 * Extensible client credential validation
 * Retained messages are supported including persisting via interface methods (own implementation required)
+* WebSockets supported (via ASP.NET Core 2.0)
 
 # Supported frameworks
 * .NET Standard 1.3+

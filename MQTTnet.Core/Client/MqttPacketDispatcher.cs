@@ -12,6 +12,12 @@ namespace MQTTnet.Core.Client
     {
         private readonly ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>> _packetByResponseType = new ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>>();
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>> _packetByResponseTypeAndIdentifier = new ConcurrentDictionary<Type, ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>>();
+        private readonly MqttNetTrace _trace;
+
+        public MqttPacketDispatcher(MqttNetTrace trace)
+        {
+            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
+        }
 
         public async Task<MqttBasePacket> WaitForPacketAsync(MqttBasePacket request, Type responseType, TimeSpan timeout)
         {
@@ -24,7 +30,7 @@ namespace MQTTnet.Core.Client
             }
             catch (MqttCommunicationTimedOutException)
             {
-                MqttNetTrace.Warning(nameof(MqttPacketDispatcher), "Timeout while waiting for packet of type '{0}'.", responseType.Name);
+                _trace.Warning(nameof(MqttPacketDispatcher), "Timeout while waiting for packet of type '{0}'.", responseType.Name);
                 throw;
             }
             finally

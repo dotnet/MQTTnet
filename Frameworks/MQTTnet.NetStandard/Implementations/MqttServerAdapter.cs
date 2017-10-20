@@ -15,10 +15,16 @@ namespace MQTTnet.Implementations
 {
     public class MqttServerAdapter : IMqttServerAdapter, IDisposable
     {
+        private readonly MqttNetTrace _trace;
         private CancellationTokenSource _cancellationTokenSource;
         private Socket _defaultEndpointSocket;
         private Socket _tlsEndpointSocket;
         private X509Certificate2 _tlsCertificate;
+
+        public MqttServerAdapter(MqttNetTrace trace)
+        {
+            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
+        }
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
@@ -94,12 +100,12 @@ namespace MQTTnet.Implementations
 #else
                     var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
 #endif
-                    var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer());
+                    var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer(), _trace);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }
                 catch (Exception exception)
                 {
-                    MqttNetTrace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at default endpoint.");
+                    _trace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at default endpoint.");
 
                     //excessive CPU consumed if in endless loop of socket errors
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
@@ -122,12 +128,12 @@ namespace MQTTnet.Implementations
                     var sslStream = new SslStream(new NetworkStream(clientSocket));
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
 
-                    var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer());
+                    var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer(), _trace);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }
                 catch (Exception exception)
                 {
-                    MqttNetTrace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at TLS endpoint.");
+                    _trace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at TLS endpoint.");
 
                     //excessive CPU consumed if in endless loop of socket errors
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);

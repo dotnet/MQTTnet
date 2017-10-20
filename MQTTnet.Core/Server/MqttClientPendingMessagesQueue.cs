@@ -15,9 +15,11 @@ namespace MQTTnet.Core.Server
         private readonly BlockingCollection<MqttPublishPacket> _pendingPublishPackets = new BlockingCollection<MqttPublishPacket>();
         private readonly MqttClientSession _session;
         private readonly MqttServerOptions _options;
+        private readonly MqttNetTrace _trace;
 
-        public MqttClientPendingMessagesQueue(MqttServerOptions options, MqttClientSession session)
+        public MqttClientPendingMessagesQueue(MqttServerOptions options, MqttClientSession session, MqttNetTrace trace)
         {
+            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
             _session = session ?? throw new ArgumentNullException(nameof(session));
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
@@ -50,7 +52,7 @@ namespace MQTTnet.Core.Server
             }
             catch (Exception exception)
             {
-                MqttNetTrace.Error(nameof(MqttClientPendingMessagesQueue), exception, "Unhandled exception while sending pending publish packets.");
+                _trace.Error(nameof(MqttClientPendingMessagesQueue), exception, "Unhandled exception while sending pending publish packets.");
             }
         }
 
@@ -66,18 +68,18 @@ namespace MQTTnet.Core.Server
             {
                 if (exception is MqttCommunicationTimedOutException)
                 {
-                    MqttNetTrace.Warning(nameof(MqttClientPendingMessagesQueue), exception, "Sending publish packet failed due to timeout.");
+                    _trace.Warning(nameof(MqttClientPendingMessagesQueue), exception, "Sending publish packet failed due to timeout.");
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    MqttNetTrace.Warning(nameof(MqttClientPendingMessagesQueue), exception, "Sending publish packet failed due to communication exception.");
+                    _trace.Warning(nameof(MqttClientPendingMessagesQueue), exception, "Sending publish packet failed due to communication exception.");
                 }
                 if (exception is OperationCanceledException)
                 {
                 }
                 else
                 {
-                    MqttNetTrace.Error(nameof(MqttClientPendingMessagesQueue), exception, "Sending publish packet failed.");
+                    _trace.Error(nameof(MqttClientPendingMessagesQueue), exception, "Sending publish packet failed.");
                 }
 
                 if (packet.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)

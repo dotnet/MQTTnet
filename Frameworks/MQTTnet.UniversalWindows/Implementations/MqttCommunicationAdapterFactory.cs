@@ -1,6 +1,7 @@
 ﻿using System;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Client;
+using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Serializer;
 
 namespace MQTTnet.Implementations
@@ -13,12 +14,14 @@ namespace MQTTnet.Implementations
 
             if (options is MqttClientTcpOptions tcpOptions)
             {
-                return new MqttChannelCommunicationAdapter(new MqttTcpChannel(tcpOptions), new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion });
+                var trace = new MqttNetTrace();
+                return new MqttChannelCommunicationAdapter(new MqttTcpChannel(tcpOptions), new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion }, trace);
             }
 
             if (options is MqttClientWebSocketOptions webSocketOptions)
             {
-                return new MqttChannelCommunicationAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion });
+                var trace = new MqttNetTrace();
+                return new MqttChannelCommunicationAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion }, trace);
             }
 
             throw new NotSupportedException();

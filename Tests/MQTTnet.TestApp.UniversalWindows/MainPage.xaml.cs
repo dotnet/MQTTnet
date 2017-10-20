@@ -29,10 +29,10 @@ namespace MQTTnet.TestApp.UniversalWindows
         {
             await Trace.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
-                var text = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [{e.Level}] [{e.Source}] [{e.ThreadId}] [{e.Message}]{Environment.NewLine}";
-                if (e.Exception != null)
+                var text = $"[{e.TraceMessage.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{e.TraceMessage.Level}] [{e.TraceMessage.Source}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Message}]{Environment.NewLine}";
+                if (e.TraceMessage.Exception != null)
                 {
-                    text += $"{e.Exception}{Environment.NewLine}";
+                    text += $"{e.TraceMessage.Exception}{Environment.NewLine}";
                 }
 
                 Trace.Text += text;

@@ -10,7 +10,13 @@ namespace MQTTnet.Implementations
 {
     public class MqttServerAdapter : IMqttServerAdapter, IDisposable
     {
+        private readonly MqttNetTrace _trace;
         private StreamSocketListener _defaultEndpointSocket;
+
+        public MqttServerAdapter(MqttNetTrace trace)
+        {
+            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
+        }
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
@@ -50,12 +56,12 @@ namespace MQTTnet.Implementations
         {
             try
             {
-                var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(args.Socket), new MqttPacketSerializer());
+                var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(args.Socket), new MqttPacketSerializer(), _trace);
                 ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }
             catch (Exception exception)
             {
-                MqttNetTrace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at default endpoint.");
+                _trace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at default endpoint.");
             }
         }
     }

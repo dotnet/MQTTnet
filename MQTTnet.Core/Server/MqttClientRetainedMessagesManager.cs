@@ -10,11 +10,13 @@ namespace MQTTnet.Core.Server
 {
     public sealed class MqttClientRetainedMessagesManager
     {
+        private readonly MqttNetTrace _trace;
         private readonly Dictionary<string, MqttPublishPacket> _retainedMessages = new Dictionary<string, MqttPublishPacket>();
         private readonly MqttServerOptions _options;
 
-        public MqttClientRetainedMessagesManager(MqttServerOptions options)
+        public MqttClientRetainedMessagesManager(MqttServerOptions options, MqttNetTrace trace)
         {
+            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
@@ -39,7 +41,7 @@ namespace MQTTnet.Core.Server
             }
             catch (Exception exception)
             {
-                MqttNetTrace.Error(nameof(MqttClientRetainedMessagesManager), exception, "Unhandled exception while loading retained messages.");
+                _trace.Error(nameof(MqttClientRetainedMessagesManager), exception, "Unhandled exception while loading retained messages.");
             }
         }
 
@@ -53,12 +55,12 @@ namespace MQTTnet.Core.Server
                 if (publishPacket.Payload?.Any() == false)
                 {
                     _retainedMessages.Remove(publishPacket.Topic);
-                    MqttNetTrace.Information(nameof(MqttClientRetainedMessagesManager), "Client '{0}' cleared retained message for topic '{1}'.", clientId, publishPacket.Topic);
+                    _trace.Information(nameof(MqttClientRetainedMessagesManager), "Client '{0}' cleared retained message for topic '{1}'.", clientId, publishPacket.Topic);
                 }
                 else
                 {
                     _retainedMessages[publishPacket.Topic] = publishPacket;
-                    MqttNetTrace.Information(nameof(MqttClientRetainedMessagesManager), "Client '{0}' updated retained message for topic '{1}'.", clientId, publishPacket.Topic);
+                    _trace.Information(nameof(MqttClientRetainedMessagesManager), "Client '{0}' updated retained message for topic '{1}'.", clientId, publishPacket.Topic);
                 }
 
                 allRetainedMessages = new List<MqttPublishPacket>(_retainedMessages.Values);
@@ -74,7 +76,7 @@ namespace MQTTnet.Core.Server
             }
             catch (Exception exception)
             {
-                MqttNetTrace.Error(nameof(MqttClientRetainedMessagesManager), exception, "Unhandled exception while saving retained messages.");
+                _trace.Error(nameof(MqttClientRetainedMessagesManager), exception, "Unhandled exception while saving retained messages.");
             }
         }
 

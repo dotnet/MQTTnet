@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Server;
 using MQTTnet.Core.Client;
+using MQTTnet.Core.Diagnostics;
 
 namespace MQTTnet.Core.Tests
 {
@@ -17,7 +18,7 @@ namespace MQTTnet.Core.Tests
             adapterA.Partner = adapterB;
             adapterB.Partner = adapterA;
 
-            var client = new MqttClient(new MqttCommunicationAdapterFactory(adapterA));
+            var client = new MqttClient(new MqttCommunicationAdapterFactory(adapterA), new MqttNetTrace());
             var connected = WaitForClientToConnect(server, clientId);
 
             FireClientAcceptedEvent(adapterB);

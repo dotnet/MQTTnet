@@ -1,11 +1,12 @@
-﻿using MQTTnet.Core.ManagedClient;
+﻿using MQTTnet.Core.Diagnostics;
+using MQTTnet.Core.ManagedClient;
 
 namespace MQTTnet.Core.Client
 {
     public interface IMqttClientFactory
     {
-        IMqttClient CreateMqttClient();
+        IMqttClient CreateMqttClient(IMqttNetTraceHandler traceHandler = null);
 
-        ManagedMqttClient CreateManagedMqttClient();
+        ManagedMqttClient CreateManagedMqttClient(IMqttNetTraceHandler traceHandler = null);
     }
 }

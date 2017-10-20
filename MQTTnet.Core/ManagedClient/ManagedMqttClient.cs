@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Client;
+using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Packets;
 
@@ -14,36 +15,23 @@ namespace MQTTnet.Core.ManagedClient
         private readonly List<MqttApplicationMessage> _messageQueue = new List<MqttApplicationMessage>();
         private readonly AutoResetEvent _messageQueueGate = new AutoResetEvent(false);
         private readonly MqttClient _mqttClient;
+        private readonly MqttNetTrace _trace;
 
         private IManagedMqttClientOptions _options;
         
-        public ManagedMqttClient(IMqttCommunicationAdapterFactory communicationChannelFactory)
+        public ManagedMqttClient(IMqttCommunicationAdapterFactory communicationChannelFactory, MqttNetTrace trace)
         {
             if (communicationChannelFactory == null) throw new ArgumentNullException(nameof(communicationChannelFactory));
+            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
 
-            _mqttClient = new MqttClient(communicationChannelFactory);
+            _mqttClient = new MqttClient(communicationChannelFactory, _trace);
             _mqttClient.Connected += OnConnected;
             _mqttClient.Disconnected += OnDisconnected;
             _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
         }
 
-        private void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)
-        {
-            ApplicationMessageReceived?.Invoke(this, e);
-        }
-
-        private void OnDisconnected(object sender, MqttClientDisconnectedEventArgs eventArgs)
-        {
-            //Disconnected?.Invoke(this, e);
-        }
-
-        private void OnConnected(object sender, EventArgs e)
-        {
-            Connected?.Invoke(this, e);
-        }
-
         public event EventHandler Connected;
-        public event EventHandler Disconnected;
+        public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
         public bool IsConnected => _mqttClient.IsConnected;
@@ -51,7 +39,10 @@ namespace MQTTnet.Core.ManagedClient
 
         public void Start(IManagedMqttClientOptions options)
         {
-            
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (options.ClientOptions == null) throw new ArgumentException("The client options are not set.", nameof(options));
+
+
         }
 
         public void Stop()
@@ -90,6 +81,8 @@ namespace MQTTnet.Core.ManagedClient
 
         public void Enqueue(IEnumerable<MqttApplicationMessage> applicationMessages)
         {
+            if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
+
             ThrowIfNotConnected();
 
             _messageQueue.AddRange(applicationMessages);
@@ -151,6 +144,21 @@ namespace MQTTnet.Core.ManagedClient
             //{
             //    MqttNetTrace.Information(nameof(MqttClient), "Stopped sending packets.");
             //}
+        }
+
+        private void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs eventArgs)
+        {
+            ApplicationMessageReceived?.Invoke(this, eventArgs);
+        }
+
+        private void OnDisconnected(object sender, MqttClientDisconnectedEventArgs eventArgs)
+        {
+            Disconnected?.Invoke(this, eventArgs);
+        }
+
+        private void OnConnected(object sender, EventArgs eventArgs)
+        {
+            Connected?.Invoke(this, eventArgs);
         }
     }
 }

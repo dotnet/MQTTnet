@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Client;
+using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
@@ -49,7 +50,7 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_WillMessage()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter });
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter }, new MqttNetTrace());
             await s.StartAsync();
 
             var willMessage = new MqttApplicationMessage("My/last/will", new byte[0], MqttQualityOfServiceLevel.AtMostOnce, false);
@@ -73,7 +74,7 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_Unsubscribe()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter });
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter }, new MqttNetTrace());
             await s.StartAsync();
 
             var c1 = await serverAdapter.ConnectTestClient(s, "c1");
@@ -109,7 +110,7 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_Publish()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter });
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter }, new MqttNetTrace());
             await s.StartAsync();
 
             var c1 = await serverAdapter.ConnectTestClient(s, "c1");
@@ -132,7 +133,7 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_NoRetainedMessage()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter });
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter }, new MqttNetTrace());
             await s.StartAsync();
 
             var c1 = await serverAdapter.ConnectTestClient(s, "c1");
@@ -155,7 +156,7 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_RetainedMessage()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter });
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter }, new MqttNetTrace());
             await s.StartAsync();
 
             var c1 = await serverAdapter.ConnectTestClient(s, "c1");
@@ -178,7 +179,7 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_ClearRetainedMessage()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter });
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter }, new MqttNetTrace());
             await s.StartAsync();
 
             var c1 = await serverAdapter.ConnectTestClient(s, "c1");
@@ -204,7 +205,7 @@ namespace MQTTnet.Core.Tests
             var storage = new TestStorage();
 
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttServer(new MqttServerOptions { Storage = storage }, new List<IMqttServerAdapter> { serverAdapter });
+            var s = new MqttServer(new MqttServerOptions { Storage = storage }, new List<IMqttServerAdapter> { serverAdapter }, new MqttNetTrace());
             await s.StartAsync();
 
             var c1 = await serverAdapter.ConnectTestClient(s, "c1");
@@ -213,7 +214,7 @@ namespace MQTTnet.Core.Tests
 
             await s.StopAsync();
 
-            s = new MqttServer(new MqttServerOptions { Storage = storage }, new List<IMqttServerAdapter> { serverAdapter });
+            s = new MqttServer(new MqttServerOptions { Storage = storage }, new List<IMqttServerAdapter> { serverAdapter }, new MqttNetTrace());
             await s.StartAsync();
 
             var c2 = await serverAdapter.ConnectTestClient(s, "c2");
@@ -235,7 +236,7 @@ namespace MQTTnet.Core.Tests
             public Task SaveRetainedMessagesAsync(IList<MqttApplicationMessage> messages)
             {
                 _messages = messages;
-                return Task.FromResult(0);
+                return Task.CompletedTask;
             }
 
             public Task<IList<MqttApplicationMessage>> LoadRetainedMessagesAsync()
@@ -252,7 +253,7 @@ namespace MQTTnet.Core.Tests
             int expectedReceivedMessagesCount)
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter });
+            var s = new MqttServer(new MqttServerOptions(), new List<IMqttServerAdapter> { serverAdapter }, new MqttNetTrace());
             await s.StartAsync();
 
             var c1 = await serverAdapter.ConnectTestClient(s, "c1");

@@ -32,7 +32,7 @@ namespace MQTTnet.Core.Tests
         {
             var tcs = new TaskCompletionSource<object>();
 
-            void Handler(object sender, MqttClientConnectedEventArgs args)
+            void Handler(object sender, Server.MqttClientConnectedEventArgs args)
             {
                 if (args.Client.ClientId == clientId)
                 {

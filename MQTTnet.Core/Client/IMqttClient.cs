@@ -10,10 +10,10 @@ namespace MQTTnet.Core.Client
         bool IsConnected { get; }
 
         event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
-        event EventHandler Connected;
+        event EventHandler<MqttClientConnectedEventArgs> Connected;
         event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
-        Task ConnectAsync(IMqttClientOptions options);
+        Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options);
         Task DisconnectAsync();
 
         Task<IList<MqttSubscribeResult>> SubscribeAsync(IEnumerable<TopicFilter> topicFilters);

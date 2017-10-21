@@ -23,22 +23,27 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("1 = Start client");
             Console.WriteLine("2 = Start server");
             Console.WriteLine("3 = Start performance test");
+            Console.WriteLine("4 = Start managed client");
+
             var pressedKey = Console.ReadKey(true);
-            if (pressedKey.Key == ConsoleKey.D1)
+            if (pressedKey.KeyChar == '1')
             {
                 Task.Run(RunClientAsync);
-                Thread.Sleep(Timeout.Infinite);
             }
-            else if (pressedKey.Key == ConsoleKey.D2)
+            else if (pressedKey.KeyChar == '2')
             {
-                Task.Run(() => RunServerAsync());
-                Thread.Sleep(Timeout.Infinite);
+                Task.Run(RunServerAsync);
             }
-            else if (pressedKey.Key == ConsoleKey.D3)
+            else if (pressedKey.KeyChar == '3')
             {
                 Task.Run(PerformanceTest.RunAsync);
-                Thread.Sleep(Timeout.Infinite);
             }
+            else if (pressedKey.KeyChar == '4')
+            {
+                Task.Run(ManagedClientTest.RunAsync);
+            }
+
+            Thread.Sleep(Timeout.Infinite);
         }
 
         private static async Task RunClientAsync()

@@ -33,13 +33,13 @@ namespace MQTTnet.Core.Client
             _packetDispatcher = new MqttPacketDispatcher(trace);
         }
 
-        public event EventHandler Connected;
+        public event EventHandler<MqttClientConnectedEventArgs> Connected;
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
         public bool IsConnected { get; private set; }
 
-        public async Task ConnectAsync(IMqttClientOptions options)
+        public async Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -59,7 +59,7 @@ namespace MQTTnet.Core.Client
                 _trace.Verbose(nameof(MqttClient), "Connection with server established.");
 
                 await SetupIncomingPacketProcessingAsync();
-                await AuthenticateAsync(options.WillMessage);
+                var connectResponse = await AuthenticateAsync(options.WillMessage);
 
                 _trace.Verbose(nameof(MqttClient), "MQTT connection with server established.");
 
@@ -69,7 +69,8 @@ namespace MQTTnet.Core.Client
                 }
 
                 IsConnected = true;
-                Connected?.Invoke(this, EventArgs.Empty);
+                Connected?.Invoke(this, new MqttClientConnectedEventArgs(connectResponse.IsSessionPresent));
+                return new MqttClientConnectResult(connectResponse.IsSessionPresent);
             }
             catch (Exception)
             {
@@ -178,7 +179,7 @@ namespace MQTTnet.Core.Client
             }
         }
 
-        private async Task AuthenticateAsync(MqttApplicationMessage willApplicationMessage)
+        private async Task<MqttConnAckPacket> AuthenticateAsync(MqttApplicationMessage willApplicationMessage)
         {
             var connectPacket = new MqttConnectPacket
             {
@@ -195,6 +196,8 @@ namespace MQTTnet.Core.Client
             {
                 throw new MqttConnectingFailedException(response.ConnectReturnCode);
             }
+
+            return response;
         }
 
         private async Task SetupIncomingPacketProcessingAsync()

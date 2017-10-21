@@ -13,5 +13,15 @@ namespace MQTTnet.Core.Packets
         public string Topic { get; }
 
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; }
+
+        public override int GetHashCode()
+        {
+            return QualityOfServiceLevel.GetHashCode() ^ (Topic ?? string.Empty).GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return Topic + "@" + QualityOfServiceLevel;
+        }
     }
 }

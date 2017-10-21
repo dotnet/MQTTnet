@@ -7,7 +7,6 @@ namespace MQTTnet.Core.ManagedClient
     {
         IMqttClientOptions ClientOptions { get; }
 
-        bool UseAutoReconnect { get; }
         TimeSpan AutoReconnectDelay { get; }
 
         IManagedMqttClientStorage Storage { get; }

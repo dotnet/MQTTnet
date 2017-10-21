@@ -23,8 +23,10 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 \* Tested on local machine with MQTTnet client and server running in the same process using the TCP channel. The app for verification is part of this repository and stored in _/Tests/MQTTnet.TestApp.NetFramework_.
 
 ### Client
+* Communication via TCP (+TLS) or WS (WebSocket) supported
+* Included core _MqttClient_ with low level functionality
+* Also included _ManagedMqttClient_ which maintains the connection and subscriptions automatically. Also application messages are queued and re-scheduled for higher QoS levels automatically.
 * Rx support (via another project)
-* Communication via TCP (+TLS) or WS (WebSocket)
 
 ### Server (broker)
 * List of connected clients available

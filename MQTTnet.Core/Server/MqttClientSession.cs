@@ -15,7 +15,7 @@ namespace MQTTnet.Core.Server
     public sealed class MqttClientSession : IDisposable
     {
         private readonly HashSet<ushort> _unacknowledgedPublishPackets = new HashSet<ushort>();
-        
+
         private readonly MqttClientSubscriptionsManager _subscriptionsManager = new MqttClientSubscriptionsManager();
         private readonly MqttClientSessionsManager _mqttClientSessionsManager;
         private readonly MqttClientPendingMessagesQueue _pendingMessagesQueue;
@@ -186,34 +186,40 @@ namespace MQTTnet.Core.Server
                 await _mqttClientSessionsManager.RetainedMessagesManager.HandleMessageAsync(ClientId, publishPacket);
             }
 
-            if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
+            switch (publishPacket.QualityOfServiceLevel)
             {
-                _mqttClientSessionsManager.DispatchPublishPacket(this, publishPacket);
-                return;
+                case MqttQualityOfServiceLevel.AtMostOnce:
+                    {
+                        _mqttClientSessionsManager.DispatchPublishPacket(this, publishPacket);
+                        return;
+                    }
+                case MqttQualityOfServiceLevel.AtLeastOnce:
+                    {
+                        _mqttClientSessionsManager.DispatchPublishPacket(this, publishPacket);
+
+                        await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token,
+                            new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
+
+                        return;
+                    }
+                case MqttQualityOfServiceLevel.ExactlyOnce:
+                    {
+                        // QoS 2 is implement as method "B" [4.3.3 QoS 2: Exactly once delivery]
+                        lock (_unacknowledgedPublishPackets)
+                        {
+                            _unacknowledgedPublishPackets.Add(publishPacket.PacketIdentifier);
+                        }
+
+                        _mqttClientSessionsManager.DispatchPublishPacket(this, publishPacket);
+
+                        await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token,
+                            new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
+
+                        return;
+                    }
+                default:
+                    throw new MqttCommunicationException("Received a not supported QoS level.");
             }
-
-            if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
-            {
-                _mqttClientSessionsManager.DispatchPublishPacket(this, publishPacket);
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
-                return;
-            }
-
-            if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
-            {
-                // QoS 2 is implement as method "B" [4.3.3 QoS 2: Exactly once delivery]
-                lock (_unacknowledgedPublishPackets)
-                {
-                    _unacknowledgedPublishPackets.Add(publishPacket.PacketIdentifier);
-                }
-
-                _mqttClientSessionsManager.DispatchPublishPacket(this, publishPacket);
-
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
-                return;
-            }
-
-            throw new MqttCommunicationException("Received a not supported QoS level.");
         }
 
         private Task HandleIncomingPubRelPacketAsync(IMqttCommunicationAdapter adapter, MqttPubRelPacket pubRelPacket)

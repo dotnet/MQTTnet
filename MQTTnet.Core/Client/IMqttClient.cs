@@ -5,11 +5,10 @@ using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Client
 {
-    public interface IMqttClient
+    public interface IMqttClient : IApplicationMessageReceiver
     {
         bool IsConnected { get; }
 
-        event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
         event EventHandler<MqttClientConnectedEventArgs> Connected;
         event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 

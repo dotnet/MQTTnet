@@ -12,7 +12,7 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.ManagedClient
 {
-    public class ManagedMqttClient
+    public class ManagedMqttClient : IApplicationMessageReceiver
     {
         private readonly ManagedMqttClientStorageManager _storageManager = new ManagedMqttClientStorageManager();
         private readonly BlockingCollection<MqttApplicationMessage> _messageQueue = new BlockingCollection<MqttApplicationMessage>();
@@ -38,11 +38,11 @@ namespace MQTTnet.Core.ManagedClient
             _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
         }
 
+        public bool IsConnected => _mqttClient.IsConnected;
+
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
-
-        public bool IsConnected => _mqttClient.IsConnected;
 
         public async Task StartAsync(IManagedMqttClientOptions options)
         {
@@ -240,22 +240,6 @@ namespace MQTTnet.Core.ManagedClient
             {
                 _trace.Error(nameof(ManagedMqttClient), exception, "Unhandled exception while publishing queued application message.");
             }
-        }
-
-        private async Task SaveAsync(List<MqttApplicationMessage> messages)
-        {
-            if (messages == null)
-            {
-                return;
-            }
-
-            var storage = _options.Storage;
-            if (storage != null)
-            {
-                return;
-            }
-
-            await _options.Storage.SaveQueuedMessagesAsync(messages);
         }
 
         private async Task PushSubscriptionsAsync()

@@ -16,6 +16,7 @@
 * [Client] Added a first version of a managed client which will manage the connection, subscription etc. automatically (Thanks to @JTrotta)
 * [Client] The session state response from the server is now returned in the _ConnectAsync_ method and also part of the _Connected_ event args
 * [Client] Added a _TopicFilterBuilder_ using a fluent API (Namespace Changes!)
+* [Client] Added several new options for the WebSocket channel (Thanks to @ChristianRiedl)
 * [Server] Added support for WebSockets via ASP.NET Core 2.0 (Thanks to @ChristianRiedl)
 * [Server] Added support for a custom application message interceptor
     </releaseNotes>

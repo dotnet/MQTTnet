@@ -3,6 +3,7 @@ using MQTTnet.Core.Client;
 using System;
 using System.IO;
 using System.Net.WebSockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,6 +33,37 @@ namespace MQTTnet.Implementations
 
             _webSocket = new ClientWebSocket();
             _webSocket.Options.KeepAliveInterval = _options.KeepAlivePeriod;
+
+            if (_options.RequestHeaders != null)
+            {
+                foreach (var requestHeader in _options.RequestHeaders)
+                {
+                    _webSocket.Options.SetRequestHeader(requestHeader.Key, requestHeader.Value);
+                }    
+            }
+
+            if (_options.SubProtocols != null)
+            {
+                foreach (var subProtocol in _options.SubProtocols)
+                {
+                    _webSocket.Options.AddSubProtocol(subProtocol);
+                }
+            }
+
+            if (_options.CookieContainer != null)
+            {
+                _webSocket.Options.Cookies = _options.CookieContainer;
+            }
+
+            if (_options.TlsOptions?.UseTls == true && _options.TlsOptions?.Certificates != null)
+            {
+                _webSocket.Options.ClientCertificates = new X509CertificateCollection();
+                foreach (var certificate in _options.TlsOptions.Certificates)
+                {
+                    _webSocket.Options.ClientCertificates.Add(new X509Certificate(certificate));
+                }
+            }
+
             await _webSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
             RawReceiveStream = new WebSocketStream(_webSocket);
         }

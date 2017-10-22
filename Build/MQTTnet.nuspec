@@ -14,11 +14,12 @@
 * [Core] Migrated the trace to a non-static approach (Breaking Change!)
 * [Core] Added a builder for application messages using a fluent API
 * [Client] Added a first version of a managed client which will manage the connection, subscription etc. automatically (Thanks to @JTrotta)
-* [Server] Added support for WebSockets via ASP.NET Core 2.0 (Thanks to @ChristianRiedl)
 * [Client] The session state response from the server is now returned in the _ConnectAsync_ method and also part of the _Connected_ event args
+* [Server] Added support for WebSockets via ASP.NET Core 2.0 (Thanks to @ChristianRiedl)
+* [Server] Added support for a custom application message interceptor
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
-    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M</tags> 
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation</tags> 
     <dependencies>
 
       <group targetFramework="netstandard1.3">

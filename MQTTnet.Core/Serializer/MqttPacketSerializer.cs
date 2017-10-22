@@ -65,7 +65,7 @@ namespace MQTTnet.Core.Serializer
                 case MqttUnsubscribePacket unsubscribePacket: return Serialize(unsubscribePacket, writer);
                 case MqttUnsubAckPacket unsubAckPacket: return Serialize(unsubAckPacket, writer);
                 default: throw new MqttProtocolViolationException("Packet type invalid.");
-            }           
+            }
         }
 
         private static MqttBasePacket Deserialize(MqttPacketHeader header, MqttPacketReader reader)
@@ -233,11 +233,13 @@ namespace MQTTnet.Core.Serializer
 
             if (willFlag)
             {
-                packet.WillMessage = new MqttApplicationMessage(
-                    reader.ReadStringWithLengthPrefix(),
-                    reader.ReadWithLengthPrefix(),
-                    (MqttQualityOfServiceLevel)willQoS,
-                    willRetain);
+                packet.WillMessage = new MqttApplicationMessage
+                {
+                    Topic = reader.ReadStringWithLengthPrefix(),
+                    Payload = reader.ReadWithLengthPrefix(),
+                    QualityOfServiceLevel = (MqttQualityOfServiceLevel)willQoS,
+                    Retain = willRetain
+                };
             }
 
             if (usernameFlag)

@@ -151,12 +151,12 @@ namespace MQTTnet.TestApp.NetCore
 
         private static MqttApplicationMessage CreateMessage()
         {
-            return new MqttApplicationMessage(
-                "A/B/C",
-                Encoding.UTF8.GetBytes("Hello World"),
-                MqttQualityOfServiceLevel.AtMostOnce,
-                false
-            );
+            return new MqttApplicationMessage
+            {
+                Topic = "A/B/C",
+                Payload = Encoding.UTF8.GetBytes("Hello World"),
+                QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce
+            };
         }
 
         private static Task PublishSingleMessage(IMqttClient client, MqttApplicationMessage applicationMessage, ref int count)

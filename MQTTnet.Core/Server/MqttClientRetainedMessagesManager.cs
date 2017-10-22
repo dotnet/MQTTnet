@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Server
 {
     public sealed class MqttClientRetainedMessagesManager
     {
+        private readonly Dictionary<string, MqttApplicationMessage> _retainedMessages = new Dictionary<string, MqttApplicationMessage>();
         private readonly MqttNetTrace _trace;
-        private readonly Dictionary<string, MqttPublishPacket> _retainedMessages = new Dictionary<string, MqttPublishPacket>();
         private readonly MqttServerOptions _options;
 
         public MqttClientRetainedMessagesManager(MqttServerOptions options, MqttNetTrace trace)
@@ -35,7 +34,7 @@ namespace MQTTnet.Core.Server
                     _retainedMessages.Clear();
                     foreach (var retainedMessage in retainedMessages)
                     {
-                        _retainedMessages[retainedMessage.Topic] = retainedMessage.ToPublishPacket();
+                        _retainedMessages[retainedMessage.Topic] = retainedMessage;
                     }
                 }
             }
@@ -45,25 +44,25 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        public async Task HandleMessageAsync(string clientId, MqttPublishPacket publishPacket)
+        public async Task HandleMessageAsync(string clientId, MqttApplicationMessage applicationMessage)
         {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            List<MqttPublishPacket> allRetainedMessages;
+            List<MqttApplicationMessage> allRetainedMessages;
             lock (_retainedMessages)
             {
-                if (publishPacket.Payload?.Any() == false)
+                if (applicationMessage.Payload?.Any() == false)
                 {
-                    _retainedMessages.Remove(publishPacket.Topic);
-                    _trace.Information(nameof(MqttClientRetainedMessagesManager), "Client '{0}' cleared retained message for topic '{1}'.", clientId, publishPacket.Topic);
+                    _retainedMessages.Remove(applicationMessage.Topic);
+                    _trace.Information(nameof(MqttClientRetainedMessagesManager), "Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                 }
                 else
                 {
-                    _retainedMessages[publishPacket.Topic] = publishPacket;
-                    _trace.Information(nameof(MqttClientRetainedMessagesManager), "Client '{0}' updated retained message for topic '{1}'.", clientId, publishPacket.Topic);
+                    _retainedMessages[applicationMessage.Topic] = applicationMessage;
+                    _trace.Information(nameof(MqttClientRetainedMessagesManager), "Client '{0}' updated retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                 }
 
-                allRetainedMessages = new List<MqttPublishPacket>(_retainedMessages.Values);
+                allRetainedMessages = new List<MqttApplicationMessage>(_retainedMessages.Values);
             }
 
             try
@@ -71,7 +70,7 @@ namespace MQTTnet.Core.Server
                 // ReSharper disable once UseNullPropagation
                 if (_options.Storage != null)
                 {
-                    await _options.Storage.SaveRetainedMessagesAsync(allRetainedMessages.Select(p => p.ToApplicationMessage()).ToList());
+                    await _options.Storage.SaveRetainedMessagesAsync(allRetainedMessages);
                 }
             }
             catch (Exception exception)
@@ -80,9 +79,9 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        public List<MqttPublishPacket> GetMessages(MqttSubscribePacket subscribePacket)
+        public List<MqttApplicationMessage> GetMessages(MqttSubscribePacket subscribePacket)
         {
-            var retainedMessages = new List<MqttPublishPacket>();
+            var retainedMessages = new List<MqttApplicationMessage>();
             lock (_retainedMessages)
             {
                 foreach (var retainedMessage in _retainedMessages.Values)

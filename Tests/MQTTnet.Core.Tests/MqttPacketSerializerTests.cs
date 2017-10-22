@@ -53,11 +53,13 @@ namespace MQTTnet.Core.Tests
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true,
-                WillMessage = new MqttApplicationMessage(
-                    "My/last/will",
-                    Encoding.UTF8.GetBytes("Good byte."),
-                    MqttQualityOfServiceLevel.AtLeastOnce,
-                    true)
+                WillMessage = new MqttApplicationMessage
+                {
+                    Topic = "My/last/will",
+                    Payload = Encoding.UTF8.GetBytes("Good byte."),
+                    QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
+                    Retain = true
+                }
             };
 
             SerializeAndCompare(p, "EDUABE1RVFQE7gB7AANYWVoADE15L2xhc3Qvd2lsbAAKR29vZCBieXRlLgAEVVNFUgAEUEFTUw==");
@@ -88,11 +90,13 @@ namespace MQTTnet.Core.Tests
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true,
-                WillMessage = new MqttApplicationMessage(
-                    "My/last/will",
-                    Encoding.UTF8.GetBytes("Good byte."),
-                    MqttQualityOfServiceLevel.AtLeastOnce,
-                    true)
+                WillMessage = new MqttApplicationMessage
+                {
+                    Topic = "My/last/will",
+                    Payload = Encoding.UTF8.GetBytes("Good byte."),
+                    QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
+                    Retain = true
+                }
             };
 
             DeserializeAndCompare(p, "EDUABE1RVFQE7gB7AANYWVoADE15L2xhc3Qvd2lsbAAKR29vZCBieXRlLgAEVVNFUgAEUEFTUw==");

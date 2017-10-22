@@ -32,7 +32,7 @@ namespace MQTTnet.TestApp.NetCore
             }
             else if (pressedKey.KeyChar == '2')
             {
-                Task.Run(RunServerAsync);
+                Task.Run(ServerTest.RunAsync);
             }
             else if (pressedKey.KeyChar == '3')
             {
@@ -119,12 +119,12 @@ namespace MQTTnet.TestApp.NetCore
                 {
                     Console.ReadLine();
 
-                    var applicationMessage = new MqttApplicationMessage(
-                        "A/B/C",
-                        Encoding.UTF8.GetBytes("Hello World"),
-                        MqttQualityOfServiceLevel.AtLeastOnce,
-                        false
-                    );
+                    var applicationMessage = new MqttApplicationMessage
+                    {
+                        Topic = "A/B/C",
+                        Payload = Encoding.UTF8.GetBytes("Hello World"),
+                        QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce
+                    };
 
                     await client.PublishAsync(applicationMessage);
                 }
@@ -133,66 +133,6 @@ namespace MQTTnet.TestApp.NetCore
             {
                 Console.WriteLine(exception);
             }
-        }
-
-        private static Task RunServerAsync()
-        {
-            MqttNetTrace.TraceMessagePublished += (s, e) =>
-            {
-                Console.WriteLine($">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
-                if (e.TraceMessage.Exception != null)
-                {
-                    Console.WriteLine(e.TraceMessage.Exception);
-                }
-            };
-
-            try
-            {
-                var options = new MqttServerOptions
-                {
-                    ConnectionValidator = p =>
-                    {
-                        if (p.ClientId == "SpecialClient")
-                        {
-                            if (p.Username != "USER" || p.Password != "PASS")
-                            {
-                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                            }
-                        }
-
-                        return MqttConnectReturnCode.ConnectionAccepted;
-                    }
-                };
-
-                options.Storage = new RetainedMessageHandler();
-
-
-                //var certificate = new X509Certificate(@"C:\certs\test\test.cer", "");
-                //options.TlsEndpointOptions.Certificate = certificate.Export(X509ContentType.Cert);
-                //options.ConnectionBacklog = 5;
-                //options.DefaultEndpointOptions.IsEnabled = true;
-                //options.TlsEndpointOptions.IsEnabled = false;
-
-                var mqttServer = new MqttServerFactory().CreateMqttServer(options);
-                mqttServer.ClientDisconnected += (s, e) =>
-                {
-                    Console.Write("Client disconnected event fired.");
-                };
-
-                mqttServer.StartAsync();
-
-                Console.WriteLine("Press any key to exit.");
-                Console.ReadLine();
-
-                mqttServer.StopAsync();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-
-            Console.ReadLine();
-            return Task.FromResult(0);
         }
 
         // ReSharper disable once UnusedMember.Local

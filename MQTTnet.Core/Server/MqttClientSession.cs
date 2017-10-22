@@ -72,7 +72,7 @@ namespace MQTTnet.Core.Server
         {
             if (_willMessage != null)
             {
-                _mqttClientSessionsManager.DispatchPublishPacket(this, _willMessage.ToPublishPacket());
+                _mqttClientSessionsManager.DispatchApplicationMessage(this, _willMessage);
             }
 
             _cancellationTokenSource?.Cancel(false);
@@ -175,27 +175,30 @@ namespace MQTTnet.Core.Server
             var retainedMessages = _mqttClientSessionsManager.RetainedMessagesManager.GetMessages(subscribePacket);
             foreach (var publishPacket in retainedMessages)
             {
-                EnqueuePublishPacket(publishPacket);
+                EnqueuePublishPacket(publishPacket.ToPublishPacket());
             }
         }
 
         private async Task HandleIncomingPublishPacketAsync(IMqttCommunicationAdapter adapter, MqttPublishPacket publishPacket)
         {
-            if (publishPacket.Retain)
+            var applicationMessage = publishPacket.ToApplicationMessage();
+            _options.ApplicationMessageInterceptor?.Invoke(applicationMessage);
+
+            if (applicationMessage.Retain)
             {
-                await _mqttClientSessionsManager.RetainedMessagesManager.HandleMessageAsync(ClientId, publishPacket);
+                await _mqttClientSessionsManager.RetainedMessagesManager.HandleMessageAsync(ClientId, applicationMessage);
             }
 
-            switch (publishPacket.QualityOfServiceLevel)
+            switch (applicationMessage.QualityOfServiceLevel)
             {
                 case MqttQualityOfServiceLevel.AtMostOnce:
                     {
-                        _mqttClientSessionsManager.DispatchPublishPacket(this, publishPacket);
+                        _mqttClientSessionsManager.DispatchApplicationMessage(this, applicationMessage);
                         return;
                     }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                     {
-                        _mqttClientSessionsManager.DispatchPublishPacket(this, publishPacket);
+                        _mqttClientSessionsManager.DispatchApplicationMessage(this, applicationMessage);
 
                         await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token,
                             new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
@@ -210,7 +213,7 @@ namespace MQTTnet.Core.Server
                             _unacknowledgedPublishPackets.Add(publishPacket.PacketIdentifier);
                         }
 
-                        _mqttClientSessionsManager.DispatchPublishPacket(this, publishPacket);
+                        _mqttClientSessionsManager.DispatchApplicationMessage(this, applicationMessage);
 
                         await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token,
                             new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });

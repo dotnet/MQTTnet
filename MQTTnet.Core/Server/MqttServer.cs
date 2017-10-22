@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Internal;
 
 namespace MQTTnet.Core.Server
 {
@@ -42,7 +41,8 @@ namespace MQTTnet.Core.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            _clientSessionsManager.DispatchPublishPacket(null, applicationMessage.ToPublishPacket());
+            _options.ApplicationMessageInterceptor?.Invoke(applicationMessage);
+            _clientSessionsManager.DispatchApplicationMessage(null, applicationMessage);
         }
 
         public async Task StartAsync()

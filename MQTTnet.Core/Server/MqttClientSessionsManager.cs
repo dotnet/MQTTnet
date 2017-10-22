@@ -117,11 +117,11 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        public void DispatchPublishPacket(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
+        public void DispatchApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
         {
             try
             {
-                var eventArgs = new MqttApplicationMessageReceivedEventArgs(senderClientSession?.ClientId, publishPacket.ToApplicationMessage());
+                var eventArgs = new MqttApplicationMessageReceivedEventArgs(senderClientSession?.ClientId, applicationMessage);
                 ApplicationMessageReceived?.Invoke(this, eventArgs);
             }
             catch (Exception exception)
@@ -133,7 +133,7 @@ namespace MQTTnet.Core.Server
             {
                 foreach (var clientSession in _clientSessions.Values.ToList())
                 {
-                    clientSession.EnqueuePublishPacket(publishPacket);
+                    clientSession.EnqueuePublishPacket(applicationMessage.ToPublishPacket());
                 }
             }
         }

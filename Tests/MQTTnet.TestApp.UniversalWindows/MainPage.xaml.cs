@@ -119,11 +119,12 @@ namespace MQTTnet.TestApp.UniversalWindows
                     payload = Convert.FromBase64String(Payload.Text);
                 }
 
-                var message = new MqttApplicationMessage(
-                    Topic.Text,
-                    payload,
-                    qos,
-                    Retain.IsChecked == true);
+                var message = new MqttApplicationMessageBuilder()
+                    .WithTopic(Topic.Text)
+                    .WithPayload(payload)
+                    .WithQualityOfServiceLevel(qos)
+                    .WithRetainFlag(Retain.IsChecked == true)
+                    .Build();
 
                 await _mqttClient.PublishAsync(message);
             }

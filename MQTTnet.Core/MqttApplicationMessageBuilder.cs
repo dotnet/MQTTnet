@@ -13,7 +13,7 @@ namespace MQTTnet.Core
         private string _topic;
         private byte[] _payload;
         private bool _retain;
-        
+
         public MqttApplicationMessageBuilder WithTopic(string topic)
         {
             _topic = topic;
@@ -102,7 +102,13 @@ namespace MQTTnet.Core
                 throw new MqttProtocolViolationException("Topic is not set.");
             }
 
-            return new MqttApplicationMessage(_topic, _payload ?? new byte[0], _qualityOfServiceLevel, _retain);
+            return new MqttApplicationMessage
+            {
+                Topic = _topic,
+                Payload = _payload ?? new byte[0],
+                QualityOfServiceLevel = _qualityOfServiceLevel,
+                Retain = _retain
+            };
         }
     }
 }

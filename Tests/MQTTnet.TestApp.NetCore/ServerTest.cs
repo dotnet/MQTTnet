@@ -48,6 +48,8 @@ namespace MQTTnet.TestApp.NetCore
                         // based payload with the timestamp is a suitable use case.
                         message.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
                     }
+
+                    return message;
                 };
 
                 //var certificate = new X509Certificate(@"C:\certs\test\test.cer", "");

@@ -1,6 +1,6 @@
 ﻿using MQTTnet.Core.Protocol;
 
-namespace MQTTnet.Core.Packets
+namespace MQTTnet.Core
 {
     public sealed class TopicFilter
     {

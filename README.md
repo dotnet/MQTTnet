@@ -27,6 +27,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Included core _MqttClient_ with low level functionality
 * Also included _ManagedMqttClient_ which maintains the connection and subscriptions automatically. Also application messages are queued and re-scheduled for higher QoS levels automatically.
 * Rx support (via another project)
+* Compatible with Microsoft Azure IoT Hub
 
 ### Server (broker)
 * List of connected clients available

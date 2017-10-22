@@ -1,4 +1,6 @@
-﻿using MQTTnet.Core;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MQTTnet.Core;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
@@ -17,33 +19,58 @@ namespace MQTTnet.TestApp.NetCore
     {
         public static async Task RunAsync()
         {
-            var server = Task.Factory.StartNew(RunServerAsync, TaskCreationOptions.LongRunning);
-            var client = Task.Factory.StartNew(() => RunClientAsync(2000, TimeSpan.FromMilliseconds(10)), TaskCreationOptions.LongRunning);
+            var services = new ServiceCollection()
+                .AddMqttServer(options => {
+
+                    options.ConnectionValidator = p =>
+                    {
+                        if (p.ClientId == "SpecialClient")
+                        {
+                            if (p.Username != "USER" || p.Password != "PASS")
+                            {
+                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            }
+                        }
+
+                        return MqttConnectReturnCode.ConnectionAccepted;
+                    };
+
+                    options.DefaultCommunicationTimeout = TimeSpan.FromMinutes(10);
+                })
+                .AddMqttClient()
+                .AddLogging()
+                .BuildServiceProvider();
+
+            services.GetService<ILoggerFactory>()
+                .AddConsole(minLevel: LogLevel.Warning, includeScopes: true);
+            
+            Console.WriteLine("Press 'c' for concurrent sends. Otherwise in one batch.");
+            var concurrent = Console.ReadKey(intercept: true).KeyChar == 'c';
+
+            var server = Task.Factory.StartNew(() => RunServerAsync(services), TaskCreationOptions.LongRunning);
+            var client = Task.Factory.StartNew(() => RunClientAsync(2000, TimeSpan.FromMilliseconds(10), services, concurrent), TaskCreationOptions.LongRunning);
 
             await Task.WhenAll(server, client).ConfigureAwait(false);
         }
 
-        private static Task RunClientsAsync(int msgChunkSize, TimeSpan interval)
+        private static Task RunClientsAsync(int msgChunkSize, TimeSpan interval, IServiceProvider serviceProvider, bool concurrent)
         {
-            return Task.WhenAll(Enumerable.Range(0, 3).Select(i => Task.Run(() => RunClientAsync(msgChunkSize, interval))));
+            return Task.WhenAll(Enumerable.Range(0, 3).Select(i => Task.Run(() => RunClientAsync(msgChunkSize, interval, serviceProvider, concurrent))));
         }
 
-        private static async Task RunClientAsync(int msgChunkSize, TimeSpan interval)
+        private static async Task RunClientAsync(int msgChunkSize, TimeSpan interval, IServiceProvider serviceProvider, bool concurrent)
         {
             try
             {
                 var options = new MqttClientTcpOptions
                 {
                     Server = "localhost",
-                    ClientId = "XYZ",
+                    ClientId = "Client1",
                     CleanSession = true,
                     DefaultCommunicationTimeout = TimeSpan.FromMinutes(10)
                 };
 
-                var client = new MqttClientFactory().CreateMqttClient();
-                client.ApplicationMessageReceived += (s, e) =>
-                {
-                };
+                var client = serviceProvider.GetRequiredService<IMqttClient>();
 
                 client.Connected += async (s, e) =>
                 {
@@ -113,8 +140,7 @@ namespace MQTTnet.TestApp.NetCore
                         .Select(i => CreateMessage())
                         .ToList();
 
-                    Console.WriteLine("Press 'c' for concurrent sends. Otherwise in one batch.");
-                    if (Console.ReadKey().KeyChar == 'c')
+                    if (concurrent)
                     {
                         //send concurrent (test for raceconditions)
                         var sendTasks = msgs
@@ -165,28 +191,11 @@ namespace MQTTnet.TestApp.NetCore
             return Task.Run(() => client.PublishAsync(applicationMessage));
         }
 
-        private static async Task RunServerAsync()
+        private static async Task RunServerAsync(IServiceProvider serviceProvider)
         {
             try
             {
-                var options = new MqttServerOptions
-                {
-                    ConnectionValidator = p =>
-                    {
-                        if (p.ClientId == "SpecialClient")
-                        {
-                            if (p.Username != "USER" || p.Password != "PASS")
-                            {
-                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                            }
-                        }
-
-                        return MqttConnectReturnCode.ConnectionAccepted;
-                    },
-                    DefaultCommunicationTimeout = TimeSpan.FromMinutes(10)
-                };
-
-                var mqttServer = new MqttServerFactory().CreateMqttServer(options);
+                var mqttServer = serviceProvider.GetRequiredService<IMqttServer>();
                 var msgs = 0;
                 var stopwatch = Stopwatch.StartNew();
                 mqttServer.ApplicationMessageReceived += (sender, args) =>

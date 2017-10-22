@@ -1,10 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
-using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
-using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.Client
 {
@@ -12,11 +12,11 @@ namespace MQTTnet.Core.Client
     {
         private readonly ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>> _packetByResponseType = new ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>>();
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>> _packetByResponseTypeAndIdentifier = new ConcurrentDictionary<Type, ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>>();
-        private readonly MqttNetTrace _trace;
+        private readonly ILogger<MqttPacketDispatcher> _logger;
 
-        public MqttPacketDispatcher(MqttNetTrace trace)
+        public MqttPacketDispatcher(ILogger<MqttPacketDispatcher> logger)
         {
-            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<MqttBasePacket> WaitForPacketAsync(MqttBasePacket request, Type responseType, TimeSpan timeout)
@@ -30,7 +30,7 @@ namespace MQTTnet.Core.Client
             }
             catch (MqttCommunicationTimedOutException)
             {
-                _trace.Warning(nameof(MqttPacketDispatcher), "Timeout while waiting for packet of type '{0}'.", responseType.Name);
+                _logger.LogWarning("Timeout while waiting for packet of type '{0}'.", responseType.Name);
                 throw;
             }
             finally

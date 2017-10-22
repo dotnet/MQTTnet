@@ -4,23 +4,23 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Channel;
-using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Serializer;
+using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.Adapter
 {
     public class MqttChannelCommunicationAdapter : IMqttCommunicationAdapter
     {
-        private readonly MqttNetTrace _trace;
+        private readonly ILogger<MqttChannelCommunicationAdapter> _logger;
         private readonly IMqttCommunicationChannel _channel;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-        public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer, MqttNetTrace trace)
+        public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer, ILogger<MqttChannelCommunicationAdapter> logger)
         {
-            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             PacketSerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
@@ -96,7 +96,7 @@ namespace MQTTnet.Core.Adapter
                         continue;
                     }
 
-                    _trace.Information(nameof(MqttChannelCommunicationAdapter), "TX >>> {0} [Timeout={1}]", packet, timeout);
+                    _logger.LogInformation("TX >>> {0} [Timeout={1}]", packet, timeout);
 
                     var writeBuffer = PacketSerializer.Serialize(packet);
                     await _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length, cancellationToken).ConfigureAwait(false);
@@ -162,7 +162,7 @@ namespace MQTTnet.Core.Adapter
                     throw new MqttProtocolViolationException("Received malformed packet.");
                 }
 
-                _trace.Information(nameof(MqttChannelCommunicationAdapter), "RX <<< {0}", packet);
+                _logger.LogInformation("RX <<< {0}", packet);
                 return packet;
             }
             catch (TaskCanceledException)

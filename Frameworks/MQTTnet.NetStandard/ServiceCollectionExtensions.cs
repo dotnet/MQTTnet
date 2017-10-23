@@ -6,6 +6,8 @@ using MQTTnet.Core.Serializer;
 using MQTTnet.Core.Server;
 using MQTTnet.Implementations;
 using System;
+using Microsoft.Extensions.Logging;
+using MQTTnet.Core.Diagnostics;
 
 namespace MQTTnet
 {
@@ -27,7 +29,6 @@ namespace MQTTnet
 
             services.AddTransient<MqttClientSessionsManager>();
             services.AddTransient<MqttClientRetainedMessagesManager>();
-
             return services;
         }
 
@@ -50,6 +51,12 @@ namespace MQTTnet
             services.AddTransient<MqttPacketDispatcher>();
 
             return services;
+        }
+
+        public static ILoggerFactory AddMqttTrace(this ILoggerFactory factory)
+        {
+            factory.AddProvider(new MqttNetTrace());
+            return factory;
         }
     }
 }

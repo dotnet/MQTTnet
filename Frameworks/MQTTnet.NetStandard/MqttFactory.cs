@@ -18,11 +18,16 @@ namespace MQTTnet
 
         private static IServiceProvider BuildServiceProvider()
         {
-            return new ServiceCollection()
+            var serviceProvider =  new ServiceCollection()
                 .AddMqttClient()
                 .AddMqttServer()
                 .AddLogging()
                 .BuildServiceProvider();
+
+            serviceProvider.GetRequiredService<ILoggerFactory>()
+                .AddMqttTrace();
+
+            return serviceProvider;
         }
 
         public MqttFactory()

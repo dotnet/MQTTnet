@@ -2,21 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Packets;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace MQTTnet.Core.Server
 {
     public sealed class MqttClientRetainedMessagesManager
     {
         private readonly Dictionary<string, MqttApplicationMessage> _retainedMessages = new Dictionary<string, MqttApplicationMessage>();
-        private readonly MqttNetTrace _trace;
+        private readonly ILogger<MqttClientRetainedMessagesManager> _logger;
         private readonly MqttServerOptions _options;
 
-        public MqttClientRetainedMessagesManager(MqttServerOptions options, MqttNetTrace trace)
+        public MqttClientRetainedMessagesManager(IOptions<MqttServerOptions> options, ILogger<MqttClientRetainedMessagesManager> logger)
         {
-            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _options = options.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
         public async Task LoadMessagesAsync()
@@ -40,7 +41,7 @@ namespace MQTTnet.Core.Server
             }
             catch (Exception exception)
             {
-                _trace.Error(nameof(MqttClientRetainedMessagesManager), exception, "Unhandled exception while loading retained messages.");
+                _logger.LogError(new EventId(), exception, "Unhandled exception while loading retained messages.");
             }
         }
 
@@ -54,12 +55,12 @@ namespace MQTTnet.Core.Server
                 if (applicationMessage.Payload?.Any() == false)
                 {
                     _retainedMessages.Remove(applicationMessage.Topic);
-                    _trace.Information(nameof(MqttClientRetainedMessagesManager), "Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                    _logger.LogInformation("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                 }
                 else
                 {
                     _retainedMessages[applicationMessage.Topic] = applicationMessage;
-                    _trace.Information(nameof(MqttClientRetainedMessagesManager), "Client '{0}' updated retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                    _logger.LogInformation("Client '{0}' updated retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                 }
 
                 allRetainedMessages = new List<MqttApplicationMessage>(_retainedMessages.Values);
@@ -75,7 +76,7 @@ namespace MQTTnet.Core.Server
             }
             catch (Exception exception)
             {
-                _trace.Error(nameof(MqttClientRetainedMessagesManager), exception, "Unhandled exception while saving retained messages.");
+                _logger.LogError(new EventId(), exception, "Unhandled exception while saving retained messages.");
             }
         }
 

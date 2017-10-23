@@ -1,10 +1,11 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.Diagnostics
 {
     public sealed class MqttNetTraceMessage
     {
-        public MqttNetTraceMessage(DateTime timestamp, int threadId, string source, MqttNetTraceLevel level, string message, Exception exception)
+        public MqttNetTraceMessage(DateTime timestamp, int threadId, string source, LogLevel level, string message, Exception exception)
         {
             Timestamp = timestamp;
             ThreadId = threadId;
@@ -20,7 +21,7 @@ namespace MQTTnet.Core.Diagnostics
 
         public string Source { get; }
 
-        public MqttNetTraceLevel Level { get; }
+        public LogLevel Level { get; }
 
         public string Message { get; }
 

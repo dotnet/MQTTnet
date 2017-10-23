@@ -1,4 +1,5 @@
 ﻿using MQTTnet.Core.Adapter;
+using MQTTnet.Core.Channel;
 using MQTTnet.Core.Client;
 
 namespace MQTTnet.Core.Tests
@@ -12,7 +13,12 @@ namespace MQTTnet.Core.Tests
             _adapter = adapter;
         }
 
-        public IMqttCommunicationAdapter CreateMqttCommunicationAdapter(IMqttClientOptions options)
+        public IMqttCommunicationAdapter CreateClientMqttCommunicationAdapter(IMqttClientOptions options)
+        {
+            return _adapter;
+        }
+
+        public IMqttCommunicationAdapter CreateServerMqttCommunicationAdapter(IMqttCommunicationChannel channel)
         {
             return _adapter;
         }

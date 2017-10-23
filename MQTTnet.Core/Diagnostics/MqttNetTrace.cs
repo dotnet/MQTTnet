@@ -1,77 +1,33 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.Diagnostics
 {
-    public sealed class MqttNetTrace : IMqttNetTraceHandler
+    public class MqttNetTrace : ILoggerProvider
     {
-        private readonly IMqttNetTraceHandler _traceHandler;
+        private readonly ConcurrentDictionary<string, MqttNetLogger> _loggers = new ConcurrentDictionary<string, MqttNetLogger>();
 
-        public MqttNetTrace(IMqttNetTraceHandler customTraceHandler = null)
-        {
-            _traceHandler = customTraceHandler ?? this;
-        }
-        
         public static event EventHandler<MqttNetTraceMessagePublishedEventArgs> TraceMessagePublished;
 
-        public bool IsEnabled => TraceMessagePublished != null;
-
-        public void Verbose(string source, string message, params object[] parameters)
+        public void Publish(MqttNetTraceMessage msg)
         {
-            Publish(source, MqttNetTraceLevel.Verbose, null, message, parameters);
+            TraceMessagePublished?.Invoke(this, new MqttNetTraceMessagePublishedEventArgs(msg));
         }
 
-        public void Information(string source, string message, params object[] parameters)
+        public void Dispose()
         {
-            Publish(source, MqttNetTraceLevel.Information, null, message, parameters);
+            TraceMessagePublished = null;
         }
 
-        public void Warning(string source, string message, params object[] parameters)
+        public ILogger CreateLogger(string categoryName)
         {
-            Publish(source, MqttNetTraceLevel.Warning, null, message, parameters);
+            return _loggers.GetOrAdd(categoryName, CreateLoggerImplementation);
         }
 
-        public void Warning(string source, Exception exception, string message, params object[] parameters)
+        private MqttNetLogger CreateLoggerImplementation(string categoryName)
         {
-            Publish(source, MqttNetTraceLevel.Warning, exception, message, parameters);
-        }
-
-        public void Error(string source, string message, params object[] parameters)
-        {
-            Publish(source, MqttNetTraceLevel.Error, null, message, parameters);
-        }
-
-        public void Error(string source, Exception exception, string message, params object[] parameters)
-        {
-            Publish(source, MqttNetTraceLevel.Error, exception, message, parameters);
-        }
-
-        public void HandleTraceMessage(MqttNetTraceMessage mqttNetTraceMessage)
-        {
-            TraceMessagePublished?.Invoke(this, new MqttNetTraceMessagePublishedEventArgs(mqttNetTraceMessage));
-        }
-
-        private void Publish(string source, MqttNetTraceLevel traceLevel, Exception exception, string message, params object[] parameters)
-        {
-            if (!_traceHandler.IsEnabled)
-            {
-                return;
-            }
-
-            var now = DateTime.Now;
-            if (parameters?.Length > 0)
-            {
-                try
-                {
-                    message = string.Format(message, parameters);
-                }
-                catch (Exception formatException)
-                {
-                    Error(nameof(MqttNetTrace), formatException, "Error while tracing message: " + message);
-                    return;
-                }
-            }
-
-            _traceHandler.HandleTraceMessage(new MqttNetTraceMessage(now, Environment.CurrentManagedThreadId, source, traceLevel, message, exception));
+            return new MqttNetLogger(categoryName, this);
         }
     }
 }

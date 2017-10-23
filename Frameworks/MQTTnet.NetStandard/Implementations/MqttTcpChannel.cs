@@ -59,7 +59,7 @@ namespace MQTTnet.Implementations
             }
 
 //todo: else brach can be used with min dependency NET46
-#if NET45
+#if NET451
             await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
 #else
             await _socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);

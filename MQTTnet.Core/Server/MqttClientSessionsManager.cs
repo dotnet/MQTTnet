@@ -167,7 +167,7 @@ namespace MQTTnet.Core.Server
                         clientSession.Dispose();
                         clientSession = null;
 
-                        _trace.Verbose(nameof(MqttClientSessionsManager), "Disposed existing session of client '{0}'.", connectPacket.ClientId);
+                        _logger.LogTrace("Disposed existing session of client '{0}'.", connectPacket.ClientId);
                     }
                     else
                     {

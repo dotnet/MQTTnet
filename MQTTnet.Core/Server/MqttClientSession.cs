@@ -28,11 +28,11 @@ namespace MQTTnet.Core.Server
 
         public MqttClientSession(string clientId, MqttClientSessionsManager mqttClientSessionsManager, ILogger<MqttClientSession> logger, ILogger<MqttClientPendingMessagesQueue> msgQueueLogger)
         {
-            ClientId = clientId;
-            _options = mqttClientSessionsManager.Options;
             _mqttClientSessionsManager = mqttClientSessionsManager ?? throw new ArgumentNullException(nameof(mqttClientSessionsManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ClientId = clientId;
 
+            _options = mqttClientSessionsManager.Options;
             _pendingMessagesQueue = new MqttClientPendingMessagesQueue(mqttClientSessionsManager.Options, this, msgQueueLogger);
         }
 
@@ -78,7 +78,7 @@ namespace MQTTnet.Core.Server
 
                 _adapter = null;
 
-                _trace.Information(nameof(MqttClientSession), "Client '{0}': Disconnected.", ClientId);
+                _logger.LogInformation("Client '{0}': Disconnected.", ClientId);
             }
             finally
             {

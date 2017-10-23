@@ -5,20 +5,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Channel;
-using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Serializer;
 using MQTTnet.Core.Server;
 using MQTTnet.Implementations;
+using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {
     public class MqttWebSocketServerAdapter : IMqttServerAdapter, IDisposable
     {
-        private readonly MqttNetTrace _trace;
+        private readonly ILogger<MqttWebSocketServerAdapter> _logger;
+        private readonly IMqttCommunicationAdapterFactory _mqttCommunicationAdapterFactory;
 
-        public MqttWebSocketServerAdapter(MqttNetTrace trace)
+        public MqttWebSocketServerAdapter(ILogger<MqttWebSocketServerAdapter> logger, IMqttCommunicationAdapterFactory mqttCommunicationAdapterFactory)
         {
-            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mqttCommunicationAdapterFactory = mqttCommunicationAdapterFactory ?? throw new ArgumentNullException(nameof(mqttCommunicationAdapterFactory));
         }
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
@@ -38,7 +40,7 @@ namespace MQTTnet.TestApp.AspNetCore2
             if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
 
             var channel = new MqttWebSocketServerChannel(webSocket);
-            var clientAdapter = new MqttChannelCommunicationAdapter(channel, new MqttPacketSerializer(), _trace);
+            var clientAdapter = _mqttCommunicationAdapterFactory.CreateServerMqttCommunicationAdapter(channel);
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
             ClientAccepted?.Invoke(this, eventArgs);

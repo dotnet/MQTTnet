@@ -2,10 +2,11 @@
 using System.Threading.Tasks;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
-using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.ManagedClient;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -13,14 +14,14 @@ namespace MQTTnet.TestApp.NetCore
     {
         public static async Task RunAsync()
         {
-            MqttNetTrace.TraceMessagePublished += (s, e) =>
-            {
-                Console.WriteLine($">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
-                if (e.TraceMessage.Exception != null)
-                {
-                    Console.WriteLine(e.TraceMessage.Exception);
-                }
-            };
+            var services = new ServiceCollection()
+                   .AddMqttClient()
+                   .AddLogging()
+                   .BuildServiceProvider();
+
+            services.GetService<ILoggerFactory>()
+                .AddConsole();
+
 
             var options = new ManagedMqttClientOptions
             {
@@ -35,7 +36,7 @@ namespace MQTTnet.TestApp.NetCore
 
             try
             {
-                var managedClient = new MqttClientFactory().CreateManagedMqttClient();
+                var managedClient = services.GetRequiredService<ManagedMqttClient>();
                 managedClient.ApplicationMessageReceived += (s, e) =>
                 {
                     Console.WriteLine(">> RECEIVED: " + e.ApplicationMessage.Topic);

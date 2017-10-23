@@ -1,6 +1,5 @@
 ﻿using MQTTnet.Core;
 using MQTTnet.Core.Client;
-using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
@@ -12,6 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -24,7 +25,7 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("2 = Start server");
             Console.WriteLine("3 = Start performance test");
             Console.WriteLine("4 = Start managed client");
-
+                        
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.KeyChar == '1')
             {
@@ -48,17 +49,16 @@ namespace MQTTnet.TestApp.NetCore
 
         private static async Task RunClientAsync()
         {
-            MqttNetTrace.TraceMessagePublished += (s, e) =>
-            {
-                Console.WriteLine($">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
-                if (e.TraceMessage.Exception != null)
-                {
-                    Console.WriteLine(e.TraceMessage.Exception);
-                }
-            };
-
             try
             {
+                var services = new ServiceCollection()
+                    .AddMqttServer()
+                    .AddLogging()
+                    .BuildServiceProvider();
+
+                services.GetService<ILoggerFactory>()
+                    .AddConsole();
+
                 var options = new MqttClientWebSocketOptions
                 {
                     Uri = "localhost",
@@ -66,7 +66,7 @@ namespace MQTTnet.TestApp.NetCore
                     CleanSession = true
                 };
 
-                var client = new MqttClientFactory().CreateMqttClient();
+                var client = services.GetRequiredService<IMqttClient>();
                 client.ApplicationMessageReceived += (s, e) =>
                 {
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
@@ -139,7 +139,12 @@ namespace MQTTnet.TestApp.NetCore
         private static async void WikiCode()
         {
             {
-                var client = new MqttClientFactory().CreateMqttClient(new CustomTraceHandler("Client 1"));
+                var serviceProvider = new ServiceCollection()
+                    .AddMqttServer()
+                    .AddLogging()
+                    .BuildServiceProvider();
+
+                var client = serviceProvider.GetRequiredService<IMqttClient>();
 
                 var message = new MqttApplicationMessageBuilder()
                     .WithTopic("MyTopic")
@@ -155,28 +160,6 @@ namespace MQTTnet.TestApp.NetCore
                 var message = new MqttApplicationMessageBuilder()
                     .WithTopic("/MQTTnet/is/awesome")
                     .Build();
-            }
-        }
-    }
-
-    public class CustomTraceHandler : IMqttNetTraceHandler
-    {
-        private readonly string _clientId;
-
-        public CustomTraceHandler(string clientId)
-        {
-            _clientId = clientId;
-        }
-
-        public bool IsEnabled { get; } = true;
-
-        public void HandleTraceMessage(MqttNetTraceMessage traceMessage)
-        {
-            // Client ID is added to the trace message.
-            Console.WriteLine($">> [{_clientId}] [{traceMessage.Timestamp:O}] [{traceMessage.ThreadId}] [{traceMessage.Source}] [{traceMessage.Level}]: {traceMessage.Message}");
-            if (traceMessage.Exception != null)
-            {
-                Console.WriteLine(traceMessage.Exception);
             }
         }
     }

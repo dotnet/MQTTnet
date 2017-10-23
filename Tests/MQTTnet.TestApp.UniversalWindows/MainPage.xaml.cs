@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
+using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
@@ -78,7 +79,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     await _mqttClient.DisconnectAsync();
                 }
 
-                var factory = new MqttClientFactory();
+                var factory = new MqttFactory();
                 _mqttClient = factory.CreateMqttClient();
                 await _mqttClient.ConnectAsync(options);
             }
@@ -200,7 +201,35 @@ namespace MQTTnet.TestApp.UniversalWindows
         // ReSharper disable once UnusedMember.Local
         private async Task WikiCode()
         {
-            var mqttClient = new MqttClientFactory().CreateMqttClient();
+            var services = new ServiceCollection()
+                .AddMqttClient()
+                .AddMqttServer(options =>
+                {
+                    options.ConnectionValidator = c =>
+                    {
+                        if (c.ClientId.Length < 10)
+                        {
+                            return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        }
+
+                        if (c.Username != "mySecretUser")
+                        {
+                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        }
+
+                        if (c.Password != "mySecretPassword")
+                        {
+                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        }
+
+                        return MqttConnectReturnCode.ConnectionAccepted;
+                    };
+                })
+                .BuildServiceProvider();
+
+            var factory = new MqttFactory(services);
+
+            var mqttClient = factory.CreateMqttClient();
 
             // ----------------------------------
 
@@ -239,9 +268,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             // ----------------------------------
             {
-                var options = new MqttServerOptions();
-
-                var mqttServer = new MqttServerFactory().CreateMqttServer(options);
+                var mqttServer = factory.CreateMqttServer();
                 await mqttServer.StartAsync();
 
                 Console.WriteLine("Press any key to exit.");
@@ -251,34 +278,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             }
 
             // ----------------------------------
-
-            {
-                var options = new MqttServerOptions
-                {
-                    ConnectionValidator = c =>
-                    {
-                        if (c.ClientId.Length < 10)
-                        {
-                            return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
-                        }
-
-                        if (c.Username != "mySecretUser")
-                        {
-                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                        }
-
-                        if (c.Password != "mySecretPassword")
-                        {
-                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                        }
-
-                        return MqttConnectReturnCode.ConnectionAccepted;
-                    }
-                };
-            }
-
-            // ----------------------------------
-
+            
             // For UWP apps:
             MqttTcpChannel.CustomIgnorableServerCertificateErrorsResolver = o =>
             {

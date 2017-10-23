@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Server;
 
 namespace MQTTnet.TestApp.AspNetCore2
@@ -14,25 +13,18 @@ namespace MQTTnet.TestApp.AspNetCore2
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMqttServer();
+            services.AddSingleton<MqttWebSocketServerAdapter>();
+            services.AddSingleton<IMqttServerAdapter, MqttWebSocketServerAdapter>();
         }
 
         public async void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole(LogLevel.Debug);
+            loggerFactory.AddDebug();
 
-            MqttNetTrace.TraceMessagePublished += (s, e) =>
-            {
-                Debug.WriteLine($">> [{e.TraceMessage.Timestamp}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
-                if (e.TraceMessage.Exception != null)
-                {
-                    Debug.WriteLine(e.TraceMessage.Exception.Message);
-                }
-            };
-
-            var trace = new MqttNetTrace();
-            var adapter = new MqttWebSocketServerAdapter(trace);
-            var options = new MqttServerOptions();
-            var mqttServer = new MqttServer(options, new List<IMqttServerAdapter> { adapter }, new MqttNetTrace());
+            var adapter = app.ApplicationServices.GetService<MqttWebSocketServerAdapter>();
+            var mqttServer = app.ApplicationServices.GetService<IMqttServer>();
             await mqttServer.StartAsync();
             
             app.UseWebSockets();

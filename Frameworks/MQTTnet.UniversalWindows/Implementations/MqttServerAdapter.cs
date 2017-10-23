@@ -1,21 +1,22 @@
 using System;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Serializer;
 using MQTTnet.Core.Server;
 using Windows.Networking.Sockets;
+using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Implementations
 {
     public class MqttServerAdapter : IMqttServerAdapter, IDisposable
     {
-        private readonly MqttNetTrace _trace;
+        private readonly ILogger<MqttServerAdapter> _logger;
+        private readonly IMqttCommunicationAdapterFactory _mqttCommunicationAdapterFactory;
         private StreamSocketListener _defaultEndpointSocket;
 
-        public MqttServerAdapter(MqttNetTrace trace)
+        public MqttServerAdapter(ILogger<MqttServerAdapter> logger, IMqttCommunicationAdapterFactory mqttCommunicationAdapterFactory)
         {
-            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mqttCommunicationAdapterFactory = mqttCommunicationAdapterFactory ?? throw new ArgumentNullException(nameof(mqttCommunicationAdapterFactory));
         }
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
@@ -56,12 +57,12 @@ namespace MQTTnet.Implementations
         {
             try
             {
-                var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(args.Socket), new MqttPacketSerializer(), _trace);
+                var clientAdapter = _mqttCommunicationAdapterFactory.CreateServerMqttCommunicationAdapter(new MqttTcpChannel(args.Socket));
                 ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }
             catch (Exception exception)
             {
-                _trace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at default endpoint.");
+                _logger.LogError(new EventId(), exception, "Error while accepting connection at default endpoint.");
             }
         }
     }

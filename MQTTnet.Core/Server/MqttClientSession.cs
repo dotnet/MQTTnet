@@ -45,10 +45,9 @@ namespace MQTTnet.Core.Server
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 
-            _willMessage = willMessage;
-
             try
             {
+                _willMessage = willMessage;
                 _adapter = adapter;
                 _cancellationTokenSource = new CancellationTokenSource();
 
@@ -70,18 +69,23 @@ namespace MQTTnet.Core.Server
 
         public void Stop()
         {
-            if (_willMessage != null)
+            try
             {
-                _mqttClientSessionsManager.DispatchApplicationMessage(this, _willMessage);
+                _cancellationTokenSource?.Cancel(false);
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+
+                _adapter = null;
+
+                _trace.Information(nameof(MqttClientSession), "Client '{0}': Disconnected.", ClientId);
             }
-
-            _cancellationTokenSource?.Cancel(false);
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
-
-            _adapter = null;
-
-            _trace.Information(nameof(MqttClientSession), "Client '{0}': Disconnected.", ClientId);
+            finally
+            {
+                if (_willMessage != null)
+                {
+                    _mqttClientSessionsManager.DispatchApplicationMessage(this, _willMessage);
+                }
+            }
         }
 
         public void EnqueuePublishPacket(MqttPublishPacket publishPacket)

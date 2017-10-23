@@ -28,7 +28,7 @@ namespace MQTTnet.Core.Server
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 
-            Task.Run(() => SendPendingPublishPacketsAsync(adapter, cancellationToken), cancellationToken);
+            Task.Factory.StartNew(async () => await SendPendingPublishPacketsAsync(adapter, cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).ConfigureAwait(false);
         }
 
         public void Enqueue(MqttPublishPacket publishPacket)
@@ -74,7 +74,7 @@ namespace MQTTnet.Core.Server
                 {
                     _trace.Warning(nameof(MqttClientPendingMessagesQueue), exception, "Sending publish packet failed due to communication exception.");
                 }
-                if (exception is OperationCanceledException)
+                else if (exception is OperationCanceledException)
                 {
                 }
                 else

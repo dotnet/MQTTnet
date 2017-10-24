@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Core.Exceptions;
 
 namespace MQTTnet.Implementations
 {
@@ -33,6 +34,11 @@ namespace MQTTnet.Implementations
                 {
                     await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken).ConfigureAwait(false);
                 }
+            }
+
+            if (_webSocket.State == WebSocketState.Closed)
+            {
+                throw new MqttCommunicationException("connection closed");
             }
 
             return currentOffset - offset;

@@ -24,14 +24,14 @@ namespace MQTTnet.TestApp.AspNetCore2
             app.UseMqttServer(async server =>
             {
                 var msg = new MqttApplicationMessageBuilder()
-                    .WithPayload("Mqtt is Awesome")
-                    .WithTopic("message")
-                    .Build();
+                    .WithPayload("Mqtt is awesome")
+                    .WithTopic("message");
 
                 while (true)
                 {
-                    server.Publish(msg);
+                    server.Publish(msg.Build());
                     await Task.Delay(TimeSpan.FromSeconds(2));
+                    msg.WithPayload("Mqtt is still awesome at " + DateTime.Now);
                 }
             });
 

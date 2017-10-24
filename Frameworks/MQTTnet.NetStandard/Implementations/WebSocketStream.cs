@@ -41,6 +41,7 @@ namespace MQTTnet.Implementations
             {
                 var response = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer, currentOffset, count), cancellationToken).ConfigureAwait(false);
                 currentOffset += response.Count;
+                count -= response.Count;
 
                 if (response.MessageType == WebSocketMessageType.Close)
                 {

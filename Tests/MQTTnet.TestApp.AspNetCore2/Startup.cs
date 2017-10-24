@@ -20,9 +20,6 @@ namespace MQTTnet.TestApp.AspNetCore2
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(LogLevel.Debug);
-            loggerFactory.AddDebug();
-            
             app.UseMqttEndpoint();
             app.UseMqttServer(async server =>
             {

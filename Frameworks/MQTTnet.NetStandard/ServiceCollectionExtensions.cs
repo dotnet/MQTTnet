@@ -15,14 +15,20 @@ namespace MQTTnet
     {
         public static IServiceCollection AddMqttServer(this IServiceCollection services)
         {
+            services.AddMqttServerServices();
+            
+            services.AddSingleton<IMqttServer>(s => s.GetService<MqttServer>());
+            services.AddSingleton<MqttServer>();
+
+            return services;
+        }
+
+        public static IServiceCollection AddMqttServerServices(this IServiceCollection services)
+        {
             services.AddOptions();
             services.AddSingleton<MqttFactory>();
-            services.AddSingleton<IMqttCommunicationAdapterFactory, MqttFactory>();
-            services.AddSingleton<IMqttClientSesssionFactory, MqttFactory>();
-
-
-            services.AddSingleton<IMqttServer,MqttServer>();
-            services.AddSingleton<MqttServer>();
+            services.AddSingleton<IMqttCommunicationAdapterFactory>(s => s.GetService<MqttFactory>());
+            services.AddSingleton<IMqttClientSesssionFactory>(s => s.GetService<MqttFactory>());
 
             services.AddTransient<IMqttServerAdapter, MqttServerAdapter>();
             services.AddTransient<IMqttPacketSerializer, MqttPacketSerializer>();
@@ -42,7 +48,7 @@ namespace MQTTnet
         public static IServiceCollection AddMqttClient(this IServiceCollection services)
         {
             services.AddSingleton<MqttFactory>();
-            services.AddSingleton<IMqttCommunicationAdapterFactory, MqttFactory>();
+            services.AddSingleton<IMqttCommunicationAdapterFactory>(s => s.GetService<MqttFactory>());
 
             services.AddTransient<IMqttClient, MqttClient>();
             services.AddTransient<MqttClient>();

@@ -1,0 +1,23 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>MQTT test</title>
+</head>
+<body>
+<script src="node_modules/systemjs/dist/system.js"></script>
+<script>
+    System.config({
+        packages: {
+            '': {
+                defaultExtension: 'js'
+            }
+        },
+        map: {
+            mqtt: 'node_modules/mqtt/dist/mqtt.min'
+        }
+    });
+    System.import('app/app');
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "name": "mqtt.test",
+  "private": true,
+  "devDependencies": {
+  },
+
+  "dependencies": {
+    "mqtt": "2.13.1",
+    "@types/node": "8.0.46",
+    "systemjs": "0.20.19",
+    "typescript": "2.3.4"
+  }
+}

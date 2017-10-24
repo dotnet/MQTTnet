@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace MQTTnet.Core.Server
 {
-    public sealed class MqttServer : IMqttServer
+    public class MqttServer : IMqttServer
     {
         private readonly ILogger<MqttServer> _logger;
         private readonly MqttClientSessionsManager _clientSessionsManager;

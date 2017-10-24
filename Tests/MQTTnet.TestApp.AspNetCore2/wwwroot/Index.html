@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>MQTT test</title>
+</head>
+<body>
+<script src="node_modules/systemjs/dist/system.js"></script>
+<script>
+    System.config({
+        packages: {
+            '': {
+                defaultExtension: 'js'
+            }
+        },
+        map: {
+            mqtt: 'node_modules/mqtt/dist/mqtt.min'
+        }
+    });
+    System.import('app/app');
+</script>
+    
+<div>
+    <p id="state"></p>
+    <input id="topic" placeholder="topic" />
+    <input id="msg" placeholder="msg" />
+    <button id="publish">send</button>
+</div>
+
+<div>
+    <ul id="msgs" ></ul>
+</div>
+
+</body>
+</html>

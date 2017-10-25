@@ -28,6 +28,7 @@ namespace MQTTnet.Core.Server
             {
                 throw new ArgumentNullException(nameof(adapters));
             }            
+
             _adapters = adapters.ToList();
 
             _clientSessionsManager.ApplicationMessageReceived += (s, e) => ApplicationMessageReceived?.Invoke(s, e);

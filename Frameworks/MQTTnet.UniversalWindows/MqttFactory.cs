@@ -95,7 +95,7 @@ namespace MQTTnet
             return _serviceProvider.GetRequiredService<IMqttClient>();
         }
 
-        public ManagedMqttClient CreateManagedMqttClient()
+        public IManagedMqttClient CreateManagedMqttClient()
         {
             return _serviceProvider.GetRequiredService<ManagedMqttClient>();
         }

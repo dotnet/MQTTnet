@@ -6,6 +6,6 @@ namespace MQTTnet.Core.Client
     {
         IMqttClient CreateMqttClient();
 
-        ManagedMqttClient CreateManagedMqttClient();
+        IManagedMqttClient CreateManagedMqttClient();
     }
 }

@@ -55,7 +55,7 @@ namespace MQTTnet.Core.Tests
         {
             try
             {
-                var r = await Task.Run(() =>
+                await Task.Run(() =>
                 {
                     var iis = new int[0];
                     return iis[1];

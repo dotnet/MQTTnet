@@ -4,7 +4,7 @@ namespace MQTTnet.Core.Server
 {
     public static class MqttTopicFilterComparer
     {
-        private const char TopicLevelSeparator = '/';
+        private static readonly char[] TopicLevelSeparator = { '/' };
 
         public static bool IsMatch(string topic, string filter)
         {
@@ -16,19 +16,15 @@ namespace MQTTnet.Core.Server
                 return true;
             }
 
-            var fragmentsTopic = topic.Split(new[] { TopicLevelSeparator }, StringSplitOptions.None);
-            var fragmentsFilter = filter.Split(new[] { TopicLevelSeparator }, StringSplitOptions.None);
+            var fragmentsTopic = topic.Split(TopicLevelSeparator, StringSplitOptions.None);
+            var fragmentsFilter = filter.Split(TopicLevelSeparator, StringSplitOptions.None);
 
             for (var i = 0; i < fragmentsFilter.Length; i++)
             {
-                if (fragmentsFilter[i] == "+")
+                switch (fragmentsFilter[i])
                 {
-                    continue;
-                }
-
-                if (fragmentsFilter[i] == "#" && i == fragmentsFilter.Length - 1)
-                {
-                    return true;
+                    case "+": continue;
+                    case "#" when i == fragmentsFilter.Length - 1: return true;
                 }
 
                 if (i >= fragmentsTopic.Length)
@@ -36,18 +32,13 @@ namespace MQTTnet.Core.Server
                     return false;
                 }
 
-                if (!string.Equals(fragmentsFilter[i], fragmentsTopic[i]))
+                if (!string.Equals(fragmentsFilter[i], fragmentsTopic[i], StringComparison.Ordinal))
                 {
                     return false;
                 }
             }
 
-            if (fragmentsTopic.Length > fragmentsFilter.Length)
-            {
-                return false;
-            }
-
-            return true;
+            return fragmentsTopic.Length <= fragmentsFilter.Length;
         }
     }
 }

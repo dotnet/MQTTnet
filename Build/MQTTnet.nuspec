@@ -2,28 +2,26 @@
 <package >
   <metadata>
     <id>MQTTnet</id>
-    <version>2.4.0</version>
+    <version>2.5.0</version>
     <authors>Christian Kratky</authors>
     <owners>Christian Kratky</owners>
     <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>MQTTnet is a .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* [Server] Added an event which is fired when a client has disconnected
-* [Server] Added support for retained application messages
-* [Server] Added support for saving and loading retained messages
-* [Server] The client connection is now closed if sending of one pending application message has failed
-* [Server] Fixed handling of _Dup_ flag (Thanks to haeberle)
-* [Core] Optimized exception handling
-* [Core] Mono is now also supported (Thanks to JTrotta)
-* [Client] The options are now passed in _ConnectAsync_ (Breaking change! Read Wiki for examples)
-* [Core] Trace class renamed to _MqttNetTrace_ (Breaking change!)
-* [Client] Extended certificate validation options (Breaking change!)
-* [Client] Added static certificate validation callback (NetFramework, NetStandard) / ignorable certificate errors (UniversalWindows) to _MqttTcpChannel_
+    <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
+    <releaseNotes>* [Core] Merged the .NET Framwork and netstandard projects (Thanks to @JanEggers)
+* [Core] Migrated the trace to a non-static approach (Breaking Change!)
+* [Core] Added a builder for application messages using a fluent API
+* [Client] Added a first version of a managed client which will manage the connection, subscription etc. automatically (Thanks to @JTrotta)
+* [Client] The session state response from the server is now returned in the _ConnectAsync_ method and also part of the _Connected_ event args
+* [Client] Added a _TopicFilterBuilder_ using a fluent API (Namespace Changes!)
+* [Client] Added several new options for the WebSocket channel (Thanks to @ChristianRiedl)
+* [Server] Added support for WebSockets via ASP.NET Core 2.0 (Thanks to @ChristianRiedl)
+* [Server] Added support for a custom application message interceptor
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
-    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M</tags> 
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation</tags> 
     <dependencies>
 
       <group targetFramework="netstandard1.3">
@@ -48,8 +46,8 @@
     <file src="..\Frameworks\MQTTnet.UniversalWindows\bin\Release\MQTTnet.*" target="lib\uap10.0\"/>
 
     <!-- .NET Framework -->
-    <file src="..\Frameworks\MQTTnet.NetFramework\bin\Release\MQTTnet.Core.*" target="lib\net45\"/>
-    <file src="..\Frameworks\MQTTnet.NetFramework\bin\Release\MQTTnet.*" target="lib\net45\"/>
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net45\MQTTnet.Core.*" target="lib\net45\"/>
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net45\MQTTnet.*" target="lib\net45\"/>
     
   </files>
 </package>

@@ -4,21 +4,23 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Channel;
-using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Serializer;
+using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.Adapter
 {
     public class MqttChannelCommunicationAdapter : IMqttCommunicationAdapter
     {
+        private readonly ILogger<MqttChannelCommunicationAdapter> _logger;
         private readonly IMqttCommunicationChannel _channel;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-        public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer)
+        public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer, ILogger<MqttChannelCommunicationAdapter> logger)
         {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             PacketSerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
@@ -94,7 +96,7 @@ namespace MQTTnet.Core.Adapter
                         continue;
                     }
 
-                    MqttNetTrace.Information(nameof(MqttChannelCommunicationAdapter), "TX >>> {0} [Timeout={1}]", packet, timeout);
+                    _logger.LogInformation("TX >>> {0} [Timeout={1}]", packet, timeout);
 
                     var writeBuffer = PacketSerializer.Serialize(packet);
                     await _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length, cancellationToken).ConfigureAwait(false);
@@ -160,7 +162,7 @@ namespace MQTTnet.Core.Adapter
                     throw new MqttProtocolViolationException("Received malformed packet.");
                 }
 
-                MqttNetTrace.Information(nameof(MqttChannelCommunicationAdapter), "RX <<< {0}", packet);
+                _logger.LogInformation("RX <<< {0}", packet);
                 return packet;
             }
             catch (TaskCanceledException)

@@ -8,7 +8,7 @@ namespace MQTTnet.Core.Packets
     {
         public ushort PacketIdentifier { get; set; }
 
-        public IList<MqttSubscribeReturnCode> SubscribeReturnCodes { get; set; } = new List<MqttSubscribeReturnCode>();
+        public IList<MqttSubscribeReturnCode> SubscribeReturnCodes { get; } = new List<MqttSubscribeReturnCode>();
 
         public override string ToString()
         {

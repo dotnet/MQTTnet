@@ -3,7 +3,7 @@ using System.Net;
 
 namespace MQTTnet.Core.Client
 {
-    public class MqttClientWebSocketOptions : BaseMqttClientOptions
+    public class MqttClientWebSocketOptions : MqttClientOptions
     {
         public string Uri { get; set; }
 

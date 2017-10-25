@@ -79,7 +79,7 @@ namespace MQTTnet
 
         public MqttPacketSerializer CreateSerializer(MqttProtocolVersion protocolVersion)
         {
-            return new MqttPacketSerializer()
+            return new MqttPacketSerializer
             {
                 ProtocolVersion = protocolVersion
             };

@@ -42,7 +42,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void Connect(object sender, RoutedEventArgs e)
         {
-            BaseMqttClientOptions options = null;
+            MqttClientOptions options = null;
             if (UseTcp.IsChecked == true)
             {
                 options = new MqttClientTcpOptions
@@ -64,8 +64,12 @@ namespace MQTTnet.TestApp.UniversalWindows
                 throw new InvalidOperationException();
             }
 
-            options.UserName = User.Text;
-            options.Password = Password.Text;
+            options.Credentials = new MqttClientCredentials
+            {
+                Username = User.Text,
+                Password = Password.Text
+            };
+
             options.ClientId = ClientId.Text;
             options.TlsOptions.UseTls = UseTls.IsChecked == true;
             options.TlsOptions.IgnoreCertificateChainErrors = true;

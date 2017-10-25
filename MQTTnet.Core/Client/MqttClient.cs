@@ -186,8 +186,8 @@ namespace MQTTnet.Core.Client
             var connectPacket = new MqttConnectPacket
             {
                 ClientId = _options.ClientId,
-                Username = _options.UserName,
-                Password = _options.Password,
+                Username = _options.Credentials?.Username,
+                Password = _options.Credentials?.Password,
                 CleanSession = _options.CleanSession,
                 KeepAlivePeriod = (ushort)_options.KeepAlivePeriod.TotalSeconds,
                 WillMessage = willApplicationMessage

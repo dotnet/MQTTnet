@@ -7,10 +7,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Serializer;
 using MQTTnet.Core.Server;
 using Microsoft.Extensions.Logging;
-using MQTTnet.Core.Client;
 
 namespace MQTTnet.Implementations
 {
@@ -18,6 +16,7 @@ namespace MQTTnet.Implementations
     {
         private readonly ILogger<MqttServerAdapter> _logger;
         private readonly IMqttCommunicationAdapterFactory _mqttCommunicationAdapterFactory;
+
         private CancellationTokenSource _cancellationTokenSource;
         private Socket _defaultEndpointSocket;
         private Socket _tlsEndpointSocket;

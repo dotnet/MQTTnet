@@ -11,6 +11,7 @@ using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Serializer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MQTTnet.Core.Client;
 
 namespace MQTTnet.Core.Server
 {
@@ -28,9 +29,9 @@ namespace MQTTnet.Core.Server
             _mqttClientSesssionFactory = mqttClientSesssionFactory ?? throw new ArgumentNullException(nameof(mqttClientSesssionFactory));
         }
 
-        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
+        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
         public MqttClientRetainedMessagesManager RetainedMessagesManager { get; }
         public MqttServerOptions Options { get; }

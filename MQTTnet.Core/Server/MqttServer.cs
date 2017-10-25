@@ -6,6 +6,7 @@ using MQTTnet.Core.Adapter;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Linq;
+using MQTTnet.Core.Client;
 
 namespace MQTTnet.Core.Server
 {
@@ -45,12 +46,22 @@ namespace MQTTnet.Core.Server
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
-        public void Publish(MqttApplicationMessage applicationMessage)
+        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+            if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
-            _options.ApplicationMessageInterceptor?.Invoke(applicationMessage);
-            _clientSessionsManager.DispatchApplicationMessage(null, applicationMessage);
+            if (_cancellationTokenSource == null)
+            {
+                throw new InvalidOperationException("The server is not started.");
+            }
+
+            foreach (var applicationMessage in applicationMessages)
+            {
+                _options.ApplicationMessageInterceptor?.Invoke(applicationMessage);
+                _clientSessionsManager.DispatchApplicationMessage(null, applicationMessage);
+            }
+            
+            return Task.FromResult(0);
         }
 
         public async Task StartAsync()

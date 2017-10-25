@@ -122,7 +122,7 @@ namespace MQTTnet.Core.Tests
             var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
             await c1.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
 
-            s.Publish(message);
+            s.PublishAsync(message).Wait();
             await Task.Delay(500);
 
             await s.StopAsync();
@@ -180,7 +180,13 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_ClearRetainedMessage()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttFactory().CreateMqttServer();
+            var services = new ServiceCollection()
+                .AddLogging()
+                .AddMqttServer() // TODO: Is there maybe an easier way for the library user to set the options?
+                .AddSingleton<IMqttServerAdapter>(serverAdapter)
+                .BuildServiceProvider();
+
+            var s = new MqttFactory(services).CreateMqttServer();
             await s.StartAsync();
 
             var c1 = await serverAdapter.ConnectTestClient(s, "c1");
@@ -207,11 +213,12 @@ namespace MQTTnet.Core.Tests
 
             var serverAdapter = new TestMqttServerAdapter();
             var services = new ServiceCollection()
-                .AddMqttServer(options => options.Storage = storage)
+                .AddLogging()
+                .AddMqttServer(options => options.Storage = storage) // TODO: Is there maybe an easier way for the library user to set the options?
                 .AddSingleton<IMqttServerAdapter>(serverAdapter)
                 .BuildServiceProvider();
 
-            var s = new MqttFactory().CreateMqttServer();
+            var s = new MqttFactory(services).CreateMqttServer(); // TODO: Like here?
             await s.StartAsync();
 
             var c1 = await serverAdapter.ConnectTestClient(s, "c1");
@@ -246,6 +253,7 @@ namespace MQTTnet.Core.Tests
 
             var serverAdapter = new TestMqttServerAdapter();
             var services = new ServiceCollection()
+                .AddLogging()
                 .AddMqttServer(options => options.ApplicationMessageInterceptor = Interceptor)
                 .AddSingleton<IMqttServerAdapter>(serverAdapter)
                 .BuildServiceProvider();

@@ -305,7 +305,7 @@ namespace MQTTnet.Core.Client
             try
             {
                 var applicationMessage = publishPacket.ToApplicationMessage();
-                ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(applicationMessage));
+                ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(_options.ClientId, applicationMessage));
             }
             catch (Exception exception)
             {

@@ -8,6 +8,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using MQTTnet.AspnetCore;
 using MQTTnet.Core;
+using MQTTnet.Core.Client;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {
@@ -29,7 +30,7 @@ namespace MQTTnet.TestApp.AspNetCore2
 
                 while (true)
                 {
-                    server.Publish(msg.Build());
+                    server.PublishAsync(msg.Build()).Wait();
                     await Task.Delay(TimeSpan.FromSeconds(2));
                     msg.WithPayload("Mqtt is still awesome at " + DateTime.Now);
                 }

@@ -17,14 +17,14 @@ namespace MQTTnet.TestApp.NetCore
                 {
                     ClientId = "XYZ",
                     CleanSession = true,
-                    ////ChannelOptions = new MqttClientTcpOptions
-                    ////{
-                    ////    Server = "localhost"
-                    ////},
-                    ChannelOptions = new MqttClientWebSocketOptions
+                    ChannelOptions = new MqttClientTcpOptions
                     {
-                        Uri = "localhost"
-                    }
+                        Server = "localhost"
+                    },
+                    ////ChannelOptions = new MqttClientWebSocketOptions
+                    ////{
+                    ////    Uri = "localhost"
+                    ////}
                 };
 
                 var factory = new MqttFactory();

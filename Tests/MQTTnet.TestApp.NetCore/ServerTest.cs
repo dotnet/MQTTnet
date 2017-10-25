@@ -49,6 +49,7 @@ namespace MQTTnet.TestApp.NetCore
                 });
 
                 var serviceProvider = services.BuildServiceProvider();
+                serviceProvider.GetRequiredService<ILoggerFactory>().AddConsole();
 
                 //var certificate = new X509Certificate(@"C:\certs\test\test.cer", "");
                 //options.TlsEndpointOptions.Certificate = certificate.Export(X509ContentType.Cert);
@@ -56,7 +57,7 @@ namespace MQTTnet.TestApp.NetCore
                 //options.DefaultEndpointOptions.IsEnabled = true;
                 //options.TlsEndpointOptions.IsEnabled = false;
 
-                var mqttServer = serviceProvider.GetRequiredService<IMqttServer>();
+                var mqttServer = new MqttFactory(serviceProvider).CreateMqttServer();
                 mqttServer.ClientDisconnected += (s, e) =>
                 {
                     Console.Write("Client disconnected event fired.");

@@ -7,6 +7,9 @@ using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.IO;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -22,17 +25,31 @@ namespace MQTTnet.TestApp.NetCore
             services.GetService<ILoggerFactory>()
                 .AddConsole();
 
+            ClientRetainedMessageHandler ms = new ClientRetainedMessageHandler();
+            Func<ManagedMqttClientOptions, string> func = delegate (ManagedMqttClientOptions managedMqttClientOptions)
+            {
+                return "password";
+            };
 
             var options = new ManagedMqttClientOptions
             {
                 ClientOptions = new MqttClientTcpOptions
                 {
                     Server = "broker.hivemq.com",
-                    ClientId = "MQTTnetManagedClientTest"
+                    ClientId = "MQTTnetManagedClientTest",
+                    Password = "pippo",
                 },
 
-                AutoReconnectDelay = TimeSpan.FromSeconds(1)
+                AutoReconnectDelay = TimeSpan.FromSeconds(1),
+                Storage = ms,      
+                PasswordProvider = o =>
+                {
+                    //o.ClientOptions.Password = GetPassword();
+                    return o.ClientOptions.Password;
+                }
             };
+
+            
 
             try
             {
@@ -57,6 +74,40 @@ namespace MQTTnet.TestApp.NetCore
             catch (Exception e)
             {
                 Console.WriteLine(e);
+            }
+        }
+
+
+        public static string GetPassword()
+        {
+            return "password";
+        }
+
+
+        public class ClientRetainedMessageHandler : IManagedMqttClientStorage
+        {
+            private const string Filename = @"RetainedMessages.json";
+
+            public Task SaveQueuedMessagesAsync(IList<MqttApplicationMessage> messages)
+            {
+                File.WriteAllText(Filename, JsonConvert.SerializeObject(messages));
+                return Task.FromResult(0);
+            }
+
+            public Task<IList<MqttApplicationMessage>> LoadQueuedMessagesAsync()
+            {
+                IList<MqttApplicationMessage> retainedMessages;
+                if (File.Exists(Filename))
+                {
+                    var json = File.ReadAllText(Filename);
+                    retainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(json);
+                }
+                else
+                {
+                    retainedMessages = new List<MqttApplicationMessage>();
+                }
+
+                return Task.FromResult(retainedMessages);
             }
         }
     }

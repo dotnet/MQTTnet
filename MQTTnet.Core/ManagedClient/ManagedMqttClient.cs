@@ -277,6 +277,7 @@ namespace MQTTnet.Core.ManagedClient
 
             try
             {
+                _options.PasswordProvider?.Invoke(_options);
                 await _mqttClient.ConnectAsync(_options.ClientOptions).ConfigureAwait(false);
                 return ReconnectionResult.Reconnected;
             }

@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TypeScriptToolsVersion>2.3</TypeScriptToolsVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
+    <Content Remove="wwwroot\app\app.ts" />
   </ItemGroup>
 
   <ItemGroup>
@@ -13,8 +14,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.Netstandard\MQTTnet.NetStandard.csproj" />
-    <ProjectReference Include="..\..\MQTTnet.Core\MQTTnet.Core.csproj" />
+    <ProjectReference Include="..\..\Frameworks\MQTTnet.AspnetCore\MQTTnet.AspnetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\app\app.ts" />
   </ItemGroup>
 
 </Project>

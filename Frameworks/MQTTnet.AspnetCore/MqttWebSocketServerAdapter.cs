@@ -5,21 +5,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Channel;
-using MQTTnet.Core.Serializer;
 using MQTTnet.Core.Server;
 using MQTTnet.Implementations;
-using Microsoft.Extensions.Logging;
 
-namespace MQTTnet.TestApp.AspNetCore2
+namespace MQTTnet.AspNetCore
 {
     public class MqttWebSocketServerAdapter : IMqttServerAdapter, IDisposable
     {
-        private readonly ILogger<MqttWebSocketServerAdapter> _logger;
         private readonly IMqttCommunicationAdapterFactory _mqttCommunicationAdapterFactory;
 
-        public MqttWebSocketServerAdapter(ILogger<MqttWebSocketServerAdapter> logger, IMqttCommunicationAdapterFactory mqttCommunicationAdapterFactory)
+        public MqttWebSocketServerAdapter(IMqttCommunicationAdapterFactory mqttCommunicationAdapterFactory)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mqttCommunicationAdapterFactory = mqttCommunicationAdapterFactory ?? throw new ArgumentNullException(nameof(mqttCommunicationAdapterFactory));
         }
 
@@ -32,7 +28,7 @@ namespace MQTTnet.TestApp.AspNetCore2
 
         public Task StopAsync()
         {
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public Task AcceptWebSocketAsync(WebSocket webSocket)

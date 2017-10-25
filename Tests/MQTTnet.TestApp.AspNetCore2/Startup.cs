@@ -1,11 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Server;
+using MQTTnet.AspnetCore;
+using MQTTnet.Core;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {
@@ -13,35 +15,44 @@ namespace MQTTnet.TestApp.AspNetCore2
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMqttServer();
-            services.AddSingleton<MqttWebSocketServerAdapter>();
-            services.AddSingleton<IMqttServerAdapter, MqttWebSocketServerAdapter>();
+            services.AddHostedMqttServer();
         }
 
-        public async void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(LogLevel.Debug);
-            loggerFactory.AddDebug();
-
-            var adapter = app.ApplicationServices.GetService<MqttWebSocketServerAdapter>();
-            var mqttServer = app.ApplicationServices.GetService<IMqttServer>();
-            await mqttServer.StartAsync();
-            
-            app.UseWebSockets();
-            app.Use(async (context, next) =>
+            app.UseMqttEndpoint();
+            app.UseMqttServer(async server =>
             {
-                if (context.WebSockets.IsWebSocketRequest)
+                var msg = new MqttApplicationMessageBuilder()
+                    .WithPayload("Mqtt is awesome")
+                    .WithTopic("message");
+
+                while (true)
                 {
-                    using (var webSocket = await context.WebSockets.AcceptWebSocketAsync())
-                    {
-                        await adapter.AcceptWebSocketAsync(webSocket);
-                    }
-                }
-                else
-                {
-                    await next();
+                    server.Publish(msg.Build());
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    msg.WithPayload("Mqtt is still awesome at " + DateTime.Now);
                 }
             });
+
+            app.Use((context, next) =>
+            {
+                if (context.Request.Path == "/")
+                {
+                    context.Request.Path = "/Index.html";
+                }
+
+                return next();
+            });
+
+            app.UseStaticFiles();
+
+
+            app.UseStaticFiles( new StaticFileOptions()
+            {
+                RequestPath = "/node_modules",
+                FileProvider = new PhysicalFileProvider( Path.Combine(env.ContentRootPath, "node_modules" ) )
+            } );
         }
     }
 }

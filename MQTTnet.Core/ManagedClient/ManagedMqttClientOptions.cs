@@ -10,5 +10,8 @@ namespace MQTTnet.Core.ManagedClient
         public TimeSpan AutoReconnectDelay { get; set; } = TimeSpan.FromSeconds(5);
 
         public IManagedMqttClientStorage Storage { get; set; }
+
+        public Func<IManagedMqttClientOptions, string> PasswordProvider { get; set; }
+
     }
 }

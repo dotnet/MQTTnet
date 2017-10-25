@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.ManagedClient
 {
-    public class ManagedMqttClient : IApplicationMessageReceiver
+    public class ManagedMqttClient : IManagedMqttClient
     {
         private readonly ManagedMqttClientStorageManager _storageManager = new ManagedMqttClientStorageManager();
         private readonly BlockingCollection<MqttApplicationMessage> _messageQueue = new BlockingCollection<MqttApplicationMessage>();
@@ -91,7 +91,7 @@ namespace MQTTnet.Core.ManagedClient
             return Task.FromResult(0);
         }
 
-        public Task EnqueueAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
         {
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 

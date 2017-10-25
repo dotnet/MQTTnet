@@ -42,6 +42,7 @@ namespace MQTTnet.Core.Client
         public async Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
+            if (options.ChannelOptions == null) throw new ArgumentException("ChannelOptions are not set.");
 
             ThrowIfConnected("It is not allowed to connect with a server after the connection is established.");
 
@@ -56,7 +57,7 @@ namespace MQTTnet.Core.Client
 
                 _scopeHandle = _logger.BeginScope(options.ClientId);
                 _logger.LogTrace("Trying to connect with server.");
-                await _adapter.ConnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                await _adapter.ConnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
                 _logger.LogTrace("Connection with server established.");
 
                 await SetupIncomingPacketProcessingAsync();
@@ -73,8 +74,9 @@ namespace MQTTnet.Core.Client
                 Connected?.Invoke(this, new MqttClientConnectedEventArgs(connectResponse.IsSessionPresent));
                 return new MqttClientConnectResult(connectResponse.IsSessionPresent);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(new EventId(), exception, "Error while connecting with server.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
                 throw;
             }
@@ -149,7 +151,7 @@ namespace MQTTnet.Core.Client
                     case MqttQualityOfServiceLevel.AtMostOnce:
                         {
                             // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
-                            await _adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, qosPackets);
+                            await _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, qosPackets);
                             break;
                         }
                     case MqttQualityOfServiceLevel.AtLeastOnce:
@@ -247,7 +249,7 @@ namespace MQTTnet.Core.Client
 
             try
             {
-                await _adapter.DisconnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                await _adapter.DisconnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
                 _logger.LogInformation("Disconnected from adapter.");
             }
             catch (Exception exception)
@@ -354,13 +356,13 @@ namespace MQTTnet.Core.Client
 
         private Task SendAsync(MqttBasePacket packet)
         {
-            return _adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, packet);
+            return _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, packet);
         }
 
         private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket) where TResponsePacket : MqttBasePacket
         {
-            var packetAwaiter = _packetDispatcher.WaitForPacketAsync(requestPacket, typeof(TResponsePacket), _options.DefaultCommunicationTimeout);
-            await _adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, requestPacket).ConfigureAwait(false);
+            var packetAwaiter = _packetDispatcher.WaitForPacketAsync(requestPacket, typeof(TResponsePacket), _options.CommunicationTimeout);
+            await _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, requestPacket).ConfigureAwait(false);
             return (TResponsePacket)await packetAwaiter.ConfigureAwait(false);
         }
 

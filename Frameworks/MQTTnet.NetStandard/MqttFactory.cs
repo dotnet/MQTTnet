@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Implementations;
 using MQTTnet.Core.ManagedClient;
 using MQTTnet.Core.Server;
-using System.Linq;
 using MQTTnet.Core.Channel;
 
 namespace MQTTnet
@@ -18,7 +17,7 @@ namespace MQTTnet
 
         private static IServiceProvider BuildServiceProvider()
         {
-            var serviceProvider =  new ServiceCollection()
+            var serviceProvider = new ServiceCollection()
                 .AddMqttClient()
                 .AddMqttServer()
                 .AddLogging()
@@ -40,10 +39,15 @@ namespace MQTTnet
             _serviceProvider = serviceProvider;
         }
 
+        public ILoggerFactory GetLoggerFactory()
+        {
+            return _serviceProvider.GetRequiredService<ILoggerFactory>();
+        }
+
         public IMqttCommunicationAdapter CreateClientMqttCommunicationAdapter(IMqttClientOptions options)
         {
             var logger = _serviceProvider.GetRequiredService<ILogger<MqttChannelCommunicationAdapter>>();
-            return new MqttChannelCommunicationAdapter(CreateMqttCommunicationChannel(options), CreateSerializer(options.ProtocolVersion), logger);
+            return new MqttChannelCommunicationAdapter(CreateMqttCommunicationChannel(options.ChannelOptions), CreateSerializer(options.ProtocolVersion), logger);
         }
 
         public IMqttCommunicationAdapter CreateServerMqttCommunicationAdapter(IMqttCommunicationChannel channel)
@@ -53,7 +57,7 @@ namespace MQTTnet
             return new MqttChannelCommunicationAdapter(channel, serializer, logger);
         }
 
-        public IMqttCommunicationChannel CreateMqttCommunicationChannel(IMqttClientOptions options)
+        public IMqttCommunicationChannel CreateMqttCommunicationChannel(IMqttClientChannelOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -66,7 +70,7 @@ namespace MQTTnet
                 default:
                     throw new NotSupportedException();
             }
-        }        
+        }
 
         public MqttTcpChannel CreateTcpChannel(MqttClientTcpOptions tcpOptions)
         {
@@ -80,7 +84,7 @@ namespace MQTTnet
 
         public MqttPacketSerializer CreateSerializer(MqttProtocolVersion protocolVersion)
         {
-            return new MqttPacketSerializer()
+            return new MqttPacketSerializer
             {
                 ProtocolVersion = protocolVersion
             };

@@ -28,11 +28,14 @@ namespace MQTTnet.TestApp.NetCore
             
             var options = new ManagedMqttClientOptions
             {
-                ClientOptions = new MqttClientTcpOptions
+                ClientOptions = new MqttClientOptions
                 {
-                    Server = "broker.hivemq.com",
                     ClientId = "MQTTnetManagedClientTest",
-                    Credentials = new RandomPassword()
+                    Credentials = new RandomPassword(),
+                    ChannelOptions = new MqttClientTcpOptions
+                    {
+                        Server = "broker.hivemq.com"
+                    }
                 },
 
                 AutoReconnectDelay = TimeSpan.FromSeconds(1),

@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using MQTTnet.AspNetCore;
 using MQTTnet.Core.Server;
 
 namespace MQTTnet.AspnetCore

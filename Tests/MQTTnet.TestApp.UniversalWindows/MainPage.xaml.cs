@@ -8,9 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.TestApp.UniversalWindows
@@ -42,24 +40,35 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void Connect(object sender, RoutedEventArgs e)
         {
-            MqttClientOptions options = null;
+            var tlsOptions = new MqttClientTlsOptions
+            {
+                UseTls = UseTls.IsChecked == true,
+                IgnoreCertificateChainErrors = true,
+                IgnoreCertificateRevocationErrors = true,
+                AllowUntrustedCertificates = true
+            };
+
+            var options = new MqttClientOptions { ClientId = ClientId.Text };
+
             if (UseTcp.IsChecked == true)
             {
-                options = new MqttClientTcpOptions
+                options.ChannelOptions = new MqttClientTcpOptions
                 {
-                    Server = Server.Text
+                    Server = Server.Text,
+                    TlsOptions = tlsOptions
                 };
             }
 
             if (UseWs.IsChecked == true)
             {
-                options = new MqttClientWebSocketOptions
+                options.ChannelOptions = new MqttClientWebSocketOptions
                 {
-                    Uri = Server.Text
+                    Uri = Server.Text,
+                    TlsOptions = tlsOptions
                 };
             }
 
-            if (options == null)
+            if (options.ChannelOptions == null)
             {
                 throw new InvalidOperationException();
             }
@@ -69,12 +78,6 @@ namespace MQTTnet.TestApp.UniversalWindows
                 Username = User.Text,
                 Password = Password.Text
             };
-
-            options.ClientId = ClientId.Text;
-            options.TlsOptions.UseTls = UseTls.IsChecked == true;
-            options.TlsOptions.IgnoreCertificateChainErrors = true;
-            options.TlsOptions.IgnoreCertificateRevocationErrors = true;
-            options.TlsOptions.AllowUntrustedCertificates = true;
 
             try
             {
@@ -205,73 +208,94 @@ namespace MQTTnet.TestApp.UniversalWindows
         // ReSharper disable once UnusedMember.Local
         private async Task WikiCode()
         {
-            var services = new ServiceCollection()
-                .AddMqttClient()
-                .AddMqttServer(options =>
-                {
-                    options.ConnectionValidator = c =>
-                    {
-                        if (c.ClientId.Length < 10)
-                        {
-                            return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
-                        }
-
-                        if (c.Username != "mySecretUser")
-                        {
-                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                        }
-
-                        if (c.Password != "mySecretPassword")
-                        {
-                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                        }
-
-                        return MqttConnectReturnCode.ConnectionAccepted;
-                    };
-                })
-                .BuildServiceProvider();
-
-            var factory = new MqttFactory(services);
-
-            var mqttClient = factory.CreateMqttClient();
-
-            // ----------------------------------
-
-            var tcpOptions = new MqttClientTcpOptions
             {
-                Server = "broker.hivemq.org",
-                ClientId = "TestClient"
-            };
+                // Create a new MQTT client
+                var services = new ServiceCollection()
+                    .AddMqttClient()
+                    .BuildServiceProvider();
 
-            await mqttClient.ConnectAsync(tcpOptions);
+                var factory = new MqttFactory(services);
+                var client = factory.CreateMqttClient();
 
-            // ----------------------------------
-
-            var secureTcpOptions = new MqttClientTcpOptions
-            {
-                Server = "broker.hivemq.org",
-                ClientId = "TestClient",
-                TlsOptions = new MqttClientTlsOptions
                 {
-                    UseTls = true,
-                    IgnoreCertificateChainErrors = true,
-                    IgnoreCertificateRevocationErrors = true,
-                    AllowUntrustedCertificates = true
+                    // Create TCP based options using the builder
+                    var options = new MqttClientOptionsBuilder()
+                        .WithClientId("Client1")
+                        .WithTcpServer("broker.hivemq.com")
+                        .WithCredentials("bud", "%spencer%")
+                        .WithTls()
+                        .Build();
+
+                    await client.ConnectAsync(options);
                 }
-            };
+
+                {
+                    // Create TCP based options manually
+                    var options = new MqttClientOptions
+                    {
+                        ClientId = "Client1",
+                        Credentials = new MqttClientCredentials
+                        {
+                            Username = "bud",
+                            Password = "%spencer%"
+                        },
+                        ChannelOptions = new MqttClientTcpOptions
+                        {
+                            Server = "broker.hivemq.org",
+                            TlsOptions = new MqttClientTlsOptions
+                            {
+                                UseTls = true
+                            }
+                        },
+                    };
+                }
+
+                {
+                    // Subscribe to a topic
+                    await client.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
+
+                    // Unsubscribe from a topic
+                    await client.UnsubscribeAsync("my/topic");
+
+                    // Publish an application message
+                    var applicationMessage = new MqttApplicationMessageBuilder()
+                        .WithTopic("A/B/C")
+                        .WithPayload("Hello World")
+                        .WithAtLeastOnceQoS()
+                        .Build();
+
+                    await client.PublishAsync(applicationMessage);
+                }
+            }
 
             // ----------------------------------
-
-            var wsOptions = new MqttClientWebSocketOptions
             {
-                Uri = "broker.hivemq.com:8000/mqtt",
-                ClientId = "TestClient"
-            };
+                var services = new ServiceCollection()
+                    .AddMqttServer(options =>
+                    {
+                        options.ConnectionValidator = c =>
+                        {
+                            if (c.ClientId.Length < 10)
+                            {
+                                return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                            }
 
-            await mqttClient.ConnectAsync(wsOptions);
+                            if (c.Username != "mySecretUser")
+                            {
+                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            }
 
-            // ----------------------------------
-            {
+                            if (c.Password != "mySecretPassword")
+                            {
+                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            }
+
+                            return MqttConnectReturnCode.ConnectionAccepted;
+                        };
+                    })
+                    .BuildServiceProvider();
+
+                var factory = new MqttFactory(services);
                 var mqttServer = factory.CreateMqttServer();
                 await mqttServer.StartAsync();
 
@@ -282,7 +306,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             }
 
             // ----------------------------------
-            
+
             // For UWP apps:
             MqttTcpChannel.CustomIgnorableServerCertificateErrorsResolver = o =>
             {

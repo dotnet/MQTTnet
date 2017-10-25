@@ -15,7 +15,7 @@ namespace MQTTnet.Implementations
     {
         private readonly MqttClientTcpOptions _options;
 
-//todo: this can be used with min dependency NetStandard1.6
+        //todo: this can be used with min dependency NetStandard1.6
 #if NET45
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
@@ -24,7 +24,7 @@ namespace MQTTnet.Implementations
 
         private Socket _socket;
         private SslStream _sslStream;
-        
+
         /// <summary>
         /// called on client sockets are created in connect
         /// </summary>
@@ -48,7 +48,7 @@ namespace MQTTnet.Implementations
         public Stream SendStream { get; private set; }
         public Stream ReceiveStream { get; private set; }
         public Stream RawReceiveStream { get; private set; }
-        
+
         public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
 
         public async Task ConnectAsync()
@@ -58,7 +58,7 @@ namespace MQTTnet.Implementations
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             }
 
-//todo: else brach can be used with min dependency NET46
+            //todo: else brach can be used with min dependency NET46
 #if NET451
             await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
 #else
@@ -120,7 +120,7 @@ namespace MQTTnet.Implementations
             return _options.TlsOptions.AllowUntrustedCertificates;
         }
 
-        private static X509CertificateCollection LoadCertificates(IMqttClientOptions options)
+        private static X509CertificateCollection LoadCertificates(MqttClientTcpOptions options)
         {
             var certificates = new X509CertificateCollection();
             if (options.TlsOptions.Certificates == null)
@@ -144,7 +144,7 @@ namespace MQTTnet.Implementations
             //cannot use this as default buffering prevents from receiving the first connect message
             //need two streams otherwise read and write have to be synchronized
 
-//todo: if branch can be used with min dependency NetStandard1.6
+            //todo: if branch can be used with min dependency NetStandard1.6
 #if NET45
             SendStream = new BufferedStream(RawReceiveStream, BufferSize);
             ReceiveStream = new BufferedStream(RawReceiveStream, BufferSize);

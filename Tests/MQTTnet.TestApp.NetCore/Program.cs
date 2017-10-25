@@ -1,17 +1,12 @@
 ﻿using MQTTnet.Core;
 using MQTTnet.Core.Client;
-using MQTTnet.Core.Packets;
-using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.TestApp.NetCore
@@ -25,11 +20,11 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("2 = Start server");
             Console.WriteLine("3 = Start performance test");
             Console.WriteLine("4 = Start managed client");
-                        
+
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.KeyChar == '1')
             {
-                Task.Run(RunClientAsync);
+                Task.Run(ClientTest.RunAsync);
             }
             else if (pressedKey.KeyChar == '2')
             {
@@ -46,105 +41,22 @@ namespace MQTTnet.TestApp.NetCore
 
             Thread.Sleep(Timeout.Infinite);
         }
-
-        private static async Task RunClientAsync()
-        {
-            try
-            {
-                var services = new ServiceCollection()
-                    .AddMqttServer()
-                    .AddLogging()
-                    .BuildServiceProvider();
-
-                services.GetService<ILoggerFactory>()
-                    .AddConsole();
-
-                var options = new MqttClientWebSocketOptions
-                {
-                    Uri = "localhost",
-                    ClientId = "XYZ",
-                    CleanSession = true
-                };
-
-                var client = services.GetRequiredService<IMqttClient>();
-                client.ApplicationMessageReceived += (s, e) =>
-                {
-                    Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
-                    Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
-                    Console.WriteLine($"+ Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
-                    Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
-                    Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
-                    Console.WriteLine();
-                };
-
-                client.Connected += async (s, e) =>
-                {
-                    Console.WriteLine("### CONNECTED WITH SERVER ###");
-
-                    await client.SubscribeAsync(new List<TopicFilter>
-                    {
-                        new TopicFilter("#", MqttQualityOfServiceLevel.AtMostOnce)
-                    });
-
-                    Console.WriteLine("### SUBSCRIBED ###");
-                };
-
-                client.Disconnected += async (s, e) =>
-                {
-                    Console.WriteLine("### DISCONNECTED FROM SERVER ###");
-                    await Task.Delay(TimeSpan.FromSeconds(5));
-
-                    try
-                    {
-                        await client.ConnectAsync(options);
-                    }
-                    catch
-                    {
-                        Console.WriteLine("### RECONNECTING FAILED ###");
-                    }
-                };
-
-                try
-                {
-                    await client.ConnectAsync(options);
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine("### CONNECTING FAILED ###" + Environment.NewLine + exception);
-                }
-
-                Console.WriteLine("### WAITING FOR APPLICATION MESSAGES ###");
-
-                while (true)
-                {
-                    Console.ReadLine();
-
-                    var applicationMessage = new MqttApplicationMessage
-                    {
-                        Topic = "A/B/C",
-                        Payload = Encoding.UTF8.GetBytes("Hello World"),
-                        QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce
-                    };
-
-                    await client.PublishAsync(applicationMessage);
-                }
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine(exception);
-            }
-        }
-
+        
+        // This code is used at the Wiki on GitHub!
         // ReSharper disable once UnusedMember.Local
         private static async void WikiCode()
         {
             {
-                var serviceProvider = new ServiceCollection()
-                    .AddMqttServer()
-                    .AddLogging()
-                    .BuildServiceProvider();
+                var client = new MqttFactory().CreateMqttClient();
 
-                var client = serviceProvider.GetRequiredService<IMqttClient>();
+                var options = new MqttClientOptionsBuilder()
+                    .WithClientId("Client1")
+                    .WithTcpServer("broker.hivemq.com")
+                    .WithCredentials("bud", "%spencer%")
+                    .WithTls()
+                    .Build();
+
+                await client.ConnectAsync(options);
 
                 var message = new MqttApplicationMessageBuilder()
                     .WithTopic("MyTopic")
@@ -157,9 +69,10 @@ namespace MQTTnet.TestApp.NetCore
             }
 
             {
-                var message = new MqttApplicationMessageBuilder()
-                    .WithTopic("/MQTTnet/is/awesome")
-                    .Build();
+                var factory = new MqttFactory();
+                factory.GetLoggerFactory().AddConsole();
+
+                var client = factory.CreateMqttClient();
             }
         }
     }

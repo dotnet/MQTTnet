@@ -5,8 +5,6 @@ namespace MQTTnet.Core.Client
 {
     public class MqttClientOptions : IMqttClientOptions
     {
-        public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
-
         public MqttApplicationMessage WillMessage { get; set; }
 
         public string ClientId { get; set; } = Guid.NewGuid().ToString("N");
@@ -17,8 +15,10 @@ namespace MQTTnet.Core.Client
 
         public TimeSpan KeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(5);
 
-        public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan CommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
+
+        public IMqttClientChannelOptions ChannelOptions { get; set; }
     }
 }

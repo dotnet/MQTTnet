@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Core.Client
 {
-    public sealed class MqttClientTlsOptions
+    public class MqttClientTlsOptions
     {
         public bool UseTls { get; set; }
 

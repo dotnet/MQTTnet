@@ -17,10 +17,5 @@ namespace MQTTnet.Core.Exceptions
             : base(message)
         {
         }
-
-        public MqttCommunicationException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
     }
 }

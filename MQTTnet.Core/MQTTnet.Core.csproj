@@ -17,19 +17,15 @@
     <PackageIconUrl></PackageIconUrl>
     <RepositoryUrl></RepositoryUrl>
     <PackageTags></PackageTags>
-    <FileVersion>2.4.0.0</FileVersion>
-    <AssemblyVersion>2.4.0.0</AssemblyVersion>
+    <FileVersion>2.5.0.0</FileVersion>
+    <AssemblyVersion>2.5.0.0</AssemblyVersion>
     <PackageLicenseUrl></PackageLicenseUrl>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Any CPU|AnyCPU'" />
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Any CPU|x64'" />
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" />
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" />
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Any CPU|x86'" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="1.1.2" />
+    <PackageReference Include="System.Threading" Version="4.3.0" />
+  </ItemGroup>
 
 </Project>

@@ -5,15 +5,14 @@ using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Client
 {
-    public interface IMqttClient
+    public interface IMqttClient : IApplicationMessageReceiver
     {
         bool IsConnected { get; }
 
-        event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
-        event EventHandler Connected;
-        event EventHandler Disconnected;
+        event EventHandler<MqttClientConnectedEventArgs> Connected;
+        event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
-        Task ConnectAsync(MqttClientOptions options);
+        Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options);
         Task DisconnectAsync();
 
         Task<IList<MqttSubscribeResult>> SubscribeAsync(IEnumerable<TopicFilter> topicFilters);

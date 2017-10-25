@@ -12,8 +12,7 @@ namespace MQTTnet.Core.Packets
 
             if (responsePacket is IMqttPacketWithIdentifier responsePacketWithIdentifier)
             {
-                var requestPacketWithIdentifier = packet as IMqttPacketWithIdentifier;
-                if (requestPacketWithIdentifier == null)
+                if (!(packet is IMqttPacketWithIdentifier requestPacketWithIdentifier))
                 {
                     throw new InvalidOperationException("Response packet has PacketIdentifier but request packet does not.");
                 }

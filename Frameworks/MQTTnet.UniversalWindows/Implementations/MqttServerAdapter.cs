@@ -1,29 +1,32 @@
 using System;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Serializer;
 using MQTTnet.Core.Server;
 using Windows.Networking.Sockets;
+using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Implementations
 {
     public class MqttServerAdapter : IMqttServerAdapter, IDisposable
     {
+        private readonly ILogger<MqttServerAdapter> _logger;
+        private readonly IMqttCommunicationAdapterFactory _mqttCommunicationAdapterFactory;
         private StreamSocketListener _defaultEndpointSocket;
 
-        private bool _isRunning;
+        public MqttServerAdapter(ILogger<MqttServerAdapter> logger, IMqttCommunicationAdapterFactory mqttCommunicationAdapterFactory)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mqttCommunicationAdapterFactory = mqttCommunicationAdapterFactory ?? throw new ArgumentNullException(nameof(mqttCommunicationAdapterFactory));
+        }
 
-        public event Action<IMqttCommunicationAdapter> ClientAccepted;
+        public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
         public async Task StartAsync(MqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            if (_isRunning) throw new InvalidOperationException("Server is already started.");
-
-            _isRunning = true;
-
+            if (_defaultEndpointSocket != null) throw new InvalidOperationException("Server is already started.");
+            
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _defaultEndpointSocket = new StreamSocketListener();
@@ -39,8 +42,6 @@ namespace MQTTnet.Implementations
 
         public Task StopAsync()
         {
-            _isRunning = false;
-
             _defaultEndpointSocket?.Dispose();
             _defaultEndpointSocket = null;
 
@@ -56,12 +57,12 @@ namespace MQTTnet.Implementations
         {
             try
             {
-                var clientAdapter = new MqttChannelCommunicationAdapter(new MqttTcpChannel(args.Socket), new MqttPacketSerializer());
-                ClientAccepted?.Invoke(clientAdapter);
+                var clientAdapter = _mqttCommunicationAdapterFactory.CreateServerMqttCommunicationAdapter(new MqttTcpChannel(args.Socket));
+                ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }
             catch (Exception exception)
             {
-                MqttNetTrace.Error(nameof(MqttServerAdapter), exception, "Error while accepting connection at default endpoint.");
+                _logger.LogError(new EventId(), exception, "Error while accepting connection at default endpoint.");
             }
         }
     }

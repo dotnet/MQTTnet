@@ -6,12 +6,13 @@ namespace MQTTnet.Core.Internal
     {
         public static MqttApplicationMessage ToApplicationMessage(this MqttPublishPacket publishPacket)
         {
-            return new MqttApplicationMessage(
-                publishPacket.Topic,
-                publishPacket.Payload,
-                publishPacket.QualityOfServiceLevel,
-                publishPacket.Retain
-            );
+            return new MqttApplicationMessage
+            { 
+                Topic = publishPacket.Topic,
+                Payload = publishPacket.Payload,
+                QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
+                Retain = publishPacket.Retain
+            };
         }
 
         public static MqttPublishPacket ToPublishPacket(this MqttApplicationMessage applicationMessage)

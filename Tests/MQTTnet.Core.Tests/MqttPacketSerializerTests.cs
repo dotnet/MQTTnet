@@ -2,10 +2,8 @@
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Channel;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Serializer;
@@ -55,11 +53,13 @@ namespace MQTTnet.Core.Tests
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true,
-                WillMessage = new MqttApplicationMessage(
-                    "My/last/will",
-                    Encoding.UTF8.GetBytes("Good byte."),
-                    MqttQualityOfServiceLevel.AtLeastOnce,
-                    true)
+                WillMessage = new MqttApplicationMessage
+                {
+                    Topic = "My/last/will",
+                    Payload = Encoding.UTF8.GetBytes("Good byte."),
+                    QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
+                    Retain = true
+                }
             };
 
             SerializeAndCompare(p, "EDUABE1RVFQE7gB7AANYWVoADE15L2xhc3Qvd2lsbAAKR29vZCBieXRlLgAEVVNFUgAEUEFTUw==");
@@ -90,11 +90,13 @@ namespace MQTTnet.Core.Tests
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true,
-                WillMessage = new MqttApplicationMessage(
-                    "My/last/will",
-                    Encoding.UTF8.GetBytes("Good byte."),
-                    MqttQualityOfServiceLevel.AtLeastOnce,
-                    true)
+                WillMessage = new MqttApplicationMessage
+                {
+                    Topic = "My/last/will",
+                    Payload = Encoding.UTF8.GetBytes("Good byte."),
+                    QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
+                    Retain = true
+                }
             };
 
             DeserializeAndCompare(p, "EDUABE1RVFQE7gB7AANYWVoADE15L2xhc3Qvd2lsbAAKR29vZCBieXRlLgAEVVNFUgAEUEFTUw==");
@@ -385,45 +387,6 @@ namespace MQTTnet.Core.Tests
             };
 
             DeserializeAndCompare(p, "sAIAew==");
-        }
-
-
-        public class TestChannel : IMqttCommunicationChannel
-        {
-            private readonly MemoryStream _stream = new MemoryStream();
-
-            public Stream ReceiveStream => _stream;
-
-            public Stream RawReceiveStream => _stream;
-
-            public Stream SendStream => _stream;
-
-            public bool IsConnected { get; } = true;
-
-            public TestChannel()
-            {
-            }
-
-            public TestChannel(byte[] initialData)
-            {
-                _stream.Write(initialData, 0, initialData.Length);
-                _stream.Position = 0;
-            }
-
-            public Task ConnectAsync()
-            {
-                return Task.FromResult(0);
-            }
-
-            public Task DisconnectAsync()
-            {
-                return Task.FromResult(0);
-            }
-
-            public byte[] ToArray()
-            {
-                return _stream.ToArray();
-            }
         }
 
         private static void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)

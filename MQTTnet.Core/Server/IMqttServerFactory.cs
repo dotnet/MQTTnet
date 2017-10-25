@@ -2,6 +2,6 @@
 {
     public interface IMqttServerFactory
     {
-        IMqttServer CreateMqttServer(MqttServerOptions options);
+        IMqttServer CreateMqttServer();
     }
 }

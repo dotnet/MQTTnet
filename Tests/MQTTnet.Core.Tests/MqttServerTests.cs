@@ -51,7 +51,13 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_WillMessage()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttFactory().CreateMqttServer();
+            var services = new ServiceCollection()
+                .AddLogging()
+                .AddMqttServer()
+                .AddSingleton<IMqttServerAdapter>(serverAdapter)
+                .BuildServiceProvider();
+
+            var s = new MqttFactory(services).CreateMqttServer();
             var receivedMessagesCount = 0;
             try
             {
@@ -79,7 +85,13 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_Unsubscribe()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttFactory().CreateMqttServer();
+            var services = new ServiceCollection()
+                .AddLogging()
+                .AddMqttServer()
+                .AddSingleton<IMqttServerAdapter>(serverAdapter)
+                .BuildServiceProvider();
+
+            var s = new MqttFactory(services).CreateMqttServer();
 
             var receivedMessagesCount = 0;
 
@@ -121,7 +133,13 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_Publish()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttFactory().CreateMqttServer();
+            var services = new ServiceCollection()
+                .AddLogging()
+                .AddMqttServer()
+                .AddSingleton<IMqttServerAdapter>(serverAdapter)
+                .BuildServiceProvider();
+
+            var s = new MqttFactory(services).CreateMqttServer();
             var receivedMessagesCount = 0;
 
             try
@@ -150,7 +168,13 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_NoRetainedMessage()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttFactory().CreateMqttServer();
+            var services = new ServiceCollection()
+                .AddLogging()
+                .AddMqttServer()
+                .AddSingleton<IMqttServerAdapter>(serverAdapter)
+                .BuildServiceProvider();
+
+            var s = new MqttFactory(services).CreateMqttServer();
             var receivedMessagesCount = 0;
 
             try
@@ -179,7 +203,13 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_RetainedMessage()
         {
             var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttFactory().CreateMqttServer();
+            var services = new ServiceCollection()
+                .AddLogging()
+                .AddMqttServer()
+                .AddSingleton<IMqttServerAdapter>(serverAdapter)
+                .BuildServiceProvider();
+
+            var s = new MqttFactory(services).CreateMqttServer();
 
             var receivedMessagesCount = 0;
             try
@@ -210,7 +240,7 @@ namespace MQTTnet.Core.Tests
             var serverAdapter = new TestMqttServerAdapter();
             var services = new ServiceCollection()
                 .AddLogging()
-                .AddMqttServer() // TODO: Is there maybe an easier way for the library user to set the options?
+                .AddMqttServer()
                 .AddSingleton<IMqttServerAdapter>(serverAdapter)
                 .BuildServiceProvider();
 
@@ -248,11 +278,11 @@ namespace MQTTnet.Core.Tests
             var serverAdapter = new TestMqttServerAdapter();
             var services = new ServiceCollection()
                 .AddLogging()
-                .AddMqttServer(options => options.Storage = storage) // TODO: Is there maybe an easier way for the library user to set the options?
+                .AddMqttServer()
                 .AddSingleton<IMqttServerAdapter>(serverAdapter)
                 .BuildServiceProvider();
 
-            var s = new MqttFactory(services).CreateMqttServer(); // TODO: Like here?
+            var s = new MqttFactory(services).CreateMqttServer(options => options.Storage = storage);
 
             try
             {
@@ -300,11 +330,11 @@ namespace MQTTnet.Core.Tests
             var serverAdapter = new TestMqttServerAdapter();
             var services = new ServiceCollection()
                 .AddLogging()
-                .AddMqttServer(options => options.ApplicationMessageInterceptor = Interceptor)
+                .AddMqttServer()
                 .AddSingleton<IMqttServerAdapter>(serverAdapter)
                 .BuildServiceProvider();
 
-            var s = services.GetRequiredService<IMqttServer>();
+            var s = new MqttFactory(services).CreateMqttServer(options => options.ApplicationMessageInterceptor = Interceptor);
             try
             {
                 await s.StartAsync();

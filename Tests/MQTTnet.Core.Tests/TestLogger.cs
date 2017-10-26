@@ -3,11 +3,11 @@ using System;
 
 namespace MQTTnet.Core.Tests
 {
-    public class TestLogger<T> : ILogger<T>
+    public class TestLogger<T> : IDisposable, ILogger<T>
     {
         public IDisposable BeginScope<TState>(TState state)
         {
-            throw new NotImplementedException();
+            return this;
         }
 
         public bool IsEnabled(LogLevel logLevel)
@@ -16,6 +16,10 @@ namespace MQTTnet.Core.Tests
         }
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        {
+        }
+
+        public void Dispose()
         {
         }
     }

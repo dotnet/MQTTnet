@@ -4,6 +4,7 @@ using MQTTnet.Core.Client;
 using MQTTnet.Core.Serializer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MQTTnet.Implementations;
 using MQTTnet.Core.ManagedClient;
 using MQTTnet.Core.Server;
@@ -107,6 +108,15 @@ namespace MQTTnet
 
         public IMqttServer CreateMqttServer()
         {
+            return _serviceProvider.GetRequiredService<IMqttServer>();
+        }
+
+        public IMqttServer CreateMqttServer(Action<MqttServerOptions> configure)
+        {
+            var options = _serviceProvider.GetRequiredService<IOptions<MqttServerOptions>>();
+
+            configure(options.Value);
+
             return _serviceProvider.GetRequiredService<IMqttServer>();
         }
     }

@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.AspnetCore\MQTTnet.AspnetCore.csproj" />
+    <ProjectReference Include="..\..\Frameworks\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

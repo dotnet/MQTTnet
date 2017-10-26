@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Channel;
 using MQTTnet.Core.Client;
@@ -85,9 +86,15 @@ namespace MQTTnet
             };
         }
 
-        public MqttClientSession CreateClientSession(string sessionId, MqttClientSessionsManager mqttClientSessionsManager)
+        public MqttClientSession CreateClientSession(string clientId, MqttClientSessionsManager clientSessionsManager)
         {
-            return new MqttClientSession(sessionId, mqttClientSessionsManager, _serviceProvider.GetRequiredService<ILogger<MqttClientSession>>(), _serviceProvider.GetRequiredService<ILogger<MqttClientPendingMessagesQueue>>());
+            return new MqttClientSession(
+                clientId,
+                _serviceProvider.GetRequiredService<IOptions<MqttServerOptions>>(),
+                clientSessionsManager,
+                _serviceProvider.GetRequiredService<MqttClientSubscriptionsManager>(),
+                _serviceProvider.GetRequiredService<ILogger<MqttClientSession>>(),
+                _serviceProvider.GetRequiredService<ILogger<MqttClientPendingMessagesQueue>>());
         }
 
         public IMqttClient CreateMqttClient()

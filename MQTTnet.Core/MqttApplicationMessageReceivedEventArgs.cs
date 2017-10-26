@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MQTTnet.Core.Client
+namespace MQTTnet.Core
 {
     public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     {

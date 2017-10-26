@@ -9,6 +9,7 @@ using MQTTnet.Core;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Protocol;
+using MQTTnet.Core.Server;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.TestApp.UniversalWindows
@@ -16,6 +17,7 @@ namespace MQTTnet.TestApp.UniversalWindows
     public sealed partial class MainPage
     {
         private IMqttClient _mqttClient;
+        private IMqttServer _mqttServer;
 
         public MainPage()
         {
@@ -318,6 +320,28 @@ namespace MQTTnet.TestApp.UniversalWindows
                 return new ChainValidationResult[0];
             };
 
+        }
+
+        private async void StartServer(object sender, RoutedEventArgs e)
+        {
+            if (_mqttServer != null)
+            {
+                return;
+            }
+
+            _mqttServer = new MqttFactory().CreateMqttServer();
+            await _mqttServer.StartAsync();
+        }
+
+        private async void StopServer(object sender, RoutedEventArgs e)
+        {
+            if (_mqttServer == null)
+            {
+                return;
+            }
+
+            await _mqttServer.StopAsync();
+            _mqttServer = null;
         }
     }
 }

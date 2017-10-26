@@ -6,7 +6,6 @@ using MQTTnet.Core.Adapter;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Linq;
-using MQTTnet.Core.Client;
 
 namespace MQTTnet.Core.Server
 {
@@ -46,7 +45,7 @@ namespace MQTTnet.Core.Server
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
-        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        public void Publish(IEnumerable<MqttApplicationMessage> applicationMessages)
         {
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
@@ -60,7 +59,11 @@ namespace MQTTnet.Core.Server
                 _options.ApplicationMessageInterceptor?.Invoke(applicationMessage);
                 _clientSessionsManager.DispatchApplicationMessage(null, applicationMessage);
             }
-            
+        }
+
+        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        {
+            Publish(applicationMessages);
             return Task.FromResult(0);
         }
 

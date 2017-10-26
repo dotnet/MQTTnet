@@ -9,6 +9,11 @@ namespace MQTTnet.Core.Server
     {
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscribedTopics = new Dictionary<string, MqttQualityOfServiceLevel>();
 
+        public MqttClientSubscriptionsManager()
+        {
+            
+        }
+
         public MqttSubAckPacket Subscribe(MqttSubscribePacket subscribePacket)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
@@ -19,6 +24,8 @@ namespace MQTTnet.Core.Server
             {
                 foreach (var topicFilter in subscribePacket.TopicFilters)
                 {
+
+
                     _subscribedTopics[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
                     responsePacket.SubscribeReturnCodes.Add(MqttSubscribeReturnCode.SuccessMaximumQoS1); // TODO: Add support for QoS 2.
                 }

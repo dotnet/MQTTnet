@@ -11,6 +11,7 @@ using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Serializer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MQTTnet.Core.Client;
 
 namespace MQTTnet.Core.Server
 {
@@ -28,9 +29,9 @@ namespace MQTTnet.Core.Server
             _mqttClientSesssionFactory = mqttClientSesssionFactory ?? throw new ArgumentNullException(nameof(mqttClientSesssionFactory));
         }
 
-        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
+        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
         public MqttClientRetainedMessagesManager RetainedMessagesManager { get; }
         public MqttServerOptions Options { get; }
@@ -166,6 +167,7 @@ namespace MQTTnet.Core.Server
                         _clientSessions.Remove(connectPacket.ClientId);
                         clientSession.Dispose();
                         clientSession = null;
+
                         _logger.LogTrace("Disposed existing session of client '{0}'.", connectPacket.ClientId);
                     }
                     else

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MQTTnet.AspNetCore;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Server;
 

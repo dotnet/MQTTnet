@@ -5,14 +5,15 @@ namespace MQTTnet.Core.Client
 {
     public interface IMqttClientOptions
     {
-        bool CleanSession { get; }
         string ClientId { get; }
-        TimeSpan DefaultCommunicationTimeout { get; }
-        TimeSpan KeepAlivePeriod { get; }
-        string Password { get; }
-        MqttProtocolVersion ProtocolVersion { get; }
-        MqttClientTlsOptions TlsOptions { get; }
-        string UserName { get; }
+        IMqttClientCredentials Credentials { get; }
+        bool CleanSession { get; }
         MqttApplicationMessage WillMessage { get; }
+        
+        TimeSpan CommunicationTimeout { get; }
+        TimeSpan KeepAlivePeriod { get; }
+        MqttProtocolVersion ProtocolVersion { get; }
+
+        IMqttClientChannelOptions ChannelOptions { get; }
     }
 }

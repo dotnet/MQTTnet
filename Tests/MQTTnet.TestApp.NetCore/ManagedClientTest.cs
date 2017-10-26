@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.ManagedClient;
-using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -25,31 +24,23 @@ namespace MQTTnet.TestApp.NetCore
             services.GetService<ILoggerFactory>()
                 .AddConsole();
 
-            ClientRetainedMessageHandler ms = new ClientRetainedMessageHandler();
-            Func<ManagedMqttClientOptions, string> func = delegate (ManagedMqttClientOptions managedMqttClientOptions)
-            {
-                return "password";
-            };
-
+            var ms = new ClientRetainedMessageHandler();
+            
             var options = new ManagedMqttClientOptions
             {
-                ClientOptions = new MqttClientTcpOptions
+                ClientOptions = new MqttClientOptions
                 {
-                    Server = "broker.hivemq.com",
                     ClientId = "MQTTnetManagedClientTest",
-                    Password = "pippo",
+                    Credentials = new RandomPassword(),
+                    ChannelOptions = new MqttClientTcpOptions
+                    {
+                        Server = "broker.hivemq.com"
+                    }
                 },
 
                 AutoReconnectDelay = TimeSpan.FromSeconds(1),
-                Storage = ms,      
-                PasswordProvider = o =>
-                {
-                    //o.ClientOptions.Password = GetPassword();
-                    return o.ClientOptions.Password;
-                }
+                Storage = ms
             };
-
-            
 
             try
             {
@@ -78,11 +69,18 @@ namespace MQTTnet.TestApp.NetCore
         }
 
 
-        public static string GetPassword()
+        public class RandomPassword : IMqttClientCredentials
         {
-            return "password";
-        }
+            public string Password
+            {
+                get
+                {
+                    return Guid.NewGuid().ToString(); // The random password.
+                }
+            }
 
+            public string Username => "the_static_user";
+        }
 
         public class ClientRetainedMessageHandler : IManagedMqttClientStorage
         {

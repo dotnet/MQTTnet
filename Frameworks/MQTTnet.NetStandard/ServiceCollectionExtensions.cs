@@ -52,8 +52,9 @@ namespace MQTTnet
 
             services.AddTransient<IMqttClient, MqttClient>();
             services.AddTransient<MqttClient>();
-            services.AddTransient<IMqttPacketSerializer, MqttPacketSerializer>();
+            services.AddTransient<IManagedMqttClient, ManagedMqttClient>();
             services.AddTransient<ManagedMqttClient>();
+            services.AddTransient<IMqttPacketSerializer, MqttPacketSerializer>();
             services.AddTransient<MqttPacketDispatcher>();
 
             return services;

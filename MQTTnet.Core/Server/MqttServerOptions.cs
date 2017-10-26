@@ -4,7 +4,7 @@ using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Server
 {
-    public sealed class MqttServerOptions
+    public class MqttServerOptions
     {
         public MqttServerDefaultEndpointOptions DefaultEndpointOptions { get; } = new MqttServerDefaultEndpointOptions();
 

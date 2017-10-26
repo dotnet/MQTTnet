@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Core.Client;
 
 namespace MQTTnet.Core.Server
 {
-    public interface IMqttServer
+    public interface IMqttServer : IApplicationMessageReceiver, IApplicationMessagePublisher
     {
         event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
         event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
 
-        event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
-
         IList<ConnectedMqttClient> GetConnectedClients();
-        void Publish(MqttApplicationMessage applicationMessage);
 
         Task StartAsync();
         Task StopAsync();

@@ -28,11 +28,11 @@ namespace MQTTnet.Core.Server
 
         public MqttClientSession(string clientId, MqttClientSessionsManager mqttClientSessionsManager, ILogger<MqttClientSession> logger, ILogger<MqttClientPendingMessagesQueue> msgQueueLogger)
         {
-            ClientId = clientId;
-            _options = mqttClientSessionsManager.Options;
             _mqttClientSessionsManager = mqttClientSessionsManager ?? throw new ArgumentNullException(nameof(mqttClientSessionsManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ClientId = clientId;
 
+            _options = mqttClientSessionsManager.Options;
             _pendingMessagesQueue = new MqttClientPendingMessagesQueue(mqttClientSessionsManager.Options, this, msgQueueLogger);
         }
 
@@ -46,10 +46,9 @@ namespace MQTTnet.Core.Server
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 
-            _willMessage = willMessage;
-
             try
             {
+                _willMessage = willMessage;
                 _adapter = adapter;
                 _cancellationTokenSource = new CancellationTokenSource();
 
@@ -71,18 +70,23 @@ namespace MQTTnet.Core.Server
 
         public void Stop()
         {
-            if (_willMessage != null)
+            try
             {
-                _mqttClientSessionsManager.DispatchApplicationMessage(this, _willMessage);
+                _cancellationTokenSource?.Cancel(false);
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+
+                _adapter = null;
+
+                _logger.LogInformation("Client '{0}': Disconnected.", ClientId);
             }
-
-            _cancellationTokenSource?.Cancel(false);
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
-
-            _adapter = null;
-
-            _logger.LogInformation("Client '{0}': Disconnected.", ClientId);
+            finally
+            {
+                if (_willMessage != null)
+                {
+                    _mqttClientSessionsManager.DispatchApplicationMessage(this, _willMessage);
+                }
+            }
         }
 
         public void EnqueuePublishPacket(MqttPublishPacket publishPacket)

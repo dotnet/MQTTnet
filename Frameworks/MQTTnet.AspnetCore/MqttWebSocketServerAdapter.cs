@@ -8,7 +8,7 @@ using MQTTnet.Core.Channel;
 using MQTTnet.Core.Server;
 using MQTTnet.Implementations;
 
-namespace MQTTnet.AspNetCore
+namespace MQTTnet.AspnetCore
 {
     public class MqttWebSocketServerAdapter : IMqttServerAdapter, IDisposable
     {

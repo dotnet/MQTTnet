@@ -21,7 +21,17 @@ namespace MQTTnet.Core.Tests
             var connected = WaitForClientToConnect(server, clientId);
 
             FireClientAcceptedEvent(adapterB);
-            await client.ConnectAsync(new MqttClientTcpOptions { ClientId = clientId, WillMessage = willMessage });
+
+            var options = new MqttClientOptions
+            {
+                ClientId = clientId,
+                WillMessage = willMessage,
+                ChannelOptions = new MqttClientTcpOptions()
+            };
+
+            options.ChannelOptions = new MqttClientTcpOptions();
+
+            await client.ConnectAsync(options);
             await connected;
 
             return client;

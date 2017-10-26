@@ -32,7 +32,6 @@ namespace MQTTnet.Implementations
             }
 
             _webSocket = new ClientWebSocket();
-            _webSocket.Options.KeepAliveInterval = _options.KeepAlivePeriod;
 
             if (_options.RequestHeaders != null)
             {
@@ -77,12 +76,16 @@ namespace MQTTnet.Implementations
                 return;
             }
 
-            await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
+            if (_webSocket.State == WebSocketState.Open || _webSocket.State == WebSocketState.Connecting)
+            {
+                await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
+            }
         }
 
         public void Dispose()
         {
             _webSocket?.Dispose();
+            _webSocket = null;
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Net;
 
 namespace MQTTnet.Core.Client
 {
-    public class MqttClientWebSocketOptions : BaseMqttClientOptions
+    public class MqttClientWebSocketOptions : IMqttClientChannelOptions
     {
         public string Uri { get; set; }
 
@@ -12,5 +12,7 @@ namespace MQTTnet.Core.Client
         public ICollection<string> SubProtocols { get; set; }
 
         public CookieContainer CookieContainer { get; set; }
+
+        public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
     }
 }

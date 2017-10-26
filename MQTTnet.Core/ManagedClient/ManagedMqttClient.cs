@@ -6,13 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Exceptions;
-using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.ManagedClient
 {
-    public class ManagedMqttClient : IApplicationMessageReceiver
+    public class ManagedMqttClient : IManagedMqttClient
     {
         private readonly ManagedMqttClientStorageManager _storageManager = new ManagedMqttClientStorageManager();
         private readonly BlockingCollection<MqttApplicationMessage> _messageQueue = new BlockingCollection<MqttApplicationMessage>();
@@ -92,7 +91,7 @@ namespace MQTTnet.Core.ManagedClient
             return Task.FromResult(0);
         }
 
-        public Task EnqueueAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
         {
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
@@ -277,7 +276,6 @@ namespace MQTTnet.Core.ManagedClient
 
             try
             {
-                _options.PasswordProvider?.Invoke(_options);
                 await _mqttClient.ConnectAsync(_options.ClientOptions).ConfigureAwait(false);
                 return ReconnectionResult.Reconnected;
             }

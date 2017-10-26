@@ -5,7 +5,7 @@ using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Client
 {
-    public interface IMqttClient : IApplicationMessageReceiver
+    public interface IMqttClient : IApplicationMessageReceiver, IApplicationMessagePublisher
     {
         bool IsConnected { get; }
 
@@ -17,7 +17,5 @@ namespace MQTTnet.Core.Client
 
         Task<IList<MqttSubscribeResult>> SubscribeAsync(IEnumerable<TopicFilter> topicFilters);
         Task UnsubscribeAsync(IEnumerable<string> topicFilters);
-
-        Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages);
     }
 }

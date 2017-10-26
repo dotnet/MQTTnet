@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
-using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
 using System;
@@ -20,7 +19,8 @@ namespace MQTTnet.TestApp.NetCore
         public static async Task RunAsync()
         {
             var services = new ServiceCollection()
-                .AddMqttServer(options => {
+                .AddMqttServer(options =>
+                {
 
                     options.ConnectionValidator = p =>
                     {
@@ -41,11 +41,10 @@ namespace MQTTnet.TestApp.NetCore
                 .AddLogging()
                 .BuildServiceProvider();
 
-            services.GetService<ILoggerFactory>()
-                .AddConsole(minLevel: LogLevel.Warning, includeScopes: true);
-            
+            services.GetService<ILoggerFactory>().AddConsole(LogLevel.Warning, true);
+
             Console.WriteLine("Press 'c' for concurrent sends. Otherwise in one batch.");
-            var concurrent = Console.ReadKey(intercept: true).KeyChar == 'c';
+            var concurrent = Console.ReadKey(true).KeyChar == 'c';
 
             var server = Task.Factory.StartNew(() => RunServerAsync(services), TaskCreationOptions.LongRunning);
             var client = Task.Factory.StartNew(() => RunClientAsync(2000, TimeSpan.FromMilliseconds(10), services, concurrent), TaskCreationOptions.LongRunning);
@@ -62,12 +61,12 @@ namespace MQTTnet.TestApp.NetCore
         {
             try
             {
-                var options = new MqttClientTcpOptions
+                var options = new MqttClientOptions
                 {
-                    Server = "localhost",
+                    ChannelOptions = new MqttClientTcpOptions { Server = "localhost" },
                     ClientId = "Client1",
                     CleanSession = true,
-                    DefaultCommunicationTimeout = TimeSpan.FromMinutes(10)
+                    CommunicationTimeout = TimeSpan.FromMinutes(10)
                 };
 
                 var client = serviceProvider.GetRequiredService<IMqttClient>();

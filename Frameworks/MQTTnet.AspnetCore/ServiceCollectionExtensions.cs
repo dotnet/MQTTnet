@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Server;
 
-namespace MQTTnet.AspnetCore
+namespace MQTTnet.AspNetCore
 {
     public static class ServiceCollectionExtensions
     {

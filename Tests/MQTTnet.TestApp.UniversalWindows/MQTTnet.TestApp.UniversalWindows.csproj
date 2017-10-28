@@ -126,9 +126,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.UniversalWindows\MQTTnet.UniversalWindows.csproj">
-      <Project>{bd60c727-d8e8-40c3-b8e3-c95a864ae611}</Project>
-      <Name>MQTTnet.UniversalWindows</Name>
+    <ProjectReference Include="..\..\Frameworks\MQTTnet.Netstandard\MQTTnet.NetStandard.csproj">
+      <Project>{3587e506-55a2-4eb3-99c7-dc01e42d25d2}</Project>
+      <Name>MQTTnet.NetStandard</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\MQTTnet.Core\MQTTnet.Core.csproj">
       <Project>{2ecb99e4-72d0-4c23-99ba-93d511d3967d}</Project>

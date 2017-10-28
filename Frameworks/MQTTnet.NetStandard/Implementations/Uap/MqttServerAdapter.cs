@@ -1,3 +1,5 @@
+#if NET451 || NETSTANDARD1_3
+#else
 using System;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
@@ -70,3 +72,4 @@ namespace MQTTnet.Implementations
         }
     }
 }
+#endif

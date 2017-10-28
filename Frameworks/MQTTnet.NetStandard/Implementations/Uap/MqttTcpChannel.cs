@@ -1,3 +1,5 @@
+#if NET451 || NETSTANDARD1_3
+#else
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -134,3 +136,4 @@ namespace MQTTnet.Implementations
         }
     }
 }
+#endif

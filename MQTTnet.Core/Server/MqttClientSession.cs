@@ -124,7 +124,7 @@ namespace MQTTnet.Core.Server
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var packet = await adapter.ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
-                    await ProcessReceivedPacketAsync(adapter, packet).ConfigureAwait(false);
+                    await ProcessReceivedPacketAsync(adapter, packet, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -142,28 +142,35 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        private async Task ProcessReceivedPacketAsync(IMqttCommunicationAdapter adapter, MqttBasePacket packet)
+        private async Task ProcessReceivedPacketAsync(IMqttCommunicationAdapter adapter, MqttBasePacket packet, CancellationToken cancellationToken)
         {
             if (packet is MqttSubscribePacket subscribePacket)
             {
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, _subscriptionsManager.Subscribe(subscribePacket));
+                var subscribeResult = _subscriptionsManager.Subscribe(subscribePacket);
+                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, subscribeResult.ResponsePacket);
                 EnqueueRetainedMessages(subscribePacket);
+
+                if (subscribeResult.CloseConnection)
+                {
+                    await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttDisconnectPacket());
+                    Stop();
+                }
             }
             else if (packet is MqttUnsubscribePacket unsubscribePacket)
             {
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, _subscriptionsManager.Unsubscribe(unsubscribePacket));
+                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, _subscriptionsManager.Unsubscribe(unsubscribePacket));
             }
             else if (packet is MqttPublishPacket publishPacket)
             {
-                await HandleIncomingPublishPacketAsync(adapter, publishPacket);
+                await HandleIncomingPublishPacketAsync(adapter, publishPacket, cancellationToken);
             }
             else if (packet is MqttPubRelPacket pubRelPacket)
             {
-                await HandleIncomingPubRelPacketAsync(adapter, pubRelPacket);
+                await HandleIncomingPubRelPacketAsync(adapter, pubRelPacket, cancellationToken);
             }
             else if (packet is MqttPubRecPacket pubRecPacket)
             {
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, pubRecPacket.CreateResponse<MqttPubRelPacket>());
+                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, pubRecPacket.CreateResponse<MqttPubRelPacket>());
             }
             else if (packet is MqttPubAckPacket || packet is MqttPubCompPacket)
             {
@@ -171,7 +178,7 @@ namespace MQTTnet.Core.Server
             }
             else if (packet is MqttPingReqPacket)
             {
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, new MqttPingRespPacket());
+                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttPingRespPacket());
             }
             else if (packet is MqttDisconnectPacket || packet is MqttConnectPacket)
             {
@@ -193,10 +200,17 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        private async Task HandleIncomingPublishPacketAsync(IMqttCommunicationAdapter adapter, MqttPublishPacket publishPacket)
+        private async Task HandleIncomingPublishPacketAsync(IMqttCommunicationAdapter adapter, MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             var applicationMessage = publishPacket.ToApplicationMessage();
-            _options.ApplicationMessageInterceptor?.Invoke(applicationMessage);
+
+            var interceptorContext = new MqttApplicationMessageInterceptorContext
+            {
+                ApplicationMessage = applicationMessage
+            };
+
+            _options.ApplicationMessageInterceptor?.Invoke(interceptorContext);
+            applicationMessage = interceptorContext.ApplicationMessage;
 
             if (applicationMessage.Retain)
             {
@@ -214,7 +228,7 @@ namespace MQTTnet.Core.Server
                     {
                         _sessionsManager.DispatchApplicationMessage(this, applicationMessage);
 
-                        await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token,
+                        await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken,
                             new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
 
                         return;
@@ -229,7 +243,7 @@ namespace MQTTnet.Core.Server
 
                         _sessionsManager.DispatchApplicationMessage(this, applicationMessage);
 
-                        await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token,
+                        await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken,
                             new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
 
                         return;
@@ -239,14 +253,14 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        private Task HandleIncomingPubRelPacketAsync(IMqttCommunicationAdapter adapter, MqttPubRelPacket pubRelPacket)
+        private Task HandleIncomingPubRelPacketAsync(IMqttCommunicationAdapter adapter, MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
         {
             lock (_unacknowledgedPublishPackets)
             {
                 _unacknowledgedPublishPackets.Remove(pubRelPacket.PacketIdentifier);
             }
 
-            return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, _cancellationTokenSource.Token, new MqttPubCompPacket { PacketIdentifier = pubRelPacket.PacketIdentifier });
+            return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttPubCompPacket { PacketIdentifier = pubRelPacket.PacketIdentifier });
         }
     }
 }

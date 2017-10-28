@@ -56,8 +56,14 @@ namespace MQTTnet.Core.Server
 
             foreach (var applicationMessage in applicationMessages)
             {
-                _options.ApplicationMessageInterceptor?.Invoke(applicationMessage);
-                _clientSessionsManager.DispatchApplicationMessage(null, applicationMessage);
+                var interceptorContext = new MqttApplicationMessageInterceptorContext
+                {
+                    ApplicationMessage = applicationMessage
+                };
+
+                _options.ApplicationMessageInterceptor?.Invoke(interceptorContext);
+                
+                _clientSessionsManager.DispatchApplicationMessage(null, interceptorContext.ApplicationMessage);
             }
         }
 

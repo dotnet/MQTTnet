@@ -245,10 +245,9 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public async Task MqttServer_InterceptMessage()
         {
-            MqttApplicationMessage Interceptor(MqttApplicationMessage message)
+            void Interceptor(MqttApplicationMessageInterceptorContext context)
             {
-                message.Payload = Encoding.ASCII.GetBytes("extended");
-                return message;
+                context.ApplicationMessage.Payload = Encoding.ASCII.GetBytes("extended");
             }
 
             var serverAdapter = new TestMqttServerAdapter();

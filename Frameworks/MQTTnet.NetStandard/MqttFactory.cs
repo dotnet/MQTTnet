@@ -98,7 +98,7 @@ namespace MQTTnet
                 _serviceProvider.GetRequiredService<IOptions<MqttServerOptions>>(),
                 clientSessionsManager,
                 _serviceProvider.GetRequiredService<MqttClientSubscriptionsManager>(),
-                _serviceProvider.GetRequiredService<ILogger<MqttClientSession>>(), 
+                _serviceProvider.GetRequiredService<ILogger<MqttClientSession>>(),
                 _serviceProvider.GetRequiredService<ILogger<MqttClientPendingMessagesQueue>>());
         }
 
@@ -119,8 +119,9 @@ namespace MQTTnet
 
         public IMqttServer CreateMqttServer(Action<MqttServerOptions> configure)
         {
-            var options = _serviceProvider.GetRequiredService<IOptions<MqttServerOptions>>();
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
 
+            var options = _serviceProvider.GetRequiredService<IOptions<MqttServerOptions>>();
             configure(options.Value);
 
             return _serviceProvider.GetRequiredService<IMqttServer>();

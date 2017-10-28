@@ -111,5 +111,15 @@ namespace MQTTnet
         {
             return _serviceProvider.GetRequiredService<IMqttServer>();
         }
+
+        public IMqttServer CreateMqttServer(Action<MqttServerOptions> configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+
+            var options = _serviceProvider.GetRequiredService<IOptions<MqttServerOptions>>();
+            configure(options.Value);
+
+            return _serviceProvider.GetRequiredService<IMqttServer>();
+        }
     }
 }

@@ -55,7 +55,7 @@ namespace MQTTnet.Core.Client
 
                 _adapter = _communicationAdapterFactory.CreateClientMqttCommunicationAdapter(options);
 
-                _scopeHandle = _logger.BeginScope(options.ClientId);
+                _scopeHandle = _logger.BeginScope(options.LogId ?? options.ClientId);
                 _logger.LogTrace("Trying to connect with server.");
                 await _adapter.ConnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
                 _logger.LogTrace("Connection with server established.");

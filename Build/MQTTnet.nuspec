@@ -47,8 +47,8 @@
     <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\netstandard1.3\MQTTnet.*" target="lib\netstandard1.3\"/>
 
     <!-- Universal Windows -->
-    <file src="..\Frameworks\MQTTnet.UniversalWindows\bin\Release\MQTTnet.Core.*" target="lib\uap10.0\"/>
-    <file src="..\Frameworks\MQTTnet.UniversalWindows\bin\Release\MQTTnet.*" target="lib\uap10.0\"/>
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\uap10.0\MQTTnet.Core.*" target="lib\uap10.0\"/>
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\uap10.0\MQTTnet.*" target="lib\uap10.0\"/>
 
     <!-- .NET Framework -->
     <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net451\MQTTnet.Core.*" target="lib\net451\"/>

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-using MQTTnet.AspnetCore;
+using MQTTnet.AspNetCore;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
 

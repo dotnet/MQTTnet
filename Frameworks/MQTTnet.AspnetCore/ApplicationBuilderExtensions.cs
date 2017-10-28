@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Core.Server;
 
-namespace MQTTnet.AspnetCore
+namespace MQTTnet.AspNetCore
 {
     public static class ApplicationBuilderExtensions
     {

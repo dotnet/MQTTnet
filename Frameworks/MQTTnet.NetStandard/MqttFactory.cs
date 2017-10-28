@@ -116,5 +116,14 @@ namespace MQTTnet
         {
             return _serviceProvider.GetRequiredService<IMqttServer>();
         }
+
+        public IMqttServer CreateMqttServer(Action<MqttServerOptions> configure)
+        {
+            var options = _serviceProvider.GetRequiredService<IOptions<MqttServerOptions>>();
+
+            configure(options.Value);
+
+            return _serviceProvider.GetRequiredService<IMqttServer>();
+        }
     }
 }

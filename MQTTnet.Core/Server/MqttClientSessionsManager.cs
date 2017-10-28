@@ -39,12 +39,12 @@ namespace MQTTnet.Core.Server
 
         public MqttClientRetainedMessagesManager RetainedMessagesManager { get; }
 
-        public async Task RunClientSessionAsync(IMqttCommunicationAdapter clientAdapter)
+        public async Task RunClientSessionAsync(IMqttCommunicationAdapter clientAdapter, CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
             try
             {
-                if (!(await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false) is MqttConnectPacket connectPacket))
+                if (!(await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false) is MqttConnectPacket connectPacket))
                 {
                     throw new MqttProtocolViolationException("The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
                 }
@@ -57,7 +57,7 @@ namespace MQTTnet.Core.Server
                 var connectReturnCode = ValidateConnection(connectPacket);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
-                    await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, CancellationToken.None, new MqttConnAckPacket
+                    await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttConnAckPacket
                     {
                         ConnectReturnCode = connectReturnCode
                     }).ConfigureAwait(false);
@@ -67,7 +67,7 @@ namespace MQTTnet.Core.Server
 
                 var clientSession = GetOrCreateClientSession(connectPacket);
 
-                await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, CancellationToken.None, new MqttConnAckPacket
+                await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttConnAckPacket
                 {
                     ConnectReturnCode = connectReturnCode,
                     IsSessionPresent = clientSession.IsExistingSession

@@ -16,7 +16,7 @@ namespace MQTTnet.Core.Server
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public MqttClientSubscribeResult Subscribe(MqttSubscribePacket subscribePacket)
+        public MqttClientSubscribeResult Subscribe(MqttSubscribePacket subscribePacket, string clientId)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
 
@@ -27,7 +27,7 @@ namespace MQTTnet.Core.Server
             {
                 foreach (var topicFilter in subscribePacket.TopicFilters)
                 {
-                    var interceptorContext = new MqttSubscriptionInterceptorContext("", topicFilter);
+                    var interceptorContext = new MqttSubscriptionInterceptorContext(clientId, topicFilter);
                     _options.SubscriptionsInterceptor?.Invoke(interceptorContext);
                     responsePacket.SubscribeReturnCodes.Add(interceptorContext.AcceptSubscription ? MqttSubscribeReturnCode.SuccessMaximumQoS1 : MqttSubscribeReturnCode.Failure);
                     

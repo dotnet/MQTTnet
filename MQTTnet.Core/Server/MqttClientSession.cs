@@ -142,51 +142,65 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        private async Task ProcessReceivedPacketAsync(IMqttCommunicationAdapter adapter, MqttBasePacket packet, CancellationToken cancellationToken)
+        private Task ProcessReceivedPacketAsync(IMqttCommunicationAdapter adapter, MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            if (packet is MqttSubscribePacket subscribePacket)
+            if (packet is MqttPingReqPacket)
             {
-                var subscribeResult = _subscriptionsManager.Subscribe(subscribePacket);
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, subscribeResult.ResponsePacket);
-                EnqueueRetainedMessages(subscribePacket);
+                return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttPingRespPacket());
+            }
 
-                if (subscribeResult.CloseConnection)
-                {
-                    await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttDisconnectPacket());
-                    Stop();
-                }
-            }
-            else if (packet is MqttUnsubscribePacket unsubscribePacket)
+            if (packet is MqttPublishPacket publishPacket)
             {
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, _subscriptionsManager.Unsubscribe(unsubscribePacket));
+                return HandleIncomingPublishPacketAsync(adapter, publishPacket, cancellationToken);
             }
-            else if (packet is MqttPublishPacket publishPacket)
+
+            if (packet is MqttPubRelPacket pubRelPacket)
             {
-                await HandleIncomingPublishPacketAsync(adapter, publishPacket, cancellationToken);
+                return HandleIncomingPubRelPacketAsync(adapter, pubRelPacket, cancellationToken);
             }
-            else if (packet is MqttPubRelPacket pubRelPacket)
+
+            if (packet is MqttPubRecPacket pubRecPacket)
             {
-                await HandleIncomingPubRelPacketAsync(adapter, pubRelPacket, cancellationToken);
+                return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, pubRecPacket.CreateResponse<MqttPubRelPacket>());
             }
-            else if (packet is MqttPubRecPacket pubRecPacket)
-            {
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, pubRecPacket.CreateResponse<MqttPubRelPacket>());
-            }
-            else if (packet is MqttPubAckPacket || packet is MqttPubCompPacket)
+
+            if (packet is MqttPubAckPacket || packet is MqttPubCompPacket)
             {
                 // Discard message.
+                return Task.FromResult(0);
             }
-            else if (packet is MqttPingReqPacket)
+
+            if (packet is MqttSubscribePacket subscribePacket)
             {
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttPingRespPacket());
+                return HandleIncomingSubscribePacketAsync(adapter, subscribePacket, cancellationToken);
             }
-            else if (packet is MqttDisconnectPacket || packet is MqttConnectPacket)
+
+            if (packet is MqttUnsubscribePacket unsubscribePacket)
+            {
+                return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, _subscriptionsManager.Unsubscribe(unsubscribePacket));
+            }
+            
+            if (packet is MqttDisconnectPacket || packet is MqttConnectPacket)
             {
                 Stop();
+                return Task.FromResult(0);
             }
-            else
+
+            _logger.LogWarning("Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
+            Stop();
+
+            return Task.FromResult(0);
+        }
+
+        private async Task HandleIncomingSubscribePacketAsync(IMqttCommunicationAdapter adapter, MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
+        {
+            var subscribeResult = _subscriptionsManager.Subscribe(subscribePacket, ClientId);
+            await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, subscribeResult.ResponsePacket);
+            EnqueueRetainedMessages(subscribePacket);
+
+            if (subscribeResult.CloseConnection)
             {
-                _logger.LogWarning("Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
+                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttDisconnectPacket());
                 Stop();
             }
         }

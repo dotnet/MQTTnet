@@ -84,9 +84,14 @@
                 </StackPanel>
             </PivotItem>
             <PivotItem Header="Server">
-                <StackPanel Orientation="Horizontal">
-                    <Button Width="120" Margin="0,0,10,0" Click="StartServer">Start</Button>
-                    <Button Width="120" Margin="0,0,10,0" Click="StopServer">Stop</Button>
+                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <TextBlock>Port:</TextBlock>
+                    <TextBox x:Name="ServerPort" Text="1883"></TextBox>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Width="120" Margin="0,0,10,0" Click="StartServer">Start</Button>
+                        <Button Width="120" Margin="0,0,10,0" Click="StopServer">Stop</Button>
+                    </StackPanel>
                 </StackPanel>
             </PivotItem>
         </Pivot>

@@ -329,7 +329,11 @@ namespace MQTTnet.TestApp.UniversalWindows
                 return;
             }
 
-            _mqttServer = new MqttFactory().CreateMqttServer();
+            _mqttServer = new MqttFactory().CreateMqttServer(o =>
+            {
+                o.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
+            });
+
             await _mqttServer.StartAsync();
         }
 

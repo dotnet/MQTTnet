@@ -17,7 +17,7 @@ namespace MQTTnet.Core.Tests
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
 
-            sm.Subscribe(sp);
+            sm.Subscribe(sp, "");
 
             var pp = new MqttPublishPacket
             {
@@ -36,7 +36,7 @@ namespace MQTTnet.Core.Tests
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
 
-            sm.Subscribe(sp);
+            sm.Subscribe(sp, "");
 
             var pp = new MqttPublishPacket
             {
@@ -55,7 +55,7 @@ namespace MQTTnet.Core.Tests
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
 
-            sm.Subscribe(sp);
+            sm.Subscribe(sp, "");
 
             var pp = new MqttPublishPacket
             {

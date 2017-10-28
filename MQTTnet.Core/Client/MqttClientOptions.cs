@@ -9,6 +9,9 @@ namespace MQTTnet.Core.Client
 
         public string ClientId { get; set; } = Guid.NewGuid().ToString("N");
 
+        /// <inheritdoc />
+        public string LogId { get; set; }
+
         public bool CleanSession { get; set; } = true;
 
         public IMqttClientCredentials Credentials { get; set; } = new MqttClientCredentials();

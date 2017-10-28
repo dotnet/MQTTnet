@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Server;
 
-namespace MQTTnet.AspnetCore
+namespace MQTTnet.AspNetCore
 {
     public class MqttHostedServer : MqttServer, IHostedService
     {

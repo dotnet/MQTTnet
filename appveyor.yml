@@ -1,0 +1,9 @@
+version: 1.0.{build}
+image: Visual Studio 2017
+before_build:
+- cmd: dotnet restore
+build:
+  project: Frameworks/MQTTnet.NetStandard/MQTTnet.Netstandard.csproj
+  verbosity: minimal
+test_script:
+- cmd: dotnet test Tests/MQTTnet.Core.Tests/MQTTnet.Core.Tests.csproj

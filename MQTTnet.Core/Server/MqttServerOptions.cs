@@ -16,7 +16,9 @@ namespace MQTTnet.Core.Server
 
         public Func<MqttConnectPacket, MqttConnectReturnCode> ConnectionValidator { get; set; }
 
-        public Func<MqttApplicationMessage, MqttApplicationMessage> ApplicationMessageInterceptor { get; set; }
+        public Action<MqttApplicationMessageInterceptorContext> ApplicationMessageInterceptor { get; set; }
+
+        public Action<MqttSubscriptionInterceptorContext> SubscriptionsInterceptor { get; set; }
 
         public IMqttServerStorage Storage { get; set; }
     }

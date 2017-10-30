@@ -65,7 +65,6 @@
                     <Button Click="Publish" Width="120">Publish</Button>
                 </StackPanel>
             </PivotItem>
-
             <PivotItem Header="Subscribe">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                     <TextBlock>Topic:</TextBlock>
@@ -81,6 +80,17 @@
                     <StackPanel Orientation="Horizontal">
                         <Button Click="Subscribe" Width="120" Margin="0,0,10,0">Subscribe</Button>
                         <Button Click="Unsubscribe" Width="120">Unsubscribe</Button>
+                    </StackPanel>
+                </StackPanel>
+            </PivotItem>
+            <PivotItem Header="Server">
+                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <TextBlock>Port:</TextBlock>
+                    <TextBox x:Name="ServerPort" Text="1883"></TextBox>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Width="120" Margin="0,0,10,0" Click="StartServer">Start</Button>
+                        <Button Width="120" Margin="0,0,10,0" Click="StopServer">Stop</Button>
                     </StackPanel>
                 </StackPanel>
             </PivotItem>

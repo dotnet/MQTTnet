@@ -18,7 +18,7 @@
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
     <PackageCertificateKeyFile>MQTTnet.TestApp.UniversalWindows_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <PackageCertificateThumbprint>13E377A693C923EE9E88EE84B32A4B9881657362</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>FA56408F253A1F7FCAC649611411B6B9F42BC4F9</PackageCertificateThumbprint>
     <RuntimeIdentifiers>win10;win10-arm;win10-arm-aot;win10-x86;win10-x86-aot;win10-x64;win10-x64-aot</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
@@ -126,9 +126,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.UniversalWindows\MQTTnet.UniversalWindows.csproj">
-      <Project>{bd60c727-d8e8-40c3-b8e3-c95a864ae611}</Project>
-      <Name>MQTTnet.UniversalWindows</Name>
+    <ProjectReference Include="..\..\Frameworks\MQTTnet.Netstandard\MQTTnet.NetStandard.csproj">
+      <Project>{3587e506-55a2-4eb3-99c7-dc01e42d25d2}</Project>
+      <Name>MQTTnet.NetStandard</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\MQTTnet.Core\MQTTnet.Core.csproj">
       <Project>{2ecb99e4-72d0-4c23-99ba-93d511d3967d}</Project>

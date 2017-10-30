@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2005
+VisualStudioVersion = 15.0.27004.2002
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Core.Tests", "Tests\MQTTnet.Core.Tests\MQTTnet.Core.Tests.csproj", "{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.UniversalWindows", "Frameworks\MQTTnet.UniversalWindows\MQTTnet.UniversalWindows.csproj", "{BD60C727-D8E8-40C3-B8E3-C95A864AE611}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{9248C2E1-B9D6-40BF-81EC-86004D7765B4}"
 EndProject
@@ -19,7 +17,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.NetStandard", "Fram
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{67C28AC1-BC3A-420A-BE9C-FA2401431CF9}"
 	ProjectSection(SolutionItems) = preProject
+		appveyor.yml = appveyor.yml
 		Build\build.ps1 = Build\build.ps1
+		Build\MQTTnet.AspNetCore.nuspec = Build\MQTTnet.AspNetCore.nuspec
 		Build\MQTTnet.nuspec = Build\MQTTnet.nuspec
 	EndProjectSection
 EndProject
@@ -33,7 +33,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.TestApp.NetCore", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.TestApp.AspNetCore2", "Tests\MQTTnet.TestApp.AspNetCore2\MQTTnet.TestApp.AspNetCore2.csproj", "{C6FF8AEA-0855-41EC-A1F3-AC262225BAB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.AspnetCore", "Frameworks\MQTTnet.AspnetCore\MQTTnet.AspnetCore.csproj", "{F10C4060-F7EE-4A83-919F-FF723E72F94A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.AspNetCore", "Frameworks\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj", "{F10C4060-F7EE-4A83-919F-FF723E72F94A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,22 +63,6 @@ Global
 		{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}.Release|x64.Build.0 = Release|Any CPU
 		{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}.Release|x86.ActiveCfg = Release|Any CPU
 		{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}.Release|x86.Build.0 = Release|Any CPU
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Debug|ARM.ActiveCfg = Debug|ARM
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Debug|ARM.Build.0 = Debug|ARM
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Debug|x64.ActiveCfg = Debug|x64
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Debug|x64.Build.0 = Debug|x64
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Debug|x86.ActiveCfg = Debug|x86
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Debug|x86.Build.0 = Debug|x86
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Release|ARM.ActiveCfg = Release|ARM
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Release|ARM.Build.0 = Release|ARM
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Release|x64.ActiveCfg = Release|x64
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Release|x64.Build.0 = Release|x64
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Release|x86.ActiveCfg = Release|x86
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611}.Release|x86.Build.0 = Release|x86
 		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|ARM.ActiveCfg = Debug|Any CPU
@@ -187,7 +171,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC} = {9248C2E1-B9D6-40BF-81EC-86004D7765B4}
-		{BD60C727-D8E8-40C3-B8E3-C95A864AE611} = {32A630A7-2598-41D7-B625-204CD906F5FB}
 		{FF1F72D6-9524-4422-9497-3CC0002216ED} = {9248C2E1-B9D6-40BF-81EC-86004D7765B4}
 		{3587E506-55A2-4EB3-99C7-DC01E42D25D2} = {32A630A7-2598-41D7-B625-204CD906F5FB}
 		{3D283AAD-AAA8-4339-8394-52F80B6304DB} = {9248C2E1-B9D6-40BF-81EC-86004D7765B4}

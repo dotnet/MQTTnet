@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.Extensions.Options;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
@@ -11,12 +12,12 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void MqttSubscriptionsManager_SubscribeSingleSuccess()
         {
-            var sm = new MqttClientSubscriptionsManager();
+            var sm = new MqttClientSubscriptionsManager(new OptionsWrapper<MqttServerOptions>(new MqttServerOptions()));
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
 
-            sm.Subscribe(sp);
+            sm.Subscribe(sp, "");
 
             var pp = new MqttPublishPacket
             {
@@ -30,12 +31,12 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void MqttSubscriptionsManager_SubscribeSingleNoSuccess()
         {
-            var sm = new MqttClientSubscriptionsManager();
+            var sm = new MqttClientSubscriptionsManager(new OptionsWrapper<MqttServerOptions>(new MqttServerOptions()));
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
 
-            sm.Subscribe(sp);
+            sm.Subscribe(sp, "");
 
             var pp = new MqttPublishPacket
             {
@@ -49,12 +50,12 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void MqttSubscriptionsManager_SubscribeAndUnsubscribeSingle()
         {
-            var sm = new MqttClientSubscriptionsManager();
+            var sm = new MqttClientSubscriptionsManager(new OptionsWrapper<MqttServerOptions>(new MqttServerOptions()));
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
 
-            sm.Subscribe(sp);
+            sm.Subscribe(sp, "");
 
             var pp = new MqttPublishPacket
             {

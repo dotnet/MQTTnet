@@ -35,16 +35,14 @@ namespace MQTTnet.TestApp.NetCore
 
                     options.Storage = new RetainedMessageHandler();
 
-                    options.ApplicationMessageInterceptor = message =>
+                    options.ApplicationMessageInterceptor = context =>
                     {
-                        if (MqttTopicFilterComparer.IsMatch(message.Topic, "/myTopic/WithTimestamp/#"))
+                        if (MqttTopicFilterComparer.IsMatch(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#"))
                         {
                             // Replace the payload with the timestamp. But also extending a JSON 
                             // based payload with the timestamp is a suitable use case.
-                            message.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
-                        }
-
-                        return message;
+                            context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
+                        }                        
                     };
                 });
 

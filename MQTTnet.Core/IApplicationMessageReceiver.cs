@@ -1,6 +1,7 @@
 ﻿using System;
+using MQTTnet.Core.Client;
 
-namespace MQTTnet.Core.Client
+namespace MQTTnet.Core
 {
     public interface IApplicationMessageReceiver
     {

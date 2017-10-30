@@ -55,7 +55,7 @@ namespace MQTTnet.Core.Client
 
                 _adapter = _communicationAdapterFactory.CreateClientMqttCommunicationAdapter(options);
 
-                _scopeHandle = _logger.BeginScope(options.ClientId);
+                _scopeHandle = _logger.BeginScope(options.LogId ?? options.ClientId);
                 _logger.LogTrace("Trying to connect with server.");
                 await _adapter.ConnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
                 _logger.LogTrace("Connection with server established.");
@@ -149,36 +149,36 @@ namespace MQTTnet.Core.Client
                 switch (qosGroup.Key)
                 {
                     case MqttQualityOfServiceLevel.AtMostOnce:
-                        {
-                            // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
-                            await _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, qosPackets);
-                            break;
-                        }
+                    {
+                        // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
+                        await _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, qosPackets);
+                        break;
+                    }
                     case MqttQualityOfServiceLevel.AtLeastOnce:
+                    {
+                        foreach (var publishPacket in qosPackets)
                         {
-                            foreach (var publishPacket in qosPackets)
-                            {
-                                publishPacket.PacketIdentifier = GetNewPacketIdentifier();
-                                await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket);
-                            }
-
-                            break;
+                            publishPacket.PacketIdentifier = GetNewPacketIdentifier();
+                            await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket);
                         }
+
+                        break;
+                    }
                     case MqttQualityOfServiceLevel.ExactlyOnce:
+                    {
+                        foreach (var publishPacket in qosPackets)
                         {
-                            foreach (var publishPacket in qosPackets)
-                            {
-                                publishPacket.PacketIdentifier = GetNewPacketIdentifier();
-                                var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket).ConfigureAwait(false);
-                                await SendAndReceiveAsync<MqttPubCompPacket>(pubRecPacket.CreateResponse<MqttPubRelPacket>()).ConfigureAwait(false);
-                            }
+                            publishPacket.PacketIdentifier = GetNewPacketIdentifier();
+                            var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket).ConfigureAwait(false);
+                            await SendAndReceiveAsync<MqttPubCompPacket>(pubRecPacket.CreateResponse<MqttPubRelPacket>()).ConfigureAwait(false);
+                        }
 
-                            break;
-                        }
+                        break;
+                    }
                     default:
-                        {
-                            throw new InvalidOperationException();
-                        }
+                    {
+                        throw new InvalidOperationException();
+                    }
                 }
             }
         }
@@ -191,7 +191,7 @@ namespace MQTTnet.Core.Client
                 Username = _options.Credentials?.Username,
                 Password = _options.Credentials?.Password,
                 CleanSession = _options.CleanSession,
-                KeepAlivePeriod = (ushort)_options.KeepAlivePeriod.TotalSeconds,
+                KeepAlivePeriod = (ushort) _options.KeepAlivePeriod.TotalSeconds,
                 WillMessage = willApplicationMessage
             };
 
@@ -324,7 +324,7 @@ namespace MQTTnet.Core.Client
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
             {
                 FireApplicationMessageReceivedEvent(publishPacket);
-                await SendAsync(new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
+                await SendAsync(new MqttPubAckPacket {PacketIdentifier = publishPacket.PacketIdentifier});
                 return;
             }
 
@@ -337,7 +337,7 @@ namespace MQTTnet.Core.Client
                 }
 
                 FireApplicationMessageReceivedEvent(publishPacket);
-                await SendAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
+                await SendAsync(new MqttPubRecPacket {PacketIdentifier = publishPacket.PacketIdentifier});
                 return;
             }
 
@@ -363,12 +363,12 @@ namespace MQTTnet.Core.Client
         {
             var packetAwaiter = _packetDispatcher.WaitForPacketAsync(requestPacket, typeof(TResponsePacket), _options.CommunicationTimeout);
             await _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, requestPacket).ConfigureAwait(false);
-            return (TResponsePacket)await packetAwaiter.ConfigureAwait(false);
+            return (TResponsePacket) await packetAwaiter.ConfigureAwait(false);
         }
 
         private ushort GetNewPacketIdentifier()
         {
-            return (ushort)Interlocked.Increment(ref _latestPacketIdentifier);
+            return (ushort) Interlocked.Increment(ref _latestPacketIdentifier);
         }
 
         private async Task SendKeepAliveMessagesAsync(CancellationToken cancellationToken)
@@ -465,7 +465,8 @@ namespace MQTTnet.Core.Client
         private void StartSendKeepAliveMessages(CancellationToken cancellationToken)
         {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Factory.StartNew(() => SendKeepAliveMessagesAsync(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).ConfigureAwait(false);
+            Task.Factory.StartNew(() => SendKeepAliveMessagesAsync(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default)
+                .ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
     }

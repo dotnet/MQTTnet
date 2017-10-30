@@ -1,0 +1,15 @@
+version: 1.0.{build}
+image: Visual Studio 2017
+before_build:
+- cmd: >-
+    msbuild /t:restore
+
+    cd Tests/MQTTnet.TestApp.AspNetCore2/
+
+    npm install
+
+build:
+  project: MQTTnet.sln
+  verbosity: minimal
+test_script:
+- cmd: vstest.console /logger:Appveyor Tests/MQTTnet.Core.Tests/bin/Release/net461/MQTTnet.Core.Tests.dll

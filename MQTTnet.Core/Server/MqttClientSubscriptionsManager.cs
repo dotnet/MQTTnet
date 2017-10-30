@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Options;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 
@@ -8,23 +9,45 @@ namespace MQTTnet.Core.Server
     public sealed class MqttClientSubscriptionsManager
     {
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscribedTopics = new Dictionary<string, MqttQualityOfServiceLevel>();
+        private readonly MqttServerOptions _options;
 
-        public MqttSubAckPacket Subscribe(MqttSubscribePacket subscribePacket)
+        public MqttClientSubscriptionsManager(IOptions<MqttServerOptions> options)
+        {
+            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        }
+
+        public MqttClientSubscribeResult Subscribe(MqttSubscribePacket subscribePacket, string clientId)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
 
             var responsePacket = subscribePacket.CreateResponse<MqttSubAckPacket>();
+            var closeConnection = false;
 
             lock (_subscribedTopics)
             {
                 foreach (var topicFilter in subscribePacket.TopicFilters)
                 {
-                    _subscribedTopics[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
-                    responsePacket.SubscribeReturnCodes.Add(MqttSubscribeReturnCode.SuccessMaximumQoS1); // TODO: Add support for QoS 2.
+                    var interceptorContext = new MqttSubscriptionInterceptorContext(clientId, topicFilter);
+                    _options.SubscriptionsInterceptor?.Invoke(interceptorContext);
+                    responsePacket.SubscribeReturnCodes.Add(interceptorContext.AcceptSubscription ? MqttSubscribeReturnCode.SuccessMaximumQoS1 : MqttSubscribeReturnCode.Failure);
+                    
+                    if (interceptorContext.CloseConnection)
+                    {
+                        closeConnection = true;
+                    }
+
+                    if (interceptorContext.AcceptSubscription)
+                    {
+                        _subscribedTopics[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                    }
                 }
             }
 
-            return responsePacket;
+            return new MqttClientSubscribeResult
+            {
+                ResponsePacket = responsePacket,
+                CloseConnection = closeConnection
+            };
         }
 
         public MqttUnsubAckPacket Unsubscribe(MqttUnsubscribePacket unsubscribePacket)

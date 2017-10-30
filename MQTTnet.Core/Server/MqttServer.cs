@@ -6,7 +6,6 @@ using MQTTnet.Core.Adapter;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Linq;
-using MQTTnet.Core.Client;
 
 namespace MQTTnet.Core.Server
 {
@@ -46,7 +45,7 @@ namespace MQTTnet.Core.Server
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
-        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        public void Publish(IEnumerable<MqttApplicationMessage> applicationMessages)
         {
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
@@ -57,10 +56,20 @@ namespace MQTTnet.Core.Server
 
             foreach (var applicationMessage in applicationMessages)
             {
-                _options.ApplicationMessageInterceptor?.Invoke(applicationMessage);
-                _clientSessionsManager.DispatchApplicationMessage(null, applicationMessage);
+                var interceptorContext = new MqttApplicationMessageInterceptorContext
+                {
+                    ApplicationMessage = applicationMessage
+                };
+
+                _options.ApplicationMessageInterceptor?.Invoke(interceptorContext);
+                
+                _clientSessionsManager.DispatchApplicationMessage(null, interceptorContext.ApplicationMessage);
             }
-            
+        }
+
+        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        {
+            Publish(applicationMessages);
             return Task.FromResult(0);
         }
 
@@ -100,7 +109,7 @@ namespace MQTTnet.Core.Server
 
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
-            eventArgs.SessionTask = Task.Run(async () => await _clientSessionsManager.RunClientSessionAsync(eventArgs.Client), _cancellationTokenSource.Token);
+            eventArgs.SessionTask = Task.Run(async () => await _clientSessionsManager.RunClientSessionAsync(eventArgs.Client, _cancellationTokenSource.Token), _cancellationTokenSource.Token);
         }
 
         private void OnClientConnected(object sender, MqttClientConnectedEventArgs eventArgs)

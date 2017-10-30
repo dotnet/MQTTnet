@@ -1,3 +1,5 @@
+#if NET451 || NETSTANDARD1_3
+#else
 using System;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
@@ -30,6 +32,7 @@ namespace MQTTnet.Implementations
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _defaultEndpointSocket = new StreamSocketListener();
+                _defaultEndpointSocket.Control.NoDelay = true;
                 await _defaultEndpointSocket.BindServiceNameAsync(options.GetDefaultEndpointPort().ToString(), SocketProtectionLevel.PlainSocket);
                 _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
             }
@@ -57,6 +60,8 @@ namespace MQTTnet.Implementations
         {
             try
             {
+                args.Socket.Control.NoDelay = true;
+
                 var clientAdapter = _mqttCommunicationAdapterFactory.CreateServerMqttCommunicationAdapter(new MqttTcpChannel(args.Socket));
                 ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }
@@ -67,3 +72,4 @@ namespace MQTTnet.Implementations
         }
     }
 }
+#endif

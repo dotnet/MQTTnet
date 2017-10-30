@@ -91,16 +91,15 @@ namespace MQTTnet.Core.ManagedClient
             return Task.FromResult(0);
         }
 
-        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        public async Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
         {
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
             foreach (var applicationMessage in applicationMessages)
             {
+                await _storageManager.AddAsync(applicationMessage).ConfigureAwait(false);
                 _messageQueue.Add(applicationMessage);
             }
-
-            return Task.FromResult(0);
         }
 
         public Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
@@ -208,6 +207,7 @@ namespace MQTTnet.Core.ManagedClient
                     }
 
                     await TryPublishQueuedMessageAsync(message).ConfigureAwait(false);
+                    await _storageManager.RemoveAsync(message).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)

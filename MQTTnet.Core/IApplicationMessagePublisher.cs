@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Core.Client
+namespace MQTTnet.Core
 {
     public interface IApplicationMessagePublisher
     {

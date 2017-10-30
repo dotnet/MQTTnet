@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if NET451 || NETSTANDARD1_3
+
+using System;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -144,3 +146,4 @@ namespace MQTTnet.Implementations
         }
     }
 }
+#endif

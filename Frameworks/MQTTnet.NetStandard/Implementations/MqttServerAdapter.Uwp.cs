@@ -1,5 +1,4 @@
-#if NET451 || NETSTANDARD1_3
-#else
+#if WINDOWS_UWP
 using System;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
@@ -12,13 +11,13 @@ namespace MQTTnet.Implementations
     public class MqttServerAdapter : IMqttServerAdapter, IDisposable
     {
         private readonly ILogger<MqttServerAdapter> _logger;
-        private readonly IMqttCommunicationAdapterFactory _mqttCommunicationAdapterFactory;
+        private readonly IMqttCommunicationAdapterFactory _communicationAdapterFactory;
         private StreamSocketListener _defaultEndpointSocket;
 
-        public MqttServerAdapter(ILogger<MqttServerAdapter> logger, IMqttCommunicationAdapterFactory mqttCommunicationAdapterFactory)
+        public MqttServerAdapter(ILogger<MqttServerAdapter> logger, IMqttCommunicationAdapterFactory communicationAdapterFactory)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mqttCommunicationAdapterFactory = mqttCommunicationAdapterFactory ?? throw new ArgumentNullException(nameof(mqttCommunicationAdapterFactory));
+            _communicationAdapterFactory = communicationAdapterFactory ?? throw new ArgumentNullException(nameof(communicationAdapterFactory));
         }
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
@@ -32,7 +31,6 @@ namespace MQTTnet.Implementations
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _defaultEndpointSocket = new StreamSocketListener();
-                _defaultEndpointSocket.Control.NoDelay = true;
                 await _defaultEndpointSocket.BindServiceNameAsync(options.GetDefaultEndpointPort().ToString(), SocketProtectionLevel.PlainSocket);
                 _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
             }
@@ -45,6 +43,11 @@ namespace MQTTnet.Implementations
 
         public Task StopAsync()
         {
+            if (_defaultEndpointSocket != null)
+            {
+                _defaultEndpointSocket.ConnectionReceived -= AcceptDefaultEndpointConnectionsAsync;
+            }
+
             _defaultEndpointSocket?.Dispose();
             _defaultEndpointSocket = null;
 
@@ -60,9 +63,7 @@ namespace MQTTnet.Implementations
         {
             try
             {
-                args.Socket.Control.NoDelay = true;
-
-                var clientAdapter = _mqttCommunicationAdapterFactory.CreateServerMqttCommunicationAdapter(new MqttTcpChannel(args.Socket));
+                var clientAdapter = _communicationAdapterFactory.CreateServerCommunicationAdapter(new MqttTcpChannel(args.Socket));
                 ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }
             catch (Exception exception)

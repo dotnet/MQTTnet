@@ -36,7 +36,7 @@ namespace MQTTnet.AspNetCore
             if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
 
             var channel = new MqttWebSocketServerChannel(webSocket);
-            var clientAdapter = _mqttCommunicationAdapterFactory.CreateServerMqttCommunicationAdapter(channel);
+            var clientAdapter = _mqttCommunicationAdapterFactory.CreateServerCommunicationAdapter(channel);
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
             ClientAccepted?.Invoke(this, eventArgs);

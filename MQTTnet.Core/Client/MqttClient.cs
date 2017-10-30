@@ -53,7 +53,7 @@ namespace MQTTnet.Core.Client
                 _latestPacketIdentifier = 0;
                 _packetDispatcher.Reset();
 
-                _adapter = _communicationAdapterFactory.CreateClientMqttCommunicationAdapter(options);
+                _adapter = _communicationAdapterFactory.CreateClientCommunicationAdapter(options);
 
                 _scopeHandle = _logger.BeginScope(options.LogId ?? options.ClientId);
                 _logger.LogTrace("Trying to connect with server.");

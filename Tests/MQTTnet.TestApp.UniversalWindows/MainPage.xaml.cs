@@ -81,6 +81,8 @@ namespace MQTTnet.TestApp.UniversalWindows
                 Password = Password.Text
             };
 
+            options.CleanSession = CleanSession.IsChecked == true;
+
             try
             {
                 if (_mqttClient != null)
@@ -226,6 +228,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                         .WithTcpServer("broker.hivemq.com")
                         .WithCredentials("bud", "%spencer%")
                         .WithTls()
+                        .WithCleanSession()
                         .Build();
 
                     await client.ConnectAsync(options);

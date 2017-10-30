@@ -63,7 +63,7 @@ namespace MQTTnet.Implementations
                 }
             }
 
-            await _webSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
+            await _webSocket.ConnectAsync(new Uri(uri), CancellationToken.None).ConfigureAwait(false);
             RawReceiveStream = new WebSocketStream(_webSocket);
         }
 

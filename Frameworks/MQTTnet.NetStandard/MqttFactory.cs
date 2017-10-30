@@ -45,20 +45,20 @@ namespace MQTTnet
             return _serviceProvider.GetRequiredService<ILoggerFactory>();
         }
 
-        public IMqttCommunicationAdapter CreateClientMqttCommunicationAdapter(IMqttClientOptions options)
+        public IMqttCommunicationAdapter CreateClientCommunicationAdapter(IMqttClientOptions options)
         {
             var logger = _serviceProvider.GetRequiredService<ILogger<MqttChannelCommunicationAdapter>>();
-            return new MqttChannelCommunicationAdapter(CreateMqttCommunicationChannel(options.ChannelOptions), CreateSerializer(options.ProtocolVersion), logger);
+            return new MqttChannelCommunicationAdapter(CreateCommunicationChannel(options.ChannelOptions), CreateSerializer(options.ProtocolVersion), logger);
         }
 
-        public IMqttCommunicationAdapter CreateServerMqttCommunicationAdapter(IMqttCommunicationChannel channel)
+        public IMqttCommunicationAdapter CreateServerCommunicationAdapter(IMqttCommunicationChannel channel)
         {
             var serializer = _serviceProvider.GetRequiredService<IMqttPacketSerializer>();
             var logger = _serviceProvider.GetRequiredService<ILogger<MqttChannelCommunicationAdapter>>();
             return new MqttChannelCommunicationAdapter(channel, serializer, logger);
         }
 
-        public IMqttCommunicationChannel CreateMqttCommunicationChannel(IMqttClientChannelOptions options)
+        public IMqttCommunicationChannel CreateCommunicationChannel(IMqttClientChannelOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

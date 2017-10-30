@@ -1,5 +1,4 @@
-#if NET451 || NETSTANDARD1_3
-#else
+#if WINDOWS_UWP
 using System;
 using System.Collections.Generic;
 using System.IO;

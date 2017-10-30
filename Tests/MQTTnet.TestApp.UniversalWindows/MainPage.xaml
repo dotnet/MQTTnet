@@ -27,7 +27,9 @@
                     <TextBox x:Name="Password"></TextBox>
                     <TextBlock>ClientId:</TextBlock>
                     <TextBox x:Name="ClientId"></TextBox>
-
+                    <TextBlock>Clean session:</TextBlock>
+                    <CheckBox x:Name="CleanSession" IsChecked="True"></CheckBox>
+                    
                     <StackPanel Orientation="Horizontal">
                         <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="connection">TCP</RadioButton>
                         <RadioButton x:Name="UseWs" GroupName="connection">WS</RadioButton>

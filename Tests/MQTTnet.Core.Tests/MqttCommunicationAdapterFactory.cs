@@ -13,12 +13,12 @@ namespace MQTTnet.Core.Tests
             _adapter = adapter;
         }
 
-        public IMqttCommunicationAdapter CreateClientMqttCommunicationAdapter(IMqttClientOptions options)
+        public IMqttCommunicationAdapter CreateClientCommunicationAdapter(IMqttClientOptions options)
         {
             return _adapter;
         }
 
-        public IMqttCommunicationAdapter CreateServerMqttCommunicationAdapter(IMqttCommunicationChannel channel)
+        public IMqttCommunicationAdapter CreateServerCommunicationAdapter(IMqttCommunicationChannel channel)
         {
             return _adapter;
         }

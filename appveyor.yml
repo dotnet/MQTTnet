@@ -1,5 +1,6 @@
 version: 1.0.{build}
 image: Visual Studio 2017
+configuration: Release
 before_build:
 - cmd: >-
     msbuild /t:restore
@@ -12,4 +13,4 @@ build:
   project: MQTTnet.sln
   verbosity: minimal
 test_script:
-- cmd: vstest.console /logger:Appveyor Tests/MQTTnet.Core.Tests/bin/Release/net461/MQTTnet.Core.Tests.dll
+- cmd: vstest.console /logger:Appveyor Tests\MQTTnet.Core.Tests\bin\Release\netcoreapp2.0\MQTTnet.Core.Tests.dll

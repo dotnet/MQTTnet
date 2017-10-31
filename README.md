@@ -7,11 +7,13 @@
 [![BCH compliance](https://bettercodehub.com/edge/badge/chkr1011/MQTTnet?branch=master)](https://bettercodehub.com/)
 
 # MQTTnet
-MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker). The implementation is based on the documentation from http://mqtt.org/.
 
-# Features
+MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker). The implementation is based on the documentation from <http://mqtt.org/>.
+
+## Features
 
 ### General
+
 * Async support
 * TLS 1.2 support for client and server (but not UWP servers)
 * Extensible communication channels (i.e. In-Memory, TCP, TCP+TLS, WS)
@@ -21,9 +23,10 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Access to internal trace messages
 * Unit tested (70+ tests)
 
-\* Tested on local machine with MQTTnet client and server running in the same process using the TCP channel. The app for verification is part of this repository and stored in _/Tests/MQTTnet.TestApp.NetFramework_.
+\* Tested on local machine with MQTTnet client and server running in the same process using the TCP channel. The app for verification is part of this repository and stored in _/Tests/MQTTnet.TestApp.NetCore_.
 
 ### Client
+
 * Communication via TCP (+TLS) or WS (WebSocket) supported
 * Included core _MqttClient_ with low level functionality
 * Also included _ManagedMqttClient_ which maintains the connection and subscriptions automatically. Also application messages are queued and re-scheduled for higher QoS levels automatically.
@@ -31,16 +34,18 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Compatible with Microsoft Azure IoT Hub
 
 ### Server (broker)
+
 * List of connected clients available
 * Supports connected clients with different protocol versions at the same time
 * Able to publish its own messages (no loopback client required)
 * Able to receive every message (no loopback client required)
 * Extensible client credential validation
 * Retained messages are supported including persisting via interface methods (own implementation required)
-* WebSockets supported (via ASP.NET Core 2.0)
+* WebSockets supported (via ASP.NET Core 2.0, separate nuget)
 * A custom message interceptor can be added which allows transforming or extending every received application message
 
-# Supported frameworks
+## Supported frameworks
+
 * .NET Standard 1.3+
 * .NET Core 1.1+
 * .NET Core App 1.1+
@@ -48,28 +53,33 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Universal Windows (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU)
 * Mono 5.2+
 
-# Supported MQTT versions
+## Supported MQTT versions
+
 * 3.1.1
 * 3.1.0
 
-# Nuget
-This library is available as a nuget package: https://www.nuget.org/packages/MQTTnet/
+## Nuget
 
-# Examples
-Please find examples and the documentation at the Wiki of this repository (https://github.com/chkr1011/MQTTnet/wiki).
+This library is available as a nuget package: <https://www.nuget.org/packages/MQTTnet/>
 
-# Contributions
+## Examples
+
+Please find examples and the documentation at the Wiki of this repository (<https://github.com/chkr1011/MQTTnet/wiki>).
+
+## Contributions
+
 If you want to contribute to this project just create a pull request. But only pull requests which are matching the code style of this library will be accepted. Before creating a pull request please have a look at the library to get an overview of the required style.
 
-# References
+## References
+
 This library is used in the following projects:
 
-* MQTT Client Rx (Wrapper for Reactive Extensions, https://github.com/1iveowl/MQTTClient.rx)
-* Wirehome (Open Source Home Automation system for .NET, https://github.com/chkr1011/Wirehome)
+* MQTT Client Rx (Wrapper for Reactive Extensions, <https://github.com/1iveowl/MQTTClient.rx>)
+* Wirehome (Open Source Home Automation system for .NET, <https://github.com/chkr1011/Wirehome>)
 
 If you use this library and want to see your project here please let me know.
 
-# MIT License
+## MIT License
 
 Copyright (c) 2017 Christian Kratky
 

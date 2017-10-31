@@ -28,7 +28,7 @@
 * [Server] Added support for a custom subscription interceptor which allows denying of subscriptions and closing the connection
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
-    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation</tags> 
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
 
       <group targetFramework="netstandard1.3">

@@ -15,7 +15,6 @@
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation</tags> 
     <dependencies>
-
       <group targetFramework="netstandard2.0">
         <dependency id="MQTTnet" version="2.5" />
       </group>
@@ -25,6 +24,5 @@
   <files>
     <!-- .NET Standard 2.0 -->
     <file src="..\Frameworks\MQTTnet.AspNetCore\bin\Release\netstandard2.0\MQTTnet.AspNetCore.*" target="lib\netstandard2.0\"/>
-    
   </files>
 </package>

@@ -274,8 +274,8 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_PersistRetainedMessage()
         {
             var storage = new TestStorage();
-
             var serverAdapter = new TestMqttServerAdapter();
+
             var services = new ServiceCollection()
                 .AddLogging()
                 .AddMqttServer()
@@ -297,7 +297,7 @@ namespace MQTTnet.Core.Tests
                 await s.StopAsync();
             }
 
-            s = services.GetRequiredService<IMqttServer>();
+            s = new MqttFactory(services).CreateMqttServer(options => options.Storage = storage);
 
             var receivedMessagesCount = 0;
             try

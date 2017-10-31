@@ -25,7 +25,13 @@ namespace MQTTnet.Core.Serializer
 
         public static MqttPacketHeader ReadHeaderFromSource(Stream stream, CancellationToken cancellationToken)
         {
-            var fixedHeader = (byte)stream.ReadByte();
+            var buffer = stream.ReadByte();
+            if (buffer == -1)
+            {
+                return null;
+            }
+
+            var fixedHeader = (byte)buffer;
             var controlPacketType = (MqttControlPacketType)(fixedHeader >> 4);
             var bodyLength = ReadBodyLengthFromSource(stream, cancellationToken);
 
@@ -83,10 +89,10 @@ namespace MQTTnet.Core.Serializer
                 var buffer = stream.ReadByte();
                 readBytes.Add(buffer);
 
-                ////if (buffer == -1)
-                ////{
-                ////    break;
-                ////}
+                if (buffer == -1)
+                {
+                    break;
+                }
 
                 encodedByte = (byte)buffer;
                 value += (byte)(encodedByte & 127) * multiplier;

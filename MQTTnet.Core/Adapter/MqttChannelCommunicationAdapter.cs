@@ -151,7 +151,7 @@ namespace MQTTnet.Core.Adapter
                     receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, cancellationToken).ConfigureAwait(false);
                 }
 
-                if (cancellationToken.IsCancellationRequested)
+                if (receivedMqttPacket == null || cancellationToken.IsCancellationRequested)
                 {
                     throw new TaskCanceledException();
                 }
@@ -190,6 +190,10 @@ namespace MQTTnet.Core.Adapter
         private static async Task<ReceivedMqttPacket> ReceiveAsync(Stream stream, CancellationToken cancellationToken)
         {
             var header = MqttPacketReader.ReadHeaderFromSource(stream, cancellationToken);
+            if (header == null)
+            {
+                return null;
+            }
 
             if (header.BodyLength == 0)
             {

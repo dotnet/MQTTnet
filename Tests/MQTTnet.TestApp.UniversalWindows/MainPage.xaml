@@ -9,14 +9,12 @@
     mc:Ignorable="d">
 
     <Grid Margin="10">
-
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Pivot Grid.Row="0" >
+        <Pivot Grid.Row="0">
             <PivotItem Header="Connection">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                     <TextBlock>Server:</TextBlock>
@@ -96,15 +94,16 @@
                     </StackPanel>
                 </StackPanel>
             </PivotItem>
+            <PivotItem Header="Log">
+                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <Button Click="Clear" Width="120">Clear</Button>
+                </StackPanel>
+            </PivotItem>
         </Pivot>
 
-        <ScrollViewer Margin="12,10,12,0" Grid.Row="1" Background="Black" Foreground="WhiteSmoke" FontFamily="Consolas" HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+        <ScrollViewer Grid.Row="1"  Margin="12,10,12,0"  Background="Black" Foreground="WhiteSmoke" FontFamily="Consolas" HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
             <TextBlock x:Name="Trace" FontSize="11"></TextBlock>
         </ScrollViewer>
-
-        <StackPanel Margin="12,0,12,10" Grid.Row="2">
-            <Button Click="Clear" Width="120">Clear</Button>
-        </StackPanel>
     </Grid>
 
 </Page>

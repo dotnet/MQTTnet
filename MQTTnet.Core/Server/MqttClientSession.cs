@@ -108,7 +108,6 @@ namespace MQTTnet.Core.Server
             }
 
             _pendingMessagesQueue.Enqueue(publishPacket);
-            _logger.LogTrace("Client '{0}': Enqueued pending publish packet.", ClientId);
         }
 
         public void Dispose()

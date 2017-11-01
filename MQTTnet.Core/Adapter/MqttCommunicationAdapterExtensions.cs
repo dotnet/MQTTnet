@@ -9,6 +9,8 @@ namespace MQTTnet.Core.Adapter
     {
         public static Task SendPacketsAsync(this IMqttCommunicationAdapter adapter, TimeSpan timeout, CancellationToken cancellationToken, params MqttBasePacket[] packets)
         {
+            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
+
             return adapter.SendPacketsAsync(timeout, cancellationToken, packets);
         }
     }

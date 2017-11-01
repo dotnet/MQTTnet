@@ -13,8 +13,8 @@ namespace MQTTnet.Core.Server
     public sealed class MqttClientPendingMessagesQueue
     {
         private readonly BlockingCollection<MqttPublishPacket> _pendingPublishPackets = new BlockingCollection<MqttPublishPacket>();
-        private readonly MqttClientSession _session;
         private readonly MqttServerOptions _options;
+        private readonly MqttClientSession _session;
         private readonly ILogger<MqttClientPendingMessagesQueue> _logger;
 
         public MqttClientPendingMessagesQueue(MqttServerOptions options, MqttClientSession session, ILogger<MqttClientPendingMessagesQueue> logger)
@@ -28,7 +28,7 @@ namespace MQTTnet.Core.Server
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 
-            Task.Factory.StartNew(async () => await SendPendingPublishPacketsAsync(adapter, cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).ConfigureAwait(false);
+            Task.Run(async () => await SendPendingPublishPacketsAsync(adapter, cancellationToken), cancellationToken).ConfigureAwait(false);
         }
 
         public void Enqueue(MqttPublishPacket publishPacket)
@@ -36,6 +36,7 @@ namespace MQTTnet.Core.Server
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 
             _pendingPublishPackets.Add(publishPacket);
+            _logger.LogTrace("Enqueued packet (ClientId: {0}).", _session.ClientId);
         }
 
         private async Task SendPendingPublishPacketsAsync(IMqttCommunicationAdapter adapter, CancellationToken cancellationToken)
@@ -52,7 +53,7 @@ namespace MQTTnet.Core.Server
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Unhandled exception while sending pending publish packets.");
+                _logger.LogError(new EventId(), exception, "Unhandled exception while sending enqueued packet (ClientId: {0}).", _session.ClientId);
             }
         }
 
@@ -63,23 +64,24 @@ namespace MQTTnet.Core.Server
             try
             {
                 await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, packet).ConfigureAwait(false);
+                _logger.LogTrace("Enqueued packet sent (ClientId: {0}).", _session.ClientId);
             }
             catch (Exception exception)
             {
                 if (exception is MqttCommunicationTimedOutException)
                 {
-                    _logger.LogWarning(new EventId(), exception, "Sending publish packet failed due to timeout.");
+                    _logger.LogWarning(new EventId(), exception, "Sending publish packet failed due to timeout (ClientId: {0}).", _session.ClientId);
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    _logger.LogWarning(new EventId(), exception, "Sending publish packet failed due to communication exception.");
+                    _logger.LogWarning(new EventId(), exception, "Sending publish packet failed due to communication exception (ClientId: {0}).", _session.ClientId);
                 }
                 else if (exception is OperationCanceledException)
                 {
                 }
                 else
                 {
-                    _logger.LogError(new EventId(), exception, "Sending publish packet failed.");
+                    _logger.LogError(new EventId(), exception, "Sending publish packet failed (ClientId: {0}).", _session.ClientId);
                 }
 
                 if (packet.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)

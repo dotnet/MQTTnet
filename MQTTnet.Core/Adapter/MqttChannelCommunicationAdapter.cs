@@ -85,10 +85,10 @@ namespace MQTTnet.Core.Adapter
 
         public async Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets)
         {
-            await _semaphore.WaitAsync(cancellationToken);
-
             try
             {
+                await _semaphore.WaitAsync(cancellationToken);
+
                 foreach (var packet in packets)
                 {
                     if (packet == null)

@@ -6,11 +6,13 @@ using MQTTnet.Core.Adapter;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MQTTnet.Core.Server
 {
     public class MqttServer : IMqttServer
     {
+        private readonly IMqttClientRetainedMessageManager _clientRetainedMessageManager;
         private readonly ILogger<MqttServer> _logger;
         private readonly MqttClientSessionsManager _clientSessionsManager;
         private readonly ICollection<IMqttServerAdapter> _adapters;
@@ -18,11 +20,18 @@ namespace MQTTnet.Core.Server
 
         private CancellationTokenSource _cancellationTokenSource;
 
-        public MqttServer(IOptions<MqttServerOptions> options, IEnumerable<IMqttServerAdapter> adapters, ILogger<MqttServer> logger, MqttClientSessionsManager clientSessionsManager)
+        public MqttServer(
+            IOptions<MqttServerOptions> options, 
+            IEnumerable<IMqttServerAdapter> adapters,
+            ILogger<MqttServer> logger,
+            MqttClientSessionsManager clientSessionsManager,
+            IMqttClientRetainedMessageManager clientRetainedMessageManager
+            )
         {
             _options = options.Value ?? throw new ArgumentNullException(nameof(options));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
+            _clientRetainedMessageManager = clientRetainedMessageManager ?? throw new ArgumentNullException(nameof(clientRetainedMessageManager));
 
             if (adapters == null)
             {
@@ -79,7 +88,7 @@ namespace MQTTnet.Core.Server
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            await _clientSessionsManager.RetainedMessagesManager.LoadMessagesAsync();
+            await _clientRetainedMessageManager.LoadMessagesAsync();
 
             foreach (var adapter in _adapters)
             {

@@ -48,6 +48,12 @@
         <dependency id="Microsoft.Extensions.Logging" version="1.1.2" />
         <dependency id="Microsoft.Extensions.Options" version="1.1.2" />
       </group>
+        
+      <group targetFramework="net451">
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="1.1.1" />
+        <dependency id="Microsoft.Extensions.Logging" version="1.1.2" />
+        <dependency id="Microsoft.Extensions.Options" version="1.1.2" />
+      </group>
 
     </dependencies>
   </metadata>

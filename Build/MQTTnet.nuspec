@@ -34,10 +34,14 @@
       <group targetFramework="netstandard1.3">
         <dependency id="NETStandard.Library" version="1.6.1" />
         <dependency id="System.Net.Security" version="4.3.2" />
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="1.1.1" />
+        <dependency id="Microsoft.Extensions.Logging" version="1.1.2" />
       </group>
       
       <group targetFramework="uap10.0">
         <dependency id="Microsoft.NETCore.UniversalWindowsPlatform" version="5.4.0" />
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="1.1.1" />
+        <dependency id="Microsoft.Extensions.Logging" version="1.1.2" />
       </group>
 
     </dependencies>

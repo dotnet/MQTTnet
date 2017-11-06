@@ -15,6 +15,7 @@ namespace MQTTnet.Core.Server
 {
     public sealed class MqttClientSession : IDisposable
     {
+        private readonly IMqttClientRetainedMessageManager _clientRetainedMessageManager;
         private readonly HashSet<ushort> _unacknowledgedPublishPackets = new HashSet<ushort>();
 
         private readonly MqttClientSubscriptionsManager _subscriptionsManager;
@@ -33,10 +34,12 @@ namespace MQTTnet.Core.Server
             MqttClientSessionsManager sessionsManager,
             MqttClientSubscriptionsManager subscriptionsManager,
             ILogger<MqttClientSession> logger, 
-            ILogger<MqttClientPendingMessagesQueue> messageQueueLogger)
+            ILogger<MqttClientPendingMessagesQueue> messageQueueLogger,
+            IMqttClientRetainedMessageManager clientRetainedMessageManager)
         {
+            _clientRetainedMessageManager = clientRetainedMessageManager ?? throw new ArgumentNullException(nameof(clientRetainedMessageManager));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
-            _subscriptionsManager = subscriptionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
+            _subscriptionsManager = subscriptionsManager ?? throw new ArgumentNullException(nameof(subscriptionsManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             ClientId = clientId;
@@ -206,7 +209,7 @@ namespace MQTTnet.Core.Server
 
         private void EnqueueRetainedMessages(MqttSubscribePacket subscribePacket)
         {
-            var retainedMessages = _sessionsManager.RetainedMessagesManager.GetMessages(subscribePacket);
+            var retainedMessages = _clientRetainedMessageManager.GetMessages(subscribePacket);
             foreach (var publishPacket in retainedMessages)
             {
                 EnqueuePublishPacket(publishPacket.ToPublishPacket());
@@ -227,7 +230,7 @@ namespace MQTTnet.Core.Server
 
             if (applicationMessage.Retain)
             {
-                await _sessionsManager.RetainedMessagesManager.HandleMessageAsync(ClientId, applicationMessage);
+                await _clientRetainedMessageManager.HandleMessageAsync(ClientId, applicationMessage);
             }
 
             switch (applicationMessage.QualityOfServiceLevel)

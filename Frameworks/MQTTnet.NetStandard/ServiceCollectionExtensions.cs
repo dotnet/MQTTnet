@@ -33,9 +33,9 @@ namespace MQTTnet
             services.AddTransient<IMqttServerAdapter, MqttServerAdapter>();
             services.AddTransient<IMqttPacketSerializer, MqttPacketSerializer>();
 
-            services.AddTransient<MqttClientSessionsManager>();
+            services.AddSingleton<MqttClientSessionsManager>();
             services.AddTransient<MqttClientSubscriptionsManager>();
-            services.AddTransient<MqttClientRetainedMessagesManager>();
+            services.AddSingleton<IMqttClientRetainedMessageManager, MqttClientRetainedMessagesManager>();
             return services;
         }
 

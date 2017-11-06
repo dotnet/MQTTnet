@@ -24,20 +24,16 @@ namespace MQTTnet.Core.Server
         public MqttClientSessionsManager(
             IOptions<MqttServerOptions> options, 
             ILogger<MqttClientSessionsManager> logger,
-            MqttClientRetainedMessagesManager retainedMessagesManager, 
             IMqttClientSesssionFactory clientSesssionFactory)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-            RetainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(options));
             _clientSesssionFactory = clientSesssionFactory ?? throw new ArgumentNullException(nameof(clientSesssionFactory));
         }
 
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
-
-        public MqttClientRetainedMessagesManager RetainedMessagesManager { get; }
 
         public async Task RunClientSessionAsync(IMqttCommunicationAdapter clientAdapter, CancellationToken cancellationToken)
         {

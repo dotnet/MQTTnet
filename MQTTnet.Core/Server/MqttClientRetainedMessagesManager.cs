@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 
 namespace MQTTnet.Core.Server
 {
-    public sealed class MqttClientRetainedMessagesManager
+    public sealed class MqttClientRetainedMessagesManager : IMqttClientRetainedMessageManager
     {
         private readonly Dictionary<string, MqttApplicationMessage> _retainedMessages = new Dictionary<string, MqttApplicationMessage>();
         private readonly ILogger<MqttClientRetainedMessagesManager> _logger;

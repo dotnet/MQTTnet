@@ -11,8 +11,14 @@ namespace MQTTnet.AspNetCore
 {
     public class MqttHostedServer : MqttServer, IHostedService
     {
-        public MqttHostedServer(IOptions<MqttServerOptions> options, IEnumerable<IMqttServerAdapter> adapters, ILogger<MqttServer> logger, MqttClientSessionsManager clientSessionsManager) 
-            : base(options, adapters, logger, clientSessionsManager)
+        public MqttHostedServer(
+            IOptions<MqttServerOptions> options,
+            IEnumerable<IMqttServerAdapter> adapters,
+            ILogger<MqttServer> logger, 
+            MqttClientSessionsManager clientSessionsManager,
+            IMqttClientRetainedMessageManager clientRetainedMessageManager
+            ) 
+            : base(options, adapters, logger, clientSessionsManager, clientRetainedMessageManager)
         {
         }
 

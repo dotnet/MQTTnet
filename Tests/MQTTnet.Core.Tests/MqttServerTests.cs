@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -8,6 +9,7 @@ using MQTTnet.Core.Client;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
 using Microsoft.Extensions.DependencyInjection;
+using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Tests
 {
@@ -210,6 +212,7 @@ namespace MQTTnet.Core.Tests
                 .BuildServiceProvider();
 
             var s = new MqttFactory(services).CreateMqttServer();
+            var retainMessagemanager = services.GetRequiredService<IMqttClientRetainedMessageManager>();
 
             var receivedMessagesCount = 0;
             try
@@ -219,6 +222,20 @@ namespace MQTTnet.Core.Tests
                 var c1 = await serverAdapter.ConnectTestClient(s, "c1");
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
                 await c1.DisconnectAsync();
+
+                var subscribe = new MqttSubscribePacket()
+                {
+                    TopicFilters = new List<TopicFilter>()
+                    {
+                        new TopicFilter("retained", MqttQualityOfServiceLevel.AtMostOnce)
+                    }
+                };
+
+                //make shure the retainedMessageManagerreceived the package
+                while (retainMessagemanager.GetMessages(subscribe).Any())
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(10));
+                }
 
                 var c2 = await serverAdapter.ConnectTestClient(s, "c2");
                 c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;

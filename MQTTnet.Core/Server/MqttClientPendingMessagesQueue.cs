@@ -59,11 +59,12 @@ namespace MQTTnet.Core.Server
 
         private async Task SendPendingPublishPacketAsync(IMqttCommunicationAdapter adapter, CancellationToken cancellationToken)
         {
-            var packet = _pendingPublishPackets.Take(cancellationToken);
-
+            MqttPublishPacket packet = null;
             try
             {
+                packet = _pendingPublishPackets.Take(cancellationToken);
                 await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, packet).ConfigureAwait(false);
+
                 _logger.LogTrace("Enqueued packet sent (ClientId: {0}).", _session.ClientId);
             }
             catch (Exception exception)
@@ -84,10 +85,10 @@ namespace MQTTnet.Core.Server
                     _logger.LogError(new EventId(), exception, "Sending publish packet failed (ClientId: {0}).", _session.ClientId);
                 }
 
-                if (packet.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
+                if (packet != null && packet.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
                 {
                     packet.Dup = true;
-                    _pendingPublishPackets.Add(packet, cancellationToken);
+                    _pendingPublishPackets.Add(packet, CancellationToken.None);
                 }
 
                 _session.Stop();

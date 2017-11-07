@@ -4,7 +4,7 @@ namespace MQTTnet.Core
 {
     public sealed class TopicFilter
     {
-        public TopicFilter(string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public TopicFilter(string topic, MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce)
         {
             Topic = topic;
             QualityOfServiceLevel = qualityOfServiceLevel;

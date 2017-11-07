@@ -68,7 +68,6 @@ namespace MQTTnet.Core.Server
 
             try
             {
-                // ReSharper disable once UseNullPropagation
                 if (_options.Storage != null)
                 {
                     await _options.Storage.SaveRetainedMessagesAsync(allRetainedMessages);

@@ -14,10 +14,10 @@ namespace MQTTnet.Core.Adapter
 {
     public class MqttChannelCommunicationAdapter : IMqttCommunicationAdapter
     {
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly ILogger<MqttChannelCommunicationAdapter> _logger;
         private readonly IMqttCommunicationChannel _channel;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-
+        
         public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer, ILogger<MqttChannelCommunicationAdapter> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

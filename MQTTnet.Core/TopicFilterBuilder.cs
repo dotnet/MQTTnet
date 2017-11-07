@@ -5,8 +5,8 @@ namespace MQTTnet.Core
 {
     public class TopicFilterBuilder
     {
-        private string _topic;
         private MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
+        private string _topic;
 
         public TopicFilterBuilder WithTopic(string topic)
         {

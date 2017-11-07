@@ -13,11 +13,11 @@ using Microsoft.Extensions.Options;
 
 namespace MQTTnet.Core.Server
 {
-    public sealed class MqttClientSession : IDisposable
+    public sealed class MqttClientSession
     {
-        private readonly IMqttClientRetainedMessageManager _clientRetainedMessageManager;
         private readonly HashSet<ushort> _unacknowledgedPublishPackets = new HashSet<ushort>();
 
+        private readonly IMqttClientRetainedMessageManager _clientRetainedMessageManager;
         private readonly MqttClientSubscriptionsManager _subscriptionsManager;
         private readonly MqttClientSessionsManager _sessionsManager;
         private readonly MqttClientPendingMessagesQueue _pendingMessagesQueue;
@@ -111,12 +111,6 @@ namespace MQTTnet.Core.Server
             }
 
             _pendingMessagesQueue.Enqueue(publishPacket);
-        }
-
-        public void Dispose()
-        {
-            _cancellationTokenSource?.Cancel();
-            _cancellationTokenSource?.Dispose();
         }
 
         private async Task ReceivePacketsAsync(IMqttCommunicationAdapter adapter, CancellationToken cancellationToken)

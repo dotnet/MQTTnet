@@ -164,10 +164,10 @@ namespace MQTTnet.Core.Server
                     if (connectPacket.CleanSession)
                     {
                         _clientSessions.Remove(connectPacket.ClientId);
-                        clientSession.Dispose();
+                        clientSession.Stop();
                         clientSession = null;
 
-                        _logger.LogTrace("Disposed existing session of client '{0}'.", connectPacket.ClientId);
+                        _logger.LogTrace("Stopped existing session of client '{0}'.", connectPacket.ClientId);
                     }
                     else
                     {

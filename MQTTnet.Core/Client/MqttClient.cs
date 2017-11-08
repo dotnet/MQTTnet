@@ -60,8 +60,8 @@ namespace MQTTnet.Core.Client
                 await _adapter.ConnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
                 _logger.LogTrace("Connection with server established.");
 
-                await SetupIncomingPacketProcessingAsync();
-                var connectResponse = await AuthenticateAsync(options.WillMessage);
+                await SetupIncomingPacketProcessingAsync().ConfigureAwait(false);
+                var connectResponse = await AuthenticateAsync(options.WillMessage).ConfigureAwait(false);
 
                 _logger.LogTrace("MQTT connection with server established.");
 
@@ -218,7 +218,7 @@ namespace MQTTnet.Core.Client
 
             while (!_isReceivingPackets && _cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
+                await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(false);
             }
         }
 

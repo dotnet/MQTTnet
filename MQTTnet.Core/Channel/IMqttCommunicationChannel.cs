@@ -7,7 +7,6 @@ namespace MQTTnet.Core.Channel
     {
         Stream SendStream { get; }
         Stream ReceiveStream { get; }
-        Stream RawReceiveStream { get; }
 
         Task ConnectAsync();
         Task DisconnectAsync();

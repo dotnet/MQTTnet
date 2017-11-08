@@ -32,7 +32,6 @@ namespace MQTTnet.Implementations
 
         public Stream SendStream { get; private set; }
         public Stream ReceiveStream { get; private set; }
-        public Stream RawReceiveStream { get; private set; }
 
         public static Func<MqttClientTcpOptions, IEnumerable<ChainValidationResult>> CustomIgnorableServerCertificateErrorsResolver { get; set; }
 
@@ -70,9 +69,6 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            RawReceiveStream?.Dispose();
-            RawReceiveStream = null;
-
             SendStream?.Dispose();
             SendStream = null;
 
@@ -87,7 +83,6 @@ namespace MQTTnet.Implementations
         {
             SendStream = _socket.OutputStream.AsStreamForWrite();
             ReceiveStream = _socket.InputStream.AsStreamForRead();
-            RawReceiveStream = ReceiveStream;
         }
 
         private static Certificate LoadCertificate(MqttClientTcpOptions options)

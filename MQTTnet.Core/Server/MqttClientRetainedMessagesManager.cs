@@ -54,7 +54,7 @@ namespace MQTTnet.Core.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            await _gate.WaitAsync();
+            await _gate.WaitAsync().ConfigureAwait(false);
             try
             {
                 var saveIsRequired = false;
@@ -108,7 +108,7 @@ namespace MQTTnet.Core.Server
         {
             var retainedMessages = new List<MqttApplicationMessage>();
 
-            await _gate.WaitAsync();
+            await _gate.WaitAsync().ConfigureAwait(false);
             try
             {
                 foreach (var retainedMessage in _retainedMessages.Values)

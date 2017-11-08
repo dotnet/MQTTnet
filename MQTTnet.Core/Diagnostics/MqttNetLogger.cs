@@ -21,15 +21,19 @@ namespace MQTTnet.Core.Diagnostics
                 throw new ArgumentNullException(nameof(formatter));
             }
 
-            var message = formatter(state, exception);
+            if (!MqttNetTrace.HasListeners)
+            {
+                return;
+            }
 
+            var message = formatter(state, exception);
             var traceMessage = new MqttNetTraceMessage(DateTime.Now, Environment.CurrentManagedThreadId, _categoryName, logLevel, message, exception);
             _mqttNetTrace.Publish(traceMessage);
         }
 
         public bool IsEnabled(LogLevel logLevel)
         {
-            return true;
+            return MqttNetTrace.HasListeners;
         }
 
         //not supported: async local requires netstandard1.3

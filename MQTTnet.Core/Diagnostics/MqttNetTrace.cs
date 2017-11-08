@@ -10,9 +10,11 @@ namespace MQTTnet.Core.Diagnostics
 
         public static event EventHandler<MqttNetTraceMessagePublishedEventArgs> TraceMessagePublished;
 
-        public void Publish(MqttNetTraceMessage msg)
+        public static bool HasListeners => TraceMessagePublished != null;
+
+        public void Publish(MqttNetTraceMessage traceMessage)
         {
-            TraceMessagePublished?.Invoke(this, new MqttNetTraceMessagePublishedEventArgs(msg));
+            TraceMessagePublished?.Invoke(this, new MqttNetTraceMessagePublishedEventArgs(traceMessage));
         }
 
         public void Dispose()

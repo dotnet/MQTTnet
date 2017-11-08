@@ -41,7 +41,7 @@ namespace MQTTnet.TestApp.NetCore
                 .AddLogging()
                 .BuildServiceProvider();
 
-            services.GetService<ILoggerFactory>().AddConsole(LogLevel.Warning, true);
+            //services.GetService<ILoggerFactory>().AddConsole(LogLevel.Warning, true);
 
             Console.WriteLine("Press 'c' for concurrent sends. Otherwise in one batch.");
             var concurrent = Console.ReadKey(true).KeyChar == 'c';
@@ -120,11 +120,15 @@ namespace MQTTnet.TestApp.NetCore
                 stopwatch.Stop();
                 Console.WriteLine($"Sent 10.000 messages within {stopwatch.ElapsedMilliseconds} ms ({stopwatch.ElapsedMilliseconds / (float)testMessageCount} ms / message).");
 
-                stopwatch.Restart();
+
+                var messages = new[] { message };
                 var sentMessagesCount = 0;
+
+                stopwatch.Restart();
+
                 while (stopwatch.ElapsedMilliseconds < 1000)
                 {
-                    await client.PublishAsync(message);
+                    await client.PublishAsync(messages).ConfigureAwait(false);
                     sentMessagesCount++;
                 }
 
@@ -180,7 +184,7 @@ namespace MQTTnet.TestApp.NetCore
             {
                 Topic = "A/B/C",
                 Payload = Encoding.UTF8.GetBytes("Hello World"),
-                QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce
+                QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
             };
         }
 

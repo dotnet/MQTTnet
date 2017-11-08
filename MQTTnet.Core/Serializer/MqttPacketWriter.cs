@@ -56,11 +56,11 @@ namespace MQTTnet.Core.Serializer
             Write(value);
         }
 
-        public static void BuildLengthHeader(int length, List<byte> header)
+        public static void WriteRemainingLength(int length, List<byte> target)
         {
             if (length == 0)
             {
-                header.Add(0);
+                target.Add(0);
                 return;
             }
 
@@ -75,7 +75,7 @@ namespace MQTTnet.Core.Serializer
                     encodedByte = encodedByte | 128;
                 }
 
-                header.Add((byte)encodedByte);
+                target.Add((byte)encodedByte);
             } while (x > 0);
         }
     }

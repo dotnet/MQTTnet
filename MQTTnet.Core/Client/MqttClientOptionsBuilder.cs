@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using MQTTnet.Core.Serializer;
 
 namespace MQTTnet.Core.Client
@@ -74,6 +75,24 @@ namespace MQTTnet.Core.Client
             _webSocketOptions = new MqttClientWebSocketOptions
             {
                 Uri = uri
+            };
+
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithTls(
+            bool allowUntrustedCertificates = false,
+            bool ignoreCertificateChainErrors = false,
+            bool ignoreCertificateRevocationErrors = false,
+            params byte[][] certificates)
+        {
+            _tlsOptions = new MqttClientTlsOptions
+            {
+                UseTls = true,
+                AllowUntrustedCertificates = allowUntrustedCertificates,
+                IgnoreCertificateChainErrors = ignoreCertificateChainErrors,
+                IgnoreCertificateRevocationErrors = ignoreCertificateRevocationErrors,
+                Certificates = certificates.ToList()
             };
 
             return this;

@@ -139,9 +139,9 @@ namespace MQTTnet.Core.Adapter
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
+            ReceivedMqttPacket receivedMqttPacket = null;
             try
             {
-                ReceivedMqttPacket receivedMqttPacket;
                 if (timeout > TimeSpan.Zero)
                 {
                     receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
@@ -184,6 +184,10 @@ namespace MQTTnet.Core.Adapter
             catch (Exception exception)
             {
                 throw new MqttCommunicationException(exception);
+            }
+            finally
+            {
+                receivedMqttPacket?.Dispose();
             }
         }
 

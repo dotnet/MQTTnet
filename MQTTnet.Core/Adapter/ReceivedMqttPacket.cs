@@ -4,7 +4,7 @@ using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Adapter
 {
-    public class ReceivedMqttPacket
+    public sealed class ReceivedMqttPacket : IDisposable
     {
         public ReceivedMqttPacket(MqttPacketHeader header, MemoryStream body)
         {
@@ -15,5 +15,10 @@ namespace MQTTnet.Core.Adapter
         public MqttPacketHeader Header { get; }
 
         public MemoryStream Body { get; }
+
+        public void Dispose()
+        {
+            Body?.Dispose();
+        }
     }
 }

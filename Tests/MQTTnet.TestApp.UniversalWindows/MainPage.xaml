@@ -27,7 +27,7 @@
                     <TextBox x:Name="ClientId"></TextBox>
                     <TextBlock>Clean session:</TextBlock>
                     <CheckBox x:Name="CleanSession" IsChecked="True"></CheckBox>
-                    
+
                     <StackPanel Orientation="Horizontal">
                         <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="connection">TCP</RadioButton>
                         <RadioButton x:Name="UseWs" GroupName="connection">WS</RadioButton>
@@ -77,9 +77,19 @@
                         <RadioButton Margin="0,0,10,0" x:Name="SubscribeQoS2" GroupName="sqos">2 (Exactly once)</RadioButton>
                     </StackPanel>
 
+                    <TextBlock>Received messages:</TextBlock>
+                    <ListBox MinHeight="50" MaxHeight="250" x:Name="ReceivedMessages" Margin="0,0,0,10">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <ContentPresenter Content="{Binding}" FontFamily="Consolas" FontSize="12"></ContentPresenter>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    
                     <StackPanel Orientation="Horizontal">
                         <Button Click="Subscribe" Width="120" Margin="0,0,10,0">Subscribe</Button>
-                        <Button Click="Unsubscribe" Width="120">Unsubscribe</Button>
+                        <Button Click="Unsubscribe" Width="120" Margin="0,0,10,0">Unsubscribe</Button>
+                        <Button Click="ClearReceivedMessages" Width="200">Clear received messages</Button>
                     </StackPanel>
                 </StackPanel>
             </PivotItem>
@@ -88,6 +98,9 @@
                     <TextBlock>Port:</TextBlock>
                     <TextBox x:Name="ServerPort" Text="1883"></TextBox>
 
+                    <CheckBox x:Name="ServerPersistRetainedMessages" IsChecked="True">Persist retained messages in JSON format</CheckBox>
+                    <CheckBox x:Name="ServerClearRetainedMessages">Clear previously retained messages on startup</CheckBox>
+                    
                     <StackPanel Orientation="Horizontal">
                         <Button Width="120" Margin="0,0,10,0" Click="StartServer">Start</Button>
                         <Button Width="120" Margin="0,0,10,0" Click="StopServer">Stop</Button>

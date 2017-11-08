@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Packets;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ namespace MQTTnet.Core.Server
     public sealed class MqttClientRetainedMessagesManager : IMqttClientRetainedMessageManager
     {
         private readonly Dictionary<string, MqttApplicationMessage> _retainedMessages = new Dictionary<string, MqttApplicationMessage>();
+        private readonly SemaphoreSlim _gate = new SemaphoreSlim(1, 1);
         private readonly ILogger<MqttClientRetainedMessagesManager> _logger;
         private readonly MqttServerOptions _options;
 
@@ -27,21 +29,24 @@ namespace MQTTnet.Core.Server
                 return;
             }
 
+            await _gate.WaitAsync();
             try
             {
                 var retainedMessages = await _options.Storage.LoadRetainedMessagesAsync();
-                lock (_retainedMessages)
+
+                _retainedMessages.Clear();
+                foreach (var retainedMessage in retainedMessages)
                 {
-                    _retainedMessages.Clear();
-                    foreach (var retainedMessage in retainedMessages)
-                    {
-                        _retainedMessages[retainedMessage.Topic] = retainedMessage;
-                    }
+                    _retainedMessages[retainedMessage.Topic] = retainedMessage;
                 }
             }
             catch (Exception exception)
             {
                 _logger.LogError(new EventId(), exception, "Unhandled exception while loading retained messages.");
+            }
+            finally
+            {
+                _gate.Release();
             }
         }
 
@@ -49,40 +54,62 @@ namespace MQTTnet.Core.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            List<MqttApplicationMessage> allRetainedMessages;
-            lock (_retainedMessages)
+            await _gate.WaitAsync();
+            try
             {
+                var saveIsRequired = false;
+
                 if (applicationMessage.Payload?.Any() == false)
                 {
-                    _retainedMessages.Remove(applicationMessage.Topic);
+                    saveIsRequired = _retainedMessages.Remove(applicationMessage.Topic);
                     _logger.LogInformation("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                 }
                 else
                 {
-                    _retainedMessages[applicationMessage.Topic] = applicationMessage;
-                    _logger.LogInformation("Client '{0}' updated retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                    if (!_retainedMessages.ContainsKey(applicationMessage.Topic))
+                    {
+                        _retainedMessages[applicationMessage.Topic] = applicationMessage;
+                        saveIsRequired = true;
+                    }
+                    else
+                    {
+                        var existingMessage = _retainedMessages[applicationMessage.Topic];
+                        if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? new byte[0]))
+                        {
+                            _retainedMessages[applicationMessage.Topic] = applicationMessage;
+                            saveIsRequired = true;
+                        }
+                    }
+                    
+                    _logger.LogInformation("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                 }
 
-                allRetainedMessages = new List<MqttApplicationMessage>(_retainedMessages.Values);
-            }
-
-            try
-            {
-                if (_options.Storage != null)
+                if (!saveIsRequired)
                 {
-                    await _options.Storage.SaveRetainedMessagesAsync(allRetainedMessages);
+                    _logger.LogTrace("Skipped saving retained messages because no changes were detected.");
+                }
+
+                if (saveIsRequired && _options.Storage != null)
+                {
+                    await _options.Storage.SaveRetainedMessagesAsync(_retainedMessages.Values.ToList());
                 }
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Unhandled exception while saving retained messages.");
+                _logger.LogError(new EventId(), exception, "Unhandled exception while handling retained messages.");
+            }
+            finally
+            {
+                _gate.Release();
             }
         }
 
-        public List<MqttApplicationMessage> GetMessages(MqttSubscribePacket subscribePacket)
+        public async Task<List<MqttApplicationMessage>> GetSubscribedMessagesAsync(MqttSubscribePacket subscribePacket)
         {
             var retainedMessages = new List<MqttApplicationMessage>();
-            lock (_retainedMessages)
+
+            await _gate.WaitAsync();
+            try
             {
                 foreach (var retainedMessage in _retainedMessages.Values)
                 {
@@ -102,6 +129,10 @@ namespace MQTTnet.Core.Server
                         break;
                     }
                 }
+            }
+            finally
+            {
+                _gate.Release();
             }
 
             return retainedMessages;

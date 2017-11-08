@@ -88,16 +88,30 @@ namespace MQTTnet.TestApp.UniversalWindows
                 if (_mqttClient != null)
                 {
                     await _mqttClient.DisconnectAsync();
+                    _mqttClient.ApplicationMessageReceived -= OnApplicationMessageReceived;
                 }
 
                 var factory = new MqttFactory();
                 _mqttClient = factory.CreateMqttClient();
+                _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
+
                 await _mqttClient.ConnectAsync(options);
             }
             catch (Exception exception)
             {
                 Trace.Text += exception + Environment.NewLine;
             }
+        }
+
+        private async void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs eventArgs)
+        {
+            var item = $"Timestamp: {DateTime.Now:O} | Topic: {eventArgs.ApplicationMessage.Topic} | Payload: {Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload)} | QoS: {eventArgs.ApplicationMessage.QualityOfServiceLevel}";
+
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                ReceivedMessages.Items.Add(item);
+            });
+            
         }
 
         private async void Publish(object sender, RoutedEventArgs e)
@@ -332,9 +346,21 @@ namespace MQTTnet.TestApp.UniversalWindows
                 return;
             }
 
+            JsonServerStorage storage = null;
+            if (ServerPersistRetainedMessages.IsChecked == true)
+            {
+                storage = new JsonServerStorage();
+
+                if (ServerClearRetainedMessages.IsChecked == true)
+                {
+                    storage.Clear();
+                }
+            }
+
             _mqttServer = new MqttFactory().CreateMqttServer(o =>
             {
                 o.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
+                o.Storage = storage;
             });
 
             await _mqttServer.StartAsync();
@@ -349,6 +375,11 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             await _mqttServer.StopAsync();
             _mqttServer = null;
+        }
+
+        private void ClearReceivedMessages(object sender, RoutedEventArgs e)
+        {
+            ReceivedMessages.Items.Clear();
         }
     }
 }

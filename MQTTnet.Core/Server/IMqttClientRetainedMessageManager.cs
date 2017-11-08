@@ -10,6 +10,6 @@ namespace MQTTnet.Core.Server
 
         Task HandleMessageAsync(string clientId, MqttApplicationMessage applicationMessage);
 
-        List<MqttApplicationMessage> GetMessages(MqttSubscribePacket subscribePacket);
+        Task<List<MqttApplicationMessage>> GetSubscribedMessagesAsync(MqttSubscribePacket subscribePacket);
     }
 }

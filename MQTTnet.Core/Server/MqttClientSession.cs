@@ -191,8 +191,9 @@ namespace MQTTnet.Core.Server
         private async Task HandleIncomingSubscribePacketAsync(IMqttCommunicationAdapter adapter, MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
             var subscribeResult = _subscriptionsManager.Subscribe(subscribePacket, ClientId);
+
             await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, subscribeResult.ResponsePacket);
-            EnqueueRetainedMessages(subscribePacket);
+            await EnqueueSubscribedRetainedMessagesAsync(subscribePacket);
 
             if (subscribeResult.CloseConnection)
             {
@@ -201,9 +202,9 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        private void EnqueueRetainedMessages(MqttSubscribePacket subscribePacket)
+        private async Task EnqueueSubscribedRetainedMessagesAsync(MqttSubscribePacket subscribePacket)
         {
-            var retainedMessages = _clientRetainedMessageManager.GetMessages(subscribePacket);
+            var retainedMessages = await _clientRetainedMessageManager.GetSubscribedMessagesAsync(subscribePacket);
             foreach (var publishPacket in retainedMessages)
             {
                 EnqueuePublishPacket(publishPacket.ToPublishPacket());

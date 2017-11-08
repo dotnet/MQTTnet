@@ -232,7 +232,7 @@ namespace MQTTnet.Core.Tests
                 };
 
                 //make shure the retainedMessageManagerreceived the package
-                while (!retainMessagemanager.GetMessages(subscribe).Any())
+                while (!(await retainMessagemanager.GetSubscribedMessagesAsync(subscribe)).Any())
                 {
                     await Task.Delay(TimeSpan.FromMilliseconds(10));
                 }

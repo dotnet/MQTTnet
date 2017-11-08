@@ -9,7 +9,7 @@ namespace MQTTnet.Core.Serializer
     public sealed class MqttPacketWriter : BinaryWriter
     {
         public MqttPacketWriter(Stream stream)
-            : base(stream)
+            : base(stream, Encoding.UTF8, true)
         {
         }
 

@@ -1,5 +1,4 @@
-#if NET451 || NETSTANDARD1_3
-
+#if NET452 || NETSTANDARD1_3
 using System;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -18,7 +17,7 @@ namespace MQTTnet.Implementations
         private readonly MqttClientTcpOptions _options;
 
         //todo: this can be used with min dependency NetStandard1.6
-#if NET45
+#if NET452
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
         public static int BufferSize { get; set; } = 4096 * 20; // Can be changed for fine tuning by library user.
@@ -49,7 +48,6 @@ namespace MQTTnet.Implementations
 
         public Stream SendStream { get; private set; }
         public Stream ReceiveStream { get; private set; }
-        public Stream RawReceiveStream { get; private set; }
 
         public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
 
@@ -61,7 +59,7 @@ namespace MQTTnet.Implementations
             }
 
             //todo: else brach can be used with min dependency NET46
-#if NET451
+#if NET452
             await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
 #else
             await _socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
@@ -140,19 +138,18 @@ namespace MQTTnet.Implementations
 
         private void CreateStreams(Socket socket, Stream sslStream)
         {
-            RawReceiveStream = sslStream ?? new NetworkStream(socket);
-
+            var stream = sslStream ?? new NetworkStream(socket);
 
             //cannot use this as default buffering prevents from receiving the first connect message
             //need two streams otherwise read and write have to be synchronized
 
             //todo: if branch can be used with min dependency NetStandard1.6
-#if NET45
-            SendStream = new BufferedStream(RawReceiveStream, BufferSize);
-            ReceiveStream = new BufferedStream(RawReceiveStream, BufferSize);
+#if NET452
+            SendStream = new BufferedStream(stream, BufferSize);
+            ReceiveStream = new BufferedStream(stream, BufferSize);
 #else
-            SendStream = RawReceiveStream;
-            ReceiveStream = RawReceiveStream;
+            SendStream = stream;
+            ReceiveStream = stream;
 #endif
         }
 

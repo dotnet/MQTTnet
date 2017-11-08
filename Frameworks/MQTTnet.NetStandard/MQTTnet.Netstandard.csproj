@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;net451;uap10.0</TargetFrameworks>
+    <TargetFrameworks>netstandard1.3;net452;uap10.0</TargetFrameworks>
     <AssemblyName>MQTTnet</AssemblyName>
     <RootNamespace>MQTTnet</RootNamespace>
     <AssemblyVersion>2.5.0.0</AssemblyVersion>
@@ -18,7 +18,7 @@
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <NugetTargetMoniker>UAP,Version=v10.0</NugetTargetMoniker>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.15063.0</TargetPlatformVersion>
+    <TargetPlatformVersion>10.0.16299.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
     <TargetFrameworkIdentifier>.NETCore</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>

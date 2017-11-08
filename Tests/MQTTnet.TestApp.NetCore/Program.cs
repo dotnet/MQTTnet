@@ -83,6 +83,12 @@ namespace MQTTnet.TestApp.NetCore
 
         public Task SaveRetainedMessagesAsync(IList<MqttApplicationMessage> messages)
         {
+            var directory = Path.GetDirectoryName(Filename);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
             File.WriteAllText(Filename, JsonConvert.SerializeObject(messages));
             return Task.FromResult(0);
         }

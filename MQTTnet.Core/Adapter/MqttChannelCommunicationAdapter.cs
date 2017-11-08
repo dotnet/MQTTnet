@@ -144,7 +144,7 @@ namespace MQTTnet.Core.Adapter
                 ReceivedMqttPacket receivedMqttPacket;
                 if (timeout > TimeSpan.Zero)
                 {
-                    receivedMqttPacket = await ReceiveAsync(_channel.RawReceiveStream, cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
+                    receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
                 }
                 else
                 {

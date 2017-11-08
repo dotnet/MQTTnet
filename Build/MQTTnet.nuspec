@@ -68,8 +68,8 @@
     <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\uap10.0\MQTTnet.*" target="lib\uap10.0\"/>
 
     <!-- .NET Framework -->
-    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net451\MQTTnet.Core.*" target="lib\net451\"/>
-    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net451\MQTTnet.*" target="lib\net451\"/>
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net452\MQTTnet.Core.*" target="lib\net452\"/>
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net452\MQTTnet.*" target="lib\net452\"/>
     
   </files>
 </package>

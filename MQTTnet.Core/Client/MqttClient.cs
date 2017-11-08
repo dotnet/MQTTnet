@@ -151,7 +151,7 @@ namespace MQTTnet.Core.Client
                     case MqttQualityOfServiceLevel.AtMostOnce:
                     {
                         // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
-                        await _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, qosPackets);
+                        await _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, qosPackets).ConfigureAwait(false);
                         break;
                     }
                     case MqttQualityOfServiceLevel.AtLeastOnce:
@@ -159,7 +159,7 @@ namespace MQTTnet.Core.Client
                         foreach (var publishPacket in qosPackets)
                         {
                             publishPacket.PacketIdentifier = GetNewPacketIdentifier();
-                            await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket);
+                            await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket).ConfigureAwait(false);
                         }
 
                         break;

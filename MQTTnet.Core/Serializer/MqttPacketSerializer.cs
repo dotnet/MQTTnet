@@ -24,15 +24,18 @@ namespace MQTTnet.Core.Serializer
             using (var stream = new MemoryStream())
             using (var writer = new MqttPacketWriter(stream))
             {
-                var header = new List<byte> { SerializePacket(packet, writer) };
-                var body = stream.ToArray();
-                MqttPacketWriter.BuildLengthHeader(body.Length, header);
-                var headerArray = header.ToArray();
-                var writeBuffer = new byte[header.Count + body.Length];
-                Buffer.BlockCopy(headerArray, 0, writeBuffer, 0, headerArray.Length);
-                Buffer.BlockCopy(body, 0, writeBuffer, headerArray.Length, body.Length);
+                var fixedHeader = SerializePacket(packet, writer);
+                var headerBuffer = new List<byte> { fixedHeader };
+                MqttPacketWriter.WriteRemainingLength((int)stream.Length, headerBuffer);
 
-                return writeBuffer;
+                var header = headerBuffer.ToArray();
+                var body = stream.ToArray();
+
+                var buffer = new byte[header.Length + body.Length];
+                Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
+                Buffer.BlockCopy(body, 0, buffer, header.Length, body.Length);
+
+                return buffer;
             }
         }
 

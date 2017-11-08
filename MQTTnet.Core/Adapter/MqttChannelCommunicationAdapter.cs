@@ -87,7 +87,7 @@ namespace MQTTnet.Core.Adapter
         {
             try
             {
-                await _semaphore.WaitAsync(cancellationToken);
+                await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
                 foreach (var packet in packets)
                 {

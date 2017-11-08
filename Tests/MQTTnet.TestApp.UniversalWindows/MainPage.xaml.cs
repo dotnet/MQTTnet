@@ -5,6 +5,7 @@ using Windows.Security.Cryptography.Certificates;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
@@ -111,7 +112,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             {
                 ReceivedMessages.Items.Add(item);
             });
-            
+
         }
 
         private async void Publish(object sender, RoutedEventArgs e)
@@ -227,16 +228,50 @@ namespace MQTTnet.TestApp.UniversalWindows
         private async Task WikiCode()
         {
             {
-                // Create a new MQTT client
+                // Write all trace messages to the console window.
+                MqttNetTrace.TraceMessagePublished += (s, e) =>
+                {
+                    Console.WriteLine($">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
+                    if (e.TraceMessage.Exception != null)
+                    {
+                        Console.WriteLine(e.TraceMessage.Exception);
+                    }
+                };
+            }
+
+            {
+                // Add the console logger to the logger factory.
                 var services = new ServiceCollection()
                     .AddMqttClient()
                     .BuildServiceProvider();
 
-                var factory = new MqttFactory(services);
-                var client = factory.CreateMqttClient();
+                services.GetRequiredService<ILoggerFactory>()
+                    .AddConsole();
+            }
+
+            {
+                // Use a custom identifier for the trace messages.
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithLogId("ClientX")
+                    .Build();
+            }
+
+            {
+                // Create a client from the service provider manually.
+                var serviceProvider = new ServiceCollection()
+                    .AddMqttClient()
+                    .BuildServiceProvider();
+
+                var mqttClient = serviceProvider.GetRequiredService<IMqttClient>();
+            }
+            
+            {
+                // Create a new MQTT client.
+                var factory = new MqttFactory();
+                var mqttClient = factory.CreateMqttClient();
 
                 {
-                    // Create TCP based options using the builder
+                    // Create TCP based options using the builder.
                     var options = new MqttClientOptionsBuilder()
                         .WithClientId("Client1")
                         .WithTcpServer("broker.hivemq.com")
@@ -245,7 +280,31 @@ namespace MQTTnet.TestApp.UniversalWindows
                         .WithCleanSession()
                         .Build();
 
-                    await client.ConnectAsync(options);
+                    await mqttClient.ConnectAsync(options);
+                }
+
+                {
+                    // Use TCP connection.
+                    var options = new MqttClientOptionsBuilder()
+                        .WithTcpServer("broker.hivemq.com", 1883) // Port is optional
+                        .Build();
+                }
+
+                {
+                    // Use secure TCP connection.
+                    var options = new MqttClientOptionsBuilder()
+                    .WithTcpServer("broker.hivemq.com")
+                    .WithTls()
+                    .Build();
+                }
+
+                {
+                    // Use WebSocket connection.
+                    var options = new MqttClientOptionsBuilder()
+                        .WithWebSocketServer("broker.hivemq.com:8000/mqtt")
+                        .Build();
+
+                    await mqttClient.ConnectAsync(options);
                 }
 
                 {
@@ -271,10 +330,10 @@ namespace MQTTnet.TestApp.UniversalWindows
 
                 {
                     // Subscribe to a topic
-                    await client.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
+                    await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
 
                     // Unsubscribe from a topic
-                    await client.UnsubscribeAsync("my/topic");
+                    await mqttClient.UnsubscribeAsync("my/topic");
 
                     // Publish an application message
                     var applicationMessage = new MqttApplicationMessageBuilder()
@@ -283,7 +342,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                         .WithAtLeastOnceQoS()
                         .Build();
 
-                    await client.PublishAsync(applicationMessage);
+                    await mqttClient.PublishAsync(applicationMessage);
                 }
             }
 

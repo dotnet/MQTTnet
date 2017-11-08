@@ -12,15 +12,21 @@ namespace MQTTnet.Core.Client
 
         private MqttClientTlsOptions _tlsOptions;
 
-        public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion protocolVersion)
+        public MqttClientOptionsBuilder WithLogId(string value)
         {
-            _options.ProtocolVersion = protocolVersion;
+            _options.LogId = value;
             return this;
         }
 
-        public MqttClientOptionsBuilder WithCommunicationTimeout(TimeSpan communicationTimeout)
+        public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion value)
         {
-            _options.CommunicationTimeout = communicationTimeout;
+            _options.ProtocolVersion = value;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithCommunicationTimeout(TimeSpan value)
+        {
+            _options.CommunicationTimeout = value;
             return this;
         }
 
@@ -30,21 +36,21 @@ namespace MQTTnet.Core.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithKeepAlivePeriod(TimeSpan keepAlivePeriod)
+        public MqttClientOptionsBuilder WithKeepAlivePeriod(TimeSpan value)
         {
-            _options.KeepAlivePeriod = keepAlivePeriod;
+            _options.KeepAlivePeriod = value;
             return this;
         }
 
-        public MqttClientOptionsBuilder WithClientId(string clientId)
+        public MqttClientOptionsBuilder WithClientId(string value)
         {
-            _options.ClientId = clientId;
+            _options.ClientId = value;
             return this;
         }
 
-        public MqttClientOptionsBuilder WithWillMessage(MqttApplicationMessage applicationMessage)
+        public MqttClientOptionsBuilder WithWillMessage(MqttApplicationMessage value)
         {
-            _options.WillMessage = applicationMessage;
+            _options.WillMessage = value;
             return this;
         }
 

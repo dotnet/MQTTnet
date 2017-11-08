@@ -6,7 +6,6 @@ using MQTTnet.Core.Adapter;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MQTTnet.Core.Server
 {

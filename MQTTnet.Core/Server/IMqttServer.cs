@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using MQTTnet.Core.Client;
 
 namespace MQTTnet.Core.Server
 {

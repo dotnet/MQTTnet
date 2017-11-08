@@ -264,7 +264,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 
                 var mqttClient = serviceProvider.GetRequiredService<IMqttClient>();
             }
-            
+
             {
                 // Create a new MQTT client.
                 var factory = new MqttFactory();
@@ -395,6 +395,64 @@ namespace MQTTnet.TestApp.UniversalWindows
 
                 return new ChainValidationResult[0];
             };
+
+            {
+                // Start a MQTT server.
+                var mqttServer = new MqttFactory().CreateMqttServer();
+                await mqttServer.StartAsync();
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadLine();
+                await mqttServer.StopAsync();
+            }
+
+            {
+                // Configure MQTT server.
+                var mqttServer = new MqttFactory().CreateMqttServer(options =>
+                {
+                    options.ConnectionBacklog = 100;
+                    options.DefaultEndpointOptions.Port = 1884;
+                    options.ConnectionValidator = packet =>
+                    {
+                        if (packet.ClientId != "Highlander")
+                        {
+                            return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        }
+
+                        return MqttConnectReturnCode.ConnectionAccepted;
+                    };
+                });
+            }
+
+            {
+                // Setup client validator.
+                var mqttServer = new MqttFactory().CreateMqttServer(options =>
+                {
+                    options.ConnectionValidator = c =>
+                    {
+                        if (c.ClientId.Length < 10)
+                        {
+                            return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        }
+
+                        if (c.Username != "mySecretUser")
+                        {
+                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        }
+
+                        if (c.Password != "mySecretPassword")
+                        {
+                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        }
+
+                        return MqttConnectReturnCode.ConnectionAccepted;
+                    };
+                });
+            }
+
+            {
+                // Create a new MQTT server.
+                var mqttServer = new MqttFactory().CreateMqttServer();
+            }
 
         }
 

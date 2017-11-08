@@ -35,14 +35,29 @@ namespace MQTTnet.TestApp.NetCore
 
                     options.Storage = new RetainedMessageHandler();
 
+                    // Extend the timestamp for all messages from clients.
                     options.ApplicationMessageInterceptor = context =>
                     {
                         if (MqttTopicFilterComparer.IsMatch(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#"))
                         {
-                            // Replace the payload with the timestamp. But also extending a JSON 
-                            // based payload with the timestamp is a suitable use case.
-                            context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
-                        }                        
+        // Replace the payload with the timestamp. But also extending a JSON 
+        // based payload with the timestamp is a suitable use case.
+        context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
+                        }
+                    };
+                    // Protect several topics from being subscribed from every client.
+                    options.SubscriptionsInterceptor = context =>
+                    {
+                        if (context.TopicFilter.Topic.StartsWith("admin/foo/bar") && context.ClientId != "theAdmin")
+                        {
+                            context.AcceptSubscription = false;
+                        }
+
+                        if (context.TopicFilter.Topic.StartsWith("the/secret/stuff") && context.ClientId != "Imperator")
+                        {
+                            context.AcceptSubscription = false;
+                            context.CloseConnection = true;
+                        }
                     };
                 });
 

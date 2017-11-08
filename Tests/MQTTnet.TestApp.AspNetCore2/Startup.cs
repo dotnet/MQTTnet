@@ -8,17 +8,19 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using MQTTnet.AspNetCore;
 using MQTTnet.Core;
-using MQTTnet.Core.Client;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {
     public class Startup
     {
+        // In class _Startup_ of the ASP.NET Core 2.0 project.
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHostedMqttServer();
         }
 
+        // In class _Startup_ of the ASP.NET Core 2.0 project.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             app.UseMqttEndpoint();
@@ -49,11 +51,11 @@ namespace MQTTnet.TestApp.AspNetCore2
             app.UseStaticFiles();
 
 
-            app.UseStaticFiles( new StaticFileOptions()
+            app.UseStaticFiles(new StaticFileOptions
             {
                 RequestPath = "/node_modules",
-                FileProvider = new PhysicalFileProvider( Path.Combine(env.ContentRootPath, "node_modules" ) )
-            } );
+                FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "node_modules"))
+            });
         }
     }
 }

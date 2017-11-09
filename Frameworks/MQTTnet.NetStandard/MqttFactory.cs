@@ -16,20 +16,6 @@ namespace MQTTnet
     {
         private readonly IServiceProvider _serviceProvider;
 
-        private static IServiceProvider BuildServiceProvider()
-        {
-            var serviceProvider = new ServiceCollection()
-                .AddMqttClient()
-                .AddMqttServer()
-                .AddLogging()
-                .BuildServiceProvider();
-
-            serviceProvider.GetRequiredService<ILoggerFactory>()
-                .AddMqttTrace();
-
-            return serviceProvider;
-        }
-
         public MqttFactory()
             : this(BuildServiceProvider())
         {
@@ -127,6 +113,20 @@ namespace MQTTnet
             configure(options.Value);
 
             return _serviceProvider.GetRequiredService<IMqttServer>();
+        }
+
+        private static IServiceProvider BuildServiceProvider()
+        {
+            var serviceProvider = new ServiceCollection()
+                .AddMqttClient()
+                .AddMqttServer()
+                .AddLogging()
+                .BuildServiceProvider();
+
+            serviceProvider.GetRequiredService<ILoggerFactory>()
+                .AddMqttTrace();
+
+            return serviceProvider;
         }
     }
 }

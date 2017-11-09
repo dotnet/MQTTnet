@@ -53,6 +53,7 @@ namespace MQTTnet.Core.Tests
         public async Task MqttServer_WillMessage()
         {
             var serverAdapter = new TestMqttServerAdapter();
+
             var services = new ServiceCollection()
                 .AddLogging()
                 .AddMqttServer()
@@ -70,7 +71,7 @@ namespace MQTTnet.Core.Tests
                 var c2 = await serverAdapter.ConnectTestClient(s, "c2", willMessage);
 
                 c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
-                await c1.SubscribeAsync(new TopicFilter("#", MqttQualityOfServiceLevel.AtMostOnce));
+                await c1.SubscribeAsync(new TopicFilter("#"));
 
                 await c2.DisconnectAsync();
 
@@ -80,6 +81,7 @@ namespace MQTTnet.Core.Tests
             {
                 await s.StopAsync();
             }
+
             Assert.AreEqual(1, receivedMessagesCount);
         }
 

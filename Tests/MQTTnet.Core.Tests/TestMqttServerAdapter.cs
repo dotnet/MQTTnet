@@ -17,7 +17,11 @@ namespace MQTTnet.Core.Tests
             adapterA.Partner = adapterB;
             adapterB.Partner = adapterA;
 
-            var client = new MqttClient(new MqttCommunicationAdapterFactory(adapterA), new TestLogger<MqttClient>(), new MqttPacketDispatcher(new TestLogger<MqttPacketDispatcher>()));
+            var client = new MqttClient(
+                new TestMqttCommunicationAdapterFactory(adapterA),
+                new TestLogger<MqttClient>(), 
+                new MqttPacketDispatcher(new TestLogger<MqttPacketDispatcher>()));
+
             var connected = WaitForClientToConnect(server, clientId);
 
             FireClientAcceptedEvent(adapterB);
@@ -28,8 +32,6 @@ namespace MQTTnet.Core.Tests
                 WillMessage = willMessage,
                 ChannelOptions = new MqttClientTcpOptions()
             };
-
-            options.ChannelOptions = new MqttClientTcpOptions();
 
             await client.ConnectAsync(options);
             await connected;

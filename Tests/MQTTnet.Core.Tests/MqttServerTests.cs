@@ -76,6 +76,8 @@ namespace MQTTnet.Core.Tests
                 await c2.DisconnectAsync();
 
                 await Task.Delay(1000);
+
+                await c1.DisconnectAsync();
             }
             finally
             {

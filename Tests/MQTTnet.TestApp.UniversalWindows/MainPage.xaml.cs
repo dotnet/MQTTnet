@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
+using MQTTnet.Core.ManagedClient;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
 using MQTTnet.Implementations;
@@ -452,6 +453,21 @@ namespace MQTTnet.TestApp.UniversalWindows
             {
                 // Create a new MQTT server.
                 var mqttServer = new MqttFactory().CreateMqttServer();
+            }
+
+            {
+                // Setup and start a managed MQTT client.
+                var options = new ManagedMqttClientOptionsBuilder()
+                    .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
+                    .WithClientOptions(new MqttClientOptionsBuilder()
+                        .WithClientId("Client1")
+                        .WithTcpServer("broker.hivemq.com")
+                        .WithTls().Build())
+                    .Build();
+
+                var mqttClient = new MqttFactory().CreateManagedMqttClient();
+                await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
+                await mqttClient.StartAsync(options);
             }
 
         }

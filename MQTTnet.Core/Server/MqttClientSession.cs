@@ -94,9 +94,11 @@ namespace MQTTnet.Core.Server
             }
             finally
             {
-                if (_willMessage != null)
+                var willMessage = _willMessage; 
+                if (willMessage != null)
                 {
-                    _sessionsManager.DispatchApplicationMessage(this, _willMessage);
+                    _willMessage = null; //clear willmessage so it is send just once
+                    _sessionsManager.DispatchApplicationMessage(this, willMessage);
                 }
             }
         }

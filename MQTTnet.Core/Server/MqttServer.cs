@@ -49,6 +49,7 @@ namespace MQTTnet.Core.Server
             return _clientSessionsManager.GetConnectedClients();
         }
 
+        public event EventHandler<MqttServerStartedEventArgs> Started;
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
@@ -96,6 +97,8 @@ namespace MQTTnet.Core.Server
             }
 
             _logger.LogInformation("Started.");
+
+            Started?.Invoke(this, new MqttServerStartedEventArgs());
         }
 
         public async Task StopAsync()

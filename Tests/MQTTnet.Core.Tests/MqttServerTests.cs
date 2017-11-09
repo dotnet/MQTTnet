@@ -9,6 +9,7 @@ using MQTTnet.Core.Client;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
 using Microsoft.Extensions.DependencyInjection;
+using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Tests
@@ -76,6 +77,8 @@ namespace MQTTnet.Core.Tests
                 await c2.DisconnectAsync();
 
                 await Task.Delay(1000);
+
+                await c1.DisconnectAsync();
             }
             finally
             {
@@ -214,7 +217,6 @@ namespace MQTTnet.Core.Tests
                 .BuildServiceProvider();
 
             var s = new MqttFactory(services).CreateMqttServer();
-            var retainMessagemanager = services.GetRequiredService<IMqttClientRetainedMessageManager>();
 
             var receivedMessagesCount = 0;
             try
@@ -225,19 +227,7 @@ namespace MQTTnet.Core.Tests
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
                 await c1.DisconnectAsync();
 
-                var subscribe = new MqttSubscribePacket()
-                {
-                    TopicFilters = new List<TopicFilter>()
-                    {
-                        new TopicFilter("retained", MqttQualityOfServiceLevel.AtMostOnce)
-                    }
-                };
-
-                //make shure the retainedMessageManagerreceived the package
-                while (!(await retainMessagemanager.GetSubscribedMessagesAsync(subscribe)).Any())
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(10));
-                }
+                await services.WaitForRetainedMessage("retained").TimeoutAfter(TimeSpan.FromSeconds(5));
 
                 var c2 = await serverAdapter.ConnectTestClient(s, "c2");
                 c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
@@ -315,6 +305,8 @@ namespace MQTTnet.Core.Tests
             {
                 await s.StopAsync();
             }
+
+            await services.WaitForRetainedMessage("retained").TimeoutAfter(TimeSpan.FromSeconds(5));
 
             s = new MqttFactory(services).CreateMqttServer(options => options.Storage = storage);
 
@@ -436,6 +428,27 @@ namespace MQTTnet.Core.Tests
             }
             
             Assert.AreEqual(expectedReceivedMessagesCount, receivedMessagesCount);
+        }
+    }
+
+    public static class TestExtensions
+    {
+        public static async Task WaitForRetainedMessage(this IServiceProvider services, string topic)
+        {
+            var retainMessagemanager = services.GetRequiredService<IMqttClientRetainedMessageManager>();
+            
+            var subscribe = new MqttSubscribePacket()
+            {
+                TopicFilters = new List<TopicFilter>()
+                {
+                    new TopicFilter(topic, MqttQualityOfServiceLevel.AtMostOnce)
+                }
+            };
+
+            while (!(await retainMessagemanager.GetSubscribedMessagesAsync(subscribe)).Any())
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(10));
+            }
         }
     }
 }

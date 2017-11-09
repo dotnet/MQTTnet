@@ -4,11 +4,11 @@ using MQTTnet.Core.Client;
 
 namespace MQTTnet.Core.Tests
 {
-    public class MqttCommunicationAdapterFactory : IMqttCommunicationAdapterFactory
+    public class TestMqttCommunicationAdapterFactory : IMqttCommunicationAdapterFactory
     {
         private readonly IMqttCommunicationAdapter _adapter;
 
-        public MqttCommunicationAdapterFactory(IMqttCommunicationAdapter adapter)
+        public TestMqttCommunicationAdapterFactory(IMqttCommunicationAdapter adapter)
         {
             _adapter = adapter;
         }

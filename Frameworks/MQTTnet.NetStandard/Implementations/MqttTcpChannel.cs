@@ -1,4 +1,4 @@
-#if NET452 || NETSTANDARD1_3
+#if NET452 || NETSTANDARD1_3 || NETSTANDARD2_0
 using System;
 using System.Net.Security;
 using System.Net.Sockets;

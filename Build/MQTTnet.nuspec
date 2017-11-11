@@ -10,14 +10,15 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* 
+    <releaseNotes>* Fixed several library reference issues.
+* [Client] Fixed issue in _MqttClientOptionsBuilder_ when using no certificates (Thanks to 1iveowl).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
 
       <group targetFramework="netstandard1.3">
-        <dependency id="NETStandard.Library" version="1.6.1" />
+        <dependency id="NETStandard.Library" version="1.3" />
         <dependency id="Microsoft.Extensions.DependencyInjection" version="1.1.1" />
         <dependency id="Microsoft.Extensions.Logging" version="1.1.2" />
         <dependency id="Microsoft.Extensions.Options" version="1.1.2" />
@@ -45,7 +46,7 @@
         <dependency id="Microsoft.Extensions.Options" version="1.1.2" />
       </group>
         
-      <group targetFramework="net451">
+      <group targetFramework="net452">
         <dependency id="Microsoft.Extensions.DependencyInjection" version="1.1.1" />
         <dependency id="Microsoft.Extensions.Logging" version="1.1.2" />
         <dependency id="Microsoft.Extensions.Options" version="1.1.2" />

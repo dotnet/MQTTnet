@@ -60,12 +60,14 @@ namespace MQTTnet.Core.Server
 
             try
             {
+                var cancellationTokenSource = new CancellationTokenSource();
+
                 _willMessage = willMessage;
                 _adapter = adapter;
-                _cancellationTokenSource = new CancellationTokenSource();
+                _cancellationTokenSource = cancellationTokenSource;
 
-                _pendingMessagesQueue.Start(adapter, _cancellationTokenSource.Token);
-                await ReceivePacketsAsync(adapter, _cancellationTokenSource.Token).ConfigureAwait(false);
+                _pendingMessagesQueue.Start(adapter, cancellationTokenSource.Token);
+                await ReceivePacketsAsync(adapter, cancellationTokenSource.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {

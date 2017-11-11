@@ -28,6 +28,11 @@ namespace MQTTnet.Core.Server
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             Task.Run(async () => await SendPendingPublishPacketsAsync(adapter, cancellationToken), cancellationToken).ConfigureAwait(false);
         }
 

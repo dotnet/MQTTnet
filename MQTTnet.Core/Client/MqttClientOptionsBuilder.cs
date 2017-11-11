@@ -98,7 +98,7 @@ namespace MQTTnet.Core.Client
                 AllowUntrustedCertificates = allowUntrustedCertificates,
                 IgnoreCertificateChainErrors = ignoreCertificateChainErrors,
                 IgnoreCertificateRevocationErrors = ignoreCertificateRevocationErrors,
-                Certificates = certificates.ToList()
+                Certificates = certificates?.ToList()
             };
 
             return this;

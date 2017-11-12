@@ -1,4 +1,4 @@
-﻿#if NET452 || NETSTANDARD1_3 || NETSTANDARD2_0
+﻿#if NET452 || NET461 || NETSTANDARD1_3 || NETSTANDARD2_0
 using System;
 using System.Net;
 using System.Net.Security;
@@ -98,7 +98,7 @@ namespace MQTTnet.Implementations
                 try
                 {
                     //todo: else branch can be used with min dependency NET46
-#if NET452
+#if NET452 || NET461
                     var clientSocket = await Task.Factory.FromAsync(_defaultEndpointSocket.BeginAccept, _defaultEndpointSocket.EndAccept, null).ConfigureAwait(false);
 #else
                     var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
@@ -122,7 +122,7 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
-#if NET452
+#if NET452 || NET461
                     var clientSocket = await Task.Factory.FromAsync(_tlsEndpointSocket.BeginAccept, _tlsEndpointSocket.EndAccept, null).ConfigureAwait(false);
 #else
                     var clientSocket = await _tlsEndpointSocket.AcceptAsync().ConfigureAwait(false);

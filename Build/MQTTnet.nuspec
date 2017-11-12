@@ -52,6 +52,12 @@
         <dependency id="Microsoft.Extensions.Options" version="1.0.2" />
       </group>
 
+      <group targetFramework="net461">
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="2.0.0" />
+        <dependency id="Microsoft.Extensions.Logging" version="2.0.0" />
+        <dependency id="Microsoft.Extensions.Options" version="2.0.0" />
+      </group>
+
     </dependencies>
   </metadata>
 
@@ -71,6 +77,9 @@
     <!-- .NET Framework -->
     <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net452\MQTTnet.Core.*" target="lib\net452\"/>
     <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net452\MQTTnet.*" target="lib\net452\"/>
+
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net461\MQTTnet.Core.*" target="lib\net461\"/>
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net461\MQTTnet.*" target="lib\net461\"/>
     
   </files>
 </package>

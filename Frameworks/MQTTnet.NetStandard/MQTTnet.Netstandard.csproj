@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0;net452;uap10.0</TargetFrameworks>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;net452;net461;uap10.0</TargetFrameworks>
     <AssemblyName>MQTTnet</AssemblyName>
     <RootNamespace>MQTTnet</RootNamespace>
     <AssemblyVersion>2.5.0.0</AssemblyVersion>
@@ -66,6 +66,12 @@
   <ItemGroup Condition="'$(TargetFramework)'=='net452'">
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net461'">
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="2.0.0" />
   </ItemGroup>
 
 </Project>

@@ -15,7 +15,7 @@ namespace MQTTnet.TestApp.NetCore
     {
         public static void Main()
         {
-            Console.WriteLine("MQTTnet - TestApp.NetFramework");
+            Console.WriteLine($"MQTTnet - TestApp.{TargetFrameworkInfoProvider.TargetFramework}");
             Console.WriteLine("1 = Start client");
             Console.WriteLine("2 = Start server");
             Console.WriteLine("3 = Start performance test");

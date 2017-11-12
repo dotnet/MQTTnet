@@ -77,7 +77,7 @@ If you want to contribute to this project just create a pull request. But only p
 This library is used in the following projects:
 
 * MQTT Client Rx (Wrapper for Reactive Extensions, <https://github.com/1iveowl/MQTTClient.rx>)
-* MQTT Tester (MQTT test app for [Android](https://play.google.com/store/apps/details?id=com.liveowl.mqtttester), [iOS](https://itunes.apple.com/us/app/mqtt-tester/id1278621826?mt=8), and [Windows 10](https://www.microsoft.com/en-us/store/p/mqtt-tester/9wzdncrd272c))
+* MQTT Tester (MQTT client test app for [Android](https://play.google.com/store/apps/details?id=com.liveowl.mqtttester), [iOS](https://itunes.apple.com/us/app/mqtt-tester/id1278621826?mt=8), and [Windows 10](https://www.microsoft.com/en-us/store/p/mqtt-tester/9wzdncrd272c))
 * Wirehome (Open Source Home Automation system for .NET, <https://github.com/chkr1011/Wirehome>)
 
 

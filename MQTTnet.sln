@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2006
+VisualStudioVersion = 15.0.27004.2008
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Core.Tests", "Tests\MQTTnet.Core.Tests\MQTTnet.Core.Tests.csproj", "{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}"
 EndProject
@@ -34,6 +34,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.TestApp.AspNetCore2", "Tests\MQTTnet.TestApp.AspNetCore2\MQTTnet.TestApp.AspNetCore2.csproj", "{C6FF8AEA-0855-41EC-A1F3-AC262225BAB9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.AspNetCore", "Frameworks\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj", "{F10C4060-F7EE-4A83-919F-FF723E72F94A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Test.NugetConsumption", "Tests\MQTTnet.Test.NugetConsumption\MQTTnet.Test.NugetConsumption.csproj", "{21AD2970-A8C7-4689-A35B-88082AFDABF8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -165,6 +167,22 @@ Global
 		{F10C4060-F7EE-4A83-919F-FF723E72F94A}.Release|x64.Build.0 = Release|Any CPU
 		{F10C4060-F7EE-4A83-919F-FF723E72F94A}.Release|x86.ActiveCfg = Release|Any CPU
 		{F10C4060-F7EE-4A83-919F-FF723E72F94A}.Release|x86.Build.0 = Release|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Debug|ARM.Build.0 = Debug|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Debug|x64.Build.0 = Debug|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Debug|x86.Build.0 = Debug|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Release|ARM.ActiveCfg = Release|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Release|ARM.Build.0 = Release|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Release|x64.ActiveCfg = Release|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Release|x64.Build.0 = Release|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Release|x86.ActiveCfg = Release|Any CPU
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -176,6 +194,7 @@ Global
 		{3D283AAD-AAA8-4339-8394-52F80B6304DB} = {9248C2E1-B9D6-40BF-81EC-86004D7765B4}
 		{C6FF8AEA-0855-41EC-A1F3-AC262225BAB9} = {9248C2E1-B9D6-40BF-81EC-86004D7765B4}
 		{F10C4060-F7EE-4A83-919F-FF723E72F94A} = {32A630A7-2598-41D7-B625-204CD906F5FB}
+		{21AD2970-A8C7-4689-A35B-88082AFDABF8} = {9248C2E1-B9D6-40BF-81EC-86004D7765B4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07536672-5CBC-4BE3-ACE0-708A431A7894}

@@ -17,7 +17,6 @@ namespace MQTTnet.Core.Server
     {
         private readonly HashSet<ushort> _unacknowledgedPublishPackets = new HashSet<ushort>();
 
-        private readonly IMqttClientRetainedMessageManager _clientRetainedMessageManager;
         private readonly MqttClientSubscriptionsManager _subscriptionsManager;
         private readonly MqttClientSessionsManager _sessionsManager;
         private readonly MqttClientPendingMessagesQueue _pendingMessagesQueue;
@@ -34,10 +33,8 @@ namespace MQTTnet.Core.Server
             MqttClientSessionsManager sessionsManager,
             MqttClientSubscriptionsManager subscriptionsManager,
             ILogger<MqttClientSession> logger,
-            ILogger<MqttClientPendingMessagesQueue> messageQueueLogger,
-            IMqttClientRetainedMessageManager clientRetainedMessageManager)
+            ILogger<MqttClientPendingMessagesQueue> messageQueueLogger)
         {
-            _clientRetainedMessageManager = clientRetainedMessageManager ?? throw new ArgumentNullException(nameof(clientRetainedMessageManager));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
             _subscriptionsManager = subscriptionsManager ?? throw new ArgumentNullException(nameof(subscriptionsManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -82,7 +79,7 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        public void Stop()
+        public async Task StopAsync()
         {
             try
             {
@@ -90,17 +87,21 @@ namespace MQTTnet.Core.Server
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
 
-                _adapter = null;
+                if (_adapter != null)
+                {
+                    await _adapter.DisconnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                    _adapter = null;
+                }
 
-                _logger.LogInformation("Client '{0}': Disconnected.", ClientId);
+                _logger.LogInformation("Client '{0}': Session stopped.", ClientId);
             }
             finally
             {
-                var willMessage = _willMessage; 
+                var willMessage = _willMessage;
                 if (willMessage != null)
                 {
                     _willMessage = null; //clear willmessage so it is send just once
-                    _sessionsManager.DispatchApplicationMessage(this, willMessage);
+                    await _sessionsManager.DispatchApplicationMessageAsync(this, willMessage);
                 }
             }
         }
@@ -133,12 +134,12 @@ namespace MQTTnet.Core.Server
             catch (MqttCommunicationException exception)
             {
                 _logger.LogWarning(new EventId(), exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
-                Stop();
+                await StopAsync();
             }
             catch (Exception exception)
             {
                 _logger.LogError(new EventId(), exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
-                Stop();
+                await StopAsync();
             }
         }
 
@@ -182,14 +183,11 @@ namespace MQTTnet.Core.Server
 
             if (packet is MqttDisconnectPacket || packet is MqttConnectPacket)
             {
-                Stop();
-                return Task.FromResult(0);
+                return StopAsync();
             }
 
             _logger.LogWarning("Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
-            Stop();
-
-            return Task.FromResult(0);
+            return StopAsync();            
         }
 
         private async Task HandleIncomingSubscribePacketAsync(IMqttCommunicationAdapter adapter, MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
@@ -202,13 +200,13 @@ namespace MQTTnet.Core.Server
             if (subscribeResult.CloseConnection)
             {
                 await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttDisconnectPacket()).ConfigureAwait(false);
-                Stop();
+                await StopAsync();
             }
         }
 
         private async Task EnqueueSubscribedRetainedMessagesAsync(MqttSubscribePacket subscribePacket)
         {
-            var retainedMessages = await _clientRetainedMessageManager.GetSubscribedMessagesAsync(subscribePacket).ConfigureAwait(false);
+            var retainedMessages = await _sessionsManager.GetRetainedMessagesAsync(subscribePacket).ConfigureAwait(false);
             foreach (var publishPacket in retainedMessages)
             {
                 EnqueuePublishPacket(publishPacket.ToPublishPacket());
@@ -219,29 +217,16 @@ namespace MQTTnet.Core.Server
         {
             var applicationMessage = publishPacket.ToApplicationMessage();
 
-            var interceptorContext = new MqttApplicationMessageInterceptorContext
-            {
-                ApplicationMessage = applicationMessage
-            };
-
-            _options.ApplicationMessageInterceptor?.Invoke(interceptorContext);
-            applicationMessage = interceptorContext.ApplicationMessage;
-
-            if (applicationMessage.Retain)
-            {
-                await _clientRetainedMessageManager.HandleMessageAsync(ClientId, applicationMessage).ConfigureAwait(false);
-            }
-
             switch (applicationMessage.QualityOfServiceLevel)
             {
                 case MqttQualityOfServiceLevel.AtMostOnce:
                     {
-                        _sessionsManager.DispatchApplicationMessage(this, applicationMessage);
+                        await _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage);
                         return;
                     }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                     {
-                        _sessionsManager.DispatchApplicationMessage(this, applicationMessage);
+                        await _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage);
 
                         await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken,
                             new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
@@ -256,7 +241,7 @@ namespace MQTTnet.Core.Server
                             _unacknowledgedPublishPackets.Add(publishPacket.PacketIdentifier);
                         }
 
-                        _sessionsManager.DispatchApplicationMessage(this, applicationMessage);
+                        await _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage);
 
                         await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken,
                             new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier }).ConfigureAwait(false);

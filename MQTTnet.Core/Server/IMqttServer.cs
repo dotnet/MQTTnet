@@ -10,8 +10,7 @@ namespace MQTTnet.Core.Server
         event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
         event EventHandler<MqttServerStartedEventArgs> Started;
 
-        IList<ConnectedMqttClient> GetConnectedClients();
-        void Publish(IEnumerable<MqttApplicationMessage> applicationMessages);
+        Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync();
 
         Task StartAsync();
         Task StopAsync();

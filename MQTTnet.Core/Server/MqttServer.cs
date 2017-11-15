@@ -20,12 +20,11 @@ namespace MQTTnet.Core.Server
         private CancellationTokenSource _cancellationTokenSource;
 
         public MqttServer(
-            IOptions<MqttServerOptions> options, 
+            IOptions<MqttServerOptions> options,
             IEnumerable<IMqttServerAdapter> adapters,
             ILogger<MqttServer> logger,
             MqttClientSessionsManager clientSessionsManager,
-            IMqttClientRetainedMessageManager clientRetainedMessageManager
-            )
+            IMqttClientRetainedMessageManager clientRetainedMessageManager)
         {
             _options = options.Value ?? throw new ArgumentNullException(nameof(options));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -35,7 +34,7 @@ namespace MQTTnet.Core.Server
             if (adapters == null)
             {
                 throw new ArgumentNullException(nameof(adapters));
-            }            
+            }
 
             _adapters = adapters.ToList();
 
@@ -44,9 +43,9 @@ namespace MQTTnet.Core.Server
             _clientSessionsManager.ClientDisconnected += OnClientDisconnected;
         }
 
-        public IList<ConnectedMqttClient> GetConnectedClients()
+        public Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync()
         {
-            return _clientSessionsManager.GetConnectedClients();
+            return _clientSessionsManager.GetConnectedClientsAsync();
         }
 
         public event EventHandler<MqttServerStartedEventArgs> Started;
@@ -54,7 +53,7 @@ namespace MQTTnet.Core.Server
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
-        public void Publish(IEnumerable<MqttApplicationMessage> applicationMessages)
+        public async Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
         {
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
@@ -65,21 +64,8 @@ namespace MQTTnet.Core.Server
 
             foreach (var applicationMessage in applicationMessages)
             {
-                var interceptorContext = new MqttApplicationMessageInterceptorContext
-                {
-                    ApplicationMessage = applicationMessage
-                };
-
-                _options.ApplicationMessageInterceptor?.Invoke(interceptorContext);
-                
-                _clientSessionsManager.DispatchApplicationMessage(null, interceptorContext.ApplicationMessage);
+                await _clientSessionsManager.DispatchApplicationMessageAsync(null, applicationMessage);
             }
-        }
-
-        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
-        {
-            Publish(applicationMessages);
-            return Task.FromResult(0);
         }
 
         public async Task StartAsync()
@@ -113,7 +99,7 @@ namespace MQTTnet.Core.Server
                 await adapter.StopAsync();
             }
 
-            _clientSessionsManager.Clear();
+            await _clientSessionsManager.StopAsync();
 
             _logger.LogInformation("Stopped.");
         }

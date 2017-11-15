@@ -10,8 +10,11 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* [Client] Fixed WebSocket sub protocol negotiation (Thanks to @JanEggers)
-
+    <releaseNotes>* [Core] Fixed library reference issues for .NET 4.6 (Thanks to @JanEggers).
+* [Core] Several COM exceptions are now wrapped properly resulting in less warnings in the trace.
+* [Client] Fixed WebSocket sub protocol negotiation for ASP.NET Core 2 servers (Thanks to @JanEggers).
+* [Server] Client connections are now closed when the server is stopped (Thanks to @zhudanfei).
+* [Server] Published messages from the server are now retained (if set) (Thanks to @ChristianRiedl). BREAKING CHANGE!
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

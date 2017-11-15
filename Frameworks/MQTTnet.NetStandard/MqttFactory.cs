@@ -85,9 +85,7 @@ namespace MQTTnet
                 clientSessionsManager,
                 _serviceProvider.GetRequiredService<MqttClientSubscriptionsManager>(),
                 _serviceProvider.GetRequiredService<ILogger<MqttClientSession>>(),
-                _serviceProvider.GetRequiredService<ILogger<MqttClientPendingMessagesQueue>>(),
-                _serviceProvider.GetRequiredService<IMqttClientRetainedMessageManager>()
-                );
+                _serviceProvider.GetRequiredService<ILogger<MqttClientPendingMessagesQueue>>());
         }
 
         public IMqttClient CreateMqttClient()

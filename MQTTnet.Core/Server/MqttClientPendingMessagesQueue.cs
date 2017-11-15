@@ -96,7 +96,7 @@ namespace MQTTnet.Core.Server
                     _pendingPublishPackets.Add(packet, CancellationToken.None);
                 }
 
-                _session.Stop();
+                await _session.StopAsync();
             }
         }
     }

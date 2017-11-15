@@ -19,9 +19,8 @@ namespace MQTTnet.Implementations
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public Stream SendStream => RawReceiveStream;
-        public Stream ReceiveStream => RawReceiveStream;
-        public Stream RawReceiveStream { get; private set; }
+        public Stream SendStream { get; private set; }
+        public Stream ReceiveStream { get; private set; }
 
         public async Task ConnectAsync()
         {
@@ -32,7 +31,7 @@ namespace MQTTnet.Implementations
             }
 
             _webSocket = new ClientWebSocket();
-
+            
             if (_options.RequestHeaders != null)
             {
                 foreach (var requestHeader in _options.RequestHeaders)
@@ -64,13 +63,13 @@ namespace MQTTnet.Implementations
             }
 
             await _webSocket.ConnectAsync(new Uri(uri), CancellationToken.None).ConfigureAwait(false);
-            RawReceiveStream = new WebSocketStream(_webSocket);
+
+            SendStream = new WebSocketStream(_webSocket);
+            ReceiveStream = SendStream;
         }
 
         public async Task DisconnectAsync()
         {
-            RawReceiveStream = null;
-
             if (_webSocket == null)
             {
                 return;
@@ -80,6 +79,8 @@ namespace MQTTnet.Implementations
             {
                 await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
             }
+
+            _webSocket = null;
         }
 
         public void Dispose()

@@ -1,4 +1,4 @@
-#if NET452 || NETSTANDARD1_3 || NETSTANDARD2_0
+#if NET452 || NET461 || NETSTANDARD1_3 || NETSTANDARD2_0
 using System;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -17,7 +17,7 @@ namespace MQTTnet.Implementations
         private readonly MqttClientTcpOptions _options;
 
         //todo: this can be used with min dependency NetStandard1.6
-#if NET452
+#if NET452 || NET461
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
         public static int BufferSize { get; set; } = 4096 * 20; // Can be changed for fine tuning by library user.
@@ -59,7 +59,7 @@ namespace MQTTnet.Implementations
             }
 
             //todo: else brach can be used with min dependency NET46
-#if NET452
+#if NET452 || NET461
             await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
 #else
             await _socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
@@ -144,7 +144,7 @@ namespace MQTTnet.Implementations
             //need two streams otherwise read and write have to be synchronized
 
             //todo: if branch can be used with min dependency NetStandard1.6
-#if NET452
+#if NET452 || NET461
             SendStream = new BufferedStream(stream, BufferSize);
             ReceiveStream = new BufferedStream(stream, BufferSize);
 #else

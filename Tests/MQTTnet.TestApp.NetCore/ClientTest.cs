@@ -21,10 +21,10 @@ namespace MQTTnet.TestApp.NetCore
                     {
                         Server = "localhost"
                     },
-                    ////ChannelOptions = new MqttClientWebSocketOptions
-                    ////{
-                    ////    Uri = "localhost"
-                    ////}
+                    //ChannelOptions = new MqttClientWebSocketOptions
+                    //{
+                    //    Uri = "ws://localhost:59690/mqtt"
+                    //}
                 };
 
                 var factory = new MqttFactory();

@@ -18,10 +18,10 @@
     <dependencies>
 
       <group targetFramework="netstandard1.3">
-        <dependency id="NETStandard.Library" version="1.6.1" />
-        <dependency id="Microsoft.Extensions.DependencyInjection" version="1.1.1" />
-        <dependency id="Microsoft.Extensions.Logging" version="1.1.2" />
-        <dependency id="Microsoft.Extensions.Options" version="1.1.2" />
+        <dependency id="NETStandard.Library" version="1.3.0" />
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="1.0.2" />
+        <dependency id="Microsoft.Extensions.Logging" version="1.0.2" />
+        <dependency id="Microsoft.Extensions.Options" version="1.0.2" />
         <dependency id="System.Net.Security" version="4.3.2" />
         <dependency id="System.Net.WebSockets" version="4.3.0" />
         <dependency id="System.Net.WebSockets.Client" version="4.3.1" />
@@ -47,9 +47,15 @@
       </group>
         
       <group targetFramework="net452">
-        <dependency id="Microsoft.Extensions.DependencyInjection" version="1.1.1" />
-        <dependency id="Microsoft.Extensions.Logging" version="1.1.2" />
-        <dependency id="Microsoft.Extensions.Options" version="1.1.2" />
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="1.0.2" />
+        <dependency id="Microsoft.Extensions.Logging" version="1.0.2" />
+        <dependency id="Microsoft.Extensions.Options" version="1.0.2" />
+      </group>
+
+      <group targetFramework="net461">
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="2.0.0" />
+        <dependency id="Microsoft.Extensions.Logging" version="2.0.0" />
+        <dependency id="Microsoft.Extensions.Options" version="2.0.0" />
       </group>
 
     </dependencies>
@@ -71,6 +77,9 @@
     <!-- .NET Framework -->
     <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net452\MQTTnet.Core.*" target="lib\net452\"/>
     <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net452\MQTTnet.*" target="lib\net452\"/>
+
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net461\MQTTnet.Core.*" target="lib\net461\"/>
+    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net461\MQTTnet.*" target="lib\net461\"/>
     
   </files>
 </package>

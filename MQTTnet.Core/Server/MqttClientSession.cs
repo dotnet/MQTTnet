@@ -110,11 +110,13 @@ namespace MQTTnet.Core.Server
         {
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 
-            if (!_subscriptionsManager.IsSubscribed(publishPacket))
+            var result = _subscriptionsManager.CheckSubscriptions(publishPacket);
+            if (!result.IsSubscribed)
             {
                 return;
             }
 
+            publishPacket.QualityOfServiceLevel = result.QualityOfServiceLevel;
             _pendingMessagesQueue.Enqueue(publishPacket);
         }
 

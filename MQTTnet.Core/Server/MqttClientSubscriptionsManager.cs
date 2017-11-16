@@ -8,7 +8,7 @@ namespace MQTTnet.Core.Server
 {
     public sealed class MqttClientSubscriptionsManager
     {
-        private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscribedTopics = new Dictionary<string, MqttQualityOfServiceLevel>();
+        private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly MqttServerOptions _options;
 
         public MqttClientSubscriptionsManager(IOptions<MqttServerOptions> options)
@@ -23,7 +23,7 @@ namespace MQTTnet.Core.Server
             var responsePacket = subscribePacket.CreateResponse<MqttSubAckPacket>();
             var closeConnection = false;
 
-            lock (_subscribedTopics)
+            lock (_subscriptions)
             {
                 foreach (var topicFilter in subscribePacket.TopicFilters)
                 {
@@ -38,7 +38,7 @@ namespace MQTTnet.Core.Server
 
                     if (interceptorContext.AcceptSubscription)
                     {
-                        _subscribedTopics[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                        _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
                     }
                 }
             }
@@ -54,40 +54,48 @@ namespace MQTTnet.Core.Server
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
 
-            lock (_subscribedTopics)
+            lock (_subscriptions)
             {
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
-                    _subscribedTopics.Remove(topicFilter);
+                    _subscriptions.Remove(topicFilter);
                 }
             }
 
             return unsubscribePacket.CreateResponse<MqttUnsubAckPacket>();
         }
 
-        public bool IsSubscribed(MqttPublishPacket publishPacket)
+        public CheckSubscriptionsResult CheckSubscriptions(MqttPublishPacket publishPacket)
         {
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 
-            lock (_subscribedTopics)
+            lock (_subscriptions)
             {
-                foreach (var subscribedTopic in _subscribedTopics)
+                foreach (var subscription in _subscriptions)
                 {
-                    if (publishPacket.QualityOfServiceLevel > subscribedTopic.Value)
+                    if (!MqttTopicFilterComparer.IsMatch(publishPacket.Topic, subscription.Key))
                     {
                         continue;
                     }
 
-                    if (!MqttTopicFilterComparer.IsMatch(publishPacket.Topic, subscribedTopic.Key))
+                    var effectiveQos = subscription.Value;
+                    if (publishPacket.QualityOfServiceLevel < effectiveQos)
                     {
-                        continue;
+                        effectiveQos = publishPacket.QualityOfServiceLevel;
                     }
 
-                    return true;
+                    return new CheckSubscriptionsResult
+                    {
+                        IsSubscribed = true,
+                        QualityOfServiceLevel = effectiveQos
+                    };
                 }
             }
 
-            return false;
+            return new CheckSubscriptionsResult
+            {
+                IsSubscribed = false
+            };
         }
     }
 }

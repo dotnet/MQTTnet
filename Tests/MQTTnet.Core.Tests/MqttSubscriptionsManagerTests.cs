@@ -15,7 +15,7 @@ namespace MQTTnet.Core.Tests
             var sm = new MqttClientSubscriptionsManager(new OptionsWrapper<MqttServerOptions>(new MqttServerOptions()));
 
             var sp = new MqttSubscribePacket();
-            sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
+            sp.TopicFilters.Add(new TopicFilter("A/B/C"));
 
             sm.Subscribe(sp, "");
 
@@ -25,7 +25,7 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
             };
 
-            Assert.IsTrue(sm.IsSubscribed(pp));
+            Assert.IsTrue(sm.CheckSubscriptions(pp).IsSubscribed);
         }
 
         [TestMethod]
@@ -34,7 +34,7 @@ namespace MQTTnet.Core.Tests
             var sm = new MqttClientSubscriptionsManager(new OptionsWrapper<MqttServerOptions>(new MqttServerOptions()));
 
             var sp = new MqttSubscribePacket();
-            sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
+            sp.TopicFilters.Add(new TopicFilter("A/B/C"));
 
             sm.Subscribe(sp, "");
 
@@ -44,7 +44,7 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
             };
 
-            Assert.IsFalse(sm.IsSubscribed(pp));
+            Assert.IsFalse(sm.CheckSubscriptions(pp).IsSubscribed);
         }
 
         [TestMethod]
@@ -53,7 +53,7 @@ namespace MQTTnet.Core.Tests
             var sm = new MqttClientSubscriptionsManager(new OptionsWrapper<MqttServerOptions>(new MqttServerOptions()));
 
             var sp = new MqttSubscribePacket();
-            sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
+            sp.TopicFilters.Add(new TopicFilter("A/B/C"));
 
             sm.Subscribe(sp, "");
 
@@ -63,13 +63,13 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
             };
 
-            Assert.IsTrue(sm.IsSubscribed(pp));
+            Assert.IsTrue(sm.CheckSubscriptions(pp).IsSubscribed);
 
             var up = new MqttUnsubscribePacket();
             up.TopicFilters.Add("A/B/C");
             sm.Unsubscribe(up);
 
-            Assert.IsFalse(sm.IsSubscribed(pp));
+            Assert.IsFalse(sm.CheckSubscriptions(pp).IsSubscribed);
         }
     }
 }

@@ -1,12 +1,8 @@
 ﻿using System;
-using System.IO;
 using System.Net.WebSockets;
-using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Channel;
 using MQTTnet.Core.Server;
-using MQTTnet.Implementations;
 
 namespace MQTTnet.AspNetCore
 {
@@ -46,48 +42,6 @@ namespace MQTTnet.AspNetCore
         public void Dispose()
         {
             StopAsync();
-        }
-
-        private class MqttWebSocketServerChannel : IMqttCommunicationChannel, IDisposable
-        {
-            private readonly WebSocket _webSocket;
-
-            public MqttWebSocketServerChannel(WebSocket webSocket)
-            {
-                _webSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
-
-                RawReceiveStream = new WebSocketStream(_webSocket);
-            }
-
-            public Stream SendStream => RawReceiveStream;
-            public Stream ReceiveStream => RawReceiveStream;
-            public Stream RawReceiveStream { get; }
-
-            public Task ConnectAsync()
-            {
-                return Task.CompletedTask;
-            }
-
-            public Task DisconnectAsync()
-            {
-                RawReceiveStream?.Dispose();
-
-                if (_webSocket == null)
-                {
-                    return Task.CompletedTask;
-                }
-
-                return _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-            }
-
-            public void Dispose()
-            {
-                RawReceiveStream?.Dispose();
-                SendStream?.Dispose();
-                ReceiveStream?.Dispose();
-
-                _webSocket?.Dispose();
-            }
         }
     }
 }

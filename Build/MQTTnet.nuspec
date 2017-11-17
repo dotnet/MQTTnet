@@ -10,9 +10,11 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* [Core] Fixed library reference issues for .NET 4.6 (Thanks to @JanEggers).
+    <releaseNotes>* [Core] Fixed library reference issues for .NET 4.6 and netstandard 2.0 (Thanks to @JanEggers).
 * [Core] Several COM exceptions are now wrapped properly resulting in less warnings in the trace.
+* [Core] Removed application message payload from trace to reduce trace size and increase performance.
 * [Client] Fixed WebSocket sub protocol negotiation for ASP.NET Core 2 servers (Thanks to @JanEggers).
+* [Client] Fixed broken connection after 30 seconds then using WebSocket protocol (Thanks to @ChristianRiedl).
 * [Server] Client connections are now closed when the server is stopped (Thanks to @zhudanfei).
 * [Server] Published messages from the server are now retained (if set) (Thanks to @ChristianRiedl). BREAKING CHANGE!
     </releaseNotes>

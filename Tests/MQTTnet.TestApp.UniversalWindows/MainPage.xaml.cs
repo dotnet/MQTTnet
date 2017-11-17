@@ -30,14 +30,14 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void OnTraceMessagePublished(object sender, MqttNetTraceMessagePublishedEventArgs e)
         {
-            await Trace.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+            var text = $"[{e.TraceMessage.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{e.TraceMessage.Level}] [{e.TraceMessage.Source}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Message}]{Environment.NewLine}";
+            if (e.TraceMessage.Exception != null)
             {
-                var text = $"[{e.TraceMessage.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{e.TraceMessage.Level}] [{e.TraceMessage.Source}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Message}]{Environment.NewLine}";
-                if (e.TraceMessage.Exception != null)
-                {
-                    text += $"{e.TraceMessage.Exception}{Environment.NewLine}";
-                }
-
+                text += $"{e.TraceMessage.Exception}{Environment.NewLine}";
+            }
+            
+            await Trace.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+            {
                 Trace.Text += text;
             });
         }
@@ -109,11 +109,13 @@ namespace MQTTnet.TestApp.UniversalWindows
         {
             var item = $"Timestamp: {DateTime.Now:O} | Topic: {eventArgs.ApplicationMessage.Topic} | Payload: {Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload)} | QoS: {eventArgs.ApplicationMessage.QualityOfServiceLevel}";
 
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
             {
-                ReceivedMessages.Items.Add(item);
+                if (AddReceivedMessagesToList.IsChecked == true)
+                {
+                    ReceivedMessages.Items.Add(item);
+                }
             });
-
         }
 
         private async void Publish(object sender, RoutedEventArgs e)

@@ -91,7 +91,7 @@ namespace MQTTnet.Core.Serializer
 
                 if (buffer == -1)
                 {
-                    break;
+                    throw new MqttCommunicationException("Connection closed while reading remaining length data.");
                 }
 
                 encodedByte = (byte)buffer;

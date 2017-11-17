@@ -1,5 +1,4 @@
-﻿using System;
-using MQTTnet.Core.Protocol;
+﻿using MQTTnet.Core.Protocol;
 
 namespace MQTTnet.Core.Packets
 {
@@ -19,7 +18,7 @@ namespace MQTTnet.Core.Packets
         {
             return nameof(MqttPublishPacket) +
                 ": [Topic=" + Topic + "]" +
-                " [Payload=" + Convert.ToBase64String(Payload) + "]" +
+                " [PayloadLength=" + Payload?.Length + "]" +
                 " [QoSLevel=" + QualityOfServiceLevel + "]" +
                 " [Dup=" + Dup + "]" +
                 " [Retain=" + Retain + "]" +

@@ -78,6 +78,7 @@
                     </StackPanel>
 
                     <TextBlock>Received messages:</TextBlock>
+                    <CheckBox x:Name="AddReceivedMessagesToList" IsChecked="True">Add received messages to list</CheckBox>
                     <ListBox MinHeight="50" MaxHeight="250" x:Name="ReceivedMessages" Margin="0,0,0,10">
                         <ListBox.ItemTemplate>
                             <DataTemplate>

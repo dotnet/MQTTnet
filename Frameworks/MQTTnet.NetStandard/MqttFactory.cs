@@ -23,7 +23,7 @@ namespace MQTTnet
 
         public MqttFactory(IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider;
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
 
         public ILoggerFactory GetLoggerFactory()

@@ -11,6 +11,10 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttWebSocketChannel : IMqttCommunicationChannel, IDisposable
     {
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
+        public static int BufferSize { get; set; } = 4096 * 20; // Can be changed for fine tuning by library user.
+
         private readonly MqttClientWebSocketOptions _options;
         private ClientWebSocket _webSocket;
 
@@ -80,7 +84,7 @@ namespace MQTTnet.Implementations
                 await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
             }
 
-            _webSocket = null;
+            Dispose();
         }
 
         public void Dispose()

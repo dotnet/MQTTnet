@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
@@ -18,6 +19,8 @@ namespace MQTTnet.TestApp.UniversalWindows
 {
     public sealed partial class MainPage
     {
+        private readonly ConcurrentQueue<MqttNetTraceMessage> _traceMessages = new ConcurrentQueue<MqttNetTraceMessage>();
+
         private IMqttClient _mqttClient;
         private IMqttServer _mqttServer;
 
@@ -30,15 +33,32 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void OnTraceMessagePublished(object sender, MqttNetTraceMessagePublishedEventArgs e)
         {
-            var text = $"[{e.TraceMessage.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{e.TraceMessage.Level}] [{e.TraceMessage.Source}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Message}]{Environment.NewLine}";
-            if (e.TraceMessage.Exception != null)
+            _traceMessages.Enqueue(e.TraceMessage);
+            while (_traceMessages.Count > 100)
             {
-                text += $"{e.TraceMessage.Exception}{Environment.NewLine}";
+                _traceMessages.TryDequeue(out _);
             }
-            
+
+            var logText = new StringBuilder();
+            foreach (var traceMessage in _traceMessages)
+            {
+                logText.AppendFormat(
+                    "[{0:yyyy-MM-dd HH:mm:ss.fff}] [{1}] [{2}] [{3}] [{4}]{5}", traceMessage.Timestamp,
+                    traceMessage.Level,
+                    traceMessage.Source,
+                    traceMessage.ThreadId,
+                    traceMessage.Message,
+                    Environment.NewLine);
+
+                if (traceMessage.Exception != null)
+                {
+                    logText.AppendLine(traceMessage.Exception.ToString());
+                }
+            }
+
             await Trace.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
             {
-                Trace.Text += text;
+                Trace.Text = logText.ToString();
             });
         }
 

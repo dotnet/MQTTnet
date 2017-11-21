@@ -20,7 +20,7 @@ namespace MQTTnet.Core.Packets
 
         public override string ToString()
         {
-            return nameof(MqttConnectPacket) + ": [ClientId=" + ClientId + "] [Username=" + Username + "] [Password=" + Password + "] [KeepAlivePeriod=" + KeepAlivePeriod + "] [CleanSession=" + CleanSession + "]";
+            return "Connect: [ClientId=" + ClientId + "] [Username=" + Username + "] [Password=" + Password + "] [KeepAlivePeriod=" + KeepAlivePeriod + "] [CleanSession=" + CleanSession + "]";
         }
     }
 }

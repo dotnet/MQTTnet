@@ -57,42 +57,7 @@ namespace MQTTnet.Core.Server
             await _gate.WaitAsync().ConfigureAwait(false);
             try
             {
-                var saveIsRequired = false;
-
-                if (applicationMessage.Payload?.Any() == false)
-                {
-                    saveIsRequired = _retainedMessages.Remove(applicationMessage.Topic);
-                    _logger.LogInformation("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
-                }
-                else
-                {
-                    if (!_retainedMessages.ContainsKey(applicationMessage.Topic))
-                    {
-                        _retainedMessages[applicationMessage.Topic] = applicationMessage;
-                        saveIsRequired = true;
-                    }
-                    else
-                    {
-                        var existingMessage = _retainedMessages[applicationMessage.Topic];
-                        if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? new byte[0]))
-                        {
-                            _retainedMessages[applicationMessage.Topic] = applicationMessage;
-                            saveIsRequired = true;
-                        }
-                    }
-                    
-                    _logger.LogInformation("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
-                }
-
-                if (!saveIsRequired)
-                {
-                    _logger.LogTrace("Skipped saving retained messages because no changes were detected.");
-                }
-
-                if (saveIsRequired && _options.Storage != null)
-                {
-                    await _options.Storage.SaveRetainedMessagesAsync(_retainedMessages.Values.ToList());
-                }
+                await HandleMessageInternalAsync(clientId, applicationMessage);
             }
             catch (Exception exception)
             {
@@ -136,6 +101,46 @@ namespace MQTTnet.Core.Server
             }
 
             return retainedMessages;
+        }
+
+        private async Task HandleMessageInternalAsync(string clientId, MqttApplicationMessage applicationMessage)
+        {
+            var saveIsRequired = false;
+
+            if (applicationMessage.Payload?.Any() == false)
+            {
+                saveIsRequired = _retainedMessages.Remove(applicationMessage.Topic);
+                _logger.LogInformation("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+            }
+            else
+            {
+                if (!_retainedMessages.ContainsKey(applicationMessage.Topic))
+                {
+                    _retainedMessages[applicationMessage.Topic] = applicationMessage;
+                    saveIsRequired = true;
+                }
+                else
+                {
+                    var existingMessage = _retainedMessages[applicationMessage.Topic];
+                    if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? new byte[0]))
+                    {
+                        _retainedMessages[applicationMessage.Topic] = applicationMessage;
+                        saveIsRequired = true;
+                    }
+                }
+
+                _logger.LogInformation("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+            }
+
+            if (!saveIsRequired)
+            {
+                _logger.LogTrace("Skipped saving retained messages because no changes were detected.");
+            }
+
+            if (saveIsRequired && _options.Storage != null)
+            {
+                await _options.Storage.SaveRetainedMessagesAsync(_retainedMessages.Values.ToList());
+            }
         }
     }
 }

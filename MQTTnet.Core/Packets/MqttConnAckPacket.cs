@@ -10,7 +10,7 @@ namespace MQTTnet.Core.Packets
 
         public override string ToString()
         {
-            return nameof(MqttConnAckPacket) + ": [ConnectReturnCode=" + ConnectReturnCode + "] [IsSessionPresent=" + IsSessionPresent + "]";
+            return "ConnAck: [ConnectReturnCode=" + ConnectReturnCode + "] [IsSessionPresent=" + IsSessionPresent + "]";
         }
     }
 }

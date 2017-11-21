@@ -32,11 +32,15 @@ namespace MQTTnet.Core.Adapter
 
         public async Task ConnectAsync(TimeSpan timeout)
         {
+            _logger.LogInformation("Connecting [Timeout={0}]", timeout);
+
             await ExecuteAndWrapExceptionAsync(() => _channel.ConnectAsync().TimeoutAfter(timeout));
         }
 
         public async Task DisconnectAsync(TimeSpan timeout)
         {
+            _logger.LogInformation("Disconnecting [Timeout={0}]", timeout);
+
             await ExecuteAndWrapExceptionAsync(() => _channel.DisconnectAsync().TimeoutAfter(timeout));
         }
 

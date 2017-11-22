@@ -1,52 +1,73 @@
 ﻿using System;
-using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.Diagnostics
 {
-    public class MqttNetLogger : ILogger
+    public class MqttNetLogger : IMqttNetLogger
     {
-        private readonly string _categoryName;
-        private readonly MqttNetTrace _mqttNetTrace;
+        private readonly string _logId;
 
-        public MqttNetLogger(string categoryName, MqttNetTrace mqttNetTrace)
+        public MqttNetLogger(string logId = null)
         {
-            _categoryName = categoryName;
-            _mqttNetTrace = mqttNetTrace;
+            _logId = logId;
+        }
+        
+        public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
+
+        public void Trace<TSource>(string message, params object[] parameters)
+        {
+            Publish<TSource>(MqttNetLogLevel.Verbose, null, message, parameters);
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Info<TSource>(string message, params object[] parameters)
         {
-            if (formatter == null)
-            {
-                throw new ArgumentNullException(nameof(formatter));
-            }
+            Publish<TSource>(MqttNetLogLevel.Info, null, message, parameters);
+        }
 
-            if (!MqttNetTrace.HasListeners)
+        public void Warning<TSource>(Exception exception, string message, params object[] parameters)
+        {
+            Publish<TSource>(MqttNetLogLevel.Warning, exception, message, parameters);
+        }
+
+        public void Warning<TSource>(string message, params object[] parameters)
+        {
+            Warning<TSource>(null, message, parameters);
+        }
+
+        public void Error<TSource>(Exception exception, string message, params object[] parameters)
+        {
+            Publish<TSource>(MqttNetLogLevel.Error, exception, message, parameters);
+        }
+
+        public void Error<TSource>(string message, params object[] parameters)
+        {
+            Warning<TSource>(null, message, parameters);
+        }
+
+        private void Publish<TSource>(MqttNetLogLevel logLevel, Exception exception, string message, object[] parameters)
+        {
+            var hasLocalListeners = LogMessagePublished != null;
+            var hasGlobalListeners = MqttNetGlobalLog.HasListeners;
+
+            if (!hasLocalListeners && !hasGlobalListeners)
             {
                 return;
             }
 
-            var message = formatter(state, exception);
-            var traceMessage = new MqttNetTraceMessage(DateTime.Now, Environment.CurrentManagedThreadId, _categoryName, logLevel, message, exception);
-            _mqttNetTrace.Publish(traceMessage);
-        }
-
-        public bool IsEnabled(LogLevel logLevel)
-        {
-            return MqttNetTrace.HasListeners;
-        }
-
-        //not supported: async local requires netstandard1.3
-        //for implementation see https://github.com/aspnet/Logging/blob/dev/src/Microsoft.Extensions.Logging.Console/ConsoleLogScope.cs
-        public IDisposable BeginScope<TState>(TState state)
-        {
-            return new DisposableScope();
-        }
-
-        private class DisposableScope : IDisposable
-        {
-            public void Dispose()
+            if (parameters.Length > 0)
             {
+                message = string.Format(message, parameters);
+            }
+
+            var traceMessage = new MqttNetLogMessage(_logId, DateTime.Now, Environment.CurrentManagedThreadId, typeof(TSource).Name, logLevel, message, exception);
+
+            if (hasGlobalListeners)
+            {
+                MqttNetGlobalLog.Publish(traceMessage);
+            }
+
+            if (hasLocalListeners)
+            {
+                LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(traceMessage));
             }
         }
     }

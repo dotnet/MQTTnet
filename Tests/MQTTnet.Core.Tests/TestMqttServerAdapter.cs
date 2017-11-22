@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Server;
 using MQTTnet.Core.Client;
+using MQTTnet.Core.Diagnostics;
 
 namespace MQTTnet.Core.Tests
 {
@@ -19,8 +20,7 @@ namespace MQTTnet.Core.Tests
 
             var client = new MqttClient(
                 new TestMqttCommunicationAdapterFactory(adapterA),
-                new TestLogger<MqttClient>(), 
-                new MqttPacketDispatcher(new TestLogger<MqttPacketDispatcher>()));
+                new MqttNetLogger());
 
             var connected = WaitForClientToConnect(server, clientId);
 
@@ -57,7 +57,7 @@ namespace MQTTnet.Core.Tests
             return tcs.Task;
         }
 
-        private void FireClientAcceptedEvent(IMqttCommunicationAdapter adapter)
+        private void FireClientAcceptedEvent(IMqttChannelAdapter adapter)
         {
             ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(adapter));
         }

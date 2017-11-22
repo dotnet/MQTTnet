@@ -5,23 +5,23 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Channel;
+using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Serializer;
-using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.Adapter
 {
-    public class MqttChannelCommunicationAdapter : IMqttCommunicationAdapter
+    public class MqttChannelAdapter : IMqttChannelAdapter
     {
         private const uint ErrorOperationAborted = 0x800703E3;
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private readonly ILogger<MqttChannelCommunicationAdapter> _logger;
-        private readonly IMqttCommunicationChannel _channel;
+        private readonly IMqttNetLogger _logger;
+        private readonly IMqttChannel _channel;
 
-        public MqttChannelCommunicationAdapter(IMqttCommunicationChannel channel, IMqttPacketSerializer serializer, ILogger<MqttChannelCommunicationAdapter> logger)
+        public MqttChannelAdapter(IMqttChannel channel, IMqttPacketSerializer serializer, IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
@@ -32,14 +32,14 @@ namespace MQTTnet.Core.Adapter
 
         public async Task ConnectAsync(TimeSpan timeout)
         {
-            _logger.LogInformation("Connecting [Timeout={0}]", timeout);
+            _logger.Info<MqttChannelAdapter>("Connecting [Timeout={0}]", timeout);
 
             await ExecuteAndWrapExceptionAsync(() => _channel.ConnectAsync().TimeoutAfter(timeout));
         }
 
         public async Task DisconnectAsync(TimeSpan timeout)
         {
-            _logger.LogInformation("Disconnecting [Timeout={0}]", timeout);
+            _logger.Info<MqttChannelAdapter>("Disconnecting [Timeout={0}]", timeout);
 
             await ExecuteAndWrapExceptionAsync(() => _channel.DisconnectAsync().TimeoutAfter(timeout));
         }
@@ -58,7 +58,7 @@ namespace MQTTnet.Core.Adapter
                             continue;
                         }
 
-                        _logger.LogInformation("TX >>> {0} [Timeout={1}]", packet, timeout);
+                        _logger.Trace<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
 
                         var writeBuffer = PacketSerializer.Serialize(packet);
                         await _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length, cancellationToken).ConfigureAwait(false);
@@ -108,7 +108,7 @@ namespace MQTTnet.Core.Adapter
                         throw new MqttProtocolViolationException("Received malformed packet.");
                     }
 
-                    _logger.LogInformation("RX <<< {0}", packet);
+                    _logger.Trace<MqttChannelAdapter>("RX <<< {0}", packet);
                 }
                 finally
                 {

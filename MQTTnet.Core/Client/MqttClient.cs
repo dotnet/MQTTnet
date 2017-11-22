@@ -4,33 +4,34 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
+using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
-using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.Client
 {
     public class MqttClient : IMqttClient
     {
         private readonly HashSet<ushort> _unacknowledgedPublishPackets = new HashSet<ushort>();
+
+        private readonly IMqttClientAdapterFactory _adapterFactory;
         private readonly MqttPacketDispatcher _packetDispatcher;
-        private readonly IMqttCommunicationAdapterFactory _communicationAdapterFactory;
-        private readonly ILogger<MqttClient> _logger;
+        private readonly IMqttNetLogger _logger;
 
         private IMqttClientOptions _options;
         private bool _isReceivingPackets;
         private int _latestPacketIdentifier;
         private CancellationTokenSource _cancellationTokenSource;
-        private IMqttCommunicationAdapter _adapter;
-        private IDisposable _scopeHandle;
+        private IMqttChannelAdapter _adapter;
 
-        public MqttClient(IMqttCommunicationAdapterFactory communicationAdapterFactory, ILogger<MqttClient> logger, MqttPacketDispatcher packetDispatcher)
+        public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
-            _communicationAdapterFactory = communicationAdapterFactory ?? throw new ArgumentNullException(nameof(communicationAdapterFactory));
+            _adapterFactory = channelFactory ?? throw new ArgumentNullException(nameof(channelFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _packetDispatcher = packetDispatcher ?? throw new ArgumentNullException(nameof(packetDispatcher));
+            
+            _packetDispatcher = new MqttPacketDispatcher(logger);
         }
 
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
@@ -53,17 +54,16 @@ namespace MQTTnet.Core.Client
                 _latestPacketIdentifier = 0;
                 _packetDispatcher.Reset();
 
-                _adapter = _communicationAdapterFactory.CreateClientCommunicationAdapter(options);
-
-                _scopeHandle = _logger.BeginScope(options.LogId ?? options.ClientId);
-                _logger.LogTrace("Trying to connect with server.");
+                _adapter = _adapterFactory.CreateClientAdapter(options.ChannelOptions, _logger);
+                
+                _logger.Trace<MqttClient>("Trying to connect with server.");
                 await _adapter.ConnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
-                _logger.LogTrace("Connection with server established.");
+                _logger.Trace<MqttClient>("Connection with server established.");
 
                 await StartReceivingPacketsAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
                 var connectResponse = await AuthenticateAsync(options.WillMessage).ConfigureAwait(false);
 
-                _logger.LogTrace("MQTT connection with server established.");
+                _logger.Trace<MqttClient>("MQTT connection with server established.");
 
                 if (_options.KeepAlivePeriod != TimeSpan.Zero)
                 {
@@ -76,7 +76,7 @@ namespace MQTTnet.Core.Client
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Error while connecting with server.");
+                _logger.Error<MqttClient>(exception, "Error while connecting with server.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
                 throw;
             }
@@ -215,8 +215,6 @@ namespace MQTTnet.Core.Client
 
         private async Task DisconnectInternalAsync()
         {
-            _scopeHandle?.Dispose();
-
             var clientWasConnected = IsConnected;
             IsConnected = false;
 
@@ -233,15 +231,15 @@ namespace MQTTnet.Core.Client
             try
             {
                 await _adapter.DisconnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
-                _logger.LogInformation("Disconnected from adapter.");
+                _logger.Info<MqttClient>("Disconnected from adapter.");
             }
             catch (Exception exception)
             {
-                _logger.LogWarning(new EventId(), exception, "Error while disconnecting from adapter.");
+                _logger.Warning<MqttClient>(exception, "Error while disconnecting from adapter.");
             }
             finally
             {
-                _logger.LogInformation("Disconnected.");
+                _logger.Info<MqttClient>("Disconnected.");
                 Disconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientWasConnected));
             }
         }
@@ -250,7 +248,7 @@ namespace MQTTnet.Core.Client
         {
             try
             {
-                _logger.LogInformation("Received <<< {0}", packet);
+                _logger.Info<MqttClient>("Received <<< {0}", packet);
 
                 if (packet is MqttPingReqPacket)
                 {
@@ -280,7 +278,7 @@ namespace MQTTnet.Core.Client
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Unhandled exception while processing received packet.");
+                _logger.Error<MqttClient>(exception, "Unhandled exception while processing received packet.");
             }
         }
 
@@ -293,7 +291,7 @@ namespace MQTTnet.Core.Client
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Unhandled exception while handling application message.");
+                _logger.Error<MqttClient>(exception, "Unhandled exception while handling application message.");
             }
         }
 
@@ -357,7 +355,7 @@ namespace MQTTnet.Core.Client
 
         private async Task SendKeepAliveMessagesAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Start sending keep alive packets.");
+            _logger.Info<MqttClient>("Start sending keep alive packets.");
 
             try
             {
@@ -388,23 +386,23 @@ namespace MQTTnet.Core.Client
                     return;
                 }
 
-                _logger.LogWarning(new EventId(), exception, "MQTT communication exception while sending/receiving keep alive packets.");
+                _logger.Warning<MqttClient>(exception, "MQTT communication exception while sending/receiving keep alive packets.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                _logger.LogWarning(new EventId(), exception, "Unhandled exception while sending/receiving keep alive packets.");
+                _logger.Warning<MqttClient>(exception, "Unhandled exception while sending/receiving keep alive packets.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
             }
             finally
             {
-                _logger.LogInformation("Stopped sending keep alive packets.");
+                _logger.Info<MqttClient>("Stopped sending keep alive packets.");
             }
         }
 
         private async Task ReceivePacketsAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Start receiving packets.");
+            _logger.Info<MqttClient>("Start receiving packets.");
 
             try
             {
@@ -438,17 +436,17 @@ namespace MQTTnet.Core.Client
                     return;
                 }
 
-                _logger.LogWarning(new EventId(), exception, "MQTT communication exception while receiving packets.");
+                _logger.Warning<MqttClient>(exception, "MQTT communication exception while receiving packets.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Unhandled exception while receiving packets.");
+                _logger.Error<MqttClient>(exception, "Unhandled exception while receiving packets.");
                 await DisconnectInternalAsync().ConfigureAwait(false);
             }
             finally
             {
-                _logger.LogInformation(nameof(MqttClient), "Stopped receiving packets.");
+                _logger.Info<MqttClient>("Stopped receiving packets.");
             }
         }
 

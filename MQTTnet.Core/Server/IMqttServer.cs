@@ -12,7 +12,7 @@ namespace MQTTnet.Core.Server
 
         Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync();
 
-        Task StartAsync();
+        Task StartAsync(MqttServerOptions options);
         Task StopAsync();
     }
 }

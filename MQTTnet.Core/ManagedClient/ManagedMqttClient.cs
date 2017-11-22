@@ -5,9 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Client;
+using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Protocol;
-using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.ManagedClient
 {
@@ -18,7 +18,7 @@ namespace MQTTnet.Core.ManagedClient
         private readonly HashSet<TopicFilter> _subscriptions = new HashSet<TopicFilter>();
 
         private readonly IMqttClient _mqttClient;
-        private readonly ILogger<ManagedMqttClient> _logger;
+        private readonly IMqttNetLogger _logger;
 
         private CancellationTokenSource _connectionCancellationToken;
         private CancellationTokenSource _publishingCancellationToken;
@@ -26,7 +26,7 @@ namespace MQTTnet.Core.ManagedClient
         private IManagedMqttClientOptions _options;
         private bool _subscriptionsNotPushed;
         
-        public ManagedMqttClient(ILogger<ManagedMqttClient> logger, IMqttClient mqttClient)
+        public ManagedMqttClient(IMqttClient mqttClient, IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
@@ -52,10 +52,7 @@ namespace MQTTnet.Core.ManagedClient
                 throw new NotSupportedException("The managed client does not support existing sessions.");
             }
 
-            if (_connectionCancellationToken != null)
-            {
-                throw new InvalidOperationException("The managed client is already started.");
-            }
+            if (_connectionCancellationToken != null) throw new InvalidOperationException("The managed client is already started.");
 
             _options = options;
             await _storageManager.SetStorageAsync(_options.Storage).ConfigureAwait(false);
@@ -72,16 +69,19 @@ namespace MQTTnet.Core.ManagedClient
             _connectionCancellationToken = new CancellationTokenSource();
             
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Factory.StartNew(() => MaintainConnectionAsync(_connectionCancellationToken.Token), _connectionCancellationToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default).ConfigureAwait(false);
+            Task.Run(async () => await MaintainConnectionAsync(_connectionCancellationToken.Token), _connectionCancellationToken.Token).ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
-            _logger.LogInformation("Started");
+            _logger.Info<ManagedMqttClient>("Started");
         }
 
         public Task StopAsync()
         {
             _connectionCancellationToken?.Cancel(false);
             _connectionCancellationToken = null;
+
+            _publishingCancellationToken?.Cancel(false);
+            _publishingCancellationToken = null;
 
             while (_messageQueue.Any())
             {
@@ -159,7 +159,7 @@ namespace MQTTnet.Core.ManagedClient
                         _publishingCancellationToken = new CancellationTokenSource();
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                        Task.Factory.StartNew(() => PublishQueuedMessagesAsync(_publishingCancellationToken.Token), _publishingCancellationToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default).ConfigureAwait(false);
+                        Task.Run(async () => await PublishQueuedMessagesAsync(_publishingCancellationToken.Token), _publishingCancellationToken.Token).ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
                         continue;
@@ -167,7 +167,7 @@ namespace MQTTnet.Core.ManagedClient
 
                     if (connectionState == ReconnectionResult.StillConnected)
                     {
-                        await Task.Delay(100, _connectionCancellationToken.Token).ConfigureAwait(false); // Consider using the _Disconnected_ event here. (TaskCompletionSource)
+                        await Task.Delay(TimeSpan.FromSeconds(1), _connectionCancellationToken.Token).ConfigureAwait(false);
                     }
                 }
             }
@@ -176,16 +176,16 @@ namespace MQTTnet.Core.ManagedClient
             }
             catch (MqttCommunicationException exception)
             {
-                _logger.LogWarning(new EventId(), exception, "Communication exception while maintaining connection.");
+                _logger.Warning<ManagedMqttClient>(exception, "Communication exception while maintaining connection.");
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Unhandled exception while maintaining connection.");
+                _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while maintaining connection.");
             }
             finally
             {
                 await _mqttClient.DisconnectAsync().ConfigureAwait(false);
-                _logger.LogInformation("Stopped");
+                _logger.Info<ManagedMqttClient>("Stopped");
             }
         }
 
@@ -215,7 +215,7 @@ namespace MQTTnet.Core.ManagedClient
             }
             finally
             {
-                _logger.LogInformation("Stopped publishing messages");
+                _logger.Info<ManagedMqttClient>("Stopped publishing messages");
             }
         }
 
@@ -227,7 +227,7 @@ namespace MQTTnet.Core.ManagedClient
             }
             catch (MqttCommunicationException exception)
             {
-                _logger.LogWarning(new EventId(), exception, "Publishing application message failed.");
+                _logger.Warning<ManagedMqttClient>(exception, "Publishing application message failed.");
 
                 if (message.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
                 {
@@ -236,13 +236,13 @@ namespace MQTTnet.Core.ManagedClient
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Unhandled exception while publishing queued application message.");
+                _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while publishing queued application message.");
             }
         }
 
         private async Task PushSubscriptionsAsync()
         {
-            _logger.LogInformation(nameof(ManagedMqttClient), "Synchronizing subscriptions");
+            _logger.Info<ManagedMqttClient>(nameof(ManagedMqttClient), "Synchronizing subscriptions");
 
             List<TopicFilter> subscriptions;
             lock (_subscriptions)
@@ -262,7 +262,7 @@ namespace MQTTnet.Core.ManagedClient
             }
             catch (Exception exception)
             {
-                _logger.LogWarning(new EventId(), exception, "Synchronizing subscriptions failed");
+                _logger.Warning<ManagedMqttClient>(exception, "Synchronizing subscriptions failed");
                 _subscriptionsNotPushed = true;
             }
         }

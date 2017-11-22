@@ -9,8 +9,6 @@ namespace MQTTnet.AspNetCore
     {
         public static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
         {
-            services.AddMqttServerServices();
-
             services.AddSingleton<IHostedService>(s => s.GetService<MqttHostedServer>());
             services.AddSingleton<IMqttServer>(s => s.GetService<MqttHostedServer>());
             services.AddSingleton<MqttHostedServer>();

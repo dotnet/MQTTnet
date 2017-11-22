@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Options;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 
@@ -11,9 +10,9 @@ namespace MQTTnet.Core.Server
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly MqttServerOptions _options;
 
-        public MqttClientSubscriptionsManager(IOptions<MqttServerOptions> options)
+        public MqttClientSubscriptionsManager(MqttServerOptions options)
         {
-            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         public MqttClientSubscribeResult Subscribe(MqttSubscribePacket subscribePacket, string clientId)

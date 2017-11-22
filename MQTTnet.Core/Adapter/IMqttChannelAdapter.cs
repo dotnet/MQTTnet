@@ -7,7 +7,7 @@ using MQTTnet.Core.Serializer;
 
 namespace MQTTnet.Core.Adapter
 {
-    public interface IMqttCommunicationAdapter
+    public interface IMqttChannelAdapter
     {
         IMqttPacketSerializer PacketSerializer { get; }
 

@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>MQTTnet</id>
-    <version>2.5.2</version>
+    <version>2.5.3</version>
     <authors>Christian Kratky</authors>
     <owners>Christian Kratky</owners>
     <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>
@@ -10,7 +10,9 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* [Core] Refactored trace messages.
+    <releaseNotes>* [Core] Removed all dependencies to other libraries (BREAKING CHANGE!).
+* [Core] Updated SDK libraries.
+* [Client] Fixed broken support for WebSocketSecure connections (Thanks to @StAI).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
@@ -18,43 +20,26 @@
 
       <group targetFramework="netstandard1.3">
         <dependency id="NETStandard.Library" version="1.3.0" />
-        <dependency id="Microsoft.Extensions.DependencyInjection" version="1.0.2" />
-        <dependency id="Microsoft.Extensions.Logging" version="1.0.2" />
-        <dependency id="Microsoft.Extensions.Options" version="1.0.2" />
         <dependency id="System.Net.Security" version="4.3.2" />
         <dependency id="System.Net.WebSockets" version="4.3.0" />
-        <dependency id="System.Net.WebSockets.Client" version="4.3.1" />
-        <dependency id="System.Threading.Thread" version="4.3.0" />
+        <dependency id="System.Net.WebSockets.Client" version="4.3.1" />      
       </group>
 
       <group targetFramework="netstandard2.0">
         <dependency id="NETStandard.Library" version="2.0.0" />
-        <dependency id="Microsoft.Extensions.DependencyInjection" version="2.0.0" />
-        <dependency id="Microsoft.Extensions.Logging" version="2.0.0" />
-        <dependency id="Microsoft.Extensions.Options" version="2.0.0" />
         <dependency id="System.Net.Security" version="4.3.2" />
         <dependency id="System.Net.WebSockets" version="4.3.0" />
         <dependency id="System.Net.WebSockets.Client" version="4.3.1" />
-        <dependency id="System.Threading.Thread" version="4.3.0" />
       </group>
       
       <group targetFramework="uap10.0">
-        <dependency id="Microsoft.NETCore.UniversalWindowsPlatform" version="5.4.0" />
-        <dependency id="Microsoft.Extensions.DependencyInjection" version="1.1.1" />
-        <dependency id="Microsoft.Extensions.Logging" version="1.1.2" />
-        <dependency id="Microsoft.Extensions.Options" version="1.1.2" />
+        <dependency id="Microsoft.NETCore.UniversalWindowsPlatform" version="5.4.1" />
       </group>
         
       <group targetFramework="net452">
-        <dependency id="Microsoft.Extensions.DependencyInjection" version="1.0.2" />
-        <dependency id="Microsoft.Extensions.Logging" version="1.0.2" />
-        <dependency id="Microsoft.Extensions.Options" version="1.0.2" />
       </group>
 
       <group targetFramework="net461">
-        <dependency id="Microsoft.Extensions.DependencyInjection" version="2.0.0" />
-        <dependency id="Microsoft.Extensions.Logging" version="2.0.0" />
-        <dependency id="Microsoft.Extensions.Options" version="2.0.0" />
       </group>
 
     </dependencies>

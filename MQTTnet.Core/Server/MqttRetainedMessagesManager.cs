@@ -4,22 +4,21 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Packets;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using MQTTnet.Core.Diagnostics;
 
 namespace MQTTnet.Core.Server
 {
-    public sealed class MqttClientRetainedMessagesManager : IMqttClientRetainedMessageManager
+    public sealed class MqttRetainedMessagesManager
     {
         private readonly Dictionary<string, MqttApplicationMessage> _retainedMessages = new Dictionary<string, MqttApplicationMessage>();
         private readonly SemaphoreSlim _gate = new SemaphoreSlim(1, 1);
-        private readonly ILogger<MqttClientRetainedMessagesManager> _logger;
+        private readonly IMqttNetLogger _logger;
         private readonly MqttServerOptions _options;
 
-        public MqttClientRetainedMessagesManager(IOptions<MqttServerOptions> options, ILogger<MqttClientRetainedMessagesManager> logger)
+        public MqttRetainedMessagesManager(MqttServerOptions options, IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         public async Task LoadMessagesAsync()
@@ -42,7 +41,7 @@ namespace MQTTnet.Core.Server
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Unhandled exception while loading retained messages.");
+                _logger.Error<MqttRetainedMessagesManager>(exception, "Unhandled exception while loading retained messages.");
             }
             finally
             {
@@ -61,7 +60,7 @@ namespace MQTTnet.Core.Server
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Unhandled exception while handling retained messages.");
+                _logger.Error<MqttRetainedMessagesManager>(exception, "Unhandled exception while handling retained messages.");
             }
             finally
             {
@@ -110,7 +109,7 @@ namespace MQTTnet.Core.Server
             if (applicationMessage.Payload?.Any() == false)
             {
                 saveIsRequired = _retainedMessages.Remove(applicationMessage.Topic);
-                _logger.LogInformation("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                _logger.Info<MqttRetainedMessagesManager>("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
             }
             else
             {
@@ -129,12 +128,12 @@ namespace MQTTnet.Core.Server
                     }
                 }
 
-                _logger.LogInformation("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                _logger.Info<MqttRetainedMessagesManager>("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
             }
 
             if (!saveIsRequired)
             {
-                _logger.LogTrace("Skipped saving retained messages because no changes were detected.");
+                _logger.Trace<MqttRetainedMessagesManager>("Skipped saving retained messages because no changes were detected.");
             }
 
             if (saveIsRequired && _options.Storage != null)

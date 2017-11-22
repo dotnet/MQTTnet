@@ -1,4 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using MQTTnet.Core.Adapter;
+using MQTTnet.Core.Diagnostics;
 
 namespace MQTTnet.Core.Server
 {
@@ -6,6 +8,6 @@ namespace MQTTnet.Core.Server
     {
         IMqttServer CreateMqttServer();
 
-        IMqttServer CreateMqttServer(Action<MqttServerOptions> configure);
+        IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger);
     }
 }

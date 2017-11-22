@@ -3,24 +3,21 @@ using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Server;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.TestApp.NetCore
 {
     public static class ServerTest
     {
-        public static Task RunAsync()
+        public static async Task RunAsync()
         {
             try
             {
-                var services = new ServiceCollection()
-                    .AddMqttServer()
-                    .AddLogging();
+                MqttNetConsoleTrace.ForwardToConsole();
 
-                services.Configure<MqttServerOptions>(options =>
+                var options = new MqttServerOptions
                 {
-                    options.ConnectionValidator = p =>
+                    ConnectionValidator = p =>
                     {
                         if (p.ClientId == "SpecialClient")
                         {
@@ -31,22 +28,19 @@ namespace MQTTnet.TestApp.NetCore
                         }
 
                         return MqttConnectReturnCode.ConnectionAccepted;
-                    };
+                    },
 
-                    options.Storage = new RetainedMessageHandler();
-
-                    // Extend the timestamp for all messages from clients.
-                    options.ApplicationMessageInterceptor = context =>
+                    Storage = new RetainedMessageHandler(),
+                    ApplicationMessageInterceptor = context =>
                     {
                         if (MqttTopicFilterComparer.IsMatch(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#"))
                         {
-        // Replace the payload with the timestamp. But also extending a JSON 
-        // based payload with the timestamp is a suitable use case.
-        context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
+                            // Replace the payload with the timestamp. But also extending a JSON 
+                            // based payload with the timestamp is a suitable use case.
+                            context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
                         }
-                    };
-                    // Protect several topics from being subscribed from every client.
-                    options.SubscriptionsInterceptor = context =>
+                    },
+                    SubscriptionsInterceptor = context =>
                     {
                         if (context.TopicFilter.Topic.StartsWith("admin/foo/bar") && context.ClientId != "theAdmin")
                         {
@@ -58,11 +52,11 @@ namespace MQTTnet.TestApp.NetCore
                             context.AcceptSubscription = false;
                             context.CloseConnection = true;
                         }
-                    };
-                });
+                    }
+                };
 
-                var serviceProvider = services.BuildServiceProvider();
-                serviceProvider.GetRequiredService<ILoggerFactory>().AddConsole();
+                // Extend the timestamp for all messages from clients.
+                // Protect several topics from being subscribed from every client.
 
                 //var certificate = new X509Certificate(@"C:\certs\test\test.cer", "");
                 //options.TlsEndpointOptions.Certificate = certificate.Export(X509ContentType.Cert);
@@ -70,18 +64,18 @@ namespace MQTTnet.TestApp.NetCore
                 //options.DefaultEndpointOptions.IsEnabled = true;
                 //options.TlsEndpointOptions.IsEnabled = false;
 
-                var mqttServer = new MqttFactory(serviceProvider).CreateMqttServer();
+                var mqttServer = new MqttFactory().CreateMqttServer();
                 mqttServer.ClientDisconnected += (s, e) =>
                 {
                     Console.Write("Client disconnected event fired.");
                 };
 
-                mqttServer.StartAsync();
+                await mqttServer.StartAsync(options);
 
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
 
-                mqttServer.StopAsync();
+                await mqttServer.StopAsync();
             }
             catch (Exception e)
             {
@@ -89,7 +83,6 @@ namespace MQTTnet.TestApp.NetCore
             }
 
             Console.ReadLine();
-            return Task.FromResult(0);
         }
     }
 }

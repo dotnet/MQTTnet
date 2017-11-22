@@ -7,7 +7,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -70,8 +69,6 @@ namespace MQTTnet.TestApp.NetCore
 
             {
                 var factory = new MqttFactory();
-                factory.GetLoggerFactory().AddConsole();
-
                 var client = factory.CreateMqttClient();
             }
         }

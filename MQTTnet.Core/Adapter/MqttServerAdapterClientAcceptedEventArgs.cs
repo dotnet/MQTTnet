@@ -5,12 +5,12 @@ namespace MQTTnet.Core.Adapter
 {
     public class MqttServerAdapterClientAcceptedEventArgs : EventArgs
     {
-        public MqttServerAdapterClientAcceptedEventArgs(IMqttCommunicationAdapter client)
+        public MqttServerAdapterClientAcceptedEventArgs(IMqttChannelAdapter client)
         {
             Client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
-        public IMqttCommunicationAdapter Client { get; }
+        public IMqttChannelAdapter Client { get; }
 
         public Task SessionTask { get; set; }
     }

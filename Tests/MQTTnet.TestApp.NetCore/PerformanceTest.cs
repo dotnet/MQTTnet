@@ -1,9 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using MQTTnet.Core;
+﻿using MQTTnet.Core;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Core.Server;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -18,46 +16,21 @@ namespace MQTTnet.TestApp.NetCore
     {
         public static async Task RunAsync()
         {
-            var services = new ServiceCollection()
-                .AddMqttServer(options =>
-                {
-
-                    options.ConnectionValidator = p =>
-                    {
-                        if (p.ClientId == "SpecialClient")
-                        {
-                            if (p.Username != "USER" || p.Password != "PASS")
-                            {
-                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                            }
-                        }
-
-                        return MqttConnectReturnCode.ConnectionAccepted;
-                    };
-
-                    options.DefaultCommunicationTimeout = TimeSpan.FromMinutes(10);
-                })
-                .AddMqttClient()
-                .AddLogging()
-                .BuildServiceProvider();
-
-            //services.GetService<ILoggerFactory>().AddConsole(LogLevel.Warning, true);
-
             Console.WriteLine("Press 'c' for concurrent sends. Otherwise in one batch.");
             var concurrent = Console.ReadKey(true).KeyChar == 'c';
 
-            var server = Task.Factory.StartNew(() => RunServerAsync(services), TaskCreationOptions.LongRunning);
-            var client = Task.Factory.StartNew(() => RunClientAsync(2000, TimeSpan.FromMilliseconds(10), services, concurrent), TaskCreationOptions.LongRunning);
+            var server = Task.Factory.StartNew(async () => await RunServerAsync(), TaskCreationOptions.LongRunning);
+            var client = Task.Factory.StartNew(async () => await RunClientAsync(2000, TimeSpan.FromMilliseconds(10), concurrent), TaskCreationOptions.LongRunning);
 
             await Task.WhenAll(server, client).ConfigureAwait(false);
         }
 
-        private static Task RunClientsAsync(int msgChunkSize, TimeSpan interval, IServiceProvider serviceProvider, bool concurrent)
+        private static Task RunClientsAsync(int msgChunkSize, TimeSpan interval, bool concurrent)
         {
-            return Task.WhenAll(Enumerable.Range(0, 3).Select(i => Task.Run(() => RunClientAsync(msgChunkSize, interval, serviceProvider, concurrent))));
+            return Task.WhenAll(Enumerable.Range(0, 3).Select(i => Task.Run(() => RunClientAsync(msgChunkSize, interval, concurrent))));
         }
 
-        private static async Task RunClientAsync(int msgChunkSize, TimeSpan interval, IServiceProvider serviceProvider, bool concurrent)
+        private static async Task RunClientAsync(int msgChunkSize, TimeSpan interval, bool concurrent)
         {
             try
             {
@@ -69,7 +42,7 @@ namespace MQTTnet.TestApp.NetCore
                     CommunicationTimeout = TimeSpan.FromMinutes(10)
                 };
 
-                var client = serviceProvider.GetRequiredService<IMqttClient>();
+                var client = new MqttFactory().CreateMqttClient();
 
                 client.Connected += async (s, e) =>
                 {
@@ -77,7 +50,7 @@ namespace MQTTnet.TestApp.NetCore
 
                     await client.SubscribeAsync(new List<TopicFilter>
                     {
-                        new TopicFilter("#", MqttQualityOfServiceLevel.AtMostOnce)
+                        new TopicFilter("#")
                     });
 
                     Console.WriteLine("### SUBSCRIBED ###");
@@ -120,7 +93,6 @@ namespace MQTTnet.TestApp.NetCore
                 stopwatch.Stop();
                 Console.WriteLine($"Sent 10.000 messages within {stopwatch.ElapsedMilliseconds} ms ({stopwatch.ElapsedMilliseconds / (float)testMessageCount} ms / message).");
 
-
                 var messages = new[] { message };
                 var sentMessagesCount = 0;
 
@@ -158,9 +130,7 @@ namespace MQTTnet.TestApp.NetCore
                         msgCount += msgs.Count;
                         //send multiple
                     }
-
-
-
+                    
                     var now = DateTime.Now;
                     if (last < now - TimeSpan.FromSeconds(1))
                     {
@@ -194,11 +164,12 @@ namespace MQTTnet.TestApp.NetCore
             return Task.Run(() => client.PublishAsync(applicationMessage));
         }
 
-        private static async Task RunServerAsync(IServiceProvider serviceProvider)
+        private static async Task RunServerAsync()
         {
             try
             {
-                var mqttServer = serviceProvider.GetRequiredService<IMqttServer>();
+                var mqttServer = new MqttFactory().CreateMqttServer();
+
                 var msgs = 0;
                 var stopwatch = Stopwatch.StartNew();
                 mqttServer.ApplicationMessageReceived += (sender, args) =>
@@ -211,7 +182,7 @@ namespace MQTTnet.TestApp.NetCore
                         stopwatch.Restart();
                     }
                 };
-                await mqttServer.StartAsync();
+                await mqttServer.StartAsync(new MqttServerOptions());
 
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();

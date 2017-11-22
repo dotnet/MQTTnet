@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Implementations
 {
-    public sealed class MqttWebSocketChannel : IMqttCommunicationChannel, IDisposable
+    public sealed class MqttWebSocketChannel : IMqttChannel, IDisposable
     {
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
@@ -29,9 +29,16 @@ namespace MQTTnet.Implementations
         public async Task ConnectAsync()
         {
             var uri = _options.Uri;
-            if (!uri.StartsWith("ws://", StringComparison.OrdinalIgnoreCase))
+            if (!uri.StartsWith("ws://", StringComparison.OrdinalIgnoreCase) && !uri.StartsWith("wss://", StringComparison.OrdinalIgnoreCase))
             {
-                uri = "ws://" + uri;
+                if (!_options.TlsOptions.UseTls)
+                {
+                    uri = "ws://" + uri;
+                }
+                else
+                {
+                    uri = "wss://" + uri;
+                }
             }
 
             _webSocket = new ClientWebSocket();

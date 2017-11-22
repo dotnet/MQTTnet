@@ -9,7 +9,7 @@ using MQTTnet.Core.Serializer;
 
 namespace MQTTnet.Core.Tests
 {
-    public class TestMqttCommunicationAdapter : IMqttCommunicationAdapter
+    public class TestMqttCommunicationAdapter : IMqttChannelAdapter
     {
         private readonly BlockingCollection<MqttBasePacket> _incomingPackets = new BlockingCollection<MqttBasePacket>();
 

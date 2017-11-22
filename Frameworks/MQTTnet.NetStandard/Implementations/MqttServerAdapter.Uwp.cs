@@ -4,20 +4,19 @@ using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Server;
 using Windows.Networking.Sockets;
-using Microsoft.Extensions.Logging;
+using MQTTnet.Core.Diagnostics;
+using MQTTnet.Core.Serializer;
 
 namespace MQTTnet.Implementations
 {
     public class MqttServerAdapter : IMqttServerAdapter, IDisposable
     {
-        private readonly ILogger<MqttServerAdapter> _logger;
-        private readonly IMqttCommunicationAdapterFactory _communicationAdapterFactory;
+        private readonly IMqttNetLogger _logger;
         private StreamSocketListener _defaultEndpointSocket;
 
-        public MqttServerAdapter(ILogger<MqttServerAdapter> logger, IMqttCommunicationAdapterFactory communicationAdapterFactory)
+        public MqttServerAdapter(IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _communicationAdapterFactory = communicationAdapterFactory ?? throw new ArgumentNullException(nameof(communicationAdapterFactory));
         }
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
@@ -63,12 +62,12 @@ namespace MQTTnet.Implementations
         {
             try
             {
-                var clientAdapter = _communicationAdapterFactory.CreateServerCommunicationAdapter(new MqttTcpChannel(args.Socket));
+                var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket), new MqttPacketSerializer(), _logger);
                 ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Error while accepting connection at default endpoint.");
+                _logger.Error<MqttServerAdapter>(exception, "Error while accepting connection at default endpoint.");
             }
         }
     }

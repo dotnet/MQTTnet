@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
 using MQTTnet.Core.Diagnostics;
@@ -19,7 +17,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 {
     public sealed partial class MainPage
     {
-        private readonly ConcurrentQueue<MqttNetTraceMessage> _traceMessages = new ConcurrentQueue<MqttNetTraceMessage>();
+        private readonly ConcurrentQueue<MqttNetLogMessage> _traceMessages = new ConcurrentQueue<MqttNetLogMessage>();
 
         private IMqttClient _mqttClient;
         private IMqttServer _mqttServer;
@@ -28,10 +26,10 @@ namespace MQTTnet.TestApp.UniversalWindows
         {
             InitializeComponent();
 
-            MqttNetTrace.TraceMessagePublished += OnTraceMessagePublished;
+            MqttNetGlobalLog.LogMessagePublished += OnTraceMessagePublished;
         }
 
-        private async void OnTraceMessagePublished(object sender, MqttNetTraceMessagePublishedEventArgs e)
+        private async void OnTraceMessagePublished(object sender, MqttNetLogMessagePublishedEventArgs e)
         {
             _traceMessages.Enqueue(e.TraceMessage);
             while (_traceMessages.Count > 100)
@@ -252,7 +250,7 @@ namespace MQTTnet.TestApp.UniversalWindows
         {
             {
                 // Write all trace messages to the console window.
-                MqttNetTrace.TraceMessagePublished += (s, e) =>
+                MqttNetGlobalLog.LogMessagePublished += (s, e) =>
                 {
                     Console.WriteLine($">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
                     if (e.TraceMessage.Exception != null)
@@ -263,29 +261,9 @@ namespace MQTTnet.TestApp.UniversalWindows
             }
 
             {
-                // Add the console logger to the logger factory.
-                var services = new ServiceCollection()
-                    .AddMqttClient()
-                    .BuildServiceProvider();
-
-                services.GetRequiredService<ILoggerFactory>()
-                    .AddConsole();
-            }
-
-            {
                 // Use a custom identifier for the trace messages.
                 var clientOptions = new MqttClientOptionsBuilder()
-                    .WithLogId("ClientX")
                     .Build();
-            }
-
-            {
-                // Create a client from the service provider manually.
-                var serviceProvider = new ServiceCollection()
-                    .AddMqttClient()
-                    .BuildServiceProvider();
-
-                var mqttClient = serviceProvider.GetRequiredService<IMqttClient>();
             }
 
             {
@@ -371,34 +349,31 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             // ----------------------------------
             {
-                var services = new ServiceCollection()
-                    .AddMqttServer(options =>
+                var options = new MqttServerOptions();
+
+                options.ConnectionValidator = c =>
+                {
+                    if (c.ClientId.Length < 10)
                     {
-                        options.ConnectionValidator = c =>
-                        {
-                            if (c.ClientId.Length < 10)
-                            {
-                                return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
-                            }
+                        return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                    }
 
-                            if (c.Username != "mySecretUser")
-                            {
-                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                            }
+                    if (c.Username != "mySecretUser")
+                    {
+                        return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                    }
 
-                            if (c.Password != "mySecretPassword")
-                            {
-                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                            }
+                    if (c.Password != "mySecretPassword")
+                    {
+                        return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                    }
 
-                            return MqttConnectReturnCode.ConnectionAccepted;
-                        };
-                    })
-                    .BuildServiceProvider();
+                    return MqttConnectReturnCode.ConnectionAccepted;
+                };
 
-                var factory = new MqttFactory(services);
+                var factory = new MqttFactory();
                 var mqttServer = factory.CreateMqttServer();
-                await mqttServer.StartAsync();
+                await mqttServer.StartAsync(options);
 
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
@@ -422,7 +397,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             {
                 // Start a MQTT server.
                 var mqttServer = new MqttFactory().CreateMqttServer();
-                await mqttServer.StartAsync();
+                await mqttServer.StartAsync(new MqttServerOptions());
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
                 await mqttServer.StopAsync();
@@ -430,27 +405,31 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             {
                 // Configure MQTT server.
-                var mqttServer = new MqttFactory().CreateMqttServer(options =>
+                var options = new MqttServerOptions
                 {
-                    options.ConnectionBacklog = 100;
-                    options.DefaultEndpointOptions.Port = 1884;
-                    options.ConnectionValidator = packet =>
-                    {
-                        if (packet.ClientId != "Highlander")
-                        {
-                            return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
-                        }
+                    ConnectionBacklog = 100
+                };
 
-                        return MqttConnectReturnCode.ConnectionAccepted;
-                    };
-                });
+                options.DefaultEndpointOptions.Port = 1884;
+                options.ConnectionValidator = packet =>
+                {
+                    if (packet.ClientId != "Highlander")
+                    {
+                        return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                    }
+
+                    return MqttConnectReturnCode.ConnectionAccepted;
+                };
+
+                var mqttServer = new MqttFactory().CreateMqttServer();
+                await mqttServer.StartAsync(options);
             }
 
             {
                 // Setup client validator.
-                var mqttServer = new MqttFactory().CreateMqttServer(options =>
+                var options = new MqttServerOptions
                 {
-                    options.ConnectionValidator = c =>
+                    ConnectionValidator = c =>
                     {
                         if (c.ClientId.Length < 10)
                         {
@@ -468,8 +447,8 @@ namespace MQTTnet.TestApp.UniversalWindows
                         }
 
                         return MqttConnectReturnCode.ConnectionAccepted;
-                    };
-                });
+                    }
+                };
             }
 
             {
@@ -512,13 +491,13 @@ namespace MQTTnet.TestApp.UniversalWindows
                 }
             }
 
-            _mqttServer = new MqttFactory().CreateMqttServer(o =>
-            {
-                o.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
-                o.Storage = storage;
-            });
+            _mqttServer = new MqttFactory().CreateMqttServer();
 
-            await _mqttServer.StartAsync();
+            var options = new MqttServerOptions();
+            options.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
+            options.Storage = storage;
+
+            await _mqttServer.StartAsync(options);
         }
 
         private async void StopServer(object sender, RoutedEventArgs e)

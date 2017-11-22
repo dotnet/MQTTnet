@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using MQTTnet.Core;
 using MQTTnet.Core.Client;
 
@@ -28,8 +27,7 @@ namespace MQTTnet.TestApp.NetCore
                 };
 
                 var factory = new MqttFactory();
-                factory.GetLoggerFactory().AddConsole();
-
+                
                 var client = factory.CreateMqttClient();
 
                 client.ApplicationMessageReceived += (s, e) =>

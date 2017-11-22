@@ -3,7 +3,7 @@ using System.IO;
 
 namespace MQTTnet.Core.Channel
 {
-    public interface IMqttCommunicationChannel
+    public interface IMqttChannel
     {
         Stream SendStream { get; }
         Stream ReceiveStream { get; }

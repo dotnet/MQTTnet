@@ -13,7 +13,7 @@ using MQTTnet.Core.Client;
 
 namespace MQTTnet.Implementations
 {
-    public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
+    public sealed class MqttTcpChannel : IMqttChannel, IDisposable
     {
         private readonly MqttClientTcpOptions _options;
         private StreamSocket _socket;

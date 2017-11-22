@@ -1,130 +1,52 @@
 ﻿using System;
+using System.Collections.Generic;
 using MQTTnet.Core.Adapter;
 using MQTTnet.Core.Client;
-using MQTTnet.Core.Serializer;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using MQTTnet.Implementations;
 using MQTTnet.Core.ManagedClient;
 using MQTTnet.Core.Server;
-using MQTTnet.Core.Channel;
+using MQTTnet.Core.Diagnostics;
 
 namespace MQTTnet
 {
-    public class MqttFactory : IMqttCommunicationAdapterFactory, IMqttClientSesssionFactory, IMqttClientFactory, IMqttServerFactory
+    public class MqttFactory : IMqttClientFactory, IMqttServerFactory
     {
-        private readonly IServiceProvider _serviceProvider;
-
-        public MqttFactory()
-            : this(BuildServiceProvider())
-        {
-        }
-
-        public MqttFactory(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        }
-
-        public ILoggerFactory GetLoggerFactory()
-        {
-            return _serviceProvider.GetRequiredService<ILoggerFactory>();
-        }
-
-        public IMqttCommunicationAdapter CreateClientCommunicationAdapter(IMqttClientOptions options)
-        {
-            var logger = _serviceProvider.GetRequiredService<ILogger<MqttChannelCommunicationAdapter>>();
-            return new MqttChannelCommunicationAdapter(CreateCommunicationChannel(options.ChannelOptions), CreateSerializer(options.ProtocolVersion), logger);
-        }
-
-        public IMqttCommunicationAdapter CreateServerCommunicationAdapter(IMqttCommunicationChannel channel)
-        {
-            var serializer = _serviceProvider.GetRequiredService<IMqttPacketSerializer>();
-            var logger = _serviceProvider.GetRequiredService<ILogger<MqttChannelCommunicationAdapter>>();
-            return new MqttChannelCommunicationAdapter(channel, serializer, logger);
-        }
-
-        public IMqttCommunicationChannel CreateCommunicationChannel(IMqttClientChannelOptions options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            switch (options)
-            {
-                case MqttClientTcpOptions tcpOptions:
-                    return CreateTcpChannel(tcpOptions);
-                case MqttClientWebSocketOptions webSocketOptions:
-                    return CreateWebSocketChannel(webSocketOptions);
-                default:
-                    throw new NotSupportedException();
-            }
-        }
-
-        public MqttTcpChannel CreateTcpChannel(MqttClientTcpOptions tcpOptions)
-        {
-            return new MqttTcpChannel(tcpOptions);
-        }
-
-        public MqttWebSocketChannel CreateWebSocketChannel(MqttClientWebSocketOptions webSocketOptions)
-        {
-            return new MqttWebSocketChannel(webSocketOptions);
-        }
-
-        public MqttPacketSerializer CreateSerializer(MqttProtocolVersion protocolVersion)
-        {
-            return new MqttPacketSerializer
-            {
-                ProtocolVersion = protocolVersion
-            };
-        }
-
-        public MqttClientSession CreateClientSession(string clientId, MqttClientSessionsManager clientSessionsManager)
-        {
-            return new MqttClientSession(
-                clientId,
-                _serviceProvider.GetRequiredService<IOptions<MqttServerOptions>>(),
-                clientSessionsManager,
-                _serviceProvider.GetRequiredService<MqttClientSubscriptionsManager>(),
-                _serviceProvider.GetRequiredService<ILogger<MqttClientSession>>(),
-                _serviceProvider.GetRequiredService<ILogger<MqttClientPendingMessagesQueue>>());
-        }
-
         public IMqttClient CreateMqttClient()
         {
-            return _serviceProvider.GetRequiredService<IMqttClient>();
+            return CreateMqttClient(new MqttNetLogger());
+        }
+
+        public IMqttClient CreateMqttClient(IMqttNetLogger logger)
+        {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            return new MqttClient(new MqttClientAdapterFactory(), logger);
         }
 
         public IManagedMqttClient CreateManagedMqttClient()
         {
-            return _serviceProvider.GetRequiredService<IManagedMqttClient>();
+            return new ManagedMqttClient(CreateMqttClient(), new MqttNetLogger());
+        }
+
+        public IManagedMqttClient CreateManagedMqttClient(IMqttNetLogger logger)
+        {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            return new ManagedMqttClient(CreateMqttClient(), logger);
         }
 
         public IMqttServer CreateMqttServer()
         {
-            return _serviceProvider.GetRequiredService<IMqttServer>();
+            var logger = new MqttNetLogger();
+            return CreateMqttServer(new List<IMqttServerAdapter> { new MqttServerAdapter(logger) }, logger);
         }
 
-        public IMqttServer CreateMqttServer(Action<MqttServerOptions> configure)
+        public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
         {
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            if (adapters == null) throw new ArgumentNullException(nameof(adapters));
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            var options = _serviceProvider.GetRequiredService<IOptions<MqttServerOptions>>();
-            configure(options.Value);
-
-            return _serviceProvider.GetRequiredService<IMqttServer>();
-        }
-
-        private static IServiceProvider BuildServiceProvider()
-        {
-            var serviceProvider = new ServiceCollection()
-                .AddMqttClient()
-                .AddMqttServer()
-                .AddLogging()
-                .BuildServiceProvider();
-
-            serviceProvider.GetRequiredService<ILoggerFactory>()
-                .AddMqttTrace();
-
-            return serviceProvider;
+            return new MqttServer(adapters, logger);
         }
     }
 }

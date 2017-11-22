@@ -5,9 +5,9 @@ using MQTTnet.Core.Packets;
 
 namespace MQTTnet.Core.Adapter
 {
-    public static class MqttCommunicationAdapterExtensions
+    public static class MqttChannelAdapterExtensions
     {
-        public static Task SendPacketsAsync(this IMqttCommunicationAdapter adapter, TimeSpan timeout, CancellationToken cancellationToken, params MqttBasePacket[] packets)
+        public static Task SendPacketsAsync(this IMqttChannelAdapter adapter, TimeSpan timeout, CancellationToken cancellationToken, params MqttBasePacket[] packets)
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 

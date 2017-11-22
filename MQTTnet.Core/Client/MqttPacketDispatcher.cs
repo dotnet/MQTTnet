@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
-using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Core.Client
 {
@@ -12,9 +12,9 @@ namespace MQTTnet.Core.Client
     {
         private readonly ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>> _packetByResponseType = new ConcurrentDictionary<Type, TaskCompletionSource<MqttBasePacket>>();
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>> _packetByResponseTypeAndIdentifier = new ConcurrentDictionary<Type, ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>>();
-        private readonly ILogger<MqttPacketDispatcher> _logger;
+        private readonly IMqttNetLogger _logger;
 
-        public MqttPacketDispatcher(ILogger<MqttPacketDispatcher> logger)
+        public MqttPacketDispatcher(IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -30,7 +30,7 @@ namespace MQTTnet.Core.Client
             }
             catch (MqttCommunicationTimedOutException)
             {
-                _logger.LogWarning("Timeout while waiting for packet of type '{0}'.", responseType.Name);
+                _logger.Warning<MqttPacketDispatcher>("Timeout while waiting for packet of type '{0}'.", responseType.Name);
                 throw;
             }
             finally

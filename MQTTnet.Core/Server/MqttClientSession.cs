@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Core.Adapter;
+using MQTTnet.Core.Diagnostics;
 using MQTTnet.Core.Exceptions;
 using MQTTnet.Core.Internal;
 using MQTTnet.Core.Packets;
 using MQTTnet.Core.Protocol;
 using MQTTnet.Core.Serializer;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace MQTTnet.Core.Server
 {
@@ -21,28 +20,27 @@ namespace MQTTnet.Core.Server
         private readonly MqttClientSessionsManager _sessionsManager;
         private readonly MqttClientPendingMessagesQueue _pendingMessagesQueue;
         private readonly MqttServerOptions _options;
-        private readonly ILogger<MqttClientSession> _logger;
+        private readonly IMqttNetLogger _logger;
 
-        private IMqttCommunicationAdapter _adapter;
+        private IMqttChannelAdapter _adapter;
         private CancellationTokenSource _cancellationTokenSource;
         private MqttApplicationMessage _willMessage;
 
         public MqttClientSession(
             string clientId,
-            IOptions<MqttServerOptions> options,
+            MqttServerOptions options,
             MqttClientSessionsManager sessionsManager,
-            MqttClientSubscriptionsManager subscriptionsManager,
-            ILogger<MqttClientSession> logger,
-            ILogger<MqttClientPendingMessagesQueue> messageQueueLogger)
+            IMqttNetLogger logger)
         {
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
-            _subscriptionsManager = subscriptionsManager ?? throw new ArgumentNullException(nameof(subscriptionsManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             ClientId = clientId;
 
-            _options = options.Value;
-            _pendingMessagesQueue = new MqttClientPendingMessagesQueue(_options, this, messageQueueLogger);
+            _options = options;
+
+            _subscriptionsManager = new MqttClientSubscriptionsManager(_options);
+            _pendingMessagesQueue = new MqttClientPendingMessagesQueue(_options, this, _logger);
         }
 
         public string ClientId { get; }
@@ -51,7 +49,7 @@ namespace MQTTnet.Core.Server
 
         public bool IsConnected => _adapter != null;
 
-        public async Task RunAsync(MqttApplicationMessage willMessage, IMqttCommunicationAdapter adapter)
+        public async Task RunAsync(MqttApplicationMessage willMessage, IMqttChannelAdapter adapter)
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 
@@ -71,11 +69,11 @@ namespace MQTTnet.Core.Server
             }
             catch (MqttCommunicationException exception)
             {
-                _logger.LogWarning(new EventId(), exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
+                _logger.Warning<MqttClientSession>(exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
+                _logger.Error<MqttClientSession>(exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
             }
         }
 
@@ -93,7 +91,7 @@ namespace MQTTnet.Core.Server
                     _adapter = null;
                 }
 
-                _logger.LogInformation("Client '{0}': Session stopped.", ClientId);
+                _logger.Info<MqttClientSession>("Client '{0}': Session stopped.", ClientId);
             }
             finally
             {
@@ -120,7 +118,7 @@ namespace MQTTnet.Core.Server
             _pendingMessagesQueue.Enqueue(publishPacket);
         }
 
-        private async Task ReceivePacketsAsync(IMqttCommunicationAdapter adapter, CancellationToken cancellationToken)
+        private async Task ReceivePacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
         {
             try
             {
@@ -135,17 +133,17 @@ namespace MQTTnet.Core.Server
             }
             catch (MqttCommunicationException exception)
             {
-                _logger.LogWarning(new EventId(), exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
+                _logger.Warning<MqttClientSession>(exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
                 await StopAsync();
             }
             catch (Exception exception)
             {
-                _logger.LogError(new EventId(), exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
+                _logger.Error<MqttClientSession>(exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
                 await StopAsync();
             }
         }
 
-        private Task ProcessReceivedPacketAsync(IMqttCommunicationAdapter adapter, MqttBasePacket packet, CancellationToken cancellationToken)
+        private Task ProcessReceivedPacketAsync(IMqttChannelAdapter adapter, MqttBasePacket packet, CancellationToken cancellationToken)
         {
             if (packet is MqttPingReqPacket)
             {
@@ -188,11 +186,11 @@ namespace MQTTnet.Core.Server
                 return StopAsync();
             }
 
-            _logger.LogWarning("Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
+            _logger.Warning<MqttClientSession>("Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
             return StopAsync();            
         }
 
-        private async Task HandleIncomingSubscribePacketAsync(IMqttCommunicationAdapter adapter, MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
+        private async Task HandleIncomingSubscribePacketAsync(IMqttChannelAdapter adapter, MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
             var subscribeResult = _subscriptionsManager.Subscribe(subscribePacket, ClientId);
 
@@ -215,7 +213,7 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        private async Task HandleIncomingPublishPacketAsync(IMqttCommunicationAdapter adapter, MqttPublishPacket publishPacket, CancellationToken cancellationToken)
+        private async Task HandleIncomingPublishPacketAsync(IMqttChannelAdapter adapter, MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             var applicationMessage = publishPacket.ToApplicationMessage();
 
@@ -255,7 +253,7 @@ namespace MQTTnet.Core.Server
             }
         }
 
-        private Task HandleIncomingPubRelPacketAsync(IMqttCommunicationAdapter adapter, MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
+        private Task HandleIncomingPubRelPacketAsync(IMqttChannelAdapter adapter, MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
         {
             lock (_unacknowledgedPublishPackets)
             {

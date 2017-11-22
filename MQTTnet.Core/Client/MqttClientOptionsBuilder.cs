@@ -12,12 +12,6 @@ namespace MQTTnet.Core.Client
 
         private MqttClientTlsOptions _tlsOptions;
 
-        public MqttClientOptionsBuilder WithLogId(string value)
-        {
-            _options.LogId = value;
-            return this;
-        }
-
         public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion value)
         {
             _options.ProtocolVersion = value;

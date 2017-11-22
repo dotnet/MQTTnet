@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace MQTTnet.Implementations
 {
-    public sealed class MqttTcpChannel : IMqttCommunicationChannel, IDisposable
+    public sealed class MqttTcpChannel : IMqttChannel, IDisposable
     {
         private readonly MqttClientTcpOptions _options;
 

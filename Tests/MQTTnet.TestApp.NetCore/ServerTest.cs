@@ -40,7 +40,7 @@ namespace MQTTnet.TestApp.NetCore
                             context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
                         }
                     },
-                    SubscriptionsInterceptor = context =>
+                    SubscriptionInterceptor = context =>
                     {
                         if (context.TopicFilter.Topic.StartsWith("admin/foo/bar") && context.ClientId != "theAdmin")
                         {

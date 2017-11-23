@@ -11,14 +11,14 @@ namespace MQTTnet.Core.Server
         public MqttServerTlsEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsEndpointOptions();
 
         public int ConnectionBacklog { get; set; } = 10;
-
+        
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(15);
 
         public Func<MqttConnectPacket, MqttConnectReturnCode> ConnectionValidator { get; set; }
 
         public Action<MqttApplicationMessageInterceptorContext> ApplicationMessageInterceptor { get; set; }
 
-        public Action<MqttSubscriptionInterceptorContext> SubscriptionsInterceptor { get; set; }
+        public Action<MqttSubscriptionInterceptorContext> SubscriptionInterceptor { get; set; }
 
         public IMqttServerStorage Storage { get; set; }
     }

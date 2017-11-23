@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using MQTTnet.AspNetCore;
 using MQTTnet.Core;
+using MQTTnet.Core.Server;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {
@@ -16,7 +17,8 @@ namespace MQTTnet.TestApp.AspNetCore2
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHostedMqttServer();
+            var mqttServerOptions = new MqttServerOptionsBuilder().Build();
+            services.AddHostedMqttServer(mqttServerOptions);
         }
 
         // In class _Startup_ of the ASP.NET Core 2.0 project.

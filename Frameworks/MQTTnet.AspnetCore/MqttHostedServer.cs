@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -12,12 +13,9 @@ namespace MQTTnet.AspNetCore
     {
         private readonly MqttServerOptions _options;
 
-        public MqttHostedServer(
-            MqttServerOptions options,
-            IEnumerable<IMqttServerAdapter> adapters,
-            IMqttNetLogger logger) : base(adapters, logger)
+        public MqttHostedServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger) : base(adapters, logger)
         {
-            _options = options;
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         public Task StartAsync(CancellationToken cancellationToken)

@@ -4,7 +4,7 @@ using MQTTnet.Core.Diagnostics;
 
 namespace MQTTnet.Diagnostics
 {
-    public static class MqttNetConsoleTrace
+    public static class MqttNetConsoleLogger
     {
         private static readonly object Lock = new object();
 

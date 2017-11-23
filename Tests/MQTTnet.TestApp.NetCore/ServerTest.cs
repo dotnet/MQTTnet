@@ -13,7 +13,7 @@ namespace MQTTnet.TestApp.NetCore
         {
             try
             {
-                MqttNetConsoleTrace.ForwardToConsole();
+                MqttNetConsoleLogger.ForwardToConsole();
 
                 var options = new MqttServerOptions
                 {

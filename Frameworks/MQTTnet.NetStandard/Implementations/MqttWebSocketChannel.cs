@@ -31,7 +31,7 @@ namespace MQTTnet.Implementations
             var uri = _options.Uri;
             if (!uri.StartsWith("ws://", StringComparison.OrdinalIgnoreCase) && !uri.StartsWith("wss://", StringComparison.OrdinalIgnoreCase))
             {
-                if (!_options.TlsOptions.UseTls)
+                if (_options.TlsOptions?.UseTls == false)
                 {
                     uri = "ws://" + uri;
                 }

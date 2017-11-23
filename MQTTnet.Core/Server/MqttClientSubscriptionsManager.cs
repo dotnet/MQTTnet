@@ -27,7 +27,7 @@ namespace MQTTnet.Core.Server
                 foreach (var topicFilter in subscribePacket.TopicFilters)
                 {
                     var interceptorContext = new MqttSubscriptionInterceptorContext(clientId, topicFilter);
-                    _options.SubscriptionsInterceptor?.Invoke(interceptorContext);
+                    _options.SubscriptionInterceptor?.Invoke(interceptorContext);
                     responsePacket.SubscribeReturnCodes.Add(interceptorContext.AcceptSubscription ? MqttSubscribeReturnCode.SuccessMaximumQoS1 : MqttSubscribeReturnCode.Failure);
                     
                     if (interceptorContext.CloseConnection)

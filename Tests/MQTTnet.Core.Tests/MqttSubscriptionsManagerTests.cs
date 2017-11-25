@@ -18,7 +18,7 @@ namespace MQTTnet.Core.Tests
 
             sm.Subscribe(sp, "");
 
-            var pp = new MqttPublishPacket
+            var pp = new MqttApplicationMessage
             {
                 Topic = "A/B/C",
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
@@ -37,7 +37,7 @@ namespace MQTTnet.Core.Tests
 
             sm.Subscribe(sp, "");
 
-            var pp = new MqttPublishPacket
+            var pp = new MqttApplicationMessage
             {
                 Topic = "A/B/X",
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
@@ -56,7 +56,7 @@ namespace MQTTnet.Core.Tests
 
             sm.Subscribe(sp, "");
 
-            var pp = new MqttPublishPacket
+            var pp = new MqttApplicationMessage
             {
                 Topic = "A/B/C",
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce

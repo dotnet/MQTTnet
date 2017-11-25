@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -30,7 +29,7 @@ namespace MQTTnet.Serializer
             {
                 return null;
             }
-
+            
             var fixedHeader = (byte)buffer;
             var controlPacketType = (MqttControlPacketType)(fixedHeader >> 4);
             var bodyLength = ReadBodyLengthFromSource(stream, cancellationToken);
@@ -57,12 +56,22 @@ namespace MQTTnet.Serializer
         public string ReadStringWithLengthPrefix()
         {
             var buffer = ReadWithLengthPrefix();
+            if (buffer.Length == 0)
+            {
+                return string.Empty;
+            }
+
             return Encoding.UTF8.GetString(buffer, 0, buffer.Length);
         }
 
         public byte[] ReadWithLengthPrefix()
         {
             var length = ReadUInt16();
+            if (length == 0)
+            {
+                return new byte[0];
+            }
+
             return ReadBytes(length);
         }
 
@@ -78,7 +87,7 @@ namespace MQTTnet.Serializer
             var value = 0;
             byte encodedByte;
 
-            var readBytes = new List<int>();
+            ////var readBytes = new List<int>();
             do
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -87,19 +96,20 @@ namespace MQTTnet.Serializer
                 }
 
                 var buffer = stream.ReadByte();
-                readBytes.Add(buffer);
-
                 if (buffer == -1)
                 {
                     throw new MqttCommunicationException("Connection closed while reading remaining length data.");
                 }
+
+                ////readBytes.Add(buffer);
 
                 encodedByte = (byte)buffer;
                 value += (byte)(encodedByte & 127) * multiplier;
                 multiplier *= 128;
                 if (multiplier > 128 * 128 * 128)
                 {
-                    throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", readBytes)}).");
+                    //throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", readBytes)}).");
+                    throw new MqttProtocolViolationException("Remaining length is invalid.");
                 }
             } while ((encodedByte & 128) != 0);
 

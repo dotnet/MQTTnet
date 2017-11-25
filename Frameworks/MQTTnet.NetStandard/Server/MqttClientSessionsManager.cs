@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Serializer;
@@ -59,7 +58,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                var clientSession = await GetOrCreateClientSessionAsync(connectPacket);
+                var clientSession = await GetOrCreateClientSessionAsync(connectPacket).ConfigureAwait(false);
 
                 await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttConnAckPacket
                 {
@@ -105,7 +104,7 @@ namespace MQTTnet.Server
             {
                 foreach (var session in _sessions)
                 {
-                    await session.Value.StopAsync();
+                    await session.Value.StopAsync().ConfigureAwait(false);
                 }
 
                 _sessions.Clear();
@@ -162,7 +161,7 @@ namespace MQTTnet.Server
             {
                 foreach (var clientSession in _sessions.Values.ToList())
                 {
-                    clientSession.EnqueuePublishPacket(applicationMessage.ToPublishPacket());
+                    clientSession.EnqueueApplicationMessage(applicationMessage);
                 }
             }
         }
@@ -200,7 +199,7 @@ namespace MQTTnet.Server
                     if (connectPacket.CleanSession)
                     {
                         _sessions.Remove(connectPacket.ClientId);
-                        await clientSession.StopAsync();
+                        await clientSession.StopAsync().ConfigureAwait(false);
                         clientSession = null;
 
                         _logger.Trace<MqttClientSessionsManager>("Stopped existing session of client '{0}'.", connectPacket.ClientId);

@@ -171,16 +171,16 @@ namespace MQTTnet.TestApp.NetCore
 
                 var msgs = 0;
                 var stopwatch = Stopwatch.StartNew();
-                mqttServer.ApplicationMessageReceived += (sender, args) =>
-                {
-                    msgs++;
-                    if (stopwatch.ElapsedMilliseconds > 1000)
-                    {
-                        Console.WriteLine($"received {msgs}");
-                        msgs = 0;
-                        stopwatch.Restart();
-                    }
-                };
+                ////mqttServer.ApplicationMessageReceived += (sender, args) =>
+                ////{
+                ////    msgs++;
+                ////    if (stopwatch.ElapsedMilliseconds > 1000)
+                ////    {
+                ////        Console.WriteLine($"received {msgs}");
+                ////        msgs = 0;
+                ////        stopwatch.Restart();
+                ////    }
+                ////};
                 await mqttServer.StartAsync(new MqttServerOptions());
 
                 Console.WriteLine("Press any key to exit.");

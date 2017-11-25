@@ -1,12 +1,12 @@
-﻿using System;
+﻿using MQTTnet.Adapter;
+using MQTTnet.Exceptions;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using MQTTnet.Adapter;
-using MQTTnet.Exceptions;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Serializer
 {
@@ -17,25 +17,29 @@ namespace MQTTnet.Serializer
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
-        public byte[] Serialize(MqttBasePacket packet)
+        public IEnumerable<ArraySegment<byte>> Serialize(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
-            using (var stream = new MemoryStream())
+            using (var stream = new MemoryStream(128))
             using (var writer = new MqttPacketWriter(stream))
             {
                 var fixedHeader = SerializePacket(packet, writer);
-                var headerBuffer = new List<byte> { fixedHeader };
-                MqttPacketWriter.WriteRemainingLength((int)stream.Length, headerBuffer);
+                var remainingLength = (int)stream.Length;
+                writer.Write(fixedHeader);
+                MqttPacketWriter.WriteRemainingLength(remainingLength, writer);
+                var headerLength = (int)stream.Length - remainingLength;
 
-                var header = headerBuffer.ToArray();
-                var body = stream.ToArray();
-
-                var buffer = new byte[header.Length + body.Length];
-                Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
-                Buffer.BlockCopy(body, 0, buffer, header.Length, body.Length);
-
-                return buffer;
+#if NET461 || NET452 || NETSTANDARD2_0
+                var buffer = stream.GetBuffer();
+#else
+                var buffer = stream.ToArray();
+#endif
+                return new List<ArraySegment<byte>>
+                {
+                    new ArraySegment<byte>(buffer, remainingLength, headerLength),
+                    new ArraySegment<byte>(buffer, 0, remainingLength)
+                };
             }
         }
 

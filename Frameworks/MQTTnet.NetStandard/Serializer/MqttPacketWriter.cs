@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using MQTTnet.Protocol;
@@ -56,11 +55,11 @@ namespace MQTTnet.Serializer
             Write(value);
         }
 
-        public static void WriteRemainingLength(int length, List<byte> target)
+        public static void WriteRemainingLength(int length, BinaryWriter target)
         {
             if (length == 0)
             {
-                target.Add(0);
+                target.Write((byte)0);
                 return;
             }
 
@@ -75,7 +74,7 @@ namespace MQTTnet.Serializer
                     encodedByte = encodedByte | 128;
                 }
 
-                target.Add((byte)encodedByte);
+                target.Write((byte)encodedByte);
             } while (x > 0);
         }
     }

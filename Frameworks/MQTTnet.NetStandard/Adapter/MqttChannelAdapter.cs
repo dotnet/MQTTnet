@@ -60,8 +60,11 @@ namespace MQTTnet.Adapter
 
                         _logger.Trace<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
 
-                        var writeBuffer = PacketSerializer.Serialize(packet);
-                        await _channel.SendStream.WriteAsync(writeBuffer, 0, writeBuffer.Length, cancellationToken).ConfigureAwait(false);
+                        var chunks = PacketSerializer.Serialize(packet);
+                        foreach (var chunk in chunks)
+                        {
+                            await _channel.SendStream.WriteAsync(chunk.Array, chunk.Offset, chunk.Count, cancellationToken).ConfigureAwait(false);
+                        }
                     }
 
                     if (timeout > TimeSpan.Zero)
@@ -114,7 +117,7 @@ namespace MQTTnet.Adapter
                 {
                     receivedMqttPacket?.Dispose();
                 }
-            });
+            }).ConfigureAwait(false);
 
             return packet;
         }
@@ -140,8 +143,8 @@ namespace MQTTnet.Adapter
                 var readBytesCount = await stream.ReadAsync(body, offset, body.Length - offset, cancellationToken).ConfigureAwait(false);
                 offset += readBytesCount;
             } while (offset < header.BodyLength);
-
-            return new ReceivedMqttPacket(header, new MemoryStream(body, 0, body.Length));
+            
+            return new ReceivedMqttPacket(header, new MemoryStream(body, 0, body.Length, false, true));
         }
 
         private static async Task ExecuteAndWrapExceptionAsync(Func<Task> action)

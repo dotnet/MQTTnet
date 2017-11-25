@@ -64,23 +64,23 @@ namespace MQTTnet.Server
             return unsubscribePacket.CreateResponse<MqttUnsubAckPacket>();
         }
 
-        public CheckSubscriptionsResult CheckSubscriptions(MqttPublishPacket publishPacket)
+        public CheckSubscriptionsResult CheckSubscriptions(MqttApplicationMessage applicationMessage)
         {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
             lock (_subscriptions)
             {
                 foreach (var subscription in _subscriptions)
                 {
-                    if (!MqttTopicFilterComparer.IsMatch(publishPacket.Topic, subscription.Key))
+                    if (!MqttTopicFilterComparer.IsMatch(applicationMessage.Topic, subscription.Key))
                     {
                         continue;
                     }
 
                     var effectiveQos = subscription.Value;
-                    if (publishPacket.QualityOfServiceLevel < effectiveQos)
+                    if (applicationMessage.QualityOfServiceLevel < effectiveQos)
                     {
-                        effectiveQos = publishPacket.QualityOfServiceLevel;
+                        effectiveQos = applicationMessage.QualityOfServiceLevel;
                     }
 
                     return new CheckSubscriptionsResult

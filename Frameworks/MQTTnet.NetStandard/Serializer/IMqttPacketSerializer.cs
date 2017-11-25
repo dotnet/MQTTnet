@@ -1,4 +1,6 @@
-﻿using MQTTnet.Adapter;
+﻿using System;
+using System.Collections.Generic;
+using MQTTnet.Adapter;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Serializer
@@ -7,7 +9,7 @@ namespace MQTTnet.Serializer
     {
         MqttProtocolVersion ProtocolVersion { get; set; }
 
-        byte[] Serialize(MqttBasePacket mqttPacket);
+        IEnumerable<ArraySegment<byte>> Serialize(MqttBasePacket mqttPacket);
 
         MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket);
     }

@@ -1,10 +1,8 @@
 ﻿using System;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public class MqttServerOptions
+    public class MqttServerOptions : IMqttServerOptions
     {
         public MqttServerDefaultEndpointOptions DefaultEndpointOptions { get; } = new MqttServerDefaultEndpointOptions();
 
@@ -14,7 +12,7 @@ namespace MQTTnet.Server
         
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(15);
 
-        public Func<MqttConnectPacket, MqttConnectReturnCode> ConnectionValidator { get; set; }
+        public Action<MqttConnectionValidatorContext> ConnectionValidator { get; set; }
 
         public Action<MqttApplicationMessageInterceptorContext> ApplicationMessageInterceptor { get; set; }
 

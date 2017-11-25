@@ -21,7 +21,7 @@ namespace MQTTnet.Implementations
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
-        public async Task StartAsync(MqttServerOptions options)
+        public async Task StartAsync(IMqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

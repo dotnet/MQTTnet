@@ -8,7 +8,7 @@ namespace MQTTnet.Adapter
     {
         event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
-        Task StartAsync(MqttServerOptions options);
+        Task StartAsync(IMqttServerOptions options);
         Task StopAsync();
     }
 }

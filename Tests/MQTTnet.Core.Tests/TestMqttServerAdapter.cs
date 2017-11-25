@@ -62,7 +62,7 @@ namespace MQTTnet.Core.Tests
             ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(adapter));
         }
 
-        public Task StartAsync(MqttServerOptions options)
+        public Task StartAsync(IMqttServerOptions options)
         {
             return Task.FromResult(0);
         }

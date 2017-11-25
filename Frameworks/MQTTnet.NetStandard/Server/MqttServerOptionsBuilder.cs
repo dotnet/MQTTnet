@@ -1,6 +1,4 @@
 ﻿using System;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
@@ -62,7 +60,7 @@ namespace MQTTnet.Server
             return this;
         }
 
-        public MqttServerOptionsBuilder WithConnectionValidator(Func<MqttConnectPacket, MqttConnectReturnCode> value)
+        public MqttServerOptionsBuilder WithConnectionValidator(Action<MqttConnectionValidatorContext> value)
         {
             _options.ConnectionValidator = value;
             return this;
@@ -80,7 +78,7 @@ namespace MQTTnet.Server
             return this;
         }
 
-        public MqttServerOptions Build()
+        public IMqttServerOptions Build()
         {
             return _options;
         }

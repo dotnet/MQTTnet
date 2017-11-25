@@ -13,9 +13,9 @@ namespace MQTTnet.Server
         private readonly Dictionary<string, MqttApplicationMessage> _retainedMessages = new Dictionary<string, MqttApplicationMessage>();
         private readonly SemaphoreSlim _gate = new SemaphoreSlim(1, 1);
         private readonly IMqttNetLogger _logger;
-        private readonly MqttServerOptions _options;
+        private readonly IMqttServerOptions _options;
 
-        public MqttRetainedMessagesManager(MqttServerOptions options, IMqttNetLogger logger)
+        public MqttRetainedMessagesManager(IMqttServerOptions options, IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options ?? throw new ArgumentNullException(nameof(options));

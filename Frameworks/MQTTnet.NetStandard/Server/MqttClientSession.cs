@@ -19,7 +19,7 @@ namespace MQTTnet.Server
         private readonly MqttClientSubscriptionsManager _subscriptionsManager;
         private readonly MqttClientSessionsManager _sessionsManager;
         private readonly MqttClientPendingMessagesQueue _pendingMessagesQueue;
-        private readonly MqttServerOptions _options;
+        private readonly IMqttServerOptions _options;
         private readonly IMqttNetLogger _logger;
 
         private IMqttChannelAdapter _adapter;
@@ -28,7 +28,7 @@ namespace MQTTnet.Server
 
         public MqttClientSession(
             string clientId,
-            MqttServerOptions options,
+            IMqttServerOptions options,
             MqttClientSessionsManager sessionsManager,
             IMqttNetLogger logger)
         {

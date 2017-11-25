@@ -30,7 +30,7 @@ namespace MQTTnet.Implementations
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
-        public Task StartAsync(MqttServerOptions options)
+        public Task StartAsync(IMqttServerOptions options)
         {
             if (_cancellationTokenSource != null) throw new InvalidOperationException("Server is already started.");
 

@@ -16,7 +16,7 @@ namespace MQTTnet.Server
         private MqttClientSessionsManager _clientSessionsManager;
         private MqttRetainedMessagesManager _retainedMessagesManager;
         private CancellationTokenSource _cancellationTokenSource;
-        private MqttServerOptions _options;
+        private IMqttServerOptions _options;
 
         public MqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
         {
@@ -52,7 +52,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public async Task StartAsync(MqttServerOptions options)
+        public async Task StartAsync(IMqttServerOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
 

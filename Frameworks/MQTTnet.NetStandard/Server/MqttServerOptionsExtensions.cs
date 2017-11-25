@@ -4,7 +4,7 @@ namespace MQTTnet.Server
 {
     public static class MqttServerOptionsExtensions
     {
-        public static int GetTlsEndpointPort(this MqttServerOptions options)
+        public static int GetTlsEndpointPort(this IMqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -16,7 +16,7 @@ namespace MQTTnet.Server
             return options.TlsEndpointOptions.Port.Value;
         }
 
-        public static int GetDefaultEndpointPort(this MqttServerOptions options)
+        public static int GetDefaultEndpointPort(this IMqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

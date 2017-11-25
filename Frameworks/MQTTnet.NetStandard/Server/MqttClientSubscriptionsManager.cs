@@ -8,9 +8,9 @@ namespace MQTTnet.Server
     public sealed class MqttClientSubscriptionsManager
     {
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
-        private readonly MqttServerOptions _options;
+        private readonly IMqttServerOptions _options;
 
-        public MqttClientSubscriptionsManager(MqttServerOptions options)
+        public MqttClientSubscriptionsManager(IMqttServerOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }

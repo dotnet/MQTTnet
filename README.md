@@ -49,7 +49,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * .NET Standard 1.3+
 * .NET Core 1.1+
 * .NET Core App 1.1+
-* Universal Windows Platform (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU)
+* Universal Windows Platform (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU, WIndows IoT Core)
 * .NET Framework 4.5.2+ (x86, x64, AnyCPU)
 * Mono 5.2+
 * Xamarin.Android 7.5+

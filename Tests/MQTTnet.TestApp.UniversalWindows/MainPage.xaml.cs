@@ -354,20 +354,23 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                     if (c.ClientId.Length < 10)
                     {
-                        return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        return;
                     }
 
                     if (c.Username != "mySecretUser")
                     {
-                        return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        return;
                     }
 
                     if (c.Password != "mySecretPassword")
                     {
-                        return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        return;
                     }
 
-                    return MqttConnectReturnCode.ConnectionAccepted;
+                    c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
                 };
 
                 var factory = new MqttFactory();
@@ -410,14 +413,15 @@ namespace MQTTnet.TestApp.UniversalWindows
                 };
 
                 options.DefaultEndpointOptions.Port = 1884;
-                options.ConnectionValidator = packet =>
+                options.ConnectionValidator = c =>
                 {
-                    if (packet.ClientId != "Highlander")
+                    if (c.ClientId != "Highlander")
                     {
-                        return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        return;
                     }
 
-                    return MqttConnectReturnCode.ConnectionAccepted;
+                    c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
                 };
 
                 var mqttServer = new MqttFactory().CreateMqttServer();
@@ -432,20 +436,23 @@ namespace MQTTnet.TestApp.UniversalWindows
                     {
                         if (c.ClientId.Length < 10)
                         {
-                            return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                            return;
                         }
 
                         if (c.Username != "mySecretUser")
                         {
-                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            return;
                         }
 
                         if (c.Password != "mySecretPassword")
                         {
-                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            return;
                         }
 
-                        return MqttConnectReturnCode.ConnectionAccepted;
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
                     }
                 };
             }

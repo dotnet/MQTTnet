@@ -13,11 +13,11 @@ namespace MQTTnet.Server
     public sealed class MqttClientPendingMessagesQueue
     {
         private readonly BlockingCollection<MqttPublishPacket> _pendingPublishPackets = new BlockingCollection<MqttPublishPacket>();
-        private readonly MqttServerOptions _options;
+        private readonly IMqttServerOptions _options;
         private readonly MqttClientSession _session;
         private readonly IMqttNetLogger _logger;
 
-        public MqttClientPendingMessagesQueue(MqttServerOptions options, MqttClientSession session, IMqttNetLogger logger)
+        public MqttClientPendingMessagesQueue(IMqttServerOptions options, MqttClientSession session, IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _session = session ?? throw new ArgumentNullException(nameof(session));

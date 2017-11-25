@@ -23,11 +23,9 @@ namespace MQTTnet.TestApp.NetCore
                         {
                             if (p.Username != "USER" || p.Password != "PASS")
                             {
-                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                                p.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
                             }
                         }
-
-                        return MqttConnectReturnCode.ConnectionAccepted;
                     },
 
                     Storage = new RetainedMessageHandler(),

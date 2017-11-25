@@ -18,11 +18,11 @@ namespace MQTTnet.Server
         private readonly Dictionary<string, MqttClientSession> _sessions = new Dictionary<string, MqttClientSession>();
         private readonly SemaphoreSlim _sessionsSemaphore = new SemaphoreSlim(1, 1);
 
-        private readonly MqttServerOptions _options;
+        private readonly IMqttServerOptions _options;
         private readonly MqttRetainedMessagesManager _retainedMessagesManager;
         private readonly IMqttNetLogger _logger;
 
-        public MqttClientSessionsManager(MqttServerOptions options, MqttRetainedMessagesManager retainedMessagesManager, IMqttNetLogger logger)
+        public MqttClientSessionsManager(IMqttServerOptions options, MqttRetainedMessagesManager retainedMessagesManager, IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -174,12 +174,19 @@ namespace MQTTnet.Server
 
         private MqttConnectReturnCode ValidateConnection(MqttConnectPacket connectPacket)
         {
-            if (_options.ConnectionValidator != null)
+            if (_options.ConnectionValidator == null)
             {
-                return _options.ConnectionValidator(connectPacket);
+                return MqttConnectReturnCode.ConnectionAccepted;
             }
+            
+            var context = new MqttConnectionValidatorContext(
+                connectPacket.ClientId,
+                connectPacket.Username,
+                connectPacket.Password,
+                connectPacket.WillMessage);
 
-            return MqttConnectReturnCode.ConnectionAccepted;
+            _options.ConnectionValidator(context);
+            return context.ReturnCode;
         }
 
         private async Task<GetOrCreateClientSessionResult> GetOrCreateClientSessionAsync(MqttConnectPacket connectPacket)

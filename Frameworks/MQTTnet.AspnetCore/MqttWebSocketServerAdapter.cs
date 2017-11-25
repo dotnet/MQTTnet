@@ -12,7 +12,7 @@ namespace MQTTnet.AspNetCore
     {
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
-        public Task StartAsync(MqttServerOptions options)
+        public Task StartAsync(IMqttServerOptions options)
         {
             return Task.CompletedTask;
         }

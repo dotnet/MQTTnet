@@ -9,7 +9,7 @@ namespace MQTTnet.AspNetCore
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, MqttServerOptions options)
+        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, IMqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

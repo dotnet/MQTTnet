@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Serializer;
-using MQTTnet.Core.Server;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using MQTTnet.Serializer;
+using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {

@@ -1,11 +1,11 @@
-﻿using MQTTnet.Core;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.Server;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
+using MQTTnet.Server;
 using Newtonsoft.Json;
 
 namespace MQTTnet.TestApp.NetCore

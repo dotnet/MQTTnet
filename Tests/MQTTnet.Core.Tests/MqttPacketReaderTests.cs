@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Core.Serializer;
+using MQTTnet.Serializer;
 
 namespace MQTTnet.Core.Tests
 {

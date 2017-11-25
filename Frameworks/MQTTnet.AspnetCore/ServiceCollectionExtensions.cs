@@ -1,9 +1,9 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Server;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {

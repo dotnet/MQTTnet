@@ -6,8 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using MQTTnet.AspNetCore;
-using MQTTnet.Core;
-using MQTTnet.Core.Server;
+using MQTTnet.Server;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {

@@ -3,10 +3,10 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Packets;
-using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Serializer;
+using MQTTnet.Adapter;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
+using MQTTnet.Serializer;
 
 namespace MQTTnet.Core.Tests
 {

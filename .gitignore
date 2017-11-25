@@ -291,3 +291,5 @@ __pycache__/
 Build/nuget.exe
 *.js
 *.map
+
+*codeSigningKey.pfx

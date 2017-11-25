@@ -5,10 +5,10 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using MQTTnet.Core.Channel;
-using MQTTnet.Core.Client;
 using System.IO;
 using System.Linq;
+using MQTTnet.Channel;
+using MQTTnet.Client;
 
 namespace MQTTnet.Implementations
 {

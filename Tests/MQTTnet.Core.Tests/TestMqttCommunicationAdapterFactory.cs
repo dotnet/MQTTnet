@@ -1,6 +1,6 @@
-﻿using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.Diagnostics;
+﻿using MQTTnet.Adapter;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Core.Tests
 {

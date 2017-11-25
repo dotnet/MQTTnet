@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Core.Protocol;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Core.Tests
 {

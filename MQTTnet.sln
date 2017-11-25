@@ -1,15 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2008
+VisualStudioVersion = 15.0.27004.2009
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Core.Tests", "Tests\MQTTnet.Core.Tests\MQTTnet.Core.Tests.csproj", "{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{9248C2E1-B9D6-40BF-81EC-86004D7765B4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frameworks", "Frameworks", "{32A630A7-2598-41D7-B625-204CD906F5FB}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Core", "MQTTnet.Core\MQTTnet.Core.csproj", "{2ECB99E4-72D0-4C23-99BA-93D511D3967D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.TestApp.UniversalWindows", "Tests\MQTTnet.TestApp.UniversalWindows\MQTTnet.TestApp.UniversalWindows.csproj", "{FF1F72D6-9524-4422-9497-3CC0002216ED}"
 EndProject
@@ -63,22 +61,6 @@ Global
 		{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}.Release|x64.Build.0 = Release|Any CPU
 		{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}.Release|x86.ActiveCfg = Release|Any CPU
 		{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}.Release|x86.Build.0 = Release|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|ARM.Build.0 = Debug|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|x64.Build.0 = Debug|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Debug|x86.Build.0 = Debug|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Release|ARM.ActiveCfg = Release|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Release|ARM.Build.0 = Release|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Release|x64.ActiveCfg = Release|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Release|x64.Build.0 = Release|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Release|x86.ActiveCfg = Release|Any CPU
-		{2ECB99E4-72D0-4C23-99BA-93D511D3967D}.Release|x86.Build.0 = Release|Any CPU
 		{FF1F72D6-9524-4422-9497-3CC0002216ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FF1F72D6-9524-4422-9497-3CC0002216ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF1F72D6-9524-4422-9497-3CC0002216ED}.Debug|ARM.ActiveCfg = Debug|ARM

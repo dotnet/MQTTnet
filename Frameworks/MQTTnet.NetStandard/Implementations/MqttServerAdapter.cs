@@ -7,10 +7,10 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Server;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Serializer;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using MQTTnet.Serializer;
+using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {

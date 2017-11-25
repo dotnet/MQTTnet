@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MQTTnet.Core;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.ManagedClient;
-using MQTTnet.Core.Protocol;
 using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using MQTTnet.Client;
+using MQTTnet.ManagedClient;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore
 {

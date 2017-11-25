@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using MQTTnet.Core;
-using MQTTnet.Core.Server;
+using MQTTnet.Server;
 using Newtonsoft.Json;
 
 namespace MQTTnet.TestApp.UniversalWindows

@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Core.Exceptions;
-using MQTTnet.Core.Internal;
+using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Core.Tests
 {

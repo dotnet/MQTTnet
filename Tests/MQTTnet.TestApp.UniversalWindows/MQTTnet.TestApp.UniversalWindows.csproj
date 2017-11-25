@@ -131,10 +131,6 @@
       <Project>{3587e506-55a2-4eb3-99c7-dc01e42d25d2}</Project>
       <Name>MQTTnet.NetStandard</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\MQTTnet.Core\MQTTnet.Core.csproj">
-      <Project>{2ecb99e4-72d0-4c23-99ba-93d511d3967d}</Project>
-      <Name>MQTTnet.Core</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">

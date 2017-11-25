@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Packets;
-using MQTTnet.Core.Serializer;
+using MQTTnet.Adapter;
+using MQTTnet.Packets;
+using MQTTnet.Serializer;
 
 namespace MQTTnet.Core.Tests
 {

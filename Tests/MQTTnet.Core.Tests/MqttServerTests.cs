@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
+using MQTTnet.Diagnostics;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
+using MQTTnet.Client;
 
 namespace MQTTnet.Core.Tests
 {

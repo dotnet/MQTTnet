@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
 using MQTTnet.Diagnostics;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
 
 namespace MQTTnet.TestApp.NetCore
 {

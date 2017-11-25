@@ -3,7 +3,7 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Core.Channel;
+using MQTTnet.Channel;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.AspNetCore

@@ -5,13 +5,12 @@ using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using MQTTnet.Core;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.ManagedClient;
-using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
+using MQTTnet.ManagedClient;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
@@ -26,7 +25,7 @@ namespace MQTTnet.TestApp.UniversalWindows
         {
             InitializeComponent();
 
-            MqttNetGlobalLog.LogMessagePublished += OnTraceMessagePublished;
+            MqttNetGlobalLogger.LogMessagePublished += OnTraceMessagePublished;
         }
 
         private async void OnTraceMessagePublished(object sender, MqttNetLogMessagePublishedEventArgs e)
@@ -250,7 +249,7 @@ namespace MQTTnet.TestApp.UniversalWindows
         {
             {
                 // Write all trace messages to the console window.
-                MqttNetGlobalLog.LogMessagePublished += (s, e) =>
+                MqttNetGlobalLogger.LogMessagePublished += (s, e) =>
                 {
                     Console.WriteLine($">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
                     if (e.TraceMessage.Exception != null)

@@ -14,6 +14,8 @@
     <Description />
     <Authors />
     <PackageId />
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>codeSigningKey.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">
@@ -32,10 +34,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" />
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\MQTTnet.Core\MQTTnet.Core.csproj" />
-  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
     <PackageReference Include="System.Net.Security" Version="4.3.2" />

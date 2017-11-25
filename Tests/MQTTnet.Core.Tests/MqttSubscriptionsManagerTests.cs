@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Core.Packets;
-using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
 
 namespace MQTTnet.Core.Tests
 {

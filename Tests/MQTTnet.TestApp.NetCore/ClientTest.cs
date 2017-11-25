@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using MQTTnet.Core;
-using MQTTnet.Core.Client;
+using MQTTnet.Client;
 
 namespace MQTTnet.TestApp.NetCore
 {

@@ -43,33 +43,6 @@ namespace MQTTnet.TestApp.NetCore
 
                 var client = new MqttFactory().CreateMqttClient();
 
-                client.Connected += async (s, e) =>
-                {
-                    Console.WriteLine("### CONNECTED WITH SERVER ###");
-
-                    await client.SubscribeAsync(new List<TopicFilter>
-                    {
-                        new TopicFilter("#")
-                    });
-
-                    Console.WriteLine("### SUBSCRIBED ###");
-                };
-
-                client.Disconnected += async (s, e) =>
-                {
-                    Console.WriteLine("### DISCONNECTED FROM SERVER ###");
-                    await Task.Delay(TimeSpan.FromSeconds(5));
-
-                    try
-                    {
-                        await client.ConnectAsync(options);
-                    }
-                    catch
-                    {
-                        Console.WriteLine("### RECONNECTING FAILED ###");
-                    }
-                };
-
                 try
                 {
                     await client.ConnectAsync(options);
@@ -79,24 +52,12 @@ namespace MQTTnet.TestApp.NetCore
                     Console.WriteLine("### CONNECTING FAILED ###" + Environment.NewLine + exception);
                 }
 
-                Console.WriteLine("### WAITING FOR APPLICATION MESSAGES ###");
-
-                var testMessageCount = 10000;
                 var message = CreateMessage();
-                var stopwatch = Stopwatch.StartNew();
-                for (var i = 0; i < testMessageCount; i++)
-                {
-                    await client.PublishAsync(message);
-                }
-
-                stopwatch.Stop();
-                Console.WriteLine($"Sent 10.000 messages within {stopwatch.ElapsedMilliseconds} ms ({stopwatch.ElapsedMilliseconds / (float)testMessageCount} ms / message).");
-
                 var messages = new[] { message };
+
+                var stopwatch = Stopwatch.StartNew();
+
                 var sentMessagesCount = 0;
-
-                stopwatch.Restart();
-
                 while (stopwatch.ElapsedMilliseconds < 1000)
                 {
                     await client.PublishAsync(messages).ConfigureAwait(false);
@@ -104,6 +65,17 @@ namespace MQTTnet.TestApp.NetCore
                 }
 
                 Console.WriteLine($"Sending {sentMessagesCount} messages per second.");
+                
+                stopwatch.Restart();
+
+                var testMessageCount = 10000;
+                for (var i = 0; i < testMessageCount; i++)
+                {
+                    await client.PublishAsync(message);
+                }
+
+                stopwatch.Stop();
+                Console.WriteLine($"Sent 10.000 messages within {stopwatch.ElapsedMilliseconds} ms ({stopwatch.ElapsedMilliseconds / (float)testMessageCount} ms / message).");
 
                 var last = DateTime.Now;
                 var msgCount = 0;

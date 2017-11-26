@@ -120,6 +120,7 @@ namespace MQTTnet.Server
             await _sessionsSemaphore.WaitAsync().ConfigureAwait(false);
             try
             {
+                var now = DateTime.UtcNow;
                 return _sessions.Where(s => s.Value.IsConnected).Select(s => new ConnectedMqttClient
                 {
                     ClientId = s.Value.ClientId,
@@ -136,13 +137,21 @@ namespace MQTTnet.Server
         {
             try
             {
-                var interceptorContext = new MqttApplicationMessageInterceptorContext
+                if (_options.ApplicationMessageInterceptor != null)
                 {
-                    ApplicationMessage = applicationMessage
-                };
+                    var interceptorContext = new MqttApplicationMessageInterceptorContext
+                    {
+                        ApplicationMessage = applicationMessage
+                    };
 
-                _options.ApplicationMessageInterceptor?.Invoke(interceptorContext);
-                applicationMessage = interceptorContext.ApplicationMessage;
+                    _options.ApplicationMessageInterceptor(interceptorContext);
+                    applicationMessage = interceptorContext.ApplicationMessage;
+                }
+
+                if (applicationMessage == null)
+                {
+                    return;
+                }
 
                 if (applicationMessage.Retain)
                 {

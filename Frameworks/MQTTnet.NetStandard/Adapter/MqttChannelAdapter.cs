@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -171,12 +172,24 @@ namespace MQTTnet.Adapter
             }
             catch (COMException comException)
             {
-                if ((uint)comException.HResult == ErrorOperationAborted)
+                if ((uint) comException.HResult == ErrorOperationAborted)
                 {
                     throw new OperationCanceledException();
                 }
 
                 throw new MqttCommunicationException(comException);
+            }
+            catch (IOException exception)
+            {
+                if (exception.InnerException is SocketException socketException)
+                {
+                    if (socketException.SocketErrorCode == SocketError.ConnectionAborted)
+                    {
+                        throw new OperationCanceledException();
+                    }
+                }
+
+                throw new MqttCommunicationException(exception);
             }
             catch (Exception exception)
             {

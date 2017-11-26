@@ -407,12 +407,14 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             {
                 // Configure MQTT server.
+                var optionsBuilder = new MqttServerOptionsBuilder()
+                    .WithConnectionBacklog(100)
+                    .WithDefaultEndpointPort(1884);
+
                 var options = new MqttServerOptions
                 {
-                    ConnectionBacklog = 100
                 };
 
-                options.DefaultEndpointOptions.Port = 1884;
                 options.ConnectionValidator = c =>
                 {
                     if (c.ClientId != "Highlander")
@@ -425,7 +427,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 };
 
                 var mqttServer = new MqttFactory().CreateMqttServer();
-                await mqttServer.StartAsync(options);
+                await mqttServer.StartAsync(optionsBuilder.Build());
             }
 
             {

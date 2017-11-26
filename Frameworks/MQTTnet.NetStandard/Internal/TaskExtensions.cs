@@ -9,13 +9,15 @@ namespace MQTTnet.Internal
     {
         public static async Task TimeoutAfter(this Task task, TimeSpan timeout)
         {
-            using (var cancellationTokenSource = new CancellationTokenSource())
+            if (task == null) throw new ArgumentNullException(nameof(task));
+
+            using (var timeoutCts = new CancellationTokenSource())
             {
                 try
                 {
-                    var timeoutTask = Task.Delay(timeout, cancellationTokenSource.Token);
+                    var timeoutTask = Task.Delay(timeout, timeoutCts.Token);
                     var finishedTask = await Task.WhenAny(timeoutTask, task).ConfigureAwait(false);
-
+                    
                     if (finishedTask == timeoutTask)
                     {
                         throw new MqttCommunicationTimedOutException();
@@ -33,18 +35,20 @@ namespace MQTTnet.Internal
                 }
                 finally
                 {
-                    cancellationTokenSource.Cancel();
+                    timeoutCts.Cancel();
                 }
             }
         }
 
         public static async Task<TResult> TimeoutAfter<TResult>(this Task<TResult> task, TimeSpan timeout)
         {
-            using (var cancellationTokenSource = new CancellationTokenSource())
+            if (task == null) throw new ArgumentNullException(nameof(task));
+
+            using (var timeoutCts = new CancellationTokenSource())
             {
                 try
                 {
-                    var timeoutTask = Task.Delay(timeout, cancellationTokenSource.Token);
+                    var timeoutTask = Task.Delay(timeout, timeoutCts.Token);
                     var finishedTask = await Task.WhenAny(timeoutTask, task).ConfigureAwait(false);
 
                     if (finishedTask == timeoutTask)
@@ -66,7 +70,7 @@ namespace MQTTnet.Internal
                 }
                 finally
                 {
-                    cancellationTokenSource.Cancel();
+                    timeoutCts.Cancel();
                 }
             }
         }

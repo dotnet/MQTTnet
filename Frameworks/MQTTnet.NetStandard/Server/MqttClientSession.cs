@@ -143,14 +143,14 @@ namespace MQTTnet.Server
 
         private Task ProcessReceivedPacketAsync(IMqttChannelAdapter adapter, MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            if (packet is MqttPingReqPacket)
-            {
-                return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttPingRespPacket());
-            }
-
             if (packet is MqttPublishPacket publishPacket)
             {
                 return HandleIncomingPublishPacketAsync(adapter, publishPacket, cancellationToken);
+            }
+
+            if (packet is MqttPingReqPacket)
+            {
+                return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttPingRespPacket());
             }
 
             if (packet is MqttPubRelPacket pubRelPacket)

@@ -31,23 +31,23 @@ namespace MQTTnet.Adapter
 
         public IMqttPacketSerializer PacketSerializer { get; }
 
-        public async Task ConnectAsync(TimeSpan timeout)
+        public Task ConnectAsync(TimeSpan timeout)
         {
             _logger.Info<MqttChannelAdapter>("Connecting [Timeout={0}]", timeout);
 
-            await ExecuteAndWrapExceptionAsync(() => _channel.ConnectAsync().TimeoutAfter(timeout));
+            return ExecuteAndWrapExceptionAsync(() => _channel.ConnectAsync().TimeoutAfter(timeout));
         }
 
-        public async Task DisconnectAsync(TimeSpan timeout)
+        public Task DisconnectAsync(TimeSpan timeout)
         {
             _logger.Info<MqttChannelAdapter>("Disconnecting [Timeout={0}]", timeout);
 
-            await ExecuteAndWrapExceptionAsync(() => _channel.DisconnectAsync().TimeoutAfter(timeout));
+            return ExecuteAndWrapExceptionAsync(() => _channel.DisconnectAsync().TimeoutAfter(timeout));
         }
 
-        public async Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets)
+        public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets)
         {
-            await ExecuteAndWrapExceptionAsync(async () =>
+            return ExecuteAndWrapExceptionAsync(async () =>
             {
                 await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
                 try

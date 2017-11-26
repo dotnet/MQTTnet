@@ -168,7 +168,7 @@ namespace MQTTnet.Server
 
             lock (_sessions)
             {
-                foreach (var clientSession in _sessions.Values.ToList())
+                foreach (var clientSession in _sessions.Values)
                 {
                     clientSession.EnqueueApplicationMessage(applicationMessage);
                 }

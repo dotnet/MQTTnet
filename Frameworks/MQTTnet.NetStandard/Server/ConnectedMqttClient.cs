@@ -1,4 +1,5 @@
-﻿using MQTTnet.Serializer;
+﻿using System;
+using MQTTnet.Serializer;
 
 namespace MQTTnet.Server
 {
@@ -7,5 +8,9 @@ namespace MQTTnet.Server
         public string ClientId { get; set; }
 
         public MqttProtocolVersion ProtocolVersion { get; set; }
+
+        public TimeSpan LastPacketReceivedDuration { get; set; }
+
+        public TimeSpan LastNonKeepAlivePacketReceivedDuration{ get; set; }
     }
 }

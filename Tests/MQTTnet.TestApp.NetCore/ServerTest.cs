@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using Newtonsoft.Json.Linq;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -63,6 +63,25 @@ namespace MQTTnet.TestApp.NetCore
                 //options.TlsEndpointOptions.IsEnabled = false;
 
                 var mqttServer = new MqttFactory().CreateMqttServer();
+
+                mqttServer.ApplicationMessageReceived += (s, e) =>
+                {
+                    MqttNetConsoleLogger.PrintToConsole(
+                        $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}'",
+                        ConsoleColor.Magenta);
+                };
+
+                options.ApplicationMessageInterceptor = c =>
+                {
+                    var content = JObject.Parse(Encoding.UTF8.GetString(c.ApplicationMessage.Payload));
+                    var timestampProperty = content.Property("timestamp");
+                    if (timestampProperty != null && timestampProperty.Value.Type == JTokenType.Null)
+                    {
+                        timestampProperty.Value = DateTime.Now.ToString("O");
+                        c.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(content.ToString());
+                    }
+                };
+
                 mqttServer.ClientDisconnected += (s, e) =>
                 {
                     Console.Write("Client disconnected event fired.");

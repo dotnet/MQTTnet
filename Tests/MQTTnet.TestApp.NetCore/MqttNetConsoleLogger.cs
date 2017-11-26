@@ -14,6 +14,17 @@ namespace MQTTnet.TestApp.NetCore
             MqttNetGlobalLogger.LogMessagePublished += PrintToConsole;
         }
 
+        public static void PrintToConsole(string message, ConsoleColor color)
+        {
+            lock (Lock)
+            {
+                var backupColor = Console.ForegroundColor;
+                Console.ForegroundColor = color;
+                Console.Write(message);
+                Console.ForegroundColor = backupColor;
+            }
+        }
+
         private static void PrintToConsole(object sender, MqttNetLogMessagePublishedEventArgs e)
         {
             var output = new StringBuilder();
@@ -23,28 +34,24 @@ namespace MQTTnet.TestApp.NetCore
                 output.AppendLine(e.TraceMessage.Exception.ToString());
             }
 
-            lock (Lock)
+            var color = ConsoleColor.Red;
+            switch (e.TraceMessage.Level)
             {
-                var backupColor = Console.ForegroundColor;
-                switch (e.TraceMessage.Level)
-                {
-                    case MqttNetLogLevel.Error:
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        break;
-                    case MqttNetLogLevel.Warning:
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        break;
-                    case MqttNetLogLevel.Info:
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        break;
-                    case MqttNetLogLevel.Verbose:
-                        Console.ForegroundColor = ConsoleColor.Gray;
-                        break;
-                }
-
-                Console.Write(output);
-                Console.ForegroundColor = backupColor;
+                case MqttNetLogLevel.Error:
+                    color = ConsoleColor.Red;
+                    break;
+                case MqttNetLogLevel.Warning:
+                    color = ConsoleColor.Yellow;
+                    break;
+                case MqttNetLogLevel.Info:
+                    color = ConsoleColor.Green;
+                    break;
+                case MqttNetLogLevel.Verbose:
+                    color = ConsoleColor.Gray;
+                    break;
             }
+
+            PrintToConsole(output.ToString(), color);
         }
     }
 }

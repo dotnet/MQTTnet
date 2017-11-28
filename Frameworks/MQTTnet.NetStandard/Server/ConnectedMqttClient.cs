@@ -9,8 +9,8 @@ namespace MQTTnet.Server
 
         public MqttProtocolVersion ProtocolVersion { get; set; }
 
-        public TimeSpan LastPacketReceivedDuration { get; set; }
+        public TimeSpan LastPacketReceived { get; set; }
 
-        public TimeSpan LastNonKeepAlivePacketReceivedDuration{ get; set; }
+        public TimeSpan LastNonKeepAlivePacketReceived { get; set; }
     }
 }

@@ -120,11 +120,12 @@ namespace MQTTnet.Server
             await _sessionsSemaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                var now = DateTime.UtcNow;
                 return _sessions.Where(s => s.Value.IsConnected).Select(s => new ConnectedMqttClient
                 {
                     ClientId = s.Value.ClientId,
-                    ProtocolVersion = s.Value.ProtocolVersion ?? MqttProtocolVersion.V311
+                    ProtocolVersion = s.Value.ProtocolVersion ?? MqttProtocolVersion.V311,
+                    LastPacketReceived = s.Value.LastPacketReceived,
+                    LastNonKeepAlivePacketReceived = s.Value.LastNonKeepAlivePacketReceived
                 }).ToList();
             }
             finally

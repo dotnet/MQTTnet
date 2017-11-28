@@ -33,14 +33,14 @@ namespace MQTTnet.Adapter
 
         public Task ConnectAsync(TimeSpan timeout)
         {
-            _logger.Info<MqttChannelAdapter>("Connecting [Timeout={0}]", timeout);
+            _logger.Trace<MqttChannelAdapter>("Connecting [Timeout={0}]", timeout);
 
             return ExecuteAndWrapExceptionAsync(() => _channel.ConnectAsync().TimeoutAfter(timeout));
         }
 
         public Task DisconnectAsync(TimeSpan timeout)
         {
-            _logger.Info<MqttChannelAdapter>("Disconnecting [Timeout={0}]", timeout);
+            _logger.Trace<MqttChannelAdapter>("Disconnecting [Timeout={0}]", timeout);
 
             return ExecuteAndWrapExceptionAsync(() => _channel.DisconnectAsync().TimeoutAfter(timeout));
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -13,6 +14,9 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientSession
     {
+        private readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
+        private readonly Stopwatch _lastNonKeepAlivePacketReceivedTracker = new Stopwatch();
+
         private readonly MqttClientSubscriptionsManager _subscriptionsManager;
         private readonly MqttClientSessionsManager _sessionsManager;
         private readonly MqttClientPendingMessagesQueue _pendingMessagesQueue;
@@ -44,6 +48,10 @@ namespace MQTTnet.Server
 
         public MqttProtocolVersion? ProtocolVersion => _adapter?.PacketSerializer.ProtocolVersion;
 
+        public TimeSpan LastPacketReceived => _lastPacketReceivedTracker.Elapsed;
+
+        public TimeSpan LastNonKeepAlivePacketReceived => _lastNonKeepAlivePacketReceivedTracker.Elapsed;
+
         public bool IsConnected => _adapter != null;
 
         public async Task RunAsync(MqttApplicationMessage willMessage, IMqttChannelAdapter adapter)
@@ -52,6 +60,9 @@ namespace MQTTnet.Server
 
             try
             {
+                _lastPacketReceivedTracker.Restart();
+                _lastNonKeepAlivePacketReceivedTracker.Restart();
+
                 var cancellationTokenSource = new CancellationTokenSource();
 
                 _willMessage = willMessage;
@@ -78,6 +89,11 @@ namespace MQTTnet.Server
         {
             try
             {
+                if (_cancellationTokenSource == null)
+                {
+                    return;
+                }
+
                 _cancellationTokenSource?.Cancel(false);
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
@@ -143,6 +159,13 @@ namespace MQTTnet.Server
 
         private Task ProcessReceivedPacketAsync(IMqttChannelAdapter adapter, MqttBasePacket packet, CancellationToken cancellationToken)
         {
+            _lastPacketReceivedTracker.Restart();
+
+            if (!(packet is MqttPingReqPacket))
+            {
+                _lastNonKeepAlivePacketReceivedTracker.Restart();
+            }
+
             if (packet is MqttPublishPacket publishPacket)
             {
                 return HandleIncomingPublishPacketAsync(adapter, publishPacket, cancellationToken);
@@ -185,7 +208,7 @@ namespace MQTTnet.Server
             }
 
             _logger.Warning<MqttClientSession>("Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
-            return StopAsync();            
+            return StopAsync();
         }
 
         private async Task HandleIncomingSubscribePacketAsync(IMqttChannelAdapter adapter, MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
@@ -211,7 +234,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task HandleIncomingPublishPacketAsync(IMqttChannelAdapter adapter, MqttPublishPacket publishPacket, CancellationToken cancellationToken)
+        private Task HandleIncomingPublishPacketAsync(IMqttChannelAdapter adapter, MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             var applicationMessage = publishPacket.ToApplicationMessage();
 
@@ -219,36 +242,44 @@ namespace MQTTnet.Server
             {
                 case MqttQualityOfServiceLevel.AtMostOnce:
                     {
-                        await _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage).ConfigureAwait(false);
-                        return;
+                        return _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage);
                     }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                     {
-                        await _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage).ConfigureAwait(false);
-
-                        await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken,
-                            new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier }).ConfigureAwait(false);
-
-                        return;
+                        return HandleIncomingPublishPacketWithQoS1(adapter, applicationMessage, publishPacket, cancellationToken);
                     }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                     {
-                        // QoS 2 is implement as method "B" [4.3.3 QoS 2: Exactly once delivery]
-                        await _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage).ConfigureAwait(false);
-
-                        await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken,
-                            new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier }).ConfigureAwait(false);
-
-                        return;
+                        return HandleIncomingPublishPacketWithQoS2(adapter, applicationMessage, publishPacket, cancellationToken);
                     }
                 default:
-                    throw new MqttCommunicationException("Received a not supported QoS level.");
+                    {
+                        throw new MqttCommunicationException("Received a not supported QoS level.");
+                    }
             }
+        }
+
+        private async Task HandleIncomingPublishPacketWithQoS1(IMqttChannelAdapter adapter, MqttApplicationMessage applicationMessage, MqttPublishPacket publishPacket, CancellationToken cancellationToken)
+        {
+            await _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage).ConfigureAwait(false);
+
+            var response = new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier };
+            await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, response).ConfigureAwait(false);
+        }
+
+        private async Task HandleIncomingPublishPacketWithQoS2(IMqttChannelAdapter adapter, MqttApplicationMessage applicationMessage, MqttPublishPacket publishPacket, CancellationToken cancellationToken)
+        {
+            // QoS 2 is implement as method "B" [4.3.3 QoS 2: Exactly once delivery]
+            await _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage).ConfigureAwait(false);
+
+            var response = new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier };
+            await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, response).ConfigureAwait(false);
         }
 
         private Task HandleIncomingPubRelPacketAsync(IMqttChannelAdapter adapter, MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
         {
-            return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttPubCompPacket { PacketIdentifier = pubRelPacket.PacketIdentifier });
+            var response = new MqttPubCompPacket { PacketIdentifier = pubRelPacket.PacketIdentifier };
+            return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, response);
         }
     }
 }

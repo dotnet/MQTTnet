@@ -10,7 +10,7 @@ namespace MQTTnet.Diagnostics
         {
             _logId = logId;
         }
-        
+
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
         public void Trace<TSource>(string message, params object[] parameters)

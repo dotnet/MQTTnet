@@ -14,8 +14,6 @@ namespace MQTTnet.Client
 {
     public class MqttClient : IMqttClient
     {
-        private readonly HashSet<ushort> _unacknowledgedPublishPackets = new HashSet<ushort>();
-
         private readonly IMqttClientAdapterFactory _adapterFactory;
         private readonly MqttPacketDispatcher _packetDispatcher;
         private readonly IMqttNetLogger _logger;
@@ -133,7 +131,7 @@ namespace MQTTnet.Client
                 TopicFilters = topicFilters.ToList()
             };
 
-            await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket);
+            await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket).ConfigureAwait(false);
         }
 
         public async Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
@@ -141,21 +139,21 @@ namespace MQTTnet.Client
             ThrowIfNotConnected();
 
             var publishPackets = applicationMessages.Select(m => m.ToPublishPacket());
+            var packetGroups = publishPackets.GroupBy(p => p.QualityOfServiceLevel).OrderBy(g => g.Key); 
 
-            foreach (var qosGroup in publishPackets.GroupBy(p => p.QualityOfServiceLevel))
+            foreach (var qosGroup in packetGroups)
             {
-                var qosPackets = qosGroup.ToArray();
                 switch (qosGroup.Key)
                 {
                     case MqttQualityOfServiceLevel.AtMostOnce:
                         {
                             // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
-                            await _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, qosPackets).ConfigureAwait(false);
+                            await _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, qosGroup).ConfigureAwait(false);
                             break;
                         }
                     case MqttQualityOfServiceLevel.AtLeastOnce:
                         {
-                            foreach (var publishPacket in qosPackets)
+                            foreach (var publishPacket in qosGroup)
                             {
                                 publishPacket.PacketIdentifier = GetNewPacketIdentifier();
                                 await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket).ConfigureAwait(false);
@@ -165,7 +163,7 @@ namespace MQTTnet.Client
                         }
                     case MqttQualityOfServiceLevel.ExactlyOnce:
                         {
-                            foreach (var publishPacket in qosPackets)
+                            foreach (var publishPacket in qosGroup)
                             {
                                 publishPacket.PacketIdentifier = GetNewPacketIdentifier();
                                 var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket).ConfigureAwait(false);
@@ -249,28 +247,28 @@ namespace MQTTnet.Client
             try
             {
                 _logger.Info<MqttClient>("Received <<< {0}", packet);
+                
+                if (packet is MqttPublishPacket publishPacket)
+                {
+                    await ProcessReceivedPublishPacketAsync(publishPacket).ConfigureAwait(false);
+                    return;
+                }
 
                 if (packet is MqttPingReqPacket)
                 {
-                    await SendAsync(new MqttPingRespPacket());
+                    await SendAsync(new MqttPingRespPacket()).ConfigureAwait(false);
                     return;
                 }
 
                 if (packet is MqttDisconnectPacket)
                 {
-                    await DisconnectAsync();
-                    return;
-                }
-
-                if (packet is MqttPublishPacket publishPacket)
-                {
-                    await ProcessReceivedPublishPacket(publishPacket);
+                    await DisconnectAsync().ConfigureAwait(false);
                     return;
                 }
 
                 if (packet is MqttPubRelPacket pubRelPacket)
                 {
-                    await ProcessReceivedPubRelPacket(pubRelPacket);
+                    await ProcessReceivedPubRelPacket(pubRelPacket).ConfigureAwait(false);
                     return;
                 }
 
@@ -295,32 +293,25 @@ namespace MQTTnet.Client
             }
         }
 
-        private async Task ProcessReceivedPublishPacket(MqttPublishPacket publishPacket)
+        private Task ProcessReceivedPublishPacketAsync(MqttPublishPacket publishPacket)
         {
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
                 FireApplicationMessageReceivedEvent(publishPacket);
-                return;
+                return Task.FromResult(0);
             }
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
             {
                 FireApplicationMessageReceivedEvent(publishPacket);
-                await SendAsync(new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
-                return;
+                return SendAsync(new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier });
             }
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
             {
                 // QoS 2 is implement as method "B" [4.3.3 QoS 2: Exactly once delivery]
-                lock (_unacknowledgedPublishPackets)
-                {
-                    _unacknowledgedPublishPackets.Add(publishPacket.PacketIdentifier);
-                }
-
                 FireApplicationMessageReceivedEvent(publishPacket);
-                await SendAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
-                return;
+                return SendAsync(new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier });
             }
 
             throw new MqttCommunicationException("Received a not supported QoS level.");
@@ -328,11 +319,6 @@ namespace MQTTnet.Client
 
         private Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket)
         {
-            lock (_unacknowledgedPublishPackets)
-            {
-                _unacknowledgedPublishPackets.Remove(pubRelPacket.PacketIdentifier);
-            }
-
             return SendAsync(pubRelPacket.CreateResponse<MqttPubCompPacket>());
         }
 
@@ -454,7 +440,7 @@ namespace MQTTnet.Client
         {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             Task.Run(
-                () => ProcessReceivedPacketAsync(packet),
+                async () => await ProcessReceivedPacketAsync(packet).ConfigureAwait(false),
                 cancellationToken).ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
@@ -465,7 +451,7 @@ namespace MQTTnet.Client
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             Task.Run(
-                async () => await ReceivePacketsAsync(cancellationToken),
+                async () => await ReceivePacketsAsync(cancellationToken).ConfigureAwait(false),
                 cancellationToken).ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
@@ -479,7 +465,7 @@ namespace MQTTnet.Client
         {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             Task.Run(
-                async () => await SendKeepAliveMessagesAsync(cancellationToken), 
+                async () => await SendKeepAliveMessagesAsync(cancellationToken).ConfigureAwait(false), 
                 cancellationToken).ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }

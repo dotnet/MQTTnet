@@ -9,7 +9,7 @@ namespace MQTTnet.Extensions.Rpc
 {
     public sealed class MqttRpcClient : IDisposable
     {
-        private const string ResponseTopic = "$RPC/+/+/response";
+        private const string ResponseTopic = "$MQTTnet.RPC/+/+/response";
         private readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
         private readonly IMqttClient _mqttClient;
         private bool _isEnabled;

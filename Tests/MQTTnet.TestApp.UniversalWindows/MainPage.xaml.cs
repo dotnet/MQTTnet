@@ -78,6 +78,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 options.ChannelOptions = new MqttClientTcpOptions
                 {
                     Server = Server.Text,
+                    Port = int.Parse(Port.Text),
                     TlsOptions = tlsOptions
                 };
             }

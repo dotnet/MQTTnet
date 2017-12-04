@@ -29,6 +29,7 @@ namespace MQTTnet.TestApp.NetCore
                     },
 
                     Storage = new RetainedMessageHandler(),
+
                     ApplicationMessageInterceptor = context =>
                     {
                         if (MqttTopicFilterComparer.IsMatch(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#"))
@@ -67,18 +68,29 @@ namespace MQTTnet.TestApp.NetCore
                 mqttServer.ApplicationMessageReceived += (s, e) =>
                 {
                     MqttNetConsoleLogger.PrintToConsole(
-                        $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}'",
+                        $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0])}'",
                         ConsoleColor.Magenta);
                 };
 
                 options.ApplicationMessageInterceptor = c =>
                 {
-                    var content = JObject.Parse(Encoding.UTF8.GetString(c.ApplicationMessage.Payload));
-                    var timestampProperty = content.Property("timestamp");
-                    if (timestampProperty != null && timestampProperty.Value.Type == JTokenType.Null)
+                    if (c.ApplicationMessage.Payload == null || c.ApplicationMessage.Payload.Length == 0)
                     {
-                        timestampProperty.Value = DateTime.Now.ToString("O");
-                        c.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(content.ToString());
+                        return;
+                    }
+
+                    try
+                    {
+                        var content = JObject.Parse(Encoding.UTF8.GetString(c.ApplicationMessage.Payload));
+                        var timestampProperty = content.Property("timestamp");
+                        if (timestampProperty != null && timestampProperty.Value.Type == JTokenType.Null)
+                        {
+                            timestampProperty.Value = DateTime.Now.ToString("O");
+                            c.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(content.ToString());
+                        }
+                    }
+                    catch (Exception e)
+                    {
                     }
                 };
 

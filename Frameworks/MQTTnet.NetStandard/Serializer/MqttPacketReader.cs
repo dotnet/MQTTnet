@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -12,15 +12,15 @@ namespace MQTTnet.Serializer
 {
     public sealed class MqttPacketReader : BinaryReader
     {
-        private readonly ReceivedMqttPacket _receivedMqttPacket;
-
-        public MqttPacketReader(ReceivedMqttPacket receivedMqttPacket)
-            : base(receivedMqttPacket.Body, Encoding.UTF8, true)
+        private readonly MqttPacketHeader _header;
+        
+        public MqttPacketReader(MqttPacketHeader header, Stream bodyStream)
+            : base(bodyStream, Encoding.UTF8, true)
         {
-            _receivedMqttPacket = receivedMqttPacket;
+            _header = header;
         }
 
-        public bool EndOfRemainingData => BaseStream.Position == _receivedMqttPacket.Header.BodyLength;
+        public bool EndOfRemainingData => BaseStream.Position == _header.BodyLength;
 
         public static MqttPacketHeader ReadHeaderFromSource(Stream stream, CancellationToken cancellationToken)
         {
@@ -77,7 +77,7 @@ namespace MQTTnet.Serializer
 
         public byte[] ReadRemainingData()
         {
-            return ReadBytes(_receivedMqttPacket.Header.BodyLength - (int)BaseStream.Position);
+            return ReadBytes(_header.BodyLength - (int)BaseStream.Position);
         }
 
         private static int ReadBodyLengthFromSource(Stream stream, CancellationToken cancellationToken)
@@ -87,7 +87,7 @@ namespace MQTTnet.Serializer
             var value = 0;
             byte encodedByte;
 
-            ////var readBytes = new List<int>();
+            var readBytes = new List<byte>();
             do
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -101,15 +101,14 @@ namespace MQTTnet.Serializer
                     throw new MqttCommunicationException("Connection closed while reading remaining length data.");
                 }
 
-                ////readBytes.Add(buffer);
-
                 encodedByte = (byte)buffer;
+                readBytes.Add(encodedByte);
+
                 value += (byte)(encodedByte & 127) * multiplier;
                 multiplier *= 128;
                 if (multiplier > 128 * 128 * 128)
                 {
-                    //throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", readBytes)}).");
-                    throw new MqttProtocolViolationException("Remaining length is invalid.");
+                    throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", readBytes)}).");
                 }
             } while ((encodedByte & 128) != 0);
 

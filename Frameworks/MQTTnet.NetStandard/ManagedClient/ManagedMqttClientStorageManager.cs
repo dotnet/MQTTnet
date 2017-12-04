@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,18 +9,19 @@ namespace MQTTnet.ManagedClient
     {
         private readonly List<MqttApplicationMessage> _applicationMessages = new List<MqttApplicationMessage>();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private IManagedMqttClientStorage _storage;
+        private readonly IManagedMqttClientStorage _storage;
 
-        public async Task SetStorageAsync(IManagedMqttClientStorage storage)
+        public ManagedMqttClientStorageManager(IManagedMqttClientStorage storage)
         {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
-            try
+            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+        }
+
+        public async Task LoadQueuedMessagesAsync()
+        {
+            var loadedMessages = await _storage.LoadQueuedMessagesAsync().ConfigureAwait(false);
+            foreach (var loadedMessage in loadedMessages)
             {
-                _storage = storage;
-            }
-            finally
-            {
-                _semaphore.Release();
+                _applicationMessages.Add(loadedMessage);
             }
         }
 
@@ -28,11 +30,6 @@ namespace MQTTnet.ManagedClient
             await _semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (_storage == null)
-                {
-                    return;
-                }
-
                 _applicationMessages.Add(applicationMessage);
                 await SaveAsync().ConfigureAwait(false);
             }
@@ -47,11 +44,6 @@ namespace MQTTnet.ManagedClient
             await _semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (_storage == null)
-                {
-                    return;
-                }
-
                 var index = _applicationMessages.IndexOf(applicationMessage);
                 if (index == -1)
                 {

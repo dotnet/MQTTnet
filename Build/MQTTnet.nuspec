@@ -14,10 +14,14 @@
 * [Core] Added a strong name for the assembly.
 * [Core] Performance optimizations.
 * [Core] Fixed a logging issue when dealing with IOExceptions.
+* [Core] Fixed a typo in the global logger class (BREAKING CHANGE! Please find new example in Wiki).
 * [Client] Fixed an issue in _ManagedClient_ which can cause the client to stop when publishing subscriptions.
 * [Server] The application message interceptor can now delete any received application message.
-* [Server] Added a ConnectionValidator context to align with other APIs.
+* [Server] Added a ConnectionValidator context to align with other APIs (BREAKING CHANGE! Please find new example in Wiki).
 * [Server] Added an interface for the _MqttServerOptions_.
+* [Server] Added packet statistics for the connected clients.
+* [Server] Fixed a security issue which sends retained packages to a failed subscription.
+* [Server] Fixed the response (MaximumQoS) of a subscription (Thanks to @redbeans2017).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

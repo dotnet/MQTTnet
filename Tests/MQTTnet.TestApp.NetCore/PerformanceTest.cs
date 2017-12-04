@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -64,9 +63,17 @@ namespace MQTTnet.TestApp.NetCore
                     sentMessagesCount++;
                 }
 
-                Console.WriteLine($"Sending {sentMessagesCount} messages per second.");
-                
+                Console.WriteLine($"Sending {sentMessagesCount} messages per second. #1");
+
+                sentMessagesCount = 0;
                 stopwatch.Restart();
+                while (stopwatch.ElapsedMilliseconds < 1000)
+                {
+                    await client.PublishAsync(messages).ConfigureAwait(false);
+                    sentMessagesCount++;
+                }
+
+                Console.WriteLine($"Sending {sentMessagesCount} messages per second. #2");
 
                 var testMessageCount = 10000;
                 for (var i = 0; i < testMessageCount; i++)
@@ -141,8 +148,8 @@ namespace MQTTnet.TestApp.NetCore
             {
                 var mqttServer = new MqttFactory().CreateMqttServer();
 
-                var msgs = 0;
-                var stopwatch = Stopwatch.StartNew();
+                ////var msgs = 0;
+                ////var stopwatch = Stopwatch.StartNew();
                 ////mqttServer.ApplicationMessageReceived += (sender, args) =>
                 ////{
                 ////    msgs++;

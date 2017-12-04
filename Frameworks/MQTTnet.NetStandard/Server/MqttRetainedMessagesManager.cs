@@ -11,7 +11,7 @@ namespace MQTTnet.Server
     public sealed class MqttRetainedMessagesManager
     {
         private readonly Dictionary<string, MqttApplicationMessage> _retainedMessages = new Dictionary<string, MqttApplicationMessage>();
-        private readonly SemaphoreSlim _gate = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IMqttNetLogger _logger;
         private readonly IMqttServerOptions _options;
 
@@ -28,7 +28,7 @@ namespace MQTTnet.Server
                 return;
             }
 
-            await _gate.WaitAsync();
+            await _semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
                 var retainedMessages = await _options.Storage.LoadRetainedMessagesAsync();
@@ -45,7 +45,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _gate.Release();
+                _semaphore.Release();
             }
         }
 
@@ -53,7 +53,7 @@ namespace MQTTnet.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            await _gate.WaitAsync().ConfigureAwait(false);
+            await _semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
                 await HandleMessageInternalAsync(clientId, applicationMessage);
@@ -64,7 +64,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _gate.Release();
+                _semaphore.Release();
             }
         }
 
@@ -72,7 +72,7 @@ namespace MQTTnet.Server
         {
             var retainedMessages = new List<MqttApplicationMessage>();
 
-            await _gate.WaitAsync().ConfigureAwait(false);
+            await _semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
                 foreach (var retainedMessage in _retainedMessages.Values)
@@ -96,7 +96,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _gate.Release();
+                _semaphore.Release();
             }
 
             return retainedMessages;

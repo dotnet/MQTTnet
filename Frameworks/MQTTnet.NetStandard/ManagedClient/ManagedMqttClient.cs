@@ -13,9 +13,9 @@ namespace MQTTnet.ManagedClient
 {
     public class ManagedMqttClient : IManagedMqttClient
     {
-        private readonly ManagedMqttClientStorageManager _storageManager = new ManagedMqttClientStorageManager();
         private readonly BlockingCollection<MqttApplicationMessage> _messageQueue = new BlockingCollection<MqttApplicationMessage>();
         private readonly HashSet<TopicFilter> _subscriptions = new HashSet<TopicFilter>();
+        private readonly SemaphoreSlim _subscriptionsSemaphore = new SemaphoreSlim(1, 1);
 
         private readonly IMqttClient _mqttClient;
         private readonly IMqttNetLogger _logger;
@@ -23,7 +23,9 @@ namespace MQTTnet.ManagedClient
         private CancellationTokenSource _connectionCancellationToken;
         private CancellationTokenSource _publishingCancellationToken;
 
+        private ManagedMqttClientStorageManager _storageManager;
         private IManagedMqttClientOptions _options;
+
         private bool _subscriptionsNotPushed;
         
         public ManagedMqttClient(IMqttClient mqttClient, IMqttNetLogger logger)
@@ -55,15 +57,11 @@ namespace MQTTnet.ManagedClient
             if (_connectionCancellationToken != null) throw new InvalidOperationException("The managed client is already started.");
 
             _options = options;
-            await _storageManager.SetStorageAsync(_options.Storage).ConfigureAwait(false);
-
+            
             if (_options.Storage != null)
             {
-                var loadedMessages = await _options.Storage.LoadQueuedMessagesAsync().ConfigureAwait(false);
-                foreach (var loadedMessage in loadedMessages)
-                {
-                    _messageQueue.Add(loadedMessage);    
-                }
+                _storageManager = new ManagedMqttClientStorageManager(_options.Storage);
+                await _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false);
             }
 
             _connectionCancellationToken = new CancellationTokenSource();
@@ -97,16 +95,21 @@ namespace MQTTnet.ManagedClient
 
             foreach (var applicationMessage in applicationMessages)
             {
-                await _storageManager.AddAsync(applicationMessage).ConfigureAwait(false);
+                if (_storageManager != null)
+                {
+                    await _storageManager.AddAsync(applicationMessage).ConfigureAwait(false);
+                }
+                
                 _messageQueue.Add(applicationMessage);
             }
         }
 
-        public Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
+        public async Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            lock (_subscriptions)
+            await _subscriptionsSemaphore.WaitAsync().ConfigureAwait(false);
+            try
             {
                 foreach (var topicFilter in topicFilters)
                 {
@@ -116,13 +119,16 @@ namespace MQTTnet.ManagedClient
                     }
                 }
             }
-
-            return Task.FromResult(0);
+            finally
+            {
+                _subscriptionsSemaphore.Release();
+            }
         }
 
-        public Task UnsubscribeAsync(IEnumerable<TopicFilter> topicFilters)
+        public async Task UnsubscribeAsync(IEnumerable<TopicFilter> topicFilters)
         {
-            lock (_subscriptions)
+            await _subscriptionsSemaphore.WaitAsync().ConfigureAwait(false);
+            try
             {
                 foreach (var topicFilter in topicFilters)
                 {
@@ -132,8 +138,10 @@ namespace MQTTnet.ManagedClient
                     }
                 }
             }
-
-            return Task.FromResult(0);
+            finally
+            {
+                _subscriptionsSemaphore.Release();
+            }
         }
 
         private async Task MaintainConnectionAsync(CancellationToken cancellationToken)
@@ -242,7 +250,11 @@ namespace MQTTnet.ManagedClient
             try
             {
                 await _mqttClient.PublishAsync(message).ConfigureAwait(false);
-                await _storageManager.RemoveAsync(message).ConfigureAwait(false);
+
+                if (_storageManager != null)
+                {
+                    await _storageManager.RemoveAsync(message).ConfigureAwait(false);
+                }
             }
             catch (MqttCommunicationException exception)
             {
@@ -264,13 +276,18 @@ namespace MQTTnet.ManagedClient
             _logger.Info<ManagedMqttClient>(nameof(ManagedMqttClient), "Synchronizing subscriptions");
 
             List<TopicFilter> subscriptions;
-            lock (_subscriptions)
+            await _subscriptionsSemaphore.WaitAsync().ConfigureAwait(false);
+            try
             {
                 subscriptions = _subscriptions.ToList();
                 _subscriptionsNotPushed = false;
             }
+            finally
+            {
+                _subscriptionsSemaphore.Release();
+            }
 
-            if (!_subscriptions.Any())
+            if (!subscriptions.Any())
             {
                 return;
             }

@@ -2,6 +2,7 @@
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -17,7 +18,8 @@ namespace MQTTnet.TestApp.NetCore
                     CleanSession = true,
                     ChannelOptions = new MqttClientTcpOptions
                     {
-                        Server = "localhost"
+                        //Server = "localhost",
+                        Server = "192.168.1.174"
                     },
                     //ChannelOptions = new MqttClientWebSocketOptions
                     //{
@@ -77,6 +79,8 @@ namespace MQTTnet.TestApp.NetCore
                 while (true)
                 {
                     Console.ReadLine();
+
+                    await client.SubscribeAsync(new TopicFilter("test", MqttQualityOfServiceLevel.AtMostOnce));
 
                     var applicationMessage = new MqttApplicationMessageBuilder()
                         .WithTopic("A/B/C")

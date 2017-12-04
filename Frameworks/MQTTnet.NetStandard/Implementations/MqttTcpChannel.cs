@@ -70,7 +70,7 @@ namespace MQTTnet.Implementations
                 _sslStream = new SslStream(new NetworkStream(_socket, true), false, InternalUserCertificateValidationCallback);
                 await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(_options), SslProtocols.Tls12, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
             }
-
+            
             CreateStreams(_socket, _sslStream);
         }
 
@@ -139,10 +139,7 @@ namespace MQTTnet.Implementations
         private void CreateStreams(Socket socket, Stream sslStream)
         {
             var stream = sslStream ?? new NetworkStream(socket);
-
-            //cannot use this as default buffering prevents from receiving the first connect message
-            //need two streams otherwise read and write have to be synchronized
-
+            
             //todo: if branch can be used with min dependency NetStandard1.6
 #if NET452 || NET461
             SendStream = new BufferedStream(stream, BufferSize);

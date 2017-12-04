@@ -60,11 +60,7 @@ namespace MQTTnet.Server
 
             _cancellationTokenSource = new CancellationTokenSource();
             _retainedMessagesManager = new MqttRetainedMessagesManager(_options, _logger);
-
-            _clientSessionsManager = new MqttClientSessionsManager(_options, _retainedMessagesManager, _logger);
-            _clientSessionsManager.ApplicationMessageReceived += OnApplicationMessageReceived;
-            _clientSessionsManager.ClientConnected += OnClientConnected;
-            _clientSessionsManager.ClientDisconnected += OnClientDisconnected;
+            _clientSessionsManager = new MqttClientSessionsManager(_options, _retainedMessagesManager, this, _logger);
 
             await _retainedMessagesManager.LoadMessagesAsync();
 
@@ -104,40 +100,39 @@ namespace MQTTnet.Server
             finally
             {
                 _cancellationTokenSource = null;
-
                 _retainedMessagesManager = null;
-
-                if (_clientSessionsManager != null)
-                {
-                    _clientSessionsManager.ApplicationMessageReceived -= OnApplicationMessageReceived;
-                    _clientSessionsManager.ClientConnected -= OnClientConnected;
-                    _clientSessionsManager.ClientDisconnected -= OnClientDisconnected;
-                }
-
                 _clientSessionsManager = null;
             }
         }
 
+        internal void OnClientConnected(ConnectedMqttClient client)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            _logger.Info<MqttServer>("Client '{0}': Connected.", client.ClientId);
+            ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(client));
+        }
+
+        internal void OnClientDisconnected(ConnectedMqttClient client)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            _logger.Info<MqttServer>("Client '{0}': Disconnected.", client.ClientId);
+            ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(client));
+        }
+
+        internal void OnApplicationMessageReceived(string clientId, MqttApplicationMessage applicationMessage)
+        {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
+            ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(clientId, applicationMessage));
+        }
+
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
-            eventArgs.SessionTask = Task.Run(async () => await _clientSessionsManager.RunClientSessionAsync(eventArgs.Client, _cancellationTokenSource.Token), _cancellationTokenSource.Token);
-        }
-
-        private void OnClientConnected(object sender, MqttClientConnectedEventArgs eventArgs)
-        {
-            _logger.Info<MqttServer>("Client '{0}': Connected.", eventArgs.Client.ClientId);
-            ClientConnected?.Invoke(this, eventArgs);
-        }
-
-        private void OnClientDisconnected(object sender, MqttClientDisconnectedEventArgs eventArgs)
-        {
-            _logger.Info<MqttServer>("Client '{0}': Disconnected.", eventArgs.Client.ClientId);
-            ClientDisconnected?.Invoke(this, eventArgs);
-        }
-
-        private void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)
-        {
-            ApplicationMessageReceived?.Invoke(this, e);
+            eventArgs.SessionTask = Task.Run(
+                async () => await _clientSessionsManager.RunClientSessionAsync(eventArgs.Client, _cancellationTokenSource.Token).ConfigureAwait(false),
+                _cancellationTokenSource.Token);
         }
     }
 }

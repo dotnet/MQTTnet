@@ -12,7 +12,7 @@ using MQTTnet.Serializer;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientSession
+    public sealed class MqttClientSession : IDisposable
     {
         private readonly Stopwatch _lastPacketReceivedTracker = Stopwatch.StartNew();
         private readonly Stopwatch _lastNonKeepAlivePacketReceivedTracker = Stopwatch.StartNew();
@@ -57,22 +57,29 @@ namespace MQTTnet.Server
 
         public bool IsConnected => _adapter != null;
 
-        public async Task RunAsync(MqttApplicationMessage willMessage, IMqttChannelAdapter adapter)
+        public async Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
+            if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 
             try
             {
-                _lastPacketReceivedTracker.Restart();
-                _lastNonKeepAlivePacketReceivedTracker.Restart();
-
                 var cancellationTokenSource = new CancellationTokenSource();
 
-                _willMessage = willMessage;
+                _willMessage = connectPacket.WillMessage;
                 _adapter = adapter;
                 _cancellationTokenSource = cancellationTokenSource;
 
                 _pendingMessagesQueue.Start(adapter, cancellationTokenSource.Token);
+
+                _lastPacketReceivedTracker.Restart();
+                _lastNonKeepAlivePacketReceivedTracker.Restart();
+
+                if (connectPacket.KeepAlivePeriod > 0)
+                {
+                    StartCheckingKeepAliveTimeout(TimeSpan.FromSeconds(connectPacket.KeepAlivePeriod), cancellationTokenSource.Token);
+                }
+
                 await ReceivePacketsAsync(adapter, cancellationTokenSource.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
@@ -136,6 +143,12 @@ namespace MQTTnet.Server
             _pendingMessagesQueue.Enqueue(publishPacket);
         }
 
+        public void Dispose()
+        {
+            _pendingMessagesQueue?.Dispose();
+            _cancellationTokenSource?.Dispose();
+        }
+
         private async Task ReceivePacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
         {
             try
@@ -143,6 +156,14 @@ namespace MQTTnet.Server
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var packet = await adapter.ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
+
+                    _lastPacketReceivedTracker.Restart();
+
+                    if (!(packet is MqttPingReqPacket))
+                    {
+                        _lastNonKeepAlivePacketReceivedTracker.Restart();
+                    }
+
                     await ProcessReceivedPacketAsync(adapter, packet, cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -163,13 +184,6 @@ namespace MQTTnet.Server
 
         private Task ProcessReceivedPacketAsync(IMqttChannelAdapter adapter, MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            _lastPacketReceivedTracker.Restart();
-
-            if (!(packet is MqttPingReqPacket))
-            {
-                _lastNonKeepAlivePacketReceivedTracker.Restart();
-            }
-
             if (packet is MqttPublishPacket publishPacket)
             {
                 return HandleIncomingPublishPacketAsync(adapter, publishPacket, cancellationToken);
@@ -291,6 +305,43 @@ namespace MQTTnet.Server
         {
             var response = new MqttPubCompPacket { PacketIdentifier = pubRelPacket.PacketIdentifier };
             return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, response);
+        }
+
+        private void StartCheckingKeepAliveTimeout(TimeSpan keepAlivePeriod, CancellationToken cancellationToken)
+        {
+            Task.Run(
+                async () => await CheckKeepAliveTimeoutAsync(keepAlivePeriod, cancellationToken).ConfigureAwait(false)
+                , cancellationToken);
+        }
+
+        private async Task CheckKeepAliveTimeoutAsync(TimeSpan keepAlivePeriod, CancellationToken cancellationToken)
+        {
+            try
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    // Values described here: [MQTT-3.1.2-24].
+                    if (_lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod.TotalSeconds * 1.5D)
+                    {
+                        _logger.Warning<MqttClientSession>("Client '{0}': Did not receive any packet or keep alive signal.", ClientId);
+                        await StopAsync();
+                        return;
+                    }
+
+                    await Task.Delay(keepAlivePeriod, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                _logger.Error<MqttClientSession>(exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", ClientId);
+            }
+            finally
+            {
+                _logger.Trace<MqttClientSession>("Client {0}: Stopped checking keep alive timeout.", ClientId);
+            }
         }
     }
 }

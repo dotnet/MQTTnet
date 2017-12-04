@@ -103,7 +103,8 @@ namespace MQTTnet.TestApp.UniversalWindows
             };
 
             options.CleanSession = CleanSession.IsChecked == true;
-
+            options.KeepAlivePeriod = TimeSpan.FromSeconds(double.Parse(KeepAliveInterval.Text));
+            
             try
             {
                 if (_mqttClient != null)

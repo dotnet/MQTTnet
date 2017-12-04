@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
 {
@@ -13,6 +14,14 @@ namespace MQTTnet.Client
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
             return client.SubscribeAsync(topicFilters.ToList());
+        }
+
+        public static Task<IList<MqttSubscribeResult>> SubscribeAsync(this IMqttClient client, string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (topic == null) throw new ArgumentNullException(nameof(topic));
+
+            return client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
         }
 
         public static Task UnsubscribeAsync(this IMqttClient client, params string[] topicFilters)

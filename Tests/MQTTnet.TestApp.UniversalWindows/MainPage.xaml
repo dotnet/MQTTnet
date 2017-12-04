@@ -19,6 +19,8 @@
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                     <TextBlock>Server:</TextBlock>
                     <TextBox x:Name="Server"></TextBox>
+                    <TextBlock>Port:</TextBlock>
+                    <TextBox x:Name="Port" Text="1883"></TextBox>
                     <TextBlock>User:</TextBlock>
                     <TextBox x:Name="User"></TextBox>
                     <TextBlock>Password:</TextBlock>

@@ -1,12 +1,11 @@
 ﻿using System;
-using System.IO;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Adapter
 {
-    public sealed class ReceivedMqttPacket : IDisposable
+    public class ReceivedMqttPacket
     {
-        public ReceivedMqttPacket(MqttPacketHeader header, MemoryStream body)
+        public ReceivedMqttPacket(MqttPacketHeader header, byte[] body)
         {
             Header = header ?? throw new ArgumentNullException(nameof(header));
             Body = body ?? throw new ArgumentNullException(nameof(body));
@@ -14,11 +13,6 @@ namespace MQTTnet.Adapter
 
         public MqttPacketHeader Header { get; }
 
-        public MemoryStream Body { get; }
-
-        public void Dispose()
-        {
-            Body?.Dispose();
-        }
+        public byte[] Body { get; }
     }
 }

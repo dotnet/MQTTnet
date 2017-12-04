@@ -7,6 +7,8 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
+using MQTTnet.Exceptions;
+using MQTTnet.Extensions.Rpc;
 using MQTTnet.Implementations;
 using MQTTnet.ManagedClient;
 using MQTTnet.Protocol;
@@ -245,6 +247,95 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         // This code is for the Wiki at GitHub!
         // ReSharper disable once UnusedMember.Local
+
+        private async void StartServer(object sender, RoutedEventArgs e)
+        {
+            if (_mqttServer != null)
+            {
+                return;
+            }
+
+            JsonServerStorage storage = null;
+            if (ServerPersistRetainedMessages.IsChecked == true)
+            {
+                storage = new JsonServerStorage();
+
+                if (ServerClearRetainedMessages.IsChecked == true)
+                {
+                    storage.Clear();
+                }
+            }
+
+            _mqttServer = new MqttFactory().CreateMqttServer();
+
+            var options = new MqttServerOptions();
+            options.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
+            options.Storage = storage;
+
+            await _mqttServer.StartAsync(options);
+        }
+
+        private async void StopServer(object sender, RoutedEventArgs e)
+        {
+            if (_mqttServer == null)
+            {
+                return;
+            }
+
+            await _mqttServer.StopAsync();
+            _mqttServer = null;
+        }
+
+        private void ClearReceivedMessages(object sender, RoutedEventArgs e)
+        {
+            ReceivedMessages.Items.Clear();
+        }
+
+        private async void ExecuteRpc(object sender, RoutedEventArgs e)
+        {
+            var qos = MqttQualityOfServiceLevel.AtMostOnce;
+            if (RpcQoS1.IsChecked == true)
+            {
+                qos = MqttQualityOfServiceLevel.AtLeastOnce;
+            }
+
+            if (RpcQoS2.IsChecked == true)
+            {
+                qos = MqttQualityOfServiceLevel.ExactlyOnce;
+            }
+
+            var payload = new byte[0];
+            if (RpcText.IsChecked == true)
+            {
+                payload = Encoding.UTF8.GetBytes(RpcPayload.Text);
+            }
+
+            if (RpcBase64.IsChecked == true)
+            {
+                payload = Convert.FromBase64String(RpcPayload.Text);
+            }
+
+            
+            try
+            {
+                var rpcClient = new MqttRpcClient(_mqttClient);
+                await rpcClient.EnableAsync();
+                var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), RpcMethod.Text, payload, qos);
+                await rpcClient.DisableAsync();
+
+                RpcResponses.Items.Add(RpcMethod.Text + " >>> " + Encoding.UTF8.GetString(response));
+            }
+            catch (MqttCommunicationTimedOutException)
+            {
+                RpcResponses.Items.Add(RpcMethod.Text + " >>> [TIMEOUT]");
+            }
+        }
+
+        private void ClearRpcResponses(object sender, RoutedEventArgs e)
+        {
+            RpcResponses.Items.Clear();
+        }
+
         private async Task WikiCode()
         {
             {
@@ -293,9 +384,9 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                     // Use secure TCP connection.
                     var options = new MqttClientOptionsBuilder()
-                    .WithTcpServer("broker.hivemq.com")
-                    .WithTls()
-                    .Build();
+                        .WithTcpServer("broker.hivemq.com")
+                        .WithTls()
+                        .Build();
                 }
 
                 {
@@ -479,49 +570,6 @@ namespace MQTTnet.TestApp.UniversalWindows
                 await mqttClient.StartAsync(options);
             }
 
-        }
-
-        private async void StartServer(object sender, RoutedEventArgs e)
-        {
-            if (_mqttServer != null)
-            {
-                return;
-            }
-
-            JsonServerStorage storage = null;
-            if (ServerPersistRetainedMessages.IsChecked == true)
-            {
-                storage = new JsonServerStorage();
-
-                if (ServerClearRetainedMessages.IsChecked == true)
-                {
-                    storage.Clear();
-                }
-            }
-
-            _mqttServer = new MqttFactory().CreateMqttServer();
-
-            var options = new MqttServerOptions();
-            options.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
-            options.Storage = storage;
-
-            await _mqttServer.StartAsync(options);
-        }
-
-        private async void StopServer(object sender, RoutedEventArgs e)
-        {
-            if (_mqttServer == null)
-            {
-                return;
-            }
-
-            await _mqttServer.StopAsync();
-            _mqttServer = null;
-        }
-
-        private void ClearReceivedMessages(object sender, RoutedEventArgs e)
-        {
-            ReceivedMessages.Items.Clear();
         }
     }
 }

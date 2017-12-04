@@ -1,5 +1,4 @@
-﻿using MQTTnet.Adapter;
-using MQTTnet.Exceptions;
+﻿using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
@@ -17,7 +16,7 @@ namespace MQTTnet.Serializer
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
-        public IEnumerable<ArraySegment<byte>> Serialize(MqttBasePacket packet)
+        public ICollection<ArraySegment<byte>> Serialize(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
@@ -43,13 +42,15 @@ namespace MQTTnet.Serializer
             }
         }
 
-        public MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket)
+        public MqttBasePacket Deserialize(MqttPacketHeader header, byte[] body)
         {
-            if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
+            if (header == null) throw new ArgumentNullException(nameof(header));
+            if (body == null) throw new ArgumentNullException(nameof(body));
 
-            using (var reader = new MqttPacketReader(receivedMqttPacket))
+            using (var bodyStream = new MemoryStream(body))
+            using (var reader = new MqttPacketReader(header, bodyStream))
             {
-                return Deserialize(receivedMqttPacket.Header, reader);
+                return Deserialize(header, reader);
             }
         }
 

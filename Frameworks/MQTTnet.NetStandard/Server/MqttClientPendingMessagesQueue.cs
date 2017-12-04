@@ -10,9 +10,9 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientPendingMessagesQueue
+    public sealed class MqttClientPendingMessagesQueue : IDisposable
     {
-        private readonly BlockingCollection<MqttPublishPacket> _pendingPublishPackets = new BlockingCollection<MqttPublishPacket>();
+        private readonly BlockingCollection<MqttBasePacket> _queue = new BlockingCollection<MqttBasePacket>();
         private readonly IMqttServerOptions _options;
         private readonly MqttClientSession _session;
         private readonly IMqttNetLogger _logger;
@@ -33,24 +33,24 @@ namespace MQTTnet.Server
                 return;
             }
 
-            Task.Run(async () => await SendPendingPublishPacketsAsync(adapter, cancellationToken), cancellationToken).ConfigureAwait(false);
+            Task.Run(async () => await SendQueuedPacketsAsync(adapter, cancellationToken), cancellationToken).ConfigureAwait(false);
         }
 
-        public void Enqueue(MqttPublishPacket publishPacket)
+        public void Enqueue(MqttBasePacket packet)
         {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+            if (packet == null) throw new ArgumentNullException(nameof(packet));
 
-            _pendingPublishPackets.Add(publishPacket);
+            _queue.Add(packet);
             _logger.Trace<MqttClientPendingMessagesQueue>("Enqueued packet (ClientId: {0}).", _session.ClientId);
         }
 
-        private async Task SendPendingPublishPacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
+        private async Task SendQueuedPacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
         {
             try
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    await SendPendingPublishPacketAsync(adapter, cancellationToken);
+                    await SendQueuedPacketAsync(adapter, cancellationToken);
                 }
             }
             catch (OperationCanceledException)
@@ -62,12 +62,12 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task SendPendingPublishPacketAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
+        private async Task SendQueuedPacketAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
         {
-            MqttPublishPacket packet = null;
+            MqttBasePacket packet = null;
             try
             {
-                packet = _pendingPublishPackets.Take(cancellationToken);
+                packet = _queue.Take(cancellationToken);
                 await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, packet).ConfigureAwait(false);
 
                 _logger.Trace<MqttClientPendingMessagesQueue>("Enqueued packet sent (ClientId: {0}).", _session.ClientId);
@@ -90,14 +90,22 @@ namespace MQTTnet.Server
                     _logger.Error<MqttClientPendingMessagesQueue>(exception, "Sending publish packet failed (ClientId: {0}).", _session.ClientId);
                 }
 
-                if (packet != null && packet.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
+                if (packet is MqttPublishPacket publishPacket)
                 {
-                    packet.Dup = true;
-                    _pendingPublishPackets.Add(packet, CancellationToken.None);
+                    if (publishPacket.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
+                    {
+                        publishPacket.Dup = true;
+                        _queue.Add(packet, CancellationToken.None);
+                    }
                 }
 
                 await _session.StopAsync();
             }
+        }
+
+        public void Dispose()
+        {
+            _queue?.Dispose();
         }
     }
 }

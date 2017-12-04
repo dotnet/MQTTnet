@@ -71,7 +71,6 @@ namespace MQTTnet.Server
             }
 
             _logger.Info<MqttServer>("Started.");
-
             Started?.Invoke(this, new MqttServerStartedEventArgs());
         }
 

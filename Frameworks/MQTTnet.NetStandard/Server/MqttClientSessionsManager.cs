@@ -70,7 +70,7 @@ namespace MQTTnet.Server
                     ProtocolVersion = clientAdapter.PacketSerializer.ProtocolVersion
                 });
 
-                await clientSession.Session.RunAsync(connectPacket.WillMessage, clientAdapter).ConfigureAwait(false);
+                await clientSession.Session.RunAsync(connectPacket, clientAdapter).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -210,9 +210,11 @@ namespace MQTTnet.Server
                 if (isSessionPresent)
                 {
                     if (connectPacket.CleanSession)
-                    {
+                    {   
                         _sessions.Remove(connectPacket.ClientId);
+
                         await clientSession.StopAsync().ConfigureAwait(false);
+                        clientSession.Dispose();
                         clientSession = null;
 
                         _logger.Trace<MqttClientSessionsManager>("Stopped existing session of client '{0}'.", connectPacket.ClientId);

@@ -27,7 +27,9 @@
                     <TextBox x:Name="ClientId"></TextBox>
                     <TextBlock>Clean session:</TextBlock>
                     <CheckBox x:Name="CleanSession" IsChecked="True"></CheckBox>
-
+                    <TextBlock>Keep alive interval:</TextBlock>
+                    <TextBox x:Name="KeepAliveInterval" Text="5"></TextBox>
+                    
                     <StackPanel Orientation="Horizontal">
                         <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="connection">TCP</RadioButton>
                         <RadioButton x:Name="UseWs" GroupName="connection">WS</RadioButton>

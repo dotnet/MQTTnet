@@ -8,7 +8,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {
-    public class MqttWebSocketServerAdapter : IMqttServerAdapter, IDisposable
+    public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter, IDisposable
     {
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 

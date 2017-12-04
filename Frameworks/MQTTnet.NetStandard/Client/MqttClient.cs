@@ -347,13 +347,8 @@ namespace MQTTnet.Client
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    await Task.Delay(_options.KeepAlivePeriod, cancellationToken).ConfigureAwait(false);
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
-
                     await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket()).ConfigureAwait(false);
+                    await Task.Delay(_options.KeepAlivePeriod, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)

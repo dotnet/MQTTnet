@@ -12,7 +12,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
 {
-    public class MqttClient : IMqttClient
+    public class MqttClient : IMqttClient, IDisposable
     {
         private readonly IMqttClientAdapterFactory _adapterFactory;
         private readonly MqttPacketDispatcher _packetDispatcher;
@@ -178,6 +178,11 @@ namespace MQTTnet.Client
                         }
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            _cancellationTokenSource?.Dispose();
         }
 
         private async Task<MqttConnAckPacket> AuthenticateAsync(MqttApplicationMessage willApplicationMessage)

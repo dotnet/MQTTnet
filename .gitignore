@@ -293,3 +293,4 @@ Build/nuget.exe
 *.map
 
 *codeSigningKey.pfx
+/Tests/MQTTnet.TestApp.NetCore/RetainedMessages.json

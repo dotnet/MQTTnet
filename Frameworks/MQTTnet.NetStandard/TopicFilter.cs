@@ -10,14 +10,9 @@ namespace MQTTnet
             QualityOfServiceLevel = qualityOfServiceLevel;
         }
 
-        public string Topic { get; }
+        public string Topic { get; set; }
 
-        public MqttQualityOfServiceLevel QualityOfServiceLevel { get; }
-
-        public override int GetHashCode()
-        {
-            return QualityOfServiceLevel.GetHashCode() ^ (Topic ?? string.Empty).GetHashCode();
-        }
+        public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
 
         public override string ToString()
         {

@@ -16,6 +16,6 @@ namespace MQTTnet.ManagedClient
         Task StopAsync();
 
         Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters);
-        Task UnsubscribeAsync(IEnumerable<TopicFilter> topicFilters);
+        Task UnsubscribeAsync(IEnumerable<string> topics);
     }
 }

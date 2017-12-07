@@ -15,6 +15,7 @@
 * [Core] Performance optimizations.
 * [Core] Fixed a logging issue when dealing with IOExceptions.
 * [Core] Fixed a typo in the global logger class (BREAKING CHANGE! Please find new example in Wiki).
+* [Client] The certificate for encryption is now loaded as a _X509Certificate2_ which prodives more data (Thanks to @cvellan).
 * [Client] Fixed an issue in _ManagedClient_ which can cause the client to stop when publishing subscriptions.
 * [Client] Fixed an issue in _ManagedClient_ which prevents changing the QoS of an existing subscription (BREAKING CHANGE!).
 * [Client] Fixed an issue in _MqttClientOptionsBuilder_ which prevents adding TLS options to the client options when calling _Build()_. (Thanks to @cvellan).

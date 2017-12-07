@@ -130,7 +130,7 @@ namespace MQTTnet.Implementations
 
             foreach (var certificate in options.TlsOptions.Certificates)
             {
-                certificates.Add(new X509Certificate(certificate));
+                certificates.Add(new X509Certificate2(certificate));
             }
 
             return certificates;

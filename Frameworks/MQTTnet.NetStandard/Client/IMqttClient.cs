@@ -15,6 +15,6 @@ namespace MQTTnet.Client
         Task DisconnectAsync();
 
         Task<IList<MqttSubscribeResult>> SubscribeAsync(IEnumerable<TopicFilter> topicFilters);
-        Task UnsubscribeAsync(IEnumerable<string> topicFilters);
+        Task UnsubscribeAsync(IEnumerable<string> topics);
     }
 }

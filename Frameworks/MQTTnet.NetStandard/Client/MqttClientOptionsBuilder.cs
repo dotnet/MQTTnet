@@ -119,11 +119,11 @@ namespace MQTTnet.Client
 
                 if (_tcpOptions != null)
                 {
-                    _options.ChannelOptions = _tcpOptions;
+                    _tcpOptions.TlsOptions = _tlsOptions;
                 }
-                else
+                else if (_webSocketOptions != null)
                 {
-                    _options.ChannelOptions = _webSocketOptions;
+                    _webSocketOptions.TlsOptions = _tlsOptions;
                 }
             }
 

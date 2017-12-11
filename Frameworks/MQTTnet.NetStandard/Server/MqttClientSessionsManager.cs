@@ -136,7 +136,7 @@ namespace MQTTnet.Server
         {
             try
             {
-                applicationMessage = InterceptApplicationMessage(applicationMessage);
+                applicationMessage = InterceptApplicationMessage(senderClientSession, applicationMessage);
                 if (applicationMessage == null)
                 {
                     return;
@@ -168,17 +168,16 @@ namespace MQTTnet.Server
             }
         }
 
-        private MqttApplicationMessage InterceptApplicationMessage(MqttApplicationMessage applicationMessage)
+        private MqttApplicationMessage InterceptApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
         {
             if (_options.ApplicationMessageInterceptor == null)
             {
                 return applicationMessage;
             }
 
-            var interceptorContext = new MqttApplicationMessageInterceptorContext
-            {
-                ApplicationMessage = applicationMessage
-            };
+            var interceptorContext = new MqttApplicationMessageInterceptorContext(
+                senderClientSession.ClientId,
+                applicationMessage);
 
             _options.ApplicationMessageInterceptor(interceptorContext);
             return interceptorContext.ApplicationMessage;
@@ -190,7 +189,7 @@ namespace MQTTnet.Server
             {
                 return MqttConnectReturnCode.ConnectionAccepted;
             }
-            
+
             var context = new MqttConnectionValidatorContext(
                 connectPacket.ClientId,
                 connectPacket.Username,
@@ -210,7 +209,7 @@ namespace MQTTnet.Server
                 if (isSessionPresent)
                 {
                     if (connectPacket.CleanSession)
-                    {   
+                    {
                         _sessions.Remove(connectPacket.ClientId);
 
                         await clientSession.StopAsync().ConfigureAwait(false);

@@ -20,6 +20,7 @@
 * [Client] Fixed an issue in _ManagedClient_ which prevents changing the QoS of an existing subscription (BREAKING CHANGE!).
 * [Client] Fixed an issue in _MqttClientOptionsBuilder_ which prevents adding TLS options to the client options when calling _Build()_. (Thanks to @cvellan).
 * [Client] Added an overload for subscribing at both clients which reduces required code.
+* [Client] Added the _ClientId_ to the application message interceptor context.
 * [Server] The application message interceptor can now delete any received application message.
 * [Server] Added a ConnectionValidator context to align with other APIs (BREAKING CHANGE! Please find new example in Wiki).
 * [Server] Added an interface for the _MqttServerOptions_.

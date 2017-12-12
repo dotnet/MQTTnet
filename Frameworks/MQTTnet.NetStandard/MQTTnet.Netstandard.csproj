@@ -15,9 +15,9 @@
     <Description />
     <Authors />
     <PackageId />
-    <!-- <SignAssembly>true</SignAssembly>
+    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>codeSigningKey.pfx</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign> -->
+    <DelaySign>false</DelaySign>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">

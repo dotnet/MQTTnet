@@ -1,16 +1,20 @@
 ﻿using System;
+using System.Net;
 
 namespace MQTTnet.Server
 {
     public interface IMqttServerOptions
     {
-        Action<MqttApplicationMessageInterceptorContext> ApplicationMessageInterceptor { get; }
         int ConnectionBacklog { get; }
-        Action<MqttConnectionValidatorContext> ConnectionValidator { get; }
         TimeSpan DefaultCommunicationTimeout { get; }
-        MqttServerDefaultEndpointOptions DefaultEndpointOptions { get; }
-        IMqttServerStorage Storage { get; }
+
+        Action<MqttConnectionValidatorContext> ConnectionValidator { get; }
         Action<MqttSubscriptionInterceptorContext> SubscriptionInterceptor { get; }
+        Action<MqttApplicationMessageInterceptorContext> ApplicationMessageInterceptor { get; }
+
+        MqttServerDefaultEndpointOptions DefaultEndpointOptions { get; }
         MqttServerTlsEndpointOptions TlsEndpointOptions { get; }
+
+        IMqttServerStorage Storage { get; }
     }
 }

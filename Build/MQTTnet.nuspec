@@ -29,6 +29,7 @@
 * [Server] Fixed a security issue which sends retained packages to a failed subscription.
 * [Server] Fixed the response (MaximumQoS) of a subscription (Thanks to @redbeans2017).
 * [Server] The keep alive timeouts are now checked for every client (Thanks to @RainerMueller82).
+* [Server] The used IP addresses can be specified now (IPAddress.Any as default).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2017</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

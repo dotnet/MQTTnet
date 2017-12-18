@@ -5,10 +5,10 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using MQTTnet.Core.Channel;
-using MQTTnet.Core.Client;
 using System.IO;
 using System.Linq;
+using MQTTnet.Channel;
+using MQTTnet.Client;
 
 namespace MQTTnet.Implementations
 {
@@ -70,7 +70,7 @@ namespace MQTTnet.Implementations
                 _sslStream = new SslStream(new NetworkStream(_socket, true), false, InternalUserCertificateValidationCallback);
                 await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(_options), SslProtocols.Tls12, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
             }
-
+            
             CreateStreams(_socket, _sslStream);
         }
 
@@ -130,7 +130,7 @@ namespace MQTTnet.Implementations
 
             foreach (var certificate in options.TlsOptions.Certificates)
             {
-                certificates.Add(new X509Certificate(certificate));
+                certificates.Add(new X509Certificate2(certificate));
             }
 
             return certificates;
@@ -139,10 +139,7 @@ namespace MQTTnet.Implementations
         private void CreateStreams(Socket socket, Stream sslStream)
         {
             var stream = sslStream ?? new NetworkStream(socket);
-
-            //cannot use this as default buffering prevents from receiving the first connect message
-            //need two streams otherwise read and write have to be synchronized
-
+            
             //todo: if branch can be used with min dependency NetStandard1.6
 #if NET452 || NET461
             SendStream = new BufferedStream(stream, BufferSize);

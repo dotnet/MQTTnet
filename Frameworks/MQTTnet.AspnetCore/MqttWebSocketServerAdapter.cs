@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Serializer;
-using MQTTnet.Core.Server;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using MQTTnet.Serializer;
+using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {
-    public class MqttWebSocketServerAdapter : IMqttServerAdapter, IDisposable
+    public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter, IDisposable
     {
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
-        public Task StartAsync(MqttServerOptions options)
+        public Task StartAsync(IMqttServerOptions options)
         {
             return Task.CompletedTask;
         }

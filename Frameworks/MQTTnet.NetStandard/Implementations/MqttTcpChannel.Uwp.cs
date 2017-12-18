@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography.Certificates;
-using MQTTnet.Core.Channel;
-using MQTTnet.Core.Client;
+using MQTTnet.Channel;
+using MQTTnet.Client;
 
 namespace MQTTnet.Implementations
 {

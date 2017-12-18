@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Server;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {
     public class MqttHostedServer : MqttServer, IHostedService
     {
-        private readonly MqttServerOptions _options;
+        private readonly IMqttServerOptions _options;
 
-        public MqttHostedServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger) : base(adapters, logger)
+        public MqttHostedServer(IMqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger) : base(adapters, logger)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }

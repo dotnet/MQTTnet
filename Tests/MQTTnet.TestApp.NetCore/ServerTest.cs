@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
-using MQTTnet.Diagnostics;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
+using Newtonsoft.Json.Linq;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -23,14 +23,13 @@ namespace MQTTnet.TestApp.NetCore
                         {
                             if (p.Username != "USER" || p.Password != "PASS")
                             {
-                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                                p.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
                             }
                         }
-
-                        return MqttConnectReturnCode.ConnectionAccepted;
                     },
 
                     Storage = new RetainedMessageHandler(),
+
                     ApplicationMessageInterceptor = context =>
                     {
                         if (MqttTopicFilterComparer.IsMatch(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#"))
@@ -65,6 +64,36 @@ namespace MQTTnet.TestApp.NetCore
                 //options.TlsEndpointOptions.IsEnabled = false;
 
                 var mqttServer = new MqttFactory().CreateMqttServer();
+
+                mqttServer.ApplicationMessageReceived += (s, e) =>
+                {
+                    MqttNetConsoleLogger.PrintToConsole(
+                        $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0])}'",
+                        ConsoleColor.Magenta);
+                };
+
+                options.ApplicationMessageInterceptor = c =>
+                {
+                    if (c.ApplicationMessage.Payload == null || c.ApplicationMessage.Payload.Length == 0)
+                    {
+                        return;
+                    }
+
+                    try
+                    {
+                        var content = JObject.Parse(Encoding.UTF8.GetString(c.ApplicationMessage.Payload));
+                        var timestampProperty = content.Property("timestamp");
+                        if (timestampProperty != null && timestampProperty.Value.Type == JTokenType.Null)
+                        {
+                            timestampProperty.Value = DateTime.Now.ToString("O");
+                            c.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(content.ToString());
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                };
+
                 mqttServer.ClientDisconnected += (s, e) =>
                 {
                     Console.Write("Client disconnected event fired.");

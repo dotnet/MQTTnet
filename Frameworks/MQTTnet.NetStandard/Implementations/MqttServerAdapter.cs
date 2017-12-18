@@ -7,10 +7,10 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Server;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Serializer;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using MQTTnet.Serializer;
+using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
@@ -30,7 +30,7 @@ namespace MQTTnet.Implementations
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
-        public Task StartAsync(MqttServerOptions options)
+        public Task StartAsync(IMqttServerOptions options)
         {
             if (_cancellationTokenSource != null) throw new InvalidOperationException("Server is already started.");
 
@@ -39,10 +39,10 @@ namespace MQTTnet.Implementations
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _defaultEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                _defaultEndpointSocket.Bind(new IPEndPoint(IPAddress.Any, options.GetDefaultEndpointPort()));
+                _defaultEndpointSocket.Bind(new IPEndPoint(options.DefaultEndpointOptions.BoundIPAddress, options.GetDefaultEndpointPort()));
                 _defaultEndpointSocket.Listen(options.ConnectionBacklog);
 
-                Task.Run(() => AcceptDefaultEndpointConnectionsAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
+                Task.Run(async () => await AcceptDefaultEndpointConnectionsAsync(_cancellationTokenSource.Token).ConfigureAwait(false), _cancellationTokenSource.Token).ConfigureAwait(false);
             }
 
             if (options.TlsEndpointOptions.IsEnabled)
@@ -59,10 +59,10 @@ namespace MQTTnet.Implementations
                 }
 
                 _tlsEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                _tlsEndpointSocket.Bind(new IPEndPoint(IPAddress.Any, options.GetTlsEndpointPort()));
+                _tlsEndpointSocket.Bind(new IPEndPoint(options.TlsEndpointOptions.BoundIPAddress, options.GetTlsEndpointPort()));
                 _tlsEndpointSocket.Listen(options.ConnectionBacklog);
 
-                Task.Run(() => AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
+                Task.Run(async () => await AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token).ConfigureAwait(false), _cancellationTokenSource.Token).ConfigureAwait(false);
             }
 
             return Task.FromResult(0);
@@ -102,13 +102,29 @@ namespace MQTTnet.Implementations
 #else
                     var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
 #endif
+
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
+                }
+                catch (ObjectDisposedException)
+                {
+                    // It can happen that the listener socket is accessed after the cancellation token is already set and the listener socket is disposed.
+                }
+                catch (SocketException exception)
+                {
+                    if (exception.SocketErrorCode == SocketError.OperationAborted)
+                    {
+                        return;
+                    }
+
+                    _logger.Error<MqttServerAdapter>(exception, "Error while accepting connection at default endpoint.");
                 }
                 catch (Exception exception)
                 {
                     _logger.Error<MqttServerAdapter>(exception, "Error while accepting connection at default endpoint.");
-
+                }
+                finally
+                {
                     //excessive CPU consumed if in endless loop of socket errors
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
@@ -129,14 +145,29 @@ namespace MQTTnet.Implementations
 
                     var sslStream = new SslStream(new NetworkStream(clientSocket));
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
-
+                    
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
+                }
+                catch (ObjectDisposedException)
+                {
+                    // It can happen that the listener socket is accessed after the cancellation token is already set and the listener socket is disposed.
+                }
+                catch (SocketException exception)
+                {
+                    if (exception.SocketErrorCode == SocketError.OperationAborted)
+                    {
+                        return;
+                    }
+
+                    _logger.Error<MqttServerAdapter>(exception, "Error while accepting connection at default endpoint.");
                 }
                 catch (Exception exception)
                 {
                     _logger.Error<MqttServerAdapter>(exception, "Error while accepting connection at TLS endpoint.");
-
+                }
+                finally
+                {
                     //excessive CPU consumed if in endless loop of socket errors
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }

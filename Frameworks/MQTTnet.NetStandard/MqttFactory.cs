@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Client;
+using MQTTnet.Adapter;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
-using MQTTnet.Core.ManagedClient;
-using MQTTnet.Core.Server;
-using MQTTnet.Core.Diagnostics;
+using MQTTnet.ManagedClient;
+using MQTTnet.Server;
 
 namespace MQTTnet
 {

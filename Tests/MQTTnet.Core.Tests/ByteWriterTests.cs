@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Core.Serializer;
+using MQTTnet.Serializer;
 
 namespace MQTTnet.Core.Tests
 {

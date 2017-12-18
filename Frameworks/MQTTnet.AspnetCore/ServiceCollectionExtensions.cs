@@ -1,15 +1,15 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Server;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, MqttServerOptions options)
+        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, IMqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

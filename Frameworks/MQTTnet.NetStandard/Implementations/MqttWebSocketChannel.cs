@@ -1,11 +1,11 @@
-﻿using MQTTnet.Core.Channel;
-using MQTTnet.Core.Client;
-using System;
+﻿using System;
 using System.IO;
 using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Channel;
+using MQTTnet.Client;
 
 namespace MQTTnet.Implementations
 {

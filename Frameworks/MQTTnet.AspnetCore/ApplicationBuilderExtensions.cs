@@ -1,8 +1,8 @@
 ﻿using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using MQTTnet.Core.Server;
 using System.Linq;
+using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {

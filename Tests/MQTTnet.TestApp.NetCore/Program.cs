@@ -1,11 +1,11 @@
-﻿using MQTTnet.Core;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.Server;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
+using MQTTnet.Server;
 using Newtonsoft.Json;
 
 namespace MQTTnet.TestApp.NetCore
@@ -40,7 +40,7 @@ namespace MQTTnet.TestApp.NetCore
 
             Thread.Sleep(Timeout.Infinite);
         }
-        
+
         // This code is used at the Wiki on GitHub!
         // ReSharper disable once UnusedMember.Local
         private static async void WikiCode()
@@ -70,6 +70,26 @@ namespace MQTTnet.TestApp.NetCore
             {
                 var factory = new MqttFactory();
                 var client = factory.CreateMqttClient();
+            }
+
+            {
+                // Write all trace messages to the console window.
+                MqttNetGlobalLogger.LogMessagePublished += (s, e) =>
+                {
+                    var trace = $">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}";
+                    if (e.TraceMessage.Exception != null)
+                    {
+                        trace += Environment.NewLine + e.TraceMessage.Exception.ToString();
+                    }
+
+                    Console.WriteLine(trace);
+                };
+            }
+
+            {
+                // Use a custom log ID for the logger.
+                var factory = new MqttFactory();
+                var mqttClient = factory.CreateMqttClient(new MqttNetLogger("MyCustomId"));
             }
         }
     }

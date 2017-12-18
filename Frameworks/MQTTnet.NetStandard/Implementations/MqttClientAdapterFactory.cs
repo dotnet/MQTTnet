@@ -1,8 +1,8 @@
 ﻿using System;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Serializer;
+using MQTTnet.Adapter;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
+using MQTTnet.Serializer;
 
 namespace MQTTnet.Implementations
 {

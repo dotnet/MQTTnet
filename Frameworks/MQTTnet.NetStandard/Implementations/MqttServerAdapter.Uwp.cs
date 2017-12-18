@@ -1,11 +1,11 @@
 #if WINDOWS_UWP
 using System;
 using System.Threading.Tasks;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Server;
 using Windows.Networking.Sockets;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Serializer;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using MQTTnet.Serializer;
+using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
@@ -21,7 +21,7 @@ namespace MQTTnet.Implementations
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
-        public async Task StartAsync(MqttServerOptions options)
+        public async Task StartAsync(IMqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

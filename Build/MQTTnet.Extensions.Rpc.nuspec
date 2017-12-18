@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>MQTTnet.Extensions.Rpc</id>
+    <version>2.6.0</version>
+    <authors>Christian Kratky</authors>
+    <owners>Christian Kratky</owners>
+    <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>This is a extension library which allows executing synchronous device calls including a response using MQTTnet.</description>
+    <releaseNotes>* Initial version.
+    </releaseNotes>
+    <copyright>Copyright Christian Kratky 2016-2017</copyright>
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
+    <dependencies>
+      <group targetFramework="netstandard2.0">
+        <dependency id="MQTTnet" version="2.6.0-rc1" />
+      </group>
+      <group targetFramework="netstandard1.3">
+        <dependency id="MQTTnet" version="2.6.0-rc1" />  
+      </group>
+
+      <group targetFramework="netstandard2.0">
+        <dependency id="MQTTnet" version="2.6.0-rc1" />
+      </group>
+      
+      <group targetFramework="uap10.0">
+        <dependency id="MQTTnet" version="2.6.0-rc1" />
+      </group>
+        
+      <group targetFramework="net452">
+        <dependency id="MQTTnet" version="2.6.0-rc1" />
+      </group>
+
+      <group targetFramework="net461">
+        <dependency id="MQTTnet" version="2.6.0-rc1" />
+      </group>
+    </dependencies>
+  </metadata>
+
+  <files>
+    <!-- .NET Standard 2.0 -->
+    <file src="..\Frameworks\MQTTnet.AspNetCore\bin\Release\netstandard2.0\MQTTnet.AspNetCore.*" target="lib\netstandard2.0\"/>
+  </files>
+</package>

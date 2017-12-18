@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MQTTnet.Core;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.ManagedClient;
-using MQTTnet.Core.Protocol;
 using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using MQTTnet.Client;
+using MQTTnet.ManagedClient;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -46,7 +45,8 @@ namespace MQTTnet.TestApp.NetCore
                 await managedClient.StartAsync(options);
 
                 await managedClient.SubscribeAsync(new TopicFilter("xyz", MqttQualityOfServiceLevel.AtMostOnce));
-
+                await managedClient.SubscribeAsync(new TopicFilter("abc", MqttQualityOfServiceLevel.AtMostOnce));
+                
                 await managedClient.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("Step").WithPayload("3").Build());
 
                 Console.WriteLine("Managed client started.");

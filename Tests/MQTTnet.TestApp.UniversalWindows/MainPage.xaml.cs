@@ -5,13 +5,14 @@ using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using MQTTnet.Core;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.ManagedClient;
-using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
+using MQTTnet.Exceptions;
+using MQTTnet.Extensions.Rpc;
 using MQTTnet.Implementations;
+using MQTTnet.ManagedClient;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
@@ -26,7 +27,7 @@ namespace MQTTnet.TestApp.UniversalWindows
         {
             InitializeComponent();
 
-            MqttNetGlobalLog.LogMessagePublished += OnTraceMessagePublished;
+            MqttNetGlobalLogger.LogMessagePublished += OnTraceMessagePublished;
         }
 
         private async void OnTraceMessagePublished(object sender, MqttNetLogMessagePublishedEventArgs e)
@@ -77,6 +78,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 options.ChannelOptions = new MqttClientTcpOptions
                 {
                     Server = Server.Text,
+                    Port = int.Parse(Port.Text),
                     TlsOptions = tlsOptions
                 };
             }
@@ -102,7 +104,8 @@ namespace MQTTnet.TestApp.UniversalWindows
             };
 
             options.CleanSession = CleanSession.IsChecked == true;
-
+            options.KeepAlivePeriod = TimeSpan.FromSeconds(double.Parse(KeepAliveInterval.Text));
+            
             try
             {
                 if (_mqttClient != null)
@@ -246,11 +249,100 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         // This code is for the Wiki at GitHub!
         // ReSharper disable once UnusedMember.Local
+
+        private async void StartServer(object sender, RoutedEventArgs e)
+        {
+            if (_mqttServer != null)
+            {
+                return;
+            }
+
+            JsonServerStorage storage = null;
+            if (ServerPersistRetainedMessages.IsChecked == true)
+            {
+                storage = new JsonServerStorage();
+
+                if (ServerClearRetainedMessages.IsChecked == true)
+                {
+                    storage.Clear();
+                }
+            }
+
+            _mqttServer = new MqttFactory().CreateMqttServer();
+
+            var options = new MqttServerOptions();
+            options.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
+            options.Storage = storage;
+
+            await _mqttServer.StartAsync(options);
+        }
+
+        private async void StopServer(object sender, RoutedEventArgs e)
+        {
+            if (_mqttServer == null)
+            {
+                return;
+            }
+
+            await _mqttServer.StopAsync();
+            _mqttServer = null;
+        }
+
+        private void ClearReceivedMessages(object sender, RoutedEventArgs e)
+        {
+            ReceivedMessages.Items.Clear();
+        }
+
+        private async void ExecuteRpc(object sender, RoutedEventArgs e)
+        {
+            var qos = MqttQualityOfServiceLevel.AtMostOnce;
+            if (RpcQoS1.IsChecked == true)
+            {
+                qos = MqttQualityOfServiceLevel.AtLeastOnce;
+            }
+
+            if (RpcQoS2.IsChecked == true)
+            {
+                qos = MqttQualityOfServiceLevel.ExactlyOnce;
+            }
+
+            var payload = new byte[0];
+            if (RpcText.IsChecked == true)
+            {
+                payload = Encoding.UTF8.GetBytes(RpcPayload.Text);
+            }
+
+            if (RpcBase64.IsChecked == true)
+            {
+                payload = Convert.FromBase64String(RpcPayload.Text);
+            }
+
+            
+            try
+            {
+                var rpcClient = new MqttRpcClient(_mqttClient);
+                await rpcClient.EnableAsync();
+                var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), RpcMethod.Text, payload, qos);
+                await rpcClient.DisableAsync();
+
+                RpcResponses.Items.Add(RpcMethod.Text + " >>> " + Encoding.UTF8.GetString(response));
+            }
+            catch (MqttCommunicationTimedOutException)
+            {
+                RpcResponses.Items.Add(RpcMethod.Text + " >>> [TIMEOUT]");
+            }
+        }
+
+        private void ClearRpcResponses(object sender, RoutedEventArgs e)
+        {
+            RpcResponses.Items.Clear();
+        }
+
         private async Task WikiCode()
         {
             {
                 // Write all trace messages to the console window.
-                MqttNetGlobalLog.LogMessagePublished += (s, e) =>
+                MqttNetGlobalLogger.LogMessagePublished += (s, e) =>
                 {
                     Console.WriteLine($">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
                     if (e.TraceMessage.Exception != null)
@@ -294,9 +386,9 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                     // Use secure TCP connection.
                     var options = new MqttClientOptionsBuilder()
-                    .WithTcpServer("broker.hivemq.com")
-                    .WithTls()
-                    .Build();
+                        .WithTcpServer("broker.hivemq.com")
+                        .WithTls()
+                        .Build();
                 }
 
                 {
@@ -355,20 +447,23 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                     if (c.ClientId.Length < 10)
                     {
-                        return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        return;
                     }
 
                     if (c.Username != "mySecretUser")
                     {
-                        return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        return;
                     }
 
                     if (c.Password != "mySecretPassword")
                     {
-                        return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        return;
                     }
 
-                    return MqttConnectReturnCode.ConnectionAccepted;
+                    c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
                 };
 
                 var factory = new MqttFactory();
@@ -405,24 +500,27 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             {
                 // Configure MQTT server.
+                var optionsBuilder = new MqttServerOptionsBuilder()
+                    .WithConnectionBacklog(100)
+                    .WithDefaultEndpointPort(1884);
+
                 var options = new MqttServerOptions
                 {
-                    ConnectionBacklog = 100
                 };
 
-                options.DefaultEndpointOptions.Port = 1884;
-                options.ConnectionValidator = packet =>
+                options.ConnectionValidator = c =>
                 {
-                    if (packet.ClientId != "Highlander")
+                    if (c.ClientId != "Highlander")
                     {
-                        return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        return;
                     }
 
-                    return MqttConnectReturnCode.ConnectionAccepted;
+                    c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
                 };
 
                 var mqttServer = new MqttFactory().CreateMqttServer();
-                await mqttServer.StartAsync(options);
+                await mqttServer.StartAsync(optionsBuilder.Build());
             }
 
             {
@@ -433,20 +531,23 @@ namespace MQTTnet.TestApp.UniversalWindows
                     {
                         if (c.ClientId.Length < 10)
                         {
-                            return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                            return;
                         }
 
                         if (c.Username != "mySecretUser")
                         {
-                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            return;
                         }
 
                         if (c.Password != "mySecretPassword")
                         {
-                            return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            return;
                         }
 
-                        return MqttConnectReturnCode.ConnectionAccepted;
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
                     }
                 };
             }
@@ -471,49 +572,6 @@ namespace MQTTnet.TestApp.UniversalWindows
                 await mqttClient.StartAsync(options);
             }
 
-        }
-
-        private async void StartServer(object sender, RoutedEventArgs e)
-        {
-            if (_mqttServer != null)
-            {
-                return;
-            }
-
-            JsonServerStorage storage = null;
-            if (ServerPersistRetainedMessages.IsChecked == true)
-            {
-                storage = new JsonServerStorage();
-
-                if (ServerClearRetainedMessages.IsChecked == true)
-                {
-                    storage.Clear();
-                }
-            }
-
-            _mqttServer = new MqttFactory().CreateMqttServer();
-
-            var options = new MqttServerOptions();
-            options.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
-            options.Storage = storage;
-
-            await _mqttServer.StartAsync(options);
-        }
-
-        private async void StopServer(object sender, RoutedEventArgs e)
-        {
-            if (_mqttServer == null)
-            {
-                return;
-            }
-
-            await _mqttServer.StopAsync();
-            _mqttServer = null;
-        }
-
-        private void ClearReceivedMessages(object sender, RoutedEventArgs e)
-        {
-            ReceivedMessages.Items.Clear();
         }
     }
 }

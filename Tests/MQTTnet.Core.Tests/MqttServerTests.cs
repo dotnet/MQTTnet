@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
+using MQTTnet.Diagnostics;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
+using MQTTnet.Client;
 
 namespace MQTTnet.Core.Tests
 {
@@ -62,7 +62,7 @@ namespace MQTTnet.Core.Tests
                 var c2 = await serverAdapter.ConnectTestClient(s, "c2", willMessage);
 
                 c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
-                await c1.SubscribeAsync(new TopicFilter("#"));
+                await c1.SubscribeAsync(new TopicFilterBuilder().WithTopic("#").Build());
 
                 await c2.DisconnectAsync();
 
@@ -167,7 +167,7 @@ namespace MQTTnet.Core.Tests
 
                 var c2 = await serverAdapter.ConnectTestClient(s, "c2");
                 c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
-                await c2.SubscribeAsync(new TopicFilter("retained"));
+                await c2.SubscribeAsync(new TopicFilterBuilder().WithTopic("retained").Build());
 
                 await Task.Delay(500);
             }
@@ -199,7 +199,7 @@ namespace MQTTnet.Core.Tests
 
                 var c2 = await serverAdapter.ConnectTestClient(s, "c2");
                 c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
-                await c2.SubscribeAsync(new TopicFilter("retained"));
+                await c2.SubscribeAsync(new TopicFilterBuilder().WithTopic("retained").Build());
 
                 await Task.Delay(500);
             }
@@ -277,7 +277,7 @@ namespace MQTTnet.Core.Tests
 
                 var c2 = await serverAdapter.ConnectTestClient(s, "c2");
                 c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
-                await c2.SubscribeAsync(new TopicFilter("retained"));
+                await c2.SubscribeAsync(new TopicFilterBuilder().WithTopic("retained").Build());
 
                 await Task.Delay(500);
             }

@@ -12,7 +12,8 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientPendingMessagesQueue : IDisposable
     {
-        private readonly BlockingCollection<MqttBasePacket> _queue = new BlockingCollection<MqttBasePacket>();
+        private readonly ConcurrentQueue<MqttBasePacket> _queue = new ConcurrentQueue<MqttBasePacket>();
+        private readonly SemaphoreSlim _queueWaitSemaphore = new SemaphoreSlim(0);
         private readonly IMqttServerOptions _options;
         private readonly MqttClientSession _session;
         private readonly IMqttNetLogger _logger;
@@ -40,7 +41,8 @@ namespace MQTTnet.Server
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
-            _queue.Add(packet);
+            _queue.Enqueue(packet);
+            _queueWaitSemaphore.Release();
             _logger.Trace<MqttClientPendingMessagesQueue>("Enqueued packet (ClientId: {0}).", _session.ClientId);
         }
 
@@ -67,7 +69,10 @@ namespace MQTTnet.Server
             MqttBasePacket packet = null;
             try
             {
-                packet = _queue.Take(cancellationToken);
+                await _queueWaitSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                if (!_queue.TryDequeue(out packet)) {
+                    throw new InvalidOperationException(); // should not happen
+                }
                 await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, packet).ConfigureAwait(false);
 
                 _logger.Trace<MqttClientPendingMessagesQueue>("Enqueued packet sent (ClientId: {0}).", _session.ClientId);
@@ -95,7 +100,8 @@ namespace MQTTnet.Server
                     if (publishPacket.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
                     {
                         publishPacket.Dup = true;
-                        _queue.Add(packet, CancellationToken.None);
+                        _queue.Enqueue(packet);
+                        _queueWaitSemaphore.Release();
                     }
                 }
 
@@ -105,7 +111,7 @@ namespace MQTTnet.Server
 
         public void Dispose()
         {
-            _queue?.Dispose();
+            _queueWaitSemaphore?.Dispose();
         }
     }
 }

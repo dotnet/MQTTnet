@@ -110,22 +110,14 @@ namespace MQTTnet.Implementations
                 {
                     // It can happen that the listener socket is accessed after the cancellation token is already set and the listener socket is disposed.
                 }
-                catch (SocketException exception)
+                catch (Exception exception)
                 {
-                    if (exception.SocketErrorCode == SocketError.OperationAborted)
+                    if (exception is SocketException s && s.SocketErrorCode == SocketError.OperationAborted)
                     {
                         return;
                     }
 
                     _logger.Error<MqttServerAdapter>(exception, "Error while accepting connection at default endpoint.");
-                }
-                catch (Exception exception)
-                {
-                    _logger.Error<MqttServerAdapter>(exception, "Error while accepting connection at default endpoint.");
-                }
-                finally
-                {
-                    //excessive CPU consumed if in endless loop of socket errors
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -153,22 +145,14 @@ namespace MQTTnet.Implementations
                 {
                     // It can happen that the listener socket is accessed after the cancellation token is already set and the listener socket is disposed.
                 }
-                catch (SocketException exception)
+                catch (Exception exception)
                 {
-                    if (exception.SocketErrorCode == SocketError.OperationAborted)
+                    if (exception is SocketException s && s.SocketErrorCode == SocketError.OperationAborted)
                     {
                         return;
                     }
 
-                    _logger.Error<MqttServerAdapter>(exception, "Error while accepting connection at default endpoint.");
-                }
-                catch (Exception exception)
-                {
                     _logger.Error<MqttServerAdapter>(exception, "Error while accepting connection at TLS endpoint.");
-                }
-                finally
-                {
-                    //excessive CPU consumed if in endless loop of socket errors
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }

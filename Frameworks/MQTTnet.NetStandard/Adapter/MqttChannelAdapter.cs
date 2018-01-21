@@ -120,7 +120,7 @@ namespace MQTTnet.Adapter
 
         private static async Task<ReceivedMqttPacket> ReceiveAsync(Stream stream, CancellationToken cancellationToken)
         {
-            var header = MqttPacketReader.ReadHeaderFromSource(stream, cancellationToken);
+            var header = await MqttPacketReader.ReadHeaderFromSourceAsync(stream, cancellationToken).ConfigureAwait(false);
             if (header == null)
             {
                 return null;

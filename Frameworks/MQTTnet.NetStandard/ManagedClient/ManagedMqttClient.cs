@@ -11,7 +11,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.ManagedClient
 {
-    public class ManagedMqttClient : IManagedMqttClient, IDisposable
+    public class ManagedMqttClient : IManagedMqttClient
     {
         private readonly BlockingCollection<MqttApplicationMessage> _messageQueue = new BlockingCollection<MqttApplicationMessage>();
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();

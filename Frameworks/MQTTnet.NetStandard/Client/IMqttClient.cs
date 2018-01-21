@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Client
 {
-    public interface IMqttClient : IApplicationMessageReceiver, IApplicationMessagePublisher
+    public interface IMqttClient : IApplicationMessageReceiver, IApplicationMessagePublisher, IDisposable
     {
         bool IsConnected { get; }
 

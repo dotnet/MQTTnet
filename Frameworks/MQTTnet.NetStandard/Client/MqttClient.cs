@@ -12,7 +12,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
 {
-    public class MqttClient : IMqttClient, IDisposable
+    public class MqttClient : IMqttClient
     {
         private readonly IMqttClientAdapterFactory _adapterFactory;
         private readonly MqttPacketDispatcher _packetDispatcher;

@@ -22,17 +22,18 @@ namespace MQTTnet.Serializer
 
         public bool EndOfRemainingData => BaseStream.Position == _header.BodyLength;
 
-        public static MqttPacketHeader ReadHeaderFromSource(Stream stream, CancellationToken cancellationToken)
+        public static async Task<MqttPacketHeader> ReadHeaderFromSourceAsync(Stream stream, CancellationToken cancellationToken)
         {
-            var buffer = stream.ReadByte();
-            if (buffer == -1)
+            byte[] singleByteBuf = new byte[1];
+            var readCount = await stream.ReadAsync(singleByteBuf, 0, singleByteBuf.Length).ConfigureAwait(false);
+            if (readCount <= 0)
             {
                 return null;
             }
-            
-            var fixedHeader = (byte)buffer;
+
+            var fixedHeader = singleByteBuf[0];
             var controlPacketType = (MqttControlPacketType)(fixedHeader >> 4);
-            var bodyLength = ReadBodyLengthFromSource(stream, cancellationToken);
+            var bodyLength = await ReadBodyLengthFromSourceAsync(stream, cancellationToken).ConfigureAwait(false);
 
             return new MqttPacketHeader
             {
@@ -80,12 +81,14 @@ namespace MQTTnet.Serializer
             return ReadBytes(_header.BodyLength - (int)BaseStream.Position);
         }
 
-        private static int ReadBodyLengthFromSource(Stream stream, CancellationToken cancellationToken)
+        private static async Task<int> ReadBodyLengthFromSourceAsync(Stream stream, CancellationToken cancellationToken)
         {
             // Alorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
             var multiplier = 1;
             var value = 0;
             byte encodedByte;
+
+            byte[] singleByteBuf = new byte[1];
 
             var readBytes = new List<byte>();
             do
@@ -95,13 +98,13 @@ namespace MQTTnet.Serializer
                     throw new TaskCanceledException();
                 }
 
-                var buffer = stream.ReadByte();
-                if (buffer == -1)
+                int readCount = await stream.ReadAsync(singleByteBuf, 0, singleByteBuf.Length).ConfigureAwait(false);
+                if (readCount <= 0)
                 {
                     throw new MqttCommunicationException("Connection closed while reading remaining length data.");
                 }
 
-                encodedByte = (byte)buffer;
+                encodedByte = singleByteBuf[0];
                 readBytes.Add(encodedByte);
 
                 value += (byte)(encodedByte & 127) * multiplier;

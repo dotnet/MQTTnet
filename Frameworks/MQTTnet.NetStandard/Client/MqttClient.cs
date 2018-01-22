@@ -75,7 +75,8 @@ namespace MQTTnet.Client
             catch (Exception exception)
             {
                 _logger.Error<MqttClient>(exception, "Error while connecting with server.");
-                await DisconnectInternalAsync().ConfigureAwait(false);
+                await DisconnectInternalAsync(exception).ConfigureAwait(false);
+
                 throw;
             }
         }
@@ -93,7 +94,7 @@ namespace MQTTnet.Client
             }
             finally
             {
-                await DisconnectInternalAsync().ConfigureAwait(false);
+                await DisconnectInternalAsync(null).ConfigureAwait(false);
             }
         }
 
@@ -216,7 +217,7 @@ namespace MQTTnet.Client
             if (IsConnected) throw new MqttProtocolViolationException(message);
         }
 
-        private async Task DisconnectInternalAsync()
+        private async Task DisconnectInternalAsync(Exception exception)
         {
             var clientWasConnected = IsConnected;
             IsConnected = false;
@@ -236,14 +237,14 @@ namespace MQTTnet.Client
                 await _adapter.DisconnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
                 _logger.Info<MqttClient>("Disconnected from adapter.");
             }
-            catch (Exception exception)
+            catch (Exception adapterException)
             {
-                _logger.Warning<MqttClient>(exception, "Error while disconnecting from adapter.");
+                _logger.Warning<MqttClient>(adapterException, "Error while disconnecting from adapter.");
             }
             finally
             {
                 _logger.Info<MqttClient>("Disconnected.");
-                Disconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientWasConnected));
+                Disconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientWasConnected, exception));
             }
         }
 
@@ -363,7 +364,7 @@ namespace MQTTnet.Client
                     return;
                 }
 
-                await DisconnectInternalAsync().ConfigureAwait(false);
+                await DisconnectInternalAsync(null).ConfigureAwait(false);
             }
             catch (MqttCommunicationException exception)
             {
@@ -373,12 +374,12 @@ namespace MQTTnet.Client
                 }
 
                 _logger.Warning<MqttClient>(exception, "MQTT communication exception while sending/receiving keep alive packets.");
-                await DisconnectInternalAsync().ConfigureAwait(false);
+                await DisconnectInternalAsync(exception).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 _logger.Warning<MqttClient>(exception, "Unhandled exception while sending/receiving keep alive packets.");
-                await DisconnectInternalAsync().ConfigureAwait(false);
+                await DisconnectInternalAsync(exception).ConfigureAwait(false);
             }
             finally
             {
@@ -413,7 +414,7 @@ namespace MQTTnet.Client
                     return;
                 }
 
-                await DisconnectInternalAsync().ConfigureAwait(false);
+                await DisconnectInternalAsync(null).ConfigureAwait(false);
             }
             catch (MqttCommunicationException exception)
             {
@@ -423,12 +424,12 @@ namespace MQTTnet.Client
                 }
 
                 _logger.Warning<MqttClient>(exception, "MQTT communication exception while receiving packets.");
-                await DisconnectInternalAsync().ConfigureAwait(false);
+                await DisconnectInternalAsync(exception).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 _logger.Error<MqttClient>(exception, "Unhandled exception while receiving packets.");
-                await DisconnectInternalAsync().ConfigureAwait(false);
+                await DisconnectInternalAsync(exception).ConfigureAwait(false);
             }
             finally
             {

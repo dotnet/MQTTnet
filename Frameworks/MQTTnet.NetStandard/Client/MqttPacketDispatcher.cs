@@ -83,7 +83,7 @@ namespace MQTTnet.Client
             {
                 _packetByResponseType[responseType] = tcs;
             }
-
+            
             return tcs;
         }
 

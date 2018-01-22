@@ -30,7 +30,7 @@ namespace MQTTnet.Internal
 
                     if (task.IsFaulted)
                     {
-                        throw new MqttCommunicationException(task.Exception.GetBaseException());
+                        throw new MqttCommunicationException(task.Exception?.GetBaseException());
                     }
                 }
                 finally

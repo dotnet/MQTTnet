@@ -43,6 +43,7 @@ namespace MQTTnet.Server
 
             _queue.Enqueue(packet);
             _queueWaitSemaphore.Release();
+
             _logger.Trace<MqttClientPendingMessagesQueue>("Enqueued packet (ClientId: {0}).", _session.ClientId);
         }
 
@@ -70,9 +71,11 @@ namespace MQTTnet.Server
             try
             {
                 await _queueWaitSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-                if (!_queue.TryDequeue(out packet)) {
+                if (!_queue.TryDequeue(out packet))
+                {
                     throw new InvalidOperationException(); // should not happen
                 }
+
                 await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, packet).ConfigureAwait(false);
 
                 _logger.Trace<MqttClientPendingMessagesQueue>("Enqueued packet sent (ClientId: {0}).", _session.ClientId);

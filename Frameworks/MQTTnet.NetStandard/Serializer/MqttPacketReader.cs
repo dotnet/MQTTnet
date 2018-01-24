@@ -86,7 +86,7 @@ namespace MQTTnet.Serializer
 
         private static async Task<int> ReadBodyLengthFromSourceAsync(Stream stream, CancellationToken cancellationToken)
         {
-            // Alorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
+            // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
             var multiplier = 1;
             var value = 0;
             byte encodedByte;
@@ -110,11 +110,11 @@ namespace MQTTnet.Serializer
                 readBytes.Add(encodedByte);
 
                 value += (byte)(encodedByte & 127) * multiplier;
-                multiplier *= 128;
                 if (multiplier > 128 * 128 * 128)
                 {
                     throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", readBytes)}).");
                 }
+                multiplier *= 128;
             } while ((encodedByte & 128) != 0);
 
             return value;

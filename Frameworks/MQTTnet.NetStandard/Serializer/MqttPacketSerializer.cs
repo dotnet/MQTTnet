@@ -42,13 +42,12 @@ namespace MQTTnet.Serializer
             }
         }
 
-        public MqttBasePacket Deserialize(MqttPacketHeader header, byte[] body)
+        public MqttBasePacket Deserialize(MqttPacketHeader header, MemoryStream body)
         {
             if (header == null) throw new ArgumentNullException(nameof(header));
             if (body == null) throw new ArgumentNullException(nameof(body));
 
-            using (var bodyStream = new MemoryStream(body))
-            using (var reader = new MqttPacketReader(header, bodyStream))
+            using (var reader = new MqttPacketReader(header, body))
             {
                 return Deserialize(header, reader);
             }

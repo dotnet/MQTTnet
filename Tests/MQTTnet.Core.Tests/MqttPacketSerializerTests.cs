@@ -405,11 +405,11 @@ namespace MQTTnet.Core.Tests
 
             using (var headerStream = new MemoryStream(Join(buffer1)))
             {
-                var header = MqttPacketReader.ReadHeaderFromSourceAsync(headerStream, CancellationToken.None).GetAwaiter().GetResult();
+                var header = MqttPacketReader.ReadHeaderAsync(headerStream, CancellationToken.None).GetAwaiter().GetResult();
 
                 using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.BodyLength))
                 {
-                    var deserializedPacket = serializer.Deserialize(header, bodyStream.ToArray());
+                    var deserializedPacket = serializer.Deserialize(header, bodyStream);
                     var buffer2 = serializer.Serialize(deserializedPacket);
 
                     Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(buffer2)));

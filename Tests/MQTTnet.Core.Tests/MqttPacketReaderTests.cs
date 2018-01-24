@@ -12,7 +12,7 @@ namespace MQTTnet.Core.Tests
         public void MqttPacketReader_EmptyStream()
         {
             var memStream = new MemoryStream();
-            var header = MqttPacketReader.ReadHeaderFromSourceAsync(memStream, CancellationToken.None).GetAwaiter().GetResult();
+            var header = MqttPacketReader.ReadHeaderAsync(memStream, CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.IsNull(header);
         }

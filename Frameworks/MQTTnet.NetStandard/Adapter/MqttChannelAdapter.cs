@@ -137,6 +137,12 @@ namespace MQTTnet.Adapter
             do
             {
                 var readBytesCount = await stream.ReadAsync(body, offset, body.Length - offset, cancellationToken).ConfigureAwait(false);
+                // Check if the client closed the connection before sending the full body.
+                if (readBytesCount == 0)
+                {
+                    throw new MqttCommunicationException("Connection closed while reading remaining packet body.");
+                }
+
                 offset += readBytesCount;
             } while (offset < header.BodyLength);
             

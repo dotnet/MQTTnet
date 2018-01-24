@@ -114,6 +114,7 @@ namespace MQTTnet.Serializer
                 {
                     throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", readBytes)}).");
                 }
+
                 multiplier *= 128;
             } while ((encodedByte & 128) != 0);
 

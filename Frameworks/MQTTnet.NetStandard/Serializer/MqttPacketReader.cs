@@ -22,7 +22,7 @@ namespace MQTTnet.Serializer
 
         public bool EndOfRemainingData => BaseStream.Position == _header.BodyLength;
 
-        public static async Task<MqttPacketHeader> ReadHeaderFromSourceAsync(Stream stream, CancellationToken cancellationToken)
+        public static async Task<MqttPacketHeader> ReadHeaderAsync(Stream stream, CancellationToken cancellationToken)
         {
             // Wait for the next package which starts with the header. At this point there will probably
             // some large delay and thus the thread should be put back to the pool (await). So ReadByte()
@@ -36,7 +36,7 @@ namespace MQTTnet.Serializer
 
             var fixedHeader = buffer[0];
             var controlPacketType = (MqttControlPacketType)(fixedHeader >> 4);
-            var bodyLength = await ReadBodyLengthFromSourceAsync(stream, cancellationToken).ConfigureAwait(false);
+            var bodyLength = await ReadBodyLengthAsync(stream, cancellationToken).ConfigureAwait(false);
 
             return new MqttPacketHeader
             {
@@ -84,7 +84,7 @@ namespace MQTTnet.Serializer
             return ReadBytes(_header.BodyLength - (int)BaseStream.Position);
         }
 
-        private static async Task<int> ReadBodyLengthFromSourceAsync(Stream stream, CancellationToken cancellationToken)
+        private static async Task<int> ReadBodyLengthAsync(Stream stream, CancellationToken cancellationToken)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
             var multiplier = 1;

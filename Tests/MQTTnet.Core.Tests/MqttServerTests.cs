@@ -299,7 +299,7 @@ namespace MQTTnet.Core.Tests
 
             var serverAdapter = new TestMqttServerAdapter();
             var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
-            
+
             try
             {
                 var options = new MqttServerOptions { ApplicationMessageInterceptor = Interceptor };
@@ -328,6 +328,41 @@ namespace MQTTnet.Core.Tests
             {
                 await s.StopAsync();
             }
+        }
+
+        [TestMethod]
+        public async Task MqttServer_Body()
+        {
+            var serverAdapter = new TestMqttServerAdapter();
+            var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
+
+            var bodyIsMatching = false;
+            try
+            {
+                await s.StartAsync(new MqttServerOptions());
+
+                var c1 = await serverAdapter.ConnectTestClient(s, "c1");
+                var c2 = await serverAdapter.ConnectTestClient(s, "c2");
+                
+                c1.ApplicationMessageReceived += (_, e) =>
+                {
+                    if (Encoding.UTF8.GetString(e.ApplicationMessage.Payload) == "The body")
+                    {
+                        bodyIsMatching = true;
+                    }
+                };
+
+                await c1.SubscribeAsync("A", MqttQualityOfServiceLevel.AtMostOnce);
+                await c2.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("A").WithPayload(Encoding.UTF8.GetBytes("The body")).Build());
+
+                await Task.Delay(500);
+            }
+            finally
+            {
+                await s.StopAsync();
+            }
+
+            Assert.IsTrue(bodyIsMatching);
         }
 
         private class TestStorage : IMqttServerStorage

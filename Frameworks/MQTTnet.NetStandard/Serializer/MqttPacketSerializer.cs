@@ -45,6 +45,7 @@ namespace MQTTnet.Serializer
         public MqttBasePacket Deserialize(MqttPacketHeader header, ArraySegment<byte> body)
         {
             if (header == null) throw new ArgumentNullException(nameof(header));
+            if (body.Array == null) throw new ArgumentException($"{nameof(body)}.{nameof(body.Array)} must not be null");
 
             using (var bodyStream = new MemoryStream(body.Array, body.Offset, body.Count))
             using (var reader = new MqttPacketReader(header, bodyStream))

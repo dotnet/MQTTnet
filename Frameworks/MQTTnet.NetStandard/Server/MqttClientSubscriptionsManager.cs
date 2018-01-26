@@ -13,13 +13,15 @@ namespace MQTTnet.Server
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly IMqttServerOptions _options;
+        private readonly string _clientId;
 
-        public MqttClientSubscriptionsManager(IMqttServerOptions options)
+        public MqttClientSubscriptionsManager(IMqttServerOptions options, string clientId)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
         }
 
-        public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttSubscribePacket subscribePacket, string clientId)
+        public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttSubscribePacket subscribePacket)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
 
@@ -34,7 +36,7 @@ namespace MQTTnet.Server
             {
                 foreach (var topicFilter in subscribePacket.TopicFilters)
                 {
-                    var interceptorContext = InterceptSubscribe(clientId, topicFilter);
+                    var interceptorContext = InterceptSubscribe(topicFilter);
                     if (!interceptorContext.AcceptSubscription)
                     {
                         result.ResponsePacket.SubscribeReturnCodes.Add(MqttSubscribeReturnCode.Failure);
@@ -117,9 +119,9 @@ namespace MQTTnet.Server
             }
         }
 
-        private MqttSubscriptionInterceptorContext InterceptSubscribe(string clientId, TopicFilter topicFilter)
+        private MqttSubscriptionInterceptorContext InterceptSubscribe(TopicFilter topicFilter)
         {
-            var interceptorContext = new MqttSubscriptionInterceptorContext(clientId, topicFilter);
+            var interceptorContext = new MqttSubscriptionInterceptorContext(_clientId, topicFilter);
             _options.SubscriptionInterceptor?.Invoke(interceptorContext);
             return interceptorContext;
         }

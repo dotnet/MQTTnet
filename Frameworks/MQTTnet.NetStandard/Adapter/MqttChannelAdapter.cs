@@ -142,7 +142,13 @@ namespace MQTTnet.Adapter
             var buffer = new byte[ReadBufferSize];
             while (body.Length < header.BodyLength)
             {
-                var readBytesCount = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+                var bytesLeft = header.BodyLength - (int)body.Length;
+                if (bytesLeft > buffer.Length)
+                {
+                    bytesLeft = buffer.Length;
+                }
+
+                var readBytesCount = await stream.ReadAsync(buffer, 0, bytesLeft, cancellationToken).ConfigureAwait(false);
                 
                 // Check if the client closed the connection before sending the full body.
                 if (readBytesCount == 0)
@@ -150,6 +156,8 @@ namespace MQTTnet.Adapter
                     throw new MqttCommunicationException("Connection closed while reading remaining packet body.");
                 }
 
+                // Here is no need to await because internally only an array is used and no real I/O operation is made.
+                // Using async here will only generate overhead.
                 body.Write(buffer, 0, readBytesCount);
             }
 

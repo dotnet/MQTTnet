@@ -20,12 +20,8 @@ namespace MQTTnet.Server
 
         public MqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
         {
+            if (adapters == null) throw new ArgumentNullException(nameof(adapters));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-            if (adapters == null)
-            {
-                throw new ArgumentNullException(nameof(adapters));
-            }
 
             _adapters = adapters.ToList();
         }
@@ -38,6 +34,22 @@ namespace MQTTnet.Server
         public Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync()
         {
             return _clientSessionsManager.GetConnectedClientsAsync();
+        }
+
+        public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
+        {
+            if (clientId == null) throw new ArgumentNullException(nameof(clientId));
+            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
+
+            return _clientSessionsManager.SubscribeAsync(clientId, topicFilters);
+        }
+
+        public Task UnsubscribeAsync(string clientId, IList<string> topicFilters)
+        {
+            if (clientId == null) throw new ArgumentNullException(nameof(clientId));
+            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
+
+            return _clientSessionsManager.UnsubscribeAsync(clientId, topicFilters);
         }
 
         public async Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)

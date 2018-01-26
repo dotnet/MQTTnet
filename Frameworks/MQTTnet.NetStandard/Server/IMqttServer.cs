@@ -12,6 +12,9 @@ namespace MQTTnet.Server
 
         Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync();
 
+        Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters);
+        Task UnsubscribeAsync(string clientId, IList<string> topicFilters);
+
         Task StartAsync(IMqttServerOptions options);
         Task StopAsync();
     }

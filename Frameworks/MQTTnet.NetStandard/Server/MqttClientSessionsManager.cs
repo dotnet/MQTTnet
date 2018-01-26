@@ -168,6 +168,48 @@ namespace MQTTnet.Server
             }
         }
 
+        public async Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
+        {
+            if (clientId == null) throw new ArgumentNullException(nameof(clientId));
+            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
+
+            await _semaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (!_sessions.TryGetValue(clientId, out var session))
+                {
+                    throw new InvalidOperationException($"Client session {clientId} is unknown.");
+                }
+
+                await session.SubscribeAsync(topicFilters);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        public async Task UnsubscribeAsync(string clientId, IList<string> topicFilters)
+        {
+            if (clientId == null) throw new ArgumentNullException(nameof(clientId));
+            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
+
+            await _semaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (!_sessions.TryGetValue(clientId, out var session))
+                {
+                    throw new InvalidOperationException($"Client session {clientId} is unknown.");
+                }
+
+                await session.UnsubscribeAsync(topicFilters);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
         private MqttApplicationMessage InterceptApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
         {
             if (_options.ApplicationMessageInterceptor == null)

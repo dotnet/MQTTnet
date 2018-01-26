@@ -409,7 +409,7 @@ namespace MQTTnet.Core.Tests
 
                 using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.BodyLength))
                 {
-                    var deserializedPacket = serializer.Deserialize(header, bodyStream);
+                    var deserializedPacket = serializer.Deserialize(header, new ArraySegment<byte>(bodyStream.ToArray()));
                     var buffer2 = serializer.Serialize(deserializedPacket);
 
                     Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(buffer2)));

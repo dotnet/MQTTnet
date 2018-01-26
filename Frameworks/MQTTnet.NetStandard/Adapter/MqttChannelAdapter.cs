@@ -17,7 +17,10 @@ namespace MQTTnet.Adapter
     public class MqttChannelAdapter : IMqttChannelAdapter
     {
         private const uint ErrorOperationAborted = 0x800703E3;
+
         private const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
+
+        private static readonly ArraySegment<byte> EmptyBody = new ArraySegment<byte>(new byte[0]);
 
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IMqttNetLogger _logger;
@@ -90,35 +93,28 @@ namespace MQTTnet.Adapter
             MqttBasePacket packet = null;
             await ExecuteAndWrapExceptionAsync(async () =>
             {
-                ReceivedMqttPacket receivedMqttPacket = null;
-                try
+                ReceivedMqttPacket receivedMqttPacket;
+                if (timeout > TimeSpan.Zero)
                 {
-                    if (timeout > TimeSpan.Zero)
-                    {
-                        receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, cancellationToken).ConfigureAwait(false);
-                    }
-
-                    if (receivedMqttPacket == null || cancellationToken.IsCancellationRequested)
-                    {
-                        throw new TaskCanceledException();
-                    }
-
-                    packet = PacketSerializer.Deserialize(receivedMqttPacket.Header, receivedMqttPacket.Body);
-                    if (packet == null)
-                    {
-                        throw new MqttProtocolViolationException("Received malformed packet.");
-                    }
-
-                    _logger.Trace<MqttChannelAdapter>("RX <<< {0}", packet);
+                    receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
                 }
-                finally
+                else
                 {
-                    receivedMqttPacket?.Dispose();
+                    receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, cancellationToken).ConfigureAwait(false);
                 }
+
+                if (receivedMqttPacket == null || cancellationToken.IsCancellationRequested)
+                {
+                    throw new TaskCanceledException();
+                }
+
+                packet = PacketSerializer.Deserialize(receivedMqttPacket.Header, receivedMqttPacket.Body);
+                if (packet == null)
+                {
+                    throw new MqttProtocolViolationException("Received malformed packet.");
+                }
+
+                _logger.Trace<MqttChannelAdapter>("RX <<< {0}", packet);
             }).ConfigureAwait(false);
 
             return packet;
@@ -134,28 +130,64 @@ namespace MQTTnet.Adapter
 
             if (header.BodyLength == 0)
             {
-                return new ReceivedMqttPacket(header, new MemoryStream(new byte[0], false));
+                return new ReceivedMqttPacket(header, EmptyBody);
             }
 
-            var body = header.BodyLength <= ReadBufferSize ? new MemoryStream(new byte[header.BodyLength]) : new MemoryStream();
-            
-            var buffer = new byte[ReadBufferSize];
-            while (body.Length < header.BodyLength)
-            {
-                var readBytesCount = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
-                
-                // Check if the client closed the connection before sending the full body.
-                if (readBytesCount == 0)
+            // TODO: Allow to supply a read buffer by the caller so that it can be reused.
+            // When reusing the receive buffer, the caller must ensure that he does not use a previously
+            // returned ReceivedMqttPacket after calling this method again with the same buffer.
+            var readBuffer = new byte[Math.Min(ReadBufferSize, header.BodyLength)];
+
+            // Only need to use a MemoryStream if the body length is greater than our read buffer.
+            var bodyStream = header.BodyLength <= readBuffer.Length ? null : new MemoryStream(readBuffer.Length);
+            using (bodyStream)
+            {   
+                var offset = 0;
+                while (offset < header.BodyLength)
                 {
-                    throw new MqttCommunicationException("Connection closed while reading remaining packet body.");
+                    int readBytesCount;
+                    if (bodyStream == null)
+                    {
+                        readBytesCount = await stream.ReadAsync(readBuffer, offset,
+                            header.BodyLength - offset,
+                            cancellationToken).ConfigureAwait(false);                        
+                    }
+                    else
+                    {
+                        readBytesCount = await stream.ReadAsync(readBuffer, 0,
+                            Math.Min(readBuffer.Length, header.BodyLength - offset),
+                            cancellationToken).ConfigureAwait(false);
+                        bodyStream.Write(readBuffer, 0, readBytesCount);
+                    }
+
+                    // Check if the client closed the connection before sending the full body.
+                    if (readBytesCount == 0)
+                    {
+                        throw new MqttCommunicationException("Connection closed while reading remaining packet body.");
+                    }
+
+                    offset += readBytesCount;
                 }
 
-                body.Write(buffer, 0, readBytesCount);
-            }
+                ArraySegment<byte> body;
+                if (bodyStream == null)
+                {
+                    body = new ArraySegment<byte>(readBuffer, 0, offset);                    
+                }
+                else 
+                {
+#if NET452
+                    body = new ArraySegment<byte>(bodyStream.GetBuffer(), 0, (int)bodyStream.Length);
+#else
+                    if (!bodyStream.TryGetBuffer(out body))
+                    {
+                        throw new InvalidOperationException(); // should not happen
+                    }
+#endif
+                }
 
-            body.Seek(0L, SeekOrigin.Begin);
-            
-            return new ReceivedMqttPacket(header, body);
+                return new ReceivedMqttPacket(header, body);
+            }
         }
 
         private static async Task ExecuteAndWrapExceptionAsync(Func<Task> action)

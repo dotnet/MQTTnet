@@ -12,6 +12,7 @@
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
     <releaseNotes>* [Core] Fixed some still thread blocking parts in the code (thanks to @kpreisser).
 * [Core] Updated 3rd-Party packages.
+* [Core] Fixed wrong packet identifier calculation (thanks to @benpittoors).
 * [Core] Fixed an issue when reading the body of a package from a disconnected sender (thanks to @kpreisser).
 * [Core] Fixed wrong parsing of the body length (thanks to @kpreisser).
 * [Client] The client interfaces are now implementing _IDisposable_.

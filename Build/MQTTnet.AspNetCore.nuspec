@@ -16,7 +16,7 @@
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
       <group targetFramework="netstandard2.0">
-        <dependency id="MQTTnet" version="2.7.0" />
+        <dependency id="MQTTnet" version="2.7.0-rc1" />
       </group>
     </dependencies>
   </metadata>

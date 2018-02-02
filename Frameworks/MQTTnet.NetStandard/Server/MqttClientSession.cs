@@ -21,10 +21,7 @@ namespace MQTTnet.Server
         private readonly IMqttServerOptions _options;
         private readonly IMqttNetLogger _logger;
 
-        private readonly MqttClientSessionsManager _sessionsManager;
         private readonly MqttRetainedMessagesManager _retainedMessagesManager;
-        private readonly MqttClientSubscriptionsManager _subscriptionsManager;
-        private readonly MqttClientPendingMessagesQueue _pendingMessagesQueue;
 
         private IMqttChannelAdapter _adapter;
         private CancellationTokenSource _cancellationTokenSource;
@@ -34,19 +31,23 @@ namespace MQTTnet.Server
             string clientId,
             IMqttServerOptions options,
             MqttRetainedMessagesManager retainedMessagesManager,
-            MqttClientSessionsManager sessionsManager,
             IMqttNetLogger logger)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
-            _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             ClientId = clientId;
             
-            _subscriptionsManager = new MqttClientSubscriptionsManager(_options, clientId);
-            _pendingMessagesQueue = new MqttClientPendingMessagesQueue(_options, this, _logger);
+            SubscriptionsManager = new MqttClientSubscriptionsManager(_options, clientId);
+            PendingMessagesQueue = new MqttClientPendingMessagesQueue(_options, this, _logger);
         }
+
+        public Func<MqttClientSession, MqttApplicationMessage, Task> ApplicationMessageReceivedCallback { get; set; }
+
+        public MqttClientSubscriptionsManager SubscriptionsManager { get; }
+
+        public MqttClientPendingMessagesQueue PendingMessagesQueue { get; }
 
         public string ClientId { get; }
 
@@ -71,7 +72,7 @@ namespace MQTTnet.Server
                 _adapter = adapter;
                 _cancellationTokenSource = cancellationTokenSource;
 
-                _pendingMessagesQueue.Start(adapter, cancellationTokenSource.Token);
+                PendingMessagesQueue.Start(adapter, cancellationTokenSource.Token);
 
                 _lastPacketReceivedTracker.Restart();
                 _lastNonKeepAlivePacketReceivedTracker.Restart();
@@ -123,7 +124,7 @@ namespace MQTTnet.Server
                 if (willMessage != null)
                 {
                     _willMessage = null; //clear willmessage so it is send just once
-                    await _sessionsManager.DispatchApplicationMessageAsync(this, willMessage).ConfigureAwait(false);
+                    await ApplicationMessageReceivedCallback(this, willMessage).ConfigureAwait(false);
                 }
             }
         }
@@ -132,7 +133,7 @@ namespace MQTTnet.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            var result = await _subscriptionsManager.CheckSubscriptionsAsync(applicationMessage);
+            var result = await SubscriptionsManager.CheckSubscriptionsAsync(applicationMessage);
             if (!result.IsSubscribed)
             {
                 return;
@@ -141,30 +142,40 @@ namespace MQTTnet.Server
             var publishPacket = applicationMessage.ToPublishPacket();
             publishPacket.QualityOfServiceLevel = result.QualityOfServiceLevel;
 
-            _pendingMessagesQueue.Enqueue(publishPacket);
+            PendingMessagesQueue.Enqueue(publishPacket);
         }
 
         public Task SubscribeAsync(IList<TopicFilter> topicFilters)
         {
-            return _subscriptionsManager.SubscribeAsync(new MqttSubscribePacket
+            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
+
+            var response = SubscriptionsManager.SubscribeAsync(new MqttSubscribePacket
             {
                 TopicFilters = topicFilters
             });
+
+            return response;
         }
 
         public Task UnsubscribeAsync(IList<string> topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            return _subscriptionsManager.UnsubscribeAsync(new MqttUnsubscribePacket
+            var response = SubscriptionsManager.UnsubscribeAsync(new MqttUnsubscribePacket
             {
                 TopicFilters = topicFilters
             });
+
+            return response;
         }
 
         public void Dispose()
         {
-            _pendingMessagesQueue?.Dispose();
+            ApplicationMessageReceivedCallback = null;
+
+            SubscriptionsManager?.Dispose();
+            PendingMessagesQueue?.Dispose();
+
             _cancellationTokenSource?.Dispose();
         }
 
@@ -250,7 +261,7 @@ namespace MQTTnet.Server
 
         private async Task HandleIncomingSubscribePacketAsync(IMqttChannelAdapter adapter, MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
-            var subscribeResult = await _subscriptionsManager.SubscribeAsync(subscribePacket).ConfigureAwait(false);
+            var subscribeResult = await SubscriptionsManager.SubscribeAsync(subscribePacket).ConfigureAwait(false);
             await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, subscribeResult.ResponsePacket).ConfigureAwait(false);
 
             if (subscribeResult.CloseConnection)
@@ -264,7 +275,7 @@ namespace MQTTnet.Server
 
         private async Task HandleIncomingUnsubscribePacketAsync(IMqttChannelAdapter adapter, MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
-            var unsubscribeResult = await _subscriptionsManager.UnsubscribeAsync(unsubscribePacket).ConfigureAwait(false);
+            var unsubscribeResult = await SubscriptionsManager.UnsubscribeAsync(unsubscribePacket).ConfigureAwait(false);
             await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, unsubscribeResult);
         }
 
@@ -285,7 +296,7 @@ namespace MQTTnet.Server
             {
                 case MqttQualityOfServiceLevel.AtMostOnce:
                     {
-                        return _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage);
+                        return ApplicationMessageReceivedCallback?.Invoke(this, applicationMessage);
                     }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                     {
@@ -304,7 +315,7 @@ namespace MQTTnet.Server
 
         private async Task HandleIncomingPublishPacketWithQoS1(IMqttChannelAdapter adapter, MqttApplicationMessage applicationMessage, MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
-            await _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage).ConfigureAwait(false);
+            await ApplicationMessageReceivedCallback(this, applicationMessage).ConfigureAwait(false);
 
             var response = new MqttPubAckPacket { PacketIdentifier = publishPacket.PacketIdentifier };
             await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, response).ConfigureAwait(false);
@@ -313,7 +324,7 @@ namespace MQTTnet.Server
         private async Task HandleIncomingPublishPacketWithQoS2(IMqttChannelAdapter adapter, MqttApplicationMessage applicationMessage, MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             // QoS 2 is implement as method "B" [4.3.3 QoS 2: Exactly once delivery]
-            await _sessionsManager.DispatchApplicationMessageAsync(this, applicationMessage).ConfigureAwait(false);
+            await ApplicationMessageReceivedCallback(this, applicationMessage).ConfigureAwait(false);
 
             var response = new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier };
             await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, response).ConfigureAwait(false);

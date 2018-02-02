@@ -12,5 +12,7 @@ namespace MQTTnet.Server
         public TimeSpan LastPacketReceived { get; set; }
 
         public TimeSpan LastNonKeepAlivePacketReceived { get; set; }
+
+        public int PendingApplicationMessages { get; set; }
     }
 }

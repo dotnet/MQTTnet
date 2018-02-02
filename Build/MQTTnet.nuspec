@@ -19,6 +19,7 @@
 * [Client] The disconnected event now contains the exception which was thrown and causing the disconnect.
 * [Server] Fixed an issue which lets the server block 1 second after accepting a new connection (thanks to @kpreisser).
 * [Server] The server now allows managing client subscriptions.
+* [Server] Added events for topic subscriptions.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

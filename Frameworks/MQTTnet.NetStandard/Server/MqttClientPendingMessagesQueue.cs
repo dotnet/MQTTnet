@@ -15,15 +15,17 @@ namespace MQTTnet.Server
         private readonly ConcurrentQueue<MqttBasePacket> _queue = new ConcurrentQueue<MqttBasePacket>();
         private readonly SemaphoreSlim _queueWaitSemaphore = new SemaphoreSlim(0);
         private readonly IMqttServerOptions _options;
-        private readonly MqttClientSession _session;
+        private readonly MqttClientSession _clientSession;
         private readonly IMqttNetLogger _logger;
 
-        public MqttClientPendingMessagesQueue(IMqttServerOptions options, MqttClientSession session, IMqttNetLogger logger)
+        public MqttClientPendingMessagesQueue(IMqttServerOptions options, MqttClientSession clientSession, IMqttNetLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _session = session ?? throw new ArgumentNullException(nameof(session));
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
+
+        public int Count => _queue.Count;
 
         public void Start(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
         {
@@ -44,7 +46,7 @@ namespace MQTTnet.Server
             _queue.Enqueue(packet);
             _queueWaitSemaphore.Release();
 
-            _logger.Trace<MqttClientPendingMessagesQueue>("Enqueued packet (ClientId: {0}).", _session.ClientId);
+            _logger.Trace<MqttClientPendingMessagesQueue>("Enqueued packet (ClientId: {0}).", _clientSession.ClientId);
         }
 
         private async Task SendQueuedPacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
@@ -61,7 +63,7 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttClientPendingMessagesQueue>(exception, "Unhandled exception while sending enqueued packet (ClientId: {0}).", _session.ClientId);
+                _logger.Error<MqttClientPendingMessagesQueue>(exception, "Unhandled exception while sending enqueued packet (ClientId: {0}).", _clientSession.ClientId);
             }
         }
 
@@ -78,24 +80,24 @@ namespace MQTTnet.Server
 
                 await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, packet).ConfigureAwait(false);
 
-                _logger.Trace<MqttClientPendingMessagesQueue>("Enqueued packet sent (ClientId: {0}).", _session.ClientId);
+                _logger.Trace<MqttClientPendingMessagesQueue>("Enqueued packet sent (ClientId: {0}).", _clientSession.ClientId);
             }
             catch (Exception exception)
             {
                 if (exception is MqttCommunicationTimedOutException)
                 {
-                    _logger.Warning<MqttClientPendingMessagesQueue>(exception, "Sending publish packet failed due to timeout (ClientId: {0}).", _session.ClientId);
+                    _logger.Warning<MqttClientPendingMessagesQueue>(exception, "Sending publish packet failed due to timeout (ClientId: {0}).", _clientSession.ClientId);
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning<MqttClientPendingMessagesQueue>(exception, "Sending publish packet failed due to communication exception (ClientId: {0}).", _session.ClientId);
+                    _logger.Warning<MqttClientPendingMessagesQueue>(exception, "Sending publish packet failed due to communication exception (ClientId: {0}).", _clientSession.ClientId);
                 }
                 else if (exception is OperationCanceledException)
                 {
                 }
                 else
                 {
-                    _logger.Error<MqttClientPendingMessagesQueue>(exception, "Sending publish packet failed (ClientId: {0}).", _session.ClientId);
+                    _logger.Error<MqttClientPendingMessagesQueue>(exception, "Sending publish packet failed (ClientId: {0}).", _clientSession.ClientId);
                 }
 
                 if (packet is MqttPublishPacket publishPacket)
@@ -108,7 +110,7 @@ namespace MQTTnet.Server
                     }
                 }
 
-                await _session.StopAsync();
+                await _clientSession.StopAsync();
             }
         }
 

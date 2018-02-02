@@ -27,8 +27,12 @@ namespace MQTTnet.Server
         }
 
         public event EventHandler<MqttServerStartedEventArgs> Started;
+
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
+        public event EventHandler<MqttClientSubscribedTopicEventArgs> ClientSubscribedTopic;
+        public event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
+
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
         public Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync()
@@ -71,10 +75,18 @@ namespace MQTTnet.Server
             if (_cancellationTokenSource != null) throw new InvalidOperationException("The server is already started.");
 
             _cancellationTokenSource = new CancellationTokenSource();
-            _retainedMessagesManager = new MqttRetainedMessagesManager(_options, _logger);
-            _clientSessionsManager = new MqttClientSessionsManager(_options, _retainedMessagesManager, this, _logger);
 
+            _retainedMessagesManager = new MqttRetainedMessagesManager(_options, _logger);
             await _retainedMessagesManager.LoadMessagesAsync();
+
+            _clientSessionsManager = new MqttClientSessionsManager(_options, _retainedMessagesManager, _logger)
+            {
+                ClientConnectedCallback = OnClientConnected,
+                ClientDisconnectedCallback = OnClientDisconnected,
+                ClientSubscribedTopicCallback = OnClientSubscribedTopic,
+                ClientUnsubscribedTopicCallback = OnClientUnsubscribedTopic,
+                ApplicationMessageReceivedCallback = OnApplicationMessageReceived
+            };
 
             foreach (var adapter in _adapters)
             {
@@ -110,39 +122,46 @@ namespace MQTTnet.Server
             }
             finally
             {
+                _clientSessionsManager?.Dispose();
+                _retainedMessagesManager?.Dispose();
+
                 _cancellationTokenSource = null;
                 _retainedMessagesManager = null;
                 _clientSessionsManager = null;
             }
         }
 
-        internal void OnClientConnected(ConnectedMqttClient client)
+        private void OnClientConnected(ConnectedMqttClient client)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
             _logger.Info<MqttServer>("Client '{0}': Connected.", client.ClientId);
             ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(client));
         }
 
-        internal void OnClientDisconnected(ConnectedMqttClient client)
+        private void OnClientDisconnected(ConnectedMqttClient client)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
             _logger.Info<MqttServer>("Client '{0}': Disconnected.", client.ClientId);
             ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(client));
         }
-
-        internal void OnApplicationMessageReceived(string clientId, MqttApplicationMessage applicationMessage)
+        
+        private void OnClientSubscribedTopic(string clientId, TopicFilter topicFilter)
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+            ClientSubscribedTopic?.Invoke(this, new MqttClientSubscribedTopicEventArgs(clientId, topicFilter));
+        }
 
+        private void OnClientUnsubscribedTopic(string clientId, string topicFilter)
+        {
+            ClientUnsubscribedTopic?.Invoke(this, new MqttClientUnsubscribedTopicEventArgs(clientId, topicFilter));
+        }
+        
+        private void OnApplicationMessageReceived(string clientId, MqttApplicationMessage applicationMessage)
+        {
             ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(clientId, applicationMessage));
         }
 
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
             eventArgs.SessionTask = Task.Run(
-                async () => await _clientSessionsManager.RunClientSessionAsync(eventArgs.Client, _cancellationTokenSource.Token).ConfigureAwait(false),
+                async () => await _clientSessionsManager.RunSessionAsync(eventArgs.Client, _cancellationTokenSource.Token).ConfigureAwait(false),
                 _cancellationTokenSource.Token);
         }
     }

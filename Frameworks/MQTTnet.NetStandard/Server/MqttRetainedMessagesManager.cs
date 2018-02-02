@@ -8,7 +8,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttRetainedMessagesManager
+    public sealed class MqttRetainedMessagesManager : IDisposable
     {
         private readonly Dictionary<string, MqttApplicationMessage> _retainedMessages = new Dictionary<string, MqttApplicationMessage>();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
@@ -100,6 +100,11 @@ namespace MQTTnet.Server
             }
 
             return retainedMessages;
+        }
+
+        public void Dispose()
+        {
+            _semaphore?.Dispose();
         }
 
         private async Task HandleMessageInternalAsync(string clientId, MqttApplicationMessage applicationMessage)

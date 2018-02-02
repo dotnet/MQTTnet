@@ -8,18 +8,21 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientSubscriptionsManager
+    public sealed class MqttClientSubscriptionsManager : IDisposable
     {
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly IMqttServerOptions _options;
         private readonly string _clientId;
-
+        
         public MqttClientSubscriptionsManager(IMqttServerOptions options, string clientId)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
         }
+
+        public Action<string, TopicFilter> TopicSubscribedCallback { get; set; }
+        public Action<string, string> TopicUnsubscribedCallback { get; set; }
 
         public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttSubscribePacket subscribePacket)
         {
@@ -54,6 +57,7 @@ namespace MQTTnet.Server
                     if (interceptorContext.AcceptSubscription)
                     {
                         _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                        TopicSubscribedCallback?.Invoke(_clientId, topicFilter);
                     }
                 }
             }
@@ -75,6 +79,7 @@ namespace MQTTnet.Server
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
                     _subscriptions.Remove(topicFilter);
+                    TopicUnsubscribedCallback?.Invoke(_clientId, topicFilter);
                 }
             }
             finally
@@ -119,6 +124,22 @@ namespace MQTTnet.Server
             }
         }
 
+        public void Dispose()
+        {
+            _semaphore?.Dispose();
+        }
+
+        private static MqttSubscribeReturnCode ConvertToMaximumQoS(MqttQualityOfServiceLevel qualityOfServiceLevel)
+        {
+            switch (qualityOfServiceLevel)
+            {
+                case MqttQualityOfServiceLevel.AtMostOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS0;
+                case MqttQualityOfServiceLevel.AtLeastOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS1;
+                case MqttQualityOfServiceLevel.ExactlyOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS2;
+                default: return MqttSubscribeReturnCode.Failure;
+            }
+        }
+
         private MqttSubscriptionInterceptorContext InterceptSubscribe(TopicFilter topicFilter)
         {
             var interceptorContext = new MqttSubscriptionInterceptorContext(_clientId, topicFilter);
@@ -147,17 +168,6 @@ namespace MQTTnet.Server
                 IsSubscribed = true,
                 QualityOfServiceLevel = effectiveQoS
             };
-        }
-
-        private static MqttSubscribeReturnCode ConvertToMaximumQoS(MqttQualityOfServiceLevel qualityOfServiceLevel)
-        {
-            switch (qualityOfServiceLevel)
-            {
-                case MqttQualityOfServiceLevel.AtMostOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS0;
-                case MqttQualityOfServiceLevel.AtLeastOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS1;
-                case MqttQualityOfServiceLevel.ExactlyOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS2;
-                default: return MqttSubscribeReturnCode.Failure;
-            }
         }
     }
 }

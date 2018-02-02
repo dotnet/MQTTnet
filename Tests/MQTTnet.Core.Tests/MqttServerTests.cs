@@ -79,7 +79,7 @@ namespace MQTTnet.Core.Tests
         }
 
         [TestMethod]
-        public async Task MqttServer_Unsubscribe()
+        public async Task MqttServer_SubscribeUnsubscribe()
         {
             var serverAdapter = new TestMqttServerAdapter();
             var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
@@ -99,13 +99,31 @@ namespace MQTTnet.Core.Tests
                 await c2.PublishAsync(message);
                 Assert.AreEqual(0, receivedMessagesCount);
 
+                var subscribeEventCalled = false;
+                s.ClientSubscribedTopic += (_, e) =>
+                    {
+                        subscribeEventCalled = e.TopicFilter.Topic == "a" && e.ClientId == "c1";
+                    };
+
                 await c1.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
+                await Task.Delay(100);
+                Assert.IsTrue(subscribeEventCalled, "Subscribe event not called.");
+
                 await c2.PublishAsync(message);
 
                 await Task.Delay(500);
                 Assert.AreEqual(1, receivedMessagesCount);
 
+                var unsubscribeEventCalled = false;
+                s.ClientUnsubscribedTopic += (_, e) =>
+                {
+                    unsubscribeEventCalled = e.TopicFilter == "a" && e.ClientId == "c1";
+                };
+
                 await c1.UnsubscribeAsync("a");
+                await Task.Delay(100);
+                Assert.IsTrue(unsubscribeEventCalled, "Unsubscribe event not called.");
+
                 await c2.PublishAsync(message);
 
                 await Task.Delay(500);
@@ -343,7 +361,7 @@ namespace MQTTnet.Core.Tests
 
                 var c1 = await serverAdapter.ConnectTestClient(s, "c1");
                 var c2 = await serverAdapter.ConnectTestClient(s, "c2");
-                
+
                 c1.ApplicationMessageReceived += (_, e) =>
                 {
                     if (Encoding.UTF8.GetString(e.ApplicationMessage.Payload) == "The body")

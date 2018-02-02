@@ -6,10 +6,13 @@ namespace MQTTnet.Server
 {
     public interface IMqttServer : IApplicationMessageReceiver, IApplicationMessagePublisher
     {
-        event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
-        event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
         event EventHandler<MqttServerStartedEventArgs> Started;
 
+        event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
+        event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
+        event EventHandler<MqttClientSubscribedTopicEventArgs> ClientSubscribedTopic;
+        event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
+        
         Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync();
 
         Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters);

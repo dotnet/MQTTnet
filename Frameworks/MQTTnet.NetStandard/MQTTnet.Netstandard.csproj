@@ -15,8 +15,7 @@
     <Description />
     <Authors />
     <PackageId />
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>codeSigningKey.pfx</AssemblyOriginatorKeyFile>
+    <SignAssembly>false</SignAssembly>
     <DelaySign>false</DelaySign>
   </PropertyGroup>
 
@@ -29,6 +28,7 @@
     <TargetFrameworkIdentifier>.NETCore</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
     <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
+    <DefaultLanguage>en</DefaultLanguage>
     <LanguageTargets>$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets</LanguageTargets>
   </PropertyGroup>
 

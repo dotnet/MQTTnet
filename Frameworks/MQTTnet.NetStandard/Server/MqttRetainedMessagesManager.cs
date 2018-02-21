@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
-using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
@@ -68,7 +67,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public async Task<List<MqttApplicationMessage>> GetSubscribedMessagesAsync(MqttSubscribePacket subscribePacket)
+        public async Task<List<MqttApplicationMessage>> GetSubscribedMessagesAsync(ICollection<TopicFilter> topicFilters)
         {
             var retainedMessages = new List<MqttApplicationMessage>();
 
@@ -77,13 +76,8 @@ namespace MQTTnet.Server
             {
                 foreach (var retainedMessage in _retainedMessages.Values)
                 {
-                    foreach (var topicFilter in subscribePacket.TopicFilters)
+                    foreach (var topicFilter in topicFilters)
                     {
-                        if (retainedMessage.QualityOfServiceLevel < topicFilter.QualityOfServiceLevel)
-                        {
-                            continue;
-                        }
-
                         if (!MqttTopicFilterComparer.IsMatch(retainedMessage.Topic, topicFilter.Topic))
                         {
                             continue;

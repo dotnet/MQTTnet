@@ -27,7 +27,7 @@ namespace MQTTnet.ManagedClient
         private IManagedMqttClientOptions _options;
 
         private bool _subscriptionsNotPushed;
-        
+
         public ManagedMqttClient(IMqttClient mqttClient, IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -43,6 +43,7 @@ namespace MQTTnet.ManagedClient
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
+        public event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
 
         public async Task StartAsync(IManagedMqttClientOptions options)
         {
@@ -57,7 +58,7 @@ namespace MQTTnet.ManagedClient
             if (_connectionCancellationToken != null) throw new InvalidOperationException("The managed client is already started.");
 
             _options = options;
-            
+
             if (_options.Storage != null)
             {
                 _storageManager = new ManagedMqttClientStorageManager(_options.Storage);
@@ -65,7 +66,7 @@ namespace MQTTnet.ManagedClient
             }
 
             _connectionCancellationToken = new CancellationTokenSource();
-            
+
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             Task.Run(async () => await MaintainConnectionAsync(_connectionCancellationToken.Token), _connectionCancellationToken.Token).ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -85,7 +86,7 @@ namespace MQTTnet.ManagedClient
 
             return Task.FromResult(0);
         }
-        
+
         public async Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
         {
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
@@ -96,7 +97,7 @@ namespace MQTTnet.ManagedClient
                 {
                     await _storageManager.AddAsync(applicationMessage).ConfigureAwait(false);
                 }
-                
+
                 _messageQueue.Add(applicationMessage);
             }
         }
@@ -188,7 +189,7 @@ namespace MQTTnet.ManagedClient
 
                     StartPublishing();
 
-                    
+
                     return;
                 }
 
@@ -209,7 +210,7 @@ namespace MQTTnet.ManagedClient
                 _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while maintaining connection.");
             }
         }
-        
+
         private async Task PublishQueuedMessagesAsync(CancellationToken cancellationToken)
         {
             try
@@ -227,7 +228,7 @@ namespace MQTTnet.ManagedClient
                         continue;
                     }
 
-                    await TryPublishQueuedMessageAsync(message).ConfigureAwait(false);                 
+                    await TryPublishQueuedMessageAsync(message).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -245,6 +246,7 @@ namespace MQTTnet.ManagedClient
 
         private async Task TryPublishQueuedMessageAsync(MqttApplicationMessage message)
         {
+            Exception transmitException = null;
             try
             {
                 await _mqttClient.PublishAsync(message).ConfigureAwait(false);
@@ -256,6 +258,8 @@ namespace MQTTnet.ManagedClient
             }
             catch (MqttCommunicationException exception)
             {
+                transmitException = exception;
+
                 _logger.Warning<ManagedMqttClient>(exception, "Publishing application message failed.");
 
                 if (message.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
@@ -265,7 +269,12 @@ namespace MQTTnet.ManagedClient
             }
             catch (Exception exception)
             {
+                transmitException = exception;
                 _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while publishing queued application message.");
+            }
+            finally
+            {
+                ApplicationMessageProcessed?.Invoke(this, new ApplicationMessageProcessedEventArgs(message, transmitException));
             }
         }
 

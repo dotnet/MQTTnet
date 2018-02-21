@@ -220,7 +220,8 @@ namespace MQTTnet.Server
 
         private MqttApplicationMessage InterceptApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
         {
-            if (_options.ApplicationMessageInterceptor == null)
+            var interceptor = _options.ApplicationMessageInterceptor;
+            if (interceptor == null)
             {
                 return applicationMessage;
             }
@@ -229,7 +230,7 @@ namespace MQTTnet.Server
                 senderClientSession.ClientId,
                 applicationMessage);
 
-            _options.ApplicationMessageInterceptor(interceptorContext);
+            interceptor(interceptorContext);
             return interceptorContext.ApplicationMessage;
         }
 

@@ -12,6 +12,8 @@ namespace MQTTnet.ManagedClient
         event EventHandler<MqttClientConnectedEventArgs> Connected;
         event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
+        event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
+
         Task StartAsync(IManagedMqttClientOptions options);
         Task StopAsync();
 

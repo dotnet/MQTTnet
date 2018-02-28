@@ -13,6 +13,8 @@ namespace MQTTnet.Server
         event EventHandler<MqttClientSubscribedTopicEventArgs> ClientSubscribedTopic;
         event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
         
+        IMqttServerOptions Options { get; }
+
         Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync();
 
         Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters);

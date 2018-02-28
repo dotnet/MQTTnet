@@ -16,7 +16,6 @@ namespace MQTTnet.Server
         private MqttClientSessionsManager _clientSessionsManager;
         private MqttRetainedMessagesManager _retainedMessagesManager;
         private CancellationTokenSource _cancellationTokenSource;
-        private IMqttServerOptions _options;
 
         public MqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
         {
@@ -34,6 +33,8 @@ namespace MQTTnet.Server
         public event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
 
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
+
+        public IMqttServerOptions Options { get; private set; }
 
         public Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync()
         {
@@ -70,16 +71,16 @@ namespace MQTTnet.Server
 
         public async Task StartAsync(IMqttServerOptions options)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            Options = options ?? throw new ArgumentNullException(nameof(options));
 
             if (_cancellationTokenSource != null) throw new InvalidOperationException("The server is already started.");
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _retainedMessagesManager = new MqttRetainedMessagesManager(_options, _logger);
+            _retainedMessagesManager = new MqttRetainedMessagesManager(Options, _logger);
             await _retainedMessagesManager.LoadMessagesAsync();
 
-            _clientSessionsManager = new MqttClientSessionsManager(_options, _retainedMessagesManager, _logger)
+            _clientSessionsManager = new MqttClientSessionsManager(Options, _retainedMessagesManager, _logger)
             {
                 ClientConnectedCallback = OnClientConnected,
                 ClientDisconnectedCallback = OnClientDisconnected,
@@ -91,7 +92,7 @@ namespace MQTTnet.Server
             foreach (var adapter in _adapters)
             {
                 adapter.ClientAccepted += OnClientAccepted;
-                await adapter.StartAsync(_options);
+                await adapter.StartAsync(Options);
             }
 
             _logger.Info<MqttServer>("Started.");
@@ -142,7 +143,7 @@ namespace MQTTnet.Server
             _logger.Info<MqttServer>("Client '{0}': Disconnected.", client.ClientId);
             ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(client));
         }
-        
+
         private void OnClientSubscribedTopic(string clientId, TopicFilter topicFilter)
         {
             ClientSubscribedTopic?.Invoke(this, new MqttClientSubscribedTopicEventArgs(clientId, topicFilter));
@@ -152,7 +153,7 @@ namespace MQTTnet.Server
         {
             ClientUnsubscribedTopic?.Invoke(this, new MqttClientUnsubscribedTopicEventArgs(clientId, topicFilter));
         }
-        
+
         private void OnApplicationMessageReceived(string clientId, MqttApplicationMessage applicationMessage)
         {
             ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(clientId, applicationMessage));

@@ -14,6 +14,7 @@
 * [Client] The _ManagedClient_ now supports unsubscribing (thanks to @lerppana)
 * [Server] Fixed some minor async issues.
 * [Server] Fixed wrong comparison of the topic and QoS for retained messages.
+* [Server] Added a property which provides access to the used options (read only).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

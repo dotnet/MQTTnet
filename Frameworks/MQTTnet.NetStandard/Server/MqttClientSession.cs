@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -15,12 +14,8 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientSession : IDisposable
     {
-        private readonly Stopwatch _lastPacketReceivedTracker = Stopwatch.StartNew();
-        private readonly Stopwatch _lastNonKeepAlivePacketReceivedTracker = Stopwatch.StartNew();
-
         private readonly IMqttServerOptions _options;
         private readonly IMqttNetLogger _logger;
-
         private readonly MqttRetainedMessagesManager _retainedMessagesManager;
 
         private IMqttChannelAdapter _adapter;
@@ -38,7 +33,8 @@ namespace MQTTnet.Server
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             ClientId = clientId;
-            
+
+            KeepAliveMonitor = new MqttClientKeepAliveMonitor(clientId, StopDueToKeepAliveTimeoutAsync, _logger);
             SubscriptionsManager = new MqttClientSubscriptionsManager(_options, clientId);
             PendingMessagesQueue = new MqttClientPendingMessagesQueue(_options, this, _logger);
         }
@@ -49,13 +45,11 @@ namespace MQTTnet.Server
 
         public MqttClientPendingMessagesQueue PendingMessagesQueue { get; }
 
+        public MqttClientKeepAliveMonitor KeepAliveMonitor { get; }
+
         public string ClientId { get; }
 
         public MqttProtocolVersion? ProtocolVersion => _adapter?.PacketSerializer.ProtocolVersion;
-
-        public TimeSpan LastPacketReceived => _lastPacketReceivedTracker.Elapsed;
-
-        public TimeSpan LastNonKeepAlivePacketReceived => _lastNonKeepAlivePacketReceivedTracker.Elapsed;
 
         public bool IsConnected => _adapter != null;
 
@@ -73,14 +67,7 @@ namespace MQTTnet.Server
                 _cancellationTokenSource = cancellationTokenSource;
 
                 PendingMessagesQueue.Start(adapter, cancellationTokenSource.Token);
-
-                _lastPacketReceivedTracker.Restart();
-                _lastNonKeepAlivePacketReceivedTracker.Restart();
-
-                if (connectPacket.KeepAlivePeriod > 0)
-                {
-                    StartCheckingKeepAliveTimeout(TimeSpan.FromSeconds(connectPacket.KeepAlivePeriod), cancellationTokenSource.Token);
-                }
+                KeepAliveMonitor.Start(connectPacket.KeepAlivePeriod, cancellationTokenSource.Token);
 
                 await ReceivePacketsAsync(adapter, cancellationTokenSource.Token).ConfigureAwait(false);
             }
@@ -123,7 +110,7 @@ namespace MQTTnet.Server
                 var willMessage = _willMessage;
                 if (willMessage != null)
                 {
-                    _willMessage = null; //clear willmessage so it is send just once
+                    _willMessage = null; // clear willmessage so it is send just once
                     await ApplicationMessageReceivedCallback(this, willMessage).ConfigureAwait(false);
                 }
             }
@@ -161,12 +148,10 @@ namespace MQTTnet.Server
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            var response = SubscriptionsManager.UnsubscribeAsync(new MqttUnsubscribePacket
+            return SubscriptionsManager.UnsubscribeAsync(new MqttUnsubscribePacket
             {
                 TopicFilters = topicFilters
             });
-
-            return response;
         }
 
         public void Dispose()
@@ -179,6 +164,12 @@ namespace MQTTnet.Server
             _cancellationTokenSource?.Dispose();
         }
 
+        private Task StopDueToKeepAliveTimeoutAsync()
+        {
+            _logger.Info<MqttClientSession>("Client '{0}': Timeout while waiting for KeepAlive packet.", ClientId);
+            return StopAsync();
+        }
+
         private async Task ReceivePacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
         {
             try
@@ -186,14 +177,7 @@ namespace MQTTnet.Server
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var packet = await adapter.ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
-
-                    _lastPacketReceivedTracker.Restart();
-
-                    if (!(packet is MqttPingReqPacket))
-                    {
-                        _lastNonKeepAlivePacketReceivedTracker.Restart();
-                    }
-
+                    KeepAliveMonitor.PacketReceived(packet);
                     await ProcessReceivedPacketAsync(adapter, packet, cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -334,43 +318,6 @@ namespace MQTTnet.Server
         {
             var response = new MqttPubCompPacket { PacketIdentifier = pubRelPacket.PacketIdentifier };
             return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, response);
-        }
-
-        private void StartCheckingKeepAliveTimeout(TimeSpan keepAlivePeriod, CancellationToken cancellationToken)
-        {
-            Task.Run(
-                async () => await CheckKeepAliveTimeoutAsync(keepAlivePeriod, cancellationToken).ConfigureAwait(false)
-                , cancellationToken);
-        }
-
-        private async Task CheckKeepAliveTimeoutAsync(TimeSpan keepAlivePeriod, CancellationToken cancellationToken)
-        {
-            try
-            {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    // Values described here: [MQTT-3.1.2-24].
-                    if (_lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod.TotalSeconds * 1.5D)
-                    {
-                        _logger.Warning<MqttClientSession>("Client '{0}': Did not receive any packet or keep alive signal.", ClientId);
-                        await StopAsync();
-                        return;
-                    }
-
-                    await Task.Delay(keepAlivePeriod, cancellationToken);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception exception)
-            {
-                _logger.Error<MqttClientSession>(exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", ClientId);
-            }
-            finally
-            {
-                _logger.Trace<MqttClientSession>("Client {0}: Stopped checking keep alive timeout.", ClientId);
-            }
         }
     }
 }

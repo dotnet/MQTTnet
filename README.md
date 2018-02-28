@@ -43,6 +43,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Retained messages are supported including persisting via interface methods (own implementation required)
 * WebSockets supported (via ASP.NET Core 2.0, separate nuget)
 * A custom message interceptor can be added which allows transforming or extending every received application message
+* Validate subscriptions and deny subscribing of certain topics depending on requesting clients
 
 ## Supported frameworks
 

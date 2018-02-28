@@ -129,8 +129,8 @@ namespace MQTTnet.Server
                 {
                     ClientId = s.Value.ClientId,
                     ProtocolVersion = s.Value.ProtocolVersion ?? MqttProtocolVersion.V311,
-                    LastPacketReceived = s.Value.LastPacketReceived,
-                    LastNonKeepAlivePacketReceived = s.Value.LastNonKeepAlivePacketReceived,
+                    LastPacketReceived = s.Value.KeepAliveMonitor.LastPacketReceived,
+                    LastNonKeepAlivePacketReceived = s.Value.KeepAliveMonitor.LastNonKeepAlivePacketReceived,
                     PendingApplicationMessages = s.Value.PendingMessagesQueue.Count
                 }).ToList();
             }

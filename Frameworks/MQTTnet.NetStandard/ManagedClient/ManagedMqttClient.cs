@@ -45,6 +45,7 @@ namespace MQTTnet.ManagedClient
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
         public event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
+        public event EventHandler SynchronizingSubscriptionsFailed;
 
         public async Task StartAsync(IManagedMqttClientOptions options)
         {
@@ -309,13 +310,22 @@ namespace MQTTnet.ManagedClient
 
             try
             {
-                await _mqttClient.SubscribeAsync(subscriptions).ConfigureAwait(false);
-                await _mqttClient.UnsubscribeAsync(unsubscriptions).ConfigureAwait(false);
+                if (subscriptions.Any())
+                {
+                    await _mqttClient.SubscribeAsync(subscriptions).ConfigureAwait(false);
+                }
+
+                if (unsubscriptions.Any())
+                {
+                    await _mqttClient.UnsubscribeAsync(unsubscriptions).ConfigureAwait(false);
+                }
             }
             catch (Exception exception)
             {
-                _logger.Warning<ManagedMqttClient>(exception, "Synchronizing subscriptions failed");
+                _logger.Warning<ManagedMqttClient>(exception, "Synchronizing subscriptions failed.");
                 _subscriptionsNotPushed = true;
+
+                SynchronizingSubscriptionsFailed?.Invoke(this, EventArgs.Empty);
             }
         }
 

@@ -69,12 +69,6 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            SendStream?.Dispose();
-            SendStream = null;
-
-            ReceiveStream?.Dispose();
-            ReceiveStream = null;
-
             _socket?.Dispose();
             _socket = null;
         }

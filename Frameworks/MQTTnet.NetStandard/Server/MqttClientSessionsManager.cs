@@ -227,7 +227,7 @@ namespace MQTTnet.Server
             }
 
             var interceptorContext = new MqttApplicationMessageInterceptorContext(
-                senderClientSession.ClientId,
+                senderClientSession?.ClientId,
                 applicationMessage);
 
             interceptor(interceptorContext);

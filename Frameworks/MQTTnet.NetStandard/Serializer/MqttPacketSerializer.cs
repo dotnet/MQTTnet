@@ -75,7 +75,7 @@ namespace MQTTnet.Serializer
             }
         }
 
-        private static MqttBasePacket Deserialize(MqttPacketHeader header, MqttPacketReader reader)
+        private MqttBasePacket Deserialize(MqttPacketHeader header, MqttPacketReader reader)
         {
             switch (header.ControlPacketType)
             {
@@ -278,20 +278,22 @@ namespace MQTTnet.Serializer
             return packet;
         }
 
-        private static MqttBasePacket DeserializeConnAck(MqttPacketReader reader)
+        private MqttBasePacket DeserializeConnAck(MqttPacketReader reader)
         {
-            var variableHeader1 = reader.ReadByte();
-            var variableHeader2 = reader.ReadByte();
+            var packet = new MqttConnAckPacket();
 
-            var packet = new MqttConnAckPacket
+            var firstByteReader = new ByteReader(reader.ReadByte());
+
+            if (ProtocolVersion == MqttProtocolVersion.V311)
             {
-                IsSessionPresent = new ByteReader(variableHeader1).Read(),
-                ConnectReturnCode = (MqttConnectReturnCode)variableHeader2
-            };
+                packet.IsSessionPresent = firstByteReader.Read();
+            }
+
+            packet.ConnectReturnCode = (MqttConnectReturnCode)reader.ReadByte();
 
             return packet;
         }
-
+        
         private static void ValidateConnectPacket(MqttConnectPacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
@@ -373,14 +375,21 @@ namespace MQTTnet.Serializer
 
         private byte Serialize(MqttConnAckPacket packet, MqttPacketWriter writer)
         {
-            var connectAcknowledgeFlags = new ByteWriter();
-
-            if (ProtocolVersion == MqttProtocolVersion.V311)
+            if (ProtocolVersion == MqttProtocolVersion.V310)
             {
+                writer.Write(0);
+            }
+            else if (ProtocolVersion == MqttProtocolVersion.V311)
+            {
+                var connectAcknowledgeFlags = new ByteWriter();
                 connectAcknowledgeFlags.Write(packet.IsSessionPresent);
+                writer.Write(connectAcknowledgeFlags);
+            }
+            else
+            {
+                throw new MqttProtocolViolationException("Protocol version not supported.");
             }
 
-            writer.Write(connectAcknowledgeFlags);
             writer.Write((byte)packet.ConnectReturnCode);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);

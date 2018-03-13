@@ -119,10 +119,10 @@ namespace MQTTnet.Core.Tests
         {
             var p = new MqttConnAckPacket
             {
-                ConnectReturnCode = MqttConnectReturnCode.ConnectionAccepted
+                ConnectReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized
             };
 
-            SerializeAndCompare(p, "IAIAAA==", MqttProtocolVersion.V310);
+            SerializeAndCompare(p, "IAIABQ==", MqttProtocolVersion.V310);
         }
 
         [TestMethod]
@@ -135,6 +135,17 @@ namespace MQTTnet.Core.Tests
             };
 
             DeserializeAndCompare(p, "IAIBBQ==");
+        }
+
+        [TestMethod]
+        public void DeserializeV310_MqttConnAckPacket()
+        {
+            var p = new MqttConnAckPacket
+            {
+                ConnectReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized
+            };
+
+            DeserializeAndCompare(p, "IAIABQ==", MqttProtocolVersion.V310);
         }
 
         [TestMethod]
@@ -397,9 +408,9 @@ namespace MQTTnet.Core.Tests
             Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(chunks)));
         }
 
-        private static void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value)
+        private static void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
-            var serializer = new MqttPacketSerializer();
+            var serializer = new MqttPacketSerializer { ProtocolVersion = protocolVersion };
 
             var buffer1 = serializer.Serialize(packet);
 

@@ -28,5 +28,16 @@ namespace MQTTnet.Diagnostics
         public string Message { get; }
 
         public Exception Exception { get; }
+
+        public override string ToString()
+        {
+            var result = $"[{Timestamp:O}] [{LogId}] [{ThreadId}] [{Source}] [{Level}]: {Message}";
+            if (Exception != null)
+            {
+                result += Environment.NewLine + Exception;
+            }
+
+            return result;
+        }
     }
 }

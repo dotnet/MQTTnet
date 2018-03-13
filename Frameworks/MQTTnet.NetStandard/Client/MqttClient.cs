@@ -335,7 +335,13 @@ namespace MQTTnet.Client
 
         private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket) where TResponsePacket : MqttBasePacket
         {
-            var packetAwaiter = _packetDispatcher.WaitForPacketAsync(requestPacket, typeof(TResponsePacket), _options.CommunicationTimeout);
+            ushort identifier = 0;
+            if (requestPacket is IMqttPacketWithIdentifier requestPacketWithIdentifier)
+            {
+                identifier = requestPacketWithIdentifier.PacketIdentifier;
+            }
+
+            var packetAwaiter = _packetDispatcher.WaitForPacketAsync(typeof(TResponsePacket), identifier, _options.CommunicationTimeout);
             await _adapter.SendPacketsAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token, requestPacket).ConfigureAwait(false);
             return (TResponsePacket)await packetAwaiter.ConfigureAwait(false);
         }

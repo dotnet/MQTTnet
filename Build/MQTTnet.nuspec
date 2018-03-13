@@ -10,11 +10,15 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* [Client] The _ManagedClient_ now has an event which is fired after a queued application message was processed (including exception).
+    <releaseNotes>* [Core] Fixed wrong parsing of ConnAck packet for protocol version 3.1.0.
+* [Core] Log messages are now overriding ToString() and providing a ready to use text representation.
+* [Client] Optimized package dispatcher and added several new exceptions.
+* [Client] The _ManagedClient_ now has an event which is fired after a queued application message was processed (including exception).
 * [Client] The _ManagedClient_ now supports unsubscribing (thanks to @lerppana)
 * [Server] Fixed some minor async issues.
 * [Server] Fixed wrong comparison of the topic and QoS for retained messages.
 * [Server] Added a property which provides access to the used options (read only).
+* [Server] Fixed a null ref expection when using an interceptor and publishing via the server directly.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

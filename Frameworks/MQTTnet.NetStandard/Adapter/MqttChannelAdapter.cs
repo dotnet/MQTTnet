@@ -138,7 +138,7 @@ namespace MQTTnet.Adapter
             }
 
             var body = header.BodyLength <= ReadBufferSize ? new MemoryStream(header.BodyLength) : new MemoryStream();
-            
+
             var buffer = new byte[ReadBufferSize];
             while (body.Length < header.BodyLength)
             {
@@ -149,7 +149,7 @@ namespace MQTTnet.Adapter
                 }
 
                 var readBytesCount = await stream.ReadAsync(buffer, 0, bytesLeft, cancellationToken).ConfigureAwait(false);
-                
+
                 // Check if the client closed the connection before sending the full body.
                 if (readBytesCount == 0)
                 {
@@ -162,7 +162,7 @@ namespace MQTTnet.Adapter
             }
 
             body.Seek(0L, SeekOrigin.Begin);
-            
+
             return new ReceivedMqttPacket(header, body);
         }
 
@@ -190,7 +190,7 @@ namespace MQTTnet.Adapter
             }
             catch (COMException comException)
             {
-                if ((uint) comException.HResult == ErrorOperationAborted)
+                if ((uint)comException.HResult == ErrorOperationAborted)
                 {
                     throw new OperationCanceledException();
                 }

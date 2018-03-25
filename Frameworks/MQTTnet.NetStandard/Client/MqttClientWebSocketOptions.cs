@@ -9,7 +9,7 @@ namespace MQTTnet.Client
 
         public IDictionary<string, string> RequestHeaders { get; set; }
 
-        public ICollection<string> SubProtocols { get; set; }
+        public ICollection<string> SubProtocols { get; set; } = new List<string> { "mqtt" };
 
         public CookieContainer CookieContainer { get; set; }
 

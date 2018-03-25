@@ -2,6 +2,6 @@
 {
     public class MqttBasePublishPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
-        public ushort PacketIdentifier { get; set; }
+        public ushort? PacketIdentifier { get; set; }
     }
 }

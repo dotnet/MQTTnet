@@ -14,7 +14,7 @@ namespace MQTTnet.Server
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly IMqttServerOptions _options;
         private readonly string _clientId;
-        
+
         public MqttClientSubscriptionsManager(IMqttServerOptions options, string clientId)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -30,7 +30,11 @@ namespace MQTTnet.Server
 
             var result = new MqttClientSubscribeResult
             {
-                ResponsePacket = subscribePacket.CreateResponse<MqttSubAckPacket>(),
+                ResponsePacket = new MqttSubAckPacket
+                {
+                    PacketIdentifier = subscribePacket.PacketIdentifier
+                },
+
                 CloseConnection = false
             };
 
@@ -87,7 +91,10 @@ namespace MQTTnet.Server
                 _semaphore.Release();
             }
 
-            return unsubscribePacket.CreateResponse<MqttUnsubAckPacket>();
+            return new MqttUnsubAckPacket
+            {
+                PacketIdentifier = unsubscribePacket.PacketIdentifier
+            };
         }
 
         public async Task<CheckSubscriptionsResult> CheckSubscriptionsAsync(MqttApplicationMessage applicationMessage)

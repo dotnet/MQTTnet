@@ -6,7 +6,7 @@ namespace MQTTnet.Packets
 {
     public sealed class MqttSubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
-        public ushort PacketIdentifier { get; set; }
+        public ushort? PacketIdentifier { get; set; }
 
         public IList<MqttSubscribeReturnCode> SubscribeReturnCodes { get; } = new List<MqttSubscribeReturnCode>();
 

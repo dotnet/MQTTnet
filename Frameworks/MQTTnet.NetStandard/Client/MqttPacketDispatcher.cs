@@ -18,7 +18,7 @@ namespace MQTTnet.Client
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<MqttBasePacket> WaitForPacketAsync(Type responseType, ushort identifier, TimeSpan timeout)
+        public async Task<MqttBasePacket> WaitForPacketAsync(Type responseType, ushort? identifier, TimeSpan timeout)
         {
             var packetAwaiter = AddPacketAwaiter(responseType, identifier);
             try
@@ -44,13 +44,13 @@ namespace MQTTnet.Client
 
             if (_awaiters.TryGetValue(type, out var byId))
             {
-                ushort identifier = 0;
+                ushort? identifier = 0;
                 if (packet is IMqttPacketWithIdentifier packetWithIdentifier)
                 {
                     identifier = packetWithIdentifier.PacketIdentifier;
                 }
 
-                if (byId.TryRemove(identifier, out var tcs))
+                if (byId.TryRemove(identifier.Value, out var tcs))
                 {
                     tcs.TrySetResult(packet);
                     return;
@@ -65,12 +65,17 @@ namespace MQTTnet.Client
             _awaiters.Clear();
         }
 
-        private TaskCompletionSource<MqttBasePacket> AddPacketAwaiter(Type responseType, ushort identifier)
+        private TaskCompletionSource<MqttBasePacket> AddPacketAwaiter(Type responseType, ushort? identifier)
         {
             var tcs = new TaskCompletionSource<MqttBasePacket>();
 
+            if (!identifier.HasValue)
+            {
+                identifier = 0;
+            }
+
             var byId = _awaiters.GetOrAdd(responseType, key => new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>());
-            if (!byId.TryAdd(identifier, tcs))
+            if (!byId.TryAdd(identifier.Value, tcs))
             {
                 throw new InvalidOperationException($"The packet dispatcher already has an awaiter for packet of type '{responseType}' with identifier {identifier}.");
             }
@@ -78,10 +83,15 @@ namespace MQTTnet.Client
             return tcs;
         }
 
-        private void RemovePacketAwaiter(Type responseType, ushort identifier)
+        private void RemovePacketAwaiter(Type responseType, ushort? identifier)
         {
+            if (!identifier.HasValue)
+            {
+                identifier = 0;
+            }
+
             var byId = _awaiters.GetOrAdd(responseType, key => new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>());
-            byId.TryRemove(identifier, out var _);
+            byId.TryRemove(identifier.Value, out var _);
         }
     }
 }

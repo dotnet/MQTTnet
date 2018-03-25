@@ -6,6 +6,7 @@ namespace MQTTnet.ManagedClient
     public class ManagedMqttClientOptionsBuilder
     {
         private readonly ManagedMqttClientOptions _options = new ManagedMqttClientOptions();
+        private MqttClientOptionsBuilder _clientOptionsBuilder;
 
         public ManagedMqttClientOptionsBuilder WithAutoReconnectDelay(TimeSpan value)
         {
@@ -21,7 +22,24 @@ namespace MQTTnet.ManagedClient
 
         public ManagedMqttClientOptionsBuilder WithClientOptions(IMqttClientOptions value)
         {
+            if (_clientOptionsBuilder != null)
+            {
+                throw new InvalidOperationException("Cannot use client options builder and client options at the same time.");
+            }
+
             _options.ClientOptions = value ?? throw new ArgumentNullException(nameof(value));
+
+            return this;
+        }
+
+        public ManagedMqttClientOptionsBuilder WithClientOptions(MqttClientOptionsBuilder builder)
+        {
+            if (_options.ClientOptions != null)
+            {
+                throw new InvalidOperationException("Cannot use client options builder and client options at the same time.");
+            }
+
+            _clientOptionsBuilder = builder;
             return this;
         }
 
@@ -29,15 +47,22 @@ namespace MQTTnet.ManagedClient
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            var builder = new MqttClientOptionsBuilder();
-            options(builder);
-            _options.ClientOptions = builder.Build();
+            if (_clientOptionsBuilder != null)
+            {
+                _clientOptionsBuilder = new MqttClientOptionsBuilder();
+            }
 
+            options(_clientOptionsBuilder);
             return this;
         }
 
         public ManagedMqttClientOptions Build()
         {
+            if (_clientOptionsBuilder != null)
+            {
+                _options.ClientOptions = _clientOptionsBuilder.Build();
+            }
+
             if (_options.ClientOptions == null)
             {
                 throw new InvalidOperationException("The ClientOptions cannot be null.");

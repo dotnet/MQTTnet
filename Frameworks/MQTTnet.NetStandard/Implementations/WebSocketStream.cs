@@ -11,9 +11,9 @@ namespace MQTTnet.Implementations
 {
     public class WebSocketStream : Stream
     {
-        private readonly WebSocket _webSocket;
-        private readonly byte[] _chunkBuffer = new byte[MqttWebSocketChannel.BufferSize];
+        private readonly byte[] _chunckBuffer = new byte[MqttWebSocketChannel.BufferSize];
         private readonly Queue<byte> _buffer = new Queue<byte>(MqttWebSocketChannel.BufferSize);
+        private readonly WebSocket _webSocket;
 
         public WebSocketStream(WebSocket webSocket)
         {
@@ -55,25 +55,28 @@ namespace MQTTnet.Implementations
             // Use existing date from buffer.
             while (count > 0 && _buffer.Any())
             {
-                buffer[offset++] = _buffer.Dequeue();
+                buffer[offset] = _buffer.Dequeue();
                 count--;
                 bytesRead++;
+                offset++;
             }
 
             if (count == 0)
             {
                 return bytesRead;
             }
-            
+
+            // Fetch new data if the buffer is not full.
             while (_webSocket.State == WebSocketState.Open)
             {
-                await FetchChunkAsync(cancellationToken);
+                await FetchChunkAsync(cancellationToken).ConfigureAwait(false);
 
                 while (count > 0 && _buffer.Any())
                 {
-                    buffer[offset++] = _buffer.Dequeue();
+                    buffer[offset] = _buffer.Dequeue();
                     count--;
                     bytesRead++;
+                    offset++;
                 }
 
                 if (count == 0)
@@ -111,18 +114,23 @@ namespace MQTTnet.Implementations
         }
 
         private async Task FetchChunkAsync(CancellationToken cancellationToken)
-        {
-            var response = await _webSocket.ReceiveAsync(new ArraySegment<byte>(_chunkBuffer, 0, _chunkBuffer.Length), cancellationToken).ConfigureAwait(false);
-
-            for (var i = 0; i < response.Count; i++)
-            {
-                var @byte = _chunkBuffer[i];
-                _buffer.Enqueue(@byte);
-            }
+        {   
+            var response = await _webSocket.ReceiveAsync(new ArraySegment<byte>(_chunckBuffer, 0, _chunckBuffer.Length), cancellationToken).ConfigureAwait(false);
 
             if (response.MessageType == WebSocketMessageType.Close)
             {
                 await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken).ConfigureAwait(false);
+            }
+            else if (response.MessageType == WebSocketMessageType.Binary)
+            {
+                for (var i = 0; i < response.Count; i++)
+                {
+                    _buffer.Enqueue(_chunckBuffer[i]);
+                }
+            }
+            else if (response.MessageType == WebSocketMessageType.Text)
+            {
+                throw new MqttProtocolViolationException("WebSocket channel received TEXT message.");
             }
         }
     }

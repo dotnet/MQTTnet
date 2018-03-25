@@ -148,7 +148,7 @@
             </PivotItem>
             <PivotItem Header="Log">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-                    <Button Click="Clear" Width="120">Clear</Button>
+                    <Button Click="ClearLog" Width="120">Clear</Button>
                 </StackPanel>
             </PivotItem>
         </Pivot>

@@ -24,6 +24,14 @@ namespace MQTTnet.Client
             return client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
         }
 
+        public static Task<IList<MqttSubscribeResult>> SubscribeAsync(this IMqttClient client, string topic)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (topic == null) throw new ArgumentNullException(nameof(topic));
+
+            return client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
+        }
+
         public static Task UnsubscribeAsync(this IMqttClient client, params string[] topicFilters)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));

@@ -53,10 +53,10 @@ namespace MQTTnet.Server
                 var connectReturnCode = ValidateConnection(connectPacket);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
-                    await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttConnAckPacket
+                    await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new[] { new MqttConnAckPacket
                     {
                         ConnectReturnCode = connectReturnCode
-                    }).ConfigureAwait(false);
+                    }}).ConfigureAwait(false);
 
                     return;
                 }
@@ -64,11 +64,11 @@ namespace MQTTnet.Server
                 var result = await GetOrCreateClientSessionAsync(connectPacket).ConfigureAwait(false);
                 clientSession = result.Session;
 
-                await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new MqttConnAckPacket
+                await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new[] { new MqttConnAckPacket
                 {
                     ConnectReturnCode = connectReturnCode,
                     IsSessionPresent = result.IsExistingSession
-                }).ConfigureAwait(false);
+                }}).ConfigureAwait(false);
 
                 ClientConnectedCallback?.Invoke(new ConnectedMqttClient
                 {

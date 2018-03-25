@@ -13,7 +13,9 @@ namespace MQTTnet.Client
 
         public IMqttClientCredentials Credentials { get; set; } = new MqttClientCredentials();
 
-        public TimeSpan KeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(5);
+        public TimeSpan KeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(15);
+
+        public TimeSpan? KeepAliveSendInterval { get; set; }
 
         public TimeSpan CommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
 

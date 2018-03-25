@@ -42,7 +42,8 @@ namespace MQTTnet.TestApp.UniversalWindows
             foreach (var traceMessage in _traceMessages)
             {
                 logText.AppendFormat(
-                    "[{0:yyyy-MM-dd HH:mm:ss.fff}] [{1}] [{2}] [{3}] [{4}]{5}", traceMessage.Timestamp,
+                    "[{0:yyyy-MM-dd HH:mm:ss.fff}] [{1}] [{2}] [{3}] [{4}]{5}",
+                    traceMessage.Timestamp,
                     traceMessage.Level,
                     traceMessage.Source,
                     traceMessage.ThreadId,
@@ -197,8 +198,13 @@ namespace MQTTnet.TestApp.UniversalWindows
             }
         }
 
-        private void Clear(object sender, RoutedEventArgs e)
+        private void ClearLog(object sender, RoutedEventArgs e)
         {
+            while (_traceMessages.Count > 0)
+            {
+                _traceMessages.TryDequeue(out _);
+            }
+
             Trace.Text = string.Empty;
         }
 

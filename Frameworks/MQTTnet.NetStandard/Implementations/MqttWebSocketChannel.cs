@@ -96,8 +96,17 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            _webSocket?.Dispose();
-            _webSocket = null;
+            try
+            {
+                _webSocket?.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            finally
+            {
+                _webSocket = null;
+            }            
         }
     }
 }

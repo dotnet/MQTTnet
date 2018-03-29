@@ -15,12 +15,19 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttChannel, IDisposable
     {
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
+        public static int BufferSize { get; set; } = 4096 * 20; // Can be changed for fine tuning by library user.
+
+        private readonly int _bufferSize = BufferSize;
         private readonly MqttClientTcpOptions _options;
+
         private StreamSocket _socket;
 
         public MqttTcpChannel(MqttClientTcpOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _bufferSize = _options.BufferSize;
         }
 
         public MqttTcpChannel(StreamSocket socket)
@@ -69,14 +76,56 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            _socket?.Dispose();
-            _socket = null;
+            try
+            {
+                SendStream?.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (NullReferenceException)
+            {
+            }
+            finally
+            {
+                SendStream = null;
+            }
+
+            try
+            {
+                ReceiveStream?.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (NullReferenceException)
+            {
+            }
+            finally
+            {
+                ReceiveStream = null;
+            }
+
+            try
+            {
+                _socket?.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (NullReferenceException)
+            {
+            }
+            finally
+            {
+                _socket = null;
+            }
         }
 
         private void CreateStreams()
         {
-            SendStream = _socket.OutputStream.AsStreamForWrite();
-            ReceiveStream = _socket.InputStream.AsStreamForRead();
+            SendStream = _socket.OutputStream.AsStreamForWrite(_bufferSize);
+            ReceiveStream = _socket.InputStream.AsStreamForRead(_bufferSize);
         }
 
         private static Certificate LoadCertificate(MqttClientTcpOptions options)

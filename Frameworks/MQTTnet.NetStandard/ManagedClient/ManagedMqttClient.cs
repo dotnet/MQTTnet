@@ -40,6 +40,7 @@ namespace MQTTnet.ManagedClient
         }
 
         public bool IsConnected => _mqttClient.IsConnected;
+        public bool IsStarted => _connectionCancellationToken != null;
 
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;

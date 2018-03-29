@@ -47,7 +47,7 @@ namespace MQTTnet.ManagedClient
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            if (_clientOptionsBuilder != null)
+            if (_clientOptionsBuilder == null)
             {
                 _clientOptionsBuilder = new MqttClientOptionsBuilder();
             }

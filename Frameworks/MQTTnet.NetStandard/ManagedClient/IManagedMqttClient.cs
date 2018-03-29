@@ -7,6 +7,7 @@ namespace MQTTnet.ManagedClient
 {
     public interface IManagedMqttClient : IApplicationMessageReceiver, IApplicationMessagePublisher, IDisposable
     {
+        bool IsStarted { get; }
         bool IsConnected { get; }
 
         event EventHandler<MqttClientConnectedEventArgs> Connected;

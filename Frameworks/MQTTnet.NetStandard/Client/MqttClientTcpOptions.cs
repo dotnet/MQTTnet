@@ -6,6 +6,8 @@
 
         public int? Port { get; set; }
 
+        public int BufferSize { get; set; } = 20 * 4096;
+
         public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -17,6 +18,8 @@ namespace MQTTnet.Server
         private readonly IMqttServerOptions _options;
         private readonly MqttClientSession _clientSession;
         private readonly IMqttNetLogger _logger;
+
+        private Task _workerTask;
 
         public MqttClientPendingMessagesQueue(IMqttServerOptions options, MqttClientSession clientSession, IMqttNetLogger logger)
         {
@@ -36,7 +39,15 @@ namespace MQTTnet.Server
                 return;
             }
 
-            Task.Run(async () => await SendQueuedPacketsAsync(adapter, cancellationToken), cancellationToken).ConfigureAwait(false);
+            _workerTask = Task.Run(() => SendQueuedPacketsAsync(adapter, cancellationToken), cancellationToken);
+        }
+
+        public void WaitForCompletion()
+        {
+            if (_workerTask != null)
+            {
+                Task.WaitAll(_workerTask);
+            }
         }
 
         public void Enqueue(MqttBasePacket packet)
@@ -55,7 +66,7 @@ namespace MQTTnet.Server
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    await SendQueuedPacketAsync(adapter, cancellationToken);
+                    await SendNextQueuedPacketAsync(adapter, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -67,7 +78,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task SendQueuedPacketAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
+        private async Task SendNextQueuedPacketAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
         {
             MqttBasePacket packet = null;
             try
@@ -76,6 +87,11 @@ namespace MQTTnet.Server
                 if (!_queue.TryDequeue(out packet))
                 {
                     throw new InvalidOperationException(); // should not happen
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
                 }
 
                 await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new[] { packet }).ConfigureAwait(false);
@@ -110,7 +126,10 @@ namespace MQTTnet.Server
                     }
                 }
 
-                await _clientSession.StopAsync();
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await _clientSession.StopAsync().ConfigureAwait(false);
+                }
             }
         }
 

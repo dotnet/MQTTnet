@@ -17,6 +17,7 @@ namespace MQTTnet.Client
     {
         private readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         private readonly Stopwatch _sendTracker = new Stopwatch();
+        private readonly SemaphoreSlim _disconnectLock = new SemaphoreSlim(1, 1);
         private readonly IMqttClientAdapterFactory _adapterFactory;
         private readonly MqttPacketDispatcher _packetDispatcher;
         private readonly IMqttNetLogger _logger;
@@ -24,13 +25,15 @@ namespace MQTTnet.Client
         private IMqttClientOptions _options;
         private bool _isReceivingPackets;
         private CancellationTokenSource _cancellationTokenSource;
+        private Task _packetReceiverTask;
+        private Task _keepAliveMessageSenderTask;
         private IMqttChannelAdapter _adapter;
 
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
             _adapterFactory = channelFactory ?? throw new ArgumentNullException(nameof(channelFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
+
             _packetDispatcher = new MqttPacketDispatcher(logger);
         }
 
@@ -55,12 +58,12 @@ namespace MQTTnet.Client
                 _packetDispatcher.Reset();
 
                 _adapter = _adapterFactory.CreateClientAdapter(options.ChannelOptions, _logger);
-                
+
                 _logger.Trace<MqttClient>("Trying to connect with server.");
                 await _adapter.ConnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
                 _logger.Trace<MqttClient>("Connection with server established.");
 
-                await StartReceivingPacketsAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
+                await StartReceivingPacketsAsync().ConfigureAwait(false);
 
                 var connectResponse = await AuthenticateAsync(options.WillMessage).ConfigureAwait(false);
                 _logger.Trace<MqttClient>("MQTT connection with server established.");
@@ -69,7 +72,7 @@ namespace MQTTnet.Client
 
                 if (_options.KeepAlivePeriod != TimeSpan.Zero)
                 {
-                    StartSendingKeepAliveMessages(_cancellationTokenSource.Token);
+                    StartSendingKeepAliveMessages();
                 }
 
                 IsConnected = true;
@@ -94,7 +97,10 @@ namespace MQTTnet.Client
 
             try
             {
-                await SendAsync(new MqttDisconnectPacket()).ConfigureAwait(false);
+                if (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    await SendAsync(new MqttDisconnectPacket()).ConfigureAwait(false);
+                }
             }
             finally
             {
@@ -144,7 +150,7 @@ namespace MQTTnet.Client
             ThrowIfNotConnected();
 
             var publishPackets = applicationMessages.Select(m => m.ToPublishPacket());
-            var packetGroups = publishPackets.GroupBy(p => p.QualityOfServiceLevel).OrderBy(g => g.Key); 
+            var packetGroups = publishPackets.GroupBy(p => p.QualityOfServiceLevel).OrderBy(g => g.Key);
 
             foreach (var qosGroup in packetGroups)
             {
@@ -153,7 +159,7 @@ namespace MQTTnet.Client
                     case MqttQualityOfServiceLevel.AtMostOnce:
                         {
                             // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
-                            await SendAsync(qosGroup.ToArray()).ConfigureAwait(false);
+                            await SendAsync((MqttPublishPacket[])qosGroup.ToArray()).ConfigureAwait(false);
                             break;
                         }
                     case MqttQualityOfServiceLevel.AtLeastOnce:
@@ -194,6 +200,9 @@ namespace MQTTnet.Client
         public void Dispose()
         {
             _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+
+            _adapter?.Dispose();
         }
 
         private async Task<MqttConnAckPacket> AuthenticateAsync(MqttApplicationMessage willApplicationMessage)
@@ -229,23 +238,31 @@ namespace MQTTnet.Client
 
         private async Task DisconnectInternalAsync(Exception exception)
         {
+            await _disconnectLock.WaitAsync();
             var clientWasConnected = IsConnected;
-            IsConnected = false;
-
-            var cts = _cancellationTokenSource;
-            if (cts == null || cts.IsCancellationRequested)
-            {
-                return;
-            }
-
-            cts.Cancel(false);
-            cts.Dispose();
-            _cancellationTokenSource = null;
-
             try
             {
+                IsConnected = false;
+
+                if (_cancellationTokenSource == null || _cancellationTokenSource.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                _cancellationTokenSource.Cancel(false);
+
+                if (_packetReceiverTask != null)
+                {
+                    Task.WaitAll(_packetReceiverTask);
+                }
+
+                if (_keepAliveMessageSenderTask != null)
+                {
+                    Task.WaitAll(_keepAliveMessageSenderTask);
+                }
+
                 await _adapter.DisconnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
-                _logger.Info<MqttClient>("Disconnected from adapter.");
+                _logger.Trace<MqttClient>("Disconnected from adapter.");
             }
             catch (Exception adapterException)
             {
@@ -253,6 +270,14 @@ namespace MQTTnet.Client
             }
             finally
             {
+                _adapter?.Dispose();
+                _adapter = null;
+
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+
+                _disconnectLock.Release();
+                
                 _logger.Info<MqttClient>("Disconnected.");
                 Disconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientWasConnected, exception));
             }
@@ -263,7 +288,7 @@ namespace MQTTnet.Client
             try
             {
                 _logger.Info<MqttClient>("Received <<< {0}", packet);
-                
+
                 if (packet is MqttPublishPacket publishPacket)
                 {
                     await ProcessReceivedPublishPacketAsync(publishPacket).ConfigureAwait(false);
@@ -311,6 +336,11 @@ namespace MQTTnet.Client
 
         private Task ProcessReceivedPublishPacketAsync(MqttPublishPacket publishPacket)
         {
+            if (_cancellationTokenSource.IsCancellationRequested)
+            {
+                return Task.FromResult(0);
+            }
+
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
                 FireApplicationMessageReceivedEvent(publishPacket);
@@ -363,54 +393,48 @@ namespace MQTTnet.Client
             return (TResponsePacket)await packetAwaiter.ConfigureAwait(false);
         }
 
-        private async Task SendKeepAliveMessagesAsync(CancellationToken cancellationToken)
+        private async Task SendKeepAliveMessagesAsync()
         {
             _logger.Info<MqttClient>("Start sending keep alive packets.");
 
             try
             {
-                while (!cancellationToken.IsCancellationRequested)
+                while (!_cancellationTokenSource.Token.IsCancellationRequested)
                 {
-                    TimeSpan keepAliveSendInterval;
+                    var keepAliveSendInterval = TimeSpan.FromSeconds(_options.KeepAlivePeriod.TotalSeconds * 0.75);
                     if (_options.KeepAliveSendInterval.HasValue)
                     {
                         keepAliveSendInterval = _options.KeepAliveSendInterval.Value;
-                    }
-                    else
-                    {
-                        keepAliveSendInterval = TimeSpan.FromSeconds(_options.KeepAlivePeriod.TotalSeconds * 0.75);
                     }
 
                     if (_sendTracker.Elapsed > keepAliveSendInterval)
                     {
                         await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket()).ConfigureAwait(false);
                     }
-                    
-                    await Task.Delay(keepAliveSendInterval, cancellationToken).ConfigureAwait(false);
+
+                    await Task.Delay(keepAliveSendInterval, _cancellationTokenSource.Token).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                await DisconnectInternalAsync(null).ConfigureAwait(false);
-            }
-            catch (MqttCommunicationException exception)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                _logger.Warning<MqttClient>(exception, "MQTT communication exception while sending/receiving keep alive packets.");
-                await DisconnectInternalAsync(exception).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                _logger.Warning<MqttClient>(exception, "Unhandled exception while sending/receiving keep alive packets.");
+                if (_cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if (exception is MqttCommunicationException)
+                {
+                    _logger.Warning<MqttClient>(exception, "MQTT communication exception while sending/receiving keep alive packets.");
+                }
+                else
+                {
+                    _logger.Warning<MqttClient>(exception, "Unhandled exception while sending/receiving keep alive packets.");
+
+                }
+
                 await DisconnectInternalAsync(exception).ConfigureAwait(false);
             }
             finally
@@ -419,48 +443,46 @@ namespace MQTTnet.Client
             }
         }
 
-        private async Task ReceivePacketsAsync(CancellationToken cancellationToken)
+        private async Task ReceivePacketsAsync()
         {
             _logger.Info<MqttClient>("Start receiving packets.");
 
             try
             {
-                while (!cancellationToken.IsCancellationRequested)
+                while (!_cancellationTokenSource.Token.IsCancellationRequested)
                 {
                     _isReceivingPackets = true;
 
-                    var packet = await _adapter.ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
+                    var packet = await _adapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationTokenSource.Token).ConfigureAwait(false);
 
-                    if (cancellationToken.IsCancellationRequested)
+                    if (_cancellationTokenSource.Token.IsCancellationRequested)
                     {
                         return;
                     }
 
-                    StartProcessReceivedPacket(packet, cancellationToken);
+                    StartProcessReceivedPacket(packet);
                 }
             }
             catch (OperationCanceledException)
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                await DisconnectInternalAsync(null).ConfigureAwait(false);
-            }
-            catch (MqttCommunicationException exception)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                _logger.Warning<MqttClient>(exception, "MQTT communication exception while receiving packets.");
-                await DisconnectInternalAsync(exception).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttClient>(exception, "Unhandled exception while receiving packets.");
+                if (_cancellationTokenSource.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if (exception is MqttCommunicationException)
+                {
+                    _logger.Warning<MqttClient>(exception, "MQTT communication exception while receiving packets.");
+                }
+                else
+                {
+                    _logger.Error<MqttClient>(exception, "Unhandled exception while receiving packets.");
+
+                }
+
                 await DisconnectInternalAsync(exception).ConfigureAwait(false);
             }
             finally
@@ -469,38 +491,26 @@ namespace MQTTnet.Client
             }
         }
 
-        private void StartProcessReceivedPacket(MqttBasePacket packet, CancellationToken cancellationToken)
+        private void StartProcessReceivedPacket(MqttBasePacket packet)
         {
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(
-                async () => await ProcessReceivedPacketAsync(packet).ConfigureAwait(false),
-                cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() => ProcessReceivedPacketAsync(packet), _cancellationTokenSource.Token);
         }
 
-        private async Task StartReceivingPacketsAsync(CancellationToken cancellationToken)
+        private async Task StartReceivingPacketsAsync()
         {
             _isReceivingPackets = false;
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(
-                async () => await ReceivePacketsAsync(cancellationToken).ConfigureAwait(false),
-                cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            _packetReceiverTask = Task.Run(ReceivePacketsAsync, _cancellationTokenSource.Token);
 
-            while (!_isReceivingPackets && !cancellationToken.IsCancellationRequested)
+            while (!_isReceivingPackets && !_cancellationTokenSource.Token.IsCancellationRequested)
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromMilliseconds(100), _cancellationTokenSource.Token).ConfigureAwait(false);
             }
         }
 
-        private void StartSendingKeepAliveMessages(CancellationToken cancellationToken)
+        private void StartSendingKeepAliveMessages()
         {
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(
-                async () => await SendKeepAliveMessagesAsync(cancellationToken).ConfigureAwait(false), 
-                cancellationToken).ConfigureAwait(false);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            _keepAliveMessageSenderTask = Task.Run(SendKeepAliveMessagesAsync, _cancellationTokenSource.Token);
         }
     }
 }

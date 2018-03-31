@@ -17,6 +17,10 @@ namespace MQTTnet.Core.Tests
 
         public IMqttPacketSerializer PacketSerializer { get; } = new MqttPacketSerializer();
 
+        public void Dispose()
+        {
+        }
+
         public Task ConnectAsync(TimeSpan timeout)
         {
             return Task.FromResult(0);

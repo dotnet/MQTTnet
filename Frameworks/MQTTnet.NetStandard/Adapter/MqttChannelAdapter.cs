@@ -14,11 +14,12 @@ using MQTTnet.Serializer;
 
 namespace MQTTnet.Adapter
 {
-    public class MqttChannelAdapter : IMqttChannelAdapter
+    public sealed class MqttChannelAdapter : IMqttChannelAdapter
     {
         private const uint ErrorOperationAborted = 0x800703E3;
         private const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
 
+        private bool _isDisposed;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IMqttNetLogger _logger;
         private readonly IMqttChannel _channel;
@@ -34,6 +35,7 @@ namespace MQTTnet.Adapter
 
         public Task ConnectAsync(TimeSpan timeout)
         {
+            ThrowIfDisposed();
             _logger.Trace<MqttChannelAdapter>("Connecting [Timeout={0}]", timeout);
 
             return ExecuteAndWrapExceptionAsync(() => _channel.ConnectAsync().TimeoutAfter(timeout));
@@ -41,6 +43,7 @@ namespace MQTTnet.Adapter
 
         public Task DisconnectAsync(TimeSpan timeout)
         {
+            ThrowIfDisposed();
             _logger.Trace<MqttChannelAdapter>("Disconnecting [Timeout={0}]", timeout);
 
             return ExecuteAndWrapExceptionAsync(() => _channel.DisconnectAsync().TimeoutAfter(timeout));
@@ -48,6 +51,8 @@ namespace MQTTnet.Adapter
 
         public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets)
         {
+            ThrowIfDisposed();
+
             return ExecuteAndWrapExceptionAsync(async () =>
             {
                 await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -55,6 +60,11 @@ namespace MQTTnet.Adapter
                 {
                     foreach (var packet in packets)
                     {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            return;
+                        }
+
                         if (packet == null)
                         {
                             continue;
@@ -65,8 +75,18 @@ namespace MQTTnet.Adapter
                         var chunks = PacketSerializer.Serialize(packet);
                         foreach (var chunk in chunks)
                         {
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                return;
+                            }
+
                             await _channel.SendStream.WriteAsync(chunk.Array, chunk.Offset, chunk.Count, cancellationToken).ConfigureAwait(false);
                         }
+                    }
+
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
                     }
 
                     if (timeout > TimeSpan.Zero)
@@ -87,6 +107,8 @@ namespace MQTTnet.Adapter
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
+            ThrowIfDisposed();
+
             MqttBasePacket packet = null;
             await ExecuteAndWrapExceptionAsync(async () =>
             {
@@ -212,6 +234,21 @@ namespace MQTTnet.Adapter
             catch (Exception exception)
             {
                 throw new MqttCommunicationException(exception);
+            }
+        }
+
+        public void Dispose()
+        {
+            _isDisposed = true;
+            _semaphore?.Dispose();
+            _channel?.Dispose();
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(MqttChannelAdapter));
             }
         }
     }

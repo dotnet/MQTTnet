@@ -96,14 +96,14 @@ namespace MQTTnet.Server
                 }
 
                 _cancellationTokenSource?.Cancel(false);
+
+                PendingMessagesQueue.WaitForCompletion();
+                KeepAliveMonitor.WaitForCompletion();
+
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
 
-                if (_adapter != null)
-                {
-                    await _adapter.DisconnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
-                    _adapter = null;
-                }
+                _adapter = null;
 
                 _logger.Info<MqttClientSession>("Client '{0}': Session stopped.", ClientId);
             }

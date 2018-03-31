@@ -15,6 +15,8 @@
 * [Client] Added the "IsStarted" property for the managed client.
 * [Client] Optimized stream buffer for UWP apps.
 * [Client] Added the _BufferSize_ to the TCP options.
+* [Client] Fixed a race condition which leads to exceptions when reconnecting rapidly.
+* [Server] Fixed a race condition which leads to exceptions when clients are reconnecting rapidly.
 * [Core] Fixed some issues in stream and socket handling.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>

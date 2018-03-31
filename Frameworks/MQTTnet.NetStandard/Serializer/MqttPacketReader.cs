@@ -24,6 +24,11 @@ namespace MQTTnet.Serializer
 
         public static async Task<MqttPacketHeader> ReadHeaderAsync(Stream stream, CancellationToken cancellationToken)
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+
             // Wait for the next package which starts with the header. At this point there will probably
             // some large delay and thus the thread should be put back to the pool (await). So ReadByte()
             // is not an option here.

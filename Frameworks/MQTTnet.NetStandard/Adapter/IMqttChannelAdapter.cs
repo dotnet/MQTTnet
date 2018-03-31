@@ -7,7 +7,7 @@ using MQTTnet.Serializer;
 
 namespace MQTTnet.Adapter
 {
-    public interface IMqttChannelAdapter
+    public interface IMqttChannelAdapter : IDisposable
     {
         IMqttPacketSerializer PacketSerializer { get; }
 

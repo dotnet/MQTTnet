@@ -12,9 +12,8 @@ using MQTTnet.Client;
 
 namespace MQTTnet.Implementations
 {
-    public sealed class MqttTcpChannel : IMqttChannel, IDisposable
+    public sealed class MqttTcpChannel : IMqttChannel
     {
-        //todo: this can be used with min dependency NetStandard1.6
 #if NET452 || NET461
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
@@ -63,7 +62,6 @@ namespace MQTTnet.Implementations
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             }
 
-            //todo: else brach can be used with min dependency NET46
 #if NET452 || NET461
             await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
 #else
@@ -73,7 +71,7 @@ namespace MQTTnet.Implementations
             if (_options.TlsOptions.UseTls)
             {
                 _sslStream = new SslStream(new NetworkStream(_socket, true), false, InternalUserCertificateValidationCallback);
-                await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(_options), SslProtocols.Tls12, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+                await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), SslProtocols.Tls12, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
             }
             
             CreateStreams();
@@ -184,15 +182,15 @@ namespace MQTTnet.Implementations
             return _options.TlsOptions.AllowUntrustedCertificates;
         }
 
-        private static X509CertificateCollection LoadCertificates(MqttClientTcpOptions options)
+        private X509CertificateCollection LoadCertificates()
         {
             var certificates = new X509CertificateCollection();
-            if (options.TlsOptions.Certificates == null)
+            if (_options.TlsOptions.Certificates == null)
             {
                 return certificates;
             }
 
-            foreach (var certificate in options.TlsOptions.Certificates)
+            foreach (var certificate in _options.TlsOptions.Certificates)
             {
                 certificates.Add(new X509Certificate2(certificate));
             }
@@ -212,7 +210,6 @@ namespace MQTTnet.Implementations
                 stream = new NetworkStream(_socket, true);
             }
             
-            //todo: if branch can be used with min dependency NetStandard1.6
 #if NET452 || NET461
             SendStream = new BufferedStream(stream, _bufferSize);
             ReceiveStream = new BufferedStream(stream, _bufferSize);

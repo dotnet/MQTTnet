@@ -16,6 +16,8 @@ namespace MQTTnet.Server
         private readonly Func<Task> _timeoutCallback;
         private readonly IMqttNetLogger _logger;
 
+        private Task _workerTask;
+
         public MqttClientKeepAliveMonitor(string clientId, Func<Task> timeoutCallback, IMqttNetLogger logger)
         {
             _clientId = clientId;
@@ -34,7 +36,15 @@ namespace MQTTnet.Server
                 return;
             }
 
-            Task.Run(async () => await RunAsync(keepAlivePeriod, cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+            _workerTask = Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken).ConfigureAwait(false), cancellationToken);
+        }
+
+        public void WaitForCompletion()
+        {
+            if (_workerTask != null)
+            {
+                Task.WaitAll(_workerTask);
+            }
         }
 
         private async Task RunAsync(int keepAlivePeriod, CancellationToken cancellationToken)

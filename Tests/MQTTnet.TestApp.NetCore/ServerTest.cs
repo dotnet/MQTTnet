@@ -89,7 +89,7 @@ namespace MQTTnet.TestApp.NetCore
                             c.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(content.ToString());
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                     }
                 };

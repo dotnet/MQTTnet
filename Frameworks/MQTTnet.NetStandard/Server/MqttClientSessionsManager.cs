@@ -33,16 +33,18 @@ namespace MQTTnet.Server
         public Action<string, TopicFilter> ClientSubscribedTopicCallback { get; set; }
         public Action<string, string> ClientUnsubscribedTopicCallback { get; set; }
         public Action<string, MqttApplicationMessage> ApplicationMessageReceivedCallback { get; set; }
-        
+
         public async Task RunSessionAsync(IMqttChannelAdapter clientAdapter, CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
             MqttClientSession clientSession = null;
             try
             {
-                if (!(await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false) is MqttConnectPacket connectPacket))
+                if (!(await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken)
+                    .ConfigureAwait(false) is MqttConnectPacket connectPacket))
                 {
-                    throw new MqttProtocolViolationException("The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
+                    throw new MqttProtocolViolationException(
+                        "The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
                 }
 
                 clientId = connectPacket.ClientId;
@@ -53,10 +55,13 @@ namespace MQTTnet.Server
                 var connectReturnCode = ValidateConnection(connectPacket);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
-                    await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new[] { new MqttConnAckPacket
+                    await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new[]
                     {
-                        ConnectReturnCode = connectReturnCode
-                    }}).ConfigureAwait(false);
+                        new MqttConnAckPacket
+                        {
+                            ConnectReturnCode = connectReturnCode
+                        }
+                    }).ConfigureAwait(false);
 
                     return;
                 }
@@ -64,11 +69,14 @@ namespace MQTTnet.Server
                 var result = await GetOrCreateClientSessionAsync(connectPacket).ConfigureAwait(false);
                 clientSession = result.Session;
 
-                await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new[] { new MqttConnAckPacket
+                await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new[]
                 {
-                    ConnectReturnCode = connectReturnCode,
-                    IsSessionPresent = result.IsExistingSession
-                }}).ConfigureAwait(false);
+                    new MqttConnAckPacket
+                    {
+                        ConnectReturnCode = connectReturnCode,
+                        IsSessionPresent = result.IsExistingSession
+                    }
+                }).ConfigureAwait(false);
 
                 ClientConnectedCallback?.Invoke(new ConnectedMqttClient
                 {
@@ -77,6 +85,9 @@ namespace MQTTnet.Server
                 });
 
                 await clientSession.RunAsync(connectPacket, clientAdapter).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
             }
             catch (Exception exception)
             {
@@ -87,12 +98,13 @@ namespace MQTTnet.Server
                 try
                 {
                     await clientAdapter.DisconnectAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                    clientAdapter.Dispose();
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
-                    // ignored
+                    _logger.Error<MqttClientSessionsManager>(exception, exception.Message);
                 }
-
+                
                 ClientDisconnectedCallback?.Invoke(new ConnectedMqttClient
                 {
                     ClientId = clientId,
@@ -308,7 +320,7 @@ namespace MQTTnet.Server
             ClientSubscribedTopicCallback = null;
             ClientUnsubscribedTopicCallback = null;
             ApplicationMessageReceivedCallback = null;
-            
+
             _semaphore?.Dispose();
         }
     }

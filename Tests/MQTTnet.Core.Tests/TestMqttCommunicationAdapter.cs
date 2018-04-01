@@ -47,7 +47,17 @@ namespace MQTTnet.Core.Tests
         {
             ThrowIfPartnerIsNull();
 
-            return Task.Run(() => _incomingPackets.Take(), cancellationToken);
+            return Task.Run(() =>
+            {
+                try
+                {
+                    return _incomingPackets.Take(cancellationToken);
+                }
+                catch
+                {
+                    return null;
+                }
+            }, cancellationToken);
         }
 
         private void EnqueuePacketInternal(MqttBasePacket packet)

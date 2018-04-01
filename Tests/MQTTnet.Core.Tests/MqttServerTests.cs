@@ -156,7 +156,7 @@ namespace MQTTnet.Core.Tests
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
                 await c1.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
 
-                s.PublishAsync(message).Wait();
+                await s.PublishAsync(message);
                 await Task.Delay(500);
             }
             finally

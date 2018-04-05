@@ -26,8 +26,8 @@ namespace MQTTnet.Core.Tests
             
             try
             {
-                await client.PublishAsync(message);
-                await tcs.Task;
+                await client.PublishAsync(message).ConfigureAwait(false);
+                await tcs.Task.ConfigureAwait(false);
             }
             finally
             {

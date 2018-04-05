@@ -209,11 +209,8 @@ namespace MQTTnet.Core.Tests
                 await s.StartAsync(new MqttServerOptions());
 
                 var c1 = await serverAdapter.ConnectTestClient(s, "c1");
-                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
+                await c1.PublishAndWaitForAsync(s, new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
                 await c1.DisconnectAsync();
-
-                await Task.Delay(TimeSpan.FromSeconds(2));
-                // TODO: Find another way to wait for the retained components.
 
                 var c2 = await serverAdapter.ConnectTestClient(s, "c2");
                 c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
@@ -244,7 +241,7 @@ namespace MQTTnet.Core.Tests
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[0]).WithRetainFlag().Build());
                 await c1.DisconnectAsync();
-
+                
                 var c2 = await serverAdapter.ConnectTestClient(s, "c2");
                 c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
                 await c2.SubscribeAsync(new TopicFilter("retained", MqttQualityOfServiceLevel.AtMostOnce));
@@ -274,7 +271,8 @@ namespace MQTTnet.Core.Tests
                 await s.StartAsync(options);
 
                 var c1 = await serverAdapter.ConnectTestClient(s, "c1");
-                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
+
+                await c1.PublishAndWaitForAsync(s, new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
                 await c1.DisconnectAsync();
             }
             finally
@@ -282,8 +280,7 @@ namespace MQTTnet.Core.Tests
                 await s.StopAsync();
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            // TODO: Find another way to wait for the retained components.
+            Assert.AreEqual(1, storage.Messages.Count);
 
             s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
 
@@ -385,17 +382,17 @@ namespace MQTTnet.Core.Tests
 
         private class TestStorage : IMqttServerStorage
         {
-            private IList<MqttApplicationMessage> _messages = new List<MqttApplicationMessage>();
+            public IList<MqttApplicationMessage> Messages = new List<MqttApplicationMessage>();
 
             public Task SaveRetainedMessagesAsync(IList<MqttApplicationMessage> messages)
             {
-                _messages = messages;
+                Messages = messages;
                 return Task.CompletedTask;
             }
 
             public Task<IList<MqttApplicationMessage>> LoadRetainedMessagesAsync()
             {
-                return Task.FromResult(_messages);
+                return Task.FromResult(Messages);
             }
         }
 

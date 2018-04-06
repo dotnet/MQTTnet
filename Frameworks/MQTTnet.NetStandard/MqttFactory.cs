@@ -38,7 +38,14 @@ namespace MQTTnet
         public IMqttServer CreateMqttServer()
         {
             var logger = new MqttNetLogger();
-            return CreateMqttServer(new List<IMqttServerAdapter> { new MqttServerAdapter(logger) }, logger);
+            return CreateMqttServer(logger);
+        }
+
+        public IMqttServer CreateMqttServer(IMqttNetLogger logger)
+        {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            return CreateMqttServer(new List<IMqttServerAdapter> { new MqttTcpServerAdapter(logger) }, logger);
         }
 
         public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)

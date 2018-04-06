@@ -9,12 +9,12 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttServerAdapter : IMqttServerAdapter, IDisposable
+    public class MqttTcpServerAdapter : IMqttServerAdapter, IDisposable
     {
         private readonly IMqttNetLogger _logger;
         private StreamSocketListener _defaultEndpointSocket;
 
-        public MqttServerAdapter(IMqttNetLogger logger)
+        public MqttTcpServerAdapter(IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -67,7 +67,7 @@ namespace MQTTnet.Implementations
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttServerAdapter>(exception, "Error while accepting connection at default endpoint.");
+                _logger.Error<MqttTcpServerAdapter>(exception, "Error while accepting connection at default endpoint.");
             }
         }
     }

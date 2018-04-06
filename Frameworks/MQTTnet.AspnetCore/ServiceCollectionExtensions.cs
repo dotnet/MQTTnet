@@ -21,9 +21,9 @@ namespace MQTTnet.AspNetCore
             services.AddSingleton<IMqttServer>(s => s.GetService<MqttHostedServer>());
             
             services.AddSingleton<MqttWebSocketServerAdapter>();
-            services.AddSingleton<MqttServerAdapter>();
+            services.AddSingleton<MqttTcpServerAdapter>();
             services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttWebSocketServerAdapter>()); 
-            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttServerAdapter>());
+            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttTcpServerAdapter>());
 
             return services;
         }

@@ -39,15 +39,15 @@ namespace MQTTnet.TestApp.NetCore
                     Console.WriteLine(">> RECEIVED: " + e.ApplicationMessage.Topic);
                 };
 
-                await managedClient.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("Step").WithPayload("1").Build());
-                await managedClient.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("Step").WithPayload("2").WithAtLeastOnceQoS().Build());
+                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("1"));
+                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("2").WithAtLeastOnceQoS());
 
                 await managedClient.StartAsync(options);
 
                 await managedClient.SubscribeAsync(new TopicFilter("xyz", MqttQualityOfServiceLevel.AtMostOnce));
                 await managedClient.SubscribeAsync(new TopicFilter("abc", MqttQualityOfServiceLevel.AtMostOnce));
                 
-                await managedClient.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("Step").WithPayload("3").Build());
+                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("3"));
 
                 Console.WriteLine("Managed client started.");
                 Console.ReadLine();

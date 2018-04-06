@@ -19,7 +19,9 @@ namespace MQTTnet
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
             
-            return publisher.PublishAsync(new MqttApplicationMessageBuilder().WithTopic(topic).Build());
+            return publisher.PublishAsync(builder => builder
+                .WithTopic(topic)
+            );
         }
 
         public static Task PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload)
@@ -27,7 +29,10 @@ namespace MQTTnet
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return publisher.PublishAsync(new MqttApplicationMessageBuilder().WithTopic(topic).WithPayload(payload).Build());
+            return publisher.PublishAsync(builder => builder
+                .WithTopic(topic)
+                .WithPayload(payload)
+            );
         }
 
         public static Task PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
@@ -35,7 +40,17 @@ namespace MQTTnet
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return publisher.PublishAsync(new MqttApplicationMessageBuilder().WithTopic(topic).WithPayload(payload).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
+            return publisher.PublishAsync(builder => builder
+                .WithTopic(topic)
+                .WithPayload(payload)
+                .WithQualityOfServiceLevel(qualityOfServiceLevel)
+            );
+        }
+
+        public static Task PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
+        {
+            var message = builder(new MqttApplicationMessageBuilder()).Build();
+            return publisher.PublishAsync(message);
         }
     }
 }

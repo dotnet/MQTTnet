@@ -214,7 +214,7 @@ namespace MQTTnet.Core.Tests
                 await s.StartAsync(new MqttServerOptions());
 
                 var c1 = await serverAdapter.ConnectTestClient("c1");
-                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).Build());
+                await c1.PublishAsync(builder => builder.WithTopic("retained").WithPayload(new byte[3]));
                 await c1.DisconnectAsync();
 
                 var c2 = await serverAdapter.ConnectTestClient("c2");
@@ -272,8 +272,8 @@ namespace MQTTnet.Core.Tests
                 await s.StartAsync(new MqttServerOptions());
 
                 var c1 = await serverAdapter.ConnectTestClient("c1");
-                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
-                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[0]).WithRetainFlag().Build());
+                await c1.PublishAsync(builder => builder.WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag());
+                await c1.PublishAsync(builder => builder.WithTopic("retained").WithPayload(new byte[0]).WithRetainFlag());
                 await c1.DisconnectAsync();
 
                 var c2 = await serverAdapter.ConnectTestClient("c2");
@@ -366,8 +366,7 @@ namespace MQTTnet.Core.Tests
                     isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(args.ApplicationMessage.Payload), StringComparison.Ordinal) == 0;
                 };
 
-                var m = new MqttApplicationMessageBuilder().WithTopic("test").Build();
-                await c1.PublishAsync(m);
+                await c1.PublishAsync(builder => builder.WithTopic("test"));
                 await c1.DisconnectAsync();
 
                 await Task.Delay(500);
@@ -403,7 +402,7 @@ namespace MQTTnet.Core.Tests
                 };
 
                 await c1.SubscribeAsync("A", MqttQualityOfServiceLevel.AtMostOnce);
-                await c2.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("A").WithPayload(Encoding.UTF8.GetBytes("The body")).Build());
+                await c2.PublishAsync(builder => builder.WithTopic("A").WithPayload(Encoding.UTF8.GetBytes("The body")));
 
                 await Task.Delay(1000);
             }
@@ -452,7 +451,7 @@ namespace MQTTnet.Core.Tests
                 c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
 
                 await c1.SubscribeAsync(new TopicFilterBuilder().WithTopic(topicFilter).WithQualityOfServiceLevel(filterQualityOfServiceLevel).Build());
-                await c2.PublishAsync(new MqttApplicationMessageBuilder().WithTopic(topic).WithPayload(new byte[0]).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
+                await c2.PublishAsync(builder => builder.WithTopic(topic).WithPayload(new byte[0]).WithQualityOfServiceLevel(qualityOfServiceLevel));
 
                 await Task.Delay(500);
                 await c1.UnsubscribeAsync(topicFilter);

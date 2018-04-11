@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Internal;
@@ -9,11 +10,9 @@ namespace MQTTnet.Extensions.Rpc
 {
     public sealed class MqttRpcClient : IDisposable
     {
-        private const string ResponseTopic = "$MQTTnet.RPC/+/+/response";
         private readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
         private readonly IMqttClient _mqttClient;
-        private bool _isEnabled;
-
+        
         public MqttRpcClient(IMqttClient mqttClient)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
@@ -21,16 +20,9 @@ namespace MQTTnet.Extensions.Rpc
             _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
         }
 
-        public async Task EnableAsync()
+        public Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
-            await _mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic(ResponseTopic).WithAtLeastOnceQoS().Build());
-            _isEnabled = true;
-        }
-
-        public async Task DisableAsync()
-        {
-            await _mqttClient.UnsubscribeAsync(ResponseTopic);
-            _isEnabled = false;
+            return ExecuteAsync(timeout, methodName, Encoding.UTF8.GetBytes(payload), qualityOfServiceLevel);
         }
 
         public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
@@ -42,12 +34,7 @@ namespace MQTTnet.Extensions.Rpc
                 throw new ArgumentException("The method name cannot contain /, + or #.");
             }
 
-            if (!_isEnabled)
-            {
-                throw new InvalidOperationException("The RPC client is not enabled.");
-            }
-
-            var requestTopic = $"$MQTTnet.RPC/{Guid.NewGuid():N}/{methodName}";
+            var requestTopic = $"MQTTnet.RPC/{Guid.NewGuid():N}/{methodName}";
             var responseTopic = requestTopic + "/response";
 
             var requestMessage = new MqttApplicationMessageBuilder()
@@ -64,18 +51,21 @@ namespace MQTTnet.Extensions.Rpc
                     throw new InvalidOperationException();
                 }
 
-                await _mqttClient.PublishAsync(requestMessage);
+                await _mqttClient.SubscribeAsync(responseTopic, qualityOfServiceLevel).ConfigureAwait(false);
+                await _mqttClient.PublishAsync(requestMessage).ConfigureAwait(false);
+
                 return await tcs.Task.TimeoutAfter(timeout);
             }
             finally
             {
                 _waitingCalls.TryRemove(responseTopic, out _);
+                await _mqttClient.UnsubscribeAsync(responseTopic).ConfigureAwait(false);
             }
         }
 
         private void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs eventArgs)
         {
-            if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out TaskCompletionSource<byte[]> tcs))
+            if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var tcs))
             {
                 return;
             }

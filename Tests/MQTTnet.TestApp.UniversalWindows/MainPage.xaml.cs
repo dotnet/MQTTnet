@@ -13,6 +13,8 @@ using MQTTnet.Implementations;
 using MQTTnet.ManagedClient;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MqttClientConnectedEventArgs = MQTTnet.Client.MqttClientConnectedEventArgs;
+using MqttClientDisconnectedEventArgs = MQTTnet.Client.MqttClientDisconnectedEventArgs;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
@@ -33,6 +35,11 @@ namespace MQTTnet.TestApp.UniversalWindows
         private async void OnTraceMessagePublished(object sender, MqttNetLogMessagePublishedEventArgs e)
         {
             _traceMessages.Enqueue(e.TraceMessage);
+            await UpdateLogAsync();
+        }
+
+        private async Task UpdateLogAsync()
+        {
             while (_traceMessages.Count > 100)
             {
                 _traceMessages.TryDequeue(out _);
@@ -113,11 +120,15 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                     await _mqttClient.DisconnectAsync();
                     _mqttClient.ApplicationMessageReceived -= OnApplicationMessageReceived;
+                    _mqttClient.Connected -= OnConnected;
+                    _mqttClient.Disconnected -= OnDisconnected;
                 }
 
                 var factory = new MqttFactory();
                 _mqttClient = factory.CreateMqttClient();
                 _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
+                _mqttClient.Connected += OnConnected;
+                _mqttClient.Disconnected += OnDisconnected;
 
                 await _mqttClient.ConnectAsync(options);
             }
@@ -125,6 +136,22 @@ namespace MQTTnet.TestApp.UniversalWindows
             {
                 Trace.Text += exception + Environment.NewLine;
             }
+        }
+
+        private void OnDisconnected(object sender, MqttClientDisconnectedEventArgs e)
+        {
+            _traceMessages.Enqueue(new MqttNetLogMessage("", DateTime.Now, -1,
+                "", MqttNetLogLevel.Info, "! DISCONNECTED EVENT FIRED", null));
+
+            Task.Run(UpdateLogAsync);
+        }
+
+        private void OnConnected(object sender, MqttClientConnectedEventArgs e)
+        {
+            _traceMessages.Enqueue(new MqttNetLogMessage("", DateTime.Now, -1,
+                "", MqttNetLogLevel.Info, "! CONNECTED EVENT FIRED", null));
+
+            Task.Run(UpdateLogAsync);
         }
 
         private async void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs eventArgs)

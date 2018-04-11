@@ -36,7 +36,7 @@ namespace MQTTnet.Adapter
         public Task ConnectAsync(TimeSpan timeout)
         {
             ThrowIfDisposed();
-            _logger.Trace<MqttChannelAdapter>("Connecting [Timeout={0}]", timeout);
+            _logger.Verbose<MqttChannelAdapter>("Connecting [Timeout={0}]", timeout);
 
             return ExecuteAndWrapExceptionAsync(() => _channel.ConnectAsync().TimeoutAfter(timeout));
         }
@@ -44,7 +44,7 @@ namespace MQTTnet.Adapter
         public Task DisconnectAsync(TimeSpan timeout)
         {
             ThrowIfDisposed();
-            _logger.Trace<MqttChannelAdapter>("Disconnecting [Timeout={0}]", timeout);
+            _logger.Verbose<MqttChannelAdapter>("Disconnecting [Timeout={0}]", timeout);
 
             return ExecuteAndWrapExceptionAsync(() => _channel.DisconnectAsync().TimeoutAfter(timeout));
         }
@@ -70,7 +70,7 @@ namespace MQTTnet.Adapter
                             continue;
                         }
 
-                        _logger.Trace<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
+                        _logger.Verbose<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
 
                         var chunks = PacketSerializer.Serialize(packet);
                         foreach (var chunk in chunks)
@@ -135,7 +135,7 @@ namespace MQTTnet.Adapter
                         throw new MqttProtocolViolationException("Received malformed packet.");
                     }
 
-                    _logger.Trace<MqttChannelAdapter>("RX <<< {0}", packet);
+                    _logger.Verbose<MqttChannelAdapter>("RX <<< {0}", packet);
                 }
                 finally
                 {

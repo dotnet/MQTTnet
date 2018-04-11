@@ -8,18 +8,28 @@ namespace MQTTnet.Implementations
 {
     public class MqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientChannelOptions options, IMqttNetLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            switch (options)
+            var serializer = new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion };
+
+            switch (options.ChannelOptions)
             {
                 case MqttClientTcpOptions tcpOptions:
-                    return new MqttChannelAdapter(new MqttTcpChannel(tcpOptions), new MqttPacketSerializer(), logger);
+                    {
+                        return new MqttChannelAdapter(new MqttTcpChannel(tcpOptions), serializer, logger);
+                    }
+
                 case MqttClientWebSocketOptions webSocketOptions:
-                    return new MqttChannelAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketSerializer(), logger);
+                    {
+                        return new MqttChannelAdapter(new MqttWebSocketChannel(webSocketOptions), serializer, logger);
+                    }
+
                 default:
-                    throw new NotSupportedException();
+                    {
+                        throw new NotSupportedException();
+                    }
             }
         }
     }

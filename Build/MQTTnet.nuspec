@@ -10,9 +10,13 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>
+    <releaseNotes> * [Client] Fixed a deadlock while the client disconnects.
+* [Client] Fixed broken support for protocol version 3.1.0.
 * [Server] The _MqttTcpServerAdapter_ is now added to the ASP.NET services.
 * [Server] _MqttServerAdapter_ is renamed to _MqttTcpServerAdapter_ (BREAKING CHANGE!).
+* [Server] The server no longer sends the will message of a client if the disconnect was clean (via _Disconnect_ packet).
+* [Server] The application message interceptor now allows closing the connection.
+* [Server] Added a new flag for the _ClientDisconnected_ event which contains a value indicating whether the disconnect was clean (via _Disconnect_ packet).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
@@ -42,12 +46,6 @@
       <group targetFramework="net461">
       </group>
       
-      <group targetFramework="net462">
-      </group>
-      
-      <group targetFramework="net471">
-      </group>
-
     </dependencies>
   </metadata>
 
@@ -65,8 +63,6 @@
     <!-- .NET Framework -->
     <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net452\MQTTnet.*" target="lib\net452\"/>
     <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net461\MQTTnet.*" target="lib\net461\"/>
-    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net462\MQTTnet.*" target="lib\net462\"/>
-    <file src="..\Frameworks\MQTTnet.Netstandard\bin\Release\net471\MQTTnet.*" target="lib\net471\"/>
     
   </files>
 </package>

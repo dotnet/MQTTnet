@@ -81,7 +81,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _logger.Trace<MqttClientSession>("Client {0}: Stopped checking keep alive timeout.", _clientId);
+                _logger.Verbose<MqttClientSession>("Client {0}: Stopped checking keep alive timeout.", _clientId);
             }
         }
 

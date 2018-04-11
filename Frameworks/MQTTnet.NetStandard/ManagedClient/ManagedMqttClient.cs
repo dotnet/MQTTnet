@@ -244,7 +244,7 @@ namespace MQTTnet.ManagedClient
             }
             finally
             {
-                _logger.Trace<ManagedMqttClient>("Stopped publishing messages.");
+                _logger.Verbose<ManagedMqttClient>("Stopped publishing messages.");
             }
         }
 

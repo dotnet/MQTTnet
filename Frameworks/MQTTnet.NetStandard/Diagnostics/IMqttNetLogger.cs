@@ -6,7 +6,7 @@ namespace MQTTnet.Diagnostics
     {
         event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        void Trace<TSource>(string message, params object[] parameters);
+        void Verbose<TSource>(string message, params object[] parameters);
 
         void Info<TSource>(string message, params object[] parameters);
 

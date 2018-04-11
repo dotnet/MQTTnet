@@ -132,7 +132,7 @@ namespace MQTTnet.Server
 
             if (!saveIsRequired)
             {
-                _logger.Trace<MqttRetainedMessagesManager>("Skipped saving retained messages because no changes were detected.");
+                _logger.Verbose<MqttRetainedMessagesManager>("Skipped saving retained messages because no changes were detected.");
             }
 
             if (saveIsRequired && _options.Storage != null)

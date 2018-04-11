@@ -13,7 +13,7 @@ namespace MQTTnet.Client
         
         TimeSpan CommunicationTimeout { get; }
         TimeSpan KeepAlivePeriod { get; }
-        TimeSpan? KeepAliveSendInterval { get; set; }
+        TimeSpan? KeepAliveSendInterval { get; }
 
         MqttProtocolVersion ProtocolVersion { get; }
 

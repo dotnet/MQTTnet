@@ -32,7 +32,12 @@ namespace MQTTnet
             return this;
         }
 
-        public MqttApplicationMessageBuilder WithPayload(MemoryStream payload)
+        public MqttApplicationMessageBuilder WithPayload(Stream payload)
+        {
+            return WithPayload(payload, payload.Length - payload.Position);
+        }
+
+        public MqttApplicationMessageBuilder WithPayload(Stream payload, long length)
         {
             if (payload == null)
             {
@@ -46,7 +51,7 @@ namespace MQTTnet
             }
             else
             {
-                _payload = new byte[payload.Length - payload.Position];
+                _payload = new byte[length];
                 payload.Read(_payload, 0, _payload.Length);
             }
 

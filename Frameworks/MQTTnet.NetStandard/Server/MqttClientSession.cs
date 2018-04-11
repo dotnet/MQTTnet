@@ -23,6 +23,7 @@ namespace MQTTnet.Server
         private IMqttChannelAdapter _adapter;
         private CancellationTokenSource _cancellationTokenSource;
         private MqttApplicationMessage _willMessage;
+        private bool _wasCleanDisconnect;
 
         public MqttClientSession(
             string clientId,
@@ -55,7 +56,7 @@ namespace MQTTnet.Server
 
         public bool IsConnected => _adapter != null;
 
-        public async Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        public async Task<bool> RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
             if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
@@ -64,6 +65,7 @@ namespace MQTTnet.Server
             {
                 var cancellationTokenSource = new CancellationTokenSource();
 
+                _wasCleanDisconnect = false;
                 _willMessage = connectPacket.WillMessage;
                 _adapter = adapter;
                 _cancellationTokenSource = cancellationTokenSource;
@@ -84,9 +86,11 @@ namespace MQTTnet.Server
             {
                 _logger.Error<MqttClientSession>(exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
             }
+
+            return _wasCleanDisconnect;
         }
 
-        public async Task StopAsync()
+        public async Task StopAsync(bool wasCleanDisconnect = false)
         {
             try
             {
@@ -94,6 +98,8 @@ namespace MQTTnet.Server
                 {
                     return;
                 }
+
+                _wasCleanDisconnect = wasCleanDisconnect;
 
                 _cancellationTokenSource?.Cancel(false);
 
@@ -110,9 +116,10 @@ namespace MQTTnet.Server
             finally
             {
                 var willMessage = _willMessage;
-                if (willMessage != null)
+                _willMessage = null; // clear willmessage so it is send just once
+
+                if (willMessage != null && !wasCleanDisconnect)
                 {
-                    _willMessage = null; // clear willmessage so it is send just once
                     await ApplicationMessageReceivedCallback(this, willMessage).ConfigureAwait(false);
                 }
             }
@@ -246,7 +253,12 @@ namespace MQTTnet.Server
                 return HandleIncomingUnsubscribePacketAsync(adapter, unsubscribePacket, cancellationToken);
             }
 
-            if (packet is MqttDisconnectPacket || packet is MqttConnectPacket)
+            if (packet is MqttDisconnectPacket)
+            {
+                return StopAsync(true);
+            }
+
+            if (packet is MqttConnectPacket)
             {
                 return StopAsync();
             }
@@ -262,7 +274,6 @@ namespace MQTTnet.Server
 
             if (subscribeResult.CloseConnection)
             {
-                await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, cancellationToken, new[] { new MqttDisconnectPacket() }).ConfigureAwait(false);
                 await StopAsync().ConfigureAwait(false);
             }
 

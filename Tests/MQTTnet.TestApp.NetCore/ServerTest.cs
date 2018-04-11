@@ -3,7 +3,6 @@ using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using Newtonsoft.Json.Linq;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -37,6 +36,12 @@ namespace MQTTnet.TestApp.NetCore
                             // Replace the payload with the timestamp. But also extending a JSON 
                             // based payload with the timestamp is a suitable use case.
                             context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
+                        }
+
+                        if (context.ApplicationMessage.Topic == "not_allowed_topic")
+                        {
+                            context.AcceptPublish = false;
+                            context.CloseConnection = true;
                         }
                     },
                     SubscriptionInterceptor = context =>
@@ -72,27 +77,27 @@ namespace MQTTnet.TestApp.NetCore
                         ConsoleColor.Magenta);
                 };
 
-                options.ApplicationMessageInterceptor = c =>
-                {
-                    if (c.ApplicationMessage.Payload == null || c.ApplicationMessage.Payload.Length == 0)
-                    {
-                        return;
-                    }
+                //options.ApplicationMessageInterceptor = c =>
+                //{
+                //    if (c.ApplicationMessage.Payload == null || c.ApplicationMessage.Payload.Length == 0)
+                //    {
+                //        return;
+                //    }
 
-                    try
-                    {
-                        var content = JObject.Parse(Encoding.UTF8.GetString(c.ApplicationMessage.Payload));
-                        var timestampProperty = content.Property("timestamp");
-                        if (timestampProperty != null && timestampProperty.Value.Type == JTokenType.Null)
-                        {
-                            timestampProperty.Value = DateTime.Now.ToString("O");
-                            c.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(content.ToString());
-                        }
-                    }
-                    catch (Exception)
-                    {
-                    }
-                };
+                //    try
+                //    {
+                //        var content = JObject.Parse(Encoding.UTF8.GetString(c.ApplicationMessage.Payload));
+                //        var timestampProperty = content.Property("timestamp");
+                //        if (timestampProperty != null && timestampProperty.Value.Type == JTokenType.Null)
+                //        {
+                //            timestampProperty.Value = DateTime.Now.ToString("O");
+                //            c.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(content.ToString());
+                //        }
+                //    }
+                //    catch (Exception)
+                //    {
+                //    }
+                //};
 
                 mqttServer.ClientDisconnected += (s, e) =>
                 {

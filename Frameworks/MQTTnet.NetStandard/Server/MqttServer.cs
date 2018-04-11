@@ -138,10 +138,10 @@ namespace MQTTnet.Server
             ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(client));
         }
 
-        private void OnClientDisconnected(ConnectedMqttClient client)
+        private void OnClientDisconnected(ConnectedMqttClient client, bool wasCleanDisconnect)
         {
-            _logger.Info<MqttServer>("Client '{0}': Disconnected.", client.ClientId);
-            ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(client));
+            _logger.Info<MqttServer>("Client '{0}': Disconnected (clean={1}).", client.ClientId, wasCleanDisconnect);
+            ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(client, wasCleanDisconnect));
         }
 
         private void OnClientSubscribedTopic(string clientId, TopicFilter topicFilter)
@@ -162,7 +162,7 @@ namespace MQTTnet.Server
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
             eventArgs.SessionTask = Task.Run(
-                async () => await _clientSessionsManager.RunSessionAsync(eventArgs.Client, _cancellationTokenSource.Token).ConfigureAwait(false),
+                () => _clientSessionsManager.RunSessionAsync(eventArgs.Client, _cancellationTokenSource.Token),
                 _cancellationTokenSource.Token);
         }
     }

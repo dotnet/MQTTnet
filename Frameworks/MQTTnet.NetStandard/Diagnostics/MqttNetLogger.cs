@@ -13,7 +13,7 @@ namespace MQTTnet.Diagnostics
 
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        public void Trace<TSource>(string message, params object[] parameters)
+        public void Verbose<TSource>(string message, params object[] parameters)
         {
             Publish<TSource>(MqttNetLogLevel.Verbose, null, message, parameters);
         }

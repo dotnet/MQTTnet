@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.AspNetCore
 {
@@ -20,7 +21,9 @@ namespace MQTTnet.AspNetCore
             services.AddSingleton<IMqttServer>(s => s.GetService<MqttHostedServer>());
             
             services.AddSingleton<MqttWebSocketServerAdapter>();
-            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttWebSocketServerAdapter>());
+            services.AddSingleton<MqttTcpServerAdapter>();
+            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttWebSocketServerAdapter>()); 
+            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttTcpServerAdapter>());
 
             return services;
         }

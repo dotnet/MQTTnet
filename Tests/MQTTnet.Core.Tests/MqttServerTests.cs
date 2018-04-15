@@ -75,7 +75,7 @@ namespace MQTTnet.Core.Tests
                 await s.StopAsync();
             }
 
-            Assert.AreEqual(1, receivedMessagesCount);
+            Assert.AreEqual(0, receivedMessagesCount);
         }
 
         [TestMethod]

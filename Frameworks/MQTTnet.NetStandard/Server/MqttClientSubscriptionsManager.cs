@@ -10,8 +10,8 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientSubscriptionsManager : IDisposable
     {
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IMqttServerOptions _options;
         private readonly string _clientId;
 

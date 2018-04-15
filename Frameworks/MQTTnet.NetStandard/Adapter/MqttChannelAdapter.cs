@@ -115,9 +115,13 @@ namespace MQTTnet.Adapter
                 ReceivedMqttPacket receivedMqttPacket = null;
                 try
                 {
+
                     if (timeout > TimeSpan.Zero)
                     {
-                        receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
+                        var timeoutCts = new CancellationTokenSource(timeout);
+                        var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+
+                        receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, linkedCts.Token).ConfigureAwait(false);
                     }
                     else
                     {

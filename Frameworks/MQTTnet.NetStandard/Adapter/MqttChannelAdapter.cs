@@ -84,10 +84,7 @@ namespace MQTTnet.Adapter
 
                 }
 
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
+                
 
             });
         }

@@ -16,29 +16,36 @@ namespace MQTTnet.Serializer
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
-        public ICollection<ArraySegment<byte>> Serialize(MqttBasePacket packet)
+        public ArraySegment<byte> Serialize(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
             using (var stream = new MemoryStream(128))
             using (var writer = new MqttPacketWriter(stream))
             {
-                var fixedHeader = SerializePacket(packet, writer);
-                var remainingLength = (int)stream.Length;
-                writer.Write(fixedHeader);
-                MqttPacketWriter.WriteRemainingLength(remainingLength, writer);
-                var headerLength = (int)stream.Length - remainingLength;
+                //leave enough head space for max header (fixed + 4 variable remaining lenght)
+                stream.Position = 5;
 
+                var fixedHeader = SerializePacket(packet, writer);
+
+                var remainingLength = MqttPacketWriter.GetRemainingLength((int)stream.Length-5);
+
+                var headerSize = remainingLength.Length + 1;
+                var headerOffset = 5 - headerSize;
+
+                //position curson on correct offset on beginining of array
+                stream.Position = headerOffset;
+                
+                //write header
+                writer.Write(fixedHeader);
+                writer.Write(remainingLength,0,remainingLength.Length);
+                                
 #if NET461 || NET452 || NETSTANDARD2_0
                 var buffer = stream.GetBuffer();
 #else
                 var buffer = stream.ToArray();
 #endif
-                return new List<ArraySegment<byte>>
-                {
-                    new ArraySegment<byte>(buffer, remainingLength, headerLength),
-                    new ArraySegment<byte>(buffer, 0, remainingLength)
-                };
+                return new ArraySegment<byte>(buffer, headerOffset, (int)stream.Length- headerOffset);
             }
         }
 

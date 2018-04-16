@@ -76,7 +76,11 @@ namespace MQTTnet.Adapter
                     {
                         return;
                     }
-                    await _channel.SendStream.WriteAsync(packetData.Array, packetData.Offset, (int)packetData.Count, cancellationToken).ConfigureAwait(false);
+                    await _channel.SendStream.WriteAsync(
+                        packetData.Array,
+                        packetData.Offset,
+                        (int)packetData.Count,
+                        cancellationToken).ConfigureAwait(false);
 
                 }
 
@@ -85,14 +89,6 @@ namespace MQTTnet.Adapter
                     return;
                 }
 
-                if (timeout > TimeSpan.Zero)
-                {
-                    await _channel.SendStream.FlushAsync(cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
-                }
-                else
-                {
-                    await _channel.SendStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-                }
             });
         }
 

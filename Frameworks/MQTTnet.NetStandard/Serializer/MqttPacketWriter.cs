@@ -58,9 +58,9 @@ namespace MQTTnet.Serializer
 
         public static byte[] GetRemainingLength(int length)
         {
-            if (length == 0)
+            if (length <= 0)
             {
-                return new byte[] { (byte)0 };
+                return new [] { (byte)0 };
             }
 
             var bytes = new byte[4];

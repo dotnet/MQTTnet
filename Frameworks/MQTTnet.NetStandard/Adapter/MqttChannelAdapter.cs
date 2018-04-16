@@ -51,40 +51,44 @@ namespace MQTTnet.Adapter
             return ExecuteAndWrapExceptionAsync(() => _channel.DisconnectAsync().TimeoutAfter(timeout));
         }
 
-        public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets)
+        public async Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket[] packets)
+        {
+            for(var i=0;i<packets.Length;i++)
+            {
+                await SendPacketsAsync(timeout, cancellationToken, packets[i]).ConfigureAwait(false);
+            }
+
+        }
+
+        public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket packet)
         {
             ThrowIfDisposed();
 
+            if (packet == null)
+            {
+                return Task.FromResult(0);
+            }
+
             return ExecuteAndWrapExceptionAsync(async () =>
             {
-                foreach (var packet in packets)
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
-
-                    if (packet == null)
-                    {
-                        continue;
-                    }
-
-                    _logger.Verbose<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
-
-                    var packetData = PacketSerializer.Serialize(packet);
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
-                    await _channel.SendStream.WriteAsync(
-                        packetData.Array,
-                        packetData.Offset,
-                        (int)packetData.Count,
-                        cancellationToken).ConfigureAwait(false);
-
+                    return;
                 }
+                                
 
-                
+                _logger.Verbose<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
+
+                var packetData = PacketSerializer.Serialize(packet);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                await _channel.SendStream.WriteAsync(
+                    packetData.Array,
+                    packetData.Offset,
+                    (int)packetData.Count,
+                    cancellationToken).ConfigureAwait(false);
 
             });
         }

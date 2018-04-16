@@ -403,9 +403,9 @@ namespace MQTTnet.Core.Tests
         private static void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
             var serializer = new MqttPacketSerializer { ProtocolVersion = protocolVersion };
-            var chunks = serializer.Serialize(packet);
+            var data = serializer.Serialize(packet);
             
-            Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(chunks)));
+            Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(data)));
         }
 
         private static void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
@@ -429,6 +429,17 @@ namespace MQTTnet.Core.Tests
         }
 
         private static byte[] Join(IEnumerable<ArraySegment<byte>> chunks)
+        {
+            var buffer = new MemoryStream();
+            foreach (var chunk in chunks)
+            {
+                buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
+            }
+
+            return buffer.ToArray();
+        }
+
+        private static byte[] Join(params ArraySegment<byte>[] chunks)
         {
             var buffer = new MemoryStream();
             foreach (var chunk in chunks)

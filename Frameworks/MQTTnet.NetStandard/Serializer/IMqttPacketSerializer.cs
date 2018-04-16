@@ -9,7 +9,7 @@ namespace MQTTnet.Serializer
     {
         MqttProtocolVersion ProtocolVersion { get; set; }
 
-        ICollection<ArraySegment<byte>> Serialize(MqttBasePacket mqttPacket);
+        ArraySegment<byte> Serialize(MqttBasePacket mqttPacket);
 
         MqttBasePacket Deserialize(MqttPacketHeader header, MemoryStream body);
     }

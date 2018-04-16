@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using MQTTnet.Protocol;
 
@@ -55,13 +56,15 @@ namespace MQTTnet.Serializer
             Write(value);
         }
 
-        public static void WriteRemainingLength(int length, BinaryWriter target)
+        public static byte[] GetRemainingLength(int length)
         {
             if (length == 0)
             {
-                target.Write((byte)0);
-                return;
+                return new byte[] { (byte)0 };
             }
+
+            var bytes = new byte[4];
+            int arraySize = 0;
 
             // Alorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
             var x = length;
@@ -74,8 +77,12 @@ namespace MQTTnet.Serializer
                     encodedByte = encodedByte | 128;
                 }
 
-                target.Write((byte)encodedByte);
+                bytes[arraySize] = (byte)encodedByte;
+
+                arraySize++;
             } while (x > 0);
+
+            return bytes.Take(arraySize).ToArray();
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -111,7 +112,23 @@ namespace MQTTnet.Adapter
                         var timeoutCts = new CancellationTokenSource(timeout);
                         var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-                        receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, linkedCts.Token).ConfigureAwait(false);
+                        try
+                        {
+                            receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, linkedCts.Token).ConfigureAwait(false);
+                        }
+                        catch(OperationCanceledException ex)
+                        {
+                            //check if  timed out
+                            if(linkedCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+                            {
+                                //only timeout token was cancelled
+                                throw new MqttCommunicationTimedOutException(ex);
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
                     }
                     else
                     {

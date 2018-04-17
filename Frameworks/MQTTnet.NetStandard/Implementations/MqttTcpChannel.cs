@@ -60,6 +60,7 @@ namespace MQTTnet.Implementations
             if (_socket == null)
             {
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                
             }
 
 #if NET452 || NET461
@@ -67,6 +68,8 @@ namespace MQTTnet.Implementations
 #else
             await _socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
 #endif
+
+            _socket.NoDelay = true;
 
             if (_options.TlsOptions.UseTls)
             {

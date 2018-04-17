@@ -31,7 +31,7 @@ namespace MQTTnet.Core.Tests
             return Task.FromResult(0);
         }
 
-        public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets)
+        public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket[] packets)
         {
             ThrowIfPartnerIsNull();
 

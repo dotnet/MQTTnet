@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,59 +51,45 @@ namespace MQTTnet.Adapter
             return ExecuteAndWrapExceptionAsync(() => _channel.DisconnectAsync().TimeoutAfter(timeout));
         }
 
-        public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets)
+        public async Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket[] packets)
+        {
+            for(var i=0;i<packets.Length;i++)
+            {
+                await SendPacketsAsync(timeout, cancellationToken, packets[i]).ConfigureAwait(false);
+            }
+
+        }
+
+        public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket packet)
         {
             ThrowIfDisposed();
 
+            if (packet == null)
+            {
+                return Task.FromResult(0);
+            }
+
             return ExecuteAndWrapExceptionAsync(async () =>
             {
-                await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-                try
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    foreach (var packet in packets)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            return;
-                        }
-
-                        if (packet == null)
-                        {
-                            continue;
-                        }
-
-                        _logger.Verbose<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
-
-                        var chunks = PacketSerializer.Serialize(packet);
-                        foreach (var chunk in chunks)
-                        {
-                            if (cancellationToken.IsCancellationRequested)
-                            {
-                                return;
-                            }
-
-                            await _channel.SendStream.WriteAsync(chunk.Array, chunk.Offset, chunk.Count, cancellationToken).ConfigureAwait(false);
-                        }
-                    }
-
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
-
-                    if (timeout > TimeSpan.Zero)
-                    {
-                        await _channel.SendStream.FlushAsync(cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await _channel.SendStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-                    }
+                    return;
                 }
-                finally
+                                
+
+                _logger.Verbose<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
+
+                var packetData = PacketSerializer.Serialize(packet);
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    _semaphore.Release();
+                    return;
                 }
+                await _channel.SendStream.WriteAsync(
+                    packetData.Array,
+                    packetData.Offset,
+                    (int)packetData.Count,
+                    cancellationToken).ConfigureAwait(false);
+
             });
         }
 
@@ -121,7 +109,23 @@ namespace MQTTnet.Adapter
                         var timeoutCts = new CancellationTokenSource(timeout);
                         var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-                        receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, linkedCts.Token).ConfigureAwait(false);
+                        try
+                        {
+                            receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, linkedCts.Token).ConfigureAwait(false);
+                        }
+                        catch(OperationCanceledException ex)
+                        {
+                            //check if  timed out
+                            if(linkedCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+                            {
+                                //only timeout token was cancelled
+                                throw new MqttCommunicationTimedOutException(ex);
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
                     }
                     else
                     {

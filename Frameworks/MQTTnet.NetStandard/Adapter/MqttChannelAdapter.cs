@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
-using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,14 +50,13 @@ namespace MQTTnet.Adapter
 
         public async Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket[] packets)
         {
-            for(var i=0;i<packets.Length;i++)
+            foreach (var packet in packets)
             {
-                await SendPacketsAsync(timeout, cancellationToken, packets[i]).ConfigureAwait(false);
+                await SendPacketsAsync(timeout, cancellationToken, packet).ConfigureAwait(false);
             }
-
         }
 
-        public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket packet)
+        private Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket packet)
         {
             ThrowIfDisposed();
 
@@ -75,21 +71,23 @@ namespace MQTTnet.Adapter
                 {
                     return;
                 }
-                                
-
+                
                 _logger.Verbose<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
 
                 var packetData = PacketSerializer.Serialize(packet);
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return;
                 }
+
                 await _channel.SendStream.WriteAsync(
                     packetData.Array,
                     packetData.Offset,
-                    (int)packetData.Count,
+                    packetData.Count,
                     cancellationToken).ConfigureAwait(false);
 
+                await _channel.SendStream.FlushAsync(cancellationToken).ConfigureAwait(false);
             });
         }
 
@@ -113,12 +111,11 @@ namespace MQTTnet.Adapter
                         {
                             receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, linkedCts.Token).ConfigureAwait(false);
                         }
-                        catch(OperationCanceledException ex)
+                        catch (OperationCanceledException ex)
                         {
-                            //check if  timed out
-                            if(linkedCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+                            var timedOut = linkedCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested;
+                            if (timedOut)
                             {
-                                //only timeout token was cancelled
                                 throw new MqttCommunicationTimedOutException(ex);
                             }
                             else

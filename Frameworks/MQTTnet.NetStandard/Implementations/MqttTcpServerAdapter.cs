@@ -38,8 +38,7 @@ namespace MQTTnet.Implementations
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
-                _defaultEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                _defaultEndpointSocket.NoDelay = true;
+                _defaultEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
 
                 _defaultEndpointSocket.Bind(new IPEndPoint(options.DefaultEndpointOptions.BoundIPAddress, options.GetDefaultEndpointPort()));
                 _defaultEndpointSocket.Listen(options.ConnectionBacklog);
@@ -80,7 +79,7 @@ namespace MQTTnet.Implementations
             _defaultEndpointSocket = null;
 
             _tlsCertificate = null;
-            
+
             _tlsEndpointSocket?.Dispose();
             _tlsEndpointSocket = null;
 
@@ -104,7 +103,8 @@ namespace MQTTnet.Implementations
 #else
                     var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
 #endif
-                    clientSocket.NoDelay=true;
+                    clientSocket.NoDelay = true;
+
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }
@@ -139,7 +139,7 @@ namespace MQTTnet.Implementations
 
                     var sslStream = new SslStream(new NetworkStream(clientSocket));
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
-                    
+
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }

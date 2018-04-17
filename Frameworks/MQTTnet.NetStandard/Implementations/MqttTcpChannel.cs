@@ -14,7 +14,7 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttChannel
     {
-#if NET452 || NET461
+#if NET452 || NET461 || NETSTANDARD2_0
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
         public static int BufferSize { get; set; } = 4096 * 20; // Can be changed for fine tuning by library user.
@@ -60,7 +60,6 @@ namespace MQTTnet.Implementations
             if (_socket == null)
             {
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                
             }
 
 #if NET452 || NET461
@@ -212,8 +211,8 @@ namespace MQTTnet.Implementations
             {
                 stream = new NetworkStream(_socket, true);
             }
-            
-#if NET452 || NET461
+
+#if NET452 || NET461 || NETSTANDARD2_0
             SendStream = new BufferedStream(stream, _bufferSize);
             ReceiveStream = new BufferedStream(stream, _bufferSize);
 #else

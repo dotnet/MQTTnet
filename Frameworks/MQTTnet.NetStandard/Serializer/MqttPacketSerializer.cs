@@ -2,7 +2,6 @@
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -23,29 +22,28 @@ namespace MQTTnet.Serializer
             using (var stream = new MemoryStream(128))
             using (var writer = new MqttPacketWriter(stream))
             {
-                //leave enough head space for max header (fixed + 4 variable remaining lenght)
+                // Leave enough head space for max header size (fixed + 4 variable remaining length)
                 stream.Position = 5;
 
                 var fixedHeader = SerializePacket(packet, writer);
 
-                var remainingLength = MqttPacketWriter.GetRemainingLength((int)stream.Length-5);
+                var remainingLength = MqttPacketWriter.GetRemainingLength((int)stream.Length - 5);
 
                 var headerSize = remainingLength.Length + 1;
                 var headerOffset = 5 - headerSize;
 
-                //position curson on correct offset on beginining of array
+                // Position cursor on correct offset on beginining of array (has leading 0x0)
                 stream.Position = headerOffset;
-                
-                //write header
+
                 writer.Write(fixedHeader);
-                writer.Write(remainingLength,0,remainingLength.Length);
-                                
+                writer.Write(remainingLength, 0, remainingLength.Length);
+
 #if NET461 || NET452 || NETSTANDARD2_0
                 var buffer = stream.GetBuffer();
 #else
                 var buffer = stream.ToArray();
 #endif
-                return new ArraySegment<byte>(buffer, headerOffset, (int)stream.Length- headerOffset);
+                return new ArraySegment<byte>(buffer, headerOffset, (int)stream.Length - headerOffset);
             }
         }
 
@@ -300,7 +298,7 @@ namespace MQTTnet.Serializer
 
             return packet;
         }
-        
+
         private static void ValidateConnectPacket(MqttConnectPacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));

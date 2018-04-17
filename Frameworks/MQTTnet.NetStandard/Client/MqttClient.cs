@@ -60,7 +60,7 @@ namespace MQTTnet.Client
                 _adapter = _adapterFactory.CreateClientAdapter(options, _logger);
 
                 _logger.Verbose<MqttClient>("Trying to connect with server.");
-                await _adapter.ConnectAsync(_options.CommunicationTimeout).ConfigureAwait(false);
+                await _adapter.ConnectAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token).ConfigureAwait(false);
                 _logger.Verbose<MqttClient>("Connection with server established.");
 
                 await StartReceivingPacketsAsync().ConfigureAwait(false);
@@ -92,14 +92,9 @@ namespace MQTTnet.Client
 
         public async Task DisconnectAsync()
         {
-            if (!IsConnected)
-            {
-                return;
-            }
-
             try
             {
-                if (!_cancellationTokenSource.IsCancellationRequested)
+                if (IsConnected && !_cancellationTokenSource.IsCancellationRequested)
                 {
                     await SendAsync(new MqttDisconnectPacket()).ConfigureAwait(false);
                 }

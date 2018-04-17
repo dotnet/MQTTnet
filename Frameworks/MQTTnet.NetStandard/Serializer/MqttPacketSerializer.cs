@@ -27,7 +27,7 @@ namespace MQTTnet.Serializer
 
                 var fixedHeader = SerializePacket(packet, writer);
 
-                var remainingLength = MqttPacketWriter.GetRemainingLength((int)stream.Length - 5);
+                var remainingLength = MqttPacketWriter.EncodeRemainingLength((int)stream.Length - 5);
 
                 var headerSize = remainingLength.Length + 1;
                 var headerOffset = 5 - headerSize;
@@ -47,7 +47,7 @@ namespace MQTTnet.Serializer
             }
         }
 
-        public MqttBasePacket Deserialize(MqttPacketHeader header, MemoryStream body)
+        public MqttBasePacket Deserialize(MqttPacketHeader header, Stream body)
         {
             if (header == null) throw new ArgumentNullException(nameof(header));
             if (body == null) throw new ArgumentNullException(nameof(body));
@@ -183,7 +183,7 @@ namespace MQTTnet.Serializer
 
             var topic = reader.ReadStringWithLengthPrefix();
 
-            ushort packetIdentifier = 0;
+            ushort? packetIdentifier = null;
             if (qualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
             {
                 packetIdentifier = reader.ReadUInt16();
@@ -191,12 +191,12 @@ namespace MQTTnet.Serializer
 
             var packet = new MqttPublishPacket
             {
+                PacketIdentifier = packetIdentifier,
                 Retain = retain,
-                QualityOfServiceLevel = qualityOfServiceLevel,
-                Dup = dup,
                 Topic = topic,
                 Payload = reader.ReadRemainingData(),
-                PacketIdentifier = packetIdentifier
+                QualityOfServiceLevel = qualityOfServiceLevel,
+                Dup = dup
             };
 
             return packet;

@@ -56,7 +56,7 @@ namespace MQTTnet.Serializer
             Write(value);
         }
 
-        public static byte[] GetRemainingLength(int length)
+        public static byte[] EncodeRemainingLength(int length)
         {
             if (length <= 0)
             {
@@ -82,7 +82,8 @@ namespace MQTTnet.Serializer
                 offset++;
             } while (x > 0);
 
-            return bytes.Take(offset).ToArray();
+            Array.Resize(ref bytes, offset);
+            return bytes;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -21,7 +20,7 @@ namespace MQTTnet.Core.Tests
         {
         }
 
-        public Task ConnectAsync(TimeSpan timeout)
+        public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             return Task.FromResult(0);
         }

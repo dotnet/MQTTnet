@@ -59,7 +59,7 @@ namespace MQTTnet.TestApp.NetCore
                 var sentMessagesCount = 0;
                 while (stopwatch.ElapsedMilliseconds < 1000)
                 {
-                    await client.PublishAsync(messages).ConfigureAwait(false);
+                    client.PublishAsync(messages).GetAwaiter().GetResult();
                     sentMessagesCount++;
                 }
 

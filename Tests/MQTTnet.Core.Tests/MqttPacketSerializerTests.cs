@@ -416,7 +416,7 @@ namespace MQTTnet.Core.Tests
 
             using (var headerStream = new MemoryStream(Join(buffer1)))
             {
-                var header = MqttPacketReader.ReadHeaderAsync(headerStream, CancellationToken.None).GetAwaiter().GetResult();
+                var header = MqttPacketReader.ReadHeaderAsync(new TestMqttChannel(headerStream), CancellationToken.None).GetAwaiter().GetResult();
 
                 using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.BodyLength))
                 {

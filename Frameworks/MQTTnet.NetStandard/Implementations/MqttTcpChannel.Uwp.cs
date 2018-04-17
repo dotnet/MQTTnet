@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Networking.Sockets;
@@ -17,36 +18,35 @@ namespace MQTTnet.Implementations
     {
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
-        public static int BufferSize { get; set; } = 4096 * 20; // Can be changed for fine tuning by library user.
+        public static int BufferSize { get; set; } = 4096; // Can be changed for fine tuning by library user.
 
         private readonly int _bufferSize = BufferSize;
         private readonly MqttClientTcpOptions _options;
 
         private StreamSocket _socket;
+        private Stream _readStream;
+        private Stream _writeStream;
 
         public MqttTcpChannel(MqttClientTcpOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _bufferSize = _options.BufferSize;
+
+            _bufferSize = options.BufferSize;
         }
 
         public MqttTcpChannel(StreamSocket socket)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
-
-            CreateStreams();
         }
-
-        public Stream SendStream { get; private set; }
-        public Stream ReceiveStream { get; private set; }
 
         public static Func<MqttClientTcpOptions, IEnumerable<ChainValidationResult>> CustomIgnorableServerCertificateErrorsResolver { get; set; }
 
-        public async Task ConnectAsync()
+        public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             if (_socket == null)
             {
                 _socket = new StreamSocket();
+                _socket.Control.NoDelay = true;
             }
 
             if (!_options.TlsOptions.UseTls)
@@ -65,7 +65,8 @@ namespace MQTTnet.Implementations
                 await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), SocketProtectionLevel.Tls12);
             }
 
-            CreateStreams();
+            _readStream = _socket.InputStream.AsStreamForRead(_bufferSize);
+            _writeStream = _socket.OutputStream.AsStreamForWrite(_bufferSize);
         }
 
         public Task DisconnectAsync()
@@ -74,11 +75,22 @@ namespace MQTTnet.Implementations
             return Task.FromResult(0);
         }
 
+        public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return _readStream.ReadAsync(buffer, offset, count, cancellationToken);
+        }
+
+        public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            await _writeStream.WriteAsync(buffer, offset, count, cancellationToken);
+            await _writeStream.FlushAsync(cancellationToken);
+        }
+
         public void Dispose()
         {
             try
             {
-                SendStream?.Dispose();
+                _readStream?.Dispose();
             }
             catch (ObjectDisposedException)
             {
@@ -88,12 +100,12 @@ namespace MQTTnet.Implementations
             }
             finally
             {
-                SendStream = null;
+                _readStream = null;
             }
 
             try
             {
-                ReceiveStream?.Dispose();
+                _writeStream?.Dispose();
             }
             catch (ObjectDisposedException)
             {
@@ -103,7 +115,7 @@ namespace MQTTnet.Implementations
             }
             finally
             {
-                ReceiveStream = null;
+                _writeStream = null;
             }
 
             try
@@ -120,12 +132,6 @@ namespace MQTTnet.Implementations
             {
                 _socket = null;
             }
-        }
-
-        private void CreateStreams()
-        {
-            SendStream = _socket.OutputStream.AsStreamForWrite(_bufferSize);
-            ReceiveStream = _socket.InputStream.AsStreamForRead(_bufferSize);
         }
 
         private static Certificate LoadCertificate(MqttClientTcpOptions options)

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
-using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Extensions.Rpc
@@ -12,7 +12,7 @@ namespace MQTTnet.Extensions.Rpc
     {
         private readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
         private readonly IMqttClient _mqttClient;
-        
+
         public MqttRpcClient(IMqttClient mqttClient)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
@@ -22,10 +22,20 @@ namespace MQTTnet.Extensions.Rpc
 
         public Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
-            return ExecuteAsync(timeout, methodName, Encoding.UTF8.GetBytes(payload), qualityOfServiceLevel);
+            return ExecuteAsync(timeout, methodName, Encoding.UTF8.GetBytes(payload), qualityOfServiceLevel, CancellationToken.None);
         }
 
-        public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, CancellationToken cancellationToken)
+        {
+            return ExecuteAsync(timeout, methodName, Encoding.UTF8.GetBytes(payload), qualityOfServiceLevel, cancellationToken);
+        }
+
+        public Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        {
+            return ExecuteAsync(timeout, methodName, payload, qualityOfServiceLevel, CancellationToken.None);
+        }
+
+        public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, CancellationToken cancellationToken)
         {
             if (methodName == null) throw new ArgumentNullException(nameof(methodName));
 
@@ -54,7 +64,20 @@ namespace MQTTnet.Extensions.Rpc
                 await _mqttClient.SubscribeAsync(responseTopic, qualityOfServiceLevel).ConfigureAwait(false);
                 await _mqttClient.PublishAsync(requestMessage).ConfigureAwait(false);
 
-                return await tcs.Task.TimeoutAfter(timeout);
+                using (var timeoutCts = new CancellationTokenSource(timeout))
+                {
+                    timeoutCts.Token.Register(() =>
+                    {
+                        if (!tcs.Task.IsCompleted && !tcs.Task.IsFaulted && !tcs.Task.IsCanceled)
+                        {
+                            tcs.TrySetCanceled();
+                        }
+                    });
+
+                    var result = await tcs.Task.ConfigureAwait(false);
+                    timeoutCts.Cancel(false);
+                    return result;
+                }
             }
             finally
             {

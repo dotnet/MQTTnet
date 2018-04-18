@@ -19,7 +19,6 @@ namespace MQTTnet.Adapter
         private const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
 
         private bool _isDisposed;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IMqttNetLogger _logger;
         private readonly IMqttChannel _channel;
 
@@ -232,7 +231,6 @@ namespace MQTTnet.Adapter
         public void Dispose()
         {
             _isDisposed = true;
-            _semaphore?.Dispose();
             _channel?.Dispose();
         }
 

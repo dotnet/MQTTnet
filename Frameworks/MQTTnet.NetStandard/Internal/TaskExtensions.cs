@@ -7,72 +7,52 @@ namespace MQTTnet.Internal
 {
     public static class TaskExtensions
     {
-        public static async Task TimeoutAfter(this Task task, TimeSpan timeout)
+        public static async Task TimeoutAfter(Func<CancellationToken, Task> action, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            if (task == null) throw new ArgumentNullException(nameof(task));
+            if (action == null) throw new ArgumentNullException(nameof(action));
 
-            using (var timeoutCts = new CancellationTokenSource())
+            using (var timeoutCts = new CancellationTokenSource(timeout))
+            using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken))
             {
                 try
                 {
-                    var timeoutTask = Task.Delay(timeout, timeoutCts.Token);
-                    var finishedTask = await Task.WhenAny(timeoutTask, task).ConfigureAwait(false);
-                    
-                    if (finishedTask == timeoutTask)
-                    {
-                        throw new MqttCommunicationTimedOutException();
-                    }
-
-                    if (task.IsCanceled)
-                    {
-                        throw new TaskCanceledException();
-                    }
-
-                    if (task.IsFaulted)
-                    {
-                        throw new MqttCommunicationException(task.Exception?.GetBaseException());
-                    }
+                    await action(linkedCts.Token).ConfigureAwait(false);
                 }
-                finally
+                catch (OperationCanceledException exception)
                 {
-                    timeoutCts.Cancel();
+                    var timeoutReached = timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested;
+                    if (timeoutReached)
+                    {
+                        throw new MqttCommunicationTimedOutException(exception);
+                    }
+
+                    throw;
                 }
             }
         }
 
-        public static async Task<TResult> TimeoutAfter<TResult>(this Task<TResult> task, TimeSpan timeout)
+        public static async Task<TResult> TimeoutAfter<TResult>(Func<CancellationToken, Task<TResult>> action, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            if (task == null) throw new ArgumentNullException(nameof(task));
+            if (action == null) throw new ArgumentNullException(nameof(action));
 
-            using (var timeoutCts = new CancellationTokenSource())
+            using (var timeoutCts = new CancellationTokenSource(timeout))
+            using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken))
             {
                 try
                 {
-                    var timeoutTask = Task.Delay(timeout, timeoutCts.Token);
-                    var finishedTask = await Task.WhenAny(timeoutTask, task).ConfigureAwait(false);
-
-                    if (finishedTask == timeoutTask)
-                    {
-                        throw new MqttCommunicationTimedOutException();
-                    }
-
-                    if (task.IsCanceled)
-                    {
-                        throw new TaskCanceledException();
-                    }
-
-                    if (task.IsFaulted)
-                    {
-                        throw new MqttCommunicationException(task.Exception.GetBaseException());
-                    }
-
-                    return task.Result;
+                    return await action(linkedCts.Token).ConfigureAwait(false);
                 }
-                finally
+                catch (OperationCanceledException exception)
                 {
-                    timeoutCts.Cancel();
+                    var timeoutReached = timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested;
+                    if (timeoutReached)
+                    {
+                        throw new MqttCommunicationTimedOutException(exception);
+                    }
+
+                    throw;
                 }
             }
-        }
+        }     
     }
 }

@@ -71,5 +71,9 @@ namespace MQTTnet.Core.Tests
         {
             return Task.FromResult(0);
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

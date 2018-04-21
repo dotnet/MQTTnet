@@ -71,7 +71,7 @@ namespace MQTTnet.ManagedClient
             _connectionCancellationToken = new CancellationTokenSource();
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(async () => await MaintainConnectionAsync(_connectionCancellationToken.Token).ConfigureAwait(false), _connectionCancellationToken.Token).ConfigureAwait(false);
+            Task.Run(() => MaintainConnectionAsync(_connectionCancellationToken.Token), _connectionCancellationToken.Token);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
             _logger.Info<ManagedMqttClient>("Started");
@@ -190,10 +190,7 @@ namespace MQTTnet.ManagedClient
                 if (connectionState == ReconnectionResult.Reconnected || _subscriptionsNotPushed)
                 {
                     await SynchronizeSubscriptionsAsync().ConfigureAwait(false);
-
                     StartPublishing();
-
-
                     return;
                 }
 
@@ -375,7 +372,7 @@ namespace MQTTnet.ManagedClient
             _publishingCancellationToken = cts;
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(async () => await PublishQueuedMessagesAsync(cts.Token).ConfigureAwait(false), cts.Token).ConfigureAwait(false);
+            Task.Run(() => PublishQueuedMessagesAsync(cts.Token), cts.Token);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 

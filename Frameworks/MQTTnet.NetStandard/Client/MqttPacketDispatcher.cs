@@ -10,7 +10,7 @@ namespace MQTTnet.Client
 {
     public class MqttPacketDispatcher
     {
-        private readonly ConcurrentDictionary<Tuple<ushort?, Type>, TaskCompletionSource<MqttBasePacket>> _awaiters = new ConcurrentDictionary<Tuple<ushort?, Type>, TaskCompletionSource<MqttBasePacket>>();
+        private readonly ConcurrentDictionary<Tuple<ushort, Type>, TaskCompletionSource<MqttBasePacket>> _awaiters = new ConcurrentDictionary<Tuple<ushort, Type>, TaskCompletionSource<MqttBasePacket>>();
         private readonly IMqttNetLogger _logger;
 
         public MqttPacketDispatcher(IMqttNetLogger logger)
@@ -40,16 +40,15 @@ namespace MQTTnet.Client
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
-            ushort? identifier = 0;
-            if (packet is IMqttPacketWithIdentifier packetWithIdentifier)
+            ushort identifier = 0;
+            if (packet is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier.HasValue)
             {
-                identifier = packetWithIdentifier.PacketIdentifier;
+                identifier = packetWithIdentifier.PacketIdentifier.Value;
             }
 
             var type = packet.GetType();
-            var key = new Tuple<ushort?, Type>(identifier, type);
-
-
+            var key = new Tuple<ushort, Type>(identifier, type);
+            
             if (_awaiters.TryRemove(key, out var tcs))
             {
                 tcs.TrySetResult(packet);
@@ -73,7 +72,7 @@ namespace MQTTnet.Client
                 identifier = 0;
             }
 
-            var dictionaryKey = new Tuple<ushort?, Type>(identifier, responseType);
+            var dictionaryKey = new Tuple<ushort, Type>(identifier ?? 0, responseType);
             if (!_awaiters.TryAdd(dictionaryKey, tcs))
             {
                 throw new InvalidOperationException($"The packet dispatcher already has an awaiter for packet of type '{responseType}' with identifier {identifier}.");
@@ -89,7 +88,7 @@ namespace MQTTnet.Client
                 identifier = 0;
             }
 
-            var dictionaryKey = new Tuple<ushort?, Type>(identifier, responseType);
+            var dictionaryKey = new Tuple<ushort, Type>(identifier ?? 0, responseType);
             _awaiters.TryRemove(dictionaryKey, out var _);
         }
     }

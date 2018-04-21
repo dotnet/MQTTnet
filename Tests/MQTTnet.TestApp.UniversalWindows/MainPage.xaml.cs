@@ -354,12 +354,16 @@ namespace MQTTnet.TestApp.UniversalWindows
             {
                 var rpcClient = new MqttRpcClient(_mqttClient);
                 var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), RpcMethod.Text, payload, qos);
-                
+
                 RpcResponses.Items.Add(RpcMethod.Text + " >>> " + Encoding.UTF8.GetString(response));
             }
             catch (MqttCommunicationTimedOutException)
             {
                 RpcResponses.Items.Add(RpcMethod.Text + " >>> [TIMEOUT]");
+            }
+            catch (Exception exception)
+            {
+                RpcResponses.Items.Add(RpcMethod.Text + " >>> [EXCEPTION (" + exception.Message + ")]");
             }
         }
 

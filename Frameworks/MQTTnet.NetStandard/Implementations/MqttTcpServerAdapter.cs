@@ -14,7 +14,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpServerAdapter : IMqttServerAdapter, IDisposable
+    public class MqttTcpServerAdapter : IMqttServerAdapter
     {
         private readonly IMqttNetLogger _logger;
 

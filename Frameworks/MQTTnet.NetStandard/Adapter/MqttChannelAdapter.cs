@@ -134,7 +134,7 @@ namespace MQTTnet.Adapter
                 return new ReceivedMqttPacket(header, new MemoryStream(new byte[0], false));
             }
 
-            var body = header.BodyLength <= ReadBufferSize ? new MemoryStream(header.BodyLength) : new MemoryStream();
+            var body = new MemoryStream(header.BodyLength);
 
             var buffer = new byte[Math.Min(ReadBufferSize, header.BodyLength)];
             while (body.Length < header.BodyLength)

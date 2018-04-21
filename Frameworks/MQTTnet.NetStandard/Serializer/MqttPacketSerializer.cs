@@ -24,19 +24,18 @@ namespace MQTTnet.Serializer
             {
                 // Leave enough head space for max header size (fixed + 4 variable remaining length)
                 stream.Position = 5;
-
                 var fixedHeader = SerializePacket(packet, writer);
 
-                var remainingLength = MqttPacketWriter.EncodeRemainingLength((int)stream.Length - 5);
+                stream.Position = 1;
+                var remainingLength = MqttPacketWriter.EncodeRemainingLength((int)stream.Length - 5, stream);
 
-                var headerSize = remainingLength.Length + 1;
+                var headerSize = remainingLength + 1;
                 var headerOffset = 5 - headerSize;
 
                 // Position cursor on correct offset on beginining of array (has leading 0x0)
                 stream.Position = headerOffset;
 
                 writer.Write(fixedHeader);
-                writer.Write(remainingLength, 0, remainingLength.Length);
 
 #if NET461 || NET452 || NETSTANDARD2_0
                 var buffer = stream.GetBuffer();

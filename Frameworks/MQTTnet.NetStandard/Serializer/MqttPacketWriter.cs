@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using MQTTnet.Protocol;
 
@@ -56,9 +55,9 @@ namespace MQTTnet.Serializer
             Write(value);
         }
 
-        public static int EncodeRemainingLength(int length,MemoryStream stream)
+        public static int EncodeRemainingLength(int length, MemoryStream stream)
         {
-            //write the encoded remaining length right aligned on the 4 byte buffer
+            // write the encoded remaining length right aligned on the 4 byte buffer
 
             if (length <= 0)
             {
@@ -67,7 +66,7 @@ namespace MQTTnet.Serializer
                 return 1;
             }
 
-            byte[] buffer = new byte[4];
+            var buffer = new byte[4];
             var offset = 0;
 
             // Alorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.

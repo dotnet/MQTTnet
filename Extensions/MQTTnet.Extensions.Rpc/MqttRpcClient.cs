@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Extensions.Rpc
@@ -63,10 +64,11 @@ namespace MQTTnet.Extensions.Rpc
 
                 await _mqttClient.SubscribeAsync(responseTopic, qualityOfServiceLevel).ConfigureAwait(false);
                 await _mqttClient.PublishAsync(requestMessage).ConfigureAwait(false);
-
+                
                 using (var timeoutCts = new CancellationTokenSource(timeout))
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token))
                 {
-                    timeoutCts.Token.Register(() =>
+                    linkedCts.Token.Register(() =>
                     {
                         if (!tcs.Task.IsCompleted && !tcs.Task.IsFaulted && !tcs.Task.IsCanceled)
                         {
@@ -74,9 +76,23 @@ namespace MQTTnet.Extensions.Rpc
                         }
                     });
 
-                    var result = await tcs.Task.ConfigureAwait(false);
-                    timeoutCts.Cancel(false);
-                    return result;
+                    try
+                    {
+                        var result = await tcs.Task.ConfigureAwait(false);
+                        timeoutCts.Cancel(false);
+                        return result;
+                    }
+                    catch (TaskCanceledException taskCanceledException)
+                    {
+                        if (timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+                        {
+                            throw new MqttCommunicationTimedOutException(taskCanceledException);
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
                 }
             }
             finally

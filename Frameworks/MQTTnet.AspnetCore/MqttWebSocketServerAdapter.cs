@@ -3,12 +3,13 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
+using MQTTnet.Implementations;
 using MQTTnet.Serializer;
 using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {
-    public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter, IDisposable
+    public class MqttWebSocketServerAdapter : IMqttServerAdapter
     {
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
@@ -26,8 +27,7 @@ namespace MQTTnet.AspNetCore
         {
             if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
 
-            var channel = new MqttWebSocketServerChannel(webSocket);
-            var clientAdapter = new MqttChannelAdapter(channel, new MqttPacketSerializer(), new MqttNetLogger());
+            var clientAdapter = new MqttChannelAdapter(new MqttWebSocketChannel(webSocket), new MqttPacketSerializer(), new MqttNetLogger());
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
             ClientAccepted?.Invoke(this, eventArgs);

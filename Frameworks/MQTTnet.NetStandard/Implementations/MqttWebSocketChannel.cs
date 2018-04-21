@@ -5,25 +5,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Client;
-using MQTTnet.Exceptions;
 
 namespace MQTTnet.Implementations
 {
     public sealed class MqttWebSocketChannel : IMqttChannel
     {
         private readonly MqttClientWebSocketOptions _options;
-        private readonly byte[] _chunkBuffer;
-
-        private int _chunkBufferLength;
-        private int _chunkBufferOffset;
 
         private WebSocket _webSocket;
 
         public MqttWebSocketChannel(MqttClientWebSocketOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-
-            _chunkBuffer = new byte[options.BufferSize];
         }
 
         public MqttWebSocketChannel(WebSocket webSocket)
@@ -99,32 +92,8 @@ namespace MQTTnet.Implementations
 
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            var bytesRead = 0;
-
-            while (_webSocket.State == WebSocketState.Open)
-            {
-                await EnsureFilledChunkBufferAsync(cancellationToken).ConfigureAwait(false);
-                if (_chunkBufferLength == 0)
-                {
-                    return 0;
-                }
-
-                while (count > 0 && _chunkBufferOffset < _chunkBufferLength)
-                {
-                    buffer[offset] = _chunkBuffer[_chunkBufferOffset];
-                    _chunkBufferOffset++;
-                    count--;
-                    bytesRead++;
-                    offset++;
-                }
-
-                if (count == 0)
-                {
-                    return bytesRead;
-                }
-            }
-            
-            return bytesRead;
+            var response = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer, offset, count), cancellationToken).ConfigureAwait(false);
+            return response.Count;
         }
 
         public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -144,34 +113,6 @@ namespace MQTTnet.Implementations
             finally
             {
                 _webSocket = null;
-            }
-        }
-
-        private async Task EnsureFilledChunkBufferAsync(CancellationToken cancellationToken)
-        {
-            if (_chunkBufferOffset < _chunkBufferLength)
-            {
-                return;
-            }
-
-            if (_webSocket.State == WebSocketState.Closed)
-            {
-                throw new MqttCommunicationException("WebSocket connection closed.");
-            }
-
-            var response = await _webSocket.ReceiveAsync(new ArraySegment<byte>(_chunkBuffer, 0, _chunkBuffer.Length), cancellationToken).ConfigureAwait(false);
-            _chunkBufferLength = response.Count;
-            _chunkBufferOffset = 0;
-
-            if (response.MessageType == WebSocketMessageType.Close)
-            {
-                throw new MqttCommunicationException("The WebSocket server closed the connection.");
-                //await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken).ConfigureAwait(false);
-            }
-
-            if (response.MessageType == WebSocketMessageType.Text)
-            {
-                throw new MqttProtocolViolationException("WebSocket channel received TEXT message.");
             }
         }
     }

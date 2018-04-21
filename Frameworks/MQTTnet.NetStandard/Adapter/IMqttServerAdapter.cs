@@ -4,7 +4,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Adapter
 {
-    public interface IMqttServerAdapter
+    public interface IMqttServerAdapter : IDisposable
     {
         event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 

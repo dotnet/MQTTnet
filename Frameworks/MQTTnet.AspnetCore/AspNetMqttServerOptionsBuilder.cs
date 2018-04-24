@@ -8,7 +8,7 @@ namespace MQTTnet.AspNetCore
     public class AspNetMqttServerOptionsBuilder : MqttServerOptionsBuilder
     {
 
-        private AspNetMqttServerOptions _aspNetOptions => (AspNetMqttServerOptions)_options;
+        private AspNetMqttServerOptions _aspNetOptions { get { return (AspNetMqttServerOptions)_options; } }
 
         public AspNetMqttServerOptionsBuilder():base(new AspNetMqttServerOptions())
         {

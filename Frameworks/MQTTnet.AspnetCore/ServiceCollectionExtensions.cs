@@ -12,7 +12,19 @@ namespace MQTTnet.AspNetCore
 
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configureOptions=null)
+
+        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
+        {
+            return AddHostedMqttServerInternal(services, null);
+        }
+
+
+        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configureOptions)
+        {
+            return AddHostedMqttServerInternal(services, configureOptions);
+        }
+
+        private static IServiceCollection AddHostedMqttServerInternal(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configureOptions = null)
         {
             var builder = new AspNetMqttServerOptionsBuilder();
 
@@ -26,19 +38,17 @@ namespace MQTTnet.AspNetCore
             services.AddSingleton<MqttHostedServer>();
             services.AddSingleton<IHostedService>(s => s.GetService<MqttHostedServer>());
             services.AddSingleton<IMqttServer>(s => s.GetService<MqttHostedServer>());
-            
-            services.AddSingleton<MqttWebSocketServerAdapter>();            
+
+            services.AddSingleton<MqttWebSocketServerAdapter>();
             services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttWebSocketServerAdapter>());
 
             if (options.ListenTcp)
             {
                 services.AddSingleton<MqttTcpServerAdapter>();
                 services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttTcpServerAdapter>());
-            }           
+            }
 
             return services;
         }
-
-        
     }
 }

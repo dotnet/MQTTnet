@@ -36,6 +36,12 @@ namespace MQTTnet.Client
             return this;
         }
 
+        public MqttClientOptionsBuilder WithKeepAliveSendInterval(TimeSpan value)
+        {
+            _options.KeepAliveSendInterval = value;
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithClientId(string value)
         {
             _options.ClientId = value;

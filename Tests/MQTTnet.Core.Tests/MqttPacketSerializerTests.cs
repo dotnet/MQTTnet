@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -25,7 +24,7 @@ namespace MQTTnet.Core.Tests
                 CleanSession = true
             };
 
-            SerializeAndCompare(p, "EB0ABE1RSXNkcAPCAHsAA1hZWgAEVVNFUgAEUEFTUw==", MqttProtocolVersion.V310);
+            SerializeAndCompare(p, "EB0ABk1RSXNkcAPCAHsAA1hZWgAEVVNFUgAEUEFTUw==", MqttProtocolVersion.V310);
         }
 
         [TestMethod]
@@ -426,17 +425,6 @@ namespace MQTTnet.Core.Tests
                     Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(buffer2)));
                 }
             }
-        }
-
-        private static byte[] Join(IEnumerable<ArraySegment<byte>> chunks)
-        {
-            var buffer = new MemoryStream();
-            foreach (var chunk in chunks)
-            {
-                buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
-            }
-
-            return buffer.ToArray();
         }
 
         private static byte[] Join(params ArraySegment<byte>[] chunks)

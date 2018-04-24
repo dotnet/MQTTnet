@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -40,16 +41,16 @@ namespace MQTTnet.Adapter
                 Internal.TaskExtensions.TimeoutAfter(ct => _channel.ConnectAsync(ct), timeout, cancellationToken));
         }
 
-        public Task DisconnectAsync(TimeSpan timeout)
+        public Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
             _logger.Verbose<MqttChannelAdapter>("Disconnecting [Timeout={0}]", timeout);
 
             return ExecuteAndWrapExceptionAsync(() =>
-                Internal.TaskExtensions.TimeoutAfter(ct => _channel.DisconnectAsync(), timeout, CancellationToken.None));
+                Internal.TaskExtensions.TimeoutAfter(ct => _channel.DisconnectAsync(), timeout, cancellationToken));
         }
 
-        public async Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket[] packets)
+        public async Task SendPacketsAsync(TimeSpan timeout, IEnumerable<MqttBasePacket> packets, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -215,6 +216,7 @@ namespace MQTTnet.Adapter
         public void Dispose()
         {
             _isDisposed = true;
+
             _channel?.Dispose();
         }
 

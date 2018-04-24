@@ -13,16 +13,15 @@ namespace MQTTnet.Server
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IMqttServerOptions _options;
+        private readonly MqttServer _server;
         private readonly string _clientId;
 
-        public MqttClientSubscriptionsManager(IMqttServerOptions options, string clientId)
+        public MqttClientSubscriptionsManager(string clientId, IMqttServerOptions options, MqttServer server)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _server = server;
         }
-
-        public Action<string, TopicFilter> TopicSubscribedCallback { get; set; }
-        public Action<string, string> TopicUnsubscribedCallback { get; set; }
 
         public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttSubscribePacket subscribePacket)
         {
@@ -61,7 +60,7 @@ namespace MQTTnet.Server
                     if (interceptorContext.AcceptSubscription)
                     {
                         _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
-                        TopicSubscribedCallback?.Invoke(_clientId, topicFilter);
+                        _server.OnClientSubscribedTopic(_clientId, topicFilter);
                     }
                 }
             }
@@ -83,7 +82,7 @@ namespace MQTTnet.Server
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
                     _subscriptions.Remove(topicFilter);
-                    TopicUnsubscribedCallback?.Invoke(_clientId, topicFilter);
+                    _server.OnClientUnsubscribedTopic(_clientId, topicFilter);
                 }
             }
             finally

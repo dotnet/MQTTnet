@@ -19,6 +19,7 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("2 = Start server");
             Console.WriteLine("3 = Start performance test");
             Console.WriteLine("4 = Start managed client");
+            Console.WriteLine("5 = Start public broker test");
 
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.KeyChar == '1')
@@ -36,6 +37,10 @@ namespace MQTTnet.TestApp.NetCore
             else if (pressedKey.KeyChar == '4')
             {
                 Task.Run(ManagedClientTest.RunAsync);
+            }
+            else if (pressedKey.KeyChar == '5')
+            {
+                Task.Run(PublicBrokerTest.RunAsync);
             }
 
             Thread.Sleep(Timeout.Infinite);

@@ -11,7 +11,7 @@ namespace MQTTnet.Serializer
     public sealed class MqttPacketSerializer : IMqttPacketSerializer
     {
         private static byte[] ProtocolVersionV311Name { get; } = Encoding.UTF8.GetBytes("MQTT");
-        private static byte[] ProtocolVersionV310Name { get; } = Encoding.UTF8.GetBytes("MQIs");
+        private static byte[] ProtocolVersionV310Name { get; } = Encoding.UTF8.GetBytes("MQIsdp");
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
@@ -203,22 +203,30 @@ namespace MQTTnet.Serializer
 
         private static MqttBasePacket DeserializeConnect(MqttPacketReader reader)
         {
-            reader.ReadBytes(2); // Skip 2 bytes
+            reader.ReadBytes(2); // Skip 2 bytes for header and remaining length.
 
             MqttProtocolVersion protocolVersion;
             var protocolName = reader.ReadBytes(4);
-            if (protocolName.SequenceEqual(ProtocolVersionV310Name))
-            {
-                reader.ReadBytes(2);
-                protocolVersion = MqttProtocolVersion.V310;
-            }
-            else if (protocolName.SequenceEqual(ProtocolVersionV311Name))
+
+            if (protocolName.SequenceEqual(ProtocolVersionV311Name))
             {
                 protocolVersion = MqttProtocolVersion.V311;
             }
             else
             {
-                throw new MqttProtocolViolationException("Protocol name is not supported.");
+                var buffer = new byte[6];
+                Array.Copy(protocolName, buffer, 4);
+                protocolName = reader.ReadBytes(2);
+                Array.Copy(protocolName, 0, buffer, 4, 2);
+
+                if (protocolName.SequenceEqual(ProtocolVersionV310Name))
+                {
+                    protocolVersion = MqttProtocolVersion.V310;
+                }
+                else
+                {
+                    throw new MqttProtocolViolationException("Protocol name is not supported.");
+                }
             }
 
             reader.ReadByte(); // Skip protocol level
@@ -323,16 +331,15 @@ namespace MQTTnet.Serializer
             ValidateConnectPacket(packet);
 
             // Write variable header
-            writer.Write(0x00, 0x04); // 3.1.2.1 Protocol Name
             if (ProtocolVersion == MqttProtocolVersion.V311)
             {
-                writer.Write(ProtocolVersionV311Name);
-                writer.Write(0x04); // 3.1.2.2 Protocol Level (4)
+                writer.WriteWithLengthPrefix(ProtocolVersionV311Name);
+                writer.Write(0x04); // 3.1.2.2 Protocol Level 4
             }
             else
             {
-                writer.Write(ProtocolVersionV310Name);
-                writer.Write(0x64, 0x70, 0x03); // Protocol Level (0x03)
+                writer.WriteWithLengthPrefix(ProtocolVersionV310Name);
+                writer.Write(0x03); // Protocol Level 3
             }
 
             var connectFlags = new ByteWriter(); // 3.1.2.3 Connect Flags
@@ -349,6 +356,11 @@ namespace MQTTnet.Serializer
             {
                 connectFlags.Write(0, 2);
                 connectFlags.Write(false);
+            }
+
+            if (packet.Password != null && packet.Username == null)
+            {
+                throw new MqttProtocolViolationException("If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].");
             }
 
             connectFlags.Write(packet.Password != null);

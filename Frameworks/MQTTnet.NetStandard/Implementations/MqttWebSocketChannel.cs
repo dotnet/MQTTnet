@@ -10,6 +10,7 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttWebSocketChannel : IMqttChannel
     {
+        private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private readonly MqttClientWebSocketOptions _options;
 
         private WebSocket _webSocket;
@@ -96,13 +97,26 @@ namespace MQTTnet.Implementations
             return response.Count;
         }
 
-        public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return _webSocket.SendAsync(new ArraySegment<byte>(buffer, offset, count), WebSocketMessageType.Binary, true, cancellationToken);
+            // This lock is required because the client will throw an exception if _SendAsync_ is 
+            // called from multiple threads at the same time. But this issue only happens with several
+            // framework versions.
+            await _sendLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await _webSocket.SendAsync(new ArraySegment<byte>(buffer, offset, count), WebSocketMessageType.Binary, true, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                _sendLock.Release();
+            }
         }
 
         public void Dispose()
         {
+            _sendLock?.Dispose();
+
             try
             {
                 _webSocket?.Dispose();

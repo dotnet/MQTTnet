@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Concurrent;
-using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
-using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Client
@@ -11,28 +8,12 @@ namespace MQTTnet.Client
     public class MqttPacketDispatcher
     {
         private readonly ConcurrentDictionary<Tuple<ushort, Type>, TaskCompletionSource<MqttBasePacket>> _awaiters = new ConcurrentDictionary<Tuple<ushort, Type>, TaskCompletionSource<MqttBasePacket>>();
-        private readonly IMqttNetLogger _logger;
-
-        public MqttPacketDispatcher(IMqttNetLogger logger)
+        
+        public void Dispatch(Exception exception)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        public async Task<MqttBasePacket> WaitForPacketAsync(Type responseType, ushort? identifier, TimeSpan timeout)
-        {
-            var packetAwaiter = AddPacketAwaiter(responseType, identifier);
-            try
+            foreach (var awaiter in _awaiters)
             {
-                return await Internal.TaskExtensions.TimeoutAfter(ct => packetAwaiter.Task, timeout, CancellationToken.None).ConfigureAwait(false);
-            }
-            catch (MqttCommunicationTimedOutException)
-            {
-                _logger.Warning<MqttPacketDispatcher>("Timeout while waiting for packet of type '{0}'.", responseType.Name);
-                throw;
-            }
-            finally
-            {
-                RemovePacketAwaiter(responseType, identifier);
+                awaiter.Value.SetException(exception);
             }
         }
 
@@ -63,7 +44,7 @@ namespace MQTTnet.Client
             _awaiters.Clear();
         }
 
-        private TaskCompletionSource<MqttBasePacket> AddPacketAwaiter(Type responseType, ushort? identifier)
+        public TaskCompletionSource<MqttBasePacket> AddPacketAwaiter<TResponsePacket>(ushort? identifier) where TResponsePacket : MqttBasePacket
         {
             var tcs = new TaskCompletionSource<MqttBasePacket>();
 
@@ -71,25 +52,25 @@ namespace MQTTnet.Client
             {
                 identifier = 0;
             }
-
-            var dictionaryKey = new Tuple<ushort, Type>(identifier ?? 0, responseType);
-            if (!_awaiters.TryAdd(dictionaryKey, tcs))
+            
+            var key = new Tuple<ushort, Type>(identifier ?? 0, typeof(TResponsePacket));
+            if (!_awaiters.TryAdd(key, tcs))
             {
-                throw new InvalidOperationException($"The packet dispatcher already has an awaiter for packet of type '{responseType}' with identifier {identifier}.");
+                throw new InvalidOperationException($"The packet dispatcher already has an awaiter for packet of type '{key.Item2.Name}' with identifier {key.Item1}.");
             }
 
             return tcs;
         }
 
-        private void RemovePacketAwaiter(Type responseType, ushort? identifier)
+        public void RemovePacketAwaiter<TResponsePacket>(ushort? identifier) where TResponsePacket : MqttBasePacket
         {
             if (!identifier.HasValue)
             {
                 identifier = 0;
             }
 
-            var dictionaryKey = new Tuple<ushort, Type>(identifier ?? 0, responseType);
-            _awaiters.TryRemove(dictionaryKey, out var _);
+            var key = new Tuple<ushort, Type>(identifier ?? 0, typeof(TResponsePacket));
+            _awaiters.TryRemove(key, out var _);
         }
     }
 }

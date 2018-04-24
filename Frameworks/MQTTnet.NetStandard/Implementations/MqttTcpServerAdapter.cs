@@ -14,7 +14,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpServerAdapter : IMqttServerAdapter, IDisposable
+    public class MqttTcpServerAdapter : IMqttServerAdapter
     {
         private readonly IMqttNetLogger _logger;
 
@@ -38,11 +38,12 @@ namespace MQTTnet.Implementations
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
-                _defaultEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                _defaultEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+
                 _defaultEndpointSocket.Bind(new IPEndPoint(options.DefaultEndpointOptions.BoundIPAddress, options.GetDefaultEndpointPort()));
                 _defaultEndpointSocket.Listen(options.ConnectionBacklog);
 
-                Task.Run(async () => await AcceptDefaultEndpointConnectionsAsync(_cancellationTokenSource.Token).ConfigureAwait(false), _cancellationTokenSource.Token).ConfigureAwait(false);
+                Task.Run(() => AcceptDefaultEndpointConnectionsAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
             }
 
             if (options.TlsEndpointOptions.IsEnabled)
@@ -62,7 +63,7 @@ namespace MQTTnet.Implementations
                 _tlsEndpointSocket.Bind(new IPEndPoint(options.TlsEndpointOptions.BoundIPAddress, options.GetTlsEndpointPort()));
                 _tlsEndpointSocket.Listen(options.ConnectionBacklog);
 
-                Task.Run(async () => await AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token).ConfigureAwait(false), _cancellationTokenSource.Token).ConfigureAwait(false);
+                Task.Run(() => AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
             }
 
             return Task.FromResult(0);
@@ -78,7 +79,7 @@ namespace MQTTnet.Implementations
             _defaultEndpointSocket = null;
 
             _tlsCertificate = null;
-            
+
             _tlsEndpointSocket?.Dispose();
             _tlsEndpointSocket = null;
 
@@ -102,6 +103,7 @@ namespace MQTTnet.Implementations
 #else
                     var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
 #endif
+                    clientSocket.NoDelay = true;
 
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
@@ -137,7 +139,7 @@ namespace MQTTnet.Implementations
 
                     var sslStream = new SslStream(new NetworkStream(clientSocket));
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
-                    
+
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }

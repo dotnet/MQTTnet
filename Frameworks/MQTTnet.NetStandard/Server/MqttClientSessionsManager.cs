@@ -187,7 +187,7 @@ namespace MQTTnet.Server
             {
                 foreach (var clientSession in _sessions.Values)
                 {
-                    await clientSession.EnqueueApplicationMessageAsync(applicationMessage);
+                    await clientSession.EnqueueApplicationMessageAsync(applicationMessage).ConfigureAwait(false);
                 }
             }
             finally

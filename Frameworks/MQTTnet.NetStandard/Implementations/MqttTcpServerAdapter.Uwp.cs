@@ -9,7 +9,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpServerAdapter : IMqttServerAdapter, IDisposable
+    public class MqttTcpServerAdapter : IMqttServerAdapter
     {
         private readonly IMqttNetLogger _logger;
         private StreamSocketListener _defaultEndpointSocket;
@@ -62,6 +62,8 @@ namespace MQTTnet.Implementations
         {
             try
             {
+                args.Socket.Control.NoDelay = true;
+
                 var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket), new MqttPacketSerializer(), _logger);
                 ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }

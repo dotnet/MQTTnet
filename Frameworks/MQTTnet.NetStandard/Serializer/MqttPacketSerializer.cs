@@ -2,7 +2,6 @@
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,33 +15,38 @@ namespace MQTTnet.Serializer
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
-        public ICollection<ArraySegment<byte>> Serialize(MqttBasePacket packet)
+        public ArraySegment<byte> Serialize(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
             using (var stream = new MemoryStream(128))
             using (var writer = new MqttPacketWriter(stream))
             {
+                // Leave enough head space for max header size (fixed + 4 variable remaining length)
+                stream.Position = 5;
                 var fixedHeader = SerializePacket(packet, writer);
-                var remainingLength = (int)stream.Length;
+
+                stream.Position = 1;
+                var remainingLength = MqttPacketWriter.EncodeRemainingLength((int)stream.Length - 5, stream);
+
+                var headerSize = remainingLength + 1;
+                var headerOffset = 5 - headerSize;
+
+                // Position cursor on correct offset on beginining of array (has leading 0x0)
+                stream.Position = headerOffset;
+
                 writer.Write(fixedHeader);
-                MqttPacketWriter.WriteRemainingLength(remainingLength, writer);
-                var headerLength = (int)stream.Length - remainingLength;
 
 #if NET461 || NET452 || NETSTANDARD2_0
                 var buffer = stream.GetBuffer();
 #else
                 var buffer = stream.ToArray();
 #endif
-                return new List<ArraySegment<byte>>
-                {
-                    new ArraySegment<byte>(buffer, remainingLength, headerLength),
-                    new ArraySegment<byte>(buffer, 0, remainingLength)
-                };
+                return new ArraySegment<byte>(buffer, headerOffset, (int)stream.Length - headerOffset);
             }
         }
 
-        public MqttBasePacket Deserialize(MqttPacketHeader header, MemoryStream body)
+        public MqttBasePacket Deserialize(MqttPacketHeader header, Stream body)
         {
             if (header == null) throw new ArgumentNullException(nameof(header));
             if (body == null) throw new ArgumentNullException(nameof(body));
@@ -178,7 +182,7 @@ namespace MQTTnet.Serializer
 
             var topic = reader.ReadStringWithLengthPrefix();
 
-            ushort packetIdentifier = 0;
+            ushort? packetIdentifier = null;
             if (qualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
             {
                 packetIdentifier = reader.ReadUInt16();
@@ -186,12 +190,12 @@ namespace MQTTnet.Serializer
 
             var packet = new MqttPublishPacket
             {
+                PacketIdentifier = packetIdentifier,
                 Retain = retain,
-                QualityOfServiceLevel = qualityOfServiceLevel,
-                Dup = dup,
                 Topic = topic,
                 Payload = reader.ReadRemainingData(),
-                PacketIdentifier = packetIdentifier
+                QualityOfServiceLevel = qualityOfServiceLevel,
+                Dup = dup
             };
 
             return packet;
@@ -293,7 +297,7 @@ namespace MQTTnet.Serializer
 
             return packet;
         }
-        
+
         private static void ValidateConnectPacket(MqttConnectPacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));

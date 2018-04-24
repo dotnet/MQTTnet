@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Client
 {
     public class MqttPacketDispatcher
     {
-        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>> _awaiters = new ConcurrentDictionary<Type, ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>>();
+        private readonly ConcurrentDictionary<Tuple<ushort, Type>, TaskCompletionSource<MqttBasePacket>> _awaiters = new ConcurrentDictionary<Tuple<ushort, Type>, TaskCompletionSource<MqttBasePacket>>();
         private readonly IMqttNetLogger _logger;
 
         public MqttPacketDispatcher(IMqttNetLogger logger)
@@ -23,7 +23,7 @@ namespace MQTTnet.Client
             var packetAwaiter = AddPacketAwaiter(responseType, identifier);
             try
             {
-                return await packetAwaiter.Task.TimeoutAfter(timeout).ConfigureAwait(false);
+                return await Internal.TaskExtensions.TimeoutAfter(ct => packetAwaiter.Task, timeout, CancellationToken.None).ConfigureAwait(false);
             }
             catch (MqttCommunicationTimedOutException)
             {
@@ -40,21 +40,19 @@ namespace MQTTnet.Client
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
-            var type = packet.GetType();
-
-            if (_awaiters.TryGetValue(type, out var byId))
+            ushort identifier = 0;
+            if (packet is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier.HasValue)
             {
-                ushort? identifier = 0;
-                if (packet is IMqttPacketWithIdentifier packetWithIdentifier)
-                {
-                    identifier = packetWithIdentifier.PacketIdentifier;
-                }
+                identifier = packetWithIdentifier.PacketIdentifier.Value;
+            }
 
-                if (byId.TryRemove(identifier.Value, out var tcs))
-                {
-                    tcs.TrySetResult(packet);
-                    return;
-                }
+            var type = packet.GetType();
+            var key = new Tuple<ushort, Type>(identifier, type);
+            
+            if (_awaiters.TryRemove(key, out var tcs))
+            {
+                tcs.TrySetResult(packet);
+                return;
             }
 
             throw new InvalidOperationException($"Packet of type '{type.Name}' not handled or dispatched.");
@@ -74,8 +72,8 @@ namespace MQTTnet.Client
                 identifier = 0;
             }
 
-            var byId = _awaiters.GetOrAdd(responseType, key => new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>());
-            if (!byId.TryAdd(identifier.Value, tcs))
+            var dictionaryKey = new Tuple<ushort, Type>(identifier ?? 0, responseType);
+            if (!_awaiters.TryAdd(dictionaryKey, tcs))
             {
                 throw new InvalidOperationException($"The packet dispatcher already has an awaiter for packet of type '{responseType}' with identifier {identifier}.");
             }
@@ -90,8 +88,8 @@ namespace MQTTnet.Client
                 identifier = 0;
             }
 
-            var byId = _awaiters.GetOrAdd(responseType, key => new ConcurrentDictionary<ushort, TaskCompletionSource<MqttBasePacket>>());
-            byId.TryRemove(identifier.Value, out var _);
+            var dictionaryKey = new Tuple<ushort, Type>(identifier ?? 0, responseType);
+            _awaiters.TryRemove(dictionaryKey, out var _);
         }
     }
 }

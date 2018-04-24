@@ -15,7 +15,7 @@ namespace MQTTnet.AspNetCore
 
         public static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
         {
-            return AddHostedMqttServerInternal(services, null);
+            return AddHostedMqttServerInternal(services);
         }
 
 

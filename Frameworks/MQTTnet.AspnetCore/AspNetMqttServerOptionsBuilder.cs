@@ -8,7 +8,6 @@ namespace MQTTnet.AspNetCore
     public class AspNetMqttServerOptionsBuilder : MqttServerOptionsBuilder
     {
 
-        private AspNetMqttServerOptions _aspNetOptions { get { return (AspNetMqttServerOptions)_options; } }
 
         public AspNetMqttServerOptionsBuilder():base(new AspNetMqttServerOptions())
         {
@@ -17,13 +16,13 @@ namespace MQTTnet.AspNetCore
 
         public AspNetMqttServerOptionsBuilder WithListenTcp(bool value)
         {
-            _aspNetOptions.ListenTcp = value;
+            ((AspNetMqttServerOptions)(_options)).ListenTcp = value;
             return this;
         }
 
         public new IAspNetMqttServerOptions Build()
         {
-            return _aspNetOptions;
+            return (AspNetMqttServerOptions)_options;
         }
 
     }

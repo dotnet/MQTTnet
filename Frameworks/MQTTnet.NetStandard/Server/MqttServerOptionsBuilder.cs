@@ -5,7 +5,17 @@ namespace MQTTnet.Server
 {
     public class MqttServerOptionsBuilder
     {
-        private readonly MqttServerOptions _options = new MqttServerOptions();
+        protected readonly MqttServerOptions _options;
+
+        public MqttServerOptionsBuilder()
+        {
+            _options =new MqttServerOptions();
+        }
+
+        public MqttServerOptionsBuilder(MqttServerOptions options)
+        {
+            _options = options;
+        }
 
         public MqttServerOptionsBuilder WithConnectionBacklog(int value)
         {

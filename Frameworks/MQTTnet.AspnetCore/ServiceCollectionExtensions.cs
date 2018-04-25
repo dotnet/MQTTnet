@@ -8,22 +8,45 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet.AspNetCore
 {
+    
+
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, IMqttServerOptions options)
+
+        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            return AddHostedMqttServerInternal(services);
+        }
+
+
+        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configureOptions)
+        {
+            return AddHostedMqttServerInternal(services, configureOptions);
+        }
+
+        private static IServiceCollection AddHostedMqttServerInternal(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configureOptions = null)
+        {
+            var builder = new AspNetMqttServerOptionsBuilder();
+
+            configureOptions?.Invoke(builder);
+
+            var options = builder.Build();
 
             services.AddSingleton(options);
+            services.AddSingleton<IMqttServerOptions>(options);
             services.AddSingleton<IMqttNetLogger>(new MqttNetLogger());
             services.AddSingleton<MqttHostedServer>();
             services.AddSingleton<IHostedService>(s => s.GetService<MqttHostedServer>());
             services.AddSingleton<IMqttServer>(s => s.GetService<MqttHostedServer>());
-            
+
             services.AddSingleton<MqttWebSocketServerAdapter>();
-            services.AddSingleton<MqttTcpServerAdapter>();
-            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttWebSocketServerAdapter>()); 
-            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttTcpServerAdapter>());
+            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttWebSocketServerAdapter>());
+
+            if (options.ListenTcp)
+            {
+                services.AddSingleton<MqttTcpServerAdapter>();
+                services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttTcpServerAdapter>());
+            }
 
             return services;
         }

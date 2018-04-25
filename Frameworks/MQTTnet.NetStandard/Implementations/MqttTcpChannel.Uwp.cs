@@ -37,6 +37,8 @@ namespace MQTTnet.Implementations
         public MqttTcpChannel(StreamSocket socket)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+
+            CreateStreams();
         }
 
         public static Func<MqttClientTcpOptions, IEnumerable<ChainValidationResult>> CustomIgnorableServerCertificateErrorsResolver { get; set; }
@@ -65,8 +67,7 @@ namespace MQTTnet.Implementations
                 await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), SocketProtectionLevel.Tls12);
             }
 
-            _readStream = _socket.InputStream.AsStreamForRead(_bufferSize);
-            _writeStream = _socket.OutputStream.AsStreamForWrite(_bufferSize);
+            CreateStreams();
         }
 
         public Task DisconnectAsync()
@@ -176,6 +177,12 @@ namespace MQTTnet.Implementations
             }
 
             return result;
+        }
+
+        private void CreateStreams()
+        {
+            _readStream = _socket.InputStream.AsStreamForRead(_bufferSize);
+            _writeStream = _socket.OutputStream.AsStreamForWrite(_bufferSize);
         }
     }
 }

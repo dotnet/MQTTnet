@@ -26,10 +26,14 @@ namespace MQTTnet.Implementations
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             if (_defaultEndpointSocket != null) throw new InvalidOperationException("Server is already started.");
-            
+
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _defaultEndpointSocket = new StreamSocketListener();
+
+                // This also affects the client sockets.
+                _defaultEndpointSocket.Control.NoDelay = true;
+
                 await _defaultEndpointSocket.BindServiceNameAsync(options.GetDefaultEndpointPort().ToString(), SocketProtectionLevel.PlainSocket);
                 _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
             }
@@ -62,8 +66,6 @@ namespace MQTTnet.Implementations
         {
             try
             {
-                args.Socket.Control.NoDelay = true;
-
                 var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket), new MqttPacketSerializer(), _logger);
                 ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }

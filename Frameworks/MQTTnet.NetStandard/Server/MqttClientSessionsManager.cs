@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -14,7 +15,7 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientSessionsManager : IDisposable
     {
-        private readonly Dictionary<string, MqttClientSession> _sessions = new Dictionary<string, MqttClientSession>();
+        private readonly ConcurrentDictionary<string, MqttClientSession> _sessions = new ConcurrentDictionary<string, MqttClientSession>();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         private readonly IMqttServerOptions _options;
@@ -182,17 +183,9 @@ namespace MQTTnet.Server
                 _logger.Error<MqttClientSessionsManager>(exception, "Error while processing application message");
             }
 
-            await _semaphore.WaitAsync().ConfigureAwait(false);
-            try
+            foreach (var clientSession in _sessions)
             {
-                foreach (var clientSession in _sessions.Values)
-                {
-                    await clientSession.EnqueueApplicationMessageAsync(applicationMessage).ConfigureAwait(false);
-                }
-            }
-            finally
-            {
-                _semaphore.Release();
+                clientSession.Value.EnqueueApplicationMessage(applicationMessage);
             }
         }
 
@@ -281,7 +274,7 @@ namespace MQTTnet.Server
                 {
                     if (connectPacket.CleanSession)
                     {
-                        _sessions.Remove(connectPacket.ClientId);
+                        _sessions.TryRemove(connectPacket.ClientId,out _);
 
                         await clientSession.StopAsync().ConfigureAwait(false);
                         clientSession.Dispose();

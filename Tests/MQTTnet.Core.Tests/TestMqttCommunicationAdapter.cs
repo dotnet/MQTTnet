@@ -42,6 +42,15 @@ namespace MQTTnet.Core.Tests
             return Task.FromResult(0);
         }
 
+        public Task SendPacketAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket packet)
+        {
+            ThrowIfPartnerIsNull();
+
+            Partner.EnqueuePacketInternal(packet);
+
+            return Task.FromResult(0);
+        }
+
         public Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfPartnerIsNull();
@@ -73,5 +82,7 @@ namespace MQTTnet.Core.Tests
                 throw new InvalidOperationException("Partner is not set.");
             }
         }
+
+        
     }
 }

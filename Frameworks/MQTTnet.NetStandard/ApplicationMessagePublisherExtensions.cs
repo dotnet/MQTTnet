@@ -6,6 +6,14 @@ namespace MQTTnet
 {
     public static class ApplicationMessagePublisherExtensions
     {
+        public static Task PublishAsync(this IApplicationMessagePublisher publisher, MqttApplicationMessage applicationMessage)
+        {
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
+            return publisher.PublishAsync(applicationMessage);
+        }
+
         public static Task PublishAsync(this IApplicationMessagePublisher publisher, params MqttApplicationMessage[] applicationMessages)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));

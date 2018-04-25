@@ -18,12 +18,12 @@ namespace MQTTnet.TestApp.NetCore
                     CleanSession = true,
                     ChannelOptions = new MqttClientTcpOptions
                     {
-                        //Server = "localhost",
-                        Server = "192.168.1.174"
-                    },
-                    //ChannelOptions = new MqttClientWebSocketOptions
+                        Server = "localhost",
+                        //Server = "192.168.1.174"
+                    }
+                    //,ChannelOptions = new MqttClientWebSocketOptions
                     //{
-                    //    Uri = "ws://localhost:59690/mqtt"
+                    //    Uri = "ws://localhost:8280/mqtt"
                     //}
                 };
 

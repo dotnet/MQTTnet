@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientSubscriptionsManager : IDisposable
     {
-        private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
+        private ImmutableDictionary<string, MqttQualityOfServiceLevel> _subscriptions = ImmutableDictionary<string, MqttQualityOfServiceLevel>.Empty;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IMqttServerOptions _options;
         private readonly string _clientId;
@@ -60,17 +61,19 @@ namespace MQTTnet.Server
 
                     if (interceptorContext.AcceptSubscription)
                     {
-                        _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                        _subscriptions = _subscriptions.SetItem(topicFilter.Topic, topicFilter.QualityOfServiceLevel);
                         TopicSubscribedCallback?.Invoke(_clientId, topicFilter);
                     }
                 }
+
+                return result;
             }
             finally
             {
                 _semaphore.Release();
             }
 
-            return result;
+        
         }
 
         public async Task<MqttUnsubAckPacket> UnsubscribeAsync(MqttUnsubscribePacket unsubscribePacket)
@@ -82,7 +85,7 @@ namespace MQTTnet.Server
             {
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
-                    _subscriptions.Remove(topicFilter);
+                    _subscriptions = _subscriptions.Remove(topicFilter);
                     TopicUnsubscribedCallback?.Invoke(_clientId, topicFilter);
                 }
             }
@@ -97,38 +100,30 @@ namespace MQTTnet.Server
             };
         }
 
-        public async Task<CheckSubscriptionsResult> CheckSubscriptionsAsync(MqttApplicationMessage applicationMessage)
+        public CheckSubscriptionsResult CheckSubscriptions(MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            await _semaphore.WaitAsync().ConfigureAwait(false);
-            try
+            var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
+            foreach (var subscription in _subscriptions)
             {
-                var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
-                foreach (var subscription in _subscriptions)
+                if (!MqttTopicFilterComparer.IsMatch(applicationMessage.Topic, subscription.Key))
                 {
-                    if (!MqttTopicFilterComparer.IsMatch(applicationMessage.Topic, subscription.Key))
-                    {
-                        continue;
-                    }
-
-                    qosLevels.Add(subscription.Value);
+                    continue;
                 }
 
-                if (qosLevels.Count == 0)
-                {
-                    return new CheckSubscriptionsResult
-                    {
-                        IsSubscribed = false
-                    };
-                }
+                qosLevels.Add(subscription.Value);
+            }
 
-                return CreateSubscriptionResult(applicationMessage, qosLevels);
-            }
-            finally
+            if (qosLevels.Count == 0)
             {
-                _semaphore.Release();
+                return new CheckSubscriptionsResult
+                {
+                    IsSubscribed = false
+                };
             }
+
+            return CreateSubscriptionResult(applicationMessage, qosLevels);
         }
 
         public void Dispose()

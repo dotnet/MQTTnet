@@ -129,7 +129,7 @@ namespace MQTTnet.Adapter
             {
                 return null;
             }
-
+            
             if (header.BodyLength == 0)
             {
                 return new ReceivedMqttPacket(header, new MemoryStream(new byte[0], false));

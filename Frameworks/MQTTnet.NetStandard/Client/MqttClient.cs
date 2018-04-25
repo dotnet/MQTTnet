@@ -194,6 +194,47 @@ namespace MQTTnet.Client
             }
         }
 
+        public async Task PublishAsync(MqttApplicationMessage applicationMessage)
+        {
+            ThrowIfNotConnected();
+
+            var publishPacket = applicationMessage.ToPublishPacket();
+            switch (applicationMessage.QualityOfServiceLevel)
+            {
+                case MqttQualityOfServiceLevel.AtMostOnce:
+                    {
+                        // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
+                        await SendAsync(publishPacket).ConfigureAwait(false);
+                        break;
+                    }
+                case MqttQualityOfServiceLevel.AtLeastOnce:
+                    {
+                        publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
+                        await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket).ConfigureAwait(false);
+
+                        break;
+                    }
+                case MqttQualityOfServiceLevel.ExactlyOnce:
+                    {
+                        publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
+
+                        var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket).ConfigureAwait(false);
+                        var pubRelPacket = new MqttPubRelPacket
+                        {
+                            PacketIdentifier = pubRecPacket.PacketIdentifier
+                        };
+
+                        await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket).ConfigureAwait(false);
+                    
+                        break;
+                    }
+                default:
+                    {
+                        throw new InvalidOperationException();
+                    }
+            }
+        }
+
         public void Dispose()
         {
             _cancellationTokenSource?.Dispose();

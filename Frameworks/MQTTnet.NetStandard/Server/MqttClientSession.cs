@@ -125,11 +125,11 @@ namespace MQTTnet.Server
             }
         }
 
-        public async Task EnqueueApplicationMessageAsync(MqttApplicationMessage applicationMessage)
+        public void EnqueueApplicationMessage(MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            var result = await SubscriptionsManager.CheckSubscriptionsAsync(applicationMessage);
+            var result = SubscriptionsManager.CheckSubscriptions(applicationMessage);
             if (!result.IsSubscribed)
             {
                 return;
@@ -291,7 +291,7 @@ namespace MQTTnet.Server
             var retainedMessages = await _retainedMessagesManager.GetSubscribedMessagesAsync(topicFilters);
             foreach (var applicationMessage in retainedMessages)
             {
-                await EnqueueApplicationMessageAsync(applicationMessage).ConfigureAwait(false);
+                EnqueueApplicationMessage(applicationMessage);
             }
         }
 

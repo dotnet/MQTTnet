@@ -69,6 +69,15 @@ namespace MQTTnet.Server
             }
         }
 
+        public Task PublishAsync(MqttApplicationMessage applicationMessage)
+        {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
+            if (_cancellationTokenSource == null) throw new InvalidOperationException("The server is not started.");
+
+            return _clientSessionsManager.DispatchApplicationMessageAsync(null, applicationMessage); ;
+        }
+
         public async Task StartAsync(IMqttServerOptions options)
         {
             Options = options ?? throw new ArgumentNullException(nameof(options));

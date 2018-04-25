@@ -64,7 +64,7 @@ namespace MQTTnet.Adapter
             }
         }
 
-        private Task SendPacketAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket packet)
+        public Task SendPacketAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket packet)
         {
             return ExecuteAndWrapExceptionAsync(() =>
             {

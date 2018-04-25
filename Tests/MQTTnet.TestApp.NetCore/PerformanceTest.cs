@@ -35,6 +35,10 @@ namespace MQTTnet.TestApp.NetCore
                 var options = new MqttClientOptions
                 {
                     ChannelOptions = new MqttClientTcpOptions { Server = "localhost" },
+                    //ChannelOptions = new MqttClientWebSocketOptions
+                    //{
+                    //    Uri = "ws://localhost:54811/mqtt"
+                    //},
                     ClientId = "Client1",
                     CleanSession = true,
                     CommunicationTimeout = TimeSpan.FromMinutes(10)

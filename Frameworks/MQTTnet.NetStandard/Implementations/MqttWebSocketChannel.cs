@@ -81,7 +81,7 @@ namespace MQTTnet.Implementations
             {
                 return;
             }
-
+            
             if (_webSocket.State == WebSocketState.Open || _webSocket.State == WebSocketState.Connecting)
             {
                 await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);

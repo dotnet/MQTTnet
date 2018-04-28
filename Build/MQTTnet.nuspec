@@ -10,11 +10,12 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes> * [Client] Added new overloads for the message builder.
+    <releaseNotes> * [Client] Added new overloads for the message builders.
 * [Core] Performance optimizations (thanks to @	israellot)
 * [Core] Fixed a memory leak which was caused by not properly stopped async tasks.
 * [Client] Fixed a deadlock when connecting to a not reachable server.
-* [Server] Fixed a deadlock when reusing the same _ClientId_ while a will message is used (thanks to @william-wps).
+* [Server] Fixed a deadlock when reusing the same _ClientId_ while a _will message_ is used (thanks to @william-wps).
+* [Server] Fixed wrong topic filter matching for filters like 'sport/+' which should _not_ match 'sport'.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

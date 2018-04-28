@@ -86,7 +86,7 @@ If you use this library and want to see your project here please let me know.
 
 ## MIT License
 
-Copyright (c) 2017 Christian Kratky
+Copyright (c) 2017-2018 Christian Kratky
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

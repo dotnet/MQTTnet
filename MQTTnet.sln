@@ -18,6 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{67C28AC1
 		appveyor.yml = appveyor.yml
 		Build\build.ps1 = Build\build.ps1
 		Build\MQTTnet.AspNetCore.nuspec = Build\MQTTnet.AspNetCore.nuspec
+		Build\MQTTnet.Extensions.Rpc.nuspec = Build\MQTTnet.Extensions.Rpc.nuspec
 		Build\MQTTnet.nuspec = Build\MQTTnet.nuspec
 	EndProjectSection
 EndProject

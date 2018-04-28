@@ -88,7 +88,7 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            StopAsync();
+            StopAsync().GetAwaiter().GetResult();
         }
 
         private async Task AcceptDefaultEndpointConnectionsAsync(CancellationToken cancellationToken)

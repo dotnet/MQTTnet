@@ -49,6 +49,7 @@ namespace MQTTnet.Implementations
             {
                 _socket = new StreamSocket();
                 _socket.Control.NoDelay = true;
+                _socket.Control.KeepAlive = true;
             }
 
             if (!_options.TlsOptions.UseTls)

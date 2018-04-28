@@ -33,9 +33,12 @@ namespace MQTTnet.Implementations
 
                 // This also affects the client sockets.
                 _defaultEndpointSocket.Control.NoDelay = true;
+                _defaultEndpointSocket.Control.KeepAlive = true;
+                _defaultEndpointSocket.Control.QualityOfService = SocketQualityOfService.LowLatency;
+                _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
 
                 await _defaultEndpointSocket.BindServiceNameAsync(options.GetDefaultEndpointPort().ToString(), SocketProtectionLevel.PlainSocket);
-                _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
+                
             }
 
             if (options.TlsEndpointOptions.IsEnabled)
@@ -59,7 +62,7 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            StopAsync();
+            StopAsync().GetAwaiter().GetResult();
         }
 
         private void AcceptDefaultEndpointConnectionsAsync(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)

@@ -291,13 +291,13 @@ namespace MQTTnet.Client
         private Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
             _sendTracker.Restart();
-            return _adapter.SendPacketsAsync(_options.CommunicationTimeout, cancellationToken, new[] { packet });
+            return _adapter.SendPacketsAsync(_options.CommunicationTimeout, new[] { packet }, cancellationToken);
         }
 
         private Task SendAsync(IEnumerable<MqttBasePacket> packets, CancellationToken cancellationToken)
         {
             _sendTracker.Restart();
-            return _adapter.SendPacketsAsync(_options.CommunicationTimeout, cancellationToken, packets);
+            return _adapter.SendPacketsAsync(_options.CommunicationTimeout, packets, cancellationToken);
         }
 
         private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttBasePacket
@@ -313,8 +313,8 @@ namespace MQTTnet.Client
             var packetAwaiter = _packetDispatcher.AddPacketAwaiter<TResponsePacket>(identifier);
             try
             {
-                await _adapter.SendPacketsAsync(_options.CommunicationTimeout, new[] { requestPacket }, _cancellationTokenSource.Token).ConfigureAwait(false);
-                var respone = await Internal.TaskExtensions.TimeoutAfter(ct => packetAwaiter.Task, _options.CommunicationTimeout, _cancellationTokenSource.Token).ConfigureAwait(false);
+                await _adapter.SendPacketsAsync(_options.CommunicationTimeout, new[] { requestPacket }, cancellationToken).ConfigureAwait(false);
+                var respone = await Internal.TaskExtensions.TimeoutAfter(ct => packetAwaiter.Task, _options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
 
                 return (TResponsePacket)respone;
             }

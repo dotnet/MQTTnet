@@ -120,7 +120,7 @@ namespace MQTTnet.Server
             {
                 foreach (var session in _sessions)
                 {
-                    await session.Value.StopAsync(MqttClientDisconnectType.NotClean).ConfigureAwait(false);
+                    session.Value.Stop(MqttClientDisconnectType.NotClean);
                 }
 
                 _sessions.Clear();
@@ -232,7 +232,7 @@ namespace MQTTnet.Server
                     {
                         _sessions.Remove(connectPacket.ClientId);
 
-                        await clientSession.StopAsync(MqttClientDisconnectType.Clean).ConfigureAwait(false);
+                        clientSession.Stop(MqttClientDisconnectType.Clean);
                         clientSession.Dispose();
                         clientSession = null;
 
@@ -270,7 +270,7 @@ namespace MQTTnet.Server
                 var interceptorContext = InterceptApplicationMessage(senderClientSession, applicationMessage);
                 if (interceptorContext.CloseConnection)
                 {
-                    await senderClientSession.StopAsync().ConfigureAwait(false);
+                    senderClientSession.Stop(MqttClientDisconnectType.NotClean);
                 }
 
                 if (interceptorContext.ApplicationMessage == null || !interceptorContext.AcceptPublish)

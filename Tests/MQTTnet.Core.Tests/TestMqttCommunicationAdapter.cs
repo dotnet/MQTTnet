@@ -43,11 +43,30 @@ namespace MQTTnet.Core.Tests
             return Task.FromResult(0);
         }
 
-        public Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfPartnerIsNull();
 
-            return Task.Run(() =>
+            if (timeout > TimeSpan.Zero)
+            {
+                using (var timeoutCts = new CancellationTokenSource(timeout))
+                using (var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken))
+                {
+                    return await Task.Run(() =>
+                    {
+                        try
+                        {
+                            return _incomingPackets.Take(cts.Token);
+                        }
+                        catch
+                        {
+                            return null;
+                        }
+                    }, cts.Token);
+                }
+            }
+
+            return await Task.Run(() =>
             {
                 try
                 {

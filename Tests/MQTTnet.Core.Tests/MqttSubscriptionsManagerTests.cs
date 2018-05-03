@@ -18,7 +18,7 @@ namespace MQTTnet.Core.Tests
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
 
-            sm.SubscribeAsync(sp).Wait();
+            sm.Subscribe(sp);
 
             var pp = new MqttApplicationMessage
             {
@@ -39,7 +39,7 @@ namespace MQTTnet.Core.Tests
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
 
-            sm.SubscribeAsync(sp).Wait();
+            sm.Subscribe(sp);
 
             var pp = new MqttApplicationMessage
             {
@@ -61,7 +61,7 @@ namespace MQTTnet.Core.Tests
             sp.TopicFilters.Add(new TopicFilter("#", MqttQualityOfServiceLevel.AtMostOnce));
             sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtLeastOnce));
 
-            sm.SubscribeAsync(sp).Wait();
+            sm.Subscribe(sp);
 
             var pp = new MqttApplicationMessage
             {
@@ -82,7 +82,7 @@ namespace MQTTnet.Core.Tests
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
 
-            sm.SubscribeAsync(sp).Wait();
+            sm.Subscribe(sp);
 
             var pp = new MqttApplicationMessage
             {
@@ -101,7 +101,7 @@ namespace MQTTnet.Core.Tests
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
 
-            sm.SubscribeAsync(sp).Wait();
+            sm.Subscribe(sp);
 
             var pp = new MqttApplicationMessage
             {
@@ -113,7 +113,7 @@ namespace MQTTnet.Core.Tests
 
             var up = new MqttUnsubscribePacket();
             up.TopicFilters.Add("A/B/C");
-            sm.UnsubscribeAsync(up).Wait();
+            sm.Unsubscribe(up);
 
             Assert.IsFalse(sm.CheckSubscriptionsAsync(pp).Result.IsSubscribed);
         }

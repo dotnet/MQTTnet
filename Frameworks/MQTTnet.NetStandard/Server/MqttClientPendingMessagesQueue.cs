@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -13,7 +14,7 @@ namespace MQTTnet.Server
     public sealed class MqttClientPendingMessagesQueue : IDisposable
     {
         private readonly ConcurrentQueue<MqttBasePacket> _queue = new ConcurrentQueue<MqttBasePacket>();
-        private readonly SemaphoreSlim _queueWaitSemaphore = new SemaphoreSlim(0);
+        private readonly AsyncAutoResetEvent _queueAutoResetEvent = new AsyncAutoResetEvent();
         private readonly IMqttServerOptions _options;
         private readonly MqttClientSession _clientSession;
         private readonly IMqttNetLogger _logger;
@@ -54,7 +55,7 @@ namespace MQTTnet.Server
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
             _queue.Enqueue(packet);
-            _queueWaitSemaphore.Release();
+            _queueAutoResetEvent.Set();
 
             _logger.Verbose<MqttClientPendingMessagesQueue>("Enqueued packet (ClientId: {0}).", _clientSession.ClientId);
         }
@@ -82,7 +83,7 @@ namespace MQTTnet.Server
             MqttBasePacket packet = null;
             try
             {
-                await _queueWaitSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                await _queueAutoResetEvent.WaitOneAsync(cancellationToken).ConfigureAwait(false);
                 if (!_queue.TryDequeue(out packet))
                 {
                     throw new InvalidOperationException(); // should not happen
@@ -120,8 +121,8 @@ namespace MQTTnet.Server
                     if (publishPacket.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
                     {
                         publishPacket.Dup = true;
-                        _queue.Enqueue(packet);
-                        _queueWaitSemaphore.Release();
+
+                        Enqueue(publishPacket);
                     }
                 }
 
@@ -134,7 +135,7 @@ namespace MQTTnet.Server
 
         public void Dispose()
         {
-            _queueWaitSemaphore?.Dispose();
+            _queueAutoResetEvent?.Dispose();
         }
     }
 }

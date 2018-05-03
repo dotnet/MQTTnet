@@ -134,7 +134,7 @@ namespace MQTTnet.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            var result = await SubscriptionsManager.CheckSubscriptionsAsync(applicationMessage);
+            var result = await SubscriptionsManager.CheckSubscriptionsAsync(applicationMessage).ConfigureAwait(false);
             if (!result.IsSubscribed)
             {
                 return;
@@ -155,10 +155,10 @@ namespace MQTTnet.Server
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            await SubscriptionsManager.SubscribeAsync(new MqttSubscribePacket
+            SubscriptionsManager.Subscribe(new MqttSubscribePacket
             {
                 TopicFilters = topicFilters
-            }).ConfigureAwait(false);
+            });
 
             await EnqueueSubscribedRetainedMessagesAsync(topicFilters).ConfigureAwait(false);
         }
@@ -167,10 +167,12 @@ namespace MQTTnet.Server
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            return SubscriptionsManager.UnsubscribeAsync(new MqttUnsubscribePacket
+            SubscriptionsManager.Unsubscribe(new MqttUnsubscribePacket
             {
                 TopicFilters = topicFilters
             });
+
+            return Task.FromResult(0);
         }
 
         public void Dispose()
@@ -288,7 +290,7 @@ namespace MQTTnet.Server
 
         private async Task HandleIncomingSubscribePacketAsync(IMqttChannelAdapter adapter, MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
-            var subscribeResult = await SubscriptionsManager.SubscribeAsync(subscribePacket).ConfigureAwait(false);
+            var subscribeResult = SubscriptionsManager.Subscribe(subscribePacket);
             await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new[] { subscribeResult.ResponsePacket }, cancellationToken).ConfigureAwait(false);
 
             if (subscribeResult.CloseConnection)
@@ -302,7 +304,7 @@ namespace MQTTnet.Server
 
         private async Task HandleIncomingUnsubscribePacketAsync(IMqttChannelAdapter adapter, MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
-            var unsubscribeResult = await SubscriptionsManager.UnsubscribeAsync(unsubscribePacket).ConfigureAwait(false);
+            var unsubscribeResult = SubscriptionsManager.Unsubscribe(unsubscribePacket);
             await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new[] { unsubscribeResult }, cancellationToken);
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
@@ -11,7 +12,7 @@ namespace MQTTnet.Core.Tests
     {
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
         
-        public async Task<IMqttClient> ConnectTestClient(IMqttServer server, string clientId, MqttApplicationMessage willMessage = null)
+        public async Task<IMqttClient> ConnectTestClient(string clientId, MqttApplicationMessage willMessage = null)
         {
             var adapterA = new TestMqttCommunicationAdapter();
             var adapterB = new TestMqttCommunicationAdapter();
@@ -21,8 +22,6 @@ namespace MQTTnet.Core.Tests
             var client = new MqttClient(
                 new TestMqttCommunicationAdapterFactory(adapterA),
                 new MqttNetLogger());
-
-            var connected = WaitForClientToConnect(server, clientId);
 
             FireClientAcceptedEvent(adapterB);
 
@@ -34,29 +33,11 @@ namespace MQTTnet.Core.Tests
             };
 
             await client.ConnectAsync(options);
-            await connected;
+            SpinWait.SpinUntil(() => client.IsConnected);
 
             return client;
         }
         
-        private static Task WaitForClientToConnect(IMqttServer s, string clientId)
-        {
-            var tcs = new TaskCompletionSource<object>();
-
-            void Handler(object sender, Server.MqttClientConnectedEventArgs args)
-            {
-                if (args.Client.ClientId == clientId)
-                {
-                    s.ClientConnected -= Handler;
-                    tcs.SetResult(null);
-                }
-            }
-
-            s.ClientConnected += Handler;
-
-            return tcs.Task;
-        }
-
         private void FireClientAcceptedEvent(IMqttChannelAdapter adapter)
         {
             ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(adapter));

@@ -50,8 +50,8 @@ namespace MQTTnet.Client
 
             try
             {
-                _options = options;
                 _cancellationTokenSource = new CancellationTokenSource();
+                _options = options;
                 _packetIdentifierProvider.Reset();
                 _packetDispatcher.Reset();
 
@@ -212,7 +212,7 @@ namespace MQTTnet.Client
                 WillMessage = willApplicationMessage
             };
 
-            var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, _cancellationTokenSource.Token).ConfigureAwait(false);
+            var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
             if (response.ConnectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
             {
                 throw new MqttConnectingFailedException(response.ConnectReturnCode);

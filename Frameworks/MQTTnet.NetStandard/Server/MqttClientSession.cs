@@ -90,7 +90,7 @@ namespace MQTTnet.Server
             return _wasCleanDisconnect;
         }
 
-        public async Task StopAsync(bool wasCleanDisconnect = false)
+        public async Task StopAsync(MqttClientDisconnectType type)
         {
             try
             {
@@ -99,7 +99,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                _wasCleanDisconnect = wasCleanDisconnect;
+                _wasCleanDisconnect = type == MqttClientDisconnectType.Clean;
 
                 _cancellationTokenSource?.Cancel(false);
 
@@ -118,7 +118,7 @@ namespace MQTTnet.Server
                 var willMessage = _willMessage;
                 _willMessage = null; // clear willmessage so it is send just once
 
-                if (willMessage != null && !wasCleanDisconnect)
+                if (willMessage != null && !_wasCleanDisconnect)
                 {
                     await ApplicationMessageReceivedCallback(this, willMessage).ConfigureAwait(false);
                 }
@@ -181,7 +181,7 @@ namespace MQTTnet.Server
         private Task StopDueToKeepAliveTimeoutAsync()
         {
             _logger.Info<MqttClientSession>("Client '{0}': Timeout while waiting for KeepAlive packet.", ClientId);
-            return StopAsync();
+            return StopAsync(MqttClientDisconnectType.NotClean);
         }
 
         private async Task ReceivePacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
@@ -198,15 +198,18 @@ namespace MQTTnet.Server
             catch (OperationCanceledException)
             {
             }
-            catch (MqttCommunicationException exception)
-            {
-                _logger.Warning<MqttClientSession>(exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
-                await StopAsync().ConfigureAwait(false);
-            }
             catch (Exception exception)
             {
-                _logger.Error<MqttClientSession>(exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
-                await StopAsync().ConfigureAwait(false);
+                if (exception is MqttCommunicationException)
+                {
+                    _logger.Warning<MqttClientSession>(exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
+                }
+                else
+                {
+                    _logger.Error<MqttClientSession>(exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
+                }
+
+                await StopAsync(MqttClientDisconnectType.NotClean).ConfigureAwait(false);
             }
         }
 
@@ -255,16 +258,16 @@ namespace MQTTnet.Server
 
             if (packet is MqttDisconnectPacket)
             {
-                return StopAsync(true);
+                return StopAsync(MqttClientDisconnectType.Clean);
             }
 
             if (packet is MqttConnectPacket)
             {
-                return StopAsync();
+                return StopAsync(MqttClientDisconnectType.NotClean);
             }
 
             _logger.Warning<MqttClientSession>("Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
-            return StopAsync();
+            return StopAsync(MqttClientDisconnectType.NotClean);
         }
 
         private async Task HandleIncomingSubscribePacketAsync(IMqttChannelAdapter adapter, MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
@@ -274,7 +277,7 @@ namespace MQTTnet.Server
 
             if (subscribeResult.CloseConnection)
             {
-                await StopAsync().ConfigureAwait(false);
+                await StopAsync(MqttClientDisconnectType.NotClean).ConfigureAwait(false);
             }
 
             await EnqueueSubscribedRetainedMessagesAsync(subscribePacket.TopicFilters).ConfigureAwait(false);

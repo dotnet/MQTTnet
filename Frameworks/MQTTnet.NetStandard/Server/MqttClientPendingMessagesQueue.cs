@@ -128,7 +128,7 @@ namespace MQTTnet.Server
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await _clientSession.StopAsync().ConfigureAwait(false);
+                    await _clientSession.StopAsync(MqttClientDisconnectType.NotClean).ConfigureAwait(false);
                 }
             }
         }

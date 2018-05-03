@@ -108,6 +108,13 @@ namespace MQTTnet.Client
             return this;
         }
 
+        public MqttClientOptionsBuilder WithReceivedApplicationMessageProcessingMode(
+            MqttReceivedApplicationMessageProcessingMode mode)
+        {
+            _options.ReceivedApplicationMessageProcessingMode = mode;
+            return this;
+        }
+
         public IMqttClientOptions Build()
         {
             if (_tlsOptions != null)

@@ -17,12 +17,12 @@ namespace MQTTnet.AspNetCore
                 {
                     string subprotocol = null;
 
-                    if (context.Request.Headers.TryGetValue("Sec-WebSocket-Protocol", out var requestedSubProtocolValues)
-                     && requestedSubProtocolValues.Count > 0
-                     && requestedSubProtocolValues.Any(v => v.ToLower() == "mqtt")
-                     )
+                    if (context.Request.Headers.TryGetValue("Sec-WebSocket-Protocol", out var requestedSubProtocolValues))
                     {
-                        subprotocol = "mqtt";
+                        // Order the protocols to also match "mqtt", "mqttv-3.1", "mqttv-3.11" etc.
+                        subprotocol = requestedSubProtocolValues
+                            .OrderByDescending(p => p.Length)
+                            .FirstOrDefault(p => p.ToLower().StartsWith("mqtt"));
                     }
 
                     var adapter = app.ApplicationServices.GetRequiredService<MqttWebSocketServerAdapter>();

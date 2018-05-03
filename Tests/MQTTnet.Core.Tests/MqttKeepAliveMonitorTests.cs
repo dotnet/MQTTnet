@@ -1,5 +1,4 @@
 ﻿using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Diagnostics;
 using MQTTnet.Packets;
@@ -18,7 +17,6 @@ namespace MQTTnet.Core.Tests
             var monitor = new MqttClientKeepAliveMonitor(string.Empty, delegate
             {
                 timeoutCalledCount++;
-                return Task.FromResult(0);
             }, new MqttNetLogger());
 
             Assert.AreEqual(0, timeoutCalledCount);
@@ -40,7 +38,6 @@ namespace MQTTnet.Core.Tests
             var monitor = new MqttClientKeepAliveMonitor(string.Empty, delegate
             {
                 timeoutCalledCount++;
-                return Task.FromResult(0);
             }, new MqttNetLogger());
 
             Assert.AreEqual(0, timeoutCalledCount);

@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Core.Internal
 {
     public class TestMqttChannel : IMqttChannel
     {

@@ -14,20 +14,20 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public async Task TimeoutAfter()
         {
-            await Internal.TaskExtensions.TimeoutAfter(ct => Task.Delay(TimeSpan.FromMilliseconds(500), ct), TimeSpan.FromMilliseconds(100), CancellationToken.None);
+            await MQTTnet.Internal.TaskExtensions.TimeoutAfter(ct => Task.Delay(TimeSpan.FromMilliseconds(500), ct), TimeSpan.FromMilliseconds(100), CancellationToken.None);
         }
 
         [ExpectedException(typeof(MqttCommunicationTimedOutException))]
         [TestMethod]
         public async Task TimeoutAfterWithResult()
         {
-            await Internal.TaskExtensions.TimeoutAfter(ct => Task.Delay(TimeSpan.FromMilliseconds(500), ct).ContinueWith(t => 5, ct), TimeSpan.FromMilliseconds(100), CancellationToken.None);
+            await MQTTnet.Internal.TaskExtensions.TimeoutAfter(ct => Task.Delay(TimeSpan.FromMilliseconds(500), ct).ContinueWith(t => 5, ct), TimeSpan.FromMilliseconds(100), CancellationToken.None);
         }
 
         [TestMethod]
         public async Task TimeoutAfterCompleteInTime()
         {
-            var result = await Internal.TaskExtensions.TimeoutAfter(ct => Task.Delay(TimeSpan.FromMilliseconds(100), ct).ContinueWith(t => 5, ct), TimeSpan.FromMilliseconds(500), CancellationToken.None);
+            var result = await MQTTnet.Internal.TaskExtensions.TimeoutAfter(ct => Task.Delay(TimeSpan.FromMilliseconds(100), ct).ContinueWith(t => 5, ct), TimeSpan.FromMilliseconds(500), CancellationToken.None);
             Assert.AreEqual(5, result);
         }
 
@@ -36,7 +36,7 @@ namespace MQTTnet.Core.Tests
         {
             try
             {
-                await Internal.TaskExtensions.TimeoutAfter(ct => Task.Run(() =>
+                await MQTTnet.Internal.TaskExtensions.TimeoutAfter(ct => Task.Run(() =>
                 {
                     var iis = new int[0];
                     iis[1] = 0;
@@ -55,7 +55,7 @@ namespace MQTTnet.Core.Tests
         {
             try
             {
-                await Internal.TaskExtensions.TimeoutAfter(ct => Task.Run(() =>
+                await MQTTnet.Internal.TaskExtensions.TimeoutAfter(ct => Task.Run(() =>
                 {
                     var iis = new int[0];
                     iis[1] = 0;
@@ -76,7 +76,7 @@ namespace MQTTnet.Core.Tests
             var tasks = Enumerable.Range(0, 100000)
                 .Select(i =>
                 {
-                    return Internal.TaskExtensions.TimeoutAfter(ct => Task.Delay(TimeSpan.FromMilliseconds(1), ct), TimeSpan.FromMinutes(1), CancellationToken.None);
+                    return MQTTnet.Internal.TaskExtensions.TimeoutAfter(ct => Task.Delay(TimeSpan.FromMilliseconds(1), ct), TimeSpan.FromMinutes(1), CancellationToken.None);
                 });
 
             await Task.WhenAll(tasks);

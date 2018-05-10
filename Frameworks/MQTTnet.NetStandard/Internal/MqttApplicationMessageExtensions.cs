@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Internal
 {
-    internal static class MqttApplicationMessageExtensions
+    public static class MqttApplicationMessageExtensions
     {
         public static MqttApplicationMessage ToApplicationMessage(this MqttPublishPacket publishPacket)
         {

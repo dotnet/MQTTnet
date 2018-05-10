@@ -25,7 +25,7 @@ namespace MQTTnet.Serializer
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            stream.Write(value.Value);
+            stream.WriteByte(value.Value);
         }
 
         public static void WriteWithLengthPrefix(this Stream stream, string value)

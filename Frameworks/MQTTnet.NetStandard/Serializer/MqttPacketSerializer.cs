@@ -397,7 +397,7 @@ namespace MQTTnet.Serializer
                 throw new MqttProtocolViolationException("Protocol version not supported.");
             }
 
-            stream.Write((byte)packet.ConnectReturnCode);
+            stream.WriteByte((byte)packet.ConnectReturnCode);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }

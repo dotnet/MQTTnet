@@ -18,7 +18,6 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class SerializerBenchmark
     {
-        private MqttApplicationMessage _message;
         private MqttBasePacket _packet;
         private ArraySegment<byte> _serializedPacket;
         private MqttPacketSerializer _serializer;
@@ -26,11 +25,11 @@ namespace MQTTnet.Benchmarks
         [GlobalSetup]
         public void Setup()
         {
-            _message = new MqttApplicationMessageBuilder()
+            var message = new MqttApplicationMessageBuilder()
                 .WithTopic("A")
                 .Build();
 
-            _packet = _message.ToPublishPacket();
+            _packet = message.ToPublishPacket();
             _serializer = new MqttPacketSerializer();
             _serializedPacket = _serializer.Serialize(_packet);
         }
@@ -55,7 +54,7 @@ namespace MQTTnet.Benchmarks
 
                     using (var bodyStream = new MemoryStream(Join(_serializedPacket), (int)headerStream.Position, header.BodyLength))
                     {
-                        var deserializedPacket = _serializer.Deserialize(header, bodyStream);
+                        _serializer.Deserialize(header, bodyStream);
                     }
                 }
             }

@@ -38,6 +38,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extensions", "Extensions", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.Rpc", "Extensions\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj", "{C444E9C8-95FA-430E-9126-274129DE16CD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTserver", "MQTTserver\MQTTserver.csproj", "{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -168,6 +170,22 @@ Global
 		{C444E9C8-95FA-430E-9126-274129DE16CD}.Release|x64.Build.0 = Release|Any CPU
 		{C444E9C8-95FA-430E-9126-274129DE16CD}.Release|x86.ActiveCfg = Release|Any CPU
 		{C444E9C8-95FA-430E-9126-274129DE16CD}.Release|x86.Build.0 = Release|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Debug|ARM.Build.0 = Debug|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Debug|x64.Build.0 = Debug|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Debug|x86.Build.0 = Debug|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Release|ARM.ActiveCfg = Release|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Release|ARM.Build.0 = Release|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Release|x64.ActiveCfg = Release|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Release|x64.Build.0 = Release|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Release|x86.ActiveCfg = Release|Any CPU
+		{5FCCD9CE-9E7E-40C1-9B99-3328FED9EED7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,13 +5,8 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Serializer
 {
-    public sealed class MqttPacketWriter : BinaryWriter
+    public static class MqttPacketWriter
     {
-        public MqttPacketWriter(Stream stream)
-            : base(stream, Encoding.UTF8, true)
-        {
-        }
-
         public static byte BuildFixedHeader(MqttControlPacketType packetType, byte flags = 0)
         {
             var fixedHeader = (int)packetType << 4;
@@ -19,40 +14,31 @@ namespace MQTTnet.Serializer
             return (byte)fixedHeader;
         }
 
-        public override void Write(ushort value)
+        public static void Write(this Stream stream, ushort value)
         {
             var buffer = BitConverter.GetBytes(value);
-            Write(buffer[1], buffer[0]);
+            stream.WriteByte(buffer[1]);
+            stream.WriteByte(buffer[0]);
         }
 
-        public new void Write(params byte[] values)
-        {
-            base.Write(values);
-        }
-
-        public new void Write(byte value)
-        {
-            base.Write(value);
-        }
-
-        public void Write(ByteWriter value)
+        public static void Write(this Stream stream, ByteWriter value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            Write(value.Value);
+            stream.WriteByte(value.Value);
         }
 
-        public void WriteWithLengthPrefix(string value)
+        public static void WriteWithLengthPrefix(this Stream stream, string value)
         {
-            WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value ?? string.Empty));
+            stream.WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value ?? string.Empty));
         }
 
-        public void WriteWithLengthPrefix(byte[] value)
+        public static void WriteWithLengthPrefix(this Stream stream, byte[] value)
         {
             var length = (ushort)value.Length;
 
-            Write(length);
-            Write(value);
+            stream.Write(length);
+            stream.Write(value, 0, length);
         }
 
         public static int EncodeRemainingLength(int length, MemoryStream stream)

@@ -10,18 +10,8 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Serializer
 {
-    public sealed class MqttPacketReader : BinaryReader
+    public static class MqttPacketReader
     {
-        private readonly MqttPacketHeader _header;
-
-        public MqttPacketReader(MqttPacketHeader header, Stream bodyStream)
-            : base(bodyStream, Encoding.UTF8, true)
-        {
-            _header = header;
-        }
-
-        public bool EndOfRemainingData => BaseStream.Position == _header.BodyLength;
-
         public static async Task<MqttPacketHeader> ReadHeaderAsync(IMqttChannel stream, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -51,9 +41,9 @@ namespace MQTTnet.Serializer
             };
         }
 
-        public override ushort ReadUInt16()
+        public static ushort ReadUInt16(this Stream stream)
         {
-            var buffer = ReadBytes(2);
+            var buffer = stream.ReadBytes(2);
 
             var temp = buffer[0];
             buffer[0] = buffer[1];
@@ -62,9 +52,9 @@ namespace MQTTnet.Serializer
             return BitConverter.ToUInt16(buffer, 0);
         }
 
-        public string ReadStringWithLengthPrefix()
+        public static string ReadStringWithLengthPrefix(this Stream stream)
         {
-            var buffer = ReadWithLengthPrefix();
+            var buffer = stream.ReadWithLengthPrefix();
             if (buffer.Length == 0)
             {
                 return string.Empty;
@@ -73,20 +63,27 @@ namespace MQTTnet.Serializer
             return Encoding.UTF8.GetString(buffer, 0, buffer.Length);
         }
 
-        public byte[] ReadWithLengthPrefix()
+        public static byte[] ReadWithLengthPrefix(this Stream stream)
         {
-            var length = ReadUInt16();
+            var length = stream.ReadUInt16();
             if (length == 0)
             {
                 return new byte[0];
             }
 
-            return ReadBytes(length);
+            return stream.ReadBytes(length);
         }
 
-        public byte[] ReadRemainingData()
+        public static byte[] ReadRemainingData(this Stream stream, MqttPacketHeader header)
         {
-            return ReadBytes(_header.BodyLength - (int)BaseStream.Position);
+            return stream.ReadBytes(header.BodyLength - (int)stream.Position);
+        }
+
+        public static byte[] ReadBytes(this Stream stream, int count)
+        {
+            var buffer = new byte[count];
+            stream.Read(buffer, 0, count);
+            return buffer;
         }
 
         private static async Task<int> ReadBodyLengthAsync(IMqttChannel stream, CancellationToken cancellationToken)

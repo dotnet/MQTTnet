@@ -16,16 +16,18 @@ namespace MQTTnet.Implementations
 {
     public class MqttTcpServerAdapter : IMqttServerAdapter
     {
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetChildLogger _logger;
 
         private CancellationTokenSource _cancellationTokenSource;
         private Socket _defaultEndpointSocket;
         private Socket _tlsEndpointSocket;
         private X509Certificate2 _tlsCertificate;
 
-        public MqttTcpServerAdapter(IMqttNetLogger logger)
+        public MqttTcpServerAdapter(IMqttNetChildLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
         }
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
@@ -127,7 +129,7 @@ namespace MQTTnet.Implementations
                         return;
                     }
 
-                    _logger.Error<MqttTcpServerAdapter>(exception, "Error while accepting connection at default endpoint.");
+                    _logger.Error(exception, "Error while accepting connection at default endpoint.");
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -162,7 +164,7 @@ namespace MQTTnet.Implementations
                         return;
                     }
 
-                    _logger.Error<MqttTcpServerAdapter>(exception, "Error while accepting connection at TLS endpoint.");
+                    _logger.Error(exception, "Error while accepting connection at TLS endpoint.");
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }

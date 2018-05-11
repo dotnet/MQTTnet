@@ -5,6 +5,6 @@ namespace MQTTnet.Client
 {
     public interface IMqttClientAdapterFactory
     {
-        IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger);
+        IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetChildLogger logger);
     }
 }

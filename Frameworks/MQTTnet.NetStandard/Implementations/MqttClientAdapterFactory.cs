@@ -8,7 +8,7 @@ namespace MQTTnet.Implementations
 {
     public class MqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetChildLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

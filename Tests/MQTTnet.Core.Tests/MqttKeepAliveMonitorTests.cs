@@ -17,7 +17,7 @@ namespace MQTTnet.Core.Tests
             var monitor = new MqttClientKeepAliveMonitor(string.Empty, delegate
             {
                 timeoutCalledCount++;
-            }, new MqttNetLogger());
+            }, new MqttNetLogger().CreateChildLogger(""));
 
             Assert.AreEqual(0, timeoutCalledCount);
 
@@ -38,7 +38,7 @@ namespace MQTTnet.Core.Tests
             var monitor = new MqttClientKeepAliveMonitor(string.Empty, delegate
             {
                 timeoutCalledCount++;
-            }, new MqttNetLogger());
+            }, new MqttNetLogger().CreateChildLogger(""));
 
             Assert.AreEqual(0, timeoutCalledCount);
 

@@ -11,16 +11,17 @@ namespace MQTTnet.Server
     public class MqttServer : IMqttServer
     {
         private readonly ICollection<IMqttServerAdapter> _adapters;
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetChildLogger _logger;
 
         private MqttClientSessionsManager _clientSessionsManager;
         private MqttRetainedMessagesManager _retainedMessagesManager;
         private CancellationTokenSource _cancellationTokenSource;
 
-        public MqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
+        public MqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetChildLogger logger)
         {
             if (adapters == null) throw new ArgumentNullException(nameof(adapters));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            _logger = logger.CreateChildLogger(nameof(MqttServer));
 
             _adapters = adapters.ToList();
         }
@@ -90,7 +91,7 @@ namespace MQTTnet.Server
                 await adapter.StartAsync(Options);
             }
 
-            _logger.Info<MqttServer>("Started.");
+            _logger.Info("Started.");
             Started?.Invoke(this, new MqttServerStartedEventArgs());
         }
 
@@ -114,7 +115,7 @@ namespace MQTTnet.Server
 
                 await _clientSessionsManager.StopAsync();
 
-                _logger.Info<MqttServer>("Stopped.");
+                _logger.Info("Stopped.");
             }
             finally
             {
@@ -129,13 +130,13 @@ namespace MQTTnet.Server
 
         internal void OnClientConnected(ConnectedMqttClient client)
         {
-            _logger.Info<MqttServer>("Client '{0}': Connected.", client.ClientId);
+            _logger.Info("Client '{0}': Connected.", client.ClientId);
             ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(client));
         }
 
         internal void OnClientDisconnected(ConnectedMqttClient client, bool wasCleanDisconnect)
         {
-            _logger.Info<MqttServer>("Client '{0}': Disconnected (clean={1}).", client.ClientId, wasCleanDisconnect);
+            _logger.Info("Client '{0}': Disconnected (clean={1}).", client.ClientId, wasCleanDisconnect);
             ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(client, wasCleanDisconnect));
         }
 

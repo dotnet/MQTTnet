@@ -14,15 +14,17 @@ namespace MQTTnet.Server
 
         private readonly string _clientId;
         private readonly Action _timeoutCallback;
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetChildLogger _logger;
 
         private Task _workerTask;
 
-        public MqttClientKeepAliveMonitor(string clientId, Action timeoutCallback, IMqttNetLogger logger)
+        public MqttClientKeepAliveMonitor(string clientId, Action timeoutCallback, IMqttNetChildLogger logger)
         {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
             _clientId = clientId;
             _timeoutCallback = timeoutCallback;
-            _logger = logger;
+            _logger = logger.CreateChildLogger(nameof(MqttClientKeepAliveMonitor));
         }
 
         public TimeSpan LastPacketReceived => _lastPacketReceivedTracker.Elapsed;
@@ -59,7 +61,7 @@ namespace MQTTnet.Server
                     // Values described here: [MQTT-3.1.2-24].
                     if (_lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod * 1.5D)
                     {
-                        _logger.Warning(this, null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
+                        _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
 
                         _timeoutCallback?.Invoke();
 
@@ -74,11 +76,11 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error(this, exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", _clientId);
+                _logger.Error(exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", _clientId);
             }
             finally
             {
-                _logger.Verbose(this, "Client {0}: Stopped checking keep alive timeout.", _clientId);
+                _logger.Verbose("Client {0}: Stopped checking keep alive timeout.", _clientId);
             }
         }
 

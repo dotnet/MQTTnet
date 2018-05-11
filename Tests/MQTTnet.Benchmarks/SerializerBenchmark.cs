@@ -1,9 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
-using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Serializer;
 using MQTTnet.Internal;
-using MQTTnet.Server;
 using BenchmarkDotNet.Attributes.Jobs;
 using BenchmarkDotNet.Attributes.Exporters;
 using System;

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using BenchmarkDotNet.Running;
 using MQTTnet.Diagnostics;
 
@@ -12,6 +11,7 @@ namespace MQTTnet.Benchmarks
             Console.WriteLine($"MQTTnet - BenchmarkApp.{TargetFrameworkInfoProvider.TargetFramework}");
             Console.WriteLine("1 = MessageProcessingBenchmark");
             Console.WriteLine("2 = SerializerBenchmark");
+            Console.WriteLine("3 = LoggerBenchmark");
 
             var pressedKey = Console.ReadKey(true);
             switch (pressedKey.KeyChar)
@@ -22,7 +22,8 @@ namespace MQTTnet.Benchmarks
                 case '2':
                     BenchmarkRunner.Run<SerializerBenchmark>();
                     break;
-                default:
+                case '3':
+                    BenchmarkRunner.Run<LoggerBenchmark>();
                     break;
             }
 

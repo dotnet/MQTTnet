@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Serializer;
 
@@ -19,10 +18,10 @@ namespace MQTTnet.Adapter
         private const uint ErrorOperationAborted = 0x800703E3;
         private const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
 
-        private bool _isDisposed;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IMqttNetLogger _logger;
         private readonly IMqttChannel _channel;
+
+        private bool _isDisposed;
 
         public MqttChannelAdapter(IMqttChannel channel, IMqttPacketSerializer serializer, IMqttNetLogger logger)
         {
@@ -33,75 +32,52 @@ namespace MQTTnet.Adapter
 
         public IMqttPacketSerializer PacketSerializer { get; }
 
-        public Task ConnectAsync(TimeSpan timeout)
+        public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
             _logger.Verbose<MqttChannelAdapter>("Connecting [Timeout={0}]", timeout);
 
-            return ExecuteAndWrapExceptionAsync(() => _channel.ConnectAsync().TimeoutAfter(timeout));
+            return ExecuteAndWrapExceptionAsync(() =>
+                Internal.TaskExtensions.TimeoutAfter(ct => _channel.ConnectAsync(ct), timeout, cancellationToken));
         }
 
-        public Task DisconnectAsync(TimeSpan timeout)
+        public Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
             _logger.Verbose<MqttChannelAdapter>("Disconnecting [Timeout={0}]", timeout);
 
-            return ExecuteAndWrapExceptionAsync(() => _channel.DisconnectAsync().TimeoutAfter(timeout));
+            return ExecuteAndWrapExceptionAsync(() =>
+                Internal.TaskExtensions.TimeoutAfter(ct => _channel.DisconnectAsync(), timeout, cancellationToken));
         }
 
-        public Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets)
+        public async Task SendPacketsAsync(TimeSpan timeout, IEnumerable<MqttBasePacket> packets, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
-            return ExecuteAndWrapExceptionAsync(async () =>
+            foreach (var packet in packets)
             {
-                await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-                try
+                if (packet == null)
                 {
-                    foreach (var packet in packets)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            return;
-                        }
-
-                        if (packet == null)
-                        {
-                            continue;
-                        }
-
-                        _logger.Verbose<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
-
-                        var chunks = PacketSerializer.Serialize(packet);
-                        foreach (var chunk in chunks)
-                        {
-                            if (cancellationToken.IsCancellationRequested)
-                            {
-                                return;
-                            }
-
-                            await _channel.SendStream.WriteAsync(chunk.Array, chunk.Offset, chunk.Count, cancellationToken).ConfigureAwait(false);
-                        }
-                    }
-
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
-
-                    if (timeout > TimeSpan.Zero)
-                    {
-                        await _channel.SendStream.FlushAsync(cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await _channel.SendStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-                    }
+                    continue;
                 }
-                finally
-                {
-                    _semaphore.Release();
-                }
+
+                await SendPacketAsync(timeout, cancellationToken, packet).ConfigureAwait(false);
+            }
+        }
+
+        private Task SendPacketAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket packet)
+        {
+            return ExecuteAndWrapExceptionAsync(() =>
+            {
+                _logger.Verbose<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
+
+                var packetData = PacketSerializer.Serialize(packet);
+
+                return Internal.TaskExtensions.TimeoutAfter(ct => _channel.WriteAsync(
+                    packetData.Array,
+                    packetData.Offset,
+                    packetData.Count,
+                    ct), timeout, cancellationToken);
             });
         }
 
@@ -117,11 +93,11 @@ namespace MQTTnet.Adapter
                 {
                     if (timeout > TimeSpan.Zero)
                     {
-                        receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, cancellationToken).TimeoutAfter(timeout).ConfigureAwait(false);
+                        receivedMqttPacket = await Internal.TaskExtensions.TimeoutAfter(ct => ReceiveAsync(_channel, ct), timeout, cancellationToken).ConfigureAwait(false);
                     }
                     else
                     {
-                        receivedMqttPacket = await ReceiveAsync(_channel.ReceiveStream, cancellationToken).ConfigureAwait(false);
+                        receivedMqttPacket = await ReceiveAsync(_channel, cancellationToken).ConfigureAwait(false);
                     }
 
                     if (receivedMqttPacket == null || cancellationToken.IsCancellationRequested)
@@ -146,22 +122,22 @@ namespace MQTTnet.Adapter
             return packet;
         }
 
-        private static async Task<ReceivedMqttPacket> ReceiveAsync(Stream stream, CancellationToken cancellationToken)
+        private static async Task<ReceivedMqttPacket> ReceiveAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
-            var header = await MqttPacketReader.ReadHeaderAsync(stream, cancellationToken).ConfigureAwait(false);
+            var header = await MqttPacketReader.ReadHeaderAsync(channel, cancellationToken).ConfigureAwait(false);
             if (header == null)
             {
                 return null;
             }
-
+            
             if (header.BodyLength == 0)
             {
                 return new ReceivedMqttPacket(header, new MemoryStream(new byte[0], false));
             }
 
-            var body = header.BodyLength <= ReadBufferSize ? new MemoryStream(header.BodyLength) : new MemoryStream();
+            var body = new MemoryStream(header.BodyLength);
 
-            var buffer = new byte[ReadBufferSize];
+            var buffer = new byte[Math.Min(ReadBufferSize, header.BodyLength)];
             while (body.Length < header.BodyLength)
             {
                 var bytesLeft = header.BodyLength - (int)body.Length;
@@ -170,7 +146,7 @@ namespace MQTTnet.Adapter
                     bytesLeft = buffer.Length;
                 }
 
-                var readBytesCount = await stream.ReadAsync(buffer, 0, bytesLeft, cancellationToken).ConfigureAwait(false);
+                var readBytesCount = await channel.ReadAsync(buffer, 0, bytesLeft, cancellationToken).ConfigureAwait(false);
 
                 // Check if the client closed the connection before sending the full body.
                 if (readBytesCount == 0)
@@ -240,7 +216,7 @@ namespace MQTTnet.Adapter
         public void Dispose()
         {
             _isDisposed = true;
-            _semaphore?.Dispose();
+
             _channel?.Dispose();
         }
 

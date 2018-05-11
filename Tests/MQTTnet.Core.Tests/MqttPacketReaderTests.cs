@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Core.Internal;
 using MQTTnet.Serializer;
 
 namespace MQTTnet.Core.Tests
@@ -11,8 +12,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void MqttPacketReader_EmptyStream()
         {
-            var memStream = new MemoryStream();
-            var header = MqttPacketReader.ReadHeaderAsync(memStream, CancellationToken.None).GetAwaiter().GetResult();
+            var header = MqttPacketReader.ReadHeaderAsync(new TestMqttChannel(new MemoryStream()), CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.IsNull(header);
         }

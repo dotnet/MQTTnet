@@ -1,15 +1,15 @@
 ﻿using System;
-using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Channel
 {
     public interface IMqttChannel : IDisposable
     {
-        Stream SendStream { get; }
-        Stream ReceiveStream { get; }
-
-        Task ConnectAsync();
+        Task ConnectAsync(CancellationToken cancellationToken);
         Task DisconnectAsync();
+
+        Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);
+        Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);
     }
 }

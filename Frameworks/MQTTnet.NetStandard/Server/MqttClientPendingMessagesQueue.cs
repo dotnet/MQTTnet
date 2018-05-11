@@ -50,6 +50,17 @@ namespace MQTTnet.Server
             }
         }
 
+        public async Task DropPacket()
+        {
+            MqttBasePacket packet = null;
+            await _queueWaitSemaphore.WaitAsync().ConfigureAwait(false);
+            if (!_queue.TryDequeue(out packet))
+            {
+                throw new InvalidOperationException(); // should not happen
+            }
+            _queueWaitSemaphore.Release(); 
+        }
+
         public void Enqueue(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));

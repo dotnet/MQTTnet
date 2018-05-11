@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -14,15 +15,18 @@ namespace MQTTnet.Server
     public sealed class MqttClientSessionsManager : IDisposable
     {
         private readonly Dictionary<string, MqttClientSession> _sessions = new Dictionary<string, MqttClientSession>();
-        private readonly SemaphoreSlim _sessionsLock = new SemaphoreSlim(1, 1);
+        private readonly AsyncLock _sessionsLock = new AsyncLock();
 
         private readonly MqttRetainedMessagesManager _retainedMessagesManager;
         private readonly IMqttServerOptions _options;
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetChildLogger _logger;
 
-        public MqttClientSessionsManager(IMqttServerOptions options, MqttServer server, MqttRetainedMessagesManager retainedMessagesManager, IMqttNetLogger logger)
+        public MqttClientSessionsManager(IMqttServerOptions options, MqttServer server, MqttRetainedMessagesManager retainedMessagesManager, IMqttNetChildLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            _logger = logger.CreateChildLogger(nameof(MqttClientSessionsManager));
+
             _options = options ?? throw new ArgumentNullException(nameof(options));
             Server = server ?? throw new ArgumentNullException(nameof(server));
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
@@ -89,7 +93,7 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttClientSessionsManager>(exception, exception.Message);
+                _logger.Error(exception, exception.Message);
             }
             finally
             {
@@ -100,7 +104,7 @@ namespace MQTTnet.Server
                 }
                 catch (Exception exception)
                 {
-                    _logger.Error<MqttClientSessionsManager>(exception, exception.Message);
+                    _logger.Error(exception, exception.Message);
                 }
 
                 Server.OnClientDisconnected(new ConnectedMqttClient
@@ -115,7 +119,7 @@ namespace MQTTnet.Server
 
         public async Task StopAsync()
         {
-            await _sessionsLock.WaitAsync().ConfigureAwait(false);
+            await _sessionsLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
                 foreach (var session in _sessions)
@@ -127,13 +131,13 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _sessionsLock.Release();
+                _sessionsLock.Exit();
             }
         }
 
         public async Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync()
         {
-            await _sessionsLock.WaitAsync().ConfigureAwait(false);
+            await _sessionsLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
                 return _sessions.Where(s => s.Value.IsConnected).Select(s => new ConnectedMqttClient
@@ -147,7 +151,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _sessionsLock.Release();
+                _sessionsLock.Exit();
             }
         }
 
@@ -161,7 +165,7 @@ namespace MQTTnet.Server
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            await _sessionsLock.WaitAsync().ConfigureAwait(false);
+            await _sessionsLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
                 if (!_sessions.TryGetValue(clientId, out var session))
@@ -173,7 +177,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _sessionsLock.Release();
+                _sessionsLock.Exit();
             }
         }
 
@@ -182,7 +186,7 @@ namespace MQTTnet.Server
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            await _sessionsLock.WaitAsync().ConfigureAwait(false);
+            await _sessionsLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
                 if (!_sessions.TryGetValue(clientId, out var session))
@@ -194,7 +198,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _sessionsLock.Release();
+                _sessionsLock.Exit();
             }
         }
 
@@ -222,7 +226,7 @@ namespace MQTTnet.Server
 
         private async Task<GetOrCreateClientSessionResult> PrepareClientSessionAsync(MqttConnectPacket connectPacket)
         {
-            await _sessionsLock.WaitAsync().ConfigureAwait(false);
+            await _sessionsLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
                 var isSessionPresent = _sessions.TryGetValue(connectPacket.ClientId, out var clientSession);
@@ -236,11 +240,11 @@ namespace MQTTnet.Server
                         clientSession.Dispose();
                         clientSession = null;
 
-                        _logger.Verbose<MqttClientSessionsManager>("Stopped existing session of client '{0}'.", connectPacket.ClientId);
+                        _logger.Verbose("Stopped existing session of client '{0}'.", connectPacket.ClientId);
                     }
                     else
                     {
-                        _logger.Verbose<MqttClientSessionsManager>("Reusing existing session of client '{0}'.", connectPacket.ClientId);
+                        _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
                     }
                 }
 
@@ -252,14 +256,14 @@ namespace MQTTnet.Server
                     clientSession = new MqttClientSession(connectPacket.ClientId, _options, this, _retainedMessagesManager, _logger);
                     _sessions[connectPacket.ClientId] = clientSession;
 
-                    _logger.Verbose<MqttClientSessionsManager>("Created a new session for client '{0}'.", connectPacket.ClientId);
+                    _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);
                 }
 
                 return new GetOrCreateClientSessionResult { IsExistingSession = isExistingSession, Session = clientSession };
             }
             finally
             {
-                _sessionsLock.Release();
+                _sessionsLock.Exit();
             }
         }
 
@@ -287,10 +291,10 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttClientSessionsManager>(exception, "Error while processing application message");
+                _logger.Error(exception, "Error while processing application message");
             }
 
-            await _sessionsLock.WaitAsync().ConfigureAwait(false);
+            await _sessionsLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
                 foreach (var clientSession in _sessions.Values)
@@ -300,7 +304,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _sessionsLock.Release();
+                _sessionsLock.Exit();
             }
         }
 

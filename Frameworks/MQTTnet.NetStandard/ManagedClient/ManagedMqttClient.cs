@@ -19,7 +19,7 @@ namespace MQTTnet.ManagedClient
         private readonly List<string> _unsubscriptions = new List<string>();
 
         private readonly IMqttClient _mqttClient;
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetChildLogger _logger;
 
         private CancellationTokenSource _connectionCancellationToken;
         private CancellationTokenSource _publishingCancellationToken;
@@ -29,14 +29,17 @@ namespace MQTTnet.ManagedClient
 
         private bool _subscriptionsNotPushed;
 
-        public ManagedMqttClient(IMqttClient mqttClient, IMqttNetLogger logger)
+        public ManagedMqttClient(IMqttClient mqttClient, IMqttNetChildLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 
             _mqttClient.Connected += OnConnected;
             _mqttClient.Disconnected += OnDisconnected;
             _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
+
+            _logger = logger.CreateChildLogger(nameof(ManagedMqttClient));
         }
 
         public bool IsConnected => _mqttClient.IsConnected;
@@ -74,7 +77,7 @@ namespace MQTTnet.ManagedClient
             Task.Run(() => MaintainConnectionAsync(_connectionCancellationToken.Token), _connectionCancellationToken.Token);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
-            _logger.Info<ManagedMqttClient>("Started");
+            _logger.Info("Started");
         }
 
         public Task StopAsync()
@@ -166,12 +169,12 @@ namespace MQTTnet.ManagedClient
             }
             catch (Exception exception)
             {
-                _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while maintaining connection.");
+                _logger.Error(exception, "Unhandled exception while maintaining connection.");
             }
             finally
             {
                 await _mqttClient.DisconnectAsync().ConfigureAwait(false);
-                _logger.Info<ManagedMqttClient>("Stopped");
+                _logger.Info("Stopped");
             }
         }
 
@@ -204,11 +207,11 @@ namespace MQTTnet.ManagedClient
             }
             catch (MqttCommunicationException exception)
             {
-                _logger.Warning<ManagedMqttClient>(exception, "Communication exception while maintaining connection.");
+                _logger.Warning(exception, "Communication exception while maintaining connection.");
             }
             catch (Exception exception)
             {
-                _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while maintaining connection.");
+                _logger.Error(exception, "Unhandled exception while maintaining connection.");
             }
         }
 
@@ -237,11 +240,11 @@ namespace MQTTnet.ManagedClient
             }
             catch (Exception exception)
             {
-                _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while publishing queued application messages.");
+                _logger.Error(exception, "Unhandled exception while publishing queued application messages.");
             }
             finally
             {
-                _logger.Verbose<ManagedMqttClient>("Stopped publishing messages.");
+                _logger.Verbose("Stopped publishing messages.");
             }
         }
 
@@ -261,7 +264,7 @@ namespace MQTTnet.ManagedClient
             {
                 transmitException = exception;
 
-                _logger.Warning<ManagedMqttClient>(exception, "Publishing application message failed.");
+                _logger.Warning(exception, "Publishing application message failed.");
 
                 if (message.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
                 {
@@ -271,7 +274,7 @@ namespace MQTTnet.ManagedClient
             catch (Exception exception)
             {
                 transmitException = exception;
-                _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while publishing queued application message.");
+                _logger.Error(exception, "Unhandled exception while publishing queued application message.");
             }
             finally
             {
@@ -281,7 +284,7 @@ namespace MQTTnet.ManagedClient
 
         private async Task SynchronizeSubscriptionsAsync()
         {
-            _logger.Info<ManagedMqttClient>(nameof(ManagedMqttClient), "Synchronizing subscriptions");
+            _logger.Info(nameof(ManagedMqttClient), "Synchronizing subscriptions");
 
             List<TopicFilter> subscriptions;
             List<string> unsubscriptions;
@@ -320,7 +323,7 @@ namespace MQTTnet.ManagedClient
             }
             catch (Exception exception)
             {
-                _logger.Warning<ManagedMqttClient>(exception, "Synchronizing subscriptions failed.");
+                _logger.Warning(exception, "Synchronizing subscriptions failed.");
                 _subscriptionsNotPushed = true;
 
                 SynchronizingSubscriptionsFailed?.Invoke(this, EventArgs.Empty);

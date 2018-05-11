@@ -4,19 +4,21 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
     public sealed class MqttRetainedMessagesManager : IDisposable
     {
-        private readonly Dictionary<string, MqttApplicationMessage> _retainedMessages = new Dictionary<string, MqttApplicationMessage>();
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private readonly IMqttNetLogger _logger;
+        private readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>();
+        private readonly AsyncLock _messagesLock = new AsyncLock();
+        private readonly IMqttNetChildLogger _logger;
         private readonly IMqttServerOptions _options;
 
-        public MqttRetainedMessagesManager(IMqttServerOptions options, IMqttNetLogger logger)
+        public MqttRetainedMessagesManager(IMqttServerOptions options, IMqttNetChildLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            _logger = logger.CreateChildLogger(nameof(MqttRetainedMessagesManager));
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
@@ -27,24 +29,24 @@ namespace MQTTnet.Server
                 return;
             }
 
-            await _semaphore.WaitAsync().ConfigureAwait(false);
+            await _messagesLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
-                var retainedMessages = await _options.Storage.LoadRetainedMessagesAsync();
+                var retainedMessages = await _options.Storage.LoadRetainedMessagesAsync().ConfigureAwait(false);
 
-                _retainedMessages.Clear();
+                _messages.Clear();
                 foreach (var retainedMessage in retainedMessages)
                 {
-                    _retainedMessages[retainedMessage.Topic] = retainedMessage;
+                    _messages[retainedMessage.Topic] = retainedMessage;
                 }
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttRetainedMessagesManager>(exception, "Unhandled exception while loading retained messages.");
+                _logger.Error(exception, "Unhandled exception while loading retained messages.");
             }
             finally
             {
-                _semaphore.Release();
+                _messagesLock.Exit();
             }
         }
 
@@ -52,18 +54,18 @@ namespace MQTTnet.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            await _semaphore.WaitAsync().ConfigureAwait(false);
+            await _messagesLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
                 await HandleMessageInternalAsync(clientId, applicationMessage);
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttRetainedMessagesManager>(exception, "Unhandled exception while handling retained messages.");
+                _logger.Error(exception, "Unhandled exception while handling retained messages.");
             }
             finally
             {
-                _semaphore.Release();
+                _messagesLock.Exit();
             }
         }
 
@@ -71,10 +73,10 @@ namespace MQTTnet.Server
         {
             var retainedMessages = new List<MqttApplicationMessage>();
 
-            await _semaphore.WaitAsync().ConfigureAwait(false);
+            await _messagesLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
-                foreach (var retainedMessage in _retainedMessages.Values)
+                foreach (var retainedMessage in _messages.Values)
                 {
                     foreach (var topicFilter in topicFilters)
                     {
@@ -90,7 +92,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _semaphore.Release();
+                _messagesLock.Exit();
             }
 
             return retainedMessages;
@@ -98,7 +100,7 @@ namespace MQTTnet.Server
 
         public void Dispose()
         {
-            _semaphore?.Dispose();
+            _messagesLock?.Dispose();
         }
 
         private async Task HandleMessageInternalAsync(string clientId, MqttApplicationMessage applicationMessage)
@@ -107,37 +109,37 @@ namespace MQTTnet.Server
 
             if (applicationMessage.Payload?.Any() == false)
             {
-                saveIsRequired = _retainedMessages.Remove(applicationMessage.Topic);
-                _logger.Info<MqttRetainedMessagesManager>("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                saveIsRequired = _messages.Remove(applicationMessage.Topic);
+                _logger.Info("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
             }
             else
             {
-                if (!_retainedMessages.ContainsKey(applicationMessage.Topic))
+                if (!_messages.ContainsKey(applicationMessage.Topic))
                 {
-                    _retainedMessages[applicationMessage.Topic] = applicationMessage;
+                    _messages[applicationMessage.Topic] = applicationMessage;
                     saveIsRequired = true;
                 }
                 else
                 {
-                    var existingMessage = _retainedMessages[applicationMessage.Topic];
+                    var existingMessage = _messages[applicationMessage.Topic];
                     if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? new byte[0]))
                     {
-                        _retainedMessages[applicationMessage.Topic] = applicationMessage;
+                        _messages[applicationMessage.Topic] = applicationMessage;
                         saveIsRequired = true;
                     }
                 }
 
-                _logger.Info<MqttRetainedMessagesManager>("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                _logger.Info("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
             }
 
             if (!saveIsRequired)
             {
-                _logger.Verbose<MqttRetainedMessagesManager>("Skipped saving retained messages because no changes were detected.");
+                _logger.Verbose("Skipped saving retained messages because no changes were detected.");
             }
 
             if (saveIsRequired && _options.Storage != null)
             {
-                await _options.Storage.SaveRetainedMessagesAsync(_retainedMessages.Values.ToList());
+                await _options.Storage.SaveRetainedMessagesAsync(_messages.Values.ToList()).ConfigureAwait(false);
             }
         }
     }

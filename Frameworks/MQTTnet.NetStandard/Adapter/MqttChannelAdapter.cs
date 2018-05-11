@@ -18,16 +18,19 @@ namespace MQTTnet.Adapter
         private const uint ErrorOperationAborted = 0x800703E3;
         private const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
 
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetChildLogger _logger;
         private readonly IMqttChannel _channel;
 
         private bool _isDisposed;
 
-        public MqttChannelAdapter(IMqttChannel channel, IMqttPacketSerializer serializer, IMqttNetLogger logger)
+        public MqttChannelAdapter(IMqttChannel channel, IMqttPacketSerializer serializer, IMqttNetChildLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             PacketSerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+
+            _logger = logger.CreateChildLogger(nameof(MqttChannelAdapter));
         }
 
         public IMqttPacketSerializer PacketSerializer { get; }
@@ -35,7 +38,7 @@ namespace MQTTnet.Adapter
         public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
-            _logger.Verbose<MqttChannelAdapter>("Connecting [Timeout={0}]", timeout);
+            _logger.Verbose("Connecting [Timeout={0}]", timeout);
 
             return ExecuteAndWrapExceptionAsync(() =>
                 Internal.TaskExtensions.TimeoutAfter(ct => _channel.ConnectAsync(ct), timeout, cancellationToken));
@@ -44,7 +47,7 @@ namespace MQTTnet.Adapter
         public Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
-            _logger.Verbose<MqttChannelAdapter>("Disconnecting [Timeout={0}]", timeout);
+            _logger.Verbose("Disconnecting [Timeout={0}]", timeout);
 
             return ExecuteAndWrapExceptionAsync(() =>
                 Internal.TaskExtensions.TimeoutAfter(ct => _channel.DisconnectAsync(), timeout, cancellationToken));
@@ -69,7 +72,7 @@ namespace MQTTnet.Adapter
         {
             return ExecuteAndWrapExceptionAsync(() =>
             {
-                _logger.Verbose<MqttChannelAdapter>("TX >>> {0} [Timeout={1}]", packet, timeout);
+                _logger.Verbose("TX >>> {0} [Timeout={1}]", packet, timeout);
 
                 var packetData = PacketSerializer.Serialize(packet);
 
@@ -111,7 +114,7 @@ namespace MQTTnet.Adapter
                         throw new MqttProtocolViolationException("Received malformed packet.");
                     }
 
-                    _logger.Verbose<MqttChannelAdapter>("RX <<< {0}", packet);
+                    _logger.Verbose("RX <<< {0}", packet);
                 }
                 finally
                 {

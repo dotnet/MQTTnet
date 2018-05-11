@@ -17,7 +17,7 @@ namespace MQTTnet.Server
     {
         private readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         private readonly MqttRetainedMessagesManager _retainedMessagesManager;
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetChildLogger _logger;
         private readonly IMqttServerOptions _options;
         private readonly MqttClientSessionsManager _sessionsManager;
 
@@ -30,14 +30,17 @@ namespace MQTTnet.Server
             IMqttServerOptions options,
             MqttClientSessionsManager sessionsManager,
             MqttRetainedMessagesManager retainedMessagesManager,
-            IMqttNetLogger logger)
+            IMqttNetChildLogger logger)
         {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _sessionsManager = sessionsManager;
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
+            
             ClientId = clientId;
+
+            _logger = logger.CreateChildLogger(nameof(MqttClientSession));
 
             KeepAliveMonitor = new MqttClientKeepAliveMonitor(clientId, StopDueToKeepAliveTimeout, _logger);
             SubscriptionsManager = new MqttClientSubscriptionsManager(clientId, _options, sessionsManager.Server);
@@ -81,13 +84,11 @@ namespace MQTTnet.Server
             }
             catch (MqttCommunicationException exception)
             {
-                _logger.Warning<MqttClientSession>(exception,
-                    "Client '{0}': Communication exception while processing client packets.", ClientId);
+                _logger.Warning(exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttClientSession>(exception,
-                    "Client '{0}': Unhandled exception while processing client packets.", ClientId);
+                _logger.Error(exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
             }
             finally
             {
@@ -126,7 +127,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _logger.Info<MqttClientSession>("Client '{0}': Session stopped.", ClientId);
+                _logger.Info("Client '{0}': Session stopped.", ClientId);
             }
         }
 
@@ -185,7 +186,7 @@ namespace MQTTnet.Server
 
         private void StopDueToKeepAliveTimeout()
         {
-            _logger.Info<MqttClientSession>("Client '{0}': Timeout while waiting for KeepAlive packet.", ClientId);
+            _logger.Info("Client '{0}': Timeout while waiting for KeepAlive packet.", ClientId);
             Stop(MqttClientDisconnectType.NotClean);
         }
 
@@ -207,11 +208,11 @@ namespace MQTTnet.Server
             {
                 if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning<MqttClientSession>(exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
+                    _logger.Warning(exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
                 }
                 else
                 {
-                    _logger.Error<MqttClientSession>(exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
+                    _logger.Error(exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
                 }
 
                 Stop(MqttClientDisconnectType.NotClean);
@@ -273,7 +274,7 @@ namespace MQTTnet.Server
                 return Task.FromResult(0);
             }
 
-            _logger.Warning(this, null, "Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
+            _logger.Warning(null, "Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
             Stop(MqttClientDisconnectType.NotClean);
 
             return Task.FromResult(0);

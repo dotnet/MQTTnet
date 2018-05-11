@@ -11,12 +11,14 @@ namespace MQTTnet.Implementations
 {
     public class MqttTcpServerAdapter : IMqttServerAdapter
     {
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetChildLogger _logger;
         private StreamSocketListener _defaultEndpointSocket;
 
-        public MqttTcpServerAdapter(IMqttNetLogger logger)
+        public MqttTcpServerAdapter(IMqttNetChildLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
         }
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
@@ -74,7 +76,7 @@ namespace MQTTnet.Implementations
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttTcpServerAdapter>(exception, "Error while accepting connection at default endpoint.");
+                _logger.Error(exception, "Error while accepting connection at default endpoint.");
             }
         }
     }

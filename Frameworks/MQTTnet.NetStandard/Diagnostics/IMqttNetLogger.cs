@@ -8,14 +8,18 @@ namespace MQTTnet.Diagnostics
 
         void Verbose<TSource>(string message, params object[] parameters);
 
+        void Verbose(object source, string message, params object[] parameters);
+
         void Info<TSource>(string message, params object[] parameters);
+
+        void Info(object source, string message, params object[] parameters);
 
         void Warning<TSource>(Exception exception, string message, params object[] parameters);
 
-        void Warning<TSource>(string message, params object[] parameters);
+        void Warning(object source, Exception exception, string message, params object[] parameters);
 
         void Error<TSource>(Exception exception, string message, params object[] parameters);
 
-        void Error<TSource>(string message, params object[] parameters);
+        void Error(object source, Exception exception, string message, params object[] parameters);
     }
 }

@@ -6,6 +6,7 @@ namespace MQTTnet.Server
     {
         int ConnectionBacklog { get; }
         int MaxPendingMessagesPerClient { get; }
+        MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; }
 
         TimeSpan DefaultCommunicationTimeout { get; }
 

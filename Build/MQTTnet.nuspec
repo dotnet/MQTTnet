@@ -10,9 +10,11 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes> * [Client] Received messages are now processed in the worker thread by default. Added a new setting for switching back to dedicated threads.
+    <releaseNotes> * [Core] Performance optimizations.
+* [Client] Received messages are now processed in the worker thread by default. Added a new setting for switching back to dedicated threads.
 * [Server] Added support for other WebSocket sub protocol formats like mqttv-3.1.1 (thanks to @israellot).
 * [Server] The takeover of an existing client sessions is now treated as a _clean_ disconnect of the previous client.
+* [Server] The pending messages queue per client is now limited to 250 messages. Overflow strategy and count can be changed via options (thanks to @VladimirAkopyan)
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

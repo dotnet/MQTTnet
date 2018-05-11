@@ -147,10 +147,7 @@ namespace MQTTnet.Server
             {
                 publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
             }
-            if (_options.MaxPendingMessagesPerClient <= PendingMessagesQueue.Count)
-            {  
-                await PendingMessagesQueue.DropPacket(); 
-            }
+
             PendingMessagesQueue.Enqueue(publishPacket);
         }
 
@@ -276,7 +273,7 @@ namespace MQTTnet.Server
                 return Task.FromResult(0);
             }
 
-            _logger.Warning<MqttClientSession>("Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
+            _logger.Warning(this, null, "Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
             Stop(MqttClientDisconnectType.NotClean);
 
             return Task.FromResult(0);

@@ -50,25 +50,27 @@ namespace MQTTnet.Server
             }
         }
 
-        public async Task DropPacket()
-        {
-            MqttBasePacket packet = null;
-            await _queueWaitSemaphore.WaitAsync().ConfigureAwait(false);
-            if (!_queue.TryDequeue(out packet))
-            {
-                throw new InvalidOperationException(); // should not happen
-            }
-            _queueWaitSemaphore.Release(); 
-        }
-
         public void Enqueue(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
+            if (_queue.Count >= _options.MaxPendingMessagesPerClient)
+            {
+                if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
+                {
+                    return;
+                }
+
+                if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
+                {
+                    _queue.TryDequeue(out _);
+                }
+            }
+
             _queue.Enqueue(packet);
             _queueAutoResetEvent.Set();
 
-            _logger.Verbose<MqttClientPendingMessagesQueue>("Enqueued packet (ClientId: {0}).", _clientSession.ClientId);
+            _logger.Verbose(this, "Enqueued packet (ClientId: {0}).", _clientSession.ClientId);
         }
 
         private async Task SendQueuedPacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
@@ -77,7 +79,7 @@ namespace MQTTnet.Server
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    await SendNextQueuedPacketAsync(adapter, cancellationToken).ConfigureAwait(false);
+                    await TrySendNextQueuedPacketAsync(adapter, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -85,19 +87,23 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttClientPendingMessagesQueue>(exception, "Unhandled exception while sending enqueued packet (ClientId: {0}).", _clientSession.ClientId);
+                _logger.Error(this, exception, "Unhandled exception while sending enqueued packet (ClientId: {0}).", _clientSession.ClientId);
             }
         }
 
-        private async Task SendNextQueuedPacketAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
+        private async Task TrySendNextQueuedPacketAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
         {
             MqttBasePacket packet = null;
             try
             {
-                await _queueAutoResetEvent.WaitOneAsync(cancellationToken).ConfigureAwait(false);
+                if (_queue.IsEmpty)
+                {
+                    await _queueAutoResetEvent.WaitOneAsync(cancellationToken).ConfigureAwait(false);
+                }
+
                 if (!_queue.TryDequeue(out packet))
                 {
-                    throw new InvalidOperationException(); // should not happen
+                    return;
                 }
 
                 if (cancellationToken.IsCancellationRequested)
@@ -107,24 +113,25 @@ namespace MQTTnet.Server
 
                 await adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new[] { packet }, cancellationToken).ConfigureAwait(false);
 
-                _logger.Verbose<MqttClientPendingMessagesQueue>("Enqueued packet sent (ClientId: {0}).", _clientSession.ClientId);
+                _logger.Verbose<MqttClientPendingMessagesQueue>("Enqueued packet sent (ClientId: {0}).",
+                    _clientSession.ClientId);
             }
             catch (Exception exception)
             {
                 if (exception is MqttCommunicationTimedOutException)
                 {
-                    _logger.Warning<MqttClientPendingMessagesQueue>(exception, "Sending publish packet failed due to timeout (ClientId: {0}).", _clientSession.ClientId);
+                    _logger.Warning(this, exception, "Sending publish packet failed: Timeout (ClientId: {0}).", _clientSession.ClientId);
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning<MqttClientPendingMessagesQueue>(exception, "Sending publish packet failed due to communication exception (ClientId: {0}).", _clientSession.ClientId);
+                    _logger.Warning(this, exception, "Sending publish packet failed: Communication exception (ClientId: {0}).", _clientSession.ClientId);
                 }
                 else if (exception is OperationCanceledException)
                 {
                 }
                 else
                 {
-                    _logger.Error<MqttClientPendingMessagesQueue>(exception, "Sending publish packet failed (ClientId: {0}).", _clientSession.ClientId);
+                    _logger.Error(this, exception, "Sending publish packet failed (ClientId: {0}).", _clientSession.ClientId);
                 }
 
                 if (packet is MqttPublishPacket publishPacket)

@@ -59,7 +59,7 @@ namespace MQTTnet.Server
                     // Values described here: [MQTT-3.1.2-24].
                     if (_lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod * 1.5D)
                     {
-                        _logger.Warning<MqttClientSession>("Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
+                        _logger.Warning(this, null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
 
                         _timeoutCallback?.Invoke();
 
@@ -74,11 +74,11 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttClientSession>(exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", _clientId);
+                _logger.Error(this, exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", _clientId);
             }
             finally
             {
-                _logger.Verbose<MqttClientSession>("Client {0}: Stopped checking keep alive timeout.", _clientId);
+                _logger.Verbose(this, "Client {0}: Stopped checking keep alive timeout.", _clientId);
             }
         }
 

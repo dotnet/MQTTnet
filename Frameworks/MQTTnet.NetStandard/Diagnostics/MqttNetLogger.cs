@@ -15,35 +15,45 @@ namespace MQTTnet.Diagnostics
 
         public void Verbose<TSource>(string message, params object[] parameters)
         {
-            Publish<TSource>(MqttNetLogLevel.Verbose, null, message, parameters);
+            Publish(MqttNetLogLevel.Verbose, typeof(TSource), message, parameters, null);
+        }
+
+        public void Verbose(object source, string message, params object[] parameters)
+        {
+            Publish(MqttNetLogLevel.Verbose, source, message, parameters, null);
         }
 
         public void Info<TSource>(string message, params object[] parameters)
         {
-            Publish<TSource>(MqttNetLogLevel.Info, null, message, parameters);
+            Publish(MqttNetLogLevel.Info, typeof(TSource), message, parameters, null);
+        }
+
+        public void Info(object source, string message, params object[] parameters)
+        {
+            Publish(MqttNetLogLevel.Info, source, message, parameters, null);
         }
 
         public void Warning<TSource>(Exception exception, string message, params object[] parameters)
         {
-            Publish<TSource>(MqttNetLogLevel.Warning, exception, message, parameters);
+            Publish(MqttNetLogLevel.Warning, typeof(TSource), message, parameters, null);
         }
 
-        public void Warning<TSource>(string message, params object[] parameters)
+        public void Warning(object source, Exception exception, string message, params object[] parameters)
         {
-            Warning<TSource>(null, message, parameters);
+            Publish(MqttNetLogLevel.Warning, source, message, parameters, null);
         }
 
         public void Error<TSource>(Exception exception, string message, params object[] parameters)
         {
-            Publish<TSource>(MqttNetLogLevel.Error, exception, message, parameters);
+            Publish(MqttNetLogLevel.Error, typeof(TSource), message, parameters, null);
         }
 
-        public void Error<TSource>(string message, params object[] parameters)
+        public void Error(object source, Exception exception, string message, params object[] parameters)
         {
-            Warning<TSource>(null, message, parameters);
+            Publish(MqttNetLogLevel.Error, source, message, parameters, null);
         }
 
-        private void Publish<TSource>(MqttNetLogLevel logLevel, Exception exception, string message, object[] parameters)
+        private void Publish(MqttNetLogLevel logLevel, object source, string message, object[] parameters, Exception exception)
         {
             var hasLocalListeners = LogMessagePublished != null;
             var hasGlobalListeners = MqttNetGlobalLogger.HasListeners;
@@ -58,7 +68,13 @@ namespace MQTTnet.Diagnostics
                 message = string.Format(message, parameters);
             }
 
-            var traceMessage = new MqttNetLogMessage(_logId, DateTime.Now, Environment.CurrentManagedThreadId, typeof(TSource).Name, logLevel, message, exception);
+            string sourceName = null;
+            if (source != null)
+            {
+                sourceName = source.GetType().Name;
+            }
+
+            var traceMessage = new MqttNetLogMessage(_logId, DateTime.Now, Environment.CurrentManagedThreadId, sourceName, logLevel, message, exception);
 
             if (hasGlobalListeners)
             {

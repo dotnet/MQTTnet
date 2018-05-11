@@ -147,7 +147,10 @@ namespace MQTTnet.Server
             {
                 publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
             }
-
+            if (_options.MaxPendingMessagesPerClient <= PendingMessagesQueue.Count)
+            {  
+                await PendingMessagesQueue.DropPacket(); 
+            }
             PendingMessagesQueue.Enqueue(publishPacket);
         }
 

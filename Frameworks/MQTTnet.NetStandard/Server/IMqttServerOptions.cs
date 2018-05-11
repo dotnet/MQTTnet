@@ -5,6 +5,8 @@ namespace MQTTnet.Server
     public interface IMqttServerOptions
     {
         int ConnectionBacklog { get; }
+        int MaxPendingMessagesPerClient { get; }
+
         TimeSpan DefaultCommunicationTimeout { get; }
 
         Action<MqttConnectionValidatorContext> ConnectionValidator { get; }

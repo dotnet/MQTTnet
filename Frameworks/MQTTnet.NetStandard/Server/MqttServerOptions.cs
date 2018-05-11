@@ -9,6 +9,8 @@ namespace MQTTnet.Server
         public MqttServerTlsEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsEndpointOptions();
 
         public int ConnectionBacklog { get; set; } = 10;
+
+        public int MaxPendingMessagesPerClient { get; set; } = 250;
         
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(15);
 

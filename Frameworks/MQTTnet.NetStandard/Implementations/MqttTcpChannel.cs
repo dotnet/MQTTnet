@@ -7,6 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using MQTTnet.Channel;
 using MQTTnet.Client;
 
@@ -14,20 +15,10 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttChannel
     {
-#if NET452 || NET461
-        // ReSharper disable once MemberCanBePrivate.Global
-        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
-        public static int BufferSize { get; set; } = 4096 * 20; // Can be changed for fine tuning by library user.
-
-        private readonly int _bufferSize = BufferSize;
-#else
-        private readonly int _bufferSize = 0;
-#endif
-
         private readonly MqttClientTcpOptions _options;
 
         private Socket _socket;
-        private SslStream _sslStream;
+        private Stream _stream;
 
         /// <summary>
         /// called on client sockets are created in connect
@@ -35,7 +26,6 @@ namespace MQTTnet.Implementations
         public MqttTcpChannel(MqttClientTcpOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _bufferSize = options.BufferSize;
         }
 
         /// <summary>
@@ -45,21 +35,17 @@ namespace MQTTnet.Implementations
         public MqttTcpChannel(Socket socket, SslStream sslStream)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
-            _sslStream = sslStream;
 
-            CreateStreams();
+            CreateStream(sslStream);
         }
-
-        public Stream SendStream { get; private set; }
-        public Stream ReceiveStream { get; private set; }
 
         public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
 
-        public async Task ConnectAsync()
+        public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             if (_socket == null)
             {
-                _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             }
 
 #if NET452 || NET461
@@ -68,13 +54,14 @@ namespace MQTTnet.Implementations
             await _socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
 #endif
 
+            SslStream sslStream = null;
             if (_options.TlsOptions.UseTls)
             {
-                _sslStream = new SslStream(new NetworkStream(_socket, true), false, InternalUserCertificateValidationCallback);
-                await _sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), SslProtocols.Tls12, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+                sslStream = new SslStream(new NetworkStream(_socket, true), false, InternalUserCertificateValidationCallback);
+                await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), SslProtocols.Tls12, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
             }
-            
-            CreateStreams();
+
+            CreateStream(sslStream);
         }
 
         public Task DisconnectAsync()
@@ -83,13 +70,21 @@ namespace MQTTnet.Implementations
             return Task.FromResult(0);
         }
 
+        public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return _stream.ReadAsync(buffer, offset, count, cancellationToken);
+        }
+
+        public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return _stream.WriteAsync(buffer, offset, count, cancellationToken);
+        }
+
         public void Dispose()
         {
-            var oneStreamIsUsed = SendStream != null && ReceiveStream != null && ReferenceEquals(SendStream, ReceiveStream);
-
             try
             {
-                SendStream?.Dispose();
+                _stream?.Dispose();
             }
             catch (ObjectDisposedException)
             {
@@ -99,40 +94,7 @@ namespace MQTTnet.Implementations
             }
             finally
             {
-                SendStream = null;
-            }
-
-            try
-            {
-                if (!oneStreamIsUsed)
-                {
-                    ReceiveStream?.Dispose();
-                }
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (NullReferenceException)
-            {
-            }
-            finally
-            {
-                ReceiveStream = null;
-            }
-
-            try
-            {
-                _sslStream?.Dispose();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (NullReferenceException)
-            {
-            }
-            finally
-            {
-                _sslStream = null;
+                _stream = null;
             }
 
             try
@@ -198,25 +160,16 @@ namespace MQTTnet.Implementations
             return certificates;
         }
 
-        private void CreateStreams()
+        private void CreateStream(Stream stream)
         {
-            Stream stream;
-            if (_sslStream != null)
+            if (stream != null)
             {
-                stream = _sslStream;
+                _stream = stream;
             }
             else
             {
-                stream = new NetworkStream(_socket, true);
+                _stream = new NetworkStream(_socket, true);
             }
-            
-#if NET452 || NET461
-            SendStream = new BufferedStream(stream, _bufferSize);
-            ReceiveStream = new BufferedStream(stream, _bufferSize);
-#else
-            SendStream = stream;
-            ReceiveStream = stream;
-#endif
         }
     }
 }

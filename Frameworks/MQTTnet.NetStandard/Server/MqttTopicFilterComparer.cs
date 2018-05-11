@@ -19,12 +19,17 @@ namespace MQTTnet.Server
             var fragmentsTopic = topic.Split(TopicLevelSeparator, StringSplitOptions.None);
             var fragmentsFilter = filter.Split(TopicLevelSeparator, StringSplitOptions.None);
 
+            // # > In either case it MUST be the last character specified in the Topic Filter [MQTT-4.7.1-2].
             for (var i = 0; i < fragmentsFilter.Length; i++)
             {
-                switch (fragmentsFilter[i])
+                if (fragmentsFilter[i] == "+")
                 {
-                    case "+": continue;
-                    case "#" when i == fragmentsFilter.Length - 1: return true;
+                    continue;
+                }
+
+                if (fragmentsFilter[i] == "#")
+                {
+                    return true;
                 }
 
                 if (i >= fragmentsTopic.Length)
@@ -38,7 +43,7 @@ namespace MQTTnet.Server
                 }
             }
 
-            return fragmentsTopic.Length <= fragmentsFilter.Length;
+            return fragmentsTopic.Length == fragmentsFilter.Length;
         }
     }
 }

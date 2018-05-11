@@ -11,11 +11,11 @@ namespace MQTTnet.Adapter
     {
         IMqttPacketSerializer PacketSerializer { get; }
 
-        Task ConnectAsync(TimeSpan timeout);
+        Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken);
 
-        Task DisconnectAsync(TimeSpan timeout);
+        Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken);
 
-        Task SendPacketsAsync(TimeSpan timeout, CancellationToken cancellationToken, IEnumerable<MqttBasePacket> packets);
+        Task SendPacketsAsync(TimeSpan timeout, IEnumerable<MqttBasePacket> packets, CancellationToken cancellationToken);
 
         Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken);
     }

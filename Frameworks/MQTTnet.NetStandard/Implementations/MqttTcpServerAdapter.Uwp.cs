@@ -9,7 +9,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpServerAdapter : IMqttServerAdapter, IDisposable
+    public class MqttTcpServerAdapter : IMqttServerAdapter
     {
         private readonly IMqttNetLogger _logger;
         private StreamSocketListener _defaultEndpointSocket;
@@ -26,12 +26,19 @@ namespace MQTTnet.Implementations
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             if (_defaultEndpointSocket != null) throw new InvalidOperationException("Server is already started.");
-            
+
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _defaultEndpointSocket = new StreamSocketListener();
-                await _defaultEndpointSocket.BindServiceNameAsync(options.GetDefaultEndpointPort().ToString(), SocketProtectionLevel.PlainSocket);
+
+                // This also affects the client sockets.
+                _defaultEndpointSocket.Control.NoDelay = true;
+                _defaultEndpointSocket.Control.KeepAlive = true;
+                _defaultEndpointSocket.Control.QualityOfService = SocketQualityOfService.LowLatency;
                 _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
+
+                await _defaultEndpointSocket.BindServiceNameAsync(options.GetDefaultEndpointPort().ToString(), SocketProtectionLevel.PlainSocket);
+                
             }
 
             if (options.TlsEndpointOptions.IsEnabled)
@@ -55,7 +62,7 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            StopAsync();
+            StopAsync().GetAwaiter().GetResult();
         }
 
         private void AcceptDefaultEndpointConnectionsAsync(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)

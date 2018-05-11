@@ -13,12 +13,12 @@ namespace MQTTnet.Server
         private readonly Stopwatch _lastNonKeepAlivePacketReceivedTracker = new Stopwatch();
 
         private readonly string _clientId;
-        private readonly Func<Task> _timeoutCallback;
+        private readonly Action _timeoutCallback;
         private readonly IMqttNetLogger _logger;
 
         private Task _workerTask;
 
-        public MqttClientKeepAliveMonitor(string clientId, Func<Task> timeoutCallback, IMqttNetLogger logger)
+        public MqttClientKeepAliveMonitor(string clientId, Action timeoutCallback, IMqttNetLogger logger)
         {
             _clientId = clientId;
             _timeoutCallback = timeoutCallback;
@@ -61,10 +61,7 @@ namespace MQTTnet.Server
                     {
                         _logger.Warning<MqttClientSession>("Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
 
-                        if (_timeoutCallback != null)
-                        {
-                            await _timeoutCallback().ConfigureAwait(false);
-                        }
+                        _timeoutCallback?.Invoke();
 
                         return;
                     }

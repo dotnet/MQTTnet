@@ -44,7 +44,7 @@ namespace MQTTnet.TestApp.NetCore
 
                 try
                 {
-                    await client.ConnectAsync(options);
+                    await client.ConnectAsync(options).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -59,7 +59,7 @@ namespace MQTTnet.TestApp.NetCore
                 var sentMessagesCount = 0;
                 while (stopwatch.ElapsedMilliseconds < 1000)
                 {
-                    await client.PublishAsync(messages).ConfigureAwait(false);
+                    client.PublishAsync(messages).GetAwaiter().GetResult();
                     sentMessagesCount++;
                 }
 
@@ -165,7 +165,7 @@ namespace MQTTnet.TestApp.NetCore
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
 
-                await mqttServer.StopAsync();
+                await mqttServer.StopAsync().ConfigureAwait(false);
             }
             catch (Exception e)
             {

@@ -36,6 +36,12 @@ namespace MQTTnet.Client
             return this;
         }
 
+        public MqttClientOptionsBuilder WithKeepAliveSendInterval(TimeSpan value)
+        {
+            _options.KeepAliveSendInterval = value;
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithClientId(string value)
         {
             _options.ClientId = value;
@@ -105,6 +111,13 @@ namespace MQTTnet.Client
                 UseTls = true
             };
 
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithReceivedApplicationMessageProcessingMode(
+            MqttReceivedApplicationMessageProcessingMode mode)
+        {
+            _options.ReceivedApplicationMessageProcessingMode = mode;
             return this;
         }
 

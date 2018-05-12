@@ -16,6 +16,7 @@
     <PackageId />
     <SignAssembly>false</SignAssembly>
     <DelaySign>false</DelaySign>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='uap10.0'">
@@ -43,6 +44,9 @@
     <DefineConstants>RELEASE;NETSTANDARD1_3</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard1.3|AnyCPU'">
+  </PropertyGroup>
+
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
     <PackageReference Include="System.Net.Security" Version="4.3.2" />
     <PackageReference Include="System.Net.WebSockets" Version="4.3.0" />
@@ -63,6 +67,10 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net461'">
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.0-rc1" />
   </ItemGroup>
 
 </Project>

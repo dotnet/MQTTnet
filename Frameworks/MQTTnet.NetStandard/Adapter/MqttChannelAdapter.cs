@@ -94,34 +94,27 @@ namespace MQTTnet.Adapter
             await ExecuteAndWrapExceptionAsync(async () =>
             {
                 ReceivedMqttPacket receivedMqttPacket = null;
-                try
+                if (timeout > TimeSpan.Zero)
                 {
-                    if (timeout > TimeSpan.Zero)
-                    {
-                        receivedMqttPacket = await Internal.TaskExtensions.TimeoutAfter(ct => ReceiveAsync(_channel, ct), timeout, cancellationToken).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        receivedMqttPacket = await ReceiveAsync(_channel, cancellationToken).ConfigureAwait(false);
-                    }
-
-                    if (receivedMqttPacket == null || cancellationToken.IsCancellationRequested)
-                    {
-                        throw new TaskCanceledException();
-                    }
-
-                    packet = PacketSerializer.Deserialize(receivedMqttPacket.Header, receivedMqttPacket.Body);
-                    if (packet == null)
-                    {
-                        throw new MqttProtocolViolationException("Received malformed packet.");
-                    }
-
-                    _logger.Verbose("RX <<< {0}", packet);
+                    receivedMqttPacket = await Internal.TaskExtensions.TimeoutAfter(ct => ReceiveAsync(_channel, ct), timeout, cancellationToken).ConfigureAwait(false);
                 }
-                finally
+                else
                 {
-                    receivedMqttPacket?.Dispose();
+                    receivedMqttPacket = await ReceiveAsync(_channel, cancellationToken).ConfigureAwait(false);
                 }
+
+                if (receivedMqttPacket == null || cancellationToken.IsCancellationRequested)
+                {
+                    throw new TaskCanceledException();
+                }
+
+                packet = PacketSerializer.Deserialize(receivedMqttPacket.Header, receivedMqttPacket.Body.Span);
+                if (packet == null)
+                {
+                    throw new MqttProtocolViolationException("Received malformed packet.");
+                }
+
+                _logger.Verbose<MqttChannelAdapter>("RX <<< {0}", packet);
             }).ConfigureAwait(false);
 
             return packet;
@@ -137,7 +130,7 @@ namespace MQTTnet.Adapter
             
             if (header.BodyLength == 0)
             {
-                return new ReceivedMqttPacket(header, new MemoryStream(new byte[0], false));
+                return new ReceivedMqttPacket(header, new byte[0]);
             }
 
             var body = new MemoryStream(header.BodyLength);
@@ -166,7 +159,7 @@ namespace MQTTnet.Adapter
 
             body.Seek(0L, SeekOrigin.Begin);
 
-            return new ReceivedMqttPacket(header, body);
+            return new ReceivedMqttPacket(header, body.ToArray());
         }
 
         private static async Task ExecuteAndWrapExceptionAsync(Func<Task> action)

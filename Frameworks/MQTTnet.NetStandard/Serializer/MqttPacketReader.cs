@@ -41,18 +41,21 @@ namespace MQTTnet.Serializer
             };
         }
 
-        public static ushort ReadUInt16(this Stream stream)
+        public static byte ReadByte(this ref ReadOnlySpan<byte> stream)
         {
-            var buffer = stream.ReadBytes(2);
-
-            var temp = buffer[0];
-            buffer[0] = buffer[1];
-            buffer[1] = temp;
-
-            return BitConverter.ToUInt16(buffer, 0);
+            var result = stream[0];
+            stream = stream.Slice(1);
+            return result;
         }
 
-        public static string ReadStringWithLengthPrefix(this Stream stream)
+        public static ushort ReadUInt16(this ref ReadOnlySpan<byte> stream)
+        {
+            var result = System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(stream);
+            stream = stream.Slice(2);
+            return result;
+        }
+
+        public static string ReadStringWithLengthPrefix(this ref ReadOnlySpan<byte> stream)
         {
             var buffer = stream.ReadWithLengthPrefix();
             if (buffer.Length == 0)
@@ -63,7 +66,7 @@ namespace MQTTnet.Serializer
             return Encoding.UTF8.GetString(buffer, 0, buffer.Length);
         }
 
-        public static byte[] ReadWithLengthPrefix(this Stream stream)
+        public static byte[] ReadWithLengthPrefix(this ref ReadOnlySpan<byte> stream)
         {
             var length = stream.ReadUInt16();
             if (length == 0)
@@ -71,19 +74,9 @@ namespace MQTTnet.Serializer
                 return new byte[0];
             }
 
-            return stream.ReadBytes(length);
-        }
-
-        public static byte[] ReadRemainingData(this Stream stream, MqttPacketHeader header)
-        {
-            return stream.ReadBytes(header.BodyLength - (int)stream.Position);
-        }
-
-        public static byte[] ReadBytes(this Stream stream, int count)
-        {
-            var buffer = new byte[count];
-            stream.Read(buffer, 0, count);
-            return buffer;
+            var result = stream.Slice(0, length).ToArray();
+            stream = stream.Slice(length);
+            return result;
         }
 
         private static async Task<int> ReadBodyLengthAsync(IMqttChannel stream, CancellationToken cancellationToken)

@@ -10,6 +10,6 @@ namespace MQTTnet.Serializer
 
         ArraySegment<byte> Serialize(MqttBasePacket mqttPacket);
 
-        MqttBasePacket Deserialize(MqttPacketHeader header, Stream body);
+        MqttBasePacket Deserialize(MqttPacketHeader header, ReadOnlySpan<byte> body);
     }
 }

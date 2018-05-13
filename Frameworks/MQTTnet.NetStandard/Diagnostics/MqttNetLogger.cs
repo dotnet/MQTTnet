@@ -13,7 +13,7 @@ namespace MQTTnet.Diagnostics
 
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        public IMqttNetChildLogger CreateChildLogger(string source)
+        public IMqttNetChildLogger CreateChildLogger(string source = null)
         {
             return new MqttNetChildLogger(this, source);
         }

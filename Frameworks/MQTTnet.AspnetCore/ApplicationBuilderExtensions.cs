@@ -25,6 +25,11 @@ namespace MQTTnet.AspNetCore
                             .FirstOrDefault(p => p.ToLower().StartsWith("mqtt"));
                     }
 
+                    if (subprotocol == null)
+                    {
+                        return;
+                    }
+
                     var adapter = app.ApplicationServices.GetRequiredService<MqttWebSocketServerAdapter>();
                     using (var webSocket = await context.WebSockets.AcceptWebSocketAsync(subprotocol))
                     {

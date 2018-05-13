@@ -31,12 +31,12 @@ namespace MQTTnet.AspNetCore
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
             ClientAccepted?.Invoke(this, eventArgs);
-            return eventArgs.SessionTask;
+            return eventArgs.SessionTask ?? Task.CompletedTask;
         }
         
         public void Dispose()
         {
-            StopAsync();
+            StopAsync().GetAwaiter().GetResult();
         }
     }
 }

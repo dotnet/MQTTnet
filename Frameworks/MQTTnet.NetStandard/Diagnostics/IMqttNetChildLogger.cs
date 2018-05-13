@@ -4,7 +4,7 @@ namespace MQTTnet.Diagnostics
 {
     public interface IMqttNetChildLogger
     {
-        IMqttNetChildLogger CreateChildLogger(string source);
+        IMqttNetChildLogger CreateChildLogger(string source = null);
 
         void Verbose(string message, params object[] parameters);
 

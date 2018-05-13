@@ -14,16 +14,24 @@ namespace MQTTnet.AspNetCore
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
+            var logger = new MqttNetLogger();
+            var childLogger = logger.CreateChildLogger();
+
             services.AddSingleton(options);
-            services.AddSingleton<IMqttNetLogger>(new MqttNetLogger());
+            services.AddSingleton<IMqttNetLogger>(logger);
+            services.AddSingleton(childLogger);
             services.AddSingleton<MqttHostedServer>();
             services.AddSingleton<IHostedService>(s => s.GetService<MqttHostedServer>());
             services.AddSingleton<IMqttServer>(s => s.GetService<MqttHostedServer>());
-            
+
             services.AddSingleton<MqttWebSocketServerAdapter>();
             services.AddSingleton<MqttTcpServerAdapter>();
-            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttWebSocketServerAdapter>()); 
-            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttTcpServerAdapter>());
+            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttWebSocketServerAdapter>());
+
+            if (options.DefaultEndpointOptions.IsEnabled)
+            {
+                services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttTcpServerAdapter>());
+            }
 
             return services;
         }

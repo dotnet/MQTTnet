@@ -504,20 +504,16 @@ namespace MQTTnet.Client
 
         private void StartReceivingPackets(CancellationToken cancellationToken)
         {
-            _packetReceiverTask = Task.Factory.StartNew(
+            _packetReceiverTask = Task.Run(
                 () => ReceivePacketsAsync(cancellationToken),
-                cancellationToken,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Current);
+                cancellationToken);
         }
 
         private void StartSendingKeepAliveMessages(CancellationToken cancellationToken)
         {
-            _keepAliveMessageSenderTask = Task.Factory.StartNew(
+            _keepAliveMessageSenderTask = Task.Run(
                 () => SendKeepAliveMessagesAsync(cancellationToken),
-                cancellationToken,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Current);
+                cancellationToken);
         }
 
         private void StartProcessReceivedPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)

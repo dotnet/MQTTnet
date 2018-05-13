@@ -45,11 +45,8 @@ namespace MQTTnet.Implementations
                 _defaultEndpointSocket.Bind(new IPEndPoint(options.DefaultEndpointOptions.BoundIPAddress, options.GetDefaultEndpointPort()));
                 _defaultEndpointSocket.Listen(options.ConnectionBacklog);
 
-                Task.Factory.StartNew(
-                    () => AcceptDefaultEndpointConnectionsAsync(_cancellationTokenSource.Token),
-                    _cancellationTokenSource.Token, 
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Current);
+                Task.Run(() => AcceptDefaultEndpointConnectionsAsync(_cancellationTokenSource.Token),
+                    _cancellationTokenSource.Token);
             }
 
             if (options.TlsEndpointOptions.IsEnabled)
@@ -69,11 +66,9 @@ namespace MQTTnet.Implementations
                 _tlsEndpointSocket.Bind(new IPEndPoint(options.TlsEndpointOptions.BoundIPAddress, options.GetTlsEndpointPort()));
                 _tlsEndpointSocket.Listen(options.ConnectionBacklog);
 
-                Task.Factory.StartNew(
-                    () => AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token), 
-                    _cancellationTokenSource.Token,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Current);
+                Task.Run(
+                    () => AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token),
+                    _cancellationTokenSource.Token);
             }
 
             return Task.FromResult(0);

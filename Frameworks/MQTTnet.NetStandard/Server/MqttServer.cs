@@ -157,11 +157,9 @@ namespace MQTTnet.Server
 
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
-            eventArgs.SessionTask = Task.Factory.StartNew(
+            eventArgs.SessionTask = Task.Run(
                 () => _clientSessionsManager.RunSessionAsync(eventArgs.Client, _cancellationTokenSource.Token),
-                _cancellationTokenSource.Token,
-                TaskCreationOptions.LongRunning, 
-                TaskScheduler.Current);
+                _cancellationTokenSource.Token);
         }
     }
 }

@@ -17,8 +17,8 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("Press 'c' for concurrent sends. Otherwise in one batch.");
             var concurrent = Console.ReadKey(true).KeyChar == 'c';
 
-            var server = Task.Factory.StartNew(async () => await RunServerAsync(), TaskCreationOptions.LongRunning);
-            var client = Task.Factory.StartNew(async () => await RunClientAsync(2000, TimeSpan.FromMilliseconds(10), concurrent), TaskCreationOptions.LongRunning);
+            var server = Task.Run(RunServerAsync);
+            var client = Task.Run(() => RunClientAsync(2000, TimeSpan.FromMilliseconds(10), concurrent));
 
             await Task.WhenAll(server, client).ConfigureAwait(false);
         }

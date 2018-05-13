@@ -13,32 +13,26 @@ namespace MQTTnet.AspNetCore
             app.UseWebSockets();
             app.Use(async (context, next) =>
             {
-                if (context.Request.Path == path && context.WebSockets.IsWebSocketRequest)
-                {
-                    string subprotocol = null;
-
-                    if (context.Request.Headers.TryGetValue("Sec-WebSocket-Protocol", out var requestedSubProtocolValues))
-                    {
-                        // Order the protocols to also match "mqtt", "mqttv-3.1", "mqttv-3.11" etc.
-                        subprotocol = requestedSubProtocolValues
-                            .OrderByDescending(p => p.Length)
-                            .FirstOrDefault(p => p.ToLower().StartsWith("mqtt"));
-                    }
-
-                    if (subprotocol == null)
-                    {
-                        return;
-                    }
-
-                    var adapter = app.ApplicationServices.GetRequiredService<MqttWebSocketServerAdapter>();
-                    using (var webSocket = await context.WebSockets.AcceptWebSocketAsync(subprotocol))
-                    {
-                        await adapter.AcceptWebSocketAsync(webSocket);
-                    }
-                }
-                else
+                if (!context.WebSockets.IsWebSocketRequest || context.Request.Path != path)
                 {
                     await next();
+                    return;
+                }
+
+                string subProtocol = null;
+
+                if (context.Request.Headers.TryGetValue("Sec-WebSocket-Protocol", out var requestedSubProtocolValues))
+                {
+                    // Order the protocols to also match "mqtt", "mqttv-3.1", "mqttv-3.11" etc.
+                    subProtocol = requestedSubProtocolValues
+                        .OrderByDescending(p => p.Length)
+                        .FirstOrDefault(p => p.ToLower().StartsWith("mqtt"));
+                }
+
+                var adapter = app.ApplicationServices.GetRequiredService<MqttWebSocketServerAdapter>();
+                using (var webSocket = await context.WebSockets.AcceptWebSocketAsync(subProtocol))
+                {
+                    await adapter.AcceptWebSocketAsync(webSocket);
                 }
             });
 

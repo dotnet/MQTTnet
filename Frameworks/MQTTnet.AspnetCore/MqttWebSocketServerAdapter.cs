@@ -23,7 +23,7 @@ namespace MQTTnet.AspNetCore
             return Task.CompletedTask;
         }
 
-        public Task AcceptWebSocketAsync(WebSocket webSocket)
+        public async Task AcceptWebSocketAsync(WebSocket webSocket)
         {
             if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
 
@@ -31,7 +31,11 @@ namespace MQTTnet.AspNetCore
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
             ClientAccepted?.Invoke(this, eventArgs);
-            return eventArgs.SessionTask ?? Task.CompletedTask;
+
+            if (eventArgs.SessionTask != null)
+            {
+                await eventArgs.SessionTask.ConfigureAwait(false);
+            }
         }
         
         public void Dispose()

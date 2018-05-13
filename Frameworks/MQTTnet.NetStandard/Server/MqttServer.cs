@@ -81,14 +81,14 @@ namespace MQTTnet.Server
             _cancellationTokenSource = new CancellationTokenSource();
 
             _retainedMessagesManager = new MqttRetainedMessagesManager(Options, _logger);
-            await _retainedMessagesManager.LoadMessagesAsync();
+            await _retainedMessagesManager.LoadMessagesAsync().ConfigureAwait(false);
 
             _clientSessionsManager = new MqttClientSessionsManager(Options, this, _retainedMessagesManager, _logger);
 
             foreach (var adapter in _adapters)
             {
                 adapter.ClientAccepted += OnClientAccepted;
-                await adapter.StartAsync(Options);
+                await adapter.StartAsync(Options).ConfigureAwait(false);
             }
 
             _logger.Info("Started.");
@@ -110,10 +110,10 @@ namespace MQTTnet.Server
                 foreach (var adapter in _adapters)
                 {
                     adapter.ClientAccepted -= OnClientAccepted;
-                    await adapter.StopAsync();
+                    await adapter.StopAsync().ConfigureAwait(false);
                 }
 
-                await _clientSessionsManager.StopAsync();
+                await _clientSessionsManager.StopAsync().ConfigureAwait(false);
 
                 _logger.Info("Stopped.");
             }

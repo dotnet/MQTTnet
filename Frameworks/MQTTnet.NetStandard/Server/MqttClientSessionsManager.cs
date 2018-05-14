@@ -20,6 +20,8 @@ namespace MQTTnet.Server
         private readonly MqttRetainedMessagesManager _retainedMessagesManager;
         private readonly IMqttServerOptions _options;
         private readonly IMqttNetChildLogger _logger;
+        private CancellationTokenSource _cancellationTokenSource;
+        private Task _StaleSessionMonitor; 
 
         public MqttClientSessionsManager(IMqttServerOptions options, MqttServer server, MqttRetainedMessagesManager retainedMessagesManager, IMqttNetChildLogger logger)
         {
@@ -30,6 +32,8 @@ namespace MQTTnet.Server
             _options = options ?? throw new ArgumentNullException(nameof(options));
             Server = server ?? throw new ArgumentNullException(nameof(server));
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
+            _cancellationTokenSource = new CancellationTokenSource();
+            _StaleSessionMonitor = Task.Run(() => RunStaleSessionsMonitor(_cancellationTokenSource.Token).ConfigureAwait(false));
         }
 
         public MqttServer Server { get; }
@@ -117,16 +121,62 @@ namespace MQTTnet.Server
             }
         }
 
+        private async Task RunStaleSessionsMonitor(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                Dictionary<string, MqttClientSession> staleSessionIds = new Dictionary<string, MqttClientSession>();
+                string clientID = "Unassigned";
+                await _sessionsLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
+
+                try
+                {
+                    staleSessionIds = new Dictionary<string, MqttClientSession>();
+                    foreach (var sessionEntry in _sessions)
+                    {
+                        clientID = sessionEntry.Key; 
+                        if (sessionEntry.Value.KeepAliveMonitor.LastPacketReceived > _options.StaleSessionLifetime)
+                        {
+                            staleSessionIds.Add(clientID, sessionEntry.Value);
+                        }
+                    }
+                    foreach(var sessionEntry in staleSessionIds)
+                    {
+                        _sessions.Remove(sessionEntry.Key);
+                        _logger.Info($"Removed StaleSession for Client '{clientID}' after timeout");
+                    }
+                }
+                catch(Exception exception)
+                {
+                    _logger.Error(exception, $"Unhandled exception while attempting to close stale session for Client '{clientID}'");
+                }
+                finally
+                {
+                    _sessionsLock.Exit();
+                }
+
+                Parallel.ForEach(staleSessionIds, sessionEntry =>
+                   {
+                       sessionEntry.Value.Stop(MqttClientDisconnectType.NotClean);
+                       sessionEntry.Value.Dispose();
+                   });
+                await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
         public async Task StopAsync()
         {
             await _sessionsLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
+                if(_cancellationTokenSource == null){
+                    return; 
+                }
+                _cancellationTokenSource.Cancel(); 
                 foreach (var session in _sessions)
                 {
                     session.Value.Stop(MqttClientDisconnectType.NotClean);
                 }
-
                 _sessions.Clear();
             }
             finally
@@ -205,6 +255,8 @@ namespace MQTTnet.Server
         public void Dispose()
         {
             _sessionsLock?.Dispose();
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
         }
 
         private MqttConnectReturnCode ValidateConnection(MqttConnectPacket connectPacket)

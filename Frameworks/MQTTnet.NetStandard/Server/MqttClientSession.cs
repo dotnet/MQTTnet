@@ -84,11 +84,11 @@ namespace MQTTnet.Server
             }
             catch (MqttCommunicationException exception)
             {
-                _logger.Warning(exception, "Client '{0}': Communication exception while processing client packets.", ClientId);
+                _logger.Warning(exception, $"Client '{ClientId}': Communication exception while processing client packets.");
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Client '{0}': Unhandled exception while processing client packets.", ClientId);
+                _logger.Error(exception, $"Client '{ClientId}': Unhandled exception while processing client packets.");
             }
             finally
             {

@@ -19,6 +19,12 @@ namespace MQTTnet.Server
             return this;
         }
 
+        public MqttServerOptionsBuilder WithStaleSessionLifetime(TimeSpan value)
+        {
+            _options.StaleSessionLifetime = value;
+            return this;
+        }
+
         public MqttServerOptionsBuilder WithDefaultCommunicationTimeout(TimeSpan value)
         {
             _options.DefaultCommunicationTimeout = value;

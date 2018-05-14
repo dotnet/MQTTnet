@@ -58,6 +58,7 @@ namespace MQTTnet.Server
 
             if (_queue.Count >= _options.MaxPendingMessagesPerClient)
             {
+                _logger.Info($"ClientId: {_clientSession.ClientId} exceeded MaxPendingQueLength, dropping packets while Connected is {_clientSession.IsConnected}");
                 if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
                 {
                     return;
@@ -72,7 +73,7 @@ namespace MQTTnet.Server
             _queue.Enqueue(packet);
             _queueAutoResetEvent.Set();
 
-            _logger.Verbose("Enqueued packet (ClientId: {0}).", _clientSession.ClientId);
+            _logger.Verbose($"Enqueued packet (ClientId: {_clientSession.ClientId}).");
         }
 
         private async Task SendQueuedPacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)

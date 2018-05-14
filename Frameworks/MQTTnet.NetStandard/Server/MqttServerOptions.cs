@@ -10,7 +10,9 @@ namespace MQTTnet.Server
 
         public int ConnectionBacklog { get; set; } = 10;
 
-        public int MaxPendingMessagesPerClient { get; set; } = 250;
+        public TimeSpan StaleSessionLifetime { get; set; } = TimeSpan.FromMinutes(10); 
+
+        public int MaxPendingMessagesPerClient { get; set; } = 1000;
 
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage;
 

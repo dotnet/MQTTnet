@@ -182,7 +182,6 @@ namespace MQTTnet.Server
             finally
             {
                 _sessionsLock.Exit();
-                _cancellationTokenSource = null;
             }
         }
 
@@ -257,6 +256,7 @@ namespace MQTTnet.Server
         {
             _sessionsLock?.Dispose();
             _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
         }
 
         private MqttConnectReturnCode ValidateConnection(MqttConnectPacket connectPacket)

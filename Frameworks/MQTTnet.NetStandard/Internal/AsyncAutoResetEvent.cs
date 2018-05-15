@@ -1,26 +1,109 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Internal
 {
-    public sealed class AsyncAutoResetEvent : IDisposable
+    // Inspired from Stephen Toub (https://blogs.msdn.microsoft.com/pfxteam/2012/02/11/building-async-coordination-primitives-part-2-asyncautoresetevent/) and Chris Gillum (https://stackoverflow.com/a/43012490)
+    public class AsyncAutoResetEvent
     {
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0, 1);
+        private readonly LinkedList<TaskCompletionSource<bool>> waiters = new LinkedList<TaskCompletionSource<bool>>();
 
-        public Task WaitOneAsync(CancellationToken cancellationToken)
+        private bool isSignaled;
+
+        public AsyncAutoResetEvent(bool signaled = false)
         {
-            return _semaphore.WaitAsync(cancellationToken);
+            this.isSignaled = signaled;
+        }
+
+        public Task<bool> WaitOneAsync()
+        {
+            return this.WaitOneAsync(CancellationToken.None);
+        }
+
+        public Task<bool> WaitOneAsync(TimeSpan timeout)
+        {
+            return this.WaitOneAsync(timeout, CancellationToken.None);
+        }
+
+        public Task<bool> WaitOneAsync(CancellationToken cancellationToken)
+        {
+            return this.WaitOneAsync(Timeout.InfiniteTimeSpan, cancellationToken);
+        }
+
+        public async Task<bool> WaitOneAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            TaskCompletionSource<bool> tcs;
+
+            lock (this.waiters)
+            {
+                if (this.isSignaled)
+                {
+                    this.isSignaled = false;
+                    return true;
+                }
+                else if (timeout == TimeSpan.Zero)
+                {
+                    return this.isSignaled;
+                }
+                else
+                {
+                    tcs = new TaskCompletionSource<bool>();
+                    this.waiters.AddLast(tcs);
+                }
+            }
+
+            Task winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken));
+            if (winner == tcs.Task)
+            {
+                // The task was signaled.
+                return true;
+            }
+            else
+            {
+                // We timed-out; remove our reference to the task.
+                // This is an O(n) operation since waiters is a LinkedList<T>.
+                lock (this.waiters)
+                {
+                    bool removed = this.waiters.Remove(tcs);
+                    if (winner.Status == TaskStatus.Canceled)
+                    {
+                        throw new OperationCanceledException(cancellationToken);
+                    }
+                    else
+                    {
+                        throw new TimeoutException();
+                    }
+                }
+            }
         }
 
         public void Set()
         {
-            _semaphore.Release();
-        }
+            TaskCompletionSource<bool> toRelease = null;
 
-        public void Dispose()
-        {
-            _semaphore?.Dispose();
+            lock (this.waiters)
+            {
+                if (this.waiters.Count > 0)
+                {
+                    // Signal the first task in the waiters list.
+                    toRelease = this.waiters.First.Value;
+                    this.waiters.RemoveFirst();
+                }
+                else if (!this.isSignaled)
+                {
+                    // No tasks are pending
+                    this.isSignaled = true;
+                }
+            }
+
+            if (toRelease != null)
+            {
+                toRelease.SetResult(true);
+            }
         }
     }
 }

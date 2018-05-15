@@ -4,23 +4,32 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Internal
 {
-    public sealed class AsyncLock : IDisposable
+    // From Stephen Toub (https://blogs.msdn.microsoft.com/pfxteam/2012/02/12/building-async-coordination-primitives-part-6-asynclock/)
+    public sealed class AsyncLock
     {
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
+        private readonly Task<IDisposable> m_releaser;
 
-        public Task EnterAsync(CancellationToken cancellationToken)
+        public AsyncLock()
         {
-            return _semaphore.WaitAsync(cancellationToken);
+            m_releaser = Task.FromResult((IDisposable)new Releaser(this));
         }
 
-        public void Exit()
+        public Task<IDisposable> LockAsync(CancellationToken cancellationToken)
         {
-            _semaphore.Release();
+            var wait = m_semaphore.WaitAsync(cancellationToken);
+            return wait.IsCompleted ?
+                        m_releaser :
+                        wait.ContinueWith((_, state) => (IDisposable)state,
+                            m_releaser.Result, cancellationToken,
+                            TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
-        public void Dispose()
+        private sealed class Releaser : IDisposable
         {
-            _semaphore?.Dispose();
+            private readonly AsyncLock m_toRelease;
+            internal Releaser(AsyncLock toRelease) { m_toRelease = toRelease; }
+            public void Dispose() { m_toRelease.m_semaphore.Release(); }
         }
     }
 }

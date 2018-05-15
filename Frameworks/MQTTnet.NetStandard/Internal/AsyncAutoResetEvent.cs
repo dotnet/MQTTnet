@@ -12,7 +12,10 @@ namespace MQTTnet.Internal
 
         private bool isSignaled;
 
-        public AsyncAutoResetEvent(bool signaled = false)
+        public AsyncAutoResetEvent() : this(false)
+        { }
+
+        public AsyncAutoResetEvent(bool signaled)
         {
             this.isSignaled = signaled;
         }
@@ -56,7 +59,7 @@ namespace MQTTnet.Internal
                 }
             }
 
-            Task winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken));
+            Task winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken)).ConfigureAwait(false);
             if (winner == tcs.Task)
             {
                 // The task was signaled.
@@ -68,7 +71,7 @@ namespace MQTTnet.Internal
                 // This is an O(n) operation since waiters is a LinkedList<T>.
                 lock (this.waiters)
                 {
-                    bool removed = this.waiters.Remove(tcs);
+                    this.waiters.Remove(tcs);
                     if (winner.Status == TaskStatus.Canceled)
                     {
                         throw new OperationCanceledException(cancellationToken);

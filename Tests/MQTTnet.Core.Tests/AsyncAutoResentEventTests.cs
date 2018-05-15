@@ -10,7 +10,7 @@ namespace MQTTnet.Core.Tests
     // Inspired from the vs-threading tests (https://github.com/Microsoft/vs-threading/blob/master/src/Microsoft.VisualStudio.Threading.Tests/AsyncAutoResetEventTests.cs)
     public class AsyncAutoResetEventTests
     {
-        private AsyncAutoResetEvent evt;
+        private readonly AsyncAutoResetEvent evt;
 
         public AsyncAutoResetEventTests()
         {
@@ -57,7 +57,7 @@ namespace MQTTnet.Core.Tests
             for (int i = 0; i < waiters.Length; i++)
             {
                 this.evt.Set();
-                await waiters[i];
+                await waiters[i].ConfigureAwait(false);
             }
         }
 
@@ -139,7 +139,7 @@ namespace MQTTnet.Core.Tests
             Assert.IsFalse(waitTask.IsCompleted);
 
             // Cancel the request and ensure that it propagates to the task.
-            await Task.Delay(1000);
+            await Task.Delay(1000).ConfigureAwait(false);
             try
             {
                 waitTask.GetAwaiter().GetResult();

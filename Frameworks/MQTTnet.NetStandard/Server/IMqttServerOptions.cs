@@ -5,6 +5,9 @@ namespace MQTTnet.Server
     public interface IMqttServerOptions
     {
         int ConnectionBacklog { get; }
+
+        bool EnablePersistentSessions { get; }
+
         int MaxPendingMessagesPerClient { get; }
         MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; }
 

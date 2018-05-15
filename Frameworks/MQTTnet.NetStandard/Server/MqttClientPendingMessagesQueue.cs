@@ -154,7 +154,6 @@ namespace MQTTnet.Server
 
         public void Dispose()
         {
-            _queueAutoResetEvent?.Dispose();
         }
     }
 }

@@ -29,24 +29,22 @@ namespace MQTTnet.Server
                 return;
             }
 
-            await _messagesLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
-            try
+            using (var releaser = await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
-                var retainedMessages = await _options.Storage.LoadRetainedMessagesAsync().ConfigureAwait(false);
-
-                _messages.Clear();
-                foreach (var retainedMessage in retainedMessages)
+                try
                 {
-                    _messages[retainedMessage.Topic] = retainedMessage;
+                    var retainedMessages = await _options.Storage.LoadRetainedMessagesAsync().ConfigureAwait(false);
+
+                    _messages.Clear();
+                    foreach (var retainedMessage in retainedMessages)
+                    {
+                        _messages[retainedMessage.Topic] = retainedMessage;
+                    }
                 }
-            }
-            catch (Exception exception)
-            {
-                _logger.Error(exception, "Unhandled exception while loading retained messages.");
-            }
-            finally
-            {
-                _messagesLock.Exit();
+                catch (Exception exception)
+                {
+                    _logger.Error(exception, "Unhandled exception while loading retained messages.");
+                }
             }
         }
 
@@ -54,18 +52,16 @@ namespace MQTTnet.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            await _messagesLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
-            try
+            using (var releaser = await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
-                await HandleMessageInternalAsync(clientId, applicationMessage);
-            }
-            catch (Exception exception)
-            {
-                _logger.Error(exception, "Unhandled exception while handling retained messages.");
-            }
-            finally
-            {
-                _messagesLock.Exit();
+                try
+                {
+                    await HandleMessageInternalAsync(clientId, applicationMessage);
+                }
+                catch (Exception exception)
+                {
+                    _logger.Error(exception, "Unhandled exception while handling retained messages.");
+                }
             }
         }
 
@@ -73,8 +69,7 @@ namespace MQTTnet.Server
         {
             var retainedMessages = new List<MqttApplicationMessage>();
 
-            await _messagesLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
-            try
+            using (var releaser = await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 foreach (var retainedMessage in _messages.Values)
                 {
@@ -90,17 +85,12 @@ namespace MQTTnet.Server
                     }
                 }
             }
-            finally
-            {
-                _messagesLock.Exit();
-            }
 
             return retainedMessages;
         }
 
         public void Dispose()
         {
-            _messagesLock?.Dispose();
         }
 
         private async Task HandleMessageInternalAsync(string clientId, MqttApplicationMessage applicationMessage)

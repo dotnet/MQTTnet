@@ -107,6 +107,11 @@ namespace MQTTnet.Server
                     _logger.Error(exception, exception.Message);
                 }
 
+                if (!_options.EnablePersistentSessions)
+                {
+                    await DeleteSessionAsync(clientId).ConfigureAwait(false);
+                }
+
                 Server.OnClientDisconnected(new ConnectedMqttClient
                 {
                     ClientId = clientId,
@@ -222,6 +227,20 @@ namespace MQTTnet.Server
 
             _options.ConnectionValidator(context);
             return context.ReturnCode;
+        }
+
+        private async Task DeleteSessionAsync(string clientId)
+        {
+            await _sessionsLock.EnterAsync(CancellationToken.None);
+            try
+            {
+                _sessions.Remove(clientId);
+                _logger.Verbose("Session for client '{0}' deleted.", clientId);
+            }
+            finally
+            {
+                _sessionsLock.Exit();
+            }
         }
 
         private async Task<GetOrCreateClientSessionResult> PrepareClientSessionAsync(MqttConnectPacket connectPacket)

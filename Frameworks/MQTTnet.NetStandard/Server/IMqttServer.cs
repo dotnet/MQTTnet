@@ -6,7 +6,8 @@ namespace MQTTnet.Server
 {
     public interface IMqttServer : IApplicationMessageReceiver, IApplicationMessagePublisher
     {
-        event EventHandler<MqttServerStartedEventArgs> Started;
+        event EventHandler Started;
+        event EventHandler Stopped;
 
         event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
         event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;

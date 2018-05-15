@@ -26,7 +26,8 @@ namespace MQTTnet.Server
             _adapters = adapters.ToList();
         }
 
-        public event EventHandler<MqttServerStartedEventArgs> Started;
+        public event EventHandler Started;
+        public event EventHandler Stopped;
 
         public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;

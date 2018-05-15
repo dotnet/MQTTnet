@@ -9,8 +9,10 @@ namespace MQTTnet.Adapter
 {
     public interface IMqttChannelAdapter : IDisposable
     {
-        IMqttPacketSerializer PacketSerializer { get; }
+        string Endpoint { get; }
 
+        IMqttPacketSerializer PacketSerializer { get; }
+        
         Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken);
 
         Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken);

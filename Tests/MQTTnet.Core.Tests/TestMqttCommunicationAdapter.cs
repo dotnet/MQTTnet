@@ -15,6 +15,8 @@ namespace MQTTnet.Core.Tests
 
         public TestMqttCommunicationAdapter Partner { get; set; }
 
+        public string Endpoint { get; }
+
         public IMqttPacketSerializer PacketSerializer { get; } = new MqttPacketSerializer();
 
         public void Dispose()

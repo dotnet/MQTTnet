@@ -33,6 +33,8 @@ namespace MQTTnet.Adapter
             _logger = logger.CreateChildLogger(nameof(MqttChannelAdapter));
         }
 
+        public string Endpoint => _channel.Endpoint;
+
         public IMqttPacketSerializer PacketSerializer { get; }
 
         public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)

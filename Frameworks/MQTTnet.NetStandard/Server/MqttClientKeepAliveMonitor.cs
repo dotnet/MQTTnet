@@ -12,18 +12,18 @@ namespace MQTTnet.Server
         private readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
         private readonly Stopwatch _lastNonKeepAlivePacketReceivedTracker = new Stopwatch();
 
-        private readonly string _clientId;
-        private readonly Action _timeoutCallback;
         private readonly IMqttNetChildLogger _logger;
+        private readonly string _clientId;
+        private readonly Action _callback;
 
         private Task _workerTask;
 
-        public MqttClientKeepAliveMonitor(string clientId, Action timeoutCallback, IMqttNetChildLogger logger)
+        public MqttClientKeepAliveMonitor(string clientId, Action callback, IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             _clientId = clientId;
-            _timeoutCallback = timeoutCallback;
+            _callback = callback;
             _logger = logger.CreateChildLogger(nameof(MqttClientKeepAliveMonitor));
         }
 
@@ -38,16 +38,13 @@ namespace MQTTnet.Server
                 return;
             }
 
-            _workerTask = Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken).ConfigureAwait(false), cancellationToken);
+            _workerTask = Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken);
         }
 
-        public void WaitForCompletion()
-        {
-            if (_workerTask != null)
-            {
-                Task.WaitAll(_workerTask);
-            }
-        }
+        ////public void WaitForCompletion()
+        ////{
+        ////    SpinWait.SpinUntil(() => _workerTask == null || _workerTask.IsCanceled || _workerTask.IsCompleted || _workerTask.IsFaulted);
+        ////}
 
         private async Task RunAsync(int keepAlivePeriod, CancellationToken cancellationToken)
         {
@@ -62,9 +59,8 @@ namespace MQTTnet.Server
                     if (_lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod * 1.5D)
                     {
                         _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
-
-                        _timeoutCallback?.Invoke();
-
+                        _callback();
+    
                         return;
                     }
 

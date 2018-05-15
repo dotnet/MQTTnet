@@ -14,16 +14,19 @@ namespace MQTTnet.Implementations
         private readonly MqttClientWebSocketOptions _options;
 
         private WebSocket _webSocket;
-
+        
         public MqttWebSocketChannel(MqttClientWebSocketOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public MqttWebSocketChannel(WebSocket webSocket)
+        public MqttWebSocketChannel(WebSocket webSocket, string endpoint)
         {
             _webSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
+            Endpoint = endpoint;
         }
+
+        public string Endpoint { get; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {

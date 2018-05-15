@@ -26,7 +26,7 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
             };
 
-            var result = sm.CheckSubscriptionsAsync(pp).Result;
+            var result = sm.CheckSubscriptions(pp);
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
         }
@@ -47,7 +47,7 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
             };
 
-            var result = sm.CheckSubscriptionsAsync(pp).Result;
+            var result = sm.CheckSubscriptions(pp);
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
         }
@@ -69,7 +69,7 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
             };
 
-            var result = sm.CheckSubscriptionsAsync(pp).Result;
+            var result = sm.CheckSubscriptions(pp);
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtLeastOnce);
         }
@@ -90,7 +90,7 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
             };
 
-            Assert.IsFalse(sm.CheckSubscriptionsAsync(pp).Result.IsSubscribed);
+            Assert.IsFalse(sm.CheckSubscriptions(pp).IsSubscribed);
         }
 
         [TestMethod]
@@ -109,13 +109,13 @@ namespace MQTTnet.Core.Tests
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
             };
 
-            Assert.IsTrue(sm.CheckSubscriptionsAsync(pp).Result.IsSubscribed);
+            Assert.IsTrue(sm.CheckSubscriptions(pp).IsSubscribed);
 
             var up = new MqttUnsubscribePacket();
             up.TopicFilters.Add("A/B/C");
             sm.Unsubscribe(up);
 
-            Assert.IsFalse(sm.CheckSubscriptionsAsync(pp).Result.IsSubscribed);
+            Assert.IsFalse(sm.CheckSubscriptions(pp).IsSubscribed);
         }
     }
 }

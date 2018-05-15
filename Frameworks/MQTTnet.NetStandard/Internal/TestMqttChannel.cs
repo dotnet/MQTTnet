@@ -18,6 +18,8 @@ namespace MQTTnet.Core.Internal
         {
         }
 
+        public string Endpoint { get; }
+
         public Task ConnectAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(0);

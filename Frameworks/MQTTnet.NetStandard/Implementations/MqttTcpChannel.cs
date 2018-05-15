@@ -41,6 +41,8 @@ namespace MQTTnet.Implementations
 
         public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
 
+        public string Endpoint => _socket?.RemoteEndPoint?.ToString();
+
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             if (_socket == null)

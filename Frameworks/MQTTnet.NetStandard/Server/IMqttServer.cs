@@ -15,7 +15,7 @@ namespace MQTTnet.Server
         
         IMqttServerOptions Options { get; }
 
-        Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync();
+        Task<IList<IMqttClientSessionStatus>> GetClientSessionsStatusAsync();
 
         Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters);
         Task UnsubscribeAsync(string clientId, IList<string> topicFilters);

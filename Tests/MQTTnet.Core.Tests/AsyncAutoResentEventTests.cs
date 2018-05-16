@@ -10,11 +10,11 @@ namespace MQTTnet.Core.Tests
     // Inspired from the vs-threading tests (https://github.com/Microsoft/vs-threading/blob/master/src/Microsoft.VisualStudio.Threading.Tests/AsyncAutoResetEventTests.cs)
     public class AsyncAutoResetEventTests
     {
-        private readonly AsyncAutoResetEvent evt;
+        private readonly AsyncAutoResetEvent _aare;
 
         public AsyncAutoResetEventTests()
         {
-            this.evt = new AsyncAutoResetEvent();
+            _aare = new AsyncAutoResetEvent();
         }
 
         [TestMethod]
@@ -22,9 +22,9 @@ namespace MQTTnet.Core.Tests
         {
             for (int i = 0; i < 5; i++)
             {
-                var t = this.evt.WaitOneAsync();
+                var t = _aare.WaitOneAsync();
                 Assert.IsFalse(t.IsCompleted);
-                this.evt.Set();
+                _aare.Set();
                 await t;
                 Assert.IsTrue(t.IsCompleted);
             }
@@ -33,14 +33,14 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public async Task MultipleSetOnlySignalsOnce()
         {
-            this.evt.Set();
-            this.evt.Set();
-            await this.evt.WaitOneAsync();
-            var t = this.evt.WaitOneAsync();
+            _aare.Set();
+            _aare.Set();
+            await _aare.WaitOneAsync();
+            var t = _aare.WaitOneAsync();
             Assert.IsFalse(t.IsCompleted);
             await Task.Delay(500);
             Assert.IsFalse(t.IsCompleted);
-            this.evt.Set();
+            _aare.Set();
             await t;
             Assert.IsTrue(t.IsCompleted);
         }
@@ -51,12 +51,12 @@ namespace MQTTnet.Core.Tests
             var waiters = new Task[5];
             for (int i = 0; i < waiters.Length; i++)
             {
-                waiters[i] = this.evt.WaitOneAsync();
+                waiters[i] = _aare.WaitOneAsync();
             }
 
             for (int i = 0; i < waiters.Length; i++)
             {
-                this.evt.Set();
+                _aare.Set();
                 await waiters[i].ConfigureAwait(false);
             }
         }
@@ -68,7 +68,7 @@ namespace MQTTnet.Core.Tests
         public async Task SetReturnsBeforeInlinedContinuations()
         {
             var setReturned = new ManualResetEventSlim();
-            var inlinedContinuation = this.evt.WaitOneAsync()
+            var inlinedContinuation = _aare.WaitOneAsync()
                 .ContinueWith(delegate
                 {
                     // Arrange to synchronously block the continuation until Set() has returned,
@@ -76,7 +76,7 @@ namespace MQTTnet.Core.Tests
                     Assert.IsTrue(setReturned.Wait(500));
                 });
             await Task.Delay(100);
-            this.evt.Set();
+            _aare.Set();
             setReturned.Set();
             Assert.IsTrue(inlinedContinuation.Wait(500));
         }
@@ -85,7 +85,7 @@ namespace MQTTnet.Core.Tests
         public void WaitAsync_WithCancellationToken()
         {
             var cts = new CancellationTokenSource();
-            Task waitTask = this.evt.WaitOneAsync(cts.Token);
+            Task waitTask = _aare.WaitOneAsync(cts.Token);
             Assert.IsFalse(waitTask.IsCompleted);
 
             // Cancel the request and ensure that it propagates to the task.
@@ -95,14 +95,14 @@ namespace MQTTnet.Core.Tests
                 waitTask.GetAwaiter().GetResult();
                 Assert.IsTrue(false, "Task was expected to transition to a canceled state.");
             }
-            catch (System.OperationCanceledException ex)
+            catch (OperationCanceledException ex)
             {
                 Assert.AreEqual(cts.Token, ex.CancellationToken);
             }
 
             // Now set the event and verify that a future waiter gets the signal immediately.
-            this.evt.Set();
-            waitTask = this.evt.WaitOneAsync();
+            _aare.Set();
+            waitTask = _aare.WaitOneAsync();
             Assert.AreEqual(TaskStatus.RanToCompletion, waitTask.Status);
         }
 
@@ -116,10 +116,10 @@ namespace MQTTnet.Core.Tests
             var token = tokenSource.Token;
 
             // Verify that a pre-set signal is not reset by a canceled wait request.
-            this.evt.Set();
+            _aare.Set();
             try
             {
-                this.evt.WaitOneAsync(token).GetAwaiter().GetResult();
+                _aare.WaitOneAsync(token).GetAwaiter().GetResult();
                 Assert.IsTrue(false, "Task was expected to transition to a canceled state.");
             }
             catch (OperationCanceledException ex)
@@ -128,14 +128,14 @@ namespace MQTTnet.Core.Tests
             }
 
             // Verify that the signal was not acquired.
-            Task waitTask = this.evt.WaitOneAsync();
+            Task waitTask = _aare.WaitOneAsync();
             Assert.AreEqual(TaskStatus.RanToCompletion, waitTask.Status);
         }
 
         [TestMethod]
         public async Task WaitAsync_WithTimeout()
         {
-            Task waitTask = this.evt.WaitOneAsync(TimeSpan.FromMilliseconds(500));
+            Task waitTask = _aare.WaitOneAsync(TimeSpan.FromMilliseconds(500));
             Assert.IsFalse(waitTask.IsCompleted);
 
             // Cancel the request and ensure that it propagates to the task.
@@ -145,14 +145,14 @@ namespace MQTTnet.Core.Tests
                 waitTask.GetAwaiter().GetResult();
                 Assert.IsTrue(false, "Task was expected to transition to a timeout state.");
             }
-            catch (System.TimeoutException)
+            catch (TimeoutException)
             {
                 Assert.IsTrue(true);
             }
 
             // Now set the event and verify that a future waiter gets the signal immediately.
-            this.evt.Set();
-            waitTask = this.evt.WaitOneAsync(TimeSpan.FromMilliseconds(500));
+            _aare.Set();
+            waitTask = _aare.WaitOneAsync(TimeSpan.FromMilliseconds(500));
             Assert.AreEqual(TaskStatus.RanToCompletion, waitTask.Status);
         }
 
@@ -160,7 +160,7 @@ namespace MQTTnet.Core.Tests
         public void WaitAsync_Canceled_DoesNotInlineContinuations()
         {
             var cts = new CancellationTokenSource();
-            var task = this.evt.WaitOneAsync(cts.Token);
+            var task = _aare.WaitOneAsync(cts.Token);
 
             var completingActionFinished = new ManualResetEventSlim();
             var continuation = task.ContinueWith(

@@ -119,7 +119,7 @@ namespace MQTTnet.Server
 
         public async Task StopAsync()
         {
-            using (var releaser = await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 foreach (var session in _sessions)
                 {
@@ -132,7 +132,7 @@ namespace MQTTnet.Server
 
         public async Task<IList<ConnectedMqttClient>> GetConnectedClientsAsync()
         {
-            using (var releaser = await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 return _sessions.Where(s => s.Value.IsConnected).Select(s => new ConnectedMqttClient
                 {
@@ -155,7 +155,7 @@ namespace MQTTnet.Server
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            using (var releaser = await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 if (!_sessions.TryGetValue(clientId, out var session))
                 {
@@ -171,7 +171,7 @@ namespace MQTTnet.Server
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            using (var releaser = await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 if (!_sessions.TryGetValue(clientId, out var session))
                 {
@@ -205,8 +205,7 @@ namespace MQTTnet.Server
 
         private async Task<GetOrCreateClientSessionResult> PrepareClientSessionAsync(MqttConnectPacket connectPacket)
         {
-            using (var releaser = await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
-
+            using (await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 var isSessionPresent = _sessions.TryGetValue(connectPacket.ClientId, out var clientSession);
                 if (isSessionPresent)
@@ -269,7 +268,7 @@ namespace MQTTnet.Server
                 _logger.Error(exception, "Error while processing application message");
             }
 
-            using (var releaser = await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _sessionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 foreach (var clientSession in _sessions.Values)
                 {

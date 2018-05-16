@@ -136,9 +136,9 @@ namespace MQTTnet.Server
             return Task.FromResult((IList<IMqttClientSessionStatus>)result);
         }
 
-        public Task StartDispatchApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
+        public void StartDispatchApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
         {
-            return DispatchApplicationMessageAsync(senderClientSession, applicationMessage);
+            Task.Run(() => DispatchApplicationMessageAsync(senderClientSession, applicationMessage));
         }
 
         public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)

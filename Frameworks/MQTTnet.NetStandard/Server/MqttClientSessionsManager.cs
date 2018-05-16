@@ -136,9 +136,9 @@ namespace MQTTnet.Server
             return Task.FromResult((IList<IMqttClientSessionStatus>)result);
         }
 
-        public void StartDispatchApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
+        public Task StartDispatchApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
         {
-            Task.Run(() => DispatchApplicationMessageAsync(senderClientSession, applicationMessage));
+            return DispatchApplicationMessageAsync(senderClientSession, applicationMessage);
         }
 
         public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
@@ -197,8 +197,7 @@ namespace MQTTnet.Server
 
         private async Task<GetOrCreateClientSessionResult> PrepareClientSessionAsync(MqttConnectPacket connectPacket)
         {
-            await _sessionPreparationLock.EnterAsync(CancellationToken.None).ConfigureAwait(false);
-            try
+            using (await _sessionPreparationLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 var isSessionPresent = _sessions.TryGetValue(connectPacket.ClientId, out var clientSession);
                 if (isSessionPresent)
@@ -231,10 +230,6 @@ namespace MQTTnet.Server
                 }
 
                 return new GetOrCreateClientSessionResult { IsExistingSession = isExistingSession, Session = clientSession };
-            }
-            finally
-            {
-                _sessionPreparationLock.Exit();
             }
         }
 

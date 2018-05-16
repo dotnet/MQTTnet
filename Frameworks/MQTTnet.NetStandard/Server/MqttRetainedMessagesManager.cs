@@ -82,7 +82,7 @@ namespace MQTTnet.Server
         {
             var saveIsRequired = false;
 
-            if (applicationMessage.Payload?.Length > 0)
+            if (applicationMessage.Payload?.Length == 0)
             {
                 saveIsRequired = _messages.TryRemove(applicationMessage.Topic, out _);
                 _logger.Info("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);

@@ -237,7 +237,6 @@ namespace MQTTnet.Server
         {
             try
             {
-                _logger.Verbose($"DispatchApplicationMessageAsync");
                 var interceptorContext = InterceptApplicationMessage(senderClientSession, applicationMessage);
                 if (interceptorContext.CloseConnection)
                 {
@@ -258,7 +257,6 @@ namespace MQTTnet.Server
 
                 foreach (var clientSession in _sessions.Values)
                 {
-                    _logger.Verbose($"DispatchApplicationMessageAsync for {clientSession.ClientId} ");
                     clientSession.EnqueueApplicationMessage(applicationMessage);
                 }
             }

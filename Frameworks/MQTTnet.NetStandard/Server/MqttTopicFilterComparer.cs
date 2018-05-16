@@ -4,113 +4,115 @@ namespace MQTTnet.Server
 {
     public static class MqttTopicFilterComparer
     {
-        private const char LEVEL_SEPARATOR = '/';
-        private const char WILDCARD_MULTI_LEVEL = '#';
-        private const char WILDCARD_SINGLE_LEVEL = '+';
+        private const char LevelSeparator = '/';
+        private const char MultiLevelWildcard = '#';
+        private const char SingleLevelWildcard = '+';
 
         public static bool IsMatch(string topic, string filter)
         {
             if (string.IsNullOrEmpty(topic)) throw new ArgumentNullException(nameof(topic));
             if (string.IsNullOrEmpty(filter)) throw new ArgumentNullException(nameof(filter));
 
-            int spos = 0;
-            int slen = filter.Length;
-            int tpos = 0;
-            int tlen = topic.Length;
+            var sPos = 0;
+            var sLen = filter.Length;
+            var tPos = 0;
+            var tLen = topic.Length;
 
-            while (spos < slen && tpos < tlen)
+            while (sPos < sLen && tPos < tLen)
             {
-                if (filter[spos] == topic[tpos])
+                if (filter[sPos] == topic[tPos])
                 {
-                    if (tpos == tlen - 1)
+                    if (tPos == tLen - 1)
                     {
-                        /* Check for e.g. foo matching foo/# */
-                        if (spos == slen - 3
-                                && filter[spos + 1] == LEVEL_SEPARATOR
-                                && filter[spos + 2] == WILDCARD_MULTI_LEVEL)
+                        // Check for e.g. foo matching foo/#
+                        if (sPos == sLen - 3
+                                && filter[sPos + 1] == LevelSeparator
+                                && filter[sPos + 2] == MultiLevelWildcard)
                         {
                             return true;
                         }
                     }
-                    spos++;
-                    tpos++;
-                    if (spos == slen && tpos == tlen)
+
+                    sPos++;
+                    tPos++;
+
+                    if (sPos == sLen && tPos == tLen)
                     {
                         return true;
                     }
-                    else if (tpos == tlen && spos == slen - 1 && filter[spos] == WILDCARD_SINGLE_LEVEL)
+
+                    if (tPos == tLen && sPos == sLen - 1 && filter[sPos] == SingleLevelWildcard)
                     {
-                        if (spos > 0 && filter[spos - 1] != LEVEL_SEPARATOR)
+                        if (sPos > 0 && filter[sPos - 1] != LevelSeparator)
                         {
                             // Invalid filter string
                             return false;
                         }
-                        spos++;
+
                         return true;
                     }
                 }
                 else
                 {
-                    if (filter[spos] == WILDCARD_SINGLE_LEVEL)
+                    if (filter[sPos] == SingleLevelWildcard)
                     {
-                        /* Check for bad "+foo" or "a/+foo" subscription */
-                        if (spos > 0 && filter[spos - 1] != LEVEL_SEPARATOR)
+                        // Check for bad "+foo" or "a/+foo" subscription
+                        if (sPos > 0 && filter[sPos - 1] != LevelSeparator)
                         {
                             // Invalid filter string
                             return false;
                         }
-                        /* Check for bad "foo+" or "foo+/a" subscription */
-                        if (spos < slen - 1 && filter[spos + 1] != LEVEL_SEPARATOR)
+
+                        // Check for bad "foo+" or "foo+/a" subscription
+                        if (sPos < sLen - 1 && filter[sPos + 1] != LevelSeparator)
                         {
                             // Invalid filter string
                             return false;
                         }
-                        spos++;
-                        while (tpos < tlen && topic[tpos] != LEVEL_SEPARATOR)
+
+                        sPos++;
+                        while (tPos < tLen && topic[tPos] != LevelSeparator)
                         {
-                            tpos++;
+                            tPos++;
                         }
-                        if (tpos == tlen && spos == slen)
+
+                        if (tPos == tLen && sPos == sLen)
                         {
                             return true;
                         }
                     }
-                    else if (filter[spos] == WILDCARD_MULTI_LEVEL)
+                    else if (filter[sPos] == MultiLevelWildcard)
                     {
-                        if (spos > 0 && filter[spos - 1] != LEVEL_SEPARATOR)
+                        if (sPos > 0 && filter[sPos - 1] != LevelSeparator)
                         {
                             // Invalid filter string
                             return false;
                         }
-                        if (spos + 1 != slen)
+
+                        if (sPos + 1 != sLen)
                         {
                             // Invalid filter string
                             return false;
                         }
-                        else
-                        {
-                            return true;
-                        }
+
+                        return true;
                     }
                     else
                     {
-                        /* Check for e.g. foo/bar matching foo/+/# */
-                        if (spos > 0
-                                && spos + 2 == slen
-                                && tpos == tlen
-                                && filter[spos - 1] == WILDCARD_SINGLE_LEVEL
-                                && filter[spos] == LEVEL_SEPARATOR
-                                && filter[spos + 1] == WILDCARD_MULTI_LEVEL)
+                        // Check for e.g. foo/bar matching foo/+/#
+                        if (sPos > 0
+                                && sPos + 2 == sLen
+                                && tPos == tLen
+                                && filter[sPos - 1] == SingleLevelWildcard
+                                && filter[sPos] == LevelSeparator
+                                && filter[sPos + 1] == MultiLevelWildcard)
                         {
                             return true;
                         }
+
                         return false;
                     }
                 }
-            }
-            if (tpos < tlen || spos < slen)
-            {
-                return false;
             }
 
             return false;

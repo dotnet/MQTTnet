@@ -136,9 +136,9 @@ namespace MQTTnet.Server
             return Task.FromResult((IList<IMqttClientSessionStatus>)result);
         }
 
-        public void StartDispatchApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
+        public Task StartDispatchApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
         {
-            Task.Run(() => DispatchApplicationMessageAsync(senderClientSession, applicationMessage));
+            return DispatchApplicationMessageAsync(senderClientSession, applicationMessage);
         }
 
         public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
@@ -237,6 +237,7 @@ namespace MQTTnet.Server
         {
             try
             {
+                _logger.Verbose($"DispatchApplicationMessageAsync");
                 var interceptorContext = InterceptApplicationMessage(senderClientSession, applicationMessage);
                 if (interceptorContext.CloseConnection)
                 {
@@ -257,6 +258,7 @@ namespace MQTTnet.Server
 
                 foreach (var clientSession in _sessions.Values)
                 {
+                    _logger.Verbose($"DispatchApplicationMessageAsync for {clientSession.ClientId} ");
                     clientSession.EnqueueApplicationMessage(applicationMessage);
                 }
             }

@@ -43,6 +43,8 @@ namespace MQTTnet.Implementations
 
         public static Func<MqttClientTcpOptions, IEnumerable<ChainValidationResult>> CustomIgnorableServerCertificateErrorsResolver { get; set; }
 
+        public string Endpoint => _socket?.Information?.RemoteAddress?.ToString(); // TODO: Check if contains also the port.
+
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             if (_socket == null)

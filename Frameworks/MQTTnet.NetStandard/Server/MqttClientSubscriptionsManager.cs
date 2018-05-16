@@ -2,17 +2,14 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientSubscriptionsManager : IDisposable
+    public sealed class MqttClientSubscriptionsManager
     {
         private readonly ConcurrentDictionary<string, MqttQualityOfServiceLevel> _subscriptions = new ConcurrentDictionary<string, MqttQualityOfServiceLevel>();
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IMqttServerOptions _options;
         private readonly MqttServer _server;
         private readonly string _clientId;
@@ -81,43 +78,30 @@ namespace MQTTnet.Server
             };
         }
 
-        public async Task<CheckSubscriptionsResult> CheckSubscriptionsAsync(MqttApplicationMessage applicationMessage)
+        public CheckSubscriptionsResult CheckSubscriptions(MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            await _semaphore.WaitAsync().ConfigureAwait(false);
-            try
+            var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
+            foreach (var subscription in _subscriptions)
             {
-                var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
-                foreach (var subscription in _subscriptions)
+                if (!MqttTopicFilterComparer.IsMatch(applicationMessage.Topic, subscription.Key))
                 {
-                    if (!MqttTopicFilterComparer.IsMatch(applicationMessage.Topic, subscription.Key))
-                    {
-                        continue;
-                    }
-
-                    qosLevels.Add(subscription.Value);
+                    continue;
                 }
 
-                if (qosLevels.Count == 0)
-                {
-                    return new CheckSubscriptionsResult
-                    {
-                        IsSubscribed = false
-                    };
-                }
-
-                return CreateSubscriptionResult(applicationMessage, qosLevels);
+                qosLevels.Add(subscription.Value);
             }
-            finally
+
+            if (qosLevels.Count == 0)
             {
-                _semaphore.Release();
+                return new CheckSubscriptionsResult
+                {
+                    IsSubscribed = false
+                };
             }
-        }
 
-        public void Dispose()
-        {
-            _semaphore?.Dispose();
+            return CreateSubscriptionResult(applicationMessage, qosLevels);
         }
 
         private static MqttSubscribeReturnCode ConvertToMaximumQoS(MqttQualityOfServiceLevel qualityOfServiceLevel)

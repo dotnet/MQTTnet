@@ -13,12 +13,12 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientPendingMessagesQueue : IDisposable
     {
-        private readonly ConcurrentQueue<MqttBasePacket> _queue = new ConcurrentQueue<MqttBasePacket>();
         private readonly AsyncAutoResetEvent _queueAutoResetEvent = new AsyncAutoResetEvent();
         private readonly IMqttServerOptions _options;
         private readonly MqttClientSession _clientSession;
         private readonly IMqttNetChildLogger _logger;
 
+        private ConcurrentQueue<MqttBasePacket> _queue = new ConcurrentQueue<MqttBasePacket>();
         private Task _workerTask;
 
         public MqttClientPendingMessagesQueue(IMqttServerOptions options, MqttClientSession clientSession, IMqttNetChildLogger logger)
@@ -43,15 +43,7 @@ namespace MQTTnet.Server
 
             _workerTask = Task.Run(() => SendQueuedPacketsAsync(adapter, cancellationToken), cancellationToken);
         }
-
-        public void WaitForCompletion()
-        {
-            if (_workerTask != null)
-            {
-                Task.WaitAll(_workerTask);
-            }
-        }
-
+        
         public void Enqueue(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
@@ -73,6 +65,17 @@ namespace MQTTnet.Server
             _queueAutoResetEvent.Set();
 
             _logger.Verbose("Enqueued packet (ClientId: {0}).", _clientSession.ClientId);
+        }
+
+        public void Clear()
+        {
+            var newQueue = new ConcurrentQueue<MqttBasePacket>();
+            Interlocked.Exchange(ref _queue, newQueue);
+        }
+
+        public void Dispose()
+        {
+            
         }
 
         private async Task SendQueuedPacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
@@ -150,10 +153,6 @@ namespace MQTTnet.Server
                     _clientSession.Stop(MqttClientDisconnectType.NotClean);
                 }
             }
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

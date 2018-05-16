@@ -103,6 +103,12 @@ namespace MQTTnet.Server
             return this;
         }
 
+        public MqttServerOptionsBuilder WithPersistentSessions()
+        {
+            _options.EnablePersistentSessions = true;
+            return this;
+        }
+
         public IMqttServerOptions Build()
         {
             return _options;

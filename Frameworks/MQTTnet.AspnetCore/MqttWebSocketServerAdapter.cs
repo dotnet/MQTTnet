@@ -23,11 +23,11 @@ namespace MQTTnet.AspNetCore
             return Task.CompletedTask;
         }
 
-        public async Task AcceptWebSocketAsync(WebSocket webSocket)
+        public async Task RunWebSocketConnectionAsync(WebSocket webSocket, string endpoint)
         {
             if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
 
-            var clientAdapter = new MqttChannelAdapter(new MqttWebSocketChannel(webSocket), new MqttPacketSerializer(), new MqttNetLogger().CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
+            var clientAdapter = new MqttChannelAdapter(new MqttWebSocketChannel(webSocket, endpoint), new MqttPacketSerializer(), new MqttNetLogger().CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
             ClientAccepted?.Invoke(this, eventArgs);

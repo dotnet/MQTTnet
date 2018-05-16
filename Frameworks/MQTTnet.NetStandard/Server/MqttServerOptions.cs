@@ -8,10 +8,11 @@ namespace MQTTnet.Server
 
         public MqttServerTlsEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsEndpointOptions();
 
+        public bool EnablePersistentSessions { get; set; }
+
         public int ConnectionBacklog { get; set; } = 10;
 
         public int MaxPendingMessagesPerClient { get; set; } = 250;
-
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage;
 
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(15);

@@ -8,31 +8,30 @@ namespace MQTTnet.Internal
     // Inspired from Stephen Toub (https://blogs.msdn.microsoft.com/pfxteam/2012/02/11/building-async-coordination-primitives-part-2-asyncautoresetevent/) and Chris Gillum (https://stackoverflow.com/a/43012490)
     public class AsyncAutoResetEvent
     {
-        private readonly LinkedList<TaskCompletionSource<bool>> waiters = new LinkedList<TaskCompletionSource<bool>>();
-
-        private bool isSignaled;
+        private readonly LinkedList<TaskCompletionSource<bool>> _waiters = new LinkedList<TaskCompletionSource<bool>>();
+        private bool _isSignaled;
 
         public AsyncAutoResetEvent() : this(false)
         { }
 
         public AsyncAutoResetEvent(bool signaled)
         {
-            this.isSignaled = signaled;
+            _isSignaled = signaled;
         }
 
         public Task<bool> WaitOneAsync()
         {
-            return this.WaitOneAsync(CancellationToken.None);
+            return WaitOneAsync(CancellationToken.None);
         }
 
         public Task<bool> WaitOneAsync(TimeSpan timeout)
         {
-            return this.WaitOneAsync(timeout, CancellationToken.None);
+            return WaitOneAsync(timeout, CancellationToken.None);
         }
 
         public Task<bool> WaitOneAsync(CancellationToken cancellationToken)
         {
-            return this.WaitOneAsync(Timeout.InfiniteTimeSpan, cancellationToken);
+            return WaitOneAsync(Timeout.InfiniteTimeSpan, cancellationToken);
         }
 
         public async Task<bool> WaitOneAsync(TimeSpan timeout, CancellationToken cancellationToken)
@@ -41,21 +40,21 @@ namespace MQTTnet.Internal
 
             TaskCompletionSource<bool> tcs;
 
-            lock (this.waiters)
+            lock (_waiters)
             {
-                if (this.isSignaled)
+                if (_isSignaled)
                 {
-                    this.isSignaled = false;
+                    _isSignaled = false;
                     return true;
                 }
                 else if (timeout == TimeSpan.Zero)
                 {
-                    return this.isSignaled;
+                    return _isSignaled;
                 }
                 else
                 {
                     tcs = new TaskCompletionSource<bool>();
-                    this.waiters.AddLast(tcs);
+                    _waiters.AddLast(tcs);
                 }
             }
 
@@ -69,9 +68,9 @@ namespace MQTTnet.Internal
             {
                 // We timed-out; remove our reference to the task.
                 // This is an O(n) operation since waiters is a LinkedList<T>.
-                lock (this.waiters)
+                lock (_waiters)
                 {
-                    this.waiters.Remove(tcs);
+                    _waiters.Remove(tcs);
                     if (winner.Status == TaskStatus.Canceled)
                     {
                         throw new OperationCanceledException(cancellationToken);
@@ -88,25 +87,22 @@ namespace MQTTnet.Internal
         {
             TaskCompletionSource<bool> toRelease = null;
 
-            lock (this.waiters)
+            lock (_waiters)
             {
-                if (this.waiters.Count > 0)
+                if (_waiters.Count > 0)
                 {
                     // Signal the first task in the waiters list.
-                    toRelease = this.waiters.First.Value;
-                    this.waiters.RemoveFirst();
+                    toRelease = _waiters.First.Value;
+                    _waiters.RemoveFirst();
                 }
-                else if (!this.isSignaled)
+                else if (!_isSignaled)
                 {
                     // No tasks are pending
-                    this.isSignaled = true;
+                    _isSignaled = true;
                 }
             }
 
-            if (toRelease != null)
-            {
-                toRelease.SetResult(true);
-            }
+            toRelease?.SetResult(true);
         }
     }
 }

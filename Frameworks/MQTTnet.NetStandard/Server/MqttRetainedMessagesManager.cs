@@ -29,7 +29,7 @@ namespace MQTTnet.Server
                 return;
             }
 
-            using (var releaser = await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 try
                 {
@@ -52,7 +52,7 @@ namespace MQTTnet.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            using (var releaser = await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 try
                 {
@@ -69,7 +69,7 @@ namespace MQTTnet.Server
         {
             var retainedMessages = new List<MqttApplicationMessage>();
 
-            using (var releaser = await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 foreach (var retainedMessage in _messages.Values)
                 {

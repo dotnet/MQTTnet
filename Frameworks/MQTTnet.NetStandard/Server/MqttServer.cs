@@ -93,7 +93,7 @@ namespace MQTTnet.Server
             }
 
             _logger.Info("Started.");
-            Started?.Invoke(this, new MqttServerStartedEventArgs());
+            Started?.Invoke(this, EventArgs.Empty);
         }
 
         public async Task StopAsync()
@@ -117,6 +117,7 @@ namespace MQTTnet.Server
                 await _clientSessionsManager.StopAsync().ConfigureAwait(false);
 
                 _logger.Info("Stopped.");
+                Stopped?.Invoke(this, EventArgs.Empty);
             }
             finally
             {

@@ -21,22 +21,17 @@ namespace MQTTnet.Core.Tests
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 threads[i] = Task.Run(async () =>
                 {
-                    await @lock.EnterAsync(CancellationToken.None);
-                    try
+                    using (var releaser = await @lock.LockAsync(CancellationToken.None))
                     {
                         var localI = globalI;
                         await Task.Delay(10); // Increase the chance for wrong data.
                         localI++;
                         globalI = localI;
                     }
-                    finally
-                    {
-                       @lock.Exit();
-                    }
                 });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
-            
+
             Task.WaitAll(threads);
             Assert.AreEqual(ThreadsCount, globalI);
         }

@@ -114,7 +114,7 @@ namespace MQTTnet.Adapter
                     throw new MqttProtocolViolationException("Received malformed packet.");
                 }
 
-                _logger.Verbose<MqttChannelAdapter>("RX <<< {0}", packet);
+                _logger.Verbose("RX <<< {0}", packet);
             }).ConfigureAwait(false);
 
             return packet;

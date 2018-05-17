@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Diagnostics;
-using MQTTnet.Protocol;
-using MQTTnet.Server;
-using MQTTnet.Client;
 
 namespace MQTTnet.Core.Tests
 {
@@ -96,10 +96,11 @@ namespace MQTTnet.Core.Tests
                 c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
-
+                
                 await c2.PublishAsync(message);
+                await Task.Delay(1000);
                 Assert.AreEqual(0, receivedMessagesCount);
-
+                
                 var subscribeEventCalled = false;
                 s.ClientSubscribedTopic += (_, e) =>
                     {
@@ -107,14 +108,13 @@ namespace MQTTnet.Core.Tests
                     };
 
                 await c1.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
-                await Task.Delay(100);
+                await Task.Delay(500);
                 Assert.IsTrue(subscribeEventCalled, "Subscribe event not called.");
 
                 await c2.PublishAsync(message);
-
                 await Task.Delay(500);
                 Assert.AreEqual(1, receivedMessagesCount);
-
+                
                 var unsubscribeEventCalled = false;
                 s.ClientUnsubscribedTopic += (_, e) =>
                 {
@@ -122,12 +122,11 @@ namespace MQTTnet.Core.Tests
                 };
 
                 await c1.UnsubscribeAsync("a");
-                await Task.Delay(100);
+                await Task.Delay(500);
                 Assert.IsTrue(unsubscribeEventCalled, "Unsubscribe event not called.");
 
                 await c2.PublishAsync(message);
-
-                await Task.Delay(500);
+                await Task.Delay(1000);
                 Assert.AreEqual(1, receivedMessagesCount);
             }
             finally
@@ -406,7 +405,7 @@ namespace MQTTnet.Core.Tests
                 await c1.SubscribeAsync("A", MqttQualityOfServiceLevel.AtMostOnce);
                 await c2.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("A").WithPayload(Encoding.UTF8.GetBytes("The body")).Build());
 
-                await Task.Delay(500);
+                await Task.Delay(1000);
             }
             finally
             {

@@ -53,7 +53,11 @@ namespace MQTTnet.Serializer
                 return 3;
             }
 
-            return 4;
+            if (bodyLength < 128 * 128 * 128)
+            {
+                return 4;
+            }
+            return 5;
         }
 
         public static void WriteBodyLength(int length, byte[] result)

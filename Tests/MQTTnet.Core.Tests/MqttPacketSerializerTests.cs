@@ -14,6 +14,15 @@ namespace MQTTnet.Core.Tests
     public class MqttPacketSerializerTests
     {
         [TestMethod]
+        public void HeaderLengthCalculationTest()
+        {
+            Assert.AreEqual(2, MqttPacketWriter.GetHeaderLength(64));
+            Assert.AreEqual(3, MqttPacketWriter.GetHeaderLength(128));
+            Assert.AreEqual(4, MqttPacketWriter.GetHeaderLength(128 * 128));
+            Assert.AreEqual(5, MqttPacketWriter.GetHeaderLength(128 * 128 * 128));
+        }
+
+        [TestMethod]
         public void SerializeV310_MqttConnectPacket()
         {
             var p = new MqttConnectPacket

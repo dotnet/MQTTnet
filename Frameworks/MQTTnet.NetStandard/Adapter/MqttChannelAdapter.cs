@@ -132,13 +132,12 @@ namespace MQTTnet.Adapter
             {
                 return new ReceivedMqttPacket(header, new byte[0]);
             }
-
-            var body = new MemoryStream(header.BodyLength);
-
+            
             var buffer = new byte[Math.Min(ReadBufferSize, header.BodyLength)];
-            while (body.Length < header.BodyLength)
+            var written = 0;
+            while (written < header.BodyLength)
             {
-                var bytesLeft = header.BodyLength - (int)body.Length;
+                var bytesLeft = header.BodyLength - written;
                 if (bytesLeft > buffer.Length)
                 {
                     bytesLeft = buffer.Length;
@@ -154,12 +153,11 @@ namespace MQTTnet.Adapter
 
                 // Here is no need to await because internally only an array is used and no real I/O operation is made.
                 // Using async here will only generate overhead.
-                body.Write(buffer, 0, readBytesCount);
+                Array.Copy(buffer, 0, buffer, written, readBytesCount);
+                written += readBytesCount;
             }
 
-            body.Seek(0L, SeekOrigin.Begin);
-
-            return new ReceivedMqttPacket(header, body.ToArray());
+            return new ReceivedMqttPacket(header, buffer);
         }
 
         private static async Task ExecuteAndWrapExceptionAsync(Func<Task> action)

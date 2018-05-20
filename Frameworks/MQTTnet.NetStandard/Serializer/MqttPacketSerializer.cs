@@ -19,29 +19,25 @@ namespace MQTTnet.Serializer
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
-            using (var stream = new MemoryStream(128))
+            var stream = MemoryBufferWriter.Get();
+            
+            try
             {
-                // Leave enough head space for max header size (fixed + 4 variable remaining length)
-                stream.Position = 5;
                 var fixedHeader = SerializePacket(packet, stream);
+                var bodyLength = (int)stream.Length;
+                var headerLength = MqttPacketWriter.GetHeaderLength(bodyLength);
+                
+                var result = new byte[headerLength + bodyLength];
+                result[0] = fixedHeader;
+                MqttPacketWriter.WriteBodyLength(bodyLength, result);
 
-                stream.Position = 1;
-                var remainingLength = MqttPacketWriter.EncodeRemainingLength((int)stream.Length - 5, stream);
+                stream.CopyTo(result.AsSpan(headerLength));
 
-                var headerSize = remainingLength + 1;
-                var headerOffset = 5 - headerSize;
-
-                // Position cursor on correct offset on beginining of array (has leading 0x0)
-                stream.Position = headerOffset;
-
-                stream.WriteByte(fixedHeader);
-
-#if NET461 || NET452 || NETSTANDARD2_0
-                var buffer = stream.GetBuffer();
-#else
-                var buffer = stream.ToArray();
-#endif
-                return new ArraySegment<byte>(buffer, headerOffset, (int)stream.Length - headerOffset);
+                return new ArraySegment<byte>(result, 0, result.Length);
+            }
+            finally
+            {
+                MemoryBufferWriter.Return(stream);
             }
         }
 

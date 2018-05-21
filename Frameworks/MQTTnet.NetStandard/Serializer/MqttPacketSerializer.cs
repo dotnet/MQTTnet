@@ -15,7 +15,7 @@ namespace MQTTnet.Serializer
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
-        public ArraySegment<byte> Serialize(MqttBasePacket packet)
+        public byte[] Serialize(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
@@ -33,7 +33,7 @@ namespace MQTTnet.Serializer
 
                 stream.CopyTo(result.AsSpan(headerLength));
 
-                return new ArraySegment<byte>(result, 0, result.Length);
+                return result;
             }
             finally
             {

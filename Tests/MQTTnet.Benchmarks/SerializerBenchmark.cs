@@ -20,7 +20,7 @@ namespace MQTTnet.Benchmarks
         private byte[] _serializedPacket;
         private MqttPacketSerializer _serializer;
 
-        [Params(1, 10000)]
+        [Params(10000)]
         public int Iterations { get; set; }
 
         [GlobalSetup]
@@ -32,7 +32,7 @@ namespace MQTTnet.Benchmarks
 
             _packet = message.ToPublishPacket();
             _serializer = new MqttPacketSerializer();
-            _serializedPacket = Join(_serializer.Serialize(_packet));
+            _serializedPacket = _serializer.Serialize(_packet);
         }
 
         [Benchmark]
@@ -55,17 +55,6 @@ namespace MQTTnet.Benchmarks
                     _serializer.Deserialize(header, _serializedPacket.AsSpan((int)headerStream.Position, header.BodyLength));
                 }
             }
-        }
-        
-        private static byte[] Join(params ArraySegment<byte>[] chunks)
-        {
-            var buffer = new MemoryStream();
-            foreach (var chunk in chunks)
-            {
-                buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
-            }
-
-            return buffer.ToArray();
         }
     }
 }

@@ -79,9 +79,9 @@ namespace MQTTnet.Adapter
                 var packetData = PacketSerializer.Serialize(packet);
 
                 return Internal.TaskExtensions.TimeoutAfter(ct => _channel.WriteAsync(
-                    packetData.Array,
-                    packetData.Offset,
-                    packetData.Count,
+                    packetData,
+                    0,
+                    packetData.Length,
                     ct), timeout, cancellationToken);
             });
         }

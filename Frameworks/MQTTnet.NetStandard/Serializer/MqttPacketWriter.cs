@@ -29,8 +29,7 @@ namespace MQTTnet.Serializer
 
         public static void WriteWithLengthPrefix(this MemoryBufferWriter stream, string value)
         {
-            value = value ?? string.Empty;
-            var unicodeBytes = MemoryMarshal.Cast<char, byte>(value.AsSpan());
+            var unicodeBytes = MemoryMarshal.Cast<char, byte>((value ?? string.Empty).AsSpan());
             System.Buffers.Text.Encodings.Utf8.FromUtf16(unicodeBytes, stream.GetSpan().Slice(2), out _, out var written);
             stream.Write((ushort)written);
             stream.Advance(written);

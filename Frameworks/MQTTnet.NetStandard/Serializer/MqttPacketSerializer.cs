@@ -227,7 +227,7 @@ namespace MQTTnet.Serializer
             }
             else
             {
-                var buffer = remainingData.Slice(0, 6).ToArray();
+                protocolName = remainingData.Slice(0, 6).ToArray();
                 remainingData = remainingData.Slice(6);
 
                 if (protocolName.SequenceEqual(ProtocolVersionV310Name))

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Text;
+using System.Runtime.InteropServices;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Serializer
@@ -14,11 +14,10 @@ namespace MQTTnet.Serializer
             return (byte)fixedHeader;
         }
 
-        public static void Write(this Stream stream, ushort value)
+        public static void Write(this MemoryBufferWriter stream, ushort value)
         {
-            var buffer = BitConverter.GetBytes(value);
-            stream.WriteByte(buffer[1]);
-            stream.WriteByte(buffer[0]);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(stream.GetSpan(), value);
+            stream.Advance(2);
         }
 
         public static void Write(this Stream stream, ByteWriter value)
@@ -28,12 +27,16 @@ namespace MQTTnet.Serializer
             stream.WriteByte(value.Value);
         }
 
-        public static void WriteWithLengthPrefix(this Stream stream, string value)
+        public static void WriteWithLengthPrefix(this MemoryBufferWriter stream, string value)
         {
-            stream.WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value ?? string.Empty));
+            value = value ?? string.Empty;
+            var unicodeBytes = MemoryMarshal.Cast<char, byte>(value.AsSpan());
+            System.Buffers.Text.Encodings.Utf8.FromUtf16(unicodeBytes, stream.GetSpan().Slice(2), out _, out var written);
+            stream.Write((ushort)written);
+            stream.Advance(written);
         }
 
-        public static void WriteWithLengthPrefix(this Stream stream, byte[] value)
+        public static void WriteWithLengthPrefix(this MemoryBufferWriter stream, byte[] value)
         {
             var length = (ushort)value.Length;
 

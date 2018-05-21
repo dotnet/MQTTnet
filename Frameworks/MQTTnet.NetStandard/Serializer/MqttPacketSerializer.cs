@@ -41,7 +41,7 @@ namespace MQTTnet.Serializer
             }
         }
 
-        private byte SerializePacket(MqttBasePacket packet, Stream stream)
+        private byte SerializePacket(MqttBasePacket packet, MemoryBufferWriter stream)
         {
             switch (packet)
             {
@@ -323,7 +323,7 @@ namespace MQTTnet.Serializer
             }
         }
 
-        private byte Serialize(MqttConnectPacket packet, Stream stream)
+        private byte Serialize(MqttConnectPacket packet, MemoryBufferWriter stream)
         {
             ValidateConnectPacket(packet);
 
@@ -408,7 +408,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }
 
-        private static byte Serialize(MqttPubRelPacket packet, Stream stream)
+        private static byte Serialize(MqttPubRelPacket packet, MemoryBufferWriter stream)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -420,7 +420,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRel, 0x02);
         }
 
-        private static byte Serialize(MqttPublishPacket packet, Stream stream)
+        private static byte Serialize(MqttPublishPacket packet, MemoryBufferWriter stream)
         {
             ValidatePublishPacket(packet);
 
@@ -465,7 +465,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Publish, fixedHeader);
         }
 
-        private static byte Serialize(MqttPubAckPacket packet, Stream stream)
+        private static byte Serialize(MqttPubAckPacket packet, MemoryBufferWriter stream)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -477,7 +477,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubAck);
         }
 
-        private static byte Serialize(MqttPubRecPacket packet, Stream stream)
+        private static byte Serialize(MqttPubRecPacket packet, MemoryBufferWriter stream)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -489,7 +489,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRec);
         }
 
-        private static byte Serialize(MqttPubCompPacket packet, Stream stream)
+        private static byte Serialize(MqttPubCompPacket packet, MemoryBufferWriter stream)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -501,7 +501,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubComp);
         }
 
-        private static byte Serialize(MqttSubscribePacket packet, Stream stream)
+        private static byte Serialize(MqttSubscribePacket packet, MemoryBufferWriter stream)
         {
             if (!packet.TopicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
 
@@ -524,7 +524,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Subscribe, 0x02);
         }
 
-        private static byte Serialize(MqttSubAckPacket packet, Stream stream)
+        private static byte Serialize(MqttSubAckPacket packet, MemoryBufferWriter stream)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -544,7 +544,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.SubAck);
         }
 
-        private static byte Serialize(MqttUnsubscribePacket packet, Stream stream)
+        private static byte Serialize(MqttUnsubscribePacket packet, MemoryBufferWriter stream)
         {
             if (!packet.TopicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.10.3-2].");
 
@@ -566,7 +566,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Unsubscibe, 0x02);
         }
 
-        private static byte Serialize(MqttUnsubAckPacket packet, Stream stream)
+        private static byte Serialize(MqttUnsubAckPacket packet, MemoryBufferWriter stream)
         {
             if (!packet.PacketIdentifier.HasValue)
             {

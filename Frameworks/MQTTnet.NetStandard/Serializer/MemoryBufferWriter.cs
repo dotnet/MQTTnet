@@ -10,7 +10,7 @@ namespace MQTTnet.Serializer
 {
     //from https://github.com/aspnet/SignalR/blob/dev/src/Common/MemoryBufferWriter.cs
 
-    internal sealed class MemoryBufferWriter : Stream, IBufferWriter<byte>
+    public sealed class MemoryBufferWriter : Stream, IBufferWriter<byte>
     {
         [ThreadStatic]
         private static MemoryBufferWriter _cachedInstance;

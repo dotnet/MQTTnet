@@ -72,7 +72,6 @@
   <ItemGroup>
     <PackageReference Include="System.Buffers" Version="4.5.0-rc1" />
     <PackageReference Include="System.Memory" Version="4.5.0-rc1" />
-    <PackageReference Include="System.Text.Primitives" Version="0.1.0-preview2-180502-7" />
   </ItemGroup>
 
 </Project>

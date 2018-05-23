@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Serializer
@@ -29,10 +30,12 @@ namespace MQTTnet.Serializer
 
         public static void WriteWithLengthPrefix(this MemoryBufferWriter stream, string value)
         {
-            var unicodeBytes = MemoryMarshal.Cast<char, byte>((value ?? string.Empty).AsSpan());
-            System.Buffers.Text.Encodings.Utf8.FromUtf16(unicodeBytes, stream.GetSpan().Slice(2), out _, out var written);
-            stream.Write((ushort)written);
-            stream.Advance(written);
+            //TODO enable this once System.Text.Primitives is released
+            //var unicodeBytes = MemoryMarshal.Cast<char, byte>((value ?? string.Empty).AsSpan());
+            //System.Buffers.Text.Encodings.Utf8.FromUtf16(unicodeBytes, stream.GetSpan().Slice(2), out _, out var written);
+            //stream.Write((ushort)written);
+            //stream.Advance(written);
+            stream.WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value ?? string.Empty));
         }
 
         public static void WriteWithLengthPrefix(this MemoryBufferWriter stream, byte[] value)

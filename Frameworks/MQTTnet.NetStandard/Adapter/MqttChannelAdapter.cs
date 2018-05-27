@@ -79,9 +79,9 @@ namespace MQTTnet.Adapter
                 var packetData = PacketSerializer.Serialize(packet);
 
                 return Internal.TaskExtensions.TimeoutAfter(ct => _channel.WriteAsync(
-                    packetData.Array,
-                    packetData.Offset,
-                    packetData.Count,
+                    packetData,
+                    0,
+                    packetData.Length,
                     ct), timeout, cancellationToken);
             });
         }
@@ -94,34 +94,27 @@ namespace MQTTnet.Adapter
             await ExecuteAndWrapExceptionAsync(async () =>
             {
                 ReceivedMqttPacket receivedMqttPacket = null;
-                try
+                if (timeout > TimeSpan.Zero)
                 {
-                    if (timeout > TimeSpan.Zero)
-                    {
-                        receivedMqttPacket = await Internal.TaskExtensions.TimeoutAfter(ct => ReceiveAsync(_channel, ct), timeout, cancellationToken).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        receivedMqttPacket = await ReceiveAsync(_channel, cancellationToken).ConfigureAwait(false);
-                    }
-
-                    if (receivedMqttPacket == null || cancellationToken.IsCancellationRequested)
-                    {
-                        throw new TaskCanceledException();
-                    }
-
-                    packet = PacketSerializer.Deserialize(receivedMqttPacket.Header, receivedMqttPacket.Body);
-                    if (packet == null)
-                    {
-                        throw new MqttProtocolViolationException("Received malformed packet.");
-                    }
-
-                    _logger.Verbose("RX <<< {0}", packet);
+                    receivedMqttPacket = await Internal.TaskExtensions.TimeoutAfter(ct => ReceiveAsync(_channel, ct), timeout, cancellationToken).ConfigureAwait(false);
                 }
-                finally
+                else
                 {
-                    receivedMqttPacket?.Dispose();
+                    receivedMqttPacket = await ReceiveAsync(_channel, cancellationToken).ConfigureAwait(false);
                 }
+
+                if (receivedMqttPacket == null || cancellationToken.IsCancellationRequested)
+                {
+                    throw new TaskCanceledException();
+                }
+
+                packet = PacketSerializer.Deserialize(receivedMqttPacket.Header, receivedMqttPacket.Body.Span);
+                if (packet == null)
+                {
+                    throw new MqttProtocolViolationException("Received malformed packet.");
+                }
+
+                _logger.Verbose("RX <<< {0}", packet);
             }).ConfigureAwait(false);
 
             return packet;
@@ -137,15 +130,14 @@ namespace MQTTnet.Adapter
             
             if (header.BodyLength == 0)
             {
-                return new ReceivedMqttPacket(header, new MemoryStream(new byte[0], false));
+                return new ReceivedMqttPacket(header, new byte[0]);
             }
-
-            var body = new MemoryStream(header.BodyLength);
-
+            
             var buffer = new byte[Math.Min(ReadBufferSize, header.BodyLength)];
-            while (body.Length < header.BodyLength)
+            var written = 0;
+            while (written < header.BodyLength)
             {
-                var bytesLeft = header.BodyLength - (int)body.Length;
+                var bytesLeft = header.BodyLength - written;
                 if (bytesLeft > buffer.Length)
                 {
                     bytesLeft = buffer.Length;
@@ -161,12 +153,11 @@ namespace MQTTnet.Adapter
 
                 // Here is no need to await because internally only an array is used and no real I/O operation is made.
                 // Using async here will only generate overhead.
-                body.Write(buffer, 0, readBytesCount);
+                Array.Copy(buffer, 0, buffer, written, readBytesCount);
+                written += readBytesCount;
             }
 
-            body.Seek(0L, SeekOrigin.Begin);
-
-            return new ReceivedMqttPacket(header, body);
+            return new ReceivedMqttPacket(header, buffer);
         }
 
         private static async Task ExecuteAndWrapExceptionAsync(Func<Task> action)

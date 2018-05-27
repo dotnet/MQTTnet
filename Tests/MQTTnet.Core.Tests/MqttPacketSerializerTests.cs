@@ -14,6 +14,15 @@ namespace MQTTnet.Core.Tests
     public class MqttPacketSerializerTests
     {
         [TestMethod]
+        public void HeaderLengthCalculationTest()
+        {
+            Assert.AreEqual(2, MqttPacketWriter.GetHeaderLength(64));
+            Assert.AreEqual(3, MqttPacketWriter.GetHeaderLength(128));
+            Assert.AreEqual(4, MqttPacketWriter.GetHeaderLength(128 * 128));
+            Assert.AreEqual(5, MqttPacketWriter.GetHeaderLength(128 * 128 * 128));
+        }
+
+        [TestMethod]
         public void SerializeV310_MqttConnectPacket()
         {
             var p = new MqttConnectPacket
@@ -405,7 +414,7 @@ namespace MQTTnet.Core.Tests
             var serializer = new MqttPacketSerializer { ProtocolVersion = protocolVersion };
             var data = serializer.Serialize(packet);
             
-            Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(data)));
+            Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(data));
         }
 
         private static void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
@@ -414,29 +423,15 @@ namespace MQTTnet.Core.Tests
 
             var buffer1 = serializer.Serialize(packet);
 
-            using (var headerStream = new MemoryStream(Join(buffer1)))
+            using (var headerStream = new MemoryStream(buffer1))
             {
                 var header = MqttPacketReader.ReadHeaderAsync(new TestMqttChannel(headerStream), CancellationToken.None).GetAwaiter().GetResult();
 
-                using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.BodyLength))
-                {
-                    var deserializedPacket = serializer.Deserialize(header, bodyStream);
-                    var buffer2 = serializer.Serialize(deserializedPacket);
+                var deserializedPacket = serializer.Deserialize(header, buffer1.AsSpan((int)headerStream.Position, header.BodyLength));
+                var buffer2 = serializer.Serialize(deserializedPacket);
 
-                    Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(buffer2)));
-                }
+                Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(buffer2));
             }
-        }
-
-        private static byte[] Join(params ArraySegment<byte>[] chunks)
-        {
-            var buffer = new MemoryStream();
-            foreach (var chunk in chunks)
-            {
-                buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
-            }
-
-            return buffer.ToArray();
         }
     }
 }

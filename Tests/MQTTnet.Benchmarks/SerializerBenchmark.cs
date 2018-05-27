@@ -17,8 +17,11 @@ namespace MQTTnet.Benchmarks
     public class SerializerBenchmark
     {
         private MqttBasePacket _packet;
-        private ArraySegment<byte> _serializedPacket;
+        private byte[] _serializedPacket;
         private MqttPacketSerializer _serializer;
+
+        [Params(10000)]
+        public int Iterations { get; set; }
 
         [GlobalSetup]
         public void Setup()
@@ -35,7 +38,7 @@ namespace MQTTnet.Benchmarks
         [Benchmark]
         public void Serialize_10000_Messages()
         {
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < Iterations; i++)
             {
                 _serializer.Serialize(_packet);
             }
@@ -44,29 +47,14 @@ namespace MQTTnet.Benchmarks
         [Benchmark]
         public void Deserialize_10000_Messages()
         {
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < Iterations; i++)
             {
-                using (var headerStream = new MemoryStream(Join(_serializedPacket)))
+                using (var headerStream = new MemoryStream(_serializedPacket))
                 {
                     var header = MqttPacketReader.ReadHeaderAsync(new TestMqttChannel(headerStream), CancellationToken.None).GetAwaiter().GetResult();
-
-                    using (var bodyStream = new MemoryStream(Join(_serializedPacket), (int)headerStream.Position, header.BodyLength))
-                    {
-                        _serializer.Deserialize(header, bodyStream);
-                    }
+                    _serializer.Deserialize(header, _serializedPacket.AsSpan((int)headerStream.Position, header.BodyLength));
                 }
             }
-        }
-        
-        private static byte[] Join(params ArraySegment<byte>[] chunks)
-        {
-            var buffer = new MemoryStream();
-            foreach (var chunk in chunks)
-            {
-                buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
-            }
-
-            return buffer.ToArray();
         }
     }
 }

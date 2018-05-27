@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using MQTTnet.AspNetCore;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {
@@ -12,6 +13,7 @@ namespace MQTTnet.TestApp.AspNetCore2
 
         private static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .UseKestrel(o => o.ListenAnyIP(1883, l => l.UseMqtt()))
                 .UseStartup<Startup>()
                 .Build();
     }

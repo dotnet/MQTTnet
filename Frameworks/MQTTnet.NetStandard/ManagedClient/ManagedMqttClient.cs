@@ -66,6 +66,10 @@ namespace MQTTnet.ManagedClient
             {
                 _storageManager = new ManagedMqttClientStorageManager(_options.Storage);
                 await _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false);
+                foreach (var loadedMessage in _storageManager.ApplicationMessages)
+                {
+                    _messageQueue.Add(loadedMessage);
+                }
             }
 
             _connectionCancellationToken = new CancellationTokenSource();

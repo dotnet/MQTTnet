@@ -11,6 +11,8 @@ namespace MQTTnet.ManagedClient
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IManagedMqttClientStorage _storage;
 
+        public List<MqttApplicationMessage> ApplicationMessages => _applicationMessages;
+
         public ManagedMqttClientStorageManager(IManagedMqttClientStorage storage)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
@@ -19,10 +21,7 @@ namespace MQTTnet.ManagedClient
         public async Task LoadQueuedMessagesAsync()
         {
             var loadedMessages = await _storage.LoadQueuedMessagesAsync().ConfigureAwait(false);
-            foreach (var loadedMessage in loadedMessages)
-            {
-                _applicationMessages.Add(loadedMessage);
-            }
+            _applicationMessages.AddRange(loadedMessages);
         }
 
         public async Task AddAsync(MqttApplicationMessage applicationMessage)

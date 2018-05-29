@@ -12,9 +12,9 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void MqttPacketReader_EmptyStream()
         {
-            var header = MqttPacketReader.ReadHeaderAsync(new TestMqttChannel(new MemoryStream()), CancellationToken.None).GetAwaiter().GetResult();
+            var header = MqttPacketReader.ReadFixedHeaderAsync(new TestMqttChannel(new MemoryStream()), CancellationToken.None).GetAwaiter().GetResult();
 
-            Assert.IsNull(header);
+            Assert.AreEqual(-1, header);
         }
     }
 }

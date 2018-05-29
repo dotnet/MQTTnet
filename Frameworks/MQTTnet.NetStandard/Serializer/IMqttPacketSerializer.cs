@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using MQTTnet.Adapter;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Serializer
@@ -10,6 +10,6 @@ namespace MQTTnet.Serializer
 
         ArraySegment<byte> Serialize(MqttBasePacket mqttPacket);
 
-        MqttBasePacket Deserialize(MqttPacketHeader header, Stream body);
+        MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket);
     }
 }

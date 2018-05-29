@@ -73,6 +73,8 @@ namespace MQTTnet.Server
             try
             {
                 _adapter = adapter;
+                adapter.ReadingPacketStarted += OnAdapterReadingPacketStarted;
+                adapter.ReadingPacketCompleted += OnAdapterReadingPacketCompleted;
 
                 _cancellationTokenSource = new CancellationTokenSource();
                 _wasCleanDisconnect = false;
@@ -106,6 +108,12 @@ namespace MQTTnet.Server
             }
             finally
             {
+                if (_adapter != null)
+                {
+                    _adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
+                    _adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
+                }
+                
                 _adapter = null;
 
                 _cancellationTokenSource?.Dispose();
@@ -339,6 +347,16 @@ namespace MQTTnet.Server
         {
             var response = new MqttPubCompPacket { PacketIdentifier = pubRelPacket.PacketIdentifier };
             return adapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new[] { response }, cancellationToken);
+        }
+
+        private void OnAdapterReadingPacketCompleted(object sender, EventArgs e)
+        {
+            _keepAliveMonitor?.Pause();
+        }
+
+        private void OnAdapterReadingPacketStarted(object sender, EventArgs e)
+        {
+            _keepAliveMonitor?.Resume();
         }
     }
 }

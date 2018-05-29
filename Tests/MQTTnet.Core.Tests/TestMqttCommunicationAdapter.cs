@@ -19,6 +19,9 @@ namespace MQTTnet.Core.Tests
 
         public IMqttPacketSerializer PacketSerializer { get; } = new MqttPacketSerializer();
 
+        public event EventHandler ReadingPacketStarted;
+        public event EventHandler ReadingPacketCompleted;
+
         public void Dispose()
         {
         }

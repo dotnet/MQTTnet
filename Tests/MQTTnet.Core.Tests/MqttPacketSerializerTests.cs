@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Adapter;
 using MQTTnet.Core.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -416,11 +417,13 @@ namespace MQTTnet.Core.Tests
 
             using (var headerStream = new MemoryStream(Join(buffer1)))
             {
-                var header = MqttPacketReader.ReadHeaderAsync(new TestMqttChannel(headerStream), CancellationToken.None).GetAwaiter().GetResult();
+                var channel = new TestMqttChannel(headerStream);
+                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
+                var bodyLength = MqttPacketReader.ReadBodyLengthAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
 
-                using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.BodyLength))
+                using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, bodyLength))
                 {
-                    var deserializedPacket = serializer.Deserialize(header, bodyStream);
+                    var deserializedPacket = serializer.Deserialize(new ReceivedMqttPacket((byte)header, bodyStream));
                     var buffer2 = serializer.Serialize(deserializedPacket);
 
                     Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(buffer2)));

@@ -7,6 +7,7 @@ using BenchmarkDotNet.Attributes.Exporters;
 using System;
 using System.Threading;
 using System.IO;
+using MQTTnet.Adapter;
 using MQTTnet.Core.Internal;
 
 namespace MQTTnet.Benchmarks
@@ -48,11 +49,14 @@ namespace MQTTnet.Benchmarks
             {
                 using (var headerStream = new MemoryStream(Join(_serializedPacket)))
                 {
-                    var header = MqttPacketReader.ReadHeaderAsync(new TestMqttChannel(headerStream), CancellationToken.None).GetAwaiter().GetResult();
+                    var channel = new TestMqttChannel(headerStream);
 
-                    using (var bodyStream = new MemoryStream(Join(_serializedPacket), (int)headerStream.Position, header.BodyLength))
+                    var header = MqttPacketReader.ReadFixedHeaderAsync(new TestMqttChannel(headerStream), CancellationToken.None).GetAwaiter().GetResult();
+                    var bodyLength = MqttPacketReader.ReadBodyLengthAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
+
+                    using (var bodyStream = new MemoryStream(Join(_serializedPacket), (int)headerStream.Position, bodyLength))
                     {
-                        _serializer.Deserialize(header, bodyStream);
+                        _serializer.Deserialize(new ReceivedMqttPacket((byte)header, bodyStream));
                     }
                 }
             }

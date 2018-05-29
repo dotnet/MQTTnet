@@ -9,7 +9,7 @@ namespace MQTTnet.Adapter
         public ReceivedMqttPacket(MqttPacketHeader header, MemoryStream body)
         {
             Header = header ?? throw new ArgumentNullException(nameof(header));
-            Body = body ?? throw new ArgumentNullException(nameof(body));
+            Body = body;
         }
 
         public MqttPacketHeader Header { get; }

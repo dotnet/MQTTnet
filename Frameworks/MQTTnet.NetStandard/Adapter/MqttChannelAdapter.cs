@@ -137,7 +137,7 @@ namespace MQTTnet.Adapter
             
             if (header.BodyLength == 0)
             {
-                return new ReceivedMqttPacket(header, new MemoryStream(new byte[0], false));
+                return new ReceivedMqttPacket(header, null);
             }
 
             var body = new MemoryStream(header.BodyLength);

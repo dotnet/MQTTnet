@@ -1,7 +1,8 @@
 ﻿using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using MQTTnet.Core.Server;
+using System.Linq;
+using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {
@@ -14,8 +15,18 @@ namespace MQTTnet.AspNetCore
             {
                 if (context.Request.Path == path && context.WebSockets.IsWebSocketRequest)
                 {
+                    string subprotocol = null;
+
+                    if (context.Request.Headers.TryGetValue("Sec-WebSocket-Protocol", out var requestedSubProtocolValues)
+                     && requestedSubProtocolValues.Count > 0
+                     && requestedSubProtocolValues.Any(v => v.ToLower() == "mqtt")
+                     )
+                    {
+                        subprotocol = "mqtt";
+                    }
+
                     var adapter = app.ApplicationServices.GetRequiredService<MqttWebSocketServerAdapter>();
-                    using (var webSocket = await context.WebSockets.AcceptWebSocketAsync("mqtt"))
+                    using (var webSocket = await context.WebSockets.AcceptWebSocketAsync(subprotocol))
                     {
                         await adapter.AcceptWebSocketAsync(webSocket);
                     }

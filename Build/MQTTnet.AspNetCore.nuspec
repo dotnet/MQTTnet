@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>MQTTnet.AspNetCore</id>
-    <version>2.5.0</version>
+    <version>2.7.5</version>
     <authors>Christian Kratky</authors>
     <owners>Christian Kratky</owners>
     <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>
@@ -10,14 +10,13 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>This is a support library to integrate MQTTnet into AspNetCore.</description>
-    <releaseNotes>initial version
+    <releaseNotes>* Updated to MQTTnet 2.7.5.
     </releaseNotes>
-    <copyright>Copyright Christian Kratky 2016-2017</copyright>
-    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation</tags> 
+    <copyright>Copyright Christian Kratky 2016-2018</copyright>
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
-
       <group targetFramework="netstandard2.0">
-        <dependency id="MQTTnet" version="2.5" />
+        <dependency id="MQTTnet" version="2.7.5" />
       </group>
     </dependencies>
   </metadata>
@@ -25,6 +24,5 @@
   <files>
     <!-- .NET Standard 2.0 -->
     <file src="..\Frameworks\MQTTnet.AspNetCore\bin\Release\netstandard2.0\MQTTnet.AspNetCore.*" target="lib\netstandard2.0\"/>
-    
   </files>
 </package>

@@ -1,21 +1,27 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using Microsoft.Extensions.DependencyInjection;
-using MQTTnet.Core;
-using MQTTnet.Core.Client;
-using MQTTnet.Core.Diagnostics;
-using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
+using MQTTnet.Exceptions;
+using MQTTnet.Extensions.Rpc;
 using MQTTnet.Implementations;
+using MQTTnet.ManagedClient;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
+using MqttClientConnectedEventArgs = MQTTnet.Client.MqttClientConnectedEventArgs;
+using MqttClientDisconnectedEventArgs = MQTTnet.Client.MqttClientDisconnectedEventArgs;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
     public sealed partial class MainPage
     {
+        private readonly ConcurrentQueue<MqttNetLogMessage> _traceMessages = new ConcurrentQueue<MqttNetLogMessage>();
+
         private IMqttClient _mqttClient;
         private IMqttServer _mqttServer;
 
@@ -23,20 +29,43 @@ namespace MQTTnet.TestApp.UniversalWindows
         {
             InitializeComponent();
 
-            MqttNetTrace.TraceMessagePublished += OnTraceMessagePublished;
+            MqttNetGlobalLogger.LogMessagePublished += OnTraceMessagePublished;
         }
 
-        private async void OnTraceMessagePublished(object sender, MqttNetTraceMessagePublishedEventArgs e)
+        private async void OnTraceMessagePublished(object sender, MqttNetLogMessagePublishedEventArgs e)
         {
-            await Trace.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-            {
-                var text = $"[{e.TraceMessage.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{e.TraceMessage.Level}] [{e.TraceMessage.Source}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Message}]{Environment.NewLine}";
-                if (e.TraceMessage.Exception != null)
-                {
-                    text += $"{e.TraceMessage.Exception}{Environment.NewLine}";
-                }
+            _traceMessages.Enqueue(e.TraceMessage);
+            await UpdateLogAsync();
+        }
 
-                Trace.Text += text;
+        private async Task UpdateLogAsync()
+        {
+            while (_traceMessages.Count > 100)
+            {
+                _traceMessages.TryDequeue(out _);
+            }
+
+            var logText = new StringBuilder();
+            foreach (var traceMessage in _traceMessages)
+            {
+                logText.AppendFormat(
+                    "[{0:yyyy-MM-dd HH:mm:ss.fff}] [{1}] [{2}] [{3}] [{4}]{5}",
+                    traceMessage.Timestamp,
+                    traceMessage.Level,
+                    traceMessage.Source,
+                    traceMessage.ThreadId,
+                    traceMessage.Message,
+                    Environment.NewLine);
+
+                if (traceMessage.Exception != null)
+                {
+                    logText.AppendLine(traceMessage.Exception.ToString());
+                }
+            }
+
+            await Trace.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+            {
+                Trace.Text = logText.ToString();
             });
         }
 
@@ -57,6 +86,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 options.ChannelOptions = new MqttClientTcpOptions
                 {
                     Server = Server.Text,
+                    Port = int.Parse(Port.Text),
                     TlsOptions = tlsOptions
                 };
             }
@@ -81,21 +111,60 @@ namespace MQTTnet.TestApp.UniversalWindows
                 Password = Password.Text
             };
 
+            options.CleanSession = CleanSession.IsChecked == true;
+            options.KeepAlivePeriod = TimeSpan.FromSeconds(double.Parse(KeepAliveInterval.Text));
+            
             try
             {
                 if (_mqttClient != null)
                 {
                     await _mqttClient.DisconnectAsync();
+                    _mqttClient.ApplicationMessageReceived -= OnApplicationMessageReceived;
+                    _mqttClient.Connected -= OnConnected;
+                    _mqttClient.Disconnected -= OnDisconnected;
                 }
 
                 var factory = new MqttFactory();
                 _mqttClient = factory.CreateMqttClient();
+                _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
+                _mqttClient.Connected += OnConnected;
+                _mqttClient.Disconnected += OnDisconnected;
+
                 await _mqttClient.ConnectAsync(options);
             }
             catch (Exception exception)
             {
                 Trace.Text += exception + Environment.NewLine;
             }
+        }
+
+        private void OnDisconnected(object sender, MqttClientDisconnectedEventArgs e)
+        {
+            _traceMessages.Enqueue(new MqttNetLogMessage("", DateTime.Now, -1,
+                "", MqttNetLogLevel.Info, "! DISCONNECTED EVENT FIRED", null));
+
+            Task.Run(UpdateLogAsync);
+        }
+
+        private void OnConnected(object sender, MqttClientConnectedEventArgs e)
+        {
+            _traceMessages.Enqueue(new MqttNetLogMessage("", DateTime.Now, -1,
+                "", MqttNetLogLevel.Info, "! CONNECTED EVENT FIRED", null));
+
+            Task.Run(UpdateLogAsync);
+        }
+
+        private async void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs eventArgs)
+        {
+            var item = $"Timestamp: {DateTime.Now:O} | Topic: {eventArgs.ApplicationMessage.Topic} | Payload: {Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload)} | QoS: {eventArgs.ApplicationMessage.QualityOfServiceLevel}";
+
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+            {
+                if (AddReceivedMessagesToList.IsChecked == true)
+                {
+                    ReceivedMessages.Items.Add(item);
+                }
+            });
         }
 
         private async void Publish(object sender, RoutedEventArgs e)
@@ -156,8 +225,13 @@ namespace MQTTnet.TestApp.UniversalWindows
             }
         }
 
-        private void Clear(object sender, RoutedEventArgs e)
+        private void ClearLog(object sender, RoutedEventArgs e)
         {
+            while (_traceMessages.Count > 0)
+            {
+                _traceMessages.TryDequeue(out _);
+            }
+
             Trace.Text = string.Empty;
         }
 
@@ -208,27 +282,155 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         // This code is for the Wiki at GitHub!
         // ReSharper disable once UnusedMember.Local
+
+        private async void StartServer(object sender, RoutedEventArgs e)
+        {
+            if (_mqttServer != null)
+            {
+                return;
+            }
+
+            JsonServerStorage storage = null;
+            if (ServerPersistRetainedMessages.IsChecked == true)
+            {
+                storage = new JsonServerStorage();
+
+                if (ServerClearRetainedMessages.IsChecked == true)
+                {
+                    storage.Clear();
+                }
+            }
+
+            _mqttServer = new MqttFactory().CreateMqttServer();
+
+            var options = new MqttServerOptions();
+            options.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
+            options.Storage = storage;
+
+            await _mqttServer.StartAsync(options);
+        }
+
+        private async void StopServer(object sender, RoutedEventArgs e)
+        {
+            if (_mqttServer == null)
+            {
+                return;
+            }
+
+            await _mqttServer.StopAsync();
+            _mqttServer = null;
+        }
+
+        private void ClearReceivedMessages(object sender, RoutedEventArgs e)
+        {
+            ReceivedMessages.Items.Clear();
+        }
+
+        private async void ExecuteRpc(object sender, RoutedEventArgs e)
+        {
+            var qos = MqttQualityOfServiceLevel.AtMostOnce;
+            if (RpcQoS1.IsChecked == true)
+            {
+                qos = MqttQualityOfServiceLevel.AtLeastOnce;
+            }
+
+            if (RpcQoS2.IsChecked == true)
+            {
+                qos = MqttQualityOfServiceLevel.ExactlyOnce;
+            }
+
+            var payload = new byte[0];
+            if (RpcText.IsChecked == true)
+            {
+                payload = Encoding.UTF8.GetBytes(RpcPayload.Text);
+            }
+
+            if (RpcBase64.IsChecked == true)
+            {
+                payload = Convert.FromBase64String(RpcPayload.Text);
+            }
+
+            
+            try
+            {
+                var rpcClient = new MqttRpcClient(_mqttClient);
+                await rpcClient.EnableAsync();
+                var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), RpcMethod.Text, payload, qos);
+                await rpcClient.DisableAsync();
+
+                RpcResponses.Items.Add(RpcMethod.Text + " >>> " + Encoding.UTF8.GetString(response));
+            }
+            catch (MqttCommunicationTimedOutException)
+            {
+                RpcResponses.Items.Add(RpcMethod.Text + " >>> [TIMEOUT]");
+            }
+        }
+
+        private void ClearRpcResponses(object sender, RoutedEventArgs e)
+        {
+            RpcResponses.Items.Clear();
+        }
+
         private async Task WikiCode()
         {
             {
-                // Create a new MQTT client
-                var services = new ServiceCollection()
-                    .AddMqttClient()
-                    .BuildServiceProvider();
+                // Write all trace messages to the console window.
+                MqttNetGlobalLogger.LogMessagePublished += (s, e) =>
+                {
+                    Console.WriteLine($">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
+                    if (e.TraceMessage.Exception != null)
+                    {
+                        Console.WriteLine(e.TraceMessage.Exception);
+                    }
+                };
+            }
 
-                var factory = new MqttFactory(services);
-                var client = factory.CreateMqttClient();
+            {
+                // Use a custom identifier for the trace messages.
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .Build();
+            }
+
+            {
+                // Create a new MQTT client.
+                var factory = new MqttFactory();
+                var mqttClient = factory.CreateMqttClient();
 
                 {
-                    // Create TCP based options using the builder
+                    // Create TCP based options using the builder.
                     var options = new MqttClientOptionsBuilder()
                         .WithClientId("Client1")
                         .WithTcpServer("broker.hivemq.com")
                         .WithCredentials("bud", "%spencer%")
                         .WithTls()
+                        .WithCleanSession()
                         .Build();
 
-                    await client.ConnectAsync(options);
+                    await mqttClient.ConnectAsync(options);
+                }
+
+                {
+                    // Use TCP connection.
+                    var options = new MqttClientOptionsBuilder()
+                        .WithTcpServer("broker.hivemq.com", 1883) // Port is optional
+                        .Build();
+                }
+
+                {
+                    // Use secure TCP connection.
+                    var options = new MqttClientOptionsBuilder()
+                        .WithTcpServer("broker.hivemq.com")
+                        .WithTls()
+                        .Build();
+                }
+
+                {
+                    // Use WebSocket connection.
+                    var options = new MqttClientOptionsBuilder()
+                        .WithWebSocketServer("broker.hivemq.com:8000/mqtt")
+                        .Build();
+
+                    await mqttClient.ConnectAsync(options);
                 }
 
                 {
@@ -254,10 +456,10 @@ namespace MQTTnet.TestApp.UniversalWindows
 
                 {
                     // Subscribe to a topic
-                    await client.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
+                    await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
 
                     // Unsubscribe from a topic
-                    await client.UnsubscribeAsync("my/topic");
+                    await mqttClient.UnsubscribeAsync("my/topic");
 
                     // Publish an application message
                     var applicationMessage = new MqttApplicationMessageBuilder()
@@ -266,40 +468,40 @@ namespace MQTTnet.TestApp.UniversalWindows
                         .WithAtLeastOnceQoS()
                         .Build();
 
-                    await client.PublishAsync(applicationMessage);
+                    await mqttClient.PublishAsync(applicationMessage);
                 }
             }
 
             // ----------------------------------
             {
-                var services = new ServiceCollection()
-                    .AddMqttServer(options =>
+                var options = new MqttServerOptions();
+
+                options.ConnectionValidator = c =>
+                {
+                    if (c.ClientId.Length < 10)
                     {
-                        options.ConnectionValidator = c =>
-                        {
-                            if (c.ClientId.Length < 10)
-                            {
-                                return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
-                            }
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        return;
+                    }
 
-                            if (c.Username != "mySecretUser")
-                            {
-                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                            }
+                    if (c.Username != "mySecretUser")
+                    {
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        return;
+                    }
 
-                            if (c.Password != "mySecretPassword")
-                            {
-                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                            }
+                    if (c.Password != "mySecretPassword")
+                    {
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                        return;
+                    }
 
-                            return MqttConnectReturnCode.ConnectionAccepted;
-                        };
-                    })
-                    .BuildServiceProvider();
+                    c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
+                };
 
-                var factory = new MqttFactory(services);
+                var factory = new MqttFactory();
                 var mqttServer = factory.CreateMqttServer();
-                await mqttServer.StartAsync();
+                await mqttServer.StartAsync(options);
 
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
@@ -320,32 +522,89 @@ namespace MQTTnet.TestApp.UniversalWindows
                 return new ChainValidationResult[0];
             };
 
-        }
-
-        private async void StartServer(object sender, RoutedEventArgs e)
-        {
-            if (_mqttServer != null)
             {
-                return;
+                // Start a MQTT server.
+                var mqttServer = new MqttFactory().CreateMqttServer();
+                await mqttServer.StartAsync(new MqttServerOptions());
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadLine();
+                await mqttServer.StopAsync();
             }
 
-            _mqttServer = new MqttFactory().CreateMqttServer(o =>
             {
-                o.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
-            });
+                // Configure MQTT server.
+                var optionsBuilder = new MqttServerOptionsBuilder()
+                    .WithConnectionBacklog(100)
+                    .WithDefaultEndpointPort(1884);
 
-            await _mqttServer.StartAsync();
-        }
+                var options = new MqttServerOptions
+                {
+                };
 
-        private async void StopServer(object sender, RoutedEventArgs e)
-        {
-            if (_mqttServer == null)
-            {
-                return;
+                options.ConnectionValidator = c =>
+                {
+                    if (c.ClientId != "Highlander")
+                    {
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        return;
+                    }
+
+                    c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
+                };
+
+                var mqttServer = new MqttFactory().CreateMqttServer();
+                await mqttServer.StartAsync(optionsBuilder.Build());
             }
 
-            await _mqttServer.StopAsync();
-            _mqttServer = null;
+            {
+                // Setup client validator.
+                var options = new MqttServerOptions
+                {
+                    ConnectionValidator = c =>
+                    {
+                        if (c.ClientId.Length < 10)
+                        {
+                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                            return;
+                        }
+
+                        if (c.Username != "mySecretUser")
+                        {
+                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            return;
+                        }
+
+                        if (c.Password != "mySecretPassword")
+                        {
+                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            return;
+                        }
+
+                        c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
+                    }
+                };
+            }
+
+            {
+                // Create a new MQTT server.
+                var mqttServer = new MqttFactory().CreateMqttServer();
+            }
+
+            {
+                // Setup and start a managed MQTT client.
+                var options = new ManagedMqttClientOptionsBuilder()
+                    .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
+                    .WithClientOptions(new MqttClientOptionsBuilder()
+                        .WithClientId("Client1")
+                        .WithTcpServer("broker.hivemq.com")
+                        .WithTls().Build())
+                    .Build();
+
+                var mqttClient = new MqttFactory().CreateManagedMqttClient();
+                await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
+                await mqttClient.StartAsync(options);
+            }
+
         }
     }
 }

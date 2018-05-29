@@ -1,53 +1,66 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using MQTTnet.Core.Protocol;
-using MQTTnet.Core.Server;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
 
 namespace MQTTnet.TestApp.NetCore
 {
     public static class ServerTest
     {
-        public static Task RunAsync()
+        public static async Task RunAsync()
         {
             try
             {
-                var services = new ServiceCollection()
-                    .AddMqttServer()
-                    .AddLogging();
+                MqttNetConsoleLogger.ForwardToConsole();
 
-                services.Configure<MqttServerOptions>(options =>
+                var options = new MqttServerOptions
                 {
-                    options.ConnectionValidator = p =>
+                    ConnectionValidator = p =>
                     {
                         if (p.ClientId == "SpecialClient")
                         {
                             if (p.Username != "USER" || p.Password != "PASS")
                             {
-                                return MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                                p.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
                             }
                         }
+                    },
 
-                        return MqttConnectReturnCode.ConnectionAccepted;
-                    };
+                    Storage = new RetainedMessageHandler(),
 
-                    options.Storage = new RetainedMessageHandler();
-
-                    options.ApplicationMessageInterceptor = context =>
+                    ApplicationMessageInterceptor = context =>
                     {
                         if (MqttTopicFilterComparer.IsMatch(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#"))
                         {
                             // Replace the payload with the timestamp. But also extending a JSON 
                             // based payload with the timestamp is a suitable use case.
                             context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
-                        }                        
-                    };
-                });
+                        }
 
-                var serviceProvider = services.BuildServiceProvider();
-                serviceProvider.GetRequiredService<ILoggerFactory>().AddConsole();
+                        if (context.ApplicationMessage.Topic == "not_allowed_topic")
+                        {
+                            context.AcceptPublish = false;
+                            context.CloseConnection = true;
+                        }
+                    },
+                    SubscriptionInterceptor = context =>
+                    {
+                        if (context.TopicFilter.Topic.StartsWith("admin/foo/bar") && context.ClientId != "theAdmin")
+                        {
+                            context.AcceptSubscription = false;
+                        }
+
+                        if (context.TopicFilter.Topic.StartsWith("the/secret/stuff") && context.ClientId != "Imperator")
+                        {
+                            context.AcceptSubscription = false;
+                            context.CloseConnection = true;
+                        }
+                    }
+                };
+
+                // Extend the timestamp for all messages from clients.
+                // Protect several topics from being subscribed from every client.
 
                 //var certificate = new X509Certificate(@"C:\certs\test\test.cer", "");
                 //options.TlsEndpointOptions.Certificate = certificate.Export(X509ContentType.Cert);
@@ -55,18 +68,48 @@ namespace MQTTnet.TestApp.NetCore
                 //options.DefaultEndpointOptions.IsEnabled = true;
                 //options.TlsEndpointOptions.IsEnabled = false;
 
-                var mqttServer = new MqttFactory(serviceProvider).CreateMqttServer();
+                var mqttServer = new MqttFactory().CreateMqttServer();
+
+                mqttServer.ApplicationMessageReceived += (s, e) =>
+                {
+                    MqttNetConsoleLogger.PrintToConsole(
+                        $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0])}'",
+                        ConsoleColor.Magenta);
+                };
+
+                //options.ApplicationMessageInterceptor = c =>
+                //{
+                //    if (c.ApplicationMessage.Payload == null || c.ApplicationMessage.Payload.Length == 0)
+                //    {
+                //        return;
+                //    }
+
+                //    try
+                //    {
+                //        var content = JObject.Parse(Encoding.UTF8.GetString(c.ApplicationMessage.Payload));
+                //        var timestampProperty = content.Property("timestamp");
+                //        if (timestampProperty != null && timestampProperty.Value.Type == JTokenType.Null)
+                //        {
+                //            timestampProperty.Value = DateTime.Now.ToString("O");
+                //            c.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(content.ToString());
+                //        }
+                //    }
+                //    catch (Exception)
+                //    {
+                //    }
+                //};
+
                 mqttServer.ClientDisconnected += (s, e) =>
                 {
                     Console.Write("Client disconnected event fired.");
                 };
 
-                mqttServer.StartAsync();
+                await mqttServer.StartAsync(options);
 
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
 
-                mqttServer.StopAsync();
+                await mqttServer.StopAsync();
             }
             catch (Exception e)
             {
@@ -74,7 +117,6 @@ namespace MQTTnet.TestApp.NetCore
             }
 
             Console.ReadLine();
-            return Task.FromResult(0);
         }
     }
 }

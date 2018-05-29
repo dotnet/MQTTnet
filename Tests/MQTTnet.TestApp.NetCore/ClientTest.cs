@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using MQTTnet.Core;
-using MQTTnet.Core.Client;
+using MQTTnet.Client;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -19,17 +18,17 @@ namespace MQTTnet.TestApp.NetCore
                     CleanSession = true,
                     ChannelOptions = new MqttClientTcpOptions
                     {
-                        Server = "localhost"
+                        //Server = "localhost",
+                        Server = "192.168.1.174"
                     },
-                    ////ChannelOptions = new MqttClientWebSocketOptions
-                    ////{
-                    ////    Uri = "localhost"
-                    ////}
+                    //ChannelOptions = new MqttClientWebSocketOptions
+                    //{
+                    //    Uri = "ws://localhost:59690/mqtt"
+                    //}
                 };
 
                 var factory = new MqttFactory();
-                factory.GetLoggerFactory().AddConsole();
-
+                
                 var client = factory.CreateMqttClient();
 
                 client.ApplicationMessageReceived += (s, e) =>
@@ -80,6 +79,8 @@ namespace MQTTnet.TestApp.NetCore
                 while (true)
                 {
                     Console.ReadLine();
+
+                    await client.SubscribeAsync(new TopicFilter("test", MqttQualityOfServiceLevel.AtMostOnce));
 
                     var applicationMessage = new MqttApplicationMessageBuilder()
                         .WithTopic("A/B/C")

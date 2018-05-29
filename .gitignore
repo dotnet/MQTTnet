@@ -197,6 +197,7 @@ ClientBin/
 *.dbmdl
 *.dbproj.schemaview
 *.jfm
+# *.pfx
 *.publishsettings
 orleans.codegen.cs
 
@@ -290,3 +291,5 @@ __pycache__/
 Build/nuget.exe
 *.js
 *.map
+
+/Tests/MQTTnet.TestApp.NetCore/RetainedMessages.json

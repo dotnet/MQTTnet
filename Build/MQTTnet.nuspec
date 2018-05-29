@@ -12,6 +12,7 @@
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
     <releaseNotes> * [Core] Performance optimizations.
 * [Core] Due to performance reasons the timestamp of log messages is now in UTC format.
+* [Core] Added several packet validations.
 * [Client] Received messages are now processed in the worker thread by default. Added a new setting for switching back to dedicated threads.
 * [ManagedClient] Fixed a loading issue of stored application messages (thanks to @JTrotta).
 * [Server] Added support for other WebSocket sub protocol formats like mqttv-3.1.1 (thanks to @israellot).

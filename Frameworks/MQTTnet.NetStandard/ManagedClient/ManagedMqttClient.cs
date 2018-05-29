@@ -68,10 +68,11 @@ namespace MQTTnet.ManagedClient
             if (_options.Storage != null)
             {
                 _storageManager = new ManagedMqttClientStorageManager(_options.Storage);
-                await _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false);
-                foreach (var loadedMessage in _storageManager.ApplicationMessages)
+                var messages = await _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false);
+
+                foreach (var message in messages)
                 {
-                    _messageQueue.Add(loadedMessage);
+                    _messageQueue.Add(message);
                 }
             }
 

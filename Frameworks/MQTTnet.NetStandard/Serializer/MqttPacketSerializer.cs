@@ -345,12 +345,12 @@ namespace MQTTnet.Serializer
             if (ProtocolVersion == MqttProtocolVersion.V311)
             {
                 stream.WriteWithLengthPrefix("MQTT");
-                stream.WriteByte(0x04); // 3.1.2.2 Protocol Level 4
+                stream.WriteByte(4); // 3.1.2.2 Protocol Level 4
             }
             else
             {
                 stream.WriteWithLengthPrefix("MQIsdp");
-                stream.WriteByte(0x03); // Protocol Level 3
+                stream.WriteByte(3); // Protocol Level 3
             }
 
             var connectFlags = new ByteWriter(); // 3.1.2.3 Connect Flags
@@ -410,6 +410,7 @@ namespace MQTTnet.Serializer
             {
                 var connectAcknowledgeFlags = new ByteWriter();
                 connectAcknowledgeFlags.Write(packet.IsSessionPresent);
+
                 stream.Write(connectAcknowledgeFlags);
             }
             else

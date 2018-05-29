@@ -1,18 +1,17 @@
 ﻿using System;
 using System.IO;
-using MQTTnet.Packets;
 
 namespace MQTTnet.Adapter
 {
     public sealed class ReceivedMqttPacket : IDisposable
     {
-        public ReceivedMqttPacket(MqttPacketHeader header, MemoryStream body)
+        public ReceivedMqttPacket(byte fixedHeader, MemoryStream body)
         {
-            Header = header ?? throw new ArgumentNullException(nameof(header));
+            FixedHeader = fixedHeader;
             Body = body;
         }
 
-        public MqttPacketHeader Header { get; }
+        public byte FixedHeader { get; }
 
         public MemoryStream Body { get; }
 

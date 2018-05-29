@@ -16,6 +16,7 @@ namespace MQTTnet.Server
         private readonly string _clientId;
         private readonly Action _callback;
 
+        private bool _isPaused;
         private Task _workerTask;
 
         public MqttClientKeepAliveMonitor(string clientId, Action callback, IMqttNetChildLogger logger)
@@ -41,10 +42,25 @@ namespace MQTTnet.Server
             _workerTask = Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken);
         }
 
-        ////public void WaitForCompletion()
-        ////{
-        ////    SpinWait.SpinUntil(() => _workerTask == null || _workerTask.IsCanceled || _workerTask.IsCompleted || _workerTask.IsFaulted);
-        ////}
+        public void Pause()
+        {
+            _isPaused = true;
+        }
+
+        public void Resume()
+        {
+            _isPaused = false;
+        }
+
+        public void PacketReceived(MqttBasePacket packet)
+        {
+            _lastPacketReceivedTracker.Restart();
+
+            if (!(packet is MqttPingReqPacket))
+            {
+                _lastNonKeepAlivePacketReceivedTracker.Restart();
+            }
+        }
 
         private async Task RunAsync(int keepAlivePeriod, CancellationToken cancellationToken)
         {
@@ -56,7 +72,7 @@ namespace MQTTnet.Server
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     // Values described here: [MQTT-3.1.2-24].
-                    if (_lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod * 1.5D)
+                    if (!_isPaused && _lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod * 1.5D)
                     {
                         _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
                         _callback();
@@ -77,16 +93,6 @@ namespace MQTTnet.Server
             finally
             {
                 _logger.Verbose("Client {0}: Stopped checking keep alive timeout.", _clientId);
-            }
-        }
-
-        public void PacketReceived(MqttBasePacket packet)
-        {
-            _lastPacketReceivedTracker.Restart();
-
-            if (!(packet is MqttPingReqPacket))
-            {
-                _lastNonKeepAlivePacketReceivedTracker.Restart();
             }
         }
     }

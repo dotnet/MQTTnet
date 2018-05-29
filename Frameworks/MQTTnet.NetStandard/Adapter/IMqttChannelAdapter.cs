@@ -12,7 +12,11 @@ namespace MQTTnet.Adapter
         string Endpoint { get; }
 
         IMqttPacketSerializer PacketSerializer { get; }
-        
+
+        event EventHandler ReadingPacketStarted;
+
+        event EventHandler ReadingPacketCompleted;
+
         Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken);
 
         Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken);

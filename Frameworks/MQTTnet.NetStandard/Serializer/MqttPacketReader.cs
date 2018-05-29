@@ -5,14 +5,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Exceptions;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Serializer
 {
     public static class MqttPacketReader
     {
-        public static async Task<MqttPacketHeader> ReadHeaderAsync(IMqttChannel channel, CancellationToken cancellationToken)
+        public static async Task<byte?> ReadFixedHeaderAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -29,22 +27,7 @@ namespace MQTTnet.Serializer
                 return null;
             }
 
-            var fixedHeader = buffer[0];
-            var controlPacketType = fixedHeader >> 4;
-
-            if (controlPacketType < 1 || controlPacketType > 14)
-            {
-                throw new MqttProtocolViolationException($"The packet type is invalid ({controlPacketType}).");
-            }
-
-            var bodyLength = await ReadBodyLengthAsync(channel, cancellationToken).ConfigureAwait(false);
-
-            return new MqttPacketHeader
-            {
-                FixedHeader = fixedHeader,
-                ControlPacketType = (MqttControlPacketType)controlPacketType,
-                BodyLength = bodyLength
-            };
+            return buffer[0];
         }
 
         public static ushort ReadUInt16(this Stream stream)
@@ -80,9 +63,9 @@ namespace MQTTnet.Serializer
             return stream.ReadBytes(length);
         }
 
-        public static byte[] ReadRemainingData(this Stream stream, MqttPacketHeader header)
+        public static byte[] ReadRemainingData(this Stream stream)
         {
-            return stream.ReadBytes(header.BodyLength - (int)stream.Position);
+            return stream.ReadBytes((int)(stream.Length - stream.Position));
         }
 
         public static byte[] ReadBytes(this Stream stream, int count)
@@ -92,7 +75,7 @@ namespace MQTTnet.Serializer
             return buffer;
         }
 
-        private static async Task<int> ReadBodyLengthAsync(IMqttChannel stream, CancellationToken cancellationToken)
+        public static async Task<int> ReadBodyLengthAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
             var multiplier = 1;
@@ -107,7 +90,7 @@ namespace MQTTnet.Serializer
                     throw new TaskCanceledException();
                 }
 
-                var readCount = await stream.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+                var readCount = await channel.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
                 if (readCount <= 0)
                 {
                     throw new MqttCommunicationException("Connection closed while reading remaining length data.");

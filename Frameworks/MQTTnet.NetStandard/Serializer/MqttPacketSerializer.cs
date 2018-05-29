@@ -205,11 +205,7 @@ namespace MQTTnet.Serializer
             }
             else
             {
-                var buffer = new byte[6];
-                Array.Copy(protocolName, buffer, 4);
-                protocolName = stream.ReadBytes(2);
-                Array.Copy(protocolName, 0, buffer, 4, 2);
-
+                protocolName = protocolName.Concat(stream.ReadBytes(2)).ToArray();
                 if (protocolName.SequenceEqual(ProtocolVersionV310Name))
                 {
                     protocolVersion = MqttProtocolVersion.V310;

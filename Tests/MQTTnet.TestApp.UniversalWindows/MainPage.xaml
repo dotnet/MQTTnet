@@ -9,25 +9,29 @@
     mc:Ignorable="d">
 
     <Grid Margin="10">
-
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Pivot Grid.Row="0" >
+        <Pivot Grid.Row="0">
             <PivotItem Header="Connection">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                     <TextBlock>Server:</TextBlock>
                     <TextBox x:Name="Server"></TextBox>
+                    <TextBlock>Port:</TextBlock>
+                    <TextBox x:Name="Port" Text="1883"></TextBox>
                     <TextBlock>User:</TextBlock>
                     <TextBox x:Name="User"></TextBox>
                     <TextBlock>Password:</TextBlock>
                     <TextBox x:Name="Password"></TextBox>
                     <TextBlock>ClientId:</TextBlock>
                     <TextBox x:Name="ClientId"></TextBox>
-
+                    <TextBlock>Clean session:</TextBlock>
+                    <CheckBox x:Name="CleanSession" IsChecked="True"></CheckBox>
+                    <TextBlock>Keep alive interval:</TextBlock>
+                    <TextBox x:Name="KeepAliveInterval" Text="5"></TextBox>
+                    
                     <StackPanel Orientation="Horizontal">
                         <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="connection">TCP</RadioButton>
                         <RadioButton x:Name="UseWs" GroupName="connection">WS</RadioButton>
@@ -65,6 +69,40 @@
                     <Button Click="Publish" Width="120">Publish</Button>
                 </StackPanel>
             </PivotItem>
+            <PivotItem Header="Execute RPC">
+                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <TextBlock>Method:</TextBlock>
+                    <TextBox x:Name="RpcMethod"></TextBox>
+
+                    <TextBlock>Payload:</TextBlock>
+                    <TextBox x:Name="RpcPayload"></TextBox>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="RpcText" IsChecked="True" GroupName="payload">Text</RadioButton>
+                        <RadioButton x:Name="RpcBase64" GroupName="payload">Base64</RadioButton>
+                    </StackPanel>
+
+                    <TextBlock>QoS:</TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Margin="0,0,10,0" x:Name="RpcQoS0" GroupName="qos" IsChecked="True">0 (At most once)</RadioButton>
+                        <RadioButton Margin="0,0,10,0" x:Name="RpcQoS1" GroupName="qos">1 (At least once)</RadioButton>
+                        <RadioButton Margin="0,0,10,0" x:Name="RpcQoS2" GroupName="qos">2 (Exactly once)</RadioButton>
+                    </StackPanel>
+
+                    <TextBlock>Responses:</TextBlock>
+                    <ListBox MinHeight="50" MaxHeight="250" x:Name="RpcResponses" Margin="0,0,0,10">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <ContentPresenter Content="{Binding}" FontFamily="Consolas" FontSize="12"></ContentPresenter>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Click="ExecuteRpc" Width="120" Margin="0,0,10,0">Execute</Button>
+                        <Button Click="ClearRpcResponses" Width="200">Clear responses</Button>
+                    </StackPanel>
+                </StackPanel>
+            </PivotItem>
             <PivotItem Header="Subscribe">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                     <TextBlock>Topic:</TextBlock>
@@ -77,9 +115,20 @@
                         <RadioButton Margin="0,0,10,0" x:Name="SubscribeQoS2" GroupName="sqos">2 (Exactly once)</RadioButton>
                     </StackPanel>
 
+                    <TextBlock>Received messages:</TextBlock>
+                    <CheckBox x:Name="AddReceivedMessagesToList" IsChecked="True">Add received messages to list</CheckBox>
+                    <ListBox MinHeight="50" MaxHeight="250" x:Name="ReceivedMessages" Margin="0,0,0,10">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <ContentPresenter Content="{Binding}" FontFamily="Consolas" FontSize="12"></ContentPresenter>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
                     <StackPanel Orientation="Horizontal">
                         <Button Click="Subscribe" Width="120" Margin="0,0,10,0">Subscribe</Button>
-                        <Button Click="Unsubscribe" Width="120">Unsubscribe</Button>
+                        <Button Click="Unsubscribe" Width="120" Margin="0,0,10,0">Unsubscribe</Button>
+                        <Button Click="ClearReceivedMessages" Width="200">Clear received messages</Button>
                     </StackPanel>
                 </StackPanel>
             </PivotItem>
@@ -88,21 +137,25 @@
                     <TextBlock>Port:</TextBlock>
                     <TextBox x:Name="ServerPort" Text="1883"></TextBox>
 
+                    <CheckBox x:Name="ServerPersistRetainedMessages" IsChecked="True">Persist retained messages in JSON format</CheckBox>
+                    <CheckBox x:Name="ServerClearRetainedMessages">Clear previously retained messages on startup</CheckBox>
+
                     <StackPanel Orientation="Horizontal">
                         <Button Width="120" Margin="0,0,10,0" Click="StartServer">Start</Button>
                         <Button Width="120" Margin="0,0,10,0" Click="StopServer">Stop</Button>
                     </StackPanel>
                 </StackPanel>
             </PivotItem>
+            <PivotItem Header="Log">
+                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <Button Click="ClearLog" Width="120">Clear</Button>
+                </StackPanel>
+            </PivotItem>
         </Pivot>
 
-        <ScrollViewer Margin="12,10,12,0" Grid.Row="1" Background="Black" Foreground="WhiteSmoke" FontFamily="Consolas" HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+        <ScrollViewer Grid.Row="1"  Margin="12,10,12,0"  Background="Black" Foreground="WhiteSmoke" FontFamily="Consolas" HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
             <TextBlock x:Name="Trace" FontSize="11"></TextBlock>
         </ScrollViewer>
-
-        <StackPanel Margin="12,0,12,10" Grid.Row="2">
-            <Button Click="Clear" Width="120">Clear</Button>
-        </StackPanel>
     </Grid>
 
 </Page>

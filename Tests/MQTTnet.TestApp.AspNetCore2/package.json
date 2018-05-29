@@ -6,7 +6,7 @@
   },
 
   "dependencies": {
-    "mqtt": "2.13.1",
+    "mqtt": "2.15.1",
     "@types/node": "8.0.46",
     "systemjs": "0.20.19",
     "typescript": "2.3.4"

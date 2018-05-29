@@ -3,19 +3,23 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Core.Adapter;
-using MQTTnet.Core.Packets;
-using MQTTnet.Core.Serializer;
+using MQTTnet.Adapter;
+using MQTTnet.Packets;
+using MQTTnet.Serializer;
 
 namespace MQTTnet.Core.Tests
 {
-    public class TestMqttCommunicationAdapter : IMqttCommunicationAdapter
+    public class TestMqttCommunicationAdapter : IMqttChannelAdapter
     {
         private readonly BlockingCollection<MqttBasePacket> _incomingPackets = new BlockingCollection<MqttBasePacket>();
 
         public TestMqttCommunicationAdapter Partner { get; set; }
 
         public IMqttPacketSerializer PacketSerializer { get; } = new MqttPacketSerializer();
+
+        public void Dispose()
+        {
+        }
 
         public Task ConnectAsync(TimeSpan timeout)
         {
@@ -33,7 +37,7 @@ namespace MQTTnet.Core.Tests
 
             foreach (var packet in packets)
             {
-                Partner.SendPacketInternal(packet);
+                Partner.EnqueuePacketInternal(packet);
             }
 
             return Task.FromResult(0);
@@ -43,10 +47,20 @@ namespace MQTTnet.Core.Tests
         {
             ThrowIfPartnerIsNull();
 
-            return Task.Run(() => _incomingPackets.Take(), cancellationToken);
+            return Task.Run(() =>
+            {
+                try
+                {
+                    return _incomingPackets.Take(cancellationToken);
+                }
+                catch
+                {
+                    return null;
+                }
+            }, cancellationToken);
         }
 
-        private void SendPacketInternal(MqttBasePacket packet)
+        private void EnqueuePacketInternal(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 

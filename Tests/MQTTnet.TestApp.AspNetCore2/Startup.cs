@@ -5,35 +5,51 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Logging;
+using MQTTnet;
 using MQTTnet.AspNetCore;
-using MQTTnet.Core;
-using MQTTnet.Core.Client;
+using MQTTnet.Server;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {
     public class Startup
     {
+        // In class _Startup_ of the ASP.NET Core 2.0 project.
+
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHostedMqttServer();
+            var mqttServerOptions = new MqttServerOptionsBuilder().Build();
+            services.AddHostedMqttServer(mqttServerOptions);
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        // In class _Startup_ of the ASP.NET Core 2.0 project.
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseMqttEndpoint();
-            app.UseMqttServer(async server =>
+            app.UseMqttServer(server =>
             {
-                var msg = new MqttApplicationMessageBuilder()
-                    .WithPayload("Mqtt is awesome")
-                    .WithTopic("message");
-
-                while (true)
+                server.Started += async (sender, args) =>
                 {
-                    server.PublishAsync(msg.Build()).Wait();
-                    await Task.Delay(TimeSpan.FromSeconds(2));
-                    msg.WithPayload("Mqtt is still awesome at " + DateTime.Now);
-                }
+                    var msg = new MqttApplicationMessageBuilder()
+                        .WithPayload("Mqtt is awesome")
+                        .WithTopic("message");
+
+                    while (true)
+                    {
+                        try
+                        {
+                            await server.PublishAsync(msg.Build());
+                            msg.WithPayload("Mqtt is still awesome at " + DateTime.Now);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                        finally
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(2));
+                        }
+                    }
+                };
             });
 
             app.Use((context, next) =>
@@ -49,11 +65,11 @@ namespace MQTTnet.TestApp.AspNetCore2
             app.UseStaticFiles();
 
 
-            app.UseStaticFiles( new StaticFileOptions()
+            app.UseStaticFiles(new StaticFileOptions
             {
                 RequestPath = "/node_modules",
-                FileProvider = new PhysicalFileProvider( Path.Combine(env.ContentRootPath, "node_modules" ) )
-            } );
+                FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "node_modules"))
+            });
         }
     }
 }

@@ -5,7 +5,7 @@ using MQTTnet.Client;
 
 namespace MQTTnet.ManagedClient
 {
-    public interface IManagedMqttClient : IApplicationMessageReceiver, IApplicationMessagePublisher, IDisposable
+    public interface IManagedMqttClient : IApplicationMessageReceiver, IApplicationMessagePublisherId, IDisposable
     {
         bool IsStarted { get; }
         bool IsConnected { get; }

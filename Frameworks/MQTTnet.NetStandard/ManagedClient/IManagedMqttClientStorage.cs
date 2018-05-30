@@ -5,8 +5,8 @@ namespace MQTTnet.ManagedClient
 {
     public interface IManagedMqttClientStorage
     {
-        Task SaveQueuedMessagesAsync(IList<MqttApplicationMessage> messages);
+        Task SaveQueuedMessagesAsync(IList<MqttApplicationMessageId> messages);
 
-        Task<IList<MqttApplicationMessage>> LoadQueuedMessagesAsync();
+        Task<IList<MqttApplicationMessageId>> LoadQueuedMessagesAsync();
     }
 }

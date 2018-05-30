@@ -14,7 +14,7 @@ namespace MQTTnet.ManagedClient
 {
     public class ManagedMqttClient : IManagedMqttClient
     {
-        private readonly BlockingCollection<MqttApplicationMessage> _messageQueue = new BlockingCollection<MqttApplicationMessage>();
+        private readonly BlockingCollection<MqttApplicationMessageId> _messageQueue = new BlockingCollection<MqttApplicationMessageId>();
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly AsyncLock _subscriptionsLock = new AsyncLock();
         private readonly List<string> _unsubscriptions = new List<string>();
@@ -99,7 +99,7 @@ namespace MQTTnet.ManagedClient
             return Task.FromResult(0);
         }
 
-        public async Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        public async Task PublishAsync(IEnumerable<MqttApplicationMessageId> applicationMessages)
         {
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
@@ -244,7 +244,7 @@ namespace MQTTnet.ManagedClient
             }
         }
 
-        private async Task TryPublishQueuedMessageAsync(MqttApplicationMessage message)
+        private async Task TryPublishQueuedMessageAsync(MqttApplicationMessageId message)
         {
             Exception transmitException = null;
             try

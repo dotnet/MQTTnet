@@ -3,7 +3,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet
 {
-    public sealed class MqttApplicationMessage
+    public class MqttApplicationMessage
     {
         public MqttApplicationMessage()
         {

@@ -115,5 +115,22 @@ namespace MQTTnet
                 Retain = _retain
             };
         }
+        public MqttApplicationMessageId BuildId()
+        {
+            if (string.IsNullOrEmpty(_topic))
+            {
+                throw new MqttProtocolViolationException("Topic is not set.");
+            }
+
+            return new MqttApplicationMessageId
+            {
+                Id = System.Guid.NewGuid(),
+                Topic = _topic,
+                Payload = _payload ?? new byte[0],
+                QualityOfServiceLevel = _qualityOfServiceLevel,
+                Retain = _retain,                
+            };
+        }
+
     }
 }

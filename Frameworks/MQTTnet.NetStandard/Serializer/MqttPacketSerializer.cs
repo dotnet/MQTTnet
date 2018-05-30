@@ -8,7 +8,7 @@ using MQTTnet.Adapter;
 
 namespace MQTTnet.Serializer
 {
-    public sealed class MqttPacketSerializer : IMqttPacketSerializer
+    public class MqttPacketSerializer : IMqttPacketSerializer
     {
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 

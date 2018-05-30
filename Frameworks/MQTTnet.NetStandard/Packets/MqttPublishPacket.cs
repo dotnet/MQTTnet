@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttPublishPacket : MqttBasePublishPacket
+    public class MqttPublishPacket : MqttBasePublishPacket
     {
         public bool Retain { get; set; }
 

@@ -11,7 +11,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientPendingMessagesQueue : IDisposable
+    public class MqttClientPendingMessagesQueue : IDisposable
     {
         private readonly AsyncAutoResetEvent _queueAutoResetEvent = new AsyncAutoResetEvent();
         private readonly IMqttServerOptions _options;

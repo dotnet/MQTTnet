@@ -14,7 +14,7 @@ using MQTTnet.Client;
 
 namespace MQTTnet.Implementations
 {
-    public sealed class MqttTcpChannel : IMqttChannel
+    public class MqttTcpChannel : IMqttChannel
     {
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global

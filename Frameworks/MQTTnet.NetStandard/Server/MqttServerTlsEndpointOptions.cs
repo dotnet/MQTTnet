@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttServerTlsEndpointOptions
+    public class MqttServerTlsEndpointOptions
     {
         public bool IsEnabled { get; set; }
 

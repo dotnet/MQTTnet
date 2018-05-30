@@ -2,7 +2,7 @@
 
 namespace MQTTnet
 {
-    public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
+    public class MqttApplicationMessageReceivedEventArgs : EventArgs
     {
         public MqttApplicationMessageReceivedEventArgs(string clientId, MqttApplicationMessage applicationMessage)
         {

@@ -3,7 +3,7 @@ using System.IO;
 
 namespace MQTTnet.Adapter
 {
-    public sealed class ReceivedMqttPacket : IDisposable
+    public class ReceivedMqttPacket : IDisposable
     {
         public ReceivedMqttPacket(byte fixedHeader, MemoryStream body)
         {

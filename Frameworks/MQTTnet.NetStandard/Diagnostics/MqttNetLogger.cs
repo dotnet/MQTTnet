@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Diagnostics
 {
-    public sealed class MqttNetLogger : IMqttNetLogger
+    public class MqttNetLogger : IMqttNetLogger
     {
         private readonly string _logId;
 

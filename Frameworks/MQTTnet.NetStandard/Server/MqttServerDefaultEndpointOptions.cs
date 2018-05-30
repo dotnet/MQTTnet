@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttServerDefaultEndpointOptions
+    public class MqttServerDefaultEndpointOptions
     {
         public bool IsEnabled { get; set; } = true;
 

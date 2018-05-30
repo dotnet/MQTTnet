@@ -7,7 +7,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientKeepAliveMonitor
+    public class MqttClientKeepAliveMonitor
     {
         private readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
         private readonly Stopwatch _lastNonKeepAlivePacketReceivedTracker = new Stopwatch();

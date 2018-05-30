@@ -7,7 +7,7 @@ using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttRetainedMessagesManager
+    public class MqttRetainedMessagesManager
     {
         private readonly ConcurrentDictionary<string, MqttApplicationMessage> _messages = new ConcurrentDictionary<string, MqttApplicationMessage>();
         private readonly IMqttNetChildLogger _logger;

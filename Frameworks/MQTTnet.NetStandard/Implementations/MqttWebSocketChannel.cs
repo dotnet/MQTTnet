@@ -8,7 +8,7 @@ using MQTTnet.Client;
 
 namespace MQTTnet.Implementations
 {
-    public sealed class MqttWebSocketChannel : IMqttChannel
+    public class MqttWebSocketChannel : IMqttChannel
     {
         private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private readonly MqttClientWebSocketOptions _options;

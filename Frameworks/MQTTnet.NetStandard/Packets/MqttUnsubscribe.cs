@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttUnsubscribePacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public class MqttUnsubscribePacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
         public ushort? PacketIdentifier { get; set; }
 

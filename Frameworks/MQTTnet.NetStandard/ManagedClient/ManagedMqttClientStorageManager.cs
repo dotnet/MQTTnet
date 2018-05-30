@@ -2,65 +2,57 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Internal;
 
 namespace MQTTnet.ManagedClient
 {
     public class ManagedMqttClientStorageManager
     {
-        private readonly List<MqttApplicationMessage> _applicationMessages = new List<MqttApplicationMessage>();
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private readonly IManagedMqttClientStorage _storage;
+        private readonly List<MqttApplicationMessage> _messages = new List<MqttApplicationMessage>();
+        private readonly AsyncLock _messagesLock = new AsyncLock();
 
-        public List<MqttApplicationMessage> ApplicationMessages => _applicationMessages;
+        private readonly IManagedMqttClientStorage _storage;
 
         public ManagedMqttClientStorageManager(IManagedMqttClientStorage storage)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
 
-        public async Task LoadQueuedMessagesAsync()
+        public async Task<List<MqttApplicationMessage>> LoadQueuedMessagesAsync()
         {
             var loadedMessages = await _storage.LoadQueuedMessagesAsync().ConfigureAwait(false);
-            _applicationMessages.AddRange(loadedMessages);
+            _messages.AddRange(loadedMessages);
+
+            return _messages;
         }
 
         public async Task AddAsync(MqttApplicationMessage applicationMessage)
         {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
-            try
+            using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
-                _applicationMessages.Add(applicationMessage);
+                _messages.Add(applicationMessage);
                 await SaveAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                _semaphore.Release();
             }
         }
 
         public async Task RemoveAsync(MqttApplicationMessage applicationMessage)
         {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
-            try
+            using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
-                var index = _applicationMessages.IndexOf(applicationMessage);
+                var index = _messages.IndexOf(applicationMessage);
                 if (index == -1)
                 {
                     return;
                 }
 
-                _applicationMessages.RemoveAt(index);
+                _messages.RemoveAt(index);
                 await SaveAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                _semaphore.Release();
             }
         }
 
         private Task SaveAsync()
         {
-            return _storage.SaveQueuedMessagesAsync(_applicationMessages);
+            return _storage.SaveQueuedMessagesAsync(_messages);
         }
     }
 }

@@ -3,12 +3,13 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
+using MQTTnet.Implementations;
 using MQTTnet.Serializer;
 using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {
-    public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter, IDisposable
+    public class MqttWebSocketServerAdapter : IMqttServerAdapter
     {
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
@@ -22,21 +23,24 @@ namespace MQTTnet.AspNetCore
             return Task.CompletedTask;
         }
 
-        public Task AcceptWebSocketAsync(WebSocket webSocket)
+        public async Task RunWebSocketConnectionAsync(WebSocket webSocket, string endpoint)
         {
             if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
 
-            var channel = new MqttWebSocketServerChannel(webSocket);
-            var clientAdapter = new MqttChannelAdapter(channel, new MqttPacketSerializer(), new MqttNetLogger());
+            var clientAdapter = new MqttChannelAdapter(new MqttWebSocketChannel(webSocket, endpoint), new MqttPacketSerializer(), new MqttNetLogger().CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
             ClientAccepted?.Invoke(this, eventArgs);
-            return eventArgs.SessionTask;
+
+            if (eventArgs.SessionTask != null)
+            {
+                await eventArgs.SessionTask.ConfigureAwait(false);
+            }
         }
         
         public void Dispose()
         {
-            StopAsync();
+            StopAsync().GetAwaiter().GetResult();
         }
     }
 }

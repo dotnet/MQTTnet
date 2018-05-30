@@ -5,13 +5,8 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Serializer
 {
-    public sealed class MqttPacketWriter : BinaryWriter
+    public static class MqttPacketWriter
     {
-        public MqttPacketWriter(Stream stream)
-            : base(stream, Encoding.UTF8, true)
-        {
-        }
-
         public static byte BuildFixedHeader(MqttControlPacketType packetType, byte flags = 0)
         {
             var fixedHeader = (int)packetType << 4;
@@ -19,49 +14,46 @@ namespace MQTTnet.Serializer
             return (byte)fixedHeader;
         }
 
-        public override void Write(ushort value)
+        public static void Write(this Stream stream, ushort value)
         {
             var buffer = BitConverter.GetBytes(value);
-            Write(buffer[1], buffer[0]);
+            stream.WriteByte(buffer[1]);
+            stream.WriteByte(buffer[0]);
         }
 
-        public new void Write(params byte[] values)
-        {
-            base.Write(values);
-        }
-
-        public new void Write(byte value)
-        {
-            base.Write(value);
-        }
-
-        public void Write(ByteWriter value)
+        public static void Write(this Stream stream, ByteWriter value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            Write(value.Value);
+            stream.WriteByte(value.Value);
         }
 
-        public void WriteWithLengthPrefix(string value)
+        public static void WriteWithLengthPrefix(this Stream stream, string value)
         {
-            WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value ?? string.Empty));
+            stream.WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value ?? string.Empty));
         }
 
-        public void WriteWithLengthPrefix(byte[] value)
+        public static void WriteWithLengthPrefix(this Stream stream, byte[] value)
         {
             var length = (ushort)value.Length;
 
-            Write(length);
-            Write(value);
+            stream.Write(length);
+            stream.Write(value, 0, length);
         }
 
-        public static void WriteRemainingLength(int length, BinaryWriter target)
+        public static int EncodeRemainingLength(int length, MemoryStream stream)
         {
-            if (length == 0)
+            // write the encoded remaining length right aligned on the 4 byte buffer
+
+            if (length <= 0)
             {
-                target.Write((byte)0);
-                return;
+                stream.Seek(3, SeekOrigin.Current);
+                stream.WriteByte(0);
+                return 1;
             }
+
+            var buffer = new byte[4];
+            var offset = 0;
 
             // Alorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
             var x = length;
@@ -74,8 +66,15 @@ namespace MQTTnet.Serializer
                     encodedByte = encodedByte | 128;
                 }
 
-                target.Write((byte)encodedByte);
+                buffer[offset] = (byte)encodedByte;
+
+                offset++;
             } while (x > 0);
+
+            stream.Seek(4 - offset, SeekOrigin.Current);
+            stream.Write(buffer, 0, offset);
+
+            return offset;
         }
     }
 }

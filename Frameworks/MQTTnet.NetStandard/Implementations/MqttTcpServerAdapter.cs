@@ -14,18 +14,20 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpServerAdapter : IMqttServerAdapter, IDisposable
+    public class MqttTcpServerAdapter : IMqttServerAdapter
     {
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetChildLogger _logger;
 
         private CancellationTokenSource _cancellationTokenSource;
         private Socket _defaultEndpointSocket;
         private Socket _tlsEndpointSocket;
         private X509Certificate2 _tlsCertificate;
 
-        public MqttTcpServerAdapter(IMqttNetLogger logger)
+        public MqttTcpServerAdapter(IMqttNetChildLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
         }
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
@@ -38,11 +40,13 @@ namespace MQTTnet.Implementations
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
-                _defaultEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                _defaultEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+
                 _defaultEndpointSocket.Bind(new IPEndPoint(options.DefaultEndpointOptions.BoundIPAddress, options.GetDefaultEndpointPort()));
                 _defaultEndpointSocket.Listen(options.ConnectionBacklog);
 
-                Task.Run(async () => await AcceptDefaultEndpointConnectionsAsync(_cancellationTokenSource.Token).ConfigureAwait(false), _cancellationTokenSource.Token).ConfigureAwait(false);
+                Task.Run(() => AcceptDefaultEndpointConnectionsAsync(_cancellationTokenSource.Token),
+                    _cancellationTokenSource.Token);
             }
 
             if (options.TlsEndpointOptions.IsEnabled)
@@ -62,7 +66,9 @@ namespace MQTTnet.Implementations
                 _tlsEndpointSocket.Bind(new IPEndPoint(options.TlsEndpointOptions.BoundIPAddress, options.GetTlsEndpointPort()));
                 _tlsEndpointSocket.Listen(options.ConnectionBacklog);
 
-                Task.Run(async () => await AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token).ConfigureAwait(false), _cancellationTokenSource.Token).ConfigureAwait(false);
+                Task.Run(
+                    () => AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token),
+                    _cancellationTokenSource.Token);
             }
 
             return Task.FromResult(0);
@@ -78,7 +84,7 @@ namespace MQTTnet.Implementations
             _defaultEndpointSocket = null;
 
             _tlsCertificate = null;
-            
+
             _tlsEndpointSocket?.Dispose();
             _tlsEndpointSocket = null;
 
@@ -87,7 +93,7 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            StopAsync();
+            StopAsync().GetAwaiter().GetResult();
         }
 
         private async Task AcceptDefaultEndpointConnectionsAsync(CancellationToken cancellationToken)
@@ -102,6 +108,7 @@ namespace MQTTnet.Implementations
 #else
                     var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
 #endif
+                    clientSocket.NoDelay = true;
 
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
@@ -117,7 +124,7 @@ namespace MQTTnet.Implementations
                         return;
                     }
 
-                    _logger.Error<MqttTcpServerAdapter>(exception, "Error while accepting connection at default endpoint.");
+                    _logger.Error(exception, "Error while accepting connection at default endpoint.");
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -137,7 +144,7 @@ namespace MQTTnet.Implementations
 
                     var sslStream = new SslStream(new NetworkStream(clientSocket));
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
-                    
+
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }
@@ -152,7 +159,7 @@ namespace MQTTnet.Implementations
                         return;
                     }
 
-                    _logger.Error<MqttTcpServerAdapter>(exception, "Error while accepting connection at TLS endpoint.");
+                    _logger.Error(exception, "Error while accepting connection at TLS endpoint.");
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }

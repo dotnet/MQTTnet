@@ -1,28 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Channel;
 using MQTTnet.Exceptions;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Serializer
 {
-    public sealed class MqttPacketReader : BinaryReader
+    public static class MqttPacketReader
     {
-        private readonly MqttPacketHeader _header;
-        
-        public MqttPacketReader(MqttPacketHeader header, Stream bodyStream)
-            : base(bodyStream, Encoding.UTF8, true)
-        {
-            _header = header;
-        }
-
-        public bool EndOfRemainingData => BaseStream.Position == _header.BodyLength;
-
-        public static async Task<MqttPacketHeader> ReadHeaderAsync(Stream stream, CancellationToken cancellationToken)
+        public static async Task<byte?> ReadFixedHeaderAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -33,27 +21,18 @@ namespace MQTTnet.Serializer
             // some large delay and thus the thread should be put back to the pool (await). So ReadByte()
             // is not an option here.
             var buffer = new byte[1];
-            var readCount = await stream.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+            var readCount = await channel.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
             if (readCount <= 0)
             {
                 return null;
             }
 
-            var fixedHeader = buffer[0];
-            var controlPacketType = (MqttControlPacketType)(fixedHeader >> 4);
-            var bodyLength = await ReadBodyLengthAsync(stream, cancellationToken).ConfigureAwait(false);
-
-            return new MqttPacketHeader
-            {
-                FixedHeader = fixedHeader,
-                ControlPacketType = controlPacketType,
-                BodyLength = bodyLength
-            };
+            return buffer[0];
         }
 
-        public override ushort ReadUInt16()
+        public static ushort ReadUInt16(this Stream stream)
         {
-            var buffer = ReadBytes(2);
+            var buffer = stream.ReadBytes(2);
 
             var temp = buffer[0];
             buffer[0] = buffer[1];
@@ -62,9 +41,9 @@ namespace MQTTnet.Serializer
             return BitConverter.ToUInt16(buffer, 0);
         }
 
-        public string ReadStringWithLengthPrefix()
+        public static string ReadStringWithLengthPrefix(this Stream stream)
         {
-            var buffer = ReadWithLengthPrefix();
+            var buffer = stream.ReadWithLengthPrefix();
             if (buffer.Length == 0)
             {
                 return string.Empty;
@@ -73,31 +52,37 @@ namespace MQTTnet.Serializer
             return Encoding.UTF8.GetString(buffer, 0, buffer.Length);
         }
 
-        public byte[] ReadWithLengthPrefix()
+        public static byte[] ReadWithLengthPrefix(this Stream stream)
         {
-            var length = ReadUInt16();
+            var length = stream.ReadUInt16();
             if (length == 0)
             {
                 return new byte[0];
             }
 
-            return ReadBytes(length);
+            return stream.ReadBytes(length);
         }
 
-        public byte[] ReadRemainingData()
+        public static byte[] ReadRemainingData(this Stream stream)
         {
-            return ReadBytes(_header.BodyLength - (int)BaseStream.Position);
+            return stream.ReadBytes((int)(stream.Length - stream.Position));
         }
 
-        private static async Task<int> ReadBodyLengthAsync(Stream stream, CancellationToken cancellationToken)
+        public static byte[] ReadBytes(this Stream stream, int count)
+        {
+            var buffer = new byte[count];
+            stream.Read(buffer, 0, count);
+            return buffer;
+        }
+
+        public static async Task<int> ReadBodyLengthAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
             var multiplier = 1;
             var value = 0;
-            byte encodedByte;
-
+            int encodedByte;
             var buffer = new byte[1];
-            var readBytes = new List<byte>();
+
             do
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -105,19 +90,18 @@ namespace MQTTnet.Serializer
                     throw new TaskCanceledException();
                 }
 
-                var readCount = await stream.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+                var readCount = await channel.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
                 if (readCount <= 0)
                 {
                     throw new MqttCommunicationException("Connection closed while reading remaining length data.");
                 }
 
                 encodedByte = buffer[0];
-                readBytes.Add(encodedByte);
 
                 value += (byte)(encodedByte & 127) * multiplier;
                 if (multiplier > 128 * 128 * 128)
                 {
-                    throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", readBytes)}).");
+                    throw new MqttProtocolViolationException("Remaining length is invalid.");
                 }
 
                 multiplier *= 128;

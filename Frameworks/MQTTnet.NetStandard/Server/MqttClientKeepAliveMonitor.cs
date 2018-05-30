@@ -12,17 +12,20 @@ namespace MQTTnet.Server
         private readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
         private readonly Stopwatch _lastNonKeepAlivePacketReceivedTracker = new Stopwatch();
 
+        private readonly IMqttNetChildLogger _logger;
         private readonly string _clientId;
-        private readonly Func<Task> _timeoutCallback;
-        private readonly IMqttNetLogger _logger;
+        private readonly Action _callback;
 
+        private bool _isPaused;
         private Task _workerTask;
 
-        public MqttClientKeepAliveMonitor(string clientId, Func<Task> timeoutCallback, IMqttNetLogger logger)
+        public MqttClientKeepAliveMonitor(string clientId, Action callback, IMqttNetChildLogger logger)
         {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
             _clientId = clientId;
-            _timeoutCallback = timeoutCallback;
-            _logger = logger;
+            _callback = callback;
+            _logger = logger.CreateChildLogger(nameof(MqttClientKeepAliveMonitor));
         }
 
         public TimeSpan LastPacketReceived => _lastPacketReceivedTracker.Elapsed;
@@ -36,14 +39,26 @@ namespace MQTTnet.Server
                 return;
             }
 
-            _workerTask = Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken).ConfigureAwait(false), cancellationToken);
+            _workerTask = Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken);
         }
 
-        public void WaitForCompletion()
+        public void Pause()
         {
-            if (_workerTask != null)
+            _isPaused = true;
+        }
+
+        public void Resume()
+        {
+            _isPaused = false;
+        }
+
+        public void PacketReceived(MqttBasePacket packet)
+        {
+            _lastPacketReceivedTracker.Restart();
+
+            if (!(packet is MqttPingReqPacket))
             {
-                Task.WaitAll(_workerTask);
+                _lastNonKeepAlivePacketReceivedTracker.Restart();
             }
         }
 
@@ -57,15 +72,11 @@ namespace MQTTnet.Server
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     // Values described here: [MQTT-3.1.2-24].
-                    if (_lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod * 1.5D)
+                    if (!_isPaused && _lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod * 1.5D)
                     {
-                        _logger.Warning<MqttClientSession>("Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
-
-                        if (_timeoutCallback != null)
-                        {
-                            await _timeoutCallback().ConfigureAwait(false);
-                        }
-
+                        _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
+                        _callback();
+    
                         return;
                     }
 
@@ -77,21 +88,11 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error<MqttClientSession>(exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", _clientId);
+                _logger.Error(exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", _clientId);
             }
             finally
             {
-                _logger.Verbose<MqttClientSession>("Client {0}: Stopped checking keep alive timeout.", _clientId);
-            }
-        }
-
-        public void PacketReceived(MqttBasePacket packet)
-        {
-            _lastPacketReceivedTracker.Restart();
-
-            if (!(packet is MqttPingReqPacket))
-            {
-                _lastNonKeepAlivePacketReceivedTracker.Restart();
+                _logger.Verbose("Client {0}: Stopped checking keep alive timeout.", _clientId);
             }
         }
     }

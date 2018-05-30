@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
-using MQTTnet.Internal;
+using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Extensions.Rpc
 {
     public sealed class MqttRpcClient : IDisposable
     {
-        private const string ResponseTopic = "$MQTTnet.RPC/+/+/response";
         private readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
         private readonly IMqttClient _mqttClient;
-        private bool _isEnabled;
 
         public MqttRpcClient(IMqttClient mqttClient)
         {
@@ -21,19 +21,22 @@ namespace MQTTnet.Extensions.Rpc
             _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
         }
 
-        public async Task EnableAsync()
+        public Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
-            await _mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic(ResponseTopic).WithAtLeastOnceQoS().Build());
-            _isEnabled = true;
+            return ExecuteAsync(timeout, methodName, Encoding.UTF8.GetBytes(payload), qualityOfServiceLevel, CancellationToken.None);
         }
 
-        public async Task DisableAsync()
+        public Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, CancellationToken cancellationToken)
         {
-            await _mqttClient.UnsubscribeAsync(ResponseTopic);
-            _isEnabled = false;
+            return ExecuteAsync(timeout, methodName, Encoding.UTF8.GetBytes(payload), qualityOfServiceLevel, cancellationToken);
         }
 
-        public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        {
+            return ExecuteAsync(timeout, methodName, payload, qualityOfServiceLevel, CancellationToken.None);
+        }
+
+        public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, CancellationToken cancellationToken)
         {
             if (methodName == null) throw new ArgumentNullException(nameof(methodName));
 
@@ -42,12 +45,7 @@ namespace MQTTnet.Extensions.Rpc
                 throw new ArgumentException("The method name cannot contain /, + or #.");
             }
 
-            if (!_isEnabled)
-            {
-                throw new InvalidOperationException("The RPC client is not enabled.");
-            }
-
-            var requestTopic = $"$MQTTnet.RPC/{Guid.NewGuid():N}/{methodName}";
+            var requestTopic = $"MQTTnet.RPC/{Guid.NewGuid():N}/{methodName}";
             var responseTopic = requestTopic + "/response";
 
             var requestMessage = new MqttApplicationMessageBuilder()
@@ -64,18 +62,49 @@ namespace MQTTnet.Extensions.Rpc
                     throw new InvalidOperationException();
                 }
 
-                await _mqttClient.PublishAsync(requestMessage);
-                return await tcs.Task.TimeoutAfter(timeout);
+                await _mqttClient.SubscribeAsync(responseTopic, qualityOfServiceLevel).ConfigureAwait(false);
+                await _mqttClient.PublishAsync(requestMessage).ConfigureAwait(false);
+                
+                using (var timeoutCts = new CancellationTokenSource(timeout))
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token))
+                {
+                    linkedCts.Token.Register(() =>
+                    {
+                        if (!tcs.Task.IsCompleted && !tcs.Task.IsFaulted && !tcs.Task.IsCanceled)
+                        {
+                            tcs.TrySetCanceled();
+                        }
+                    });
+
+                    try
+                    {
+                        var result = await tcs.Task.ConfigureAwait(false);
+                        timeoutCts.Cancel(false);
+                        return result;
+                    }
+                    catch (TaskCanceledException taskCanceledException)
+                    {
+                        if (timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+                        {
+                            throw new MqttCommunicationTimedOutException(taskCanceledException);
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                }
             }
             finally
             {
                 _waitingCalls.TryRemove(responseTopic, out _);
+                await _mqttClient.UnsubscribeAsync(responseTopic).ConfigureAwait(false);
             }
         }
 
         private void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs eventArgs)
         {
-            if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out TaskCompletionSource<byte[]> tcs))
+            if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var tcs))
             {
                 return;
             }

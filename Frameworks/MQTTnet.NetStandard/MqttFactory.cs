@@ -25,14 +25,14 @@ namespace MQTTnet
 
         public IManagedMqttClient CreateManagedMqttClient()
         {
-            return new ManagedMqttClient(CreateMqttClient(), new MqttNetLogger());
+            return new ManagedMqttClient(CreateMqttClient(), new MqttNetLogger().CreateChildLogger());
         }
 
         public IManagedMqttClient CreateManagedMqttClient(IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            return new ManagedMqttClient(CreateMqttClient(), logger);
+            return new ManagedMqttClient(CreateMqttClient(), logger.CreateChildLogger());
         }
 
         public IMqttServer CreateMqttServer()
@@ -45,7 +45,7 @@ namespace MQTTnet
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            return CreateMqttServer(new List<IMqttServerAdapter> { new MqttTcpServerAdapter(logger) }, logger);
+            return CreateMqttServer(new List<IMqttServerAdapter> { new MqttTcpServerAdapter(logger.CreateChildLogger()) }, logger);
         }
 
         public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
@@ -53,7 +53,7 @@ namespace MQTTnet
             if (adapters == null) throw new ArgumentNullException(nameof(adapters));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            return new MqttServer(adapters, logger);
+            return new MqttServer(adapters, logger.CreateChildLogger());
         }
     }
 }

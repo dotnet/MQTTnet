@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.ManagedClient
@@ -15,11 +16,11 @@ namespace MQTTnet.ManagedClient
     {
         private readonly BlockingCollection<MqttApplicationMessage> _messageQueue = new BlockingCollection<MqttApplicationMessage>();
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
-        private readonly SemaphoreSlim _subscriptionsSemaphore = new SemaphoreSlim(1, 1);
+        private readonly AsyncLock _subscriptionsLock = new AsyncLock();
         private readonly List<string> _unsubscriptions = new List<string>();
 
         private readonly IMqttClient _mqttClient;
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetChildLogger _logger;
 
         private CancellationTokenSource _connectionCancellationToken;
         private CancellationTokenSource _publishingCancellationToken;
@@ -29,14 +30,17 @@ namespace MQTTnet.ManagedClient
 
         private bool _subscriptionsNotPushed;
 
-        public ManagedMqttClient(IMqttClient mqttClient, IMqttNetLogger logger)
+        public ManagedMqttClient(IMqttClient mqttClient, IMqttNetChildLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 
             _mqttClient.Connected += OnConnected;
             _mqttClient.Disconnected += OnDisconnected;
             _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
+
+            _logger = logger.CreateChildLogger(nameof(ManagedMqttClient));
         }
 
         public bool IsConnected => _mqttClient.IsConnected;
@@ -65,20 +69,21 @@ namespace MQTTnet.ManagedClient
             if (_options.Storage != null)
             {
                 _storageManager = new ManagedMqttClientStorageManager(_options.Storage);
-                await _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false);
-                foreach (var loadedMessage in _storageManager.ApplicationMessages)
+                var messages = await _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false);
+
+                foreach (var message in messages)
                 {
-                    _messageQueue.Add(loadedMessage);
+                    _messageQueue.Add(message);
                 }
             }
 
             _connectionCancellationToken = new CancellationTokenSource();
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(async () => await MaintainConnectionAsync(_connectionCancellationToken.Token).ConfigureAwait(false), _connectionCancellationToken.Token).ConfigureAwait(false);
+            Task.Run(() => MaintainConnectionAsync(_connectionCancellationToken.Token), _connectionCancellationToken.Token);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
-            _logger.Info<ManagedMqttClient>("Started");
+            _logger.Info("Started");
         }
 
         public Task StopAsync()
@@ -113,8 +118,7 @@ namespace MQTTnet.ManagedClient
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            await _subscriptionsSemaphore.WaitAsync().ConfigureAwait(false);
-            try
+            using (await _subscriptionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 foreach (var topicFilter in topicFilters)
                 {
@@ -122,16 +126,11 @@ namespace MQTTnet.ManagedClient
                     _subscriptionsNotPushed = true;
                 }
             }
-            finally
-            {
-                _subscriptionsSemaphore.Release();
-            }
         }
 
         public async Task UnsubscribeAsync(IEnumerable<string> topics)
         {
-            await _subscriptionsSemaphore.WaitAsync().ConfigureAwait(false);
-            try
+            using (await _subscriptionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 foreach (var topic in topics)
                 {
@@ -142,16 +141,12 @@ namespace MQTTnet.ManagedClient
                     }
                 }
             }
-            finally
-            {
-                _subscriptionsSemaphore.Release();
-            }
         }
 
         public void Dispose()
         {
             _messageQueue?.Dispose();
-            _subscriptionsSemaphore?.Dispose();
+            _subscriptionsLock?.Dispose();
             _connectionCancellationToken?.Dispose();
             _publishingCancellationToken?.Dispose();
         }
@@ -170,12 +165,12 @@ namespace MQTTnet.ManagedClient
             }
             catch (Exception exception)
             {
-                _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while maintaining connection.");
+                _logger.Error(exception, "Unhandled exception while maintaining connection.");
             }
             finally
             {
                 await _mqttClient.DisconnectAsync().ConfigureAwait(false);
-                _logger.Info<ManagedMqttClient>("Stopped");
+                _logger.Info("Stopped");
             }
         }
 
@@ -194,10 +189,7 @@ namespace MQTTnet.ManagedClient
                 if (connectionState == ReconnectionResult.Reconnected || _subscriptionsNotPushed)
                 {
                     await SynchronizeSubscriptionsAsync().ConfigureAwait(false);
-
                     StartPublishing();
-
-
                     return;
                 }
 
@@ -211,11 +203,11 @@ namespace MQTTnet.ManagedClient
             }
             catch (MqttCommunicationException exception)
             {
-                _logger.Warning<ManagedMqttClient>(exception, "Communication exception while maintaining connection.");
+                _logger.Warning(exception, "Communication exception while maintaining connection.");
             }
             catch (Exception exception)
             {
-                _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while maintaining connection.");
+                _logger.Error(exception, "Unhandled exception while maintaining connection.");
             }
         }
 
@@ -244,11 +236,11 @@ namespace MQTTnet.ManagedClient
             }
             catch (Exception exception)
             {
-                _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while publishing queued application messages.");
+                _logger.Error(exception, "Unhandled exception while publishing queued application messages.");
             }
             finally
             {
-                _logger.Verbose<ManagedMqttClient>("Stopped publishing messages.");
+                _logger.Verbose("Stopped publishing messages.");
             }
         }
 
@@ -268,7 +260,7 @@ namespace MQTTnet.ManagedClient
             {
                 transmitException = exception;
 
-                _logger.Warning<ManagedMqttClient>(exception, "Publishing application message failed.");
+                _logger.Warning(exception, "Publishing application message failed.");
 
                 if (message.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
                 {
@@ -278,7 +270,7 @@ namespace MQTTnet.ManagedClient
             catch (Exception exception)
             {
                 transmitException = exception;
-                _logger.Error<ManagedMqttClient>(exception, "Unhandled exception while publishing queued application message.");
+                _logger.Error(exception, "Unhandled exception while publishing queued application message.");
             }
             finally
             {
@@ -288,13 +280,12 @@ namespace MQTTnet.ManagedClient
 
         private async Task SynchronizeSubscriptionsAsync()
         {
-            _logger.Info<ManagedMqttClient>(nameof(ManagedMqttClient), "Synchronizing subscriptions");
+            _logger.Info(nameof(ManagedMqttClient), "Synchronizing subscriptions");
 
             List<TopicFilter> subscriptions;
             List<string> unsubscriptions;
 
-            await _subscriptionsSemaphore.WaitAsync().ConfigureAwait(false);
-            try
+            using (await _subscriptionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 subscriptions = _subscriptions.Select(i => new TopicFilter(i.Key, i.Value)).ToList();
 
@@ -302,10 +293,6 @@ namespace MQTTnet.ManagedClient
                 _unsubscriptions.Clear();
 
                 _subscriptionsNotPushed = false;
-            }
-            finally
-            {
-                _subscriptionsSemaphore.Release();
             }
             
             if (!subscriptions.Any() && !unsubscriptions.Any())
@@ -327,7 +314,7 @@ namespace MQTTnet.ManagedClient
             }
             catch (Exception exception)
             {
-                _logger.Warning<ManagedMqttClient>(exception, "Synchronizing subscriptions failed.");
+                _logger.Warning(exception, "Synchronizing subscriptions failed.");
                 _subscriptionsNotPushed = true;
 
                 SynchronizingSubscriptionsFailed?.Invoke(this, EventArgs.Empty);
@@ -379,7 +366,7 @@ namespace MQTTnet.ManagedClient
             _publishingCancellationToken = cts;
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(async () => await PublishQueuedMessagesAsync(cts.Token).ConfigureAwait(false), cts.Token).ConfigureAwait(false);
+            Task.Run(() => PublishQueuedMessagesAsync(cts.Token), cts.Token);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 

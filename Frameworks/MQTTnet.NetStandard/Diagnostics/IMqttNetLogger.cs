@@ -6,16 +6,8 @@ namespace MQTTnet.Diagnostics
     {
         event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        void Verbose<TSource>(string message, params object[] parameters);
+        IMqttNetChildLogger CreateChildLogger(string source = null);
 
-        void Info<TSource>(string message, params object[] parameters);
-
-        void Warning<TSource>(Exception exception, string message, params object[] parameters);
-
-        void Warning<TSource>(string message, params object[] parameters);
-
-        void Error<TSource>(Exception exception, string message, params object[] parameters);
-
-        void Error<TSource>(string message, params object[] parameters);
+        void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception);
     }
 }

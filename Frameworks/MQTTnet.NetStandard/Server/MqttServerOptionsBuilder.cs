@@ -13,6 +13,12 @@ namespace MQTTnet.Server
             return this;
         }
 
+        public MqttServerOptionsBuilder WithMaxPendingMessagesPerClient(int value)
+        {
+            _options.MaxPendingMessagesPerClient = value;
+            return this;
+        }
+
         public MqttServerOptionsBuilder WithDefaultCommunicationTimeout(TimeSpan value)
         {
             _options.DefaultCommunicationTimeout = value;
@@ -94,6 +100,12 @@ namespace MQTTnet.Server
         public MqttServerOptionsBuilder WithSubscriptionInterceptor(Action<MqttSubscriptionInterceptorContext> value)
         {
             _options.SubscriptionInterceptor = value;
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithPersistentSessions()
+        {
+            _options.EnablePersistentSessions = true;
             return this;
         }
 

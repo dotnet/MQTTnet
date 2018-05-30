@@ -4,13 +4,13 @@ namespace MQTTnet.Server
 {
     public class MqttClientDisconnectedEventArgs : EventArgs
     {
-        public MqttClientDisconnectedEventArgs(ConnectedMqttClient client, bool wasCleanDisconnect)
+        public MqttClientDisconnectedEventArgs(string clientId, bool wasCleanDisconnect)
         {
-            Client = client ?? throw new ArgumentNullException(nameof(client));
+            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             WasCleanDisconnect = wasCleanDisconnect;
         }
         
-        public ConnectedMqttClient Client { get; }
+        public string ClientId { get; }
 
         public bool WasCleanDisconnect { get; }
     }

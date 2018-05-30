@@ -6,17 +6,16 @@ namespace MQTTnet.Client
     public interface IMqttClientOptions
     {
         string ClientId { get; }
-
-        IMqttClientCredentials Credentials { get; }
         bool CleanSession { get; }
-        MqttApplicationMessage WillMessage { get; }
+        IMqttClientCredentials Credentials { get; }
+        MqttProtocolVersion ProtocolVersion { get; }
+        IMqttClientChannelOptions ChannelOptions { get; }
         
         TimeSpan CommunicationTimeout { get; }
         TimeSpan KeepAlivePeriod { get; }
         TimeSpan? KeepAliveSendInterval { get; }
+        MqttReceivedApplicationMessageProcessingMode ReceivedApplicationMessageProcessingMode { get; }
 
-        MqttProtocolVersion ProtocolVersion { get; }
-
-        IMqttClientChannelOptions ChannelOptions { get; }
+        MqttApplicationMessage WillMessage { get; }
     }
 }

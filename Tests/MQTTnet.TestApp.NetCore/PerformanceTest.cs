@@ -17,8 +17,8 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("Press 'c' for concurrent sends. Otherwise in one batch.");
             var concurrent = Console.ReadKey(true).KeyChar == 'c';
 
-            var server = Task.Factory.StartNew(async () => await RunServerAsync(), TaskCreationOptions.LongRunning);
-            var client = Task.Factory.StartNew(async () => await RunClientAsync(2000, TimeSpan.FromMilliseconds(10), concurrent), TaskCreationOptions.LongRunning);
+            var server = Task.Run(RunServerAsync);
+            var client = Task.Run(() => RunClientAsync(2000, TimeSpan.FromMilliseconds(10), concurrent));
 
             await Task.WhenAll(server, client).ConfigureAwait(false);
         }
@@ -44,7 +44,7 @@ namespace MQTTnet.TestApp.NetCore
 
                 try
                 {
-                    await client.ConnectAsync(options);
+                    await client.ConnectAsync(options).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -59,7 +59,7 @@ namespace MQTTnet.TestApp.NetCore
                 var sentMessagesCount = 0;
                 while (stopwatch.ElapsedMilliseconds < 1000)
                 {
-                    await client.PublishAsync(messages).ConfigureAwait(false);
+                    client.PublishAsync(messages).GetAwaiter().GetResult();
                     sentMessagesCount++;
                 }
 
@@ -165,7 +165,7 @@ namespace MQTTnet.TestApp.NetCore
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
 
-                await mqttServer.StopAsync();
+                await mqttServer.StopAsync().ConfigureAwait(false);
             }
             catch (Exception e)
             {

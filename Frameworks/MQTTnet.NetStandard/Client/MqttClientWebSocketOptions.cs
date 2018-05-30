@@ -13,6 +13,8 @@ namespace MQTTnet.Client
 
         public CookieContainer CookieContainer { get; set; }
 
+        public int BufferSize { get; set; } = 4096;
+
         public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
     }
 }

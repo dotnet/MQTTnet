@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttConnectPacket : MqttBasePacket
+    public class MqttConnectPacket : MqttBasePacket
     {
         public MqttProtocolVersion ProtocolVersion { get; set; }
 

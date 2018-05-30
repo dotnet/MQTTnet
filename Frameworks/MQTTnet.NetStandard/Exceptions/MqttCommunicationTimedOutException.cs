@@ -2,10 +2,14 @@
 
 namespace MQTTnet.Exceptions
 {
-    public sealed class MqttCommunicationTimedOutException : MqttCommunicationException
+    public class MqttCommunicationTimedOutException : MqttCommunicationException
     {
-        public MqttCommunicationTimedOutException() { }
-        public MqttCommunicationTimedOutException(Exception innerException) : base(innerException) { }
+        public MqttCommunicationTimedOutException()
+        {
+        }
 
+        public MqttCommunicationTimedOutException(Exception innerException) : base(innerException)
+        {
+        }
     }
 }

@@ -12,7 +12,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientSession : IDisposable
+    public class MqttClientSession : IDisposable
     {
         private readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
 

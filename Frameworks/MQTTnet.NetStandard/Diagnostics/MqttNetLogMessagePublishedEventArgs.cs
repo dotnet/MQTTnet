@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Diagnostics
 {
-    public sealed class MqttNetLogMessagePublishedEventArgs : EventArgs
+    public class MqttNetLogMessagePublishedEventArgs : EventArgs
     {
         public MqttNetLogMessagePublishedEventArgs(MqttNetLogMessage logMessage)
         {

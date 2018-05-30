@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Serializer
 {
-    public sealed class ByteWriter
+    public class ByteWriter
     {
         private int _index;
         private int _byte;

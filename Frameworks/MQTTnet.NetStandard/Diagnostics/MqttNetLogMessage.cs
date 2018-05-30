@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Diagnostics
 {
-    public sealed class MqttNetLogMessage
+    public class MqttNetLogMessage
     {
         public MqttNetLogMessage(string logId, DateTime timestamp, int threadId, string source, MqttNetLogLevel level, string message, Exception exception)
         {

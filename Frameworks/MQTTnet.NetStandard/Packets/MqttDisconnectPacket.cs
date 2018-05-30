@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Packets
 {
-    public sealed class MqttDisconnectPacket : MqttBasePacket
+    public class MqttDisconnectPacket : MqttBasePacket
     {
         public override string ToString()
         {

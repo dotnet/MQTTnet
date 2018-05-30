@@ -13,7 +13,7 @@ using MQTTnet.Serializer;
 
 namespace MQTTnet.Adapter
 {
-    public sealed class MqttChannelAdapter : IMqttChannelAdapter
+    public class MqttChannelAdapter : IMqttChannelAdapter
     {
         private const uint ErrorOperationAborted = 0x800703E3;
         private const int ReadBufferSize = 4096;  // TODO: Move buffer size to config

@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Packets
 {
-    public sealed class MqttPubRecPacket : MqttBasePublishPacket
+    public class MqttPubRecPacket : MqttBasePublishPacket
     {
         public override string ToString()
         {

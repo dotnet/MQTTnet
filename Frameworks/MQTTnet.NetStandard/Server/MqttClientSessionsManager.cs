@@ -12,7 +12,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientSessionsManager : IDisposable
+    public class MqttClientSessionsManager : IDisposable
     {
         private readonly ConcurrentDictionary<string, MqttClientSession> _sessions = new ConcurrentDictionary<string, MqttClientSession>();
         private readonly AsyncLock _sessionPreparationLock = new AsyncLock();

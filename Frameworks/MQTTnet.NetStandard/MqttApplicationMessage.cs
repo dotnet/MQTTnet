@@ -1,23 +1,9 @@
-﻿using System;
-using MQTTnet.Protocol;
+﻿using MQTTnet.Protocol;
 
 namespace MQTTnet
 {
-    public sealed class MqttApplicationMessage
+    public class MqttApplicationMessage
     {
-        public MqttApplicationMessage()
-        {
-        }
-
-        [Obsolete("Use object initializer or _MqttApplicationMessageBuilder_ instead.")]
-        public MqttApplicationMessage(string topic, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
-        {
-            Topic = topic ?? throw new ArgumentNullException(nameof(topic));
-            Payload = payload ?? throw new ArgumentNullException(nameof(payload));
-            QualityOfServiceLevel = qualityOfServiceLevel;
-            Retain = retain;
-        }
-
         public string Topic { get; set; }
 
         public byte[] Payload { get; set; }

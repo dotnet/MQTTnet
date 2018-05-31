@@ -115,7 +115,8 @@ namespace MQTTnet
                 Retain = _retain
             };
         }
-        public MqttApplicationMessageId BuildId()
+
+        public MqttApplicationMessageId BuildWithId()
         {
             if (string.IsNullOrEmpty(_topic))
             {
@@ -131,6 +132,5 @@ namespace MQTTnet
                 Retain = _retain,                
             };
         }
-
     }
 }

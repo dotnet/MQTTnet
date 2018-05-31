@@ -5,18 +5,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Serializer
 {
     public static class MqttPacketReader
     {
-        public static async Task<byte?> ReadFixedHeaderAsync(IMqttChannel channel, CancellationToken cancellationToken)
+        public static async Task<byte> ReadFixedHeaderAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return null;
-            }
-
             // Wait for the next package which starts with the header. At this point there will probably
             // some large delay and thus the thread should be put back to the pool (await). So ReadByte()
             // is not an option here.
@@ -24,7 +20,7 @@ namespace MQTTnet.Serializer
             var readCount = await channel.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
             if (readCount <= 0)
             {
-                return null;
+                ExceptionHelper.ThrowGracefulSocketClose();
             }
 
             return buffer[0];
@@ -68,13 +64,6 @@ namespace MQTTnet.Serializer
             return stream.ReadBytes((int)(stream.Length - stream.Position));
         }
 
-        public static byte[] ReadBytes(this Stream stream, int count)
-        {
-            var buffer = new byte[count];
-            stream.Read(buffer, 0, count);
-            return buffer;
-        }
-
         public static async Task<int> ReadBodyLengthAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
@@ -93,7 +82,7 @@ namespace MQTTnet.Serializer
                 var readCount = await channel.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
                 if (readCount <= 0)
                 {
-                    throw new MqttCommunicationException("Connection closed while reading remaining length data.");
+                    ExceptionHelper.ThrowGracefulSocketClose();
                 }
 
                 encodedByte = buffer[0];
@@ -108,6 +97,13 @@ namespace MQTTnet.Serializer
             } while ((encodedByte & 128) != 0);
 
             return value;
+        }
+
+        private static byte[] ReadBytes(this Stream stream, int count)
+        {
+            var buffer = new byte[count];
+            stream.Read(buffer, 0, count);
+            return buffer;
         }
     }
 }

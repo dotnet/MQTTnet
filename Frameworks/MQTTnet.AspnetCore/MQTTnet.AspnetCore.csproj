@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MQTTnet.Netstandard\MQTTnet.NetStandard.csproj" />
+    <ProjectReference Include="..\MQTTnet.NetStandard\MQTTnet.NetStandard.csproj" />
   </ItemGroup>
 
 </Project>

@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frameworks", "Frameworks", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.TestApp.UniversalWindows", "Tests\MQTTnet.TestApp.UniversalWindows\MQTTnet.TestApp.UniversalWindows.csproj", "{FF1F72D6-9524-4422-9497-3CC0002216ED}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.NetStandard", "Frameworks\MQTTnet.NetStandard\MQTTnet.Netstandard.csproj", "{3587E506-55A2-4EB3-99C7-DC01E42D25D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.NetStandard", "Frameworks\MQTTnet.NetStandard\MQTTnet.NetStandard.csproj", "{3587E506-55A2-4EB3-99C7-DC01E42D25D2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{67C28AC1-BC3A-420A-BE9C-FA2401431CF9}"
 	ProjectSection(SolutionItems) = preProject
@@ -38,7 +38,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extensions", "Extensions", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.Rpc", "Extensions\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj", "{C444E9C8-95FA-430E-9126-274129DE16CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Benchmarks", "Tests\MQTTnet.Benchmarks\MQTTnet.Benchmarks.csproj", "{998D04DD-7CB0-45F5-A393-E2495C16399E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Benchmarks", "Tests\MQTTnet.Benchmarks\MQTTnet.Benchmarks.csproj", "{998D04DD-7CB0-45F5-A393-E2495C16399E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

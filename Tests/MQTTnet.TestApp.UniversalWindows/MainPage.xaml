@@ -43,8 +43,8 @@
                         <Button Click="Disconnect" Width="120">Disconnect</Button>
                     </StackPanel>
                 </StackPanel>
-
             </PivotItem>
+
             <PivotItem Header="Publish">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                     <TextBlock>Topic:</TextBlock>
@@ -69,6 +69,7 @@
                     <Button Click="Publish" Width="120">Publish</Button>
                 </StackPanel>
             </PivotItem>
+
             <PivotItem Header="Execute RPC">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                     <TextBlock>Method:</TextBlock>
@@ -103,6 +104,7 @@
                     </StackPanel>
                 </StackPanel>
             </PivotItem>
+
             <PivotItem Header="Subscribe">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                     <TextBlock>Topic:</TextBlock>
@@ -132,6 +134,7 @@
                     </StackPanel>
                 </StackPanel>
             </PivotItem>
+
             <PivotItem Header="Server">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                     <TextBlock>Port:</TextBlock>
@@ -151,6 +154,31 @@
                     <Button Click="ClearLog" Width="120">Clear</Button>
                 </StackPanel>
             </PivotItem>
+
+            <PivotItem Header="Sessions">
+                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Width="120" Margin="0,0,10,0" Click="RefreshSessions">Refresh</Button>
+                        <Button Width="120" Margin="0,0,10,0" Click="ClearSessions">Clear</Button>
+                    </StackPanel>
+
+                    <ListView>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBlock></TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                </StackPanel>
+            </PivotItem>
+            <PivotItem Header="Log">
+                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <Button Click="ClearLog" Width="120">Clear</Button>
+                </StackPanel>
+            </PivotItem>
         </Pivot>
 
         <ScrollViewer Grid.Row="1"  Margin="12,10,12,0"  Background="Black" Foreground="WhiteSmoke" FontFamily="Consolas" HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
@@ -159,3 +187,4 @@
     </Grid>
 
 </Page>
+

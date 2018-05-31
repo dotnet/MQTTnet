@@ -372,6 +372,14 @@ namespace MQTTnet.TestApp.UniversalWindows
             RpcResponses.Items.Clear();
         }
 
+        private void ClearSessions(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void RefreshSessions(object sender, RoutedEventArgs e)
+        {
+        }
+
         private async Task WikiCode()
         {
             {

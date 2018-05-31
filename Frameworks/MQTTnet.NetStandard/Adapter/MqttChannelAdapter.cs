@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Serializer;
 
@@ -133,18 +134,14 @@ namespace MQTTnet.Adapter
         private async Task<ReceivedMqttPacket> ReceiveAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
             var fixedHeader = await MqttPacketReader.ReadFixedHeaderAsync(channel, cancellationToken).ConfigureAwait(false);
-            if (!fixedHeader.HasValue)
-            {
-                return null;
-            }
-
+            
             ReadingPacketStarted?.Invoke(this, EventArgs.Empty);
             try
             {
                 var bodyLength = await MqttPacketReader.ReadBodyLengthAsync(channel, cancellationToken).ConfigureAwait(false);
                 if (bodyLength == 0)
                 {
-                    return new ReceivedMqttPacket(fixedHeader.Value, null);
+                    return new ReceivedMqttPacket(fixedHeader, null);
                 }
 
                 var body = new MemoryStream(bodyLength);
@@ -159,11 +156,9 @@ namespace MQTTnet.Adapter
                     }
 
                     var readBytesCount = await channel.ReadAsync(buffer, 0, bytesLeft, cancellationToken).ConfigureAwait(false);
-
-                    // Check if the client closed the connection before sending the full body.
                     if (readBytesCount <= 0)
                     {
-                        throw new MqttCommunicationException("Connection closed while reading remaining packet body.");
+                        ExceptionHelper.ThrowGracefulSocketClose();
                     }
 
                     // Here is no need to await because internally only an array is used and no real I/O operation is made.
@@ -173,7 +168,7 @@ namespace MQTTnet.Adapter
 
                 body.Seek(0L, SeekOrigin.Begin);
 
-                return new ReceivedMqttPacket(fixedHeader.Value, body);
+                return new ReceivedMqttPacket(fixedHeader, body);
             }
             finally
             {

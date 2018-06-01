@@ -1,9 +1,4 @@
 ﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Attributes.Exporters;
-using BenchmarkDotNet.Attributes.Jobs;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Validators;
 using MQTTnet.Adapter;
 using MQTTnet.Core.Internal;
 using MQTTnet.Diagnostics;
@@ -11,27 +6,11 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Serializer;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace MQTTnet.Benchmarks
 {
-    public class AllowNonOptimized : ManualConfig
-    {
-        public AllowNonOptimized()
-        {
-            Add(JitOptimizationsValidator.DontFailOnError); // ALLOW NON-OPTIMIZED DLLS
-            Add(DefaultConfig.Instance.GetLoggers().ToArray()); // manual config has no loggers by default
-            Add(DefaultConfig.Instance.GetExporters().ToArray()); // manual config has no exporters by default
-            Add(DefaultConfig.Instance.GetColumnProviders().ToArray()); // manual config has no columns by default
-            Add(Job.InProcess);
-        }
-    }
-
     [MemoryDiagnoser]
     public class ChannelAdapterBenchmark
     {

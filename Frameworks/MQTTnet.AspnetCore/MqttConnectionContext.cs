@@ -48,7 +48,8 @@ namespace MQTTnet.AspNetCore
             while (!cancellationToken.IsCancellationRequested)
             {
                 ReadResult readResult;
-                
+                ReadingPacketStarted?.Invoke(this, EventArgs.Empty);
+
                 var readTask = input.ReadAsync(cancellationToken);
                 if (readTask.IsCompleted)
                 {
@@ -84,6 +85,7 @@ namespace MQTTnet.AspNetCore
                     // We mark examined as buffer.End so that if we didn't receive a full frame, we'll wait for more data
                     // before yielding the read again.
                     input.AdvanceTo(consumed, observed);
+                    ReadingPacketCompleted?.Invoke(this, EventArgs.Empty);
                 }
             }
 
@@ -106,6 +108,10 @@ namespace MQTTnet.AspNetCore
         }
 
         private int messageId;
+
+        public event EventHandler ReadingPacketStarted;
+        public event EventHandler ReadingPacketCompleted;
+
         public Task PublishAsync(MqttPublishPacket packet)
         {
             if (!packet.PacketIdentifier.HasValue && packet.QualityOfServiceLevel > MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)

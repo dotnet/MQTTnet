@@ -52,5 +52,13 @@ namespace MQTTnet
             var message = builder(new MqttApplicationMessageBuilder()).Build();
             return publisher.PublishAsync(message);
         }
+        
+        public static Task PublishAsync(this IApplicationMessagePublisherId publisher, params MqttApplicationMessageId[] applicationMessages)
+        {
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
+            if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
+
+            return publisher.PublishAsync(applicationMessages);
+        }
     }
 }

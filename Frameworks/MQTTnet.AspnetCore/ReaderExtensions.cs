@@ -4,7 +4,6 @@ using System.IO;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
-using MQTTnet.Protocol;
 using MQTTnet.Serializer;
 
 namespace MQTTnet.AspNetCore
@@ -57,30 +56,6 @@ namespace MQTTnet.AspNetCore
 
             // Should be rare
             return input.ToArray();
-        }
-
-        public static bool TryDeserialize(this IMqttPacketSerializer serializer, ref ReadOnlySequence<byte> input, out MqttBasePacket packet)
-        {
-            packet = null;
-            var copy = input;
-            if (copy.Length < 2)
-            {
-                return false;
-            }
-
-            var fixedheader = copy.First.Span[0];
-            if (!TryReadBodyLength(ref copy, out var bodyLength))
-            {
-                return false;
-            }
-
-            input = copy.Slice(bodyLength);
-            var bodySlice = copy.Slice(0, bodyLength);
-            using (var body = new MemoryStream(bodySlice.GetArray()))
-            {
-                packet = serializer.Deserialize(new ReceivedMqttPacket(fixedheader, body));
-                return true;
-            }
         }
 
         public static bool TryDeserialize(this IMqttPacketSerializer serializer, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)

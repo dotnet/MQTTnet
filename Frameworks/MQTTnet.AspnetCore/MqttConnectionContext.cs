@@ -97,46 +97,12 @@ namespace MQTTnet.AspNetCore
         {
             foreach (var packet in packets)
             {
-                await WriteAsync(packet);
+                var buffer = PacketSerializer.Serialize(packet);
+                await Connection.Transport.Output.WriteAsync(buffer.AsMemory());
             }
         }
-
-        public async Task WriteAsync(MqttBasePacket packet)
-        {
-            var buffer = PacketSerializer.Serialize(packet);
-            await Connection.Transport.Output.WriteAsync(buffer.AsMemory());
-        }
-
-        private int messageId;
-
+        
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;
-
-        public Task PublishAsync(MqttPublishPacket packet)
-        {
-            if (!packet.PacketIdentifier.HasValue && packet.QualityOfServiceLevel > MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
-            {
-                packet.PacketIdentifier = (ushort)Interlocked.Increment(ref messageId);
-            }
-            return WriteAsync(packet);
-        }
-
-        public Task SubscribeAsync(MqttSubscribePacket packet)
-        {
-            if (!packet.PacketIdentifier.HasValue)
-            {
-                packet.PacketIdentifier = (ushort)Interlocked.Increment(ref messageId);
-            }
-            return WriteAsync(packet);
-        }
-
-        public Task ConnectAsync(MqttConnectPacket packet)
-        {
-            if (string.IsNullOrEmpty(packet.ClientId))
-            {
-                packet.ClientId = Guid.NewGuid().ToString();
-            }
-            return WriteAsync(packet);
-        }
     }
 }

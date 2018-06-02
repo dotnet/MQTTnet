@@ -131,14 +131,14 @@ namespace MQTTnet.AspNetCore.Client.Tcp
                 if (!_aborted)
                 {
                     // Calling Dispose after ReceiveAsync can cause an "InvalidArgument" error on *nix.
-                    //error = new MqttCommunicationException();
+                    error = ConnectionAborted();
                 }
             }
             catch (ObjectDisposedException)
             {
                 if (!_aborted)
                 {
-                    //error = new MqttCommunicationException();
+                    error = ConnectionAborted();
                 }
             }
             catch (IOException ex)
@@ -153,7 +153,7 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             {
                 if (_aborted)
                 {
-                    //error = error ?? new MqttCommunicationException();
+                    error = error ?? ConnectionAborted();
                 }
 
                 _application.Output.Complete(error);
@@ -191,6 +191,11 @@ namespace MQTTnet.AspNetCore.Client.Tcp
                     break;
                 }
             }
+        }
+
+        private Exception ConnectionAborted()
+        {
+            return new MqttCommunicationException("Connection Aborted");
         }
 
         private async Task<Exception> DoSend()

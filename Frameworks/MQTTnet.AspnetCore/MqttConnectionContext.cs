@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Connections;
 using MQTTnet.Adapter;
+using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Packets;
 using MQTTnet.Serializer;
 using System;
@@ -27,6 +28,10 @@ namespace MQTTnet.AspNetCore
 
         public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
+            if (Connection is TcpConnection tcp && !tcp.IsConnected)
+            {
+                return tcp.StartAsync();
+            }
             return Task.CompletedTask;
         }
 
@@ -34,6 +39,7 @@ namespace MQTTnet.AspNetCore
         {
             Connection.Transport.Input.Complete();
             Connection.Transport.Output.Complete();
+
             return Task.CompletedTask;
         }
 

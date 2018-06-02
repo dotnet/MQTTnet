@@ -76,13 +76,10 @@ namespace MQTTnet.AspNetCore
             }
 
             var bodySlice = copy.Slice(0, bodyLength);
-            using (var body = new MemoryStream(bodySlice.GetArray()))
-            {
-                packet = serializer.Deserialize(new ReceivedMqttPacket(fixedheader, body));
-                consumed = bodySlice.End;
-                observed = bodySlice.End;
-                return true;
-            }
+            packet = serializer.Deserialize(new ReceivedMqttPacket(fixedheader, new MqttPacketBodyReader(bodySlice.GetArray())));
+            consumed = bodySlice.End;
+            observed = bodySlice.End;
+            return true;
         }
     }
 }

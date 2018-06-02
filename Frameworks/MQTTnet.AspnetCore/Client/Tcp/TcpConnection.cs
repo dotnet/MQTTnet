@@ -4,27 +4,35 @@ using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Http.Features;
 using MQTTnet.Exceptions;
 
-namespace MQTTnet.Benchmarks.Tcp
+namespace MQTTnet.AspNetCore.Client.Tcp
 {
-    public class TcpConnection
+    public class TcpConnection : ConnectionContext
     {
-        private readonly Socket _socket;
         private volatile bool _aborted;
         private readonly EndPoint _endPoint;
+        private SocketSender _sender;
+        private SocketReceiver _receiver;
+
+        private Socket _socket;
         private IDuplexPipe _application;
-        private IDuplexPipe _transport;
-        private readonly SocketSender _sender;
-        private readonly SocketReceiver _receiver;
+
+
+        public bool IsConnected { get; private set; }
+
+        public override string ConnectionId { get; set; }
+
+        public override IFeatureCollection Features { get; }
+
+        public override IDictionary<object, object> Items { get; set; }
+        public override IDuplexPipe Transport { get; set; }
 
         public TcpConnection(EndPoint endPoint)
         {
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _endPoint = endPoint;
-
-            _sender = new SocketSender(_socket, PipeScheduler.ThreadPool);
-            _receiver = new SocketReceiver(_socket, PipeScheduler.ThreadPool);
         }
 
         public TcpConnection(Socket socket)
@@ -38,29 +46,34 @@ namespace MQTTnet.Benchmarks.Tcp
 
         public Task DisposeAsync()
         {
-            _transport?.Output.Complete();
-            _transport?.Input.Complete();
+            IsConnected = false;
+
+            Transport?.Output.Complete();
+            Transport?.Input.Complete();
 
             _socket?.Dispose();
 
             return Task.CompletedTask;
         }
 
-        public async Task<IDuplexPipe> StartAsync()
+        public async Task StartAsync()
         {
-            if (!_socket.Connected)
+            if (_socket == null)
             {
+                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                _sender = new SocketSender(_socket, PipeScheduler.ThreadPool);
+                _receiver = new SocketReceiver(_socket, PipeScheduler.ThreadPool);
                 await _socket.ConnectAsync(_endPoint);
             }
 
             var pair = DuplexPipe.CreateConnectionPair(PipeOptions.Default, PipeOptions.Default);
 
-            _transport = pair.Transport;
+            Transport = pair.Transport;
             _application = pair.Application;
 
             _ = ExecuteAsync();
 
-            return pair.Transport;
+            IsConnected = true;
         }
 
         private async Task ExecuteAsync()

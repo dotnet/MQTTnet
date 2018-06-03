@@ -4,10 +4,12 @@
     <OutputType>Exe</OutputType>
     <DebugType>Full</DebugType>
     <TargetFramework>net461</TargetFramework>
+      <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.10.14" />
+    <PackageReference Include="System.IO.Pipelines" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>

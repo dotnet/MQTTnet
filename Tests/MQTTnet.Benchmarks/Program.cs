@@ -13,6 +13,9 @@ namespace MQTTnet.Benchmarks
             Console.WriteLine("2 = SerializerBenchmark");
             Console.WriteLine("3 = LoggerBenchmark");
             Console.WriteLine("4 = TopicFilterComparerBenchmark");
+            Console.WriteLine("5 = ChannelAdapterBenchmark");
+            Console.WriteLine("6 = MqttTcpChannelBenchmark");
+            Console.WriteLine("7 = TcpPipesBenchmark");
 
             var pressedKey = Console.ReadKey(true);
             switch (pressedKey.KeyChar)
@@ -28,6 +31,15 @@ namespace MQTTnet.Benchmarks
                     break;
                 case '4':
                     BenchmarkRunner.Run<TopicFilterComparerBenchmark>();
+                    break;
+                case '5':
+                    BenchmarkRunner.Run<ChannelAdapterBenchmark>();
+                    break;
+                case '6':
+                    BenchmarkRunner.Run<MqttTcpChannelBenchmark>();
+                    break;
+                case '7':
+                    BenchmarkRunner.Run<TcpPipesBenchmark>();
                     break;
             }
 

@@ -153,24 +153,39 @@ namespace MQTTnet.Server
             }
         }
 
-        public void EnqueueApplicationMessage(MqttApplicationMessage applicationMessage)
+        public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            var result = _subscriptionsManager.CheckSubscriptions(applicationMessage);
-            if (!result.IsSubscribed)
+            var checkSubscriptionsResult = _subscriptionsManager.CheckSubscriptions(applicationMessage);
+            if (!checkSubscriptionsResult.IsSubscribed)
             {
                 return;
             }
 
             var publishPacket = applicationMessage.ToPublishPacket();
-            publishPacket.QualityOfServiceLevel = result.QualityOfServiceLevel;
+            publishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
 
             if (publishPacket.QualityOfServiceLevel > 0)
             {
                 publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
             }
 
+            if (_options.ClientMessageQueueInterceptor != null)
+            {
+                var context = new MqttClientMessageQueueInterceptorContext(
+                    senderClientSession?.ClientId,
+                    ClientId,
+                    publishPacket.ToApplicationMessage());
+               
+                _options.ClientMessageQueueInterceptor?.Invoke(context);
+
+                if (!context.AcceptEnqueue || context.ApplicationMessage == null)
+                {
+                    return;
+                }
+            }
+            
             _pendingMessagesQueue.Enqueue(publishPacket);
         }
 
@@ -276,7 +291,7 @@ namespace MQTTnet.Server
             var retainedMessages = _retainedMessagesManager.GetSubscribedMessages(topicFilters);
             foreach (var applicationMessage in retainedMessages)
             {
-                EnqueueApplicationMessage(applicationMessage);
+                EnqueueApplicationMessage(null, applicationMessage);
             }
         }
 

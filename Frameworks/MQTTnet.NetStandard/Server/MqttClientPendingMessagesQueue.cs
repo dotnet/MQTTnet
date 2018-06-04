@@ -19,7 +19,6 @@ namespace MQTTnet.Server
         private readonly IMqttNetChildLogger _logger;
 
         private ConcurrentQueue<MqttBasePacket> _queue = new ConcurrentQueue<MqttBasePacket>();
-        private Task _workerTask;
 
         public MqttClientPendingMessagesQueue(IMqttServerOptions options, MqttClientSession clientSession, IMqttNetChildLogger logger)
         {
@@ -41,7 +40,7 @@ namespace MQTTnet.Server
                 return;
             }
 
-            _workerTask = Task.Run(() => SendQueuedPacketsAsync(adapter, cancellationToken), cancellationToken);
+            Task.Run(() => SendQueuedPacketsAsync(adapter, cancellationToken), cancellationToken);
         }
         
         public void Enqueue(MqttBasePacket packet)

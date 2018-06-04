@@ -257,7 +257,7 @@ namespace MQTTnet.Server
 
                 foreach (var clientSession in _sessions.Values)
                 {
-                    clientSession.EnqueueApplicationMessage(applicationMessage);
+                    clientSession.EnqueueApplicationMessage(senderClientSession, applicationMessage);
                 }
             }
             catch (Exception exception)

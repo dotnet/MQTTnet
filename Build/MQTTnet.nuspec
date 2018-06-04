@@ -15,7 +15,7 @@
 * [Core] Added several packet validations.
 * [Core] Log messages now contain the complete source path including parent components.
 * [Core] The adapter now has an _Endpoint_ definition as string containing remote IP and port.
-* [Client] Received messages are now processed in the worker thread by default. Added a new setting for switching back to dedicated threads.
+* [Client] Received messages are now processed completely in the worker thread without creating new Tasks.
 * [Client] Fixed wrong calculation for sending keep alive packets (thanks to @cstichlberger)
 * [ManagedClient] Fixed a loading issue of stored application messages (thanks to @JTrotta).
 * [Server] Added support for other WebSocket sub protocol formats like mqttv-3.1.1 (thanks to @israellot).

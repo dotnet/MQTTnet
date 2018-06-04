@@ -13,7 +13,7 @@ namespace MQTTnet.Client
         {
             foreach (var awaiter in _awaiters)
             {
-                awaiter.Value.SetException(exception);
+                Task.Run(() => awaiter.Value.SetException(exception)); // Task.Run fixes a dead lock. Without this the client only receives one message.
             }
         }
 
@@ -30,9 +30,10 @@ namespace MQTTnet.Client
             var type = packet.GetType();
             var key = new Tuple<ushort, Type>(identifier, type);
             
-            if (_awaiters.TryRemove(key, out var tcs))
+            if (_awaiters.TryRemove(key, out var awaiter))
             {
-                tcs.TrySetResult(packet);
+                awaiter.SetResult(packet);
+                Task.Run(() => awaiter.SetResult(packet)); // Task.Run fixes a dead lock. Without this the client only receives one message.
                 return;
             }
 
@@ -70,7 +71,7 @@ namespace MQTTnet.Client
             }
 
             var key = new Tuple<ushort, Type>(identifier ?? 0, typeof(TResponsePacket));
-            _awaiters.TryRemove(key, out var _);
+            _awaiters.TryRemove(key, out _);
         }
     }
 }

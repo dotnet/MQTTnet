@@ -19,7 +19,7 @@ namespace MQTTnet.Client
         private readonly Stopwatch _sendTracker = new Stopwatch();
         private readonly SemaphoreSlim _disconnectLock = new SemaphoreSlim(1, 1);
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
-
+        
         private readonly IMqttClientAdapterFactory _adapterFactory;
         private readonly IMqttNetChildLogger _logger;
 
@@ -390,25 +390,7 @@ namespace MQTTnet.Client
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var packet = await _adapter.ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
-
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
-
-                    if (packet == null)
-                    {
-                        continue;
-                    }
-
-                    if (_options.ReceivedApplicationMessageProcessingMode == MqttReceivedApplicationMessageProcessingMode.SingleThread)
-                    {
-                        await ProcessReceivedPacketAsync(packet, cancellationToken).ConfigureAwait(false);
-                    }
-                    else if (_options.ReceivedApplicationMessageProcessingMode == MqttReceivedApplicationMessageProcessingMode.DedicatedThread)
-                    {
-                        StartProcessReceivedPacketAsync(packet, cancellationToken);
-                    }
+                    await ProcessReceivedPacketAsync(packet, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
@@ -434,40 +416,30 @@ namespace MQTTnet.Client
             }
         }
 
-        private async Task ProcessReceivedPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        private Task ProcessReceivedPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            try
+            if (packet is MqttPublishPacket publishPacket)
             {
-                if (packet is MqttPublishPacket publishPacket)
-                {
-                    await ProcessReceivedPublishPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-                    return;
-                }
-
-                if (packet is MqttPingReqPacket)
-                {
-                    await SendAsync(new MqttPingRespPacket(), cancellationToken).ConfigureAwait(false);
-                    return;
-                }
-
-                if (packet is MqttDisconnectPacket)
-                {
-                    await DisconnectAsync().ConfigureAwait(false);
-                    return;
-                }
-
-                if (packet is MqttPubRelPacket pubRelPacket)
-                {
-                    await ProcessReceivedPubRelPacket(pubRelPacket, cancellationToken).ConfigureAwait(false);
-                    return;
-                }
-
-                _packetDispatcher.Dispatch(packet);
+                return ProcessReceivedPublishPacketAsync(publishPacket, cancellationToken);
             }
-            catch (Exception exception)
+
+            if (packet is MqttPingReqPacket)
             {
-                _logger.Error(exception, "Unhandled exception while processing received packet.");
+                return SendAsync(new MqttPingRespPacket(), cancellationToken);
             }
+
+            if (packet is MqttDisconnectPacket)
+            {
+                return DisconnectAsync();
+            }
+
+            if (packet is MqttPubRelPacket pubRelPacket)
+            {
+                return ProcessReceivedPubRelPacket(pubRelPacket, cancellationToken);
+            }
+
+            _packetDispatcher.Dispatch(packet);
+            return Task.FromResult(0);
         }
 
         private Task ProcessReceivedPublishPacketAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
@@ -516,13 +488,6 @@ namespace MQTTnet.Client
             _keepAliveMessageSenderTask = Task.Run(
                 () => SendKeepAliveMessagesAsync(cancellationToken),
                 cancellationToken);
-        }
-
-        private void StartProcessReceivedPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
-        {
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(() => ProcessReceivedPacketAsync(packet, cancellationToken), cancellationToken);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         private void FireApplicationMessageReceivedEvent(MqttPublishPacket publishPacket)

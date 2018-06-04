@@ -419,12 +419,14 @@ namespace MQTTnet.Client
                         keepAliveSendInterval = _options.KeepAliveSendInterval.Value;
                     }
 
-                    if (_sendTracker.Elapsed > keepAliveSendInterval)
+                    var waitTime = keepAliveSendInterval - _sendTracker.Elapsed;
+                    if (waitTime <= TimeSpan.Zero)
                     {
                         await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket()).ConfigureAwait(false);
+                        waitTime = keepAliveSendInterval;
                     }
 
-                    await Task.Delay(keepAliveSendInterval, _cancellationTokenSource.Token).ConfigureAwait(false);
+                    await Task.Delay(waitTime, _cancellationTokenSource.Token).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

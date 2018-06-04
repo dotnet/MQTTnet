@@ -14,8 +14,7 @@ namespace MQTTnet.Client
         public TimeSpan CommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
         public TimeSpan KeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(15);
         public TimeSpan? KeepAliveSendInterval { get; set; }
-        public MqttReceivedApplicationMessageProcessingMode ReceivedApplicationMessageProcessingMode { get; set; } = MqttReceivedApplicationMessageProcessingMode.SingleThread;
-
+        
         public MqttApplicationMessage WillMessage { get; set; }
     }
 }

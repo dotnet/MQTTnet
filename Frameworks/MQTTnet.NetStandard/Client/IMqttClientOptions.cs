@@ -14,8 +14,7 @@ namespace MQTTnet.Client
         TimeSpan CommunicationTimeout { get; }
         TimeSpan KeepAlivePeriod { get; }
         TimeSpan? KeepAliveSendInterval { get; }
-        MqttReceivedApplicationMessageProcessingMode ReceivedApplicationMessageProcessingMode { get; }
-
+        
         MqttApplicationMessage WillMessage { get; }
     }
 }

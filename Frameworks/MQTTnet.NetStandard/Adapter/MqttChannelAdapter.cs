@@ -135,9 +135,10 @@ namespace MQTTnet.Adapter
         {
             var fixedHeader = await MqttPacketReader.ReadFixedHeaderAsync(channel, cancellationToken).ConfigureAwait(false);
             
-            ReadingPacketStarted?.Invoke(this, EventArgs.Empty);
             try
             {
+                ReadingPacketStarted?.Invoke(this, EventArgs.Empty);
+
                 var bodyLength = await MqttPacketReader.ReadBodyLengthAsync(channel, cancellationToken).ConfigureAwait(false);
                 if (bodyLength == 0)
                 {

@@ -16,6 +16,7 @@
 * [Core] Log messages now contain the complete source path including parent components.
 * [Core] The adapter now has an _Endpoint_ definition as string containing remote IP and port.
 * [Client] Received messages are now processed in the worker thread by default. Added a new setting for switching back to dedicated threads.
+* [Client] Fixed wrong calculation for sending keep alive packets (thanks to @cstichlberger)
 * [ManagedClient] Fixed a loading issue of stored application messages (thanks to @JTrotta).
 * [Server] Added support for other WebSocket sub protocol formats like mqttv-3.1.1 (thanks to @israellot).
 * [Server] The takeover of an existing client sessions is now treated as a _clean_ disconnect of the previous client.

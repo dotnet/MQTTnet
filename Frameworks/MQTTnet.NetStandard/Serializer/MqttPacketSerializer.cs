@@ -26,14 +26,15 @@ namespace MQTTnet.Serializer
                 var fixedHeader = SerializePacket(packet, stream);
                 var remainingLength = (int)stream.Length - 5;
 
-                var remainingLengthSize = MqttPacketWriter.WriteRemainingLength(remainingLength, stream);
+                var remainingLengthBuffer = MqttPacketWriter.EncodeRemainingLength(remainingLength);
 
-                var headerSize = FixedHeaderSize + remainingLengthSize;
+                var headerSize = FixedHeaderSize + remainingLengthBuffer.Count;
                 var headerOffset = 5 - headerSize;
 
                 // Position cursor on correct offset on beginining of array (has leading 0x0)
                 stream.Seek(headerOffset, SeekOrigin.Begin);
                 stream.WriteByte(fixedHeader);
+                stream.Write(remainingLengthBuffer.Array, remainingLengthBuffer.Offset, remainingLengthBuffer.Count);
 
 #if NET461 || NET452 || NETSTANDARD2_0
                 var buffer = stream.GetBuffer();

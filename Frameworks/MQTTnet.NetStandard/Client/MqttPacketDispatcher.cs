@@ -32,8 +32,8 @@ namespace MQTTnet.Client
             
             if (_awaiters.TryRemove(key, out var awaiter))
             {
-                awaiter.SetResult(packet);
-                Task.Run(() => awaiter.SetResult(packet)); // Task.Run fixes a dead lock. Without this the client only receives one message.
+                Task task = Task.Factory.StartNew(() => awaiter.SetResult(packet)); // Task.Run fixes a dead lock. Without this the client only receives one message.
+                task.ContinueWith(t => { }, TaskContinuationOptions.OnlyOnFaulted);
                 return;
             }
 

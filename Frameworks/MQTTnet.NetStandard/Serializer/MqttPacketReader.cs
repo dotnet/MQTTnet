@@ -93,11 +93,11 @@ namespace MQTTnet.Serializer
         private static async Task<int> ReadBodyLengthAsync(IMqttChannel channel, byte initialEncodedByte, CancellationToken cancellationToken)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
-            var multiplier = 1;
-            var value = (byte)(initialEncodedByte & 127) * multiplier;
+            var multiplier = 128;
+            var value = initialEncodedByte & 127;
             int encodedByte = initialEncodedByte;
             var buffer = new byte[1];
-
+            
             while ((encodedByte & 128) != 0)
             {
                 var readCount = await channel.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);

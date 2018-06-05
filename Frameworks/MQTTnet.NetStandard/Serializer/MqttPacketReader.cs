@@ -11,19 +11,32 @@ namespace MQTTnet.Serializer
 {
     public static class MqttPacketReader
     {
-        public static async Task<byte> ReadFixedHeaderAsync(IMqttChannel channel, CancellationToken cancellationToken)
+        public static async Task<MqttFixedHeader> ReadFixedHeaderAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
-            // Wait for the next package which starts with the header. At this point there will probably
-            // some large delay and thus the thread should be put back to the pool (await). So ReadByte()
-            // is not an option here.
-            var buffer = new byte[1];
-            var readCount = await channel.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
-            if (readCount <= 0)
+            // The MQTT fixed header contains 1 byte of flags and at least 1 byte for the remaining data length.
+            // So in all cases at least 2 bytes must be read for a complete MQTT packet.
+            var buffer = new byte[2];
+            var totalBytesRead = 0;
+
+            while (totalBytesRead < buffer.Length)
             {
-                ExceptionHelper.ThrowGracefulSocketClose();
+                var bytesRead = await channel.ReadAsync(buffer, 0, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
+                if (bytesRead <= 0)
+                {
+                    ExceptionHelper.ThrowGracefulSocketClose();
+                }
+
+                totalBytesRead += bytesRead;
             }
 
-            return buffer[0];
+            var hasRemainingLength = buffer[1] != 0;
+            if (!hasRemainingLength)
+            {
+                return new MqttFixedHeader(buffer[0], 0);
+            }
+
+            var bodyLength = await ReadBodyLengthAsync(channel, buffer[1], cancellationToken);
+            return new MqttFixedHeader(buffer[0], bodyLength);
         }
 
         public static ushort ReadUInt16(this Stream stream)
@@ -64,21 +77,29 @@ namespace MQTTnet.Serializer
             return stream.ReadBytes((int)(stream.Length - stream.Position));
         }
 
-        public static async Task<int> ReadBodyLengthAsync(IMqttChannel channel, CancellationToken cancellationToken)
+        private static byte[] ReadBytes(this Stream stream, int count)
+        {
+            var buffer = new byte[count];
+            var readBytes = stream.Read(buffer, 0, count);
+
+            if (readBytes != count)
+            {
+                throw new InvalidOperationException($"Unable to read {count} bytes from the stream.");
+            }
+
+            return buffer;
+        }
+
+        private static async Task<int> ReadBodyLengthAsync(IMqttChannel channel, byte initialEncodedByte, CancellationToken cancellationToken)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
             var multiplier = 1;
-            var value = 0;
-            int encodedByte;
+            var value = (byte)(initialEncodedByte & 127) * multiplier;
+            int encodedByte = initialEncodedByte;
             var buffer = new byte[1];
 
-            do
+            while ((encodedByte & 128) != 0)
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    throw new TaskCanceledException();
-                }
-
                 var readCount = await channel.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
                 if (readCount <= 0)
                 {
@@ -94,16 +115,9 @@ namespace MQTTnet.Serializer
                 }
 
                 multiplier *= 128;
-            } while ((encodedByte & 128) != 0);
+            }
 
             return value;
-        }
-
-        private static byte[] ReadBytes(this Stream stream, int count)
-        {
-            var buffer = new byte[count];
-            stream.Read(buffer, 0, count);
-            return buffer;
         }
     }
 }

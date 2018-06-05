@@ -41,19 +41,18 @@ namespace MQTTnet.Serializer
             stream.Write(value, 0, length);
         }
 
-        public static int EncodeRemainingLength(int length, MemoryStream stream)
+        public static int WriteRemainingLength(int length, MemoryStream stream)
         {
             // write the encoded remaining length right aligned on the 4 byte buffer
-
             if (length <= 0)
             {
-                stream.Seek(3, SeekOrigin.Current);
+                stream.Seek(4, SeekOrigin.Begin);
                 stream.WriteByte(0);
                 return 1;
             }
 
             var buffer = new byte[4];
-            var offset = 0;
+            var remainingLengthSize = 0;
 
             // Alorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
             var x = length;
@@ -66,15 +65,15 @@ namespace MQTTnet.Serializer
                     encodedByte = encodedByte | 128;
                 }
 
-                buffer[offset] = (byte)encodedByte;
+                buffer[remainingLengthSize] = (byte)encodedByte;
 
-                offset++;
+                remainingLengthSize++;
             } while (x > 0);
 
-            stream.Seek(4 - offset, SeekOrigin.Current);
-            stream.Write(buffer, 0, offset);
+            stream.Seek(5 - remainingLengthSize, SeekOrigin.Begin);
+            stream.Write(buffer, 0, remainingLengthSize);
 
-            return offset;
+            return remainingLengthSize;
         }
     }
 }

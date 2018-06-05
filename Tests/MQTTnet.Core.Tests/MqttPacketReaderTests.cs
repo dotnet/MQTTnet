@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Core.Internal;
+using MQTTnet.Exceptions;
 using MQTTnet.Serializer;
 
 namespace MQTTnet.Core.Tests
@@ -10,11 +11,10 @@ namespace MQTTnet.Core.Tests
     public class MqttPacketReaderTests
     {
         [TestMethod]
+        [ExpectedException(typeof(MqttCommunicationException))]
         public void MqttPacketReader_EmptyStream()
         {
-            var header = MqttPacketReader.ReadFixedHeaderAsync(new TestMqttChannel(new MemoryStream()), CancellationToken.None).GetAwaiter().GetResult();
-
-            Assert.AreEqual(-1, header);
+            MqttPacketReader.ReadFixedHeaderAsync(new TestMqttChannel(new MemoryStream()), CancellationToken.None).GetAwaiter().GetResult();
         }
     }
 }

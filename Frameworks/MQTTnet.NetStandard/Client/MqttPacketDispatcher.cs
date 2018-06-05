@@ -15,6 +15,8 @@ namespace MQTTnet.Client
             {
                 Task.Run(() => awaiter.Value.TrySetException(exception)); // Task.Run fixes a dead lock. Without this the client only receives one message.
             }
+
+            _awaiters.Clear();
         }
 
         public void Dispatch(MqttBasePacket packet)

@@ -10,6 +10,8 @@ namespace MQTTnet.Serializer
 {
     public class MqttPacketSerializer : IMqttPacketSerializer
     {
+        private const int FixedHeaderSize = 1;
+
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
         public ArraySegment<byte> Serialize(MqttBasePacket packet)
@@ -18,27 +20,33 @@ namespace MQTTnet.Serializer
 
             using (var stream = new MemoryStream(128))
             {
-                // Leave enough head space for max header size (fixed + 4 variable remaining length)
-                stream.Position = 5;
+                // Leave enough head space for max header size (fixed + 4 variable remaining length = 5 bytes)
+                stream.Seek(5, SeekOrigin.Begin);
+
                 var fixedHeader = SerializePacket(packet, stream);
+                var remainingLength = (int)stream.Length - 5;
 
-                stream.Position = 1;
-                var remainingLength = MqttPacketWriter.EncodeRemainingLength((int)stream.Length - 5, stream);
+                var remainingLengthSize = MqttPacketWriter.WriteRemainingLength(remainingLength, stream);
 
-                var headerSize = remainingLength + 1;
+                var headerSize = FixedHeaderSize + remainingLengthSize;
                 var headerOffset = 5 - headerSize;
 
                 // Position cursor on correct offset on beginining of array (has leading 0x0)
-                stream.Position = headerOffset;
-
+                stream.Seek(headerOffset, SeekOrigin.Begin);
                 stream.WriteByte(fixedHeader);
 
 #if NET461 || NET452 || NETSTANDARD2_0
                 var buffer = stream.GetBuffer();
-#else
-                var buffer = stream.ToArray();
-#endif
                 return new ArraySegment<byte>(buffer, headerOffset, (int)stream.Length - headerOffset);
+#else
+                if (stream.TryGetBuffer(out var segment))
+                {
+                    return new ArraySegment<byte>(segment.Array, headerOffset, segment.Count - headerOffset);
+                }
+
+                var buffer = stream.ToArray();
+                return new ArraySegment<byte>(buffer, headerOffset, buffer.Length - headerOffset);
+#endif          
             }
         }
 

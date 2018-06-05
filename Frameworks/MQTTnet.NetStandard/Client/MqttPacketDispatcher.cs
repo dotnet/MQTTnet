@@ -13,7 +13,7 @@ namespace MQTTnet.Client
         {
             foreach (var awaiter in _awaiters)
             {
-                Task.Run(() => awaiter.Value.SetException(exception)); // Task.Run fixes a dead lock. Without this the client only receives one message.
+                Task.Run(() => awaiter.Value.TrySetException(exception)); // Task.Run fixes a dead lock. Without this the client only receives one message.
             }
         }
 
@@ -32,8 +32,7 @@ namespace MQTTnet.Client
             
             if (_awaiters.TryRemove(key, out var awaiter))
             {
-                awaiter.SetResult(packet);
-                Task.Run(() => awaiter.SetResult(packet)); // Task.Run fixes a dead lock. Without this the client only receives one message.
+                Task.Run(() => awaiter.TrySetResult(packet)); // Task.Run fixes a dead lock. Without this the client only receives one message.
                 return;
             }
 

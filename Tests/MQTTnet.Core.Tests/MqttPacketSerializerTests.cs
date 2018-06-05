@@ -419,11 +419,10 @@ namespace MQTTnet.Core.Tests
             {
                 var channel = new TestMqttChannel(headerStream);
                 var header = MqttPacketReader.ReadFixedHeaderAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
-                var bodyLength = MqttPacketReader.ReadBodyLengthAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
-
-                using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, bodyLength))
+                
+                using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.RemainingLength))
                 {
-                    var deserializedPacket = serializer.Deserialize(new ReceivedMqttPacket((byte)header, bodyStream));
+                    var deserializedPacket = serializer.Deserialize(new ReceivedMqttPacket(header.Flags, bodyStream));
                     var buffer2 = serializer.Serialize(deserializedPacket);
 
                     Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(buffer2)));

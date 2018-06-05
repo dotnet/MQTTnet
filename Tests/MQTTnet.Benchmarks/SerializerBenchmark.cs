@@ -51,12 +51,11 @@ namespace MQTTnet.Benchmarks
                 {
                     var channel = new TestMqttChannel(headerStream);
 
-                    var header = MqttPacketReader.ReadFixedHeaderAsync(new TestMqttChannel(headerStream), CancellationToken.None).GetAwaiter().GetResult();
-                    var bodyLength = MqttPacketReader.ReadBodyLengthAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
-
-                    using (var bodyStream = new MemoryStream(Join(_serializedPacket), (int)headerStream.Position, bodyLength))
+                    var header = MqttPacketReader.ReadFixedHeaderAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
+                    
+                    using (var bodyStream = new MemoryStream(Join(_serializedPacket), (int)headerStream.Position, header.RemainingLength))
                     {
-                        _serializer.Deserialize(new ReceivedMqttPacket((byte)header, bodyStream));
+                        _serializer.Deserialize(new ReceivedMqttPacket(header.Flags, bodyStream));
                     }
                 }
             }

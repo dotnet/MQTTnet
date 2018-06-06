@@ -15,7 +15,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.NetStandard", "Fram
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{67C28AC1-BC3A-420A-BE9C-FA2401431CF9}"
 	ProjectSection(SolutionItems) = preProject
-		appveyor.yml = appveyor.yml
 		Build\build.ps1 = Build\build.ps1
 		Build\MQTTnet.AspNetCore.nuspec = Build\MQTTnet.AspNetCore.nuspec
 		Build\MQTTnet.Extensions.ManagedClient.nuspec = Build\MQTTnet.Extensions.ManagedClient.nuspec

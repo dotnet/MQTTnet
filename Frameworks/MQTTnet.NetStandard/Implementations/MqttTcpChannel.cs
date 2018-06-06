@@ -84,35 +84,8 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            try
-            {
-                _stream?.Dispose();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (NullReferenceException)
-            {
-            }
-            finally
-            {
-                _stream = null;
-            }
-
-            try
-            {
-                _socket?.Dispose();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (NullReferenceException)
-            {
-            }
-            finally
-            {
-                _socket = null;
-            }
+            TryDispose(_stream, () => _stream = null);
+            TryDispose(_socket, () => _socket = null);
         }
 
         private bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -171,6 +144,24 @@ namespace MQTTnet.Implementations
             else
             {
                 _stream = new NetworkStream(_socket, true);
+            }
+        }
+
+        private static void TryDispose(IDisposable disposable, Action afterDispose)
+        {
+            try
+            {
+                disposable?.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (NullReferenceException)
+            {
+            }
+            finally
+            {
+                afterDispose();
             }
         }
     }

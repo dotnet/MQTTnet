@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MQTTnet.ManagedClient
+namespace MQTTnet.Extensions.ManagedClient
 {
     public class ApplicationMessageProcessedEventArgs : EventArgs
     {

@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Internal;
 
-namespace MQTTnet.ManagedClient
+namespace MQTTnet.Extensions.ManagedClient
 {
     public class ManagedMqttClientStorageManager
     {

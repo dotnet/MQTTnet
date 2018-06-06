@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Client;
 
-namespace MQTTnet.ManagedClient
+namespace MQTTnet.Extensions.ManagedClient
 {
     public interface IManagedMqttClient : IApplicationMessageReceiver, IApplicationMessagePublisher, IDisposable
     {

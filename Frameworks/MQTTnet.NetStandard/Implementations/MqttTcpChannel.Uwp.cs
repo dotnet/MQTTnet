@@ -92,50 +92,9 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            try
-            {
-                _readStream?.Dispose();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (NullReferenceException)
-            {
-            }
-            finally
-            {
-                _readStream = null;
-            }
-
-            try
-            {
-                _writeStream?.Dispose();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (NullReferenceException)
-            {
-            }
-            finally
-            {
-                _writeStream = null;
-            }
-
-            try
-            {
-                _socket?.Dispose();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (NullReferenceException)
-            {
-            }
-            finally
-            {
-                _socket = null;
-            }
+            TryDispose(_readStream, () => _readStream = null);
+            TryDispose(_writeStream, () => _writeStream = null);
+            TryDispose(_socket, () => _socket = null);
         }
 
         private static Certificate LoadCertificate(MqttClientTcpOptions options)
@@ -186,6 +145,24 @@ namespace MQTTnet.Implementations
         {
             _readStream = _socket.InputStream.AsStreamForRead(_bufferSize);
             _writeStream = _socket.OutputStream.AsStreamForWrite(_bufferSize);
+        }
+
+        private static void TryDispose(IDisposable disposable, Action afterDispose)
+        {
+            try
+            {
+                disposable?.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (NullReferenceException)
+            {
+            }
+            finally
+            {
+                afterDispose();
+            }
         }
     }
 }

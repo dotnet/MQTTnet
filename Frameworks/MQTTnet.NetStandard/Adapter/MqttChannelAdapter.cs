@@ -177,34 +177,17 @@ namespace MQTTnet.Adapter
             {
                 await action().ConfigureAwait(false);
             }
-            catch (TaskCanceledException)
+            catch (Exception exception)
             {
-                throw;
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (MqttCommunicationTimedOutException)
-            {
-                throw;
-            }
-            catch (MqttCommunicationException)
-            {
-                throw;
-            }
-            catch (COMException comException)
-            {
-                if ((uint)comException.HResult == ErrorOperationAborted)
+                if (exception is TaskCanceledException ||
+                    exception is OperationCanceledException ||
+                    exception is MqttCommunicationTimedOutException ||
+                    exception is MqttCommunicationException)
                 {
-                    throw new OperationCanceledException();
+                    throw;
                 }
 
-                throw new MqttCommunicationException(comException);
-            }
-            catch (IOException exception)
-            {
-                if (exception.InnerException is SocketException socketException)
+                if (exception is IOException && exception.InnerException is SocketException socketException)
                 {
                     if (socketException.SocketErrorCode == SocketError.ConnectionAborted)
                     {
@@ -212,10 +195,14 @@ namespace MQTTnet.Adapter
                     }
                 }
 
-                throw new MqttCommunicationException(exception);
-            }
-            catch (Exception exception)
-            {
+                if (exception is COMException comException)
+                {
+                    if ((uint)comException.HResult == ErrorOperationAborted)
+                    {
+                        throw new OperationCanceledException();
+                    }
+                }
+
                 throw new MqttCommunicationException(exception);
             }
         }

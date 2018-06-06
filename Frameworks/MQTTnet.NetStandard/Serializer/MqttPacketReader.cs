@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Exceptions;
@@ -23,6 +20,11 @@ namespace MQTTnet.Serializer
                 var bytesRead = await channel.ReadAsync(buffer, 0, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
                 if (bytesRead <= 0)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return null;
+                    }
+
                     ExceptionHelper.ThrowGracefulSocketClose();
                 }
 
@@ -35,59 +37,8 @@ namespace MQTTnet.Serializer
                 return new MqttFixedHeader(buffer[0], 0);
             }
 
-            var bodyLength = await ReadBodyLengthAsync(channel, buffer[1], cancellationToken);
+            var bodyLength = await ReadBodyLengthAsync(channel, buffer[1], cancellationToken).ConfigureAwait(false);
             return new MqttFixedHeader(buffer[0], bodyLength);
-        }
-
-        public static ushort ReadUInt16(this Stream stream)
-        {
-            var buffer = stream.ReadBytes(2);
-
-            var temp = buffer[0];
-            buffer[0] = buffer[1];
-            buffer[1] = temp;
-
-            return BitConverter.ToUInt16(buffer, 0);
-        }
-
-        public static string ReadStringWithLengthPrefix(this Stream stream)
-        {
-            var buffer = stream.ReadWithLengthPrefix();
-            if (buffer.Length == 0)
-            {
-                return string.Empty;
-            }
-
-            return Encoding.UTF8.GetString(buffer, 0, buffer.Length);
-        }
-
-        public static byte[] ReadWithLengthPrefix(this Stream stream)
-        {
-            var length = stream.ReadUInt16();
-            if (length == 0)
-            {
-                return new byte[0];
-            }
-
-            return stream.ReadBytes(length);
-        }
-
-        public static byte[] ReadRemainingData(this Stream stream)
-        {
-            return stream.ReadBytes((int)(stream.Length - stream.Position));
-        }
-
-        private static byte[] ReadBytes(this Stream stream, int count)
-        {
-            var buffer = new byte[count];
-            var readBytes = stream.Read(buffer, 0, count);
-
-            if (readBytes != count)
-            {
-                throw new InvalidOperationException($"Unable to read {count} bytes from the stream.");
-            }
-
-            return buffer;
         }
 
         private static async Task<int> ReadBodyLengthAsync(IMqttChannel channel, byte initialEncodedByte, CancellationToken cancellationToken)
@@ -96,17 +47,10 @@ namespace MQTTnet.Serializer
             var multiplier = 128;
             var value = initialEncodedByte & 127;
             int encodedByte = initialEncodedByte;
-            var buffer = new byte[1];
-            
+
             while ((encodedByte & 128) != 0)
             {
-                var readCount = await channel.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
-                if (readCount <= 0)
-                {
-                    ExceptionHelper.ThrowGracefulSocketClose();
-                }
-
-                encodedByte = buffer[0];
+                encodedByte = await ReadByteAsync(channel, cancellationToken).ConfigureAwait(false);
 
                 value += (byte)(encodedByte & 127) * multiplier;
                 if (multiplier > 128 * 128 * 128)
@@ -118,6 +62,18 @@ namespace MQTTnet.Serializer
             }
 
             return value;
+        }
+
+        private static async Task<byte> ReadByteAsync(IMqttChannel channel, CancellationToken cancellationToken)
+        {
+            var buffer = new byte[1];
+            var readCount = await channel.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+            if (readCount <= 0)
+            {
+                ExceptionHelper.ThrowGracefulSocketClose();
+            }
+
+            return buffer[0];
         }
     }
 }

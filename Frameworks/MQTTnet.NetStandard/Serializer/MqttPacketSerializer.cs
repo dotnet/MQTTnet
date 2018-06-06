@@ -104,7 +104,7 @@ namespace MQTTnet.Serializer
             }
         }
 
-        private static MqttBasePacket DeserializeUnsubAck(Stream body)
+        private static MqttBasePacket DeserializeUnsubAck(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -114,7 +114,7 @@ namespace MQTTnet.Serializer
             };
         }
 
-        private static MqttBasePacket DeserializePubComp(Stream body)
+        private static MqttBasePacket DeserializePubComp(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -124,7 +124,7 @@ namespace MQTTnet.Serializer
             };
         }
 
-        private static MqttBasePacket DeserializePubRel(Stream body)
+        private static MqttBasePacket DeserializePubRel(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -134,7 +134,7 @@ namespace MQTTnet.Serializer
             };
         }
 
-        private static MqttBasePacket DeserializePubRec(Stream body)
+        private static MqttBasePacket DeserializePubRec(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -144,7 +144,7 @@ namespace MQTTnet.Serializer
             };
         }
 
-        private static MqttBasePacket DeserializePubAck(Stream body)
+        private static MqttBasePacket DeserializePubAck(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -154,7 +154,7 @@ namespace MQTTnet.Serializer
             };
         }
 
-        private static MqttBasePacket DeserializeUnsubscribe(Stream body)
+        private static MqttBasePacket DeserializeUnsubscribe(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -163,7 +163,7 @@ namespace MQTTnet.Serializer
                 PacketIdentifier = body.ReadUInt16(),
             };
 
-            while (body.Position != body.Length)
+            while (!body.EndOfStream)
             {
                 packet.TopicFilters.Add(body.ReadStringWithLengthPrefix());
             }
@@ -171,7 +171,7 @@ namespace MQTTnet.Serializer
             return packet;
         }
 
-        private static MqttBasePacket DeserializeSubscribe(Stream body)
+        private static MqttBasePacket DeserializeSubscribe(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -180,7 +180,7 @@ namespace MQTTnet.Serializer
                 PacketIdentifier = body.ReadUInt16()
             };
 
-            while (body.Position != body.Length)
+            while (!body.EndOfStream)
             {
                 packet.TopicFilters.Add(new TopicFilter(
                     body.ReadStringWithLengthPrefix(),
@@ -213,7 +213,7 @@ namespace MQTTnet.Serializer
                 PacketIdentifier = packetIdentifier,
                 Retain = retain,
                 Topic = topic,
-                Payload = body.ReadRemainingData(),
+                Payload = body.ReadRemainingData().ToArray(),
                 QualityOfServiceLevel = qualityOfServiceLevel,
                 Dup = dup
             };
@@ -221,7 +221,7 @@ namespace MQTTnet.Serializer
             return packet;
         }
 
-        private static MqttBasePacket DeserializeConnect(Stream body)
+        private static MqttBasePacket DeserializeConnect(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -279,7 +279,7 @@ namespace MQTTnet.Serializer
                 packet.WillMessage = new MqttApplicationMessage
                 {
                     Topic = body.ReadStringWithLengthPrefix(),
-                    Payload = body.ReadWithLengthPrefix(),
+                    Payload = body.ReadWithLengthPrefix().ToArray(),
                     QualityOfServiceLevel = (MqttQualityOfServiceLevel)willQoS,
                     Retain = willRetain
                 };
@@ -299,7 +299,7 @@ namespace MQTTnet.Serializer
             return packet;
         }
 
-        private static MqttBasePacket DeserializeSubAck(Stream body)
+        private static MqttBasePacket DeserializeSubAck(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -308,7 +308,7 @@ namespace MQTTnet.Serializer
                 PacketIdentifier = body.ReadUInt16()
             };
 
-            while (body.Position != body.Length)
+            while (!body.EndOfStream)
             {
                 packet.SubscribeReturnCodes.Add((MqttSubscribeReturnCode)body.ReadByte());
             }
@@ -316,7 +316,7 @@ namespace MQTTnet.Serializer
             return packet;
         }
 
-        private MqttBasePacket DeserializeConnAck(Stream body)
+        private MqttBasePacket DeserializeConnAck(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -614,7 +614,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(type);
         }
 
-        private static void ThrowIfBodyIsEmpty(Stream body)
+        private static void ThrowIfBodyIsEmpty(MqttPacketBodyReader body)
         {
             if (body == null || body.Length == 0)
             {

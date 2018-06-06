@@ -86,8 +86,11 @@ namespace MQTTnet.Server
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     var packet = await adapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationTokenSource.Token).ConfigureAwait(false);
-                    _keepAliveMonitor.PacketReceived(packet);
-                    await ProcessReceivedPacketAsync(adapter, packet, _cancellationTokenSource.Token).ConfigureAwait(false);
+                    if (packet != null)
+                    {
+                        _keepAliveMonitor.PacketReceived(packet);
+                        await ProcessReceivedPacketAsync(adapter, packet, _cancellationTokenSource.Token).ConfigureAwait(false);
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -351,7 +354,7 @@ namespace MQTTnet.Server
 
         private Task HandleIncomingPublishPacketWithQoS2(IMqttChannelAdapter adapter, MqttApplicationMessage applicationMessage, MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
-            // QoS 2 is implement as method "B" [4.3.3 QoS 2: Exactly once delivery]
+            // QoS 2 is implement as method "B" (4.3.3 QoS 2: Exactly once delivery)
             _sessionsManager.StartDispatchApplicationMessage(this, applicationMessage);
 
             var response = new MqttPubRecPacket { PacketIdentifier = publishPacket.PacketIdentifier };

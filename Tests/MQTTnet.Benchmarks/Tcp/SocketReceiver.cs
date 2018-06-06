@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO.Pipelines;
 using System.Net.Sockets;
-using Playground.Client.Mqtt.Tcp;
 
 namespace MQTTnet.Benchmarks.Tcp
 {

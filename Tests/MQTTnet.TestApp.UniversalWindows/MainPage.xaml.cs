@@ -8,9 +8,9 @@ using Windows.UI.Xaml;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Implementations;
-using MQTTnet.ManagedClient;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MqttClientConnectedEventArgs = MQTTnet.Client.MqttClientConnectedEventArgs;
@@ -613,7 +613,6 @@ namespace MQTTnet.TestApp.UniversalWindows
                 await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
                 await mqttClient.StartAsync(options);
             }
-
         }
     }
 }

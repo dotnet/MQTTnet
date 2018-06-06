@@ -8,7 +8,6 @@ using System;
 using System.Threading;
 using System.IO;
 using MQTTnet.Adapter;
-using MQTTnet.Core.Internal;
 
 namespace MQTTnet.Benchmarks
 {
@@ -55,7 +54,7 @@ namespace MQTTnet.Benchmarks
                     
                     using (var bodyStream = new MemoryStream(Join(_serializedPacket), (int)headerStream.Position, header.RemainingLength))
                     {
-                        _serializer.Deserialize(new ReceivedMqttPacket(header.Flags, bodyStream));
+                        _serializer.Deserialize(new ReceivedMqttPacket(header.Flags, new MqttPacketBodyReader(bodyStream.ToArray())));
                     }
                 }
             }

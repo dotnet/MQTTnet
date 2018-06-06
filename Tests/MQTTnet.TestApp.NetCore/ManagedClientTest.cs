@@ -4,7 +4,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using MQTTnet.Client;
-using MQTTnet.ManagedClient;
+using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore

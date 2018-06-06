@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
-namespace Playground.Client.Mqtt.Tcp
+namespace MQTTnet.Benchmarks.Tcp
 {
     public static class BufferExtensions
     {

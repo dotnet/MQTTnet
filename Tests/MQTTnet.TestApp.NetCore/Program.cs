@@ -21,6 +21,7 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("4 = Start managed client");
             Console.WriteLine("5 = Start public broker test");
             Console.WriteLine("6 = Start server & client");
+            Console.WriteLine("7 = Client flow test");
 
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.KeyChar == '1')
@@ -46,6 +47,10 @@ namespace MQTTnet.TestApp.NetCore
             else if (pressedKey.KeyChar == '6')
             {
                 Task.Run(ServerAndClientTest.RunAsync);
+            }
+            else if (pressedKey.KeyChar == '7')
+            {
+                Task.Run(ClientFlowTest.RunAsync);
             }
 
             Thread.Sleep(Timeout.Infinite);

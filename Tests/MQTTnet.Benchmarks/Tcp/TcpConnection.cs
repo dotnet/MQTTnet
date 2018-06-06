@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using MQTTnet.Exceptions;
-using Playground.Client.Mqtt.Tcp;
 
 namespace MQTTnet.Benchmarks.Tcp
 {

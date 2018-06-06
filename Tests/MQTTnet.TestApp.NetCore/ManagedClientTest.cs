@@ -76,23 +76,23 @@ namespace MQTTnet.TestApp.NetCore
         {
             private const string Filename = @"RetainedMessages.json";
 
-            public Task SaveQueuedMessagesAsync(IList<MqttApplicationMessage> messages)
+            public Task SaveQueuedMessagesAsync(IList<ManagedMqttApplicationMessage> messages)
             {
                 File.WriteAllText(Filename, JsonConvert.SerializeObject(messages));
                 return Task.FromResult(0);
             }
 
-            public Task<IList<MqttApplicationMessage>> LoadQueuedMessagesAsync()
+            public Task<IList<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync()
             {
-                IList<MqttApplicationMessage> retainedMessages;
+                IList<ManagedMqttApplicationMessage> retainedMessages;
                 if (File.Exists(Filename))
                 {
                     var json = File.ReadAllText(Filename);
-                    retainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(json);
+                    retainedMessages = JsonConvert.DeserializeObject<List<ManagedMqttApplicationMessage>>(json);
                 }
                 else
                 {
-                    retainedMessages = new List<MqttApplicationMessage>();
+                    retainedMessages = new List<ManagedMqttApplicationMessage>();
                 }
 
                 return Task.FromResult(retainedMessages);

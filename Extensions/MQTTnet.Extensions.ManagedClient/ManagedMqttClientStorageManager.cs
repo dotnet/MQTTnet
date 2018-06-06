@@ -8,7 +8,7 @@ namespace MQTTnet.Extensions.ManagedClient
 {
     public class ManagedMqttClientStorageManager
     {
-        private readonly List<MqttApplicationMessage> _messages = new List<MqttApplicationMessage>();
+        private readonly List<ManagedMqttApplicationMessage> _messages = new List<ManagedMqttApplicationMessage>();
         private readonly AsyncLock _messagesLock = new AsyncLock();
 
         private readonly IManagedMqttClientStorage _storage;
@@ -18,7 +18,7 @@ namespace MQTTnet.Extensions.ManagedClient
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
 
-        public async Task<List<MqttApplicationMessage>> LoadQueuedMessagesAsync()
+        public async Task<List<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync()
         {
             var loadedMessages = await _storage.LoadQueuedMessagesAsync().ConfigureAwait(false);
             _messages.AddRange(loadedMessages);
@@ -26,7 +26,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return _messages;
         }
 
-        public async Task AddAsync(MqttApplicationMessage applicationMessage)
+        public async Task AddAsync(ManagedMqttApplicationMessage applicationMessage)
         {
             using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
@@ -35,7 +35,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        public async Task RemoveAsync(MqttApplicationMessage applicationMessage)
+        public async Task RemoveAsync(ManagedMqttApplicationMessage applicationMessage)
         {
             using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {

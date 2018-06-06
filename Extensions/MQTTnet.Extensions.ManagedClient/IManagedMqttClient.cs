@@ -20,5 +20,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
         Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters);
         Task UnsubscribeAsync(IEnumerable<string> topics);
+
+        Task PublishAsync(IEnumerable<ManagedMqttApplicationMessage> applicationMessages);
     }
 }

@@ -4,7 +4,6 @@ using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
-using MQTTnet.ManagedClient;
 using MQTTnet.Server;
 
 namespace MQTTnet
@@ -21,18 +20,6 @@ namespace MQTTnet
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             return new MqttClient(new MqttClientAdapterFactory(), logger);
-        }
-
-        public IManagedMqttClient CreateManagedMqttClient()
-        {
-            return new ManagedMqttClient(CreateMqttClient(), new MqttNetLogger().CreateChildLogger());
-        }
-
-        public IManagedMqttClient CreateManagedMqttClient(IMqttNetLogger logger)
-        {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
-
-            return new ManagedMqttClient(CreateMqttClient(), logger.CreateChildLogger());
         }
 
         public IMqttServer CreateMqttServer()

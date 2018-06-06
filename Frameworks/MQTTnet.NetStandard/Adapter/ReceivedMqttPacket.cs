@@ -1,11 +1,10 @@
-﻿using System;
-using System.IO;
+﻿using MQTTnet.Serializer;
 
 namespace MQTTnet.Adapter
 {
-    public class ReceivedMqttPacket : IDisposable
+    public class ReceivedMqttPacket
     {
-        public ReceivedMqttPacket(byte fixedHeader, MemoryStream body)
+        public ReceivedMqttPacket(byte fixedHeader, MqttPacketBodyReader body)
         {
             FixedHeader = fixedHeader;
             Body = body;
@@ -13,11 +12,6 @@ namespace MQTTnet.Adapter
 
         public byte FixedHeader { get; }
 
-        public MemoryStream Body { get; }
-
-        public void Dispose()
-        {
-            Body?.Dispose();
-        }
+        public MqttPacketBodyReader Body { get; }
     }
 }

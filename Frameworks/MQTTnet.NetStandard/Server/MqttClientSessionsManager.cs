@@ -41,11 +41,15 @@ namespace MQTTnet.Server
 
             try
             {
-                if (!(await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken)
-                    .ConfigureAwait(false) is MqttConnectPacket connectPacket))
+                var firstPacket = await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false);
+                if (firstPacket == null)
                 {
-                    throw new MqttProtocolViolationException(
-                        "The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
+                    return;
+                }
+
+                if (!(firstPacket is MqttConnectPacket connectPacket))
+                {
+                    throw new MqttProtocolViolationException("The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
                 }
 
                 clientId = connectPacket.ClientId;

@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Playground.Client.Mqtt.Tcp
+namespace MQTTnet.Benchmarks.Tcp
 {
     public class SocketAwaitable : ICriticalNotifyCompletion
     {

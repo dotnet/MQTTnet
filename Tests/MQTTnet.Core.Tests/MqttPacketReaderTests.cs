@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Core.Internal;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Serializer;
 
 namespace MQTTnet.Core.Tests

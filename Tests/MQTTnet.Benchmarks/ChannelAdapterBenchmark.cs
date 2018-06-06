@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQTTnet.Adapter;
-using MQTTnet.Core.Internal;
 using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 using MQTTnet.Packets;

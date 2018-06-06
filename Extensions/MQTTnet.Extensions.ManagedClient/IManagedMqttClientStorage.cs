@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MQTTnet.ManagedClient
+namespace MQTTnet.Extensions.ManagedClient
 {
     public interface IManagedMqttClientStorage
     {

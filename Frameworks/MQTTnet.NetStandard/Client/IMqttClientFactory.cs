@@ -1,5 +1,4 @@
 ﻿using MQTTnet.Diagnostics;
-using MQTTnet.ManagedClient;
 
 namespace MQTTnet.Client
 {
@@ -8,9 +7,5 @@ namespace MQTTnet.Client
         IMqttClient CreateMqttClient();
 
         IMqttClient CreateMqttClient(IMqttNetLogger logger);
-        
-        IManagedMqttClient CreateManagedMqttClient();
-
-        IManagedMqttClient CreateManagedMqttClient(IMqttNetLogger logger);
     }
 }

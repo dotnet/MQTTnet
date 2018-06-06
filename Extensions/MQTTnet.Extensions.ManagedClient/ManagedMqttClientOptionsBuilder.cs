@@ -1,7 +1,7 @@
 ﻿using System;
 using MQTTnet.Client;
 
-namespace MQTTnet.ManagedClient
+namespace MQTTnet.Extensions.ManagedClient
 {
     public class ManagedMqttClientOptionsBuilder
     {

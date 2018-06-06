@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.ManagedClient
+﻿namespace MQTTnet.Extensions.ManagedClient
 {
     public enum ReconnectionResult
     {

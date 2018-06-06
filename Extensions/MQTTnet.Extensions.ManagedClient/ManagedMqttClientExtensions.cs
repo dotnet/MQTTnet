@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.ManagedClient
+namespace MQTTnet.Extensions.ManagedClient
 {
     public static class ManagedMqttClientExtensions
     {

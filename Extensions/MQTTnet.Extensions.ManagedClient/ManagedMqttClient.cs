@@ -10,7 +10,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.ManagedClient
+namespace MQTTnet.Extensions.ManagedClient
 {
     public class ManagedMqttClient : IManagedMqttClient
     {

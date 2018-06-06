@@ -19,7 +19,7 @@
 * [Client] Fixed wrong calculation for sending keep alive packets (thanks to @cstichlberger)
 * [Client] A clean disconnect (via DisconnectAsync) will no longer throw an exception.
 * [ManagedClient] The managed client is moved to a separate nuget package.
-* [ManagedClient] Added an own message format with extended properties like ID.
+* [ManagedClient] Added an own message format with extended properties like ID (BREAKING CHANGE).
 * [ManagedClient] Fixed a loading issue of stored application messages (thanks to @JTrotta).
 * [Server] Added support for other WebSocket sub protocol formats like mqttv-3.1.1 (thanks to @israellot).
 * [Server] The takeover of an existing client sessions is now treated as a _clean_ disconnect of the previous client.

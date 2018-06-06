@@ -14,7 +14,7 @@ namespace MQTTnet.Extensions.ManagedClient
 {
     public class ManagedMqttClient : IManagedMqttClient
     {
-        private readonly BlockingCollection<MqttApplicationMessage> _messageQueue = new BlockingCollection<MqttApplicationMessage>();
+        private readonly BlockingCollection<ManagedMqttApplicationMessage> _messageQueue = new BlockingCollection<ManagedMqttApplicationMessage>();
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly AsyncLock _subscriptionsLock = new AsyncLock();
         private readonly List<string> _unsubscriptions = new List<string>();
@@ -99,7 +99,15 @@ namespace MQTTnet.Extensions.ManagedClient
             return Task.FromResult(0);
         }
 
-        public async Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        {
+            if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
+
+            return PublishAsync(applicationMessages.Select(m =>
+                new ManagedMqttApplicationMessageBuilder().WithApplicationMessage(m).Build()));
+        }
+
+        public async Task PublishAsync(IEnumerable<ManagedMqttApplicationMessage> applicationMessages)
         {
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
@@ -244,12 +252,12 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        private async Task TryPublishQueuedMessageAsync(MqttApplicationMessage message)
+        private async Task TryPublishQueuedMessageAsync(ManagedMqttApplicationMessage message)
         {
             Exception transmitException = null;
             try
             {
-                await _mqttClient.PublishAsync(message).ConfigureAwait(false);
+                await _mqttClient.PublishAsync(message.ApplicationMessage).ConfigureAwait(false);
 
                 if (_storageManager != null)
                 {
@@ -260,9 +268,9 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 transmitException = exception;
 
-                _logger.Warning(exception, "Publishing application message failed.");
+                _logger.Warning(exception, $"Publishing application ({message.Id}) message failed.");
 
-                if (message.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
+                if (message.ApplicationMessage.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
                 {
                     _messageQueue.Add(message);
                 }
@@ -270,7 +278,7 @@ namespace MQTTnet.Extensions.ManagedClient
             catch (Exception exception)
             {
                 transmitException = exception;
-                _logger.Error(exception, "Unhandled exception while publishing queued application message.");
+                _logger.Error(exception, $"Unhandled exception while publishing application message ({message.Id}).");
             }
             finally
             {
@@ -294,7 +302,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 _subscriptionsNotPushed = false;
             }
-            
+
             if (!subscriptions.Any() && !unsubscriptions.Any())
             {
                 return;

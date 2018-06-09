@@ -15,9 +15,9 @@ namespace MQTTnet.Implementations
     {
         private readonly List<MqttTcpServerListener> _listeners = new List<MqttTcpServerListener>();
         private readonly IMqttNetChildLogger _logger;
-        
+
         private CancellationTokenSource _cancellationTokenSource;
-        
+
         public MqttTcpServerAdapter(IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -35,7 +35,7 @@ namespace MQTTnet.Implementations
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
-                RegisterListeners(options.DefaultEndpointOptions);
+                RegisterListeners(options.DefaultEndpointOptions, null);
             }
 
             if (options.TlsEndpointOptions.IsEnabled)
@@ -51,7 +51,7 @@ namespace MQTTnet.Implementations
                     throw new InvalidOperationException("The certificate for TLS encryption must contain the private key.");
                 }
 
-                RegisterListeners(options.TlsEndpointOptions);
+                RegisterListeners(options.TlsEndpointOptions, tlsCertificate);
             }
 
             return Task.FromResult(0);
@@ -77,16 +77,8 @@ namespace MQTTnet.Implementations
             _listeners.Clear();
         }
 
-        private void RegisterListeners(MqttServerTcpEndpointBaseOptions options)
+        private void RegisterListeners(MqttServerTcpEndpointBaseOptions options, X509Certificate2 tlsCertificate)
         {
-            var tlsOptions = options as MqttServerTlsTcpEndpointOptions;
-
-            X509Certificate2 tlsCertificate = null;
-            if (tlsOptions != null)
-            {
-                tlsCertificate = new X509Certificate2(tlsOptions.Certificate);
-            }
-
             var listenerV4 = new MqttTcpServerListener(
                 AddressFamily.InterNetwork,
                 options,
@@ -97,7 +89,7 @@ namespace MQTTnet.Implementations
             listenerV4.ClientAccepted += OnClientAccepted;
             listenerV4.Start();
             _listeners.Add(listenerV4);
-            
+
             var listenerV6 = new MqttTcpServerListener(
                 AddressFamily.InterNetworkV6,
                 options,

@@ -18,6 +18,7 @@ namespace MQTTnet.TestApp.NetCore
             var concurrent = Console.ReadKey(true).KeyChar == 'c';
 
             var server = Task.Run(RunServerAsync);
+            await Task.Delay(1000);
             var client = Task.Run(() => RunClientAsync(2000, TimeSpan.FromMilliseconds(10), concurrent));
 
             await Task.WhenAll(server, client).ConfigureAwait(false);

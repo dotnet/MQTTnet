@@ -9,7 +9,8 @@ namespace MQTTnet.Server
 
         public MqttServerOptionsBuilder WithConnectionBacklog(int value)
         {
-            _options.ConnectionBacklog = value;
+            _options.DefaultEndpointOptions.ConnectionBacklog = value;
+            _options.TlsEndpointOptions.ConnectionBacklog = value;
             return this;
         }
 
@@ -31,7 +32,7 @@ namespace MQTTnet.Server
             return this;
         }
 
-        public MqttServerOptionsBuilder WithDefaultEndpointPort(int? value)
+        public MqttServerOptionsBuilder WithDefaultEndpointPort(int value)
         {
             _options.DefaultEndpointOptions.Port = value;
             return this;
@@ -39,10 +40,16 @@ namespace MQTTnet.Server
 
         public MqttServerOptionsBuilder WithDefaultEndpointBoundIPAddress(IPAddress value)
         {
-            _options.DefaultEndpointOptions.BoundIPAddress = value ?? IPAddress.Any;
+            _options.DefaultEndpointOptions.BoundInterNetworkAddress = value ?? IPAddress.Any;
             return this;
         }
-        
+
+        public MqttServerOptionsBuilder WithDefaultEndpointBoundIPV6Address(IPAddress value)
+        {
+            _options.DefaultEndpointOptions.BoundInterNetworkV6Address = value ?? IPAddress.Any;
+            return this;
+        }
+
         public MqttServerOptionsBuilder WithoutDefaultEndpoint()
         {
             _options.DefaultEndpointOptions.IsEnabled = false;
@@ -55,7 +62,7 @@ namespace MQTTnet.Server
             return this;
         }
 
-        public MqttServerOptionsBuilder WithEncryptedEndpointPort(int? value)
+        public MqttServerOptionsBuilder WithEncryptedEndpointPort(int value)
         {
             _options.TlsEndpointOptions.Port = value;
             return this;
@@ -63,7 +70,7 @@ namespace MQTTnet.Server
 
         public MqttServerOptionsBuilder WithEncryptedEndpointBoundIPAddress(IPAddress value)
         {
-            _options.TlsEndpointOptions.BoundIPAddress = value;
+            _options.TlsEndpointOptions.BoundInterNetworkAddress = value;
             return this;
         }
 

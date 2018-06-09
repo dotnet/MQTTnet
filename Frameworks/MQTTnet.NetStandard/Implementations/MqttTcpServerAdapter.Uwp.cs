@@ -38,8 +38,8 @@ namespace MQTTnet.Implementations
                 _defaultEndpointSocket.Control.KeepAlive = true;
                 _defaultEndpointSocket.Control.QualityOfService = SocketQualityOfService.LowLatency;
                 _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
-
-                await _defaultEndpointSocket.BindServiceNameAsync(options.GetDefaultEndpointPort().ToString(), SocketProtectionLevel.PlainSocket);
+                
+                await _defaultEndpointSocket.BindServiceNameAsync(options.DefaultEndpointOptions.Port.ToString(), SocketProtectionLevel.PlainSocket);
                 
             }
 

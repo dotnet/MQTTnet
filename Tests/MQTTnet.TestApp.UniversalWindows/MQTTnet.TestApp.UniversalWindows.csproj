@@ -135,9 +135,9 @@
       <Project>{c444e9c8-95fa-430e-9126-274129de16cd}</Project>
       <Name>MQTTnet.Extensions.Rpc</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.Netstandard\MQTTnet.NetStandard.csproj">
+    <ProjectReference Include="..\..\Frameworks\MQTTnet.NetStandard\MQTTnet.csproj">
       <Project>{3587e506-55a2-4eb3-99c7-dc01e42d25d2}</Project>
-      <Name>MQTTnet.NetStandard</Name>
+      <Name>MQTTnet</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

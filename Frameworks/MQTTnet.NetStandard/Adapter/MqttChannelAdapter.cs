@@ -65,11 +65,6 @@ namespace MQTTnet.Adapter
 
             foreach (var packet in packets)
             {
-                if (packet == null)
-                {
-                    continue;
-                }
-
                 await SendPacketAsync(timeout, cancellationToken, packet).ConfigureAwait(false);
             }
         }

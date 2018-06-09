@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Extensions\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.NetStandard\MQTTnet.NetStandard.csproj" />
+    <ProjectReference Include="..\..\Frameworks\MQTTnet.NetStandard\MQTTnet.csproj" />
   </ItemGroup>
 
 </Project>

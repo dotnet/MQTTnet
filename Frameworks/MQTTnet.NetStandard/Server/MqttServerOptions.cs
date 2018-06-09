@@ -4,13 +4,11 @@ namespace MQTTnet.Server
 {
     public class MqttServerOptions : IMqttServerOptions
     {
-        public MqttServerDefaultEndpointOptions DefaultEndpointOptions { get; } = new MqttServerDefaultEndpointOptions();
+        public MqttServerTcpEndpointOptions DefaultEndpointOptions { get; } = new MqttServerTcpEndpointOptions();
 
-        public MqttServerTlsEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsEndpointOptions();
+        public MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsTcpEndpointOptions();
 
         public bool EnablePersistentSessions { get; set; }
-
-        public int ConnectionBacklog { get; set; } = 10;
 
         public int MaxPendingMessagesPerClient { get; set; } = 250;
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage;

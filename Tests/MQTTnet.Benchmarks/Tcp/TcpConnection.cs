@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipelines;
 using System.Net;
@@ -21,7 +20,7 @@ namespace MQTTnet.Benchmarks.Tcp
 
         public TcpConnection(EndPoint endPoint)
         {
-            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _endPoint = endPoint;
 
             _sender = new SocketSender(_socket, PipeScheduler.ThreadPool);

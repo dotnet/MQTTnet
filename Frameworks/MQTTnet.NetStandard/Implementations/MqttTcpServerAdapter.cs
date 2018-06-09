@@ -1,28 +1,23 @@
 ﻿#if NET452 || NET461 || NETSTANDARD1_3 || NETSTANDARD2_0
 using System;
-using System.Net;
-using System.Net.Security;
+using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
-using MQTTnet.Serializer;
 using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
     public class MqttTcpServerAdapter : IMqttServerAdapter
     {
+        private readonly List<MqttTcpServerListener> _listeners = new List<MqttTcpServerListener>();
         private readonly IMqttNetChildLogger _logger;
-
+        
         private CancellationTokenSource _cancellationTokenSource;
-        private Socket _defaultEndpointSocket;
-        private Socket _tlsEndpointSocket;
-        private X509Certificate2 _tlsCertificate;
-
+        
         public MqttTcpServerAdapter(IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -40,13 +35,7 @@ namespace MQTTnet.Implementations
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
-                _defaultEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
-
-                _defaultEndpointSocket.Bind(new IPEndPoint(options.DefaultEndpointOptions.BoundIPAddress, options.GetDefaultEndpointPort()));
-                _defaultEndpointSocket.Listen(options.ConnectionBacklog);
-
-                Task.Run(() => AcceptDefaultEndpointConnectionsAsync(_cancellationTokenSource.Token),
-                    _cancellationTokenSource.Token);
+                RegisterListeners(options.DefaultEndpointOptions);
             }
 
             if (options.TlsEndpointOptions.IsEnabled)
@@ -56,19 +45,13 @@ namespace MQTTnet.Implementations
                     throw new ArgumentException("TLS certificate is not set.");
                 }
 
-                _tlsCertificate = new X509Certificate2(options.TlsEndpointOptions.Certificate);
-                if (!_tlsCertificate.HasPrivateKey)
+                var tlsCertificate = new X509Certificate2(options.TlsEndpointOptions.Certificate);
+                if (!tlsCertificate.HasPrivateKey)
                 {
                     throw new InvalidOperationException("The certificate for TLS encryption must contain the private key.");
                 }
 
-                _tlsEndpointSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                _tlsEndpointSocket.Bind(new IPEndPoint(options.TlsEndpointOptions.BoundIPAddress, options.GetTlsEndpointPort()));
-                _tlsEndpointSocket.Listen(options.ConnectionBacklog);
-
-                Task.Run(
-                    () => AcceptTlsEndpointConnectionsAsync(_cancellationTokenSource.Token),
-                    _cancellationTokenSource.Token);
+                RegisterListeners(options.TlsEndpointOptions);
             }
 
             return Task.FromResult(0);
@@ -76,93 +59,60 @@ namespace MQTTnet.Implementations
 
         public Task StopAsync()
         {
-            _cancellationTokenSource?.Cancel(false);
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
-
-            _defaultEndpointSocket?.Dispose();
-            _defaultEndpointSocket = null;
-
-            _tlsCertificate = null;
-
-            _tlsEndpointSocket?.Dispose();
-            _tlsEndpointSocket = null;
-
+            Dispose();
             return Task.FromResult(0);
         }
 
         public void Dispose()
         {
-            StopAsync().GetAwaiter().GetResult();
+            _cancellationTokenSource?.Cancel(false);
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+
+            foreach (var listener in _listeners)
+            {
+                listener.Dispose();
+            }
+
+            _listeners.Clear();
         }
 
-        private async Task AcceptDefaultEndpointConnectionsAsync(CancellationToken cancellationToken)
+        private void RegisterListeners(MqttServerTcpEndpointBaseOptions options)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            var tlsOptions = options as MqttServerTlsTcpEndpointOptions;
+
+            X509Certificate2 tlsCertificate = null;
+            if (tlsOptions != null)
             {
-                try
-                {
-                    //todo: else branch can be used with min dependency NET46
-#if NET452 || NET461
-                    var clientSocket = await Task.Factory.FromAsync(_defaultEndpointSocket.BeginAccept, _defaultEndpointSocket.EndAccept, null).ConfigureAwait(false);
-#else
-                    var clientSocket = await _defaultEndpointSocket.AcceptAsync().ConfigureAwait(false);
-#endif
-                    clientSocket.NoDelay = true;
-
-                    var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer(), _logger);
-                    ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
-                }
-                catch (ObjectDisposedException)
-                {
-                    // It can happen that the listener socket is accessed after the cancellation token is already set and the listener socket is disposed.
-                }
-                catch (Exception exception)
-                {
-                    if (exception is SocketException s && s.SocketErrorCode == SocketError.OperationAborted)
-                    {
-                        return;
-                    }
-
-                    _logger.Error(exception, "Error while accepting connection at default endpoint.");
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
-                }
+                tlsCertificate = new X509Certificate2(tlsOptions.Certificate);
             }
+
+            var listenerV4 = new MqttTcpServerListener(
+                AddressFamily.InterNetwork,
+                options,
+                tlsCertificate,
+                _cancellationTokenSource.Token,
+                _logger);
+
+            listenerV4.ClientAccepted += OnClientAccepted;
+            listenerV4.Start();
+            _listeners.Add(listenerV4);
+            
+            var listenerV6 = new MqttTcpServerListener(
+                AddressFamily.InterNetworkV6,
+                options,
+                tlsCertificate,
+                _cancellationTokenSource.Token,
+                _logger);
+
+            listenerV6.ClientAccepted += OnClientAccepted;
+            listenerV6.Start();
+            _listeners.Add(listenerV6);
         }
 
-        private async Task AcceptTlsEndpointConnectionsAsync(CancellationToken cancellationToken)
+        private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs e)
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-#if NET452 || NET461
-                    var clientSocket = await Task.Factory.FromAsync(_tlsEndpointSocket.BeginAccept, _tlsEndpointSocket.EndAccept, null).ConfigureAwait(false);
-#else
-                    var clientSocket = await _tlsEndpointSocket.AcceptAsync().ConfigureAwait(false);
-#endif
-
-                    var sslStream = new SslStream(new NetworkStream(clientSocket));
-                    await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
-
-                    var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer(), _logger);
-                    ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
-                }
-                catch (ObjectDisposedException)
-                {
-                    // It can happen that the listener socket is accessed after the cancellation token is already set and the listener socket is disposed.
-                }
-                catch (Exception exception)
-                {
-                    if (exception is SocketException s && s.SocketErrorCode == SocketError.OperationAborted)
-                    {
-                        return;
-                    }
-
-                    _logger.Error(exception, "Error while accepting connection at TLS endpoint.");
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
-                }
-            }
+            ClientAccepted?.Invoke(this, e);
         }
     }
 }

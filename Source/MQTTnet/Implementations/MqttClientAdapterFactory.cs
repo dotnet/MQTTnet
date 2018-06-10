@@ -16,9 +16,9 @@ namespace MQTTnet.Implementations
 
             switch (options.ChannelOptions)
             {
-                case MqttClientTcpOptions tcpOptions:
+                case MqttClientTcpOptions _:
                     {
-                        return new MqttChannelAdapter(new MqttTcpChannel(tcpOptions), serializer, logger);
+                        return new MqttChannelAdapter(new MqttTcpChannel(options), serializer, logger);
                     }
 
                 case MqttClientWebSocketOptions webSocketOptions:

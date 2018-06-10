@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.NetStandard\MQTTnet.csproj" />
+    <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
   </ItemGroup>
 
 </Project>

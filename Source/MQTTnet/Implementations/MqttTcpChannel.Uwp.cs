@@ -11,32 +11,29 @@ using Windows.Networking.Sockets;
 using Windows.Security.Cryptography.Certificates;
 using MQTTnet.Channel;
 using MQTTnet.Client;
+using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
     public class MqttTcpChannel : IMqttChannel
     {
-        // ReSharper disable once MemberCanBePrivate.Global
-        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
-        public static int BufferSize { get; set; } = 4096; // Can be changed for fine tuning by library user.
-
-        private readonly int _bufferSize = BufferSize;
         private readonly MqttClientTcpOptions _options;
+        private readonly int _bufferSize;
 
         private StreamSocket _socket;
         private Stream _readStream;
         private Stream _writeStream;
 
-        public MqttTcpChannel(MqttClientTcpOptions options)
+        public MqttTcpChannel(IMqttClientOptions clientOptions)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-
-            _bufferSize = options.BufferSize;
+            _options = (MqttClientTcpOptions)clientOptions.ChannelOptions;
+            _bufferSize = _options.BufferSize;
         }
 
-        public MqttTcpChannel(StreamSocket socket)
+        public MqttTcpChannel(StreamSocket socket, IMqttServerOptions serverOptions)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            _bufferSize = serverOptions.DefaultEndpointOptions.BufferSize;
 
             CreateStreams();
         }
@@ -97,7 +94,7 @@ namespace MQTTnet.Implementations
             TryDispose(_socket, () => _socket = null);
         }
 
-        private static Certificate LoadCertificate(MqttClientTcpOptions options)
+        private static Certificate LoadCertificate(IMqttClientChannelOptions options)
         {
             if (options.TlsOptions.Certificates == null || !options.TlsOptions.Certificates.Any())
             {

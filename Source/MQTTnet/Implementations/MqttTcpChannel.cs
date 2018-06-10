@@ -15,17 +15,19 @@ namespace MQTTnet.Implementations
 {
     public class MqttTcpChannel : IMqttChannel
     {
+        private readonly IMqttClientOptions _clientOptions;
         private readonly MqttClientTcpOptions _options;
-
+        
         private Socket _socket;
         private Stream _stream;
 
         /// <summary>
         /// called on client sockets are created in connect
         /// </summary>
-        public MqttTcpChannel(MqttClientTcpOptions options)
+        public MqttTcpChannel(IMqttClientOptions clientOptions)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
+            _options = (MqttClientTcpOptions)clientOptions.ChannelOptions;
         }
 
         /// <summary>
@@ -39,6 +41,7 @@ namespace MQTTnet.Implementations
             CreateStream(sslStream);
         }
 
+        [Obsolete("There is a new callback at the TLS options. This one will be deleted soon.")]
         public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
 
         public string Endpoint => _socket?.RemoteEndPoint?.ToString();
@@ -90,6 +93,13 @@ namespace MQTTnet.Implementations
 
         private bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
+            // Try the instance callback.
+            if (_options.TlsOptions.CertificateValidationCallback != null)
+            {
+                return _options.TlsOptions.CertificateValidationCallback(x509Certificate, chain, sslPolicyErrors,_clientOptions);
+            }
+
+            // Try static callback.
             if (CustomCertificateValidationCallback != null)
             {
                 return CustomCertificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _options);

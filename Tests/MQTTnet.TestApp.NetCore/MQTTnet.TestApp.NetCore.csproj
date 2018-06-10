@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Extensions\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.NetStandard\MQTTnet.csproj" />
+    <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
+    <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
   </ItemGroup>
 
 </Project>

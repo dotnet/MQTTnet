@@ -27,8 +27,10 @@
 * [Server] Keep alive checking is now suspended while large packages are being received (and thus the client is connected). Keep alive checking continues after a large packet is received completely.
 * [Server] Rewritten the _ConnectedClients_ API and added new features for disconnecting and Endpoint information (IP etc.).
 * [Server] Added settings for disabling persistent sessions and defining a max pending messages queue size per session.
+* [Server] Persistent sessions are disabled by default (BREAKING CHANGE!).
 * [Server] Added a new interceptor which is invoked before a new message is added to the client queue.
 * [Server] Added support for Linux servers by dividing IPv4 and IPv6 support and adding new options (BREAKING CHANGE!).
+* [Server] Gracefully closed connections are no longer reported as warnings.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

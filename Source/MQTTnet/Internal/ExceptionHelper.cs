@@ -6,7 +6,7 @@ namespace MQTTnet.Internal
     {
         public static void ThrowGracefulSocketClose()
         {
-            throw new MqttCommunicationException("Connection gracefully closed from the remote party.");
+            throw new MqttCommunicationClosedGracefullyException();
         }
     }
 }

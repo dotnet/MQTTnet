@@ -100,7 +100,14 @@ namespace MQTTnet.Server
             {
                 if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning(exception, "Client '{0}': Communication exception while receiving client packets.", ClientId);
+                    if (exception is MqttCommunicationClosedGracefullyException)
+                    {
+                        _logger.Verbose("Client '{0}': Connection closed gracefully.", ClientId); ;
+                    }
+                    else
+                    {
+                        _logger.Warning(exception, "Client '{0}': Communication exception while receiving client packets.", ClientId);
+                    }
                 }
                 else
                 {

@@ -127,15 +127,15 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Extensions\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj">
+    <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj">
       <Project>{C400533A-8EBA-4F0B-BF4D-295C3708604B}</Project>
       <Name>MQTTnet.Extensions.ManagedClient</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Extensions\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj">
+    <ProjectReference Include="..\..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj">
       <Project>{c444e9c8-95fa-430e-9126-274129de16cd}</Project>
       <Name>MQTTnet.Extensions.Rpc</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.NetStandard\MQTTnet.csproj">
+    <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj">
       <Project>{3587e506-55a2-4eb3-99c7-dc01e42d25d2}</Project>
       <Name>MQTTnet</Name>
     </ProjectReference>

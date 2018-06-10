@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MQTTnet.NetStandard\MQTTnet.csproj" />
+    <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
   </ItemGroup>
 
 </Project>

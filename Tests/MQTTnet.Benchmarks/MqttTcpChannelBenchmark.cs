@@ -14,8 +14,6 @@ namespace MQTTnet.Benchmarks
     {
         private IMqttServer _mqttServer;
         private IMqttChannel _serverChannel;
-        
-
         private IMqttChannel _clientChannel;
 
         [GlobalSetup]
@@ -23,7 +21,7 @@ namespace MQTTnet.Benchmarks
         {
             var factory = new MqttFactory();
             var tcpServer = new MqttTcpServerAdapter(new MqttNetLogger().CreateChildLogger());
-            tcpServer.ClientAccepted += (sender, args) => _serverChannel = (IMqttChannel)args.Client.GetType().GetField("_channel", System.Reflection.BindingFlags.NonPublic| System.Reflection.BindingFlags.Instance).GetValue(args.Client);
+            tcpServer.ClientAccepted += (sender, args) => _serverChannel = (IMqttChannel)args.Client.GetType().GetField("_channel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(args.Client);
 
             _mqttServer = factory.CreateMqttServer(new[] { tcpServer }, new MqttNetLogger());
 
@@ -33,8 +31,8 @@ namespace MQTTnet.Benchmarks
             var clientOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer("localhost").Build();
 
-            var tcpOptions = (MqttClientTcpOptions) clientOptions.ChannelOptions;
-            _clientChannel = new MqttTcpChannel(tcpOptions);
+            var tcpOptions = (MqttClientTcpOptions)clientOptions.ChannelOptions;
+            _clientChannel = new MqttTcpChannel(new MqttClientOptions { ChannelOptions = tcpOptions });
 
             _clientChannel.ConnectAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
@@ -65,7 +63,7 @@ namespace MQTTnet.Benchmarks
         private async Task WriteAsync(int iterations, int size)
         {
             await Task.Yield();
-            
+
             for (var i = 0; i < iterations; i++)
             {
                 await _serverChannel.WriteAsync(new byte[size], 0, size, CancellationToken.None).ConfigureAwait(false);

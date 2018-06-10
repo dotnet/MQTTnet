@@ -38,16 +38,16 @@
 
   <files>
     <!-- .NET Standard 1.3 -->
-    <file src="..\Extensions\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard1.3\MQTTnet.Extensions.ManagedClient.*" target="lib\netstandard1.3\"/>
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard1.3\MQTTnet.Extensions.ManagedClient.*" target="lib\netstandard1.3\"/>
 
     <!-- .NET Standard 2.0 -->
-    <file src="..\Extensions\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\netstandard2.0\"/>
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\netstandard2.0\"/>
 
     <!-- Universal Windows -->
-    <file src="..\Extensions\MQTTnet.Extensions.ManagedClient\bin\Release\uap10.0\MQTTnet.Extensions.ManagedClient.*" target="lib\uap10.0\"/>
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\uap10.0\MQTTnet.Extensions.ManagedClient.*" target="lib\uap10.0\"/>
 
     <!-- .NET Framework -->
-    <file src="..\Extensions\MQTTnet.Extensions.ManagedClient\bin\Release\net452\MQTTnet.Extensions.ManagedClient.*" target="lib\net452\"/>
-    <file src="..\Extensions\MQTTnet.Extensions.ManagedClient\bin\Release\net461\MQTTnet.Extensions.ManagedClient.*" target="lib\net461\"/>
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\net452\MQTTnet.Extensions.ManagedClient.*" target="lib\net452\"/>
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\net461\MQTTnet.Extensions.ManagedClient.*" target="lib\net461\"/>
   </files>
 </package>

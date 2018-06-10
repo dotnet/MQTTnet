@@ -12,7 +12,9 @@ namespace MQTTnet.Implementations
     public class MqttTcpServerAdapter : IMqttServerAdapter
     {
         private readonly IMqttNetChildLogger _logger;
-        private StreamSocketListener _defaultEndpointSocket;
+
+        private IMqttServerOptions _options;
+        private StreamSocketListener _listener;
 
         public MqttTcpServerAdapter(IMqttNetChildLogger logger)
         {
@@ -25,22 +27,21 @@ namespace MQTTnet.Implementations
 
         public async Task StartAsync(IMqttServerOptions options)
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
 
-            if (_defaultEndpointSocket != null) throw new InvalidOperationException("Server is already started.");
+            if (_listener != null) throw new InvalidOperationException("Server is already started.");
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
-                _defaultEndpointSocket = new StreamSocketListener();
+                _listener = new StreamSocketListener();
 
                 // This also affects the client sockets.
-                _defaultEndpointSocket.Control.NoDelay = true;
-                _defaultEndpointSocket.Control.KeepAlive = true;
-                _defaultEndpointSocket.Control.QualityOfService = SocketQualityOfService.LowLatency;
-                _defaultEndpointSocket.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
+                _listener.Control.NoDelay = true;
+                _listener.Control.KeepAlive = true;
+                _listener.Control.QualityOfService = SocketQualityOfService.LowLatency;
+                _listener.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
                 
-                await _defaultEndpointSocket.BindServiceNameAsync(options.DefaultEndpointOptions.Port.ToString(), SocketProtectionLevel.PlainSocket);
-                
+                await _listener.BindServiceNameAsync(options.DefaultEndpointOptions.Port.ToString(), SocketProtectionLevel.PlainSocket);
             }
 
             if (options.TlsEndpointOptions.IsEnabled)
@@ -51,13 +52,13 @@ namespace MQTTnet.Implementations
 
         public Task StopAsync()
         {
-            if (_defaultEndpointSocket != null)
+            if (_listener != null)
             {
-                _defaultEndpointSocket.ConnectionReceived -= AcceptDefaultEndpointConnectionsAsync;
+                _listener.ConnectionReceived -= AcceptDefaultEndpointConnectionsAsync;
             }
 
-            _defaultEndpointSocket?.Dispose();
-            _defaultEndpointSocket = null;
+            _listener?.Dispose();
+            _listener = null;
 
             return Task.FromResult(0);
         }
@@ -71,7 +72,7 @@ namespace MQTTnet.Implementations
         {
             try
             {
-                var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket), new MqttPacketSerializer(), _logger);
+                var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, _options), new MqttPacketSerializer(), _logger);
                 ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }
             catch (Exception exception)

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -59,17 +58,7 @@ namespace MQTTnet.Adapter
                 Internal.TaskExtensions.TimeoutAfter(ct => _channel.DisconnectAsync(), timeout, cancellationToken));
         }
 
-        public async Task SendPacketsAsync(TimeSpan timeout, IEnumerable<MqttBasePacket> packets, CancellationToken cancellationToken)
-        {
-            ThrowIfDisposed();
-
-            foreach (var packet in packets)
-            {
-                await SendPacketAsync(timeout, cancellationToken, packet).ConfigureAwait(false);
-            }
-        }
-
-        private Task SendPacketAsync(TimeSpan timeout, CancellationToken cancellationToken, MqttBasePacket packet)
+        public Task SendPacketAsync(TimeSpan timeout, MqttBasePacket packet, CancellationToken cancellationToken)
         {
             return ExecuteAndWrapExceptionAsync(() =>
             {

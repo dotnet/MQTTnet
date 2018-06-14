@@ -59,16 +59,13 @@ namespace MQTTnet.Server
             return _clientSessionsManager.UnsubscribeAsync(clientId, topicFilters);
         }
 
-        public Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        public Task PublishAsync(MqttApplicationMessage applicationMessage)
         {
-            if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
             if (_cancellationTokenSource == null) throw new InvalidOperationException("The server is not started.");
 
-            foreach (var applicationMessage in applicationMessages)
-            {
-                _clientSessionsManager.StartDispatchApplicationMessage(null, applicationMessage);
-            }
+            _clientSessionsManager.StartDispatchApplicationMessage(null, applicationMessage);
 
             return Task.FromResult(0);
         }

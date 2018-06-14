@@ -60,13 +60,12 @@ namespace MQTTnet.Server
                 var connectReturnCode = ValidateConnection(connectPacket);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
-                    await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new[]
-                    {
+                    await clientAdapter.SendPacketAsync(_options.DefaultCommunicationTimeout,
                         new MqttConnAckPacket
                         {
                             ConnectReturnCode = connectReturnCode
-                        }
-                    }, cancellationToken).ConfigureAwait(false);
+                        },
+                        cancellationToken).ConfigureAwait(false);
 
                     return;
                 }
@@ -74,14 +73,13 @@ namespace MQTTnet.Server
                 var result = await PrepareClientSessionAsync(connectPacket).ConfigureAwait(false);
                 var clientSession = result.Session;
 
-                await clientAdapter.SendPacketsAsync(_options.DefaultCommunicationTimeout, new[]
-                {
+                await clientAdapter.SendPacketAsync(_options.DefaultCommunicationTimeout,
                     new MqttConnAckPacket
                     {
                         ConnectReturnCode = connectReturnCode,
                         IsSessionPresent = result.IsExistingSession
-                    }
-                }, cancellationToken).ConfigureAwait(false);
+                    }, 
+                    cancellationToken).ConfigureAwait(false);
 
                 Server.OnClientConnected(clientId);
 
@@ -242,14 +240,19 @@ namespace MQTTnet.Server
             try
             {
                 var interceptorContext = InterceptApplicationMessage(senderClientSession, applicationMessage);
-                if (interceptorContext.CloseConnection)
+                if (interceptorContext != null)
                 {
-                    senderClientSession.Stop(MqttClientDisconnectType.NotClean);
-                }
+                    if (interceptorContext.CloseConnection)
+                    {
+                        senderClientSession.Stop(MqttClientDisconnectType.NotClean);
+                    }
 
-                if (interceptorContext.ApplicationMessage == null || !interceptorContext.AcceptPublish)
-                {
-                    return;
+                    if (interceptorContext.ApplicationMessage == null || !interceptorContext.AcceptPublish)
+                    {
+                        return;
+                    }
+
+                    applicationMessage = interceptorContext.ApplicationMessage;
                 }
 
                 Server.OnApplicationMessageReceived(senderClientSession?.ClientId, applicationMessage);

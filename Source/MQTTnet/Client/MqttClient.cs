@@ -19,7 +19,7 @@ namespace MQTTnet.Client
         private readonly Stopwatch _sendTracker = new Stopwatch();
         private readonly SemaphoreSlim _disconnectLock = new SemaphoreSlim(1, 1);
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
-        
+
         private readonly IMqttClientAdapterFactory _adapterFactory;
         private readonly IMqttNetChildLogger _logger;
 
@@ -145,55 +145,32 @@ namespace MQTTnet.Client
             await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, _cancellationTokenSource.Token).ConfigureAwait(false);
         }
 
-        public async Task PublishAsync(IEnumerable<MqttApplicationMessage> applicationMessages)
+        public Task PublishAsync(MqttApplicationMessage applicationMessage)
         {
             ThrowIfNotConnected();
 
-            var publishPackets = applicationMessages.Select(m => m.ToPublishPacket());
-            var packetGroups = publishPackets.GroupBy(p => p.QualityOfServiceLevel).OrderBy(g => g.Key);
+            var publishPacket = applicationMessage.ToPublishPacket();
 
-            foreach (var qosGroup in packetGroups)
+            switch (applicationMessage.QualityOfServiceLevel)
             {
-                switch (qosGroup.Key)
-                {
-                    case MqttQualityOfServiceLevel.AtMostOnce:
-                        {
-                            // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
-                            await SendAsync(qosGroup, _cancellationTokenSource.Token).ConfigureAwait(false);
-                            break;
-                        }
-                    case MqttQualityOfServiceLevel.AtLeastOnce:
-                        {
-                            foreach (var publishPacket in qosGroup)
-                            {
-                                publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
-                                await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket, _cancellationTokenSource.Token).ConfigureAwait(false);
-                            }
-
-                            break;
-                        }
-                    case MqttQualityOfServiceLevel.ExactlyOnce:
-                        {
-                            foreach (var publishPacket in qosGroup)
-                            {
-                                publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
-
-                                var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket, _cancellationTokenSource.Token).ConfigureAwait(false);
-                                var pubRelPacket = new MqttPubRelPacket
-                                {
-                                    PacketIdentifier = pubRecPacket.PacketIdentifier
-                                };
-
-                                await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, _cancellationTokenSource.Token).ConfigureAwait(false);
-                            }
-
-                            break;
-                        }
-                    default:
-                        {
-                            throw new InvalidOperationException();
-                        }
-                }
+                case MqttQualityOfServiceLevel.AtMostOnce:
+                    {
+                        // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
+                        return SendAsync(publishPacket, _cancellationTokenSource.Token);
+                    }
+                case MqttQualityOfServiceLevel.AtLeastOnce:
+                    {
+                        publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
+                        return SendAndReceiveAsync<MqttPubAckPacket>(publishPacket, _cancellationTokenSource.Token);
+                    }
+                case MqttQualityOfServiceLevel.ExactlyOnce:
+                    {
+                        return PublishExactlyOnce(publishPacket, _cancellationTokenSource.Token);
+                    }
+                default:
+                    {
+                        throw new NotSupportedException();
+                    }
             }
         }
 
@@ -296,18 +273,13 @@ namespace MQTTnet.Client
 
         private Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            return SendAsync(new[] { packet }, cancellationToken);
-        }
-
-        private Task SendAsync(IEnumerable<MqttBasePacket> packets, CancellationToken cancellationToken)
-        {
             if (cancellationToken.IsCancellationRequested)
             {
                 throw new TaskCanceledException();
             }
 
             _sendTracker.Restart();
-            return _adapter.SendPacketsAsync(_options.CommunicationTimeout, packets, cancellationToken);
+            return _adapter.SendPacketAsync(_options.CommunicationTimeout, packet, cancellationToken);
         }
 
         private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttBasePacket
@@ -328,7 +300,7 @@ namespace MQTTnet.Client
             var packetAwaiter = _packetDispatcher.AddPacketAwaiter<TResponsePacket>(identifier);
             try
             {
-                await _adapter.SendPacketsAsync(_options.CommunicationTimeout, new[] { requestPacket }, cancellationToken).ConfigureAwait(false);
+                await _adapter.SendPacketAsync(_options.CommunicationTimeout, requestPacket, cancellationToken).ConfigureAwait(false);
                 var respone = await Internal.TaskExtensions.TimeoutAfter(ct => packetAwaiter.Task, _options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
 
                 return (TResponsePacket)respone;
@@ -496,6 +468,19 @@ namespace MQTTnet.Client
             };
 
             return SendAsync(response, cancellationToken);
+        }
+
+        private async Task PublishExactlyOnce(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
+        {
+            publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
+
+            var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
+            var pubRelPacket = new MqttPubRelPacket
+            {
+                PacketIdentifier = pubRecPacket.PacketIdentifier
+            };
+
+            await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
         }
 
         private void StartReceivingPackets(CancellationToken cancellationToken)

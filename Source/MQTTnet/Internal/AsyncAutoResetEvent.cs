@@ -47,18 +47,17 @@ namespace MQTTnet.Internal
                     _isSignaled = false;
                     return true;
                 }
-                else if (timeout == TimeSpan.Zero)
+
+                if (timeout == TimeSpan.Zero)
                 {
                     return _isSignaled;
                 }
-                else
-                {
-                    tcs = new TaskCompletionSource<bool>();
-                    _waiters.AddLast(tcs);
-                }
+
+                tcs = new TaskCompletionSource<bool>();
+                _waiters.AddLast(tcs);
             }
 
-            Task winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken)).ConfigureAwait(false);
+            var winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken)).ConfigureAwait(false);
             if (winner == tcs.Task)
             {
                 // The task was signaled.

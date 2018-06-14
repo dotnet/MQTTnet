@@ -36,14 +36,11 @@ namespace MQTTnet.Core.Tests
             return Task.FromResult(0);
         }
 
-        public Task SendPacketsAsync(TimeSpan timeout, IEnumerable<MqttBasePacket> packets, CancellationToken cancellationToken)
+        public Task SendPacketAsync(TimeSpan timeout, MqttBasePacket packet, CancellationToken cancellationToken)
         {
             ThrowIfPartnerIsNull();
 
-            foreach (var packet in packets)
-            {
-                Partner.EnqueuePacketInternal(packet);
-            }
+            Partner.EnqueuePacketInternal(packet);
 
             return Task.FromResult(0);
         }

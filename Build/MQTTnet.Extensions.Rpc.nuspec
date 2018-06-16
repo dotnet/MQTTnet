@@ -48,6 +48,8 @@
 
     <!-- .NET Framework -->
     <file src="..\Source\MQTTnet.Extensions.Rpc\bin\Release\net452\MQTTnet.Extensions.Rpc.*" target="lib\net452\"/>
-    <file src="..\Source\MQTTnet.Extensions.Rpc\bin\Release\net461\MQTTnet.Extensions.Rpc.*" target="lib\net461\"/>
+
+    <file src="..\Source\MQTTnet.Extensions.Rpc\bin\Release\netstandard2.0\MQTTnet.Extensions.Rpc.*" target="lib\net461\"/>
+    <file src="..\Source\MQTTnet.Extensions.Rpc\bin\Release\netstandard2.0\MQTTnet.Extensions.Rpc.*" target="lib\net462\"/>
   </files>
 </package>

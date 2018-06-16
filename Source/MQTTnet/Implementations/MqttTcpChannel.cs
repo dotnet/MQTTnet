@@ -1,4 +1,4 @@
-#if NET452 || NET461 || NETSTANDARD1_3 || NETSTANDARD2_0
+#if !WINDOWS_UWP
 using System;
 using System.Net.Security;
 using System.Net.Sockets;

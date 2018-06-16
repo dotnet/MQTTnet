@@ -1,4 +1,4 @@
-﻿#if NET452 || NET461 || NETSTANDARD1_3 || NETSTANDARD2_0
+﻿#if !WINDOWS_UWP
 using System;
 using System.Net;
 using System.Net.Security;
@@ -76,7 +76,8 @@ namespace MQTTnet.Implementations
                         await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
                     }
 
-                    _logger.Verbose($"Client '{clientSocket.RemoteEndPoint}' accepted by TCP listener '{_socket.LocalEndPoint}, {_addressFamily}'.");
+                    var protocol = _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6";
+                    _logger.Verbose($"Client '{clientSocket.RemoteEndPoint}' accepted by TCP listener '{_socket.LocalEndPoint}, {protocol}'.");
 
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
@@ -102,7 +103,7 @@ namespace MQTTnet.Implementations
         {
             _socket?.Dispose();
 
-#if NETSTANDARD1_3 || NETSTANDARD2_0 || NET461
+#if NETSTANDARD1_3 || NETSTANDARD2_0 || NET461 || NET472
             _tlsCertificate?.Dispose();
 #endif
         }

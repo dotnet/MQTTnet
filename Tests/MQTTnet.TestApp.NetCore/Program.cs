@@ -34,7 +34,8 @@ namespace MQTTnet.TestApp.NetCore
             }
             else if (pressedKey.KeyChar == '3')
             {
-                Task.Run(PerformanceTest.RunAsync);
+                PerformanceTest.Run();
+                return;
             }
             else if (pressedKey.KeyChar == '4')
             {

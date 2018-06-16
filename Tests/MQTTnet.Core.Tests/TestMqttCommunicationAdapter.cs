@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -36,7 +35,7 @@ namespace MQTTnet.Core.Tests
             return Task.FromResult(0);
         }
 
-        public Task SendPacketAsync(TimeSpan timeout, MqttBasePacket packet, CancellationToken cancellationToken)
+        public Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
             ThrowIfPartnerIsNull();
 

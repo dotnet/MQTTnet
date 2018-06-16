@@ -18,8 +18,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="2.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.0.1" />
   </ItemGroup>
 
   <ItemGroup>

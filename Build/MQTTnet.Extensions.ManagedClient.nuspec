@@ -48,6 +48,8 @@
 
     <!-- .NET Framework -->
     <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\net452\MQTTnet.Extensions.ManagedClient.*" target="lib\net452\"/>
-    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\net461\MQTTnet.Extensions.ManagedClient.*" target="lib\net461\"/>
+
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\net461\"/>
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\net472\"/>
   </files>
 </package>

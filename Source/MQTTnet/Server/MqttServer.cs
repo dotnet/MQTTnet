@@ -65,7 +65,7 @@ namespace MQTTnet.Server
 
             if (_cancellationTokenSource == null) throw new InvalidOperationException("The server is not started.");
 
-            _clientSessionsManager.StartDispatchApplicationMessage(null, applicationMessage);
+            _clientSessionsManager.EnqueueApplicationMessage(null, applicationMessage);
 
             return Task.FromResult(0);
         }
@@ -81,7 +81,8 @@ namespace MQTTnet.Server
             _retainedMessagesManager = new MqttRetainedMessagesManager(Options, _logger);
             await _retainedMessagesManager.LoadMessagesAsync().ConfigureAwait(false);
 
-            _clientSessionsManager = new MqttClientSessionsManager(Options, this, _retainedMessagesManager, _logger);
+            _clientSessionsManager = new MqttClientSessionsManager(Options, this, _retainedMessagesManager, _cancellationTokenSource.Token, _logger);
+            _clientSessionsManager.Start();
 
             foreach (var adapter in _adapters)
             {
@@ -118,8 +119,6 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _clientSessionsManager?.Dispose();
-                
                 _cancellationTokenSource = null;
                 _retainedMessagesManager = null;
                 _clientSessionsManager = null;
@@ -155,9 +154,7 @@ namespace MQTTnet.Server
 
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
-            eventArgs.SessionTask = Task.Run(
-                () => _clientSessionsManager.RunSessionAsync(eventArgs.Client, _cancellationTokenSource.Token),
-                _cancellationTokenSource.Token);
+            eventArgs.SessionTask = _clientSessionsManager.StartSession(eventArgs.Client);
         }
     }
 }

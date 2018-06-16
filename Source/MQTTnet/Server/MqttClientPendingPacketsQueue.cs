@@ -11,7 +11,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientPendingMessagesQueue : IDisposable
+    public class MqttClientPendingPacketsQueue : IDisposable
     {
         private readonly AsyncAutoResetEvent _queueAutoResetEvent = new AsyncAutoResetEvent();
         private readonly IMqttServerOptions _options;
@@ -20,13 +20,13 @@ namespace MQTTnet.Server
 
         private ConcurrentQueue<MqttBasePacket> _queue = new ConcurrentQueue<MqttBasePacket>();
 
-        public MqttClientPendingMessagesQueue(IMqttServerOptions options, MqttClientSession clientSession, IMqttNetChildLogger logger)
+        public MqttClientPendingPacketsQueue(IMqttServerOptions options, MqttClientSession clientSession, IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));
 
-            _logger = logger.CreateChildLogger(nameof(MqttClientPendingMessagesQueue));
+            _logger = logger.CreateChildLogger(nameof(MqttClientPendingPacketsQueue));
         }
 
         public int Count => _queue.Count;
@@ -115,7 +115,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                await adapter.SendPacketAsync(_options.DefaultCommunicationTimeout, packet, cancellationToken).ConfigureAwait(false);
+                await adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
 
                 _logger.Verbose("Enqueued packet sent (ClientId: {0}).", _clientSession.ClientId);
             }

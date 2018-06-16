@@ -1,23 +1,13 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Serializer
 {
-    /// <summary>
-    /// This is a custom implementation of a memory stream which provides only MQTTnet relevant features.
-    /// The goal is to avoid lots of argument checks like in the original stream. The growth rule is the
-    /// same as for the original MemoryStream in .net. Also this implementation allows accessing the internal
-    /// buffer for all platforms and .net framework versions (which is not available at the regular MemoryStream).
-    /// </summary>
-    public class MqttPacketWriter
+    public static class MqttPacketWriter
     {
-        private byte[] _buffer = new byte[128];
-
-        private int _position;
-
-        public int Length { get; private set; }
-
         public static byte BuildFixedHeader(MqttControlPacketType packetType, byte flags = 0)
         {
             var fixedHeader = (int)packetType << 4;
@@ -25,17 +15,52 @@ namespace MQTTnet.Serializer
             return (byte)fixedHeader;
         }
 
-        public static ArraySegment<byte> EncodeRemainingLength(int length)
+        public static void Write(this MemoryBufferWriter stream, ushort value)
         {
-            // write the encoded remaining length right aligned on the 4 byte buffer
-            if (length <= 0)
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(stream.GetSpan(), value);
+            stream.Advance(2);
+        }
+
+        public static void WriteWithLengthPrefix(this MemoryBufferWriter stream, string value)
+        {
+            //TODO enable this once System.Text.Primitives is released
+            //var unicodeBytes = MemoryMarshal.Cast<char, byte>((value ?? string.Empty).AsSpan());
+            //System.Buffers.Text.Encodings.Utf8.FromUtf16(unicodeBytes, stream.GetSpan().Slice(2), out _, out var written);
+            //stream.Write((ushort)written);
+            //stream.Advance(written);
+            stream.WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value ?? string.Empty));
+        }
+
+        public static void WriteWithLengthPrefix(this MemoryBufferWriter stream, byte[] value)
+        {
+            var length = (ushort)value.Length;
+
+            stream.Write(length);
+            stream.Write(value, 0, length);
+        }
+
+        public static int GetHeaderLength(int bodyLength)
+        {
+            if (bodyLength < 128)
             {
-                return new ArraySegment<byte>(new byte[1], 0, 1);
+                return 2;
             }
 
-            var buffer = new byte[4];
-            var bufferOffset = 0;
+            if (bodyLength < 128 * 128)
+            {
+                return 3;
+            }
 
+            if (bodyLength < 128 * 128 * 128)
+            {
+                return 4;
+            }
+            return 5;
+        }
+
+        public static void WriteBodyLength(int length, byte[] buffer)
+        {
+            var bufferOffset = 1;
             // Algorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
             var x = length;
             do
@@ -50,94 +75,6 @@ namespace MQTTnet.Serializer
                 buffer[bufferOffset] = (byte)encodedByte;
                 bufferOffset++;
             } while (x > 0);
-
-            return new ArraySegment<byte>(buffer, 0, bufferOffset);
-        }
-
-        public void WriteWithLengthPrefix(string value)
-        {
-            WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value ?? string.Empty));
-        }
-
-        public void WriteWithLengthPrefix(byte[] value)
-        {
-            EnsureAdditionalCapacity(value.Length + 2);
-
-            Write((ushort)value.Length);
-            Write(value, 0, value.Length);
-        }
-        
-        public void Write(byte @byte)
-        {
-            EnsureAdditionalCapacity(1);
-
-            _buffer[_position] = @byte;
-            IncreasePostition(1);
-        }
-
-        public void Write(ushort value)
-        {
-            EnsureAdditionalCapacity(2);
-
-            _buffer[_position] = (byte)(value >> 8);
-            IncreasePostition(1);
-            _buffer[_position] = (byte)value;
-            IncreasePostition(1);
-        }
-
-        public void Write(byte[] array, int offset, int count)
-        {
-            EnsureAdditionalCapacity(count);
-
-            Array.Copy(array, offset, _buffer, _position, count);
-            IncreasePostition(count);
-        }
-
-        public void Seek(int offset)
-        {
-            EnsureCapacity(offset);
-            _position = offset;
-        }
-
-        public byte[] GetBuffer()
-        {
-            return _buffer;
-        }
-
-        private void EnsureAdditionalCapacity(int additionalCapacity)
-        {
-            var freeSpace = _buffer.Length - _position;
-            if (freeSpace >= additionalCapacity)
-            {
-                return;
-            }
-
-            EnsureCapacity(additionalCapacity - freeSpace);
-        }
-
-        private void EnsureCapacity(int capacity)
-        {
-            if (_buffer.Length >= capacity)
-            {
-                return;
-            }
-
-            var newBufferLength = _buffer.Length;
-            while (newBufferLength < capacity)
-            {
-                newBufferLength *= 2;
-            }
-
-            Array.Resize(ref _buffer, newBufferLength);
-        }
-
-        private void IncreasePostition(int length)
-        {
-            _position += length;
-            if (_position > Length)
-            {
-                Length = _position;
-            }
         }
     }
 }

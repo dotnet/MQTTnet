@@ -27,7 +27,7 @@ namespace MQTTnet.Benchmarks
 
             _packet = message.ToPublishPacket();
             var serializer = new MqttPacketSerializer();
-            var serializedPacket = Join(serializer.Serialize(_packet));
+            var serializedPacket = serializer.Serialize(_packet);
 
             _iterations = 10000;
 
@@ -69,17 +69,6 @@ namespace MQTTnet.Benchmarks
             }
 
             _stream.Position = 0;
-        }
-
-        private static byte[] Join(params ArraySegment<byte>[] chunks)
-        {
-            var buffer = new MemoryStream();
-            foreach (var chunk in chunks)
-            {
-                buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
-            }
-
-            return buffer.ToArray();
         }
     }
 }

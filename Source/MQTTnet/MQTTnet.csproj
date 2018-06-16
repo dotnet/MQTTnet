@@ -16,6 +16,7 @@
     <PackageId />
     <SignAssembly>false</SignAssembly>
     <DelaySign>false</DelaySign>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='uap10.0'">
@@ -60,6 +61,11 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net452'">
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5" />
+    <PackageReference Include="System.Buffers" Version="4.5" />
   </ItemGroup>
 
 </Project>

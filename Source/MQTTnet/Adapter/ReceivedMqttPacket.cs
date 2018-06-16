@@ -1,10 +1,11 @@
 ﻿using MQTTnet.Serializer;
+using System;
 
 namespace MQTTnet.Adapter
 {
     public class ReceivedMqttPacket
     {
-        public ReceivedMqttPacket(byte fixedHeader, MqttPacketBodyReader body)
+        public ReceivedMqttPacket(byte fixedHeader, Memory<byte> body)
         {
             FixedHeader = fixedHeader;
             Body = body;
@@ -12,6 +13,6 @@ namespace MQTTnet.Adapter
 
         public byte FixedHeader { get; }
 
-        public MqttPacketBodyReader Body { get; }
+        public Memory<byte> Body { get; }
     }
 }

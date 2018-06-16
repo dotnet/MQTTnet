@@ -94,7 +94,7 @@ namespace MQTTnet.Adapter
 
                 var packetData = PacketSerializer.Serialize(packet);
 
-                await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
+                await _channel.WriteAsync(packetData, 0, packetData.Length, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -169,17 +169,14 @@ namespace MQTTnet.Adapter
                     return new ReceivedMqttPacket(fixedHeader.Flags, null);
                 }
 
-                var body = new byte[fixedHeader.RemainingLength];
                 var bodyOffset = 0;
+                var body = new byte[fixedHeader.RemainingLength];
                 var chunkSize = Math.Min(ReadBufferSize, fixedHeader.RemainingLength);
 
-                do
+                while (bodyOffset < fixedHeader.RemainingLength)
                 {
                     var bytesLeft = body.Length - bodyOffset;
-                    if (chunkSize > bytesLeft)
-                    {
-                        chunkSize = bytesLeft;
-                    }
+                    chunkSize = Math.Max(chunkSize, bytesLeft);
 
                     // async/await is not used to avoid the overhead of context switches. We assume that the reamining data
                     // has been sent from the sender directly after the initial bytes.
@@ -190,9 +187,9 @@ namespace MQTTnet.Adapter
                     }
 
                     bodyOffset += readBytes;
-                } while (bodyOffset < body.Length);
-
-                return new ReceivedMqttPacket(fixedHeader.Flags, new MqttPacketBodyReader(body));
+                }
+            
+                return new ReceivedMqttPacket(fixedHeader.Flags, body);
             }
             finally
             {

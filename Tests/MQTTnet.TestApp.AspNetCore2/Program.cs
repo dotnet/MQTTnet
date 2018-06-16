@@ -13,7 +13,10 @@ namespace MQTTnet.TestApp.AspNetCore2
 
         private static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseKestrel(o => o.ListenAnyIP(1883, l => l.UseMqtt()))
+                .UseKestrel(o => {
+                    o.ListenAnyIP(1883, l => l.UseMqtt());
+                    o.ListenAnyIP(5000); // default http pipeline
+                })
                 .UseStartup<Startup>()
                 .Build();
     }

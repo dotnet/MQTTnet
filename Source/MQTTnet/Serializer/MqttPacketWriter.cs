@@ -15,7 +15,7 @@ namespace MQTTnet.Serializer
             return (byte)fixedHeader;
         }
 
-        public static void Write(this MemoryBufferWriter stream, ushort value)
+        public static void WriteUInt16(this MemoryBufferWriter stream, ushort value)
         {
             System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(stream.GetSpan(), value);
             stream.Advance(2);
@@ -35,7 +35,7 @@ namespace MQTTnet.Serializer
         {
             var length = (ushort)value.Length;
 
-            stream.Write(length);
+            stream.WriteUInt16(length);
             stream.Write(value, 0, length);
         }
 

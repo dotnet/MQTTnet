@@ -362,12 +362,12 @@ namespace MQTTnet.Serializer
             if (ProtocolVersion == MqttProtocolVersion.V311)
             {
                 packetWriter.WriteWithLengthPrefix("MQTT");
-                packetWriter.Write(4); // 3.1.2.2 Protocol Level 4
+                packetWriter.WriteByte(4); // 3.1.2.2 Protocol Level 4
             }
             else
             {
                 packetWriter.WriteWithLengthPrefix("MQIsdp");
-                packetWriter.Write(3); // Protocol Level 3
+                packetWriter.WriteByte(3); // Protocol Level 3
             }
 
             byte connectFlags = 0x0;
@@ -402,8 +402,8 @@ namespace MQTTnet.Serializer
                 connectFlags |= 0x80;
             }
             
-            packetWriter.Write(connectFlags);
-            packetWriter.Write(packet.KeepAlivePeriod);
+            packetWriter.WriteByte(connectFlags);
+            packetWriter.WriteUInt16(packet.KeepAlivePeriod);
             packetWriter.WriteWithLengthPrefix(packet.ClientId);
 
             if (packet.WillMessage != null)
@@ -429,7 +429,7 @@ namespace MQTTnet.Serializer
         {
             if (ProtocolVersion == MqttProtocolVersion.V310)
             {
-                packetWriter.Write(0);
+                packetWriter.WriteByte(0);
             }
             else if (ProtocolVersion == MqttProtocolVersion.V311)
             {
@@ -439,14 +439,14 @@ namespace MQTTnet.Serializer
                     connectAcknowledgeFlags |= 0x1;
                 }
                 
-                packetWriter.Write(connectAcknowledgeFlags);
+                packetWriter.WriteByte(connectAcknowledgeFlags);
             }
             else
             {
                 throw new MqttProtocolViolationException("Protocol version not supported.");
             }
 
-            packetWriter.Write((byte)packet.ConnectReturnCode);
+            packetWriter.WriteByte((byte)packet.ConnectReturnCode);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }
@@ -458,7 +458,7 @@ namespace MQTTnet.Serializer
                 throw new MqttProtocolViolationException("PubRel packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.WriteUInt16(packet.PacketIdentifier.Value);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRel, 0x02);
         }
@@ -476,7 +476,7 @@ namespace MQTTnet.Serializer
                     throw new MqttProtocolViolationException("Publish packet has no packet identifier.");
                 }
 
-                packetWriter.Write(packet.PacketIdentifier.Value);
+                packetWriter.WriteUInt16(packet.PacketIdentifier.Value);
             }
             else
             {
@@ -515,7 +515,7 @@ namespace MQTTnet.Serializer
                 throw new MqttProtocolViolationException("PubAck packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.WriteUInt16(packet.PacketIdentifier.Value);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubAck);
         }
@@ -527,7 +527,7 @@ namespace MQTTnet.Serializer
                 throw new MqttProtocolViolationException("PubRec packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.WriteUInt16(packet.PacketIdentifier.Value);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRec);
         }
@@ -539,7 +539,7 @@ namespace MQTTnet.Serializer
                 throw new MqttProtocolViolationException("PubComp packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.WriteUInt16(packet.PacketIdentifier.Value);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubComp);
         }
@@ -553,14 +553,14 @@ namespace MQTTnet.Serializer
                 throw new MqttProtocolViolationException("Subscribe packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.WriteUInt16(packet.PacketIdentifier.Value);
 
             if (packet.TopicFilters?.Count > 0)
             {
                 foreach (var topicFilter in packet.TopicFilters)
                 {
                     packetWriter.WriteWithLengthPrefix(topicFilter.Topic);
-                    packetWriter.Write((byte)topicFilter.QualityOfServiceLevel);
+                    packetWriter.WriteByte((byte)topicFilter.QualityOfServiceLevel);
                 }
             }
 
@@ -574,13 +574,13 @@ namespace MQTTnet.Serializer
                 throw new MqttProtocolViolationException("SubAck packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.WriteUInt16(packet.PacketIdentifier.Value);
 
             if (packet.SubscribeReturnCodes?.Any() == true)
             {
                 foreach (var packetSubscribeReturnCode in packet.SubscribeReturnCodes)
                 {
-                    packetWriter.Write((byte)packetSubscribeReturnCode);
+                    packetWriter.WriteByte((byte)packetSubscribeReturnCode);
                 }
             }
 
@@ -596,7 +596,7 @@ namespace MQTTnet.Serializer
                 throw new MqttProtocolViolationException("Unsubscribe packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.WriteUInt16(packet.PacketIdentifier.Value);
 
             if (packet.TopicFilters?.Any() == true)
             {
@@ -616,7 +616,7 @@ namespace MQTTnet.Serializer
                 throw new MqttProtocolViolationException("UnsubAck packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.WriteUInt16(packet.PacketIdentifier.Value);
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.UnsubAck);
         }
 

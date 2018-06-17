@@ -6,8 +6,9 @@ using BenchmarkDotNet.Attributes.Jobs;
 using BenchmarkDotNet.Attributes.Exporters;
 using System;
 using System.Threading;
-using System.IO;
+using System.Threading.Tasks;
 using MQTTnet.Adapter;
+using MQTTnet.Channel;
 
 namespace MQTTnet.Benchmarks
 {
@@ -38,6 +39,7 @@ namespace MQTTnet.Benchmarks
             for (var i = 0; i < 10000; i++)
             {
                 _serializer.Serialize(_packet);
+                _serializer.FreeBuffer();
             }
         }
 
@@ -46,16 +48,51 @@ namespace MQTTnet.Benchmarks
         {
             for (var i = 0; i < 10000; i++)
             {
-                using (var stream = new MemoryStream())
-                {
-                    stream.Write(_serializedPacket.Array, _serializedPacket.Offset, _serializedPacket.Count);
-                    stream.Position = 0;
+                var channel = new BenchmarkMqttChannel(_serializedPacket);
 
-                    var channel = new TestMqttChannel(stream);
+                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
+                _serializer.Deserialize(new ReceivedMqttPacket(header.Flags, new MqttPacketBodyReader(_serializedPacket.Array, _serializedPacket.Count - header.RemainingLength)));
+            }
+        }
 
-                    var header = MqttPacketReader.ReadFixedHeaderAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
-                    _serializer.Deserialize(new ReceivedMqttPacket(header.Flags, new MqttPacketBodyReader(_serializedPacket.Array, _serializedPacket.Count - header.RemainingLength)));
-                }
+        private class BenchmarkMqttChannel : IMqttChannel
+        {
+            private readonly ArraySegment<byte> _buffer;
+            private int _position;
+
+            public BenchmarkMqttChannel(ArraySegment<byte> buffer)
+            {
+                _buffer = buffer;
+                _position = _buffer.Offset;
+            }
+
+            public string Endpoint { get; }
+
+            public Task ConnectAsync(CancellationToken cancellationToken)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task DisconnectAsync()
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                Array.Copy(_buffer.Array, _position, buffer, offset, count);
+                _position += count;
+
+                return Task.FromResult(count);
+            }
+
+            public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Dispose()
+            {
             }
         }
     }

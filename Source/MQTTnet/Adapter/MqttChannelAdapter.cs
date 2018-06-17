@@ -95,6 +95,8 @@ namespace MQTTnet.Adapter
                 var packetData = PacketSerializer.Serialize(packet);
 
                 await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
+
+                PacketSerializer.FreeBuffer();
             }
             catch (Exception exception)
             {

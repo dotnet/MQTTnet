@@ -46,12 +46,19 @@ namespace MQTTnet.Benchmarks
         [Benchmark]
         public void Deserialize_10000_Messages()
         {
+            var channel = new BenchmarkMqttChannel(_serializedPacket);
+
             for (var i = 0; i < 10000; i++)
             {
-                var channel = new BenchmarkMqttChannel(_serializedPacket);
+                channel.Reset();
 
                 var header = MqttPacketReader.ReadFixedHeaderAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
-                _serializer.Deserialize(new ReceivedMqttPacket(header.Flags, new MqttPacketBodyReader(_serializedPacket.Array, _serializedPacket.Count - header.RemainingLength)));
+
+                var receivedPacket = new ReceivedMqttPacket(
+                    header.Flags,
+                    new MqttPacketBodyReader(_serializedPacket.Array, _serializedPacket.Count - header.RemainingLength));
+
+                _serializer.Deserialize(receivedPacket);
             }
         }
 
@@ -67,6 +74,11 @@ namespace MQTTnet.Benchmarks
             }
 
             public string Endpoint { get; }
+
+            public void Reset()
+            {
+                _position = _buffer.Offset;
+            }
 
             public Task ConnectAsync(CancellationToken cancellationToken)
             {

@@ -199,19 +199,18 @@ namespace MQTTnet.Serializer
 
         private static MqttBasePacket DeserializePublish(ReceivedMqttPacket receivedMqttPacket)
         {
-            var body = receivedMqttPacket.Body;
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(receivedMqttPacket.Body);
 
             var retain = (receivedMqttPacket.FixedHeader & 0x1) > 0;
             var qualityOfServiceLevel = (MqttQualityOfServiceLevel)(receivedMqttPacket.FixedHeader >> 1 & 0x3);
             var dup = (receivedMqttPacket.FixedHeader & 0x3) > 0;
 
-            var topic = body.ReadStringWithLengthPrefix();
+            var topic = receivedMqttPacket.Body.ReadStringWithLengthPrefix();
 
             ushort? packetIdentifier = null;
             if (qualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
             {
-                packetIdentifier = body.ReadUInt16();
+                packetIdentifier = receivedMqttPacket.Body.ReadUInt16();
             }
 
             var packet = new MqttPublishPacket
@@ -219,7 +218,7 @@ namespace MQTTnet.Serializer
                 PacketIdentifier = packetIdentifier,
                 Retain = retain,
                 Topic = topic,
-                Payload = body.ReadRemainingData().ToArray(),
+                Payload = receivedMqttPacket.Body.ReadRemainingData().ToArray(),
                 QualityOfServiceLevel = qualityOfServiceLevel,
                 Dup = dup
             };

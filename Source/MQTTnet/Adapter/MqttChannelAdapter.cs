@@ -157,10 +157,6 @@ namespace MQTTnet.Adapter
         private async Task<ReceivedMqttPacket> ReceiveAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
             var fixedHeader = await MqttPacketReader.ReadFixedHeaderAsync(channel, cancellationToken).ConfigureAwait(false);
-            if (fixedHeader == null)
-            {
-                return null;
-            }
 
             try
             {

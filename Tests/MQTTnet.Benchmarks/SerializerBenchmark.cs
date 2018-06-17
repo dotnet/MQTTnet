@@ -46,29 +46,17 @@ namespace MQTTnet.Benchmarks
         {
             for (var i = 0; i < 10000; i++)
             {
-                using (var headerStream = new MemoryStream(Join(_serializedPacket)))
+                using (var stream = new MemoryStream())
                 {
-                    var channel = new TestMqttChannel(headerStream);
+                    stream.Write(_serializedPacket.Array, _serializedPacket.Offset, _serializedPacket.Count);
+                    stream.Position = 0;
+
+                    var channel = new TestMqttChannel(stream);
 
                     var header = MqttPacketReader.ReadFixedHeaderAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
-                    
-                    using (var bodyStream = new MemoryStream(Join(_serializedPacket), (int)headerStream.Position, header.RemainingLength))
-                    {
-                        _serializer.Deserialize(new ReceivedMqttPacket(header.Flags, new MqttPacketBodyReader(bodyStream.ToArray())));
-                    }
+                    _serializer.Deserialize(new ReceivedMqttPacket(header.Flags, new MqttPacketBodyReader(_serializedPacket.Array, _serializedPacket.Count - header.RemainingLength)));
                 }
             }
-        }
-        
-        private static byte[] Join(params ArraySegment<byte>[] chunks)
-        {
-            var buffer = new MemoryStream();
-            foreach (var chunk in chunks)
-            {
-                buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
-            }
-
-            return buffer.ToArray();
         }
     }
 }

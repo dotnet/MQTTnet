@@ -4,7 +4,6 @@ using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Packets;
 using MQTTnet.Serializer;
 using System;
-using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,11 +12,6 @@ namespace MQTTnet.AspNetCore
 {
     public class MqttConnectionContext : IMqttChannelAdapter
     {
-        public IMqttPacketSerializer PacketSerializer { get; }
-        public ConnectionContext Connection { get; }
-
-        public string Endpoint => Connection.ConnectionId;
-
         public MqttConnectionContext(
             IMqttPacketSerializer packetSerializer,
             ConnectionContext connection)
@@ -25,6 +19,12 @@ namespace MQTTnet.AspNetCore
             PacketSerializer = packetSerializer;
             Connection = connection;
         }
+
+        public string Endpoint => Connection.ConnectionId;
+        public ConnectionContext Connection { get; }
+        public IMqttPacketSerializer PacketSerializer { get; }
+        public event EventHandler ReadingPacketStarted;
+        public event EventHandler ReadingPacketCompleted;
 
         public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
@@ -41,10 +41,6 @@ namespace MQTTnet.AspNetCore
             Connection.Transport.Output.Complete();
 
             return Task.CompletedTask;
-        }
-
-        public void Dispose()
-        {
         }
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
@@ -106,15 +102,16 @@ namespace MQTTnet.AspNetCore
 
             cancellationToken.ThrowIfCancellationRequested();
             return null;
-        }       
+        }
 
         public Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
             var buffer = PacketSerializer.Serialize(packet);
             return Connection.Transport.Output.WriteAsync(buffer.AsMemory(), cancellationToken).AsTask();
         }
-        
-        public event EventHandler ReadingPacketStarted;
-        public event EventHandler ReadingPacketCompleted;
+
+        public void Dispose()
+        {
+        }
     }
 }

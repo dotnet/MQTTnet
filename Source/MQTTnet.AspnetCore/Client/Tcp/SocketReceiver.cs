@@ -24,7 +24,6 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             _eventArgs.SetBuffer(buffer);
 #else
             var segment = buffer.GetArray();
-
             _eventArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
 #endif
             if (!_socket.ReceiveAsync(_eventArgs))

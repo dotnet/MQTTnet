@@ -23,8 +23,9 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             _ioScheduler = ioScheduler;
         }
 
-        public SocketAwaitable GetAwaiter() => this;
         public bool IsCompleted => ReferenceEquals(_callback, _callbackCompleted);
+
+        public SocketAwaitable GetAwaiter() => this;
 
         public int GetResult()
         {

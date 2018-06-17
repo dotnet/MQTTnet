@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.IO;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
@@ -8,8 +7,43 @@ using MQTTnet.Serializer;
 
 namespace MQTTnet.AspNetCore
 {
-    public static class ReaderExtensions 
+    public static class ReaderExtensions
     {
+        public static bool TryDeserialize(this IMqttPacketSerializer serializer, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)
+        {
+            packet = null;
+            consumed = input.Start;
+            observed = input.End;
+            var copy = input;
+            if (copy.Length < 2)
+            {
+                return false;
+            }
+
+            var fixedheader = copy.First.Span[0];
+            if (!TryReadBodyLength(ref copy, out var bodyLength))
+            {
+                return false;
+            }
+
+            var bodySlice = copy.Slice(0, bodyLength);
+            packet = serializer.Deserialize(new ReceivedMqttPacket(fixedheader, new MqttPacketBodyReader(bodySlice.GetArray(), 0)));
+            consumed = bodySlice.End;
+            observed = bodySlice.End;
+            return true;
+        }
+
+        private static byte[] GetArray(this in ReadOnlySequence<byte> input)
+        {
+            if (input.IsSingleSegment)
+            {
+                return input.First.Span.ToArray();
+            }
+
+            // Should be rare
+            return input.ToArray();
+        }
+
         private static bool TryReadBodyLength(ref ReadOnlySequence<byte> input, out int result)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
@@ -42,43 +76,6 @@ namespace MQTTnet.AspNetCore
             input = input.Slice(index);
 
             result = value;
-            return true;
-        }
-
-
-
-        public static byte[] GetArray(this in ReadOnlySequence<byte> input)
-        {
-            if (input.IsSingleSegment)
-            {
-                return input.First.Span.ToArray();
-            }
-
-            // Should be rare
-            return input.ToArray();
-        }
-
-        public static bool TryDeserialize(this IMqttPacketSerializer serializer, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)
-        {
-            packet = null;
-            consumed = input.Start;
-            observed = input.End;
-            var copy = input;
-            if (copy.Length < 2)
-            {
-                return false;
-            }
-
-            var fixedheader = copy.First.Span[0];
-            if (!TryReadBodyLength(ref copy, out var bodyLength))
-            {
-                return false;
-            }
-
-            var bodySlice = copy.Slice(0, bodyLength);
-            packet = serializer.Deserialize(new ReceivedMqttPacket(fixedheader, new MqttPacketBodyReader(bodySlice.GetArray())));
-            consumed = bodySlice.End;
-            observed = bodySlice.End;
             return true;
         }
     }

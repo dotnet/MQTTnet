@@ -22,6 +22,14 @@ namespace MQTTnet
             return new MqttClient(new MqttClientAdapterFactory(), logger);
         }
 
+        public IMqttClient CreateMqttClient(IMqttNetLogger logger, IMqttClientAdapterFactory mqttClientAdapterFactory)
+        {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (mqttClientAdapterFactory == null) throw new ArgumentNullException(nameof(mqttClientAdapterFactory));
+
+            return new MqttClient(mqttClientAdapterFactory, logger);
+        }
+
         public IMqttServer CreateMqttServer()
         {
             var logger = new MqttNetLogger();

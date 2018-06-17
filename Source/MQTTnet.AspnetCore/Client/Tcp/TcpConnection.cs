@@ -21,13 +21,9 @@ namespace MQTTnet.AspNetCore.Client.Tcp
         private Socket _socket;
         private IDuplexPipe _application;
 
-
         public bool IsConnected { get; private set; }
-
         public override string ConnectionId { get; set; }
-
         public override IFeatureCollection Features { get; }
-
         public override IDictionary<object, object> Items { get; set; }
         public override IDuplexPipe Transport { get; set; }
 
@@ -209,11 +205,9 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             }
             catch (SocketException ex) when (ex.SocketErrorCode == SocketError.OperationAborted)
             {
-                error = null;
             }
             catch (ObjectDisposedException)
             {
-                error = null;
             }
             catch (IOException ex)
             {

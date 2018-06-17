@@ -61,7 +61,6 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             _eventArgs.SetBuffer(MemoryMarshal.AsMemory(memory));
 #else
             var segment = memory.GetArray();
-
             _eventArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
 #endif
             if (!_socket.SendAsync(_eventArgs))

@@ -93,6 +93,11 @@ namespace MQTTnet.Serializer
             IncreasePostition(count);
         }
 
+        public void Reset()
+        {
+            Length = 0;
+        }
+
         public void Seek(int offset)
         {
             EnsureCapacity(offset);
@@ -102,6 +107,22 @@ namespace MQTTnet.Serializer
         public byte[] GetBuffer()
         {
             return _buffer;
+        }
+
+        public void FreeBuffer()
+        {
+            // This method frees the used memory by shrinking the buffer. This is required because the buffer
+            // is used across several messages. In general this is not a big issue because subsequent Ping packages
+            // have the same size but a very big publish package with 100 MB of payload will increase the buffer 
+            // a lot and the size will never reduced. So this method tries to find a size which can be held in 
+            // memory for a long time without causing troubles.
+
+            if (_buffer.Length < 4096)
+            {
+                return;
+            }
+
+            Array.Resize(ref _buffer, 4096);
         }
 
         private void EnsureAdditionalCapacity(int additionalCapacity)

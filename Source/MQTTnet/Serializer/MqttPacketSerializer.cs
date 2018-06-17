@@ -11,15 +11,19 @@ namespace MQTTnet.Serializer
     {
         private const int FixedHeaderSize = 1;
 
+        [ThreadStatic]
+        private static MqttPacketWriter _packetWriter;
+
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
         public ArraySegment<byte> Serialize(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
-            var packetWriter = new MqttPacketWriter();
+            var packetWriter = InitializePacketWriter();
 
             // Leave enough head space for max header size (fixed + 4 variable remaining length = 5 bytes)
+            packetWriter.Reset();
             packetWriter.Seek(5);
 
             var fixedHeader = SerializePacket(packet, packetWriter);
@@ -37,28 +41,6 @@ namespace MQTTnet.Serializer
 
             var buffer = packetWriter.GetBuffer();
             return new ArraySegment<byte>(buffer, headerOffset, packetWriter.Length - headerOffset);
-        }
-
-        private byte SerializePacket(MqttBasePacket packet, MqttPacketWriter packetWriter)
-        {
-            switch (packet)
-            {
-                case MqttConnectPacket connectPacket: return Serialize(connectPacket, packetWriter);
-                case MqttConnAckPacket connAckPacket: return Serialize(connAckPacket, packetWriter);
-                case MqttDisconnectPacket _: return SerializeEmptyPacket(MqttControlPacketType.Disconnect);
-                case MqttPingReqPacket _: return SerializeEmptyPacket(MqttControlPacketType.PingReq);
-                case MqttPingRespPacket _: return SerializeEmptyPacket(MqttControlPacketType.PingResp);
-                case MqttPublishPacket publishPacket: return Serialize(publishPacket, packetWriter);
-                case MqttPubAckPacket pubAckPacket: return Serialize(pubAckPacket, packetWriter);
-                case MqttPubRecPacket pubRecPacket: return Serialize(pubRecPacket, packetWriter);
-                case MqttPubRelPacket pubRelPacket: return Serialize(pubRelPacket, packetWriter);
-                case MqttPubCompPacket pubCompPacket: return Serialize(pubCompPacket, packetWriter);
-                case MqttSubscribePacket subscribePacket: return Serialize(subscribePacket, packetWriter);
-                case MqttSubAckPacket subAckPacket: return Serialize(subAckPacket, packetWriter);
-                case MqttUnsubscribePacket unsubscribePacket: return Serialize(unsubscribePacket, packetWriter);
-                case MqttUnsubAckPacket unsubAckPacket: return Serialize(unsubAckPacket, packetWriter);
-                default: throw new MqttProtocolViolationException("Packet type invalid.");
-            }
         }
 
         public MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket)
@@ -90,6 +72,43 @@ namespace MQTTnet.Serializer
 
                 default: throw new MqttProtocolViolationException($"Packet type ({controlPacketType}) not supported.");
             }
+        }
+
+        public void FreeBuffer()
+        {
+            InitializePacketWriter().FreeBuffer();
+        }
+
+        private byte SerializePacket(MqttBasePacket packet, MqttPacketWriter packetWriter)
+        {
+            switch (packet)
+            {
+                case MqttConnectPacket connectPacket: return Serialize(connectPacket, packetWriter);
+                case MqttConnAckPacket connAckPacket: return Serialize(connAckPacket, packetWriter);
+                case MqttDisconnectPacket _: return SerializeEmptyPacket(MqttControlPacketType.Disconnect);
+                case MqttPingReqPacket _: return SerializeEmptyPacket(MqttControlPacketType.PingReq);
+                case MqttPingRespPacket _: return SerializeEmptyPacket(MqttControlPacketType.PingResp);
+                case MqttPublishPacket publishPacket: return Serialize(publishPacket, packetWriter);
+                case MqttPubAckPacket pubAckPacket: return Serialize(pubAckPacket, packetWriter);
+                case MqttPubRecPacket pubRecPacket: return Serialize(pubRecPacket, packetWriter);
+                case MqttPubRelPacket pubRelPacket: return Serialize(pubRelPacket, packetWriter);
+                case MqttPubCompPacket pubCompPacket: return Serialize(pubCompPacket, packetWriter);
+                case MqttSubscribePacket subscribePacket: return Serialize(subscribePacket, packetWriter);
+                case MqttSubAckPacket subAckPacket: return Serialize(subAckPacket, packetWriter);
+                case MqttUnsubscribePacket unsubscribePacket: return Serialize(unsubscribePacket, packetWriter);
+                case MqttUnsubAckPacket unsubAckPacket: return Serialize(unsubAckPacket, packetWriter);
+                default: throw new MqttProtocolViolationException("Packet type invalid.");
+            }
+        }
+
+        private static MqttPacketWriter InitializePacketWriter()
+        {
+            if (_packetWriter == null)
+            {
+                _packetWriter = new MqttPacketWriter();
+            }
+
+            return _packetWriter;
         }
 
         private static MqttBasePacket DeserializeUnsubAck(MqttPacketBodyReader body)
@@ -310,7 +329,7 @@ namespace MQTTnet.Serializer
             var packet = new MqttConnAckPacket();
 
             var acknowledgeFlags = body.ReadByte();
-            
+
             if (ProtocolVersion == MqttProtocolVersion.V311)
             {
                 packet.IsSessionPresent = (acknowledgeFlags & 0x1) > 0;
@@ -372,7 +391,7 @@ namespace MQTTnet.Serializer
                     connectFlags |= 0x20;
                 }
             }
-            
+
             if (packet.Password != null && packet.Username == null)
             {
                 throw new MqttProtocolViolationException("If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].");
@@ -387,7 +406,7 @@ namespace MQTTnet.Serializer
             {
                 connectFlags |= 0x80;
             }
-            
+
             packetWriter.Write(connectFlags);
             packetWriter.Write(packet.KeepAlivePeriod);
             packetWriter.WriteWithLengthPrefix(packet.ClientId);
@@ -424,7 +443,7 @@ namespace MQTTnet.Serializer
                 {
                     connectAcknowledgeFlags |= 0x1;
                 }
-                
+
                 packetWriter.Write(connectAcknowledgeFlags);
             }
             else

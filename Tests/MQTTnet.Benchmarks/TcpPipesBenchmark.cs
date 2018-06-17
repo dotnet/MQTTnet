@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using MQTTnet.Benchmarks.Tcp;
+using MQTTnet.AspNetCore.Client.Tcp;
 
 namespace MQTTnet.Benchmarks
 {
@@ -25,10 +25,12 @@ namespace MQTTnet.Benchmarks
 
             var clientConnection = new TcpConnection(new IPEndPoint(IPAddress.Loopback, 1883));
 
-            _client = clientConnection.StartAsync().GetAwaiter().GetResult();
+            clientConnection.StartAsync().GetAwaiter().GetResult();
+            _client = clientConnection.Transport;
 
             var serverConnection = new TcpConnection(task.GetAwaiter().GetResult());
-            _server = serverConnection.StartAsync().GetAwaiter().GetResult();
+            serverConnection.StartAsync().GetAwaiter().GetResult();
+            _server = serverConnection.Transport;
         }
 
 

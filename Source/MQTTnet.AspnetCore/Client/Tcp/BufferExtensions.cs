@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace MQTTnet.Benchmarks.Tcp
+namespace MQTTnet.AspNetCore.Client.Tcp
 {
     public static class BufferExtensions
     {

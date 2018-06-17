@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Benchmarks.Tcp
+namespace MQTTnet.AspNetCore.Client.Tcp
 {
     public class SocketAwaitable : ICriticalNotifyCompletion
     {

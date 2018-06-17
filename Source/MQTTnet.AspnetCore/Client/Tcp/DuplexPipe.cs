@@ -1,6 +1,6 @@
 ﻿using System.IO.Pipelines;
 
-namespace MQTTnet.Benchmarks.Tcp
+namespace MQTTnet.AspNetCore.Client.Tcp
 {
     public class DuplexPipe : IDuplexPipe
     {

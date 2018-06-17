@@ -192,7 +192,7 @@ namespace MQTTnet.Adapter
                     bodyOffset += readBytes;
                 } while (bodyOffset < body.Length);
 
-                return new ReceivedMqttPacket(fixedHeader.Flags, new MqttPacketBodyReader(body));
+                return new ReceivedMqttPacket(fixedHeader.Flags, new MqttPacketBodyReader(body, 0));
             }
             finally
             {

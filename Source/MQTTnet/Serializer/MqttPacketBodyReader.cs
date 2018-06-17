@@ -8,9 +8,10 @@ namespace MQTTnet.Serializer
         private readonly byte[] _buffer;
         private int _offset;
 
-        public MqttPacketBodyReader(byte[] buffer)
+        public MqttPacketBodyReader(byte[] buffer, int offset)
         {
             _buffer = buffer;
+            _offset = offset;
         }
 
         public int Length => _buffer.Length - _offset;

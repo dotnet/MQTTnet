@@ -148,7 +148,7 @@ namespace MQTTnet.Server
                         clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, applicationMessage);
                     }
                 }
-                catch (TaskCanceledException)
+                catch (OperationCanceledException)
                 {
                 }
                 catch (Exception exception)

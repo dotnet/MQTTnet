@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Extensions.ManagedClient
@@ -15,8 +14,7 @@ namespace MQTTnet.Extensions.ManagedClient
     public class ManagedMqttClient : IManagedMqttClient
     {
         private readonly BlockingCollection<ManagedMqttApplicationMessage> _messageQueue = new BlockingCollection<ManagedMqttApplicationMessage>();
-        private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
-        private readonly AsyncLock _subscriptionsLock = new AsyncLock();
+        private readonly ConcurrentDictionary<string, MqttQualityOfServiceLevel> _subscriptions = new ConcurrentDictionary<string, MqttQualityOfServiceLevel>();
         private readonly List<string> _unsubscriptions = new List<string>();
 
         private readonly IMqttClient _mqttClient;
@@ -118,39 +116,36 @@ namespace MQTTnet.Extensions.ManagedClient
             _messageQueue.Add(applicationMessage);
         }
 
-        public async Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
+        public Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            using (await _subscriptionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            foreach (var topicFilter in topicFilters)
             {
-                foreach (var topicFilter in topicFilters)
+                _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                _subscriptionsNotPushed = true;
+            }
+
+            return Task.FromResult(0);
+        }
+
+        public Task UnsubscribeAsync(IEnumerable<string> topics)
+        {
+            foreach (var topic in topics)
+            {
+                if (_subscriptions.TryRemove(topic, out _))
                 {
-                    _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                    _unsubscriptions.Add(topic);
                     _subscriptionsNotPushed = true;
                 }
             }
-        }
 
-        public async Task UnsubscribeAsync(IEnumerable<string> topics)
-        {
-            using (await _subscriptionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
-            {
-                foreach (var topic in topics)
-                {
-                    if (_subscriptions.Remove(topic))
-                    {
-                        _unsubscriptions.Add(topic);
-                        _subscriptionsNotPushed = true;
-                    }
-                }
-            }
+            return Task.FromResult(0);
         }
 
         public void Dispose()
         {
             _messageQueue?.Dispose();
-            _subscriptionsLock?.Dispose();
             _connectionCancellationToken?.Dispose();
             _publishingCancellationToken?.Dispose();
         }
@@ -289,7 +284,7 @@ namespace MQTTnet.Extensions.ManagedClient
             List<TopicFilter> subscriptions;
             List<string> unsubscriptions;
 
-            using (await _subscriptionsLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            lock (_subscriptions)
             {
                 subscriptions = _subscriptions.Select(i => new TopicFilter(i.Key, i.Value)).ToList();
 

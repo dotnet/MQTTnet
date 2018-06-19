@@ -12,6 +12,8 @@ namespace MQTTnet.Serializer
     /// </summary>
     public class MqttPacketWriter
     {
+        public static int MaxBufferSize = 4096;
+
         private byte[] _buffer = new byte[128];
 
         private int _position;
@@ -117,12 +119,12 @@ namespace MQTTnet.Serializer
             // a lot and the size will never reduced. So this method tries to find a size which can be held in 
             // memory for a long time without causing troubles.
 
-            if (_buffer.Length < 4096)
+            if (_buffer.Length < MaxBufferSize)
             {
                 return;
             }
 
-            Array.Resize(ref _buffer, 4096);
+            Array.Resize(ref _buffer, MaxBufferSize);
         }
 
         private void EnsureAdditionalCapacity(int additionalCapacity)

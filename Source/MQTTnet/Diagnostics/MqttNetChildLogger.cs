@@ -9,7 +9,7 @@ namespace MQTTnet.Diagnostics
 
         public MqttNetChildLogger(IMqttNetLogger logger, string source)
         {
-            _logger = logger;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _source = source;
         }
 

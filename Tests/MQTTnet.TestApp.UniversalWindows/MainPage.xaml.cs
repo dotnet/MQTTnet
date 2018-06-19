@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
@@ -21,6 +22,7 @@ namespace MQTTnet.TestApp.UniversalWindows
     public sealed partial class MainPage
     {
         private readonly ConcurrentQueue<MqttNetLogMessage> _traceMessages = new ConcurrentQueue<MqttNetLogMessage>();
+        private readonly ObservableCollection<IMqttClientSessionStatus> _sessions = new ObservableCollection<IMqttClientSessionStatus>();
 
         private IMqttClient _mqttClient;
         private IMqttServer _mqttServer;
@@ -306,6 +308,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             var options = new MqttServerOptions();
             options.DefaultEndpointOptions.Port = int.Parse(ServerPort.Text);
             options.Storage = storage;
+            options.EnablePersistentSessions = ServerAllowPersistentSessions.IsChecked == true;
 
             await _mqttServer.StartAsync(options);
         }
@@ -374,10 +377,25 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private void ClearSessions(object sender, RoutedEventArgs e)
         {
+            _sessions.Clear();
         }
 
-        private void RefreshSessions(object sender, RoutedEventArgs e)
+        private async void RefreshSessions(object sender, RoutedEventArgs e)
         {
+            if (_mqttServer == null)
+            {
+                return;
+            }
+
+            var sessions = await _mqttServer.GetClientSessionsStatusAsync();
+            _sessions.Clear();
+
+            foreach (var session in sessions)
+            {
+                _sessions.Add(session);
+            }
+
+            ListViewSessions.DataContext = _sessions;
         }
 
         private async Task WikiCode()

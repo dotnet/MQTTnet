@@ -11,8 +11,7 @@ namespace MQTTnet.Serializer
     {
         private const int FixedHeaderSize = 1;
 
-        [ThreadStatic]
-        private static MqttPacketWriter _packetWriter;
+        private readonly MqttPacketWriter _packetWriter = new MqttPacketWriter();
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
@@ -20,14 +19,12 @@ namespace MQTTnet.Serializer
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
-            var packetWriter = InitializePacketWriter();
-
             // Leave enough head space for max header size (fixed + 4 variable remaining length = 5 bytes)
-            packetWriter.Reset();
-            packetWriter.Seek(5);
+            _packetWriter.Reset();
+            _packetWriter.Seek(5);
 
-            var fixedHeader = SerializePacket(packet, packetWriter);
-            var remainingLength = packetWriter.Length - 5;
+            var fixedHeader = SerializePacket(packet, _packetWriter);
+            var remainingLength = _packetWriter.Length - 5;
 
             var remainingLengthBuffer = MqttPacketWriter.EncodeRemainingLength(remainingLength);
 
@@ -35,12 +32,12 @@ namespace MQTTnet.Serializer
             var headerOffset = 5 - headerSize;
 
             // Position cursor on correct offset on beginining of array (has leading 0x0)
-            packetWriter.Seek(headerOffset);
-            packetWriter.Write(fixedHeader);
-            packetWriter.Write(remainingLengthBuffer.Array, remainingLengthBuffer.Offset, remainingLengthBuffer.Count);
+            _packetWriter.Seek(headerOffset);
+            _packetWriter.Write(fixedHeader);
+            _packetWriter.Write(remainingLengthBuffer.Array, remainingLengthBuffer.Offset, remainingLengthBuffer.Count);
 
-            var buffer = packetWriter.GetBuffer();
-            return new ArraySegment<byte>(buffer, headerOffset, packetWriter.Length - headerOffset);
+            var buffer = _packetWriter.GetBuffer();
+            return new ArraySegment<byte>(buffer, headerOffset, _packetWriter.Length - headerOffset);
         }
 
         public MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket)
@@ -76,7 +73,7 @@ namespace MQTTnet.Serializer
 
         public void FreeBuffer()
         {
-            InitializePacketWriter().FreeBuffer();
+            _packetWriter.FreeBuffer();
         }
 
         private byte SerializePacket(MqttBasePacket packet, MqttPacketWriter packetWriter)
@@ -99,16 +96,6 @@ namespace MQTTnet.Serializer
                 case MqttUnsubAckPacket unsubAckPacket: return Serialize(unsubAckPacket, packetWriter);
                 default: throw new MqttProtocolViolationException("Packet type invalid.");
             }
-        }
-
-        private static MqttPacketWriter InitializePacketWriter()
-        {
-            if (_packetWriter == null)
-            {
-                _packetWriter = new MqttPacketWriter();
-            }
-
-            return _packetWriter;
         }
 
         private static MqttBasePacket DeserializeUnsubAck(MqttPacketBodyReader body)

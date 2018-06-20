@@ -11,8 +11,10 @@ namespace MQTTnet.Internal
         private readonly LinkedList<TaskCompletionSource<bool>> _waiters = new LinkedList<TaskCompletionSource<bool>>();
         private bool _isSignaled;
 
-        public AsyncAutoResetEvent() : this(false)
-        { }
+        public AsyncAutoResetEvent()
+            : this(false)
+        {
+        }
 
         public AsyncAutoResetEvent(bool signaled)
         {
@@ -58,27 +60,24 @@ namespace MQTTnet.Internal
             }
 
             var winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken)).ConfigureAwait(false);
-            if (winner == tcs.Task)
+            var taskWasSignaled = winner == tcs.Task;
+            if (taskWasSignaled)
             {
-                // The task was signaled.
                 return true;
             }
-            else
+
+            // We timed-out; remove our reference to the task.
+            // This is an O(n) operation since waiters is a LinkedList<T>.
+            lock (_waiters)
             {
-                // We timed-out; remove our reference to the task.
-                // This is an O(n) operation since waiters is a LinkedList<T>.
-                lock (_waiters)
+                _waiters.Remove(tcs);
+
+                if (winner.Status == TaskStatus.Canceled)
                 {
-                    _waiters.Remove(tcs);
-                    if (winner.Status == TaskStatus.Canceled)
-                    {
-                        throw new OperationCanceledException(cancellationToken);
-                    }
-                    else
-                    {
-                        throw new TimeoutException();
-                    }
+                    throw new OperationCanceledException(cancellationToken);
                 }
+
+                throw new TimeoutException();
             }
         }
 

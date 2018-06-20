@@ -22,6 +22,8 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("5 = Start public broker test");
             Console.WriteLine("6 = Start server & client");
             Console.WriteLine("7 = Client flow test");
+            Console.WriteLine("8 = Start performance test (client only)");
+            Console.WriteLine("9 = Start server (no trace)");
 
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.KeyChar == '1')
@@ -34,7 +36,7 @@ namespace MQTTnet.TestApp.NetCore
             }
             else if (pressedKey.KeyChar == '3')
             {
-                PerformanceTest.Run();
+                PerformanceTest.RunClientAndServer();
                 return;
             }
             else if (pressedKey.KeyChar == '4')
@@ -52,6 +54,16 @@ namespace MQTTnet.TestApp.NetCore
             else if (pressedKey.KeyChar == '7')
             {
                 Task.Run(ClientFlowTest.RunAsync);
+            }
+            else if (pressedKey.KeyChar == '8')
+            {
+                PerformanceTest.RunClientOnly();
+                return;
+            }
+            else if (pressedKey.KeyChar == '9')
+            {
+                ServerTest.RunEmptyServer();
+                return;
             }
 
             Thread.Sleep(Timeout.Infinite);

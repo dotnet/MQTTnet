@@ -8,12 +8,19 @@ namespace MQTTnet.TestApp.NetCore
 {
     public static class ServerTest
     {
+        public static void RunEmptyServer()
+        {
+            var mqttServer = new MqttFactory().CreateMqttServer();
+            mqttServer.StartAsync(new MqttServerOptions()).GetAwaiter().GetResult();
+
+            Console.WriteLine("Press any key to exit.");
+            Console.ReadLine();
+        }
+
         public static async Task RunAsync()
         {
             try
             {
-                MqttNetConsoleLogger.ForwardToConsole();
-
                 var options = new MqttServerOptions
                 {
                     ConnectionValidator = p =>

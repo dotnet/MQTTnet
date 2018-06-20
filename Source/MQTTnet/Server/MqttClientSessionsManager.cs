@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -41,7 +42,7 @@ namespace MQTTnet.Server
             Task.Factory.StartNew(() => ProcessQueuedApplicationMessages(_cancellationToken), _cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
-        public Task StopAsync()
+        public void Stop()
         {
             foreach (var session in _sessions)
             {
@@ -49,7 +50,6 @@ namespace MQTTnet.Server
             }
 
             _sessions.Clear();
-            return Task.FromResult(0);
         }
 
         public Task StartSession(IMqttChannelAdapter clientAdapter)
@@ -71,11 +71,11 @@ namespace MQTTnet.Server
             return Task.FromResult((IList<IMqttClientSessionStatus>)result);
         }
 
-        public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
+        public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 
-            _messageQueue.Add(new MqttEnqueuedApplicationMessage(senderClientSession, applicationMessage), _cancellationToken);
+            _messageQueue.Add(new MqttEnqueuedApplicationMessage(senderClientSession, publishPacket), _cancellationToken);
         }
 
         public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
@@ -118,7 +118,7 @@ namespace MQTTnet.Server
                 {
                     var enqueuedApplicationMessage = _messageQueue.Take(cancellationToken);
                     var sender = enqueuedApplicationMessage.Sender;
-                    var applicationMessage = enqueuedApplicationMessage.ApplicationMessage;
+                    var applicationMessage = enqueuedApplicationMessage.PublishPacket.ToApplicationMessage();
 
                     var interceptorContext = InterceptApplicationMessage(sender, applicationMessage);
                     if (interceptorContext != null)
@@ -145,7 +145,7 @@ namespace MQTTnet.Server
 
                     foreach (var clientSession in _sessions.Values)
                     {
-                        clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, applicationMessage);
+                        clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, applicationMessage.ToPublishPacket());
                     }
                 }
                 catch (OperationCanceledException)

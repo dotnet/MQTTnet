@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using MQTTnet.Packets;
@@ -9,7 +8,7 @@ namespace MQTTnet.Server
 {
     public class MqttClientSubscriptionsManager
     {
-        private readonly ConcurrentDictionary<string, MqttQualityOfServiceLevel> _subscriptions = new ConcurrentDictionary<string, MqttQualityOfServiceLevel>();
+        private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly IMqttServerOptions _options;
         private readonly MqttServer _server;
         private readonly string _clientId;
@@ -54,7 +53,11 @@ namespace MQTTnet.Server
 
                 if (interceptorContext.AcceptSubscription)
                 {
-                    _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                    lock (_subscriptions)
+                    {
+                        _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                    }
+
                     _server.OnClientSubscribedTopic(_clientId, topicFilter);
                 }
             }
@@ -66,10 +69,14 @@ namespace MQTTnet.Server
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
 
-            foreach (var topicFilter in unsubscribePacket.TopicFilters)
+            lock (_subscriptions)
             {
-                _subscriptions.TryRemove(topicFilter, out _);
-                _server.OnClientUnsubscribedTopic(_clientId, topicFilter);
+                foreach (var topicFilter in unsubscribePacket.TopicFilters)
+                {
+                    _subscriptions.Remove(topicFilter);
+
+                    _server.OnClientUnsubscribedTopic(_clientId, topicFilter);
+                }
             }
 
             return new MqttUnsubAckPacket
@@ -78,19 +85,21 @@ namespace MQTTnet.Server
             };
         }
 
-        public CheckSubscriptionsResult CheckSubscriptions(MqttApplicationMessage applicationMessage)
+        public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel)
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
-
             var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
-            foreach (var subscription in _subscriptions)
-            {
-                if (!MqttTopicFilterComparer.IsMatch(applicationMessage.Topic, subscription.Key))
-                {
-                    continue;
-                }
 
-                qosLevels.Add(subscription.Value);
+            lock (_subscriptions)
+            {
+                foreach (var subscription in _subscriptions)
+                {
+                    if (!MqttTopicFilterComparer.IsMatch(topic, subscription.Key))
+                    {
+                        continue;
+                    }
+
+                    qosLevels.Add(subscription.Value);
+                }
             }
 
             if (qosLevels.Count == 0)
@@ -101,7 +110,7 @@ namespace MQTTnet.Server
                 };
             }
 
-            return CreateSubscriptionResult(applicationMessage, qosLevels);
+            return CreateSubscriptionResult(qosLevel, qosLevels);
         }
 
         private static MqttSubscribeReturnCode ConvertToMaximumQoS(MqttQualityOfServiceLevel qualityOfServiceLevel)
@@ -122,12 +131,12 @@ namespace MQTTnet.Server
             return interceptorContext;
         }
 
-        private static CheckSubscriptionsResult CreateSubscriptionResult(MqttApplicationMessage applicationMessage, HashSet<MqttQualityOfServiceLevel> subscribedQoSLevels)
+        private static CheckSubscriptionsResult CreateSubscriptionResult(MqttQualityOfServiceLevel qosLevel, HashSet<MqttQualityOfServiceLevel> subscribedQoSLevels)
         {
             MqttQualityOfServiceLevel effectiveQoS;
-            if (subscribedQoSLevels.Contains(applicationMessage.QualityOfServiceLevel))
+            if (subscribedQoSLevels.Contains(qosLevel))
             {
-                effectiveQoS = applicationMessage.QualityOfServiceLevel;
+                effectiveQoS = qosLevel;
             }
             else if (subscribedQoSLevels.Count == 1)
             {

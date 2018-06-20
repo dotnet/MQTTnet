@@ -82,11 +82,11 @@ namespace MQTTnet.Extensions.Rpc
                         timeoutCts.Cancel(false);
                         return result;
                     }
-                    catch (TaskCanceledException taskCanceledException)
+                    catch (OperationCanceledException exception)
                     {
                         if (timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                         {
-                            throw new MqttCommunicationTimedOutException(taskCanceledException);
+                            throw new MqttCommunicationTimedOutException(exception);
                         }
                         else
                         {

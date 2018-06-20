@@ -12,7 +12,48 @@ namespace MQTTnet.TestApp.NetCore
 {
     public static class PerformanceTest
     {
-        public static void Run()
+        public static void RunClientOnly()
+        {
+            try
+            {
+                var options = new MqttClientOptions
+                {
+                    ChannelOptions = new MqttClientTcpOptions
+                    {
+                        Server = "127.0.0.1"
+                    },
+                    CleanSession = true
+                };
+
+                var client = new MqttFactory().CreateMqttClient();
+                client.ConnectAsync(options).GetAwaiter().GetResult();
+
+                var message = CreateMessage();
+                var stopwatch = new Stopwatch();
+
+                for (var i = 0; i < 10; i++)
+                {
+                    var sentMessagesCount = 0;
+
+                    stopwatch.Restart();
+                    while (stopwatch.ElapsedMilliseconds < 1000)
+                    {
+                        client.PublishAsync(message).GetAwaiter().GetResult();
+                        sentMessagesCount++;
+                    }
+
+                    Console.WriteLine($"Sending {sentMessagesCount} messages per second. #" + (i + 1));
+
+                    GC.Collect();
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
+        }
+
+        public static void RunClientAndServer()
         {
             try
             {

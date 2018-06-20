@@ -123,6 +123,8 @@ namespace MQTTnet.Server
                 _cancellationTokenSource = null;
 
                 _retainedMessagesManager = null;
+
+                _clientSessionsManager?.Dispose();
                 _clientSessionsManager = null;
             }
         }

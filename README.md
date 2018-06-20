@@ -18,7 +18,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * TLS 1.2 support for client and server (but not UWP servers)
 * Extensible communication channels (i.e. In-Memory, TCP, TCP+TLS, WS)
 * Lightweight (only the low level implementation of MQTT, no overhead)
-* Performance optimized (processing ~60.000 messages / second)*
+* Performance optimized (processing ~70.000 messages / second)*
 * Interfaces included for mocking and testing
 * Access to internal trace messages
 * Unit tested (~90 tests)
@@ -50,14 +50,15 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * .NET Standard 1.3+
 * .NET Core 1.1+
 * .NET Core App 1.1+
-* Universal Windows Platform (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU, Windows 10 IoT Core)
 * .NET Framework 4.5.2+ (x86, x64, AnyCPU)
 * Mono 5.2+
+* Universal Windows Platform (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU, Windows 10 IoT Core)
 * Xamarin.Android 7.5+
 * Xamarin.iOS 10.14+
 
 ## Supported MQTT versions
 
+* 5.0.0 (planned)
 * 3.1.1
 * 3.1.0
 
@@ -79,8 +80,7 @@ This library is used in the following projects:
 
 * MQTT Client Rx (Wrapper for Reactive Extensions, <https://github.com/1iveowl/MQTTClient.rx>)
 * MQTT Tester (MQTT client test app for [Android](https://play.google.com/store/apps/details?id=com.liveowl.mqtttester) and [iOS](https://itunes.apple.com/us/app/mqtt-tester/id1278621826?mt=8))
-* Wirehome (Open Source Home Automation system for .NET, <https://github.com/chkr1011/Wirehome>)
-
+* HA4IoT (Open Source Home Automation system for .NET, <https://github.com/chkr1011/HA4IoT>)
 
 If you use this library and want to see your project here please let me know.
 

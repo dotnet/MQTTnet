@@ -12,19 +12,17 @@ namespace MQTTnet.Server
         private readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
         private readonly Stopwatch _lastNonKeepAlivePacketReceivedTracker = new Stopwatch();
 
+        private readonly IMqttClientSession _clientSession;
         private readonly IMqttNetChildLogger _logger;
-        private readonly string _clientId;
-        private readonly Action _callback;
-
+        
         private bool _isPaused;
-        private Task _workerTask;
-
-        public MqttClientKeepAliveMonitor(string clientId, Action callback, IMqttNetChildLogger logger)
+        
+        public MqttClientKeepAliveMonitor(IMqttClientSession clientSession, IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            _clientId = clientId;
-            _callback = callback;
+            _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));
+
             _logger = logger.CreateChildLogger(nameof(MqttClientKeepAliveMonitor));
         }
 
@@ -39,7 +37,7 @@ namespace MQTTnet.Server
                 return;
             }
 
-            _workerTask = Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken);
+            Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken);
         }
 
         public void Pause()
@@ -74,9 +72,9 @@ namespace MQTTnet.Server
                     // Values described here: [MQTT-3.1.2-24].
                     if (!_isPaused && _lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod * 1.5D)
                     {
-                        _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
-                        _callback();
-    
+                        _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientSession.ClientId);
+                        _clientSession.Stop(MqttClientDisconnectType.NotClean);
+                        
                         return;
                     }
 
@@ -88,11 +86,11 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", _clientId);
+                _logger.Error(exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", _clientSession.ClientId);
             }
             finally
             {
-                _logger.Verbose("Client {0}: Stopped checking keep alive timeout.", _clientId);
+                _logger.Verbose("Client {0}: Stopped checking keep alive timeout.", _clientSession.ClientId);
             }
         }
     }

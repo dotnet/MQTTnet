@@ -271,21 +271,16 @@ namespace MQTTnet.Client
 
         private Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                throw new TaskCanceledException();
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             _sendTracker.Restart();
+
             return _adapter.SendPacketAsync(packet, cancellationToken);
         }
 
         private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttBasePacket
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                throw new TaskCanceledException();
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             _sendTracker.Restart();
 
@@ -524,7 +519,7 @@ namespace MQTTnet.Client
             {
                 await task.ConfigureAwait(false);
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
             }
         }

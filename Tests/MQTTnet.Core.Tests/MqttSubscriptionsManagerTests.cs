@@ -20,13 +20,7 @@ namespace MQTTnet.Core.Tests
 
             sm.Subscribe(sp);
 
-            var pp = new MqttApplicationMessage
-            {
-                Topic = "A/B/C",
-                QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
-            };
-
-            var result = sm.CheckSubscriptions(pp);
+            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce);
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
         }
@@ -41,13 +35,7 @@ namespace MQTTnet.Core.Tests
 
             sm.Subscribe(sp);
 
-            var pp = new MqttApplicationMessage
-            {
-                Topic = "A/B/C",
-                QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
-            };
-
-            var result = sm.CheckSubscriptions(pp);
+            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce);
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
         }
@@ -63,13 +51,7 @@ namespace MQTTnet.Core.Tests
 
             sm.Subscribe(sp);
 
-            var pp = new MqttApplicationMessage
-            {
-                Topic = "A/B/C",
-                QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
-            };
-
-            var result = sm.CheckSubscriptions(pp);
+            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce);
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtLeastOnce);
         }
@@ -84,13 +66,7 @@ namespace MQTTnet.Core.Tests
 
             sm.Subscribe(sp);
 
-            var pp = new MqttApplicationMessage
-            {
-                Topic = "A/B/X",
-                QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
-            };
-
-            Assert.IsFalse(sm.CheckSubscriptions(pp).IsSubscribed);
+            Assert.IsFalse(sm.CheckSubscriptions("A/B/X", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
         }
 
         [TestMethod]
@@ -103,19 +79,13 @@ namespace MQTTnet.Core.Tests
 
             sm.Subscribe(sp);
 
-            var pp = new MqttApplicationMessage
-            {
-                Topic = "A/B/C",
-                QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
-            };
-
-            Assert.IsTrue(sm.CheckSubscriptions(pp).IsSubscribed);
+            Assert.IsTrue(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
 
             var up = new MqttUnsubscribePacket();
             up.TopicFilters.Add("A/B/C");
             sm.Unsubscribe(up);
 
-            Assert.IsFalse(sm.CheckSubscriptions(pp).IsSubscribed);
+            Assert.IsFalse(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
         }
     }
 }

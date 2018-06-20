@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
@@ -65,7 +66,7 @@ namespace MQTTnet.Server
 
             if (_cancellationTokenSource == null) throw new InvalidOperationException("The server is not started.");
 
-            _clientSessionsManager.EnqueueApplicationMessage(null, applicationMessage);
+            _clientSessionsManager.EnqueueApplicationMessage(null, applicationMessage.ToPublishPacket());
 
             return Task.FromResult(0);
         }
@@ -104,22 +105,23 @@ namespace MQTTnet.Server
                 }
 
                 _cancellationTokenSource.Cancel(false);
-                _cancellationTokenSource.Dispose();
-
+                
                 foreach (var adapter in _adapters)
                 {
                     adapter.ClientAccepted -= OnClientAccepted;
                     await adapter.StopAsync().ConfigureAwait(false);
                 }
 
-                await _clientSessionsManager.StopAsync().ConfigureAwait(false);
+                _clientSessionsManager.Stop();
 
                 _logger.Info("Stopped.");
                 Stopped?.Invoke(this, EventArgs.Empty);
             }
             finally
             {
+                _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
+
                 _retainedMessagesManager = null;
                 _clientSessionsManager = null;
             }

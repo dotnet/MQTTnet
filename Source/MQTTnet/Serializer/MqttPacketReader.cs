@@ -29,11 +29,7 @@ namespace MQTTnet.Serializer
                 var bytesRead = await channel.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
                 if (bytesRead <= 0)
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        throw new TaskCanceledException();
-                    }
-
+                    cancellationToken.ThrowIfCancellationRequested();
                     ExceptionHelper.ThrowGracefulSocketClose();
                 }
 
@@ -59,6 +55,8 @@ namespace MQTTnet.Serializer
 
             while ((encodedByte & 128) != 0)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 // Here the async/await pattern is not used becuase the overhead of context switches
                 // is too big for reading 1 byte in a row. We expect that the remaining data was sent
                 // directly after the initial bytes. If the client disconnects just in this moment we
@@ -83,6 +81,7 @@ namespace MQTTnet.Serializer
             var readCount = channel.ReadAsync(buffer, 0, 1, cancellationToken).GetAwaiter().GetResult();
             if (readCount <= 0)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ExceptionHelper.ThrowGracefulSocketClose();
             }
 

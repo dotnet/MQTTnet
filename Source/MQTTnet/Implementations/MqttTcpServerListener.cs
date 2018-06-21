@@ -70,16 +70,18 @@ namespace MQTTnet.Implementations
 #endif
                     clientSocket.NoDelay = true;
 
+                    SslStream sslStream = null;
+
                     if (_tlsCertificate != null)
                     {
-                        var sslStream = new SslStream(new NetworkStream(clientSocket), false);
+                        sslStream = new SslStream(new NetworkStream(clientSocket), false);
                         await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
                     }
 
                     var protocol = _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6";
                     _logger.Verbose($"Client '{clientSocket.RemoteEndPoint}' accepted by TCP listener '{_socket.LocalEndPoint}, {protocol}'.");
 
-                    var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, null), new MqttPacketSerializer(), _logger);
+                    var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }
                 catch (ObjectDisposedException)

@@ -21,6 +21,9 @@
 * [ManagedClient] The managed client is moved to a separate nuget package.
 * [ManagedClient] Added an own message format with extended properties like ID (BREAKING CHANGE).
 * [ManagedClient] Fixed a loading issue of stored application messages (thanks to @JTrotta).
+* [ManagedClient] Added a new event which is fired when a synchronization of the subscriptions has failed.
+* [ManagedClient] Added a new event which is fired when a connection attempt has failed.
+* [ManagedClient] Exposed a new property which provides the count of not published messages (pending messages count).
 * [Server] Added support for other WebSocket sub protocol formats like mqttv-3.1.1 (thanks to @israellot).
 * [Server] The takeover of an existing client sessions is now treated as a _clean_ disconnect of the previous client.
 * [Server] The pending messages queue per client is now limited to 250 messages. Overflow strategy and count can be changed via options (thanks to @VladimirAkopyan)

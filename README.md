@@ -5,8 +5,8 @@
 [![NuGet Badge](https://buildstats.info/nuget/MQTTnet)](https://www.nuget.org/packages/MQTTnet)
 [![Build status](https://ci.appveyor.com/api/projects/status/ycit86voxfevm2aa/branch/master?svg=true)](https://ci.appveyor.com/project/chkr1011/mqttnet/branch/develop)
 [![BCH compliance](https://bettercodehub.com/edge/badge/chkr1011/MQTTnet?branch=master)](https://bettercodehub.com/)
-[![OpenCollective](https://opencollective.com/mqttnet/backers/badge.svg)](#backers) 
-[![OpenCollective](https://opencollective.com/mqttnet/sponsors/badge.svg)](#sponsors)
+[![OpenCollective](https://opencollective.com/mqttnet/backers/badge.svg)](https://opencollective.com/mqttnet) 
+[![OpenCollective](https://opencollective.com/mqttnet/sponsors/badge.svg)](https://opencollective.com/mqttnet)
 
 # MQTTnet
 

@@ -5,6 +5,8 @@
 [![NuGet Badge](https://buildstats.info/nuget/MQTTnet)](https://www.nuget.org/packages/MQTTnet)
 [![Build status](https://ci.appveyor.com/api/projects/status/ycit86voxfevm2aa/branch/master?svg=true)](https://ci.appveyor.com/project/chkr1011/mqttnet/branch/develop)
 [![BCH compliance](https://bettercodehub.com/edge/badge/chkr1011/MQTTnet?branch=master)](https://bettercodehub.com/)
+[![OpenCollective](https://opencollective.com/mqttnet/backers/badge.svg)](#backers) 
+[![OpenCollective](https://opencollective.com/mqttnet/sponsors/badge.svg)](#sponsors)
 
 # MQTTnet
 
@@ -73,6 +75,9 @@ Please find examples and the documentation at the Wiki of this repository (<http
 ## Contributions
 
 If you want to contribute to this project just create a pull request. But only pull requests which are matching the code style of this library will be accepted. Before creating a pull request please have a look at the library to get an overview of the required style.
+Also additions and updates in the Wiki are welcome.
+
+This project also listed at Open Collective (https://opencollective.com/mqttnet).
 
 ## References
 

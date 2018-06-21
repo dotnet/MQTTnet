@@ -17,7 +17,7 @@ namespace MQTTnet.Internal
 
         public Task<IDisposable> LockAsync(CancellationToken cancellationToken)
         {
-            Task wait = _semaphore.WaitAsync(cancellationToken);
+            var wait = _semaphore.WaitAsync(cancellationToken);
             return wait.IsCompleted ?
                         _releaser :
                         wait.ContinueWith((_, state) => (IDisposable)state,

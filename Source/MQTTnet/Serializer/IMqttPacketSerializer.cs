@@ -11,5 +11,7 @@ namespace MQTTnet.Serializer
         ArraySegment<byte> Serialize(MqttBasePacket mqttPacket);
 
         MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket);
+
+        void FreeBuffer();
     }
 }

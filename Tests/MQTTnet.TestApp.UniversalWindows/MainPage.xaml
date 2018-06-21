@@ -4,6 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:server="using:MQTTnet.Server"
+    xmlns:interop="using:Windows.UI.Xaml.Interop"
     d:DesignHeight="800"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -31,7 +33,7 @@
                     <CheckBox x:Name="CleanSession" IsChecked="True"></CheckBox>
                     <TextBlock>Keep alive interval:</TextBlock>
                     <TextBox x:Name="KeepAliveInterval" Text="5"></TextBox>
-                    
+
                     <StackPanel Orientation="Horizontal">
                         <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="connection">TCP</RadioButton>
                         <RadioButton x:Name="UseWs" GroupName="connection">WS</RadioButton>
@@ -142,16 +144,12 @@
 
                     <CheckBox x:Name="ServerPersistRetainedMessages" IsChecked="True">Persist retained messages in JSON format</CheckBox>
                     <CheckBox x:Name="ServerClearRetainedMessages">Clear previously retained messages on startup</CheckBox>
+                    <CheckBox x:Name="ServerAllowPersistentSessions">Allow persistent sessions</CheckBox>
 
                     <StackPanel Orientation="Horizontal">
                         <Button Width="120" Margin="0,0,10,0" Click="StartServer">Start</Button>
                         <Button Width="120" Margin="0,0,10,0" Click="StopServer">Stop</Button>
                     </StackPanel>
-                </StackPanel>
-            </PivotItem>
-            <PivotItem Header="Log">
-                <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-                    <Button Click="ClearLog" Width="120">Clear</Button>
                 </StackPanel>
             </PivotItem>
 
@@ -162,12 +160,23 @@
                         <Button Width="120" Margin="0,0,10,0" Click="ClearSessions">Clear</Button>
                     </StackPanel>
 
-                    <ListView>
+                    <ListView ItemsSource="{Binding}" x:Name="ListViewSessions">
                         <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <TextBlock></TextBlock>
-                                </Grid>
+                            <DataTemplate x:DataType="server:IMqttClientSessionStatus">
+                                <StackPanel Orientation="Horizontal">
+                                    <StackPanel.Resources>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Margin" Value="0,0,10,0"></Setter>
+                                        </Style>
+                                    </StackPanel.Resources>
+                                    <TextBlock Text="{Binding ClientId}"></TextBlock>
+                                    <TextBlock Text="{Binding Endpoint}"></TextBlock>
+                                    <TextBlock Text="{Binding IsConnected}"></TextBlock>
+                                    <TextBlock Text="{Binding LastPacketReceived}"></TextBlock>
+                                    <TextBlock Text="{Binding LastNonKeepAlivePacketReceived}"></TextBlock>
+                                    <TextBlock Text="{Binding ProtocolVersion}"></TextBlock>
+                                    <TextBlock Text="{Binding PendingApplicationMessagesCount}"></TextBlock>
+                                </StackPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>

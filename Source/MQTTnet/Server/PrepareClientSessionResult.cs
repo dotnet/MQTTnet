@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Server
 {
-    public class GetOrCreateClientSessionResult
+    public class PrepareClientSessionResult
     {
         public bool IsExistingSession { get; set; }
 

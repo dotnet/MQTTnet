@@ -30,8 +30,17 @@ namespace MQTTnet.AspNetCore
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
+                services.AddSingleton<MqttTcpServerAdapter>();
                 services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttTcpServerAdapter>());
             }
+
+            return services;
+        }
+
+        public static IServiceCollection AddMqttConnectionHandler(this IServiceCollection services)
+        {
+            services.AddSingleton<MqttConnectionHandler>();
+            services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttConnectionHandler>());
 
             return services;
         }

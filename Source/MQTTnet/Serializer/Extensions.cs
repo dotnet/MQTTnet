@@ -12,7 +12,10 @@ namespace MQTTnet.Serializer
             }
 
             var buffer = new byte[source.Count];
-            Buffer.BlockCopy(source.Array, source.Offset, buffer, 0, buffer.Length);
+            if (buffer.Length > 0)
+            {
+                Array.Copy(source.Array, source.Offset, buffer, 0, buffer.Length);
+            }
 
             return buffer;
         }

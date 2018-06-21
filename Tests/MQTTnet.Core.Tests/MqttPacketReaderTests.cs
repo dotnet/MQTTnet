@@ -11,7 +11,7 @@ namespace MQTTnet.Core.Tests
     public class MqttPacketReaderTests
     {
         [TestMethod]
-        [ExpectedException(typeof(MqttCommunicationException))]
+        [ExpectedException(typeof(MqttCommunicationClosedGracefullyException))]
         public void MqttPacketReader_EmptyStream()
         {
             MqttPacketReader.ReadFixedHeaderAsync(new TestMqttChannel(new MemoryStream()), CancellationToken.None).GetAwaiter().GetResult();

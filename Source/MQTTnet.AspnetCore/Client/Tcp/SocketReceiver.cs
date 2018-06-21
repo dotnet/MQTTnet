@@ -2,7 +2,7 @@
 using System.IO.Pipelines;
 using System.Net.Sockets;
 
-namespace MQTTnet.Benchmarks.Tcp
+namespace MQTTnet.AspNetCore.Client.Tcp
 {
     public class SocketReceiver
     {
@@ -24,7 +24,6 @@ namespace MQTTnet.Benchmarks.Tcp
             _eventArgs.SetBuffer(buffer);
 #else
             var segment = buffer.GetArray();
-
             _eventArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
 #endif
             if (!_socket.ReceiveAsync(_eventArgs))

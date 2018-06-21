@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Net.Sockets;
 
-namespace MQTTnet.Benchmarks.Tcp
+namespace MQTTnet.AspNetCore.Client.Tcp
 {
     public class SocketSender
     {
@@ -61,7 +61,6 @@ namespace MQTTnet.Benchmarks.Tcp
             _eventArgs.SetBuffer(MemoryMarshal.AsMemory(memory));
 #else
             var segment = memory.GetArray();
-
             _eventArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
 #endif
             if (!_socket.SendAsync(_eventArgs))

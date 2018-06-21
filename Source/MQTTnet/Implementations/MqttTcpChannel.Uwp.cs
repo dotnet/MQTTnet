@@ -40,7 +40,18 @@ namespace MQTTnet.Implementations
 
         public static Func<MqttClientTcpOptions, IEnumerable<ChainValidationResult>> CustomIgnorableServerCertificateErrorsResolver { get; set; }
 
-        public string Endpoint => _socket?.Information?.RemoteAddress?.ToString(); // TODO: Check if contains also the port.
+        public string Endpoint
+        {
+            get
+            {
+                if (_socket?.Information != null)
+                {
+                    return _socket.Information.RemoteAddress + ":" + _socket.Information.RemotePort;
+                }
+
+                return null;
+            }
+        }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
@@ -81,10 +92,13 @@ namespace MQTTnet.Implementations
             return _readStream.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
-        public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            await _writeStream.WriteAsync(buffer, offset, count, cancellationToken);
-            await _writeStream.FlushAsync(cancellationToken);
+            // In the write method only the internal buffer will be filled. So here is no
+            // async/await required. The real network transmit is done when calling the
+            // Flush method.
+            _writeStream.Write(buffer, offset, count);
+            return _writeStream.FlushAsync(cancellationToken);
         }
 
         public void Dispose()

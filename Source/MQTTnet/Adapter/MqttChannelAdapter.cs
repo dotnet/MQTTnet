@@ -18,6 +18,8 @@ namespace MQTTnet.Adapter
         private const uint ErrorOperationAborted = 0x800703E3;
         private const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
 
+        private readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
+
         private readonly IMqttNetChildLogger _logger;
         private readonly IMqttChannel _channel;
 
@@ -40,52 +42,91 @@ namespace MQTTnet.Adapter
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;
 
-        public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
-            _logger.Verbose("Connecting [Timeout={0}]", timeout);
 
-            return ExecuteAndWrapExceptionAsync(() =>
-                Internal.TaskExtensions.TimeoutAfter(ct => _channel.ConnectAsync(ct), timeout, cancellationToken));
-        }
-
-        public Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
-        {
-            ThrowIfDisposed();
-            _logger.Verbose("Disconnecting [Timeout={0}]", timeout);
-
-            return ExecuteAndWrapExceptionAsync(() =>
-                Internal.TaskExtensions.TimeoutAfter(ct => _channel.DisconnectAsync(), timeout, cancellationToken));
-        }
-
-        public Task SendPacketAsync(TimeSpan timeout, MqttBasePacket packet, CancellationToken cancellationToken)
-        {
-            return ExecuteAndWrapExceptionAsync(() =>
+            try
             {
-                _logger.Verbose("TX >>> {0} [Timeout={1}]", packet, timeout);
+                _logger.Verbose("Connecting [Timeout={0}]", timeout);
+
+                await Internal.TaskExtensions
+                    .TimeoutAfterAsync(ct => _channel.ConnectAsync(ct), timeout, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                if (IsWrappedException(exception))
+                {
+                    throw;
+                }
+
+                WrapException(exception);
+            }
+        }
+
+        public async Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            ThrowIfDisposed();
+
+            try
+            {
+                _logger.Verbose("Disconnecting [Timeout={0}]", timeout);
+
+                await Internal.TaskExtensions
+                    .TimeoutAfterAsync(ct => _channel.DisconnectAsync(), timeout, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                if (IsWrappedException(exception))
+                {
+                    throw;
+                }
+
+                WrapException(exception);
+            }
+        }
+
+        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        {
+            await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                _logger.Verbose("TX >>> {0}", packet);
 
                 var packetData = PacketSerializer.Serialize(packet);
 
-                return Internal.TaskExtensions.TimeoutAfter(ct => _channel.WriteAsync(
-                    packetData.Array,
-                    packetData.Offset,
-                    packetData.Count,
-                    ct), timeout, cancellationToken);
-            });
+                await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
+
+                PacketSerializer.FreeBuffer();
+            }
+            catch (Exception exception)
+            {
+                if (IsWrappedException(exception))
+                {
+                    throw;
+                }
+
+                WrapException(exception);
+            }
+            finally
+            {
+                _writerSemaphore.Release();
+            }
         }
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
-            MqttBasePacket packet = null;
-            await ExecuteAndWrapExceptionAsync(async () =>
+            try
             {
                 ReceivedMqttPacket receivedMqttPacket;
 
                 if (timeout > TimeSpan.Zero)
                 {
-                    receivedMqttPacket = await Internal.TaskExtensions.TimeoutAfter(ct => ReceiveAsync(_channel, ct), timeout, cancellationToken).ConfigureAwait(false);
+                    receivedMqttPacket = await Internal.TaskExtensions.TimeoutAfterAsync(ct => ReceiveAsync(_channel, ct), timeout, cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
@@ -94,28 +135,35 @@ namespace MQTTnet.Adapter
 
                 if (receivedMqttPacket == null || cancellationToken.IsCancellationRequested)
                 {
-                    return;
+                    return null;
                 }
 
-                packet = PacketSerializer.Deserialize(receivedMqttPacket);
+                var packet = PacketSerializer.Deserialize(receivedMqttPacket);
                 if (packet == null)
                 {
                     throw new MqttProtocolViolationException("Received malformed packet.");
                 }
 
                 _logger.Verbose("RX <<< {0}", packet);
-            }).ConfigureAwait(false);
+                
+                return packet;
+            }
+            catch (Exception exception)
+            {
+                if (IsWrappedException(exception))
+                {
+                    throw;
+                }
 
-            return packet;
+                WrapException(exception);
+            }
+
+            return null;
         }
 
         private async Task<ReceivedMqttPacket> ReceiveAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
             var fixedHeader = await MqttPacketReader.ReadFixedHeaderAsync(channel, cancellationToken).ConfigureAwait(false);
-            if (fixedHeader == null)
-            {
-                return null;
-            }
 
             try
             {
@@ -138,7 +186,9 @@ namespace MQTTnet.Adapter
                         chunkSize = bytesLeft;
                     }
 
-                    var readBytes = await channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken) .ConfigureAwait(false);
+                    // async/await is not used to avoid the overhead of context switches. We assume that the reamining data
+                    // has been sent from the sender directly after the initial bytes.
+                    var readBytes = channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).GetAwaiter().GetResult();
                     if (readBytes <= 0)
                     {
                         ExceptionHelper.ThrowGracefulSocketClose();
@@ -147,47 +197,11 @@ namespace MQTTnet.Adapter
                     bodyOffset += readBytes;
                 } while (bodyOffset < body.Length);
 
-                return new ReceivedMqttPacket(fixedHeader.Flags, new MqttPacketBodyReader(body));
+                return new ReceivedMqttPacket(fixedHeader.Flags, new MqttPacketBodyReader(body, 0));
             }
             finally
             {
                 ReadingPacketCompleted?.Invoke(this, EventArgs.Empty);
-            }
-        }
-
-        private static async Task ExecuteAndWrapExceptionAsync(Func<Task> action)
-        {
-            try
-            {
-                await action().ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                if (exception is TaskCanceledException ||
-                    exception is OperationCanceledException ||
-                    exception is MqttCommunicationTimedOutException ||
-                    exception is MqttCommunicationException)
-                {
-                    throw;
-                }
-
-                if (exception is IOException && exception.InnerException is SocketException socketException)
-                {
-                    if (socketException.SocketErrorCode == SocketError.ConnectionAborted)
-                    {
-                        throw new OperationCanceledException();
-                    }
-                }
-
-                if (exception is COMException comException)
-                {
-                    if ((uint)comException.HResult == ErrorOperationAborted)
-                    {
-                        throw new OperationCanceledException();
-                    }
-                }
-
-                throw new MqttCommunicationException(exception);
             }
         }
 
@@ -204,6 +218,35 @@ namespace MQTTnet.Adapter
             {
                 throw new ObjectDisposedException(nameof(MqttChannelAdapter));
             }
+        }
+
+        private static bool IsWrappedException(Exception exception)
+        {
+            return exception is TaskCanceledException ||
+                   exception is OperationCanceledException ||
+                   exception is MqttCommunicationTimedOutException ||
+                   exception is MqttCommunicationException;
+        }
+
+        private static void WrapException(Exception exception)
+        {
+            if (exception is IOException && exception.InnerException is SocketException socketException)
+            {
+                if (socketException.SocketErrorCode == SocketError.ConnectionAborted)
+                {
+                    throw new OperationCanceledException();
+                }
+            }
+
+            if (exception is COMException comException)
+            {
+                if ((uint)comException.HResult == ErrorOperationAborted)
+                {
+                    throw new OperationCanceledException();
+                }
+            }
+
+            throw new MqttCommunicationException(exception);
         }
     }
 }

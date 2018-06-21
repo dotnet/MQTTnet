@@ -16,6 +16,7 @@ namespace MQTTnet.Benchmarks
             Console.WriteLine("5 = ChannelAdapterBenchmark");
             Console.WriteLine("6 = MqttTcpChannelBenchmark");
             Console.WriteLine("7 = TcpPipesBenchmark");
+            Console.WriteLine("8 = MessageProcessingMqttConnectionContextBenchmark");
 
             var pressedKey = Console.ReadKey(true);
             switch (pressedKey.KeyChar)
@@ -40,6 +41,9 @@ namespace MQTTnet.Benchmarks
                     break;
                 case '7':
                     BenchmarkRunner.Run<TcpPipesBenchmark>();
+                    break;
+                case '8':
+                    BenchmarkRunner.Run<MessageProcessingMqttConnectionContextBenchmark>(new AllowNonOptimized());
                     break;
             }
 

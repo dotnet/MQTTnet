@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Benchmarks.Tcp
+namespace MQTTnet.AspNetCore.Client.Tcp
 {
     public class SocketAwaitable : ICriticalNotifyCompletion
     {
@@ -23,8 +23,9 @@ namespace MQTTnet.Benchmarks.Tcp
             _ioScheduler = ioScheduler;
         }
 
-        public SocketAwaitable GetAwaiter() => this;
         public bool IsCompleted => ReferenceEquals(_callback, _callbackCompleted);
+
+        public SocketAwaitable GetAwaiter() => this;
 
         public int GetResult()
         {

@@ -17,8 +17,12 @@ namespace MQTTnet.TestApp.AspNetCore2
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var mqttServerOptions = new MqttServerOptionsBuilder().Build();
-            services.AddHostedMqttServer(mqttServerOptions);
+            var mqttServerOptions = new MqttServerOptionsBuilder()
+                .WithoutDefaultEndpoint()
+                .Build();
+            services
+                .AddHostedMqttServer(mqttServerOptions)
+                .AddMqttConnectionHandler();
         }
 
         // In class _Startup_ of the ASP.NET Core 2.0 project.

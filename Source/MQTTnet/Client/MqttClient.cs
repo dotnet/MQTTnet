@@ -17,7 +17,7 @@ namespace MQTTnet.Client
     {
         private readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         private readonly Stopwatch _sendTracker = new Stopwatch();
-        private readonly SemaphoreSlim _disconnectLock = new SemaphoreSlim(1, 1);
+        private readonly object _disconnectLock = new object();
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
 
         private readonly IMqttClientAdapterFactory _adapterFactory;
@@ -215,7 +215,7 @@ namespace MQTTnet.Client
 
         private async Task DisconnectInternalAsync(Task sender, Exception exception)
         {
-            await InitiateDisconnectAsync().ConfigureAwait(false);
+            InitiateDisconnect();
 
             var clientWasConnected = IsConnected;
             IsConnected = false;
@@ -249,45 +249,38 @@ namespace MQTTnet.Client
             }
         }
 
-        private async Task InitiateDisconnectAsync()
+        private void InitiateDisconnect()
         {
-            await _disconnectLock.WaitAsync().ConfigureAwait(false);
-            try
+            lock (_disconnectLock)
             {
-                if (_cancellationTokenSource == null || _cancellationTokenSource.IsCancellationRequested)
+                try
                 {
-                    return;
-                }
+                    if (_cancellationTokenSource == null || _cancellationTokenSource.IsCancellationRequested)
+                    {
+                        return;
+                    }
 
-                _cancellationTokenSource.Cancel(false);
-            }
-            catch (Exception adapterException)
-            {
-                _logger.Warning(adapterException, "Error while initiating disconnect.");
-            }
-            finally
-            {
-                _disconnectLock.Release();
+                    _cancellationTokenSource.Cancel(false);
+                }
+                catch (Exception adapterException)
+                {
+                    _logger.Warning(adapterException, "Error while initiating disconnect.");
+                }
             }
         }
 
         private Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                throw new TaskCanceledException();
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             _sendTracker.Restart();
-            return _adapter.SendPacketAsync(_options.CommunicationTimeout, packet, cancellationToken);
+
+            return _adapter.SendPacketAsync(packet, cancellationToken);
         }
 
         private async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttBasePacket
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                throw new TaskCanceledException();
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             _sendTracker.Restart();
 
@@ -300,8 +293,8 @@ namespace MQTTnet.Client
             var packetAwaiter = _packetDispatcher.AddPacketAwaiter<TResponsePacket>(identifier);
             try
             {
-                await _adapter.SendPacketAsync(_options.CommunicationTimeout, requestPacket, cancellationToken).ConfigureAwait(false);
-                var respone = await Internal.TaskExtensions.TimeoutAfter(ct => packetAwaiter.Task, _options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
+                await _adapter.SendPacketAsync(requestPacket, cancellationToken).ConfigureAwait(false);
+                var respone = await Internal.TaskExtensions.TimeoutAfterAsync(ct => packetAwaiter.Task, _options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
 
                 return (TResponsePacket)respone;
             }
@@ -526,7 +519,7 @@ namespace MQTTnet.Client
             {
                 await task.ConfigureAwait(false);
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
             }
         }

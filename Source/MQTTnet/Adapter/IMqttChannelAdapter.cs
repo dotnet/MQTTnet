@@ -20,7 +20,7 @@ namespace MQTTnet.Adapter
 
         Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken);
 
-        Task SendPacketAsync(TimeSpan timeout, MqttBasePacket packet, CancellationToken cancellationToken);
+        Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken);
 
         Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken);
     }

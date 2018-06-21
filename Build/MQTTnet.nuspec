@@ -48,7 +48,7 @@
         <dependency id="System.Net.WebSockets.Client" version="4.3.2" />
       </group>
       <group targetFramework="uap10.0">
-        <dependency id="Microsoft.NETCore.UniversalWindowsPlatform" version="5.4.1" />
+        <dependency id="Microsoft.NETCore.UniversalWindowsPlatform" version="6.1.4" />
       </group>
       <group targetFramework="net452">
       </group>
@@ -69,6 +69,8 @@
 
     <!-- .NET Framework -->
     <file src="..\Source\MQTTnet\bin\Release\net452\MQTTnet.*" target="lib\net452\"/>
-    <file src="..\Source\MQTTnet\bin\Release\net461\MQTTnet.*" target="lib\net461\"/>   
+
+    <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net461\"/>
+    <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net472\"/>
   </files>
 </package>

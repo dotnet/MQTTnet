@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{67C28AC1
 		Build\MQTTnet.Extensions.ManagedClient.nuspec = Build\MQTTnet.Extensions.ManagedClient.nuspec
 		Build\MQTTnet.Extensions.Rpc.nuspec = Build\MQTTnet.Extensions.Rpc.nuspec
 		Build\MQTTnet.nuspec = Build\MQTTnet.nuspec
+		Build\upload.ps1 = Build\upload.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B3F60ECB-45BA-4C66-8903-8BB89CA67998}"
@@ -74,6 +75,7 @@ Global
 		{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}.Release|x86.Build.0 = Release|Any CPU
 		{FF1F72D6-9524-4422-9497-3CC0002216ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FF1F72D6-9524-4422-9497-3CC0002216ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF1F72D6-9524-4422-9497-3CC0002216ED}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{FF1F72D6-9524-4422-9497-3CC0002216ED}.Debug|ARM.ActiveCfg = Debug|ARM
 		{FF1F72D6-9524-4422-9497-3CC0002216ED}.Debug|ARM.Build.0 = Debug|ARM
 		{FF1F72D6-9524-4422-9497-3CC0002216ED}.Debug|ARM.Deploy.0 = Debug|ARM

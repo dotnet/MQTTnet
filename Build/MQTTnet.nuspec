@@ -18,6 +18,7 @@
 * [Client] Received messages are now processed completely in the worker thread without creating new Tasks.
 * [Client] Fixed wrong calculation for sending keep alive packets (thanks to @cstichlberger)
 * [Client] A clean disconnect (via DisconnectAsync) will no longer throw an exception.
+* [Client] Added new overloads for quick message publishing.
 * [ManagedClient] The managed client is moved to a separate nuget package.
 * [ManagedClient] Added an own message format with extended properties like ID (BREAKING CHANGE).
 * [ManagedClient] Fixed a loading issue of stored application messages (thanks to @JTrotta).

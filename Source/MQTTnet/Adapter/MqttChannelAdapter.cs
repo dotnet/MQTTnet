@@ -23,6 +23,10 @@ namespace MQTTnet.Adapter
         private readonly IMqttNetChildLogger _logger;
         private readonly IMqttChannel _channel;
 
+        private readonly byte[] _fixedHeaderBuffer = new byte[2];
+
+        private readonly byte[] _singleByteBuffer = new byte[1];
+
         private bool _isDisposed;
 
         public MqttChannelAdapter(IMqttChannel channel, IMqttPacketSerializer serializer, IMqttNetChildLogger logger)
@@ -163,7 +167,7 @@ namespace MQTTnet.Adapter
 
         private async Task<ReceivedMqttPacket> ReceiveAsync(IMqttChannel channel, CancellationToken cancellationToken)
         {
-            var fixedHeader = await MqttPacketReader.ReadFixedHeaderAsync(channel, cancellationToken).ConfigureAwait(false);
+            var fixedHeader = await MqttPacketReader.ReadFixedHeaderAsync(channel, _fixedHeaderBuffer, _singleByteBuffer, cancellationToken).ConfigureAwait(false);
 
             try
             {

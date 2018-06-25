@@ -190,7 +190,7 @@ namespace MQTTnet.Serializer
 
             var retain = (receivedMqttPacket.FixedHeader & 0x1) > 0;
             var qualityOfServiceLevel = (MqttQualityOfServiceLevel)(receivedMqttPacket.FixedHeader >> 1 & 0x3);
-            var dup = (receivedMqttPacket.FixedHeader & 0x3) > 0;
+            var dup = (receivedMqttPacket.FixedHeader & 0x8) > 0;
 
             var topic = receivedMqttPacket.Body.ReadStringWithLengthPrefix();
 

@@ -99,7 +99,7 @@ namespace MQTTnet.Serializer
 
         public void Reset()
         {
-            Length = 0;
+            Length = 5;
         }
 
         public void Seek(int offset)

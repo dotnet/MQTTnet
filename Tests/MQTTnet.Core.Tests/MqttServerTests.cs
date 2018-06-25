@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.Core.Tests
 {
@@ -165,6 +166,72 @@ namespace MQTTnet.Core.Tests
             }
 
             Assert.AreEqual(1, receivedMessagesCount);
+        }
+
+        [TestMethod]
+        public async Task MqttServer_Publish_MultipleClients()
+        {
+            var serverAdapter = new MqttTcpServerAdapter(new MqttNetLogger().CreateChildLogger());
+            var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
+            var receivedMessagesCount = 0;
+            var locked = new object();
+
+            var clientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("localhost")
+                .Build();
+            var clientOptions2 = new MqttClientOptionsBuilder()
+                .WithTcpServer("localhost")
+                .Build();
+
+            try
+            {
+                await s.StartAsync(new MqttServerOptions());
+
+                var c1 = new MqttFactory().CreateMqttClient();
+                var c2 = new MqttFactory().CreateMqttClient();
+
+                await c1.ConnectAsync(clientOptions);
+                await c2.ConnectAsync(clientOptions2);
+
+                c1.ApplicationMessageReceived += (_, __) =>
+                {
+                    lock (locked)
+                    {
+                        receivedMessagesCount++;
+                    }
+                };
+
+                c2.ApplicationMessageReceived += (_, __) =>
+                {
+                    lock (locked)
+                    {
+                        receivedMessagesCount++;
+                    }
+                };
+
+                var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
+                await c1.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
+                await c2.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
+
+                //await Task.WhenAll(Publish(c1, message), Publish(c2, message));
+                await Publish(c1, message);
+
+                await Task.Delay(500);
+            }
+            finally
+            {
+                await s.StopAsync();
+            }
+
+            Assert.AreEqual(2000, receivedMessagesCount);
+        }
+
+        private static async Task Publish(IMqttClient c1, MqttApplicationMessage message)
+        {
+            for (int i = 0; i < 1000; i++)
+            {
+                await c1.PublishAsync(message);
+            }
         }
 
         [TestMethod]

@@ -20,6 +20,7 @@ namespace MQTTnet.Serializer
 
         public byte ReadByte()
         {
+            ValidateReceiveBuffer(1);
             return _buffer[_offset++];
         }
 
@@ -30,6 +31,8 @@ namespace MQTTnet.Serializer
 
         public ushort ReadUInt16()
         {
+            ValidateReceiveBuffer(2);
+
             var msb = _buffer[_offset++];
             var lsb = _buffer[_offset++];
             
@@ -40,10 +43,20 @@ namespace MQTTnet.Serializer
         {
             var length = ReadUInt16();
 
+            ValidateReceiveBuffer(length);
+
             var result = new ArraySegment<byte>(_buffer, _offset, length);
             _offset += length;
 
             return result;
+        }
+
+        private void ValidateReceiveBuffer(ushort length)
+        {
+            if (_buffer.Length < _offset + length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(_buffer), $"expected at least {_offset + length} bytes but there are only {_buffer.Length} bytes");
+            }
         }
 
         public string ReadStringWithLengthPrefix()

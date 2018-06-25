@@ -9,19 +9,13 @@ namespace MQTTnet.Serializer
 {
     public static class MqttPacketReader
     {
-        [ThreadStatic]
-        private static byte[] _fixedHeaderBuffer;
-
-        [ThreadStatic]
-        private static byte[] _singleByteBuffer;
-
-        public static async Task<MqttFixedHeader> ReadFixedHeaderAsync(IMqttChannel channel, CancellationToken cancellationToken)
+        public static async Task<MqttFixedHeader> ReadFixedHeaderAsync(IMqttChannel channel, byte[] fixedHeaderBuffer, byte[] singleByteBuffer, CancellationToken cancellationToken)
         {
             // The MQTT fixed header contains 1 byte of flags and at least 1 byte for the remaining data length.
             // So in all cases at least 2 bytes must be read for a complete MQTT packet.
             // async/await is used here because the next packet is received in a couple of minutes so the performance
             // impact is acceptable according to a useless waiting thread.
-            var buffer = InitializeFixedHeaderBuffer();
+            var buffer = fixedHeaderBuffer;
             var totalBytesRead = 0;
 
             while (totalBytesRead < buffer.Length)
@@ -41,12 +35,12 @@ namespace MQTTnet.Serializer
             {
                 return new MqttFixedHeader(buffer[0], 0);
             }
-
-            var bodyLength = ReadBodyLength(channel, buffer[1], cancellationToken);
+            
+            var bodyLength = ReadBodyLength(channel, buffer[1], singleByteBuffer, cancellationToken);
             return new MqttFixedHeader(buffer[0], bodyLength);
         }
 
-        private static int ReadBodyLength(IMqttChannel channel, byte initialEncodedByte, CancellationToken cancellationToken)
+        private static int ReadBodyLength(IMqttChannel channel, byte initialEncodedByte, byte[] singleByteBuffer, CancellationToken cancellationToken)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
             var multiplier = 128;
@@ -61,7 +55,7 @@ namespace MQTTnet.Serializer
                 // is too big for reading 1 byte in a row. We expect that the remaining data was sent
                 // directly after the initial bytes. If the client disconnects just in this moment we
                 // will get an exception anyway.
-                encodedByte = ReadByte(channel, cancellationToken);
+                encodedByte = ReadByte(channel, singleByteBuffer, cancellationToken);
 
                 value += (byte)(encodedByte & 127) * multiplier;
                 if (multiplier > 128 * 128 * 128)
@@ -75,27 +69,16 @@ namespace MQTTnet.Serializer
             return value;
         }
 
-        private static byte ReadByte(IMqttChannel channel, CancellationToken cancellationToken)
+        private static byte ReadByte(IMqttChannel channel, byte[] singleByteBuffer, CancellationToken cancellationToken)
         {
-            var buffer = InitializeSingleByteBuffer();
-            var readCount = channel.ReadAsync(buffer, 0, 1, cancellationToken).GetAwaiter().GetResult();
+            var readCount = channel.ReadAsync(singleByteBuffer, 0, 1, cancellationToken).GetAwaiter().GetResult();
             if (readCount <= 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 ExceptionHelper.ThrowGracefulSocketClose();
             }
 
-            return buffer[0];
-        }
-
-        private static byte[] InitializeFixedHeaderBuffer()
-        {
-            return _fixedHeaderBuffer ?? (_fixedHeaderBuffer = new byte[2]);
-        }
-
-        private static byte[] InitializeSingleByteBuffer()
-        {
-            return _singleByteBuffer ?? (_singleByteBuffer = new byte[1]);
+            return singleByteBuffer[0];
         }
     }
 }

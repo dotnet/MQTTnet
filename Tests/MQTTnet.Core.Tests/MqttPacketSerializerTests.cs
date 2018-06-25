@@ -476,7 +476,9 @@ namespace MQTTnet.Core.Tests
             using (var headerStream = new MemoryStream(Join(buffer1)))
             {
                 var channel = new TestMqttChannel(headerStream);
-                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
+                var fixedHeader = new byte[2];
+                var singleByteBuffer = new byte[1];
+                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, fixedHeader, singleByteBuffer, CancellationToken.None).GetAwaiter().GetResult();
                 
                 using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.RemainingLength))
                 {
@@ -498,7 +500,10 @@ namespace MQTTnet.Core.Tests
             using (var headerStream = new MemoryStream(Join(buffer1)))
             {
                 var channel = new TestMqttChannel(headerStream);
-                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
+                var fixedHeader = new byte[2];
+                var singleByteBuffer = new byte[1];
+
+                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, fixedHeader, singleByteBuffer, CancellationToken.None).GetAwaiter().GetResult();
 
                 using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.RemainingLength))
                 {

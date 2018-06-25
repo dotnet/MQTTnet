@@ -47,12 +47,14 @@ namespace MQTTnet.Benchmarks
         public void Deserialize_10000_Messages()
         {
             var channel = new BenchmarkMqttChannel(_serializedPacket);
+            var fixedHeader = new byte[2];
+            var singleByteBuffer = new byte[1];
 
             for (var i = 0; i < 10000; i++)
             {
                 channel.Reset();
 
-                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, CancellationToken.None).GetAwaiter().GetResult();
+                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, fixedHeader, singleByteBuffer, CancellationToken.None).GetAwaiter().GetResult();
 
                 var receivedPacket = new ReceivedMqttPacket(
                     header.Flags,

@@ -9,6 +9,7 @@ namespace MQTTnet.Benchmarks
 {
     [ClrJob]
     [RPlotExporter, RankColumn]
+    [MemoryDiagnoser]
     public class MessageProcessingBenchmark
     {
         private IMqttServer _mqttServer;

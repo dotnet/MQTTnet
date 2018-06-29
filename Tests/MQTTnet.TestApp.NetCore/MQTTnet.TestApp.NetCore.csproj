@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,11 +11,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.Netstandard\MQTTnet.NetStandard.csproj" />
+    <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
+    <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
   </ItemGroup>
 
 </Project>

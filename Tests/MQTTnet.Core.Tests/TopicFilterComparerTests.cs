@@ -60,7 +60,33 @@ namespace MQTTnet.Core.Tests
             CompareAndAssert("A/B/C/D", "#", true);
         }
 
-        private void CompareAndAssert(string topic, string filter, bool expectedResult)
+        [TestMethod]
+        public void TopicFilterComparer_MultiLevel_Sport()
+        {
+            // Tests from official MQTT spec (4.7.1.2 Multi-level wildcard)
+            CompareAndAssert("sport/tennis/player1", "sport/tennis/player1/#", true);
+            CompareAndAssert("sport/tennis/player1/ranking", "sport/tennis/player1/#", true);
+            CompareAndAssert("sport/tennis/player1/score/wimbledon", "sport/tennis/player1/#", true);
+
+            CompareAndAssert("sport/tennis/player1", "sport/tennis/+", true);
+            CompareAndAssert("sport/tennis/player2", "sport/tennis/+", true);
+            CompareAndAssert("sport/tennis/player1/ranking", "sport/tennis/+", false);
+
+            CompareAndAssert("sport", "sport/#", true);
+            CompareAndAssert("sport", "sport/+", false);
+            CompareAndAssert("sport/", "sport/+", true);
+        }
+
+        [TestMethod]
+        public void TopicFilterComparer_SingleLevel_Finance()
+        {
+            // Tests from official MQTT spec (4.7.1.3 Single level wildcard)
+            CompareAndAssert("/finance", "+/+", true);
+            CompareAndAssert("/finance", "/+", true);
+            CompareAndAssert("/finance", "+", false);
+        }
+
+        private static void CompareAndAssert(string topic, string filter, bool expectedResult)
         {
             Assert.AreEqual(expectedResult, MqttTopicFilterComparer.IsMatch(topic, filter));
         }

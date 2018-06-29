@@ -2,7 +2,7 @@
 
 var client = connect('ws://' + location.host + '/mqtt',
     {
-        clientId: "client1",
+        clientId: "client" + Math.floor(Math.random() * 6) + 1
     });
 
 window.onbeforeunload = () => {
@@ -23,11 +23,12 @@ publishButton.onclick = click => {
 
 client.on('connect', () => {
     client.subscribe('#', { qos: 0 }, (err, granted) => {
-        console.log(err);   
+        console.log(err);
     });
     client.publish('presence', 'Hello mqtt');
 
     stateParagraph.innerText = "connected";
+    showMsg("[connect]");
 });
 
 client.on("error", e => {
@@ -36,6 +37,7 @@ client.on("error", e => {
 
 client.on("reconnect", () => {
     stateParagraph.innerText = "reconnecting";
+    showMsg("[reconnect]");
 });
 
 client.on('message', (topic, message) => {
@@ -50,7 +52,7 @@ function showMsg(msg: string) {
 
     msgsList.appendChild(node);
 
-    if (msgsList.childElementCount > 20) {
+    if (msgsList.childElementCount > 50) {
         msgsList.removeChild(msgsList.childNodes[0]);
     }
 }

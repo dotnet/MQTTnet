@@ -12,15 +12,87 @@ namespace MQTTnet.TestApp.NetCore
 {
     public static class PerformanceTest
     {
-        public static async Task RunAsync()
+        public static void RunClientOnly()
         {
-            Console.WriteLine("Press 'c' for concurrent sends. Otherwise in one batch.");
-            var concurrent = Console.ReadKey(true).KeyChar == 'c';
+            try
+            {
+                var options = new MqttClientOptions
+                {
+                    ChannelOptions = new MqttClientTcpOptions
+                    {
+                        Server = "127.0.0.1"
+                    },
+                    CleanSession = true
+                };
 
-            var server = Task.Factory.StartNew(async () => await RunServerAsync(), TaskCreationOptions.LongRunning);
-            var client = Task.Factory.StartNew(async () => await RunClientAsync(2000, TimeSpan.FromMilliseconds(10), concurrent), TaskCreationOptions.LongRunning);
+                var client = new MqttFactory().CreateMqttClient();
+                client.ConnectAsync(options).GetAwaiter().GetResult();
 
-            await Task.WhenAll(server, client).ConfigureAwait(false);
+                var message = CreateMessage();
+                var stopwatch = new Stopwatch();
+
+                for (var i = 0; i < 10; i++)
+                {
+                    var sentMessagesCount = 0;
+
+                    stopwatch.Restart();
+                    while (stopwatch.ElapsedMilliseconds < 1000)
+                    {
+                        client.PublishAsync(message).GetAwaiter().GetResult();
+                        sentMessagesCount++;
+                    }
+
+                    Console.WriteLine($"Sending {sentMessagesCount} messages per second. #" + (i + 1));
+
+                    GC.Collect();
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
+        }
+
+        public static void RunClientAndServer()
+        {
+            try
+            {
+                var mqttServer = new MqttFactory().CreateMqttServer();
+                mqttServer.StartAsync(new MqttServerOptions()).GetAwaiter().GetResult();
+
+                var options = new MqttClientOptions
+                {
+                    ChannelOptions = new MqttClientTcpOptions
+                    {
+                        Server = "127.0.0.1"
+                    },
+                    CleanSession = true
+                };
+
+                var client = new MqttFactory().CreateMqttClient();
+                client.ConnectAsync(options).GetAwaiter().GetResult();
+
+                var message = CreateMessage();
+                var stopwatch = new Stopwatch();
+
+                for (var i = 0; i < 10; i++)
+                {
+                    stopwatch.Restart();
+
+                    var sentMessagesCount = 0;
+                    while (stopwatch.ElapsedMilliseconds < 1000)
+                    {
+                        client.PublishAsync(message).GetAwaiter().GetResult();
+                        sentMessagesCount++;
+                    }
+
+                    Console.WriteLine($"Sending {sentMessagesCount} messages per second. #" + (i + 1));
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
         }
 
         private static Task RunClientsAsync(int msgChunkSize, TimeSpan interval, bool concurrent)
@@ -44,7 +116,7 @@ namespace MQTTnet.TestApp.NetCore
 
                 try
                 {
-                    await client.ConnectAsync(options);
+                    await client.ConnectAsync(options).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -52,28 +124,7 @@ namespace MQTTnet.TestApp.NetCore
                 }
 
                 var message = CreateMessage();
-                var messages = new[] { message };
-
                 var stopwatch = Stopwatch.StartNew();
-
-                var sentMessagesCount = 0;
-                while (stopwatch.ElapsedMilliseconds < 1000)
-                {
-                    await client.PublishAsync(messages).ConfigureAwait(false);
-                    sentMessagesCount++;
-                }
-
-                Console.WriteLine($"Sending {sentMessagesCount} messages per second. #1");
-
-                sentMessagesCount = 0;
-                stopwatch.Restart();
-                while (stopwatch.ElapsedMilliseconds < 1000)
-                {
-                    await client.PublishAsync(messages).ConfigureAwait(false);
-                    sentMessagesCount++;
-                }
-
-                Console.WriteLine($"Sending {sentMessagesCount} messages per second. #2");
 
                 var testMessageCount = 10000;
                 for (var i = 0; i < testMessageCount; i++)
@@ -140,39 +191,6 @@ namespace MQTTnet.TestApp.NetCore
         {
             Interlocked.Increment(ref count);
             return Task.Run(() => client.PublishAsync(applicationMessage));
-        }
-
-        private static async Task RunServerAsync()
-        {
-            try
-            {
-                var mqttServer = new MqttFactory().CreateMqttServer();
-
-                ////var msgs = 0;
-                ////var stopwatch = Stopwatch.StartNew();
-                ////mqttServer.ApplicationMessageReceived += (sender, args) =>
-                ////{
-                ////    msgs++;
-                ////    if (stopwatch.ElapsedMilliseconds > 1000)
-                ////    {
-                ////        Console.WriteLine($"received {msgs}");
-                ////        msgs = 0;
-                ////        stopwatch.Restart();
-                ////    }
-                ////};
-                await mqttServer.StartAsync(new MqttServerOptions());
-
-                Console.WriteLine("Press any key to exit.");
-                Console.ReadLine();
-
-                await mqttServer.StopAsync();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-
-            Console.ReadLine();
         }
     }
 }

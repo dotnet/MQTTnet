@@ -12,25 +12,18 @@ namespace MQTTnet.TestApp.NetCore
         {
             try
             {
-                var options = new MqttClientOptions
-                {
-                    ClientId = "XYZ",
-                    CleanSession = true,
-                    ChannelOptions = new MqttClientTcpOptions
-                    {
-                        //Server = "localhost",
-                        Server = "192.168.1.174"
-                    },
-                    //ChannelOptions = new MqttClientWebSocketOptions
-                    //{
-                    //    Uri = "ws://localhost:59690/mqtt"
-                    //}
-                };
+                MqttNetConsoleLogger.ForwardToConsole();
 
                 var factory = new MqttFactory();
-                
                 var client = factory.CreateMqttClient();
-
+                var clientOptions = new MqttClientOptions
+                {
+                    ChannelOptions = new MqttClientTcpOptions
+                    {
+                        Server = "127.0.0.1"
+                    }
+                };
+                
                 client.ApplicationMessageReceived += (s, e) =>
                 {
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
@@ -57,7 +50,7 @@ namespace MQTTnet.TestApp.NetCore
 
                     try
                     {
-                        await client.ConnectAsync(options);
+                        await client.ConnectAsync(clientOptions);
                     }
                     catch
                     {
@@ -67,7 +60,7 @@ namespace MQTTnet.TestApp.NetCore
 
                 try
                 {
-                    await client.ConnectAsync(options);
+                    await client.ConnectAsync(clientOptions);
                 }
                 catch (Exception exception)
                 {

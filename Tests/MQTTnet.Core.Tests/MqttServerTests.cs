@@ -233,6 +233,32 @@ namespace MQTTnet.Core.Tests
                 await c1.PublishAsync(message);
             }
         }
+        
+        [TestMethod]
+        public async Task MqttServer_ShutdownDisconnectsClientsGracefully()
+        {
+            var serverAdapter = new MqttTcpServerAdapter(new MqttNetLogger().CreateChildLogger());
+            var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
+
+            var clientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("localhost")
+                .Build();
+
+            bool disconnectCalled = false;
+
+            await s.StartAsync(new MqttServerOptions());
+
+            var c1 = new MqttFactory().CreateMqttClient();
+            c1.Disconnected += (sender, args) => disconnectCalled = true;
+
+            await c1.ConnectAsync(clientOptions);
+
+            await s.StopAsync();
+
+            await Task.Delay(500);
+
+            Assert.IsTrue(disconnectCalled);
+        }
 
         [TestMethod]
         public async Task MqttServer_RetainedMessagesFlow()

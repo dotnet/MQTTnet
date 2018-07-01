@@ -253,11 +253,11 @@ namespace MQTTnet.Core.Tests
 
             await c1.ConnectAsync(clientOptions);
 
-            await Task.Delay(500);
+            await Task.Delay(100);
 
             await s.StopAsync();
 
-            await Task.Delay(1000);
+            await Task.Delay(100);
 
             Assert.IsTrue(disconnectCalled);
         }

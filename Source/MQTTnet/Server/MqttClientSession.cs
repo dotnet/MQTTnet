@@ -30,6 +30,7 @@ namespace MQTTnet.Server
         private bool _wasCleanDisconnect;
         private IMqttChannelAdapter _adapter;
         private Task<bool> _run;
+        private IDisposable _cleanupHandle;
 
         public MqttClientSession(
             string clientId,
@@ -84,6 +85,10 @@ namespace MQTTnet.Server
                 adapter.ReadingPacketCompleted += OnAdapterReadingPacketCompleted;
 
                 _cancellationTokenSource = new CancellationTokenSource();
+
+                //woraround for https://github.com/dotnet/corefx/issues/24430
+                _cleanupHandle = _cancellationTokenSource.Token.Register(() => Cleanup());
+                //endworkaround
                 _wasCleanDisconnect = false;
                 _willMessage = connectPacket.WillMessage;
 
@@ -129,25 +134,32 @@ namespace MQTTnet.Server
                 {
                     _adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
                     _adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
-
-                    try
-                    {
-                        await _adapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
-                        _adapter.Dispose();
-                    }
-                    catch (Exception exception)
-                    {
-                        _logger.Error(exception, exception.Message);
-                    }
+                    await Cleanup();
                 }
 
                 _adapter = null;
+
+                _cleanupHandle?.Dispose();
+                _cleanupHandle = null;
 
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
             }
 
             return _wasCleanDisconnect;
+        }
+
+        private async Task Cleanup()
+        {
+            try
+            {
+                await _adapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
+                _adapter.Dispose();
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, exception.Message);
+            }
         }
 
         public void Stop(MqttClientDisconnectType type)

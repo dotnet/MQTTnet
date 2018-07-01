@@ -29,6 +29,7 @@ namespace MQTTnet.Server
         private MqttApplicationMessage _willMessage;
         private bool _wasCleanDisconnect;
         private IMqttChannelAdapter _adapter;
+        private Task<bool> _run;
 
         public MqttClientSession(
             string clientId,
@@ -65,7 +66,13 @@ namespace MQTTnet.Server
             status.LastNonKeepAlivePacketReceived = _keepAliveMonitor.LastNonKeepAlivePacketReceived;
         }
 
-        public async Task<bool> RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        public Task<bool> RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        {
+            _run = RunInternalAsync(connectPacket, adapter);
+            return _run;
+        }
+
+        private async Task<bool> RunInternalAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
             if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
@@ -122,6 +129,16 @@ namespace MQTTnet.Server
                 {
                     _adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
                     _adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
+
+                    try
+                    {
+                        await _adapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
+                        _adapter.Dispose();
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.Error(exception, exception.Message);
+                    }
                 }
 
                 _adapter = null;
@@ -153,6 +170,8 @@ namespace MQTTnet.Server
                 }
 
                 _willMessage = null;
+
+                _run?.GetAwaiter().GetResult();
             }
             finally
             {

@@ -249,16 +249,6 @@ namespace MQTTnet.Server
             }
             finally
             {
-                try
-                {
-                    await clientAdapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
-                    clientAdapter.Dispose();
-                }
-                catch (Exception exception)
-                {
-                    _logger.Error(exception, exception.Message);
-                }
-
                 if (!_options.EnablePersistentSessions)
                 {
                     DeleteSession(clientId);

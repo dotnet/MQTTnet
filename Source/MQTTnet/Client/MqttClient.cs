@@ -222,8 +222,11 @@ namespace MQTTnet.Client
 
             try
             {
-                await WaitForTaskAsync(_packetReceiverTask, sender).ConfigureAwait(false);
-                await WaitForTaskAsync(_keepAliveMessageSenderTask, sender).ConfigureAwait(false);
+                if (!(exception is MqttCommunicationClosedGracefullyException))
+                {
+                    await WaitForTaskAsync(_packetReceiverTask, sender).ConfigureAwait(false);
+                    await WaitForTaskAsync(_keepAliveMessageSenderTask, sender).ConfigureAwait(false);
+                }
 
                 if (_adapter != null)
                 {

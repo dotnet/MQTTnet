@@ -212,7 +212,7 @@ namespace MQTTnet.Server
                 // Switch to the required protocol version before sending any response.
                 clientAdapter.PacketSerializer.ProtocolVersion = connectPacket.ProtocolVersion;
 
-                var connectReturnCode = ValidateConnection(connectPacket);
+                var connectReturnCode = ValidateConnection(connectPacket, clientAdapter);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
                     await clientAdapter.SendPacketAsync(
@@ -268,7 +268,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private MqttConnectReturnCode ValidateConnection(MqttConnectPacket connectPacket)
+        private MqttConnectReturnCode ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
         {
             if (_options.ConnectionValidator == null)
             {
@@ -279,7 +279,8 @@ namespace MQTTnet.Server
                 connectPacket.ClientId,
                 connectPacket.Username,
                 connectPacket.Password,
-                connectPacket.WillMessage);
+                connectPacket.WillMessage,
+                clientAdapter.Endpoint);
 
             _options.ConnectionValidator(context);
             return context.ReturnCode;

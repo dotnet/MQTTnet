@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
@@ -25,11 +26,14 @@ namespace MQTTnet.TestApp.UniversalWindows
         private readonly ObservableCollection<IMqttClientSessionStatus> _sessions = new ObservableCollection<IMqttClientSessionStatus>();
 
         private IMqttClient _mqttClient;
+        private IManagedMqttClient _managedMqttClient;
         private IMqttServer _mqttServer;
 
         public MainPage()
         {
             InitializeComponent();
+
+            ClientId.Text = Guid.NewGuid().ToString("D");
 
             MqttNetGlobalLogger.LogMessagePublished += OnTraceMessagePublished;
         }
@@ -81,7 +85,10 @@ namespace MQTTnet.TestApp.UniversalWindows
                 AllowUntrustedCertificates = true
             };
 
-            var options = new MqttClientOptions { ClientId = ClientId.Text };
+            var options = new MqttClientOptions
+            {
+                ClientId = ClientId.Text
+            };
 
             if (UseTcp.IsChecked == true)
             {
@@ -127,12 +134,28 @@ namespace MQTTnet.TestApp.UniversalWindows
                 }
 
                 var factory = new MqttFactory();
-                _mqttClient = factory.CreateMqttClient();
-                _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
-                _mqttClient.Connected += OnConnected;
-                _mqttClient.Disconnected += OnDisconnected;
 
-                await _mqttClient.ConnectAsync(options);
+                if (UseManagedClient.IsChecked == true)
+                {
+                    _managedMqttClient = factory.CreateManagedMqttClient();
+                    _managedMqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
+                    _managedMqttClient.Connected += OnConnected;
+                    _managedMqttClient.Disconnected += OnDisconnected;
+
+                    await _managedMqttClient.StartAsync(new ManagedMqttClientOptions
+                    {
+                        ClientOptions = options
+                    });
+                }
+                else
+                {
+                    _mqttClient = factory.CreateMqttClient();
+                    _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
+                    _mqttClient.Connected += OnConnected;
+                    _mqttClient.Disconnected += OnDisconnected;
+
+                    await _mqttClient.ConnectAsync(options);
+                }
             }
             catch (Exception exception)
             {
@@ -171,11 +194,6 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void Publish(object sender, RoutedEventArgs e)
         {
-            if (_mqttClient == null)
-            {
-                return;
-            }
-
             try
             {
                 var qos = MqttQualityOfServiceLevel.AtMostOnce;
@@ -190,7 +208,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 }
 
                 var payload = new byte[0];
-                if (Text.IsChecked == true)
+                if (PlainText.IsChecked == true)
                 {
                     payload = Encoding.UTF8.GetBytes(Payload.Text);
                 }
@@ -207,7 +225,15 @@ namespace MQTTnet.TestApp.UniversalWindows
                     .WithRetainFlag(Retain.IsChecked == true)
                     .Build();
 
-                await _mqttClient.PublishAsync(message);
+                if (_mqttClient != null)
+                {
+                    await _mqttClient.PublishAsync(message);
+                }
+
+                if (_managedMqttClient != null)
+                {
+                    await _managedMqttClient.PublishAsync(message);
+                }
             }
             catch (Exception exception)
             {
@@ -219,7 +245,19 @@ namespace MQTTnet.TestApp.UniversalWindows
         {
             try
             {
-                await _mqttClient.DisconnectAsync();
+                if (_mqttClient != null)
+                {
+                    await _mqttClient.DisconnectAsync();
+                    _mqttClient.Dispose();
+                    _mqttClient = null;
+                }
+                
+                if (_managedMqttClient != null)
+                {
+                    await _managedMqttClient.StopAsync();
+                    _managedMqttClient.Dispose();
+                    _managedMqttClient = null;
+                }
             }
             catch (Exception exception)
             {
@@ -239,11 +277,6 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void Subscribe(object sender, RoutedEventArgs e)
         {
-            if (_mqttClient == null)
-            {
-                return;
-            }
-
             try
             {
                 var qos = MqttQualityOfServiceLevel.AtMostOnce;
@@ -257,7 +290,15 @@ namespace MQTTnet.TestApp.UniversalWindows
                     qos = MqttQualityOfServiceLevel.ExactlyOnce;
                 }
 
-                await _mqttClient.SubscribeAsync(new TopicFilter(SubscribeTopic.Text, qos));
+                if (_mqttClient != null)
+                {
+                    await _mqttClient.SubscribeAsync(new TopicFilter(SubscribeTopic.Text, qos));
+                }
+
+                if (_managedMqttClient != null)
+                {
+                    await _managedMqttClient.SubscribeAsync(new TopicFilter(SubscribeTopic.Text, qos));
+                }
             }
             catch (Exception exception)
             {
@@ -267,14 +308,17 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void Unsubscribe(object sender, RoutedEventArgs e)
         {
-            if (_mqttClient == null)
-            {
-                return;
-            }
-
             try
             {
-                await _mqttClient.UnsubscribeAsync(SubscribeTopic.Text);
+                if (_mqttClient != null)
+                {
+                    await _mqttClient.UnsubscribeAsync(SubscribeTopic.Text);
+                }
+
+                if (_managedMqttClient != null)
+                {
+                    await _managedMqttClient.UnsubscribeAsync(SubscribeTopic.Text);
+                }
             }
             catch (Exception exception)
             {
@@ -397,6 +441,8 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             ListViewSessions.DataContext = _sessions;
         }
+
+        #region Wiki Code
 
         private async Task WikiCode()
         {
@@ -632,5 +678,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 await mqttClient.StartAsync(options);
             }
         }
+
+        #endregion
     }
 }

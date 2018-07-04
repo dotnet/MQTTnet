@@ -5,7 +5,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:server="using:MQTTnet.Server"
-    xmlns:interop="using:Windows.UI.Xaml.Interop"
     d:DesignHeight="800"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -19,26 +18,55 @@
         <Pivot Grid.Row="0">
             <PivotItem Header="Connection">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-                    <TextBlock>Server:</TextBlock>
-                    <TextBox x:Name="Server"></TextBox>
-                    <TextBlock>Port:</TextBlock>
-                    <TextBox x:Name="Port" Text="1883"></TextBox>
-                    <TextBlock>User:</TextBlock>
-                    <TextBox x:Name="User"></TextBox>
-                    <TextBlock>Password:</TextBlock>
-                    <TextBox x:Name="Password"></TextBox>
-                    <TextBlock>ClientId:</TextBlock>
-                    <TextBox x:Name="ClientId"></TextBox>
-                    <TextBlock>Clean session:</TextBlock>
-                    <CheckBox x:Name="CleanSession" IsChecked="True"></CheckBox>
-                    <TextBlock>Keep alive interval:</TextBlock>
-                    <TextBox x:Name="KeepAliveInterval" Text="5"></TextBox>
+                    <Grid>
+                        <Grid.Resources>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"></Setter>
+                                <Setter Property="Margin" Value="0, 0, 10, 0"></Setter>
+                            </Style>
+                        </Grid.Resources>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                        </Grid.RowDefinitions>
 
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="connection">TCP</RadioButton>
-                        <RadioButton x:Name="UseWs" GroupName="connection">WS</RadioButton>
-                        <CheckBox x:Name="UseTls">Use TLS</CheckBox>
-                    </StackPanel>
+                        <TextBlock Grid.Column="0" Grid.Row="0">Server:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="0" x:Name="Server" Text="localhost"></TextBox>
+
+                        <TextBlock Grid.Column="0" Grid.Row="1">Port:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="1" x:Name="Port" Text="1883"></TextBox>
+
+                        <TextBlock Grid.Column="0" Grid.Row="2">Username:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="2" x:Name="User"></TextBox>
+
+                        <TextBlock Grid.Column="0" Grid.Row="3">Password:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="3" x:Name="Password"></TextBox>
+
+                        <TextBlock Grid.Column="0" Grid.Row="4">Client ID:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="4" x:Name="ClientId"></TextBox>
+
+                        <TextBlock Grid.Column="0" Grid.Row="5">Keep Alive interval:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="5" x:Name="KeepAliveInterval" Text="5"></TextBox>
+
+                        <TextBlock Grid.Column="0" Grid.Row="6">Protocol:</TextBlock>
+                        <StackPanel Grid.Column="1" Grid.Row="6" Orientation="Horizontal">
+                            <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="connection">TCP</RadioButton>
+                            <RadioButton x:Name="UseWs" GroupName="connection">WS</RadioButton>
+                            <CheckBox x:Name="UseTls">Use TLS</CheckBox>
+                        </StackPanel>
+                    </Grid>
+                   
+                    <CheckBox x:Name="CleanSession" IsChecked="True">Clean session</CheckBox>
+                    <CheckBox x:Name="UseManagedClient" IsChecked="False">Use managed client</CheckBox>
 
                     <StackPanel Orientation="Horizontal">
                         <Button Click="Connect" Width="120" Margin="0,0,10,0">Connect</Button>
@@ -49,25 +77,46 @@
 
             <PivotItem Header="Publish">
                 <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-                    <TextBlock>Topic:</TextBlock>
-                    <TextBox x:Name="Topic"></TextBox>
+                    <Grid>
+                        <Grid.Resources>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"></Setter>
+                                <Setter Property="Margin" Value="0, 0, 10, 0"></Setter>
+                            </Style>
+                        </Grid.Resources>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                        </Grid.RowDefinitions>
 
-                    <TextBlock>Payload:</TextBlock>
-                    <TextBox x:Name="Payload"></TextBox>
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="Text" IsChecked="True" GroupName="payload">Text</RadioButton>
-                        <RadioButton x:Name="Base64" GroupName="payload">Base64</RadioButton>
-                    </StackPanel>
+                        <TextBlock Grid.Column="0" Grid.Row="0">Topic:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="0" x:Name="Topic"></TextBox>
 
-                    <TextBlock>Retain:</TextBlock>
-                    <CheckBox x:Name="Retain"></CheckBox>
+                        <TextBlock Grid.Column="0" Grid.Row="1">Payload:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="1" x:Name="Payload"></TextBox>
 
-                    <TextBlock>QoS:</TextBlock>
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton Margin="0,0,10,0" IsChecked="True" GroupName="qos">0 (At most once)</RadioButton>
-                        <RadioButton Margin="0,0,10,0" x:Name="QoS1" GroupName="qos">1 (At least once)</RadioButton>
-                        <RadioButton Margin="0,0,10,0" x:Name="QoS2" GroupName="qos">2 (Exactly once)</RadioButton>
-                    </StackPanel>
+                        <TextBlock Grid.Column="0" Grid.Row="2">Payload format:</TextBlock>
+                        <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal">
+                            <RadioButton Margin="0,0,10,0"  x:Name="PlainText" IsChecked="True" GroupName="payload">Plain text</RadioButton>
+                            <RadioButton Margin="0,0,10,0"  x:Name="Base64" GroupName="payload">Base64 string</RadioButton>
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="0" Grid.Row="3">QoS level:</TextBlock>
+                        <StackPanel Grid.Column="1" Grid.Row="3" Orientation="Horizontal">
+                            <RadioButton Margin="0,0,10,0" IsChecked="True" GroupName="qos">0 (At most once)</RadioButton>
+                            <RadioButton Margin="0,0,10,0" x:Name="QoS1" GroupName="qos">1 (At least once)</RadioButton>
+                            <RadioButton Margin="0,0,10,0" x:Name="QoS2" GroupName="qos">2 (Exactly once)</RadioButton>
+                        </StackPanel>
+                    </Grid>
+
+                    <CheckBox x:Name="Retain">Retain</CheckBox>
+
                     <Button Click="Publish" Width="120">Publish</Button>
                 </StackPanel>
             </PivotItem>

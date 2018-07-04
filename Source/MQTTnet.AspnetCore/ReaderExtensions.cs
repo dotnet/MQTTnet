@@ -32,7 +32,8 @@ namespace MQTTnet.AspNetCore
             }
 
             var bodySlice = copy.Slice(0, bodyLength);
-            packet = serializer.Deserialize(new ReceivedMqttPacket(fixedheader, new MqttPacketBodyReader(bodySlice.GetArray(), 0)));
+            var buffer = bodySlice.GetArray();
+            packet = serializer.Deserialize(new ReceivedMqttPacket(fixedheader, new MqttPacketBodyReader(buffer, 0, buffer.Length)));
             consumed = bodySlice.End;
             observed = bodySlice.End;
             return true;

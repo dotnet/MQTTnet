@@ -206,7 +206,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 if (connectionState == ReconnectionResult.StillConnected)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(_options.ConnectionCheckInterval, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)

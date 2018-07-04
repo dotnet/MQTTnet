@@ -1,6 +1,7 @@
 ﻿#if !WINDOWS_UWP
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -79,27 +80,33 @@ namespace MQTTnet.Implementations
 
         private void RegisterListeners(MqttServerTcpEndpointBaseOptions options, X509Certificate2 tlsCertificate)
         {
-            var listenerV4 = new MqttTcpServerListener(
-                AddressFamily.InterNetwork,
-                options,
-                tlsCertificate,
-                _cancellationTokenSource.Token,
-                _logger);
+            if (!options.BoundInterNetworkAddress.Equals(IPAddress.None))
+            {
+                var listenerV4 = new MqttTcpServerListener(
+                    AddressFamily.InterNetwork,
+                    options,
+                    tlsCertificate,
+                    _cancellationTokenSource.Token,
+                    _logger);
 
-            listenerV4.ClientAccepted += OnClientAccepted;
-            listenerV4.Start();
-            _listeners.Add(listenerV4);
+                listenerV4.ClientAccepted += OnClientAccepted;
+                listenerV4.Start();
+                _listeners.Add(listenerV4);
+            }
 
-            var listenerV6 = new MqttTcpServerListener(
-                AddressFamily.InterNetworkV6,
-                options,
-                tlsCertificate,
-                _cancellationTokenSource.Token,
-                _logger);
+            if (!options.BoundInterNetworkV6Address.Equals(IPAddress.None))
+            {
+                var listenerV6 = new MqttTcpServerListener(
+                    AddressFamily.InterNetworkV6,
+                    options,
+                    tlsCertificate,
+                    _cancellationTokenSource.Token,
+                    _logger);
 
-            listenerV6.ClientAccepted += OnClientAccepted;
-            listenerV6.Start();
-            _listeners.Add(listenerV6);
+                listenerV6.ClientAccepted += OnClientAccepted;
+                listenerV6.Start();
+                _listeners.Add(listenerV6);
+            }
         }
 
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs e)

@@ -14,11 +14,7 @@ namespace MQTTnet.Internal
             _stream = stream;
         }
 
-        public void Dispose()
-        {
-        }
-
-        public string Endpoint { get; }
+        public string Endpoint { get; } = "<Test channel>";
 
         public Task ConnectAsync(CancellationToken cancellationToken)
         {
@@ -38,6 +34,10 @@ namespace MQTTnet.Internal
         public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             return _stream.WriteAsync(buffer, offset, count, cancellationToken);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

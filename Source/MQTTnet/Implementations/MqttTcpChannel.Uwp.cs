@@ -156,7 +156,7 @@ namespace MQTTnet.Implementations
         {
             // Attention! Do not set the buffer for the read method. This will
             // limit the internal buffer and the read operation will hang forever
-            // is more data than the buffer size was received.
+            // if more data than the buffer size was received.
             _readStream = _socket.InputStream.AsStreamForRead();
 
             _writeStream = _socket.OutputStream.AsStreamForWrite(_bufferSize);

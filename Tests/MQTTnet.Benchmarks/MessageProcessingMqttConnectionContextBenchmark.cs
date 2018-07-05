@@ -27,6 +27,7 @@ namespace MQTTnet.Benchmarks
                    .ConfigureServices(services => {
                        var mqttServerOptions = new MqttServerOptionsBuilder()
                             .WithoutDefaultEndpoint()
+                            .WithPendingMessagesOverflowStrategy(MqttPendingMessagesOverflowStrategy.Block)
                             .Build();
                         services
                             .AddHostedMqttServer(mqttServerOptions)

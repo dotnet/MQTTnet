@@ -143,8 +143,14 @@ namespace MQTTnet.Server
                 {
                     if (!_messageQueue.TryDequeue(out var enqueuedApplicationMessage))
                     {
-                        await _messageQueue.DequeueAsync(cancellationToken).ConfigureAwait(false);
+                        enqueuedApplicationMessage = await _messageQueue.DequeueAsync(cancellationToken).ConfigureAwait(false);
                     }
+
+                    if (enqueuedApplicationMessage == null)
+                    {
+                        continue;
+                    }
+
                     var sender = enqueuedApplicationMessage.Sender;
                     var applicationMessage = enqueuedApplicationMessage.PublishPacket.ToApplicationMessage();
 

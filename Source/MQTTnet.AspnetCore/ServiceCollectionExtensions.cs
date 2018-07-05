@@ -44,7 +44,7 @@ namespace MQTTnet.AspNetCore
             return services;
         }
 
-        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
+        private static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
         {
             var logger = new MqttNetLogger();
             var childLogger = logger.CreateChildLogger();

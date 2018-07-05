@@ -29,7 +29,7 @@ namespace MQTTnet.Server
         private MqttApplicationMessage _willMessage;
         private bool _wasCleanDisconnect;
         private IMqttChannelAdapter _adapter;
-        private Task<bool> _run;
+        private Task<bool> _workerTask;
         private IDisposable _cleanupHandle;
 
         public MqttClientSession(
@@ -69,8 +69,8 @@ namespace MQTTnet.Server
 
         public Task<bool> RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
-            _run = RunInternalAsync(connectPacket, adapter);
-            return _run;
+            _workerTask = RunInternalAsync(connectPacket, adapter);
+            return _workerTask;
         }
 
         private async Task<bool> RunInternalAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
@@ -134,7 +134,7 @@ namespace MQTTnet.Server
                 {
                     _adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
                     _adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
-                    await Cleanup();
+                    await Cleanup().ConfigureAwait(false);
                 }
 
                 _adapter = null;
@@ -183,7 +183,7 @@ namespace MQTTnet.Server
 
                 _willMessage = null;
 
-                _run?.GetAwaiter().GetResult();
+                _workerTask?.GetAwaiter().GetResult();
             }
             finally
             {

@@ -97,13 +97,11 @@ namespace MQTTnet.Adapter
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                _logger.Verbose("TX >>> {0}", packet);
-
                 var packetData = PacketSerializer.Serialize(packet);
-
                 await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
-
                 PacketSerializer.FreeBuffer();
+
+                _logger.Verbose("TX >>> {0}", packet);
             }
             catch (Exception exception)
             {
@@ -149,7 +147,7 @@ namespace MQTTnet.Adapter
                 }
 
                 _logger.Verbose("RX <<< {0}", packet);
-                
+
                 return packet;
             }
             catch (Exception exception)
@@ -190,9 +188,16 @@ namespace MQTTnet.Adapter
                         chunkSize = bytesLeft;
                     }
 
+#if WINDOWS_UWP
+                    var readBytes = await channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false);
+#else
                     // async/await is not used to avoid the overhead of context switches. We assume that the reamining data
                     // has been sent from the sender directly after the initial bytes.
-                    var readBytes = channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).GetAwaiter().GetResult();
+                    var readBytes = channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
+#endif
+
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     if (readBytes <= 0)
                     {
                         ExceptionHelper.ThrowGracefulSocketClose();

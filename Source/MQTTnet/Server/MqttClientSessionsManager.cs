@@ -15,7 +15,7 @@ namespace MQTTnet.Server
 {
     public class MqttClientSessionsManager : IDisposable
     {
-        private readonly BlockingCollection<MqttEnqueuedApplicationMessage> _messageQueue = new BlockingCollection<MqttEnqueuedApplicationMessage>();
+        private readonly AsyncQueue<MqttEnqueuedApplicationMessage> _messageQueue;
 
         /// <summary>
         /// manual locking dictionaries is faster than using concurrent dictionary
@@ -34,9 +34,11 @@ namespace MQTTnet.Server
 
             _logger = logger.CreateChildLogger(nameof(MqttClientSessionsManager));
 
-            _cancellationToken = cancellationToken;
             _options = options ?? throw new ArgumentNullException(nameof(options));
             Server = server ?? throw new ArgumentNullException(nameof(server));
+
+            _cancellationToken = cancellationToken;
+            _messageQueue = new AsyncQueue<MqttEnqueuedApplicationMessage>(options);
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
         }
 
@@ -84,7 +86,7 @@ namespace MQTTnet.Server
         {
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 
-            _messageQueue.Add(new MqttEnqueuedApplicationMessage(senderClientSession, publishPacket), _cancellationToken);
+            _messageQueue.Enqueue(new MqttEnqueuedApplicationMessage(senderClientSession, publishPacket));
         }
 
         public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
@@ -133,13 +135,16 @@ namespace MQTTnet.Server
             _messageQueue?.Dispose();
         }
 
-        private void ProcessQueuedApplicationMessages(CancellationToken cancellationToken)
+        private async Task ProcessQueuedApplicationMessages(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var enqueuedApplicationMessage = _messageQueue.Take(cancellationToken);
+                    if (!_messageQueue.TryDequeue(out var enqueuedApplicationMessage))
+                    {
+                        await _messageQueue.DequeueAsync(cancellationToken).ConfigureAwait(false);
+                    }
                     var sender = enqueuedApplicationMessage.Sender;
                     var applicationMessage = enqueuedApplicationMessage.PublishPacket.ToApplicationMessage();
 

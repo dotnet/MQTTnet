@@ -9,7 +9,8 @@ namespace MQTTnet.Server
     public class AsyncQueue<T> : IDisposable
     {
         private readonly Queue<T> _queue = new Queue<T>();
-        private readonly AsyncAutoResetEvent _queueAutoResetEvent = new AsyncAutoResetEvent();
+        private readonly AsyncAutoResetEvent _queueEmptyEvent = new AsyncAutoResetEvent();
+        private readonly AsyncAutoResetEvent _queueNotFullEvent = new AsyncAutoResetEvent();
         protected readonly IMqttServerOptions _options;
 
 
@@ -51,25 +52,34 @@ namespace MQTTnet.Server
 
         protected virtual bool TryEnqueue(T packet)
         {
+            bool wait = false;
             lock (_queue)
             {
                 if (_queue.Count >= _options.MaxPendingMessagesPerClient)
                 {
-                    if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
+                    switch (_options.PendingMessagesOverflowStrategy)
                     {
-                        return false;
-                    }
-
-                    if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
-                    {
-                        _queue.Dequeue();
+                        case MqttPendingMessagesOverflowStrategy.DropNewMessage:
+                            return false;
+                        case MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage:
+                            _queue.Dequeue();
+                            break;
+                        case MqttPendingMessagesOverflowStrategy.Block:
+                            wait = true;
+                            break;
                     }
                 }
 
                 _queue.Enqueue(packet);
             }
 
-            _queueAutoResetEvent.Set();
+            if (wait)
+            {
+                _queueNotFullEvent.WaitOneAsync().GetAwaiter().GetResult();
+                _queue.Enqueue(packet);
+            }
+
+            _queueEmptyEvent.Set();
             return true;
         }
 
@@ -81,6 +91,7 @@ namespace MQTTnet.Server
                 if (_queue.Count > 0)
                 {
                     packet = _queue.Dequeue();
+                    _queueNotFullEvent.Set();
                     return true;
                 }
                 return false;
@@ -89,7 +100,7 @@ namespace MQTTnet.Server
 
         public Task<T> DequeueAsync(CancellationToken cancellationToken)
         {
-            return _queueAutoResetEvent.WaitOneAsync(cancellationToken).ContinueWith(t =>
+            return _queueEmptyEvent.WaitOneAsync(cancellationToken).ContinueWith(t =>
             {
                 if (!t.IsCanceled && !t.IsFaulted && TryDequeue(out var packet))
                 {

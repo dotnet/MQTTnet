@@ -22,13 +22,18 @@ namespace MQTTnet.TestApp.AspNetCore2
                 .Build();
             services
                 .AddHostedMqttServer(mqttServerOptions)
-                .AddMqttConnectionHandler();
+                .AddMqttConnectionHandler()
+                .AddConnections();
         }
 
         // In class _Startup_ of the ASP.NET Core 2.0 project.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            app.UseMqttEndpoint();
+            app.UseConnections(c => c.MapConnectionHandler<MqttConnectionHandler>("/mqtt", options => {
+                options.WebSockets.SubProtocolSelector = MQTTnet.AspNetCore.ApplicationBuilderExtensions.SelectSubProtocol;
+            }));
+
+            //app.UseMqttEndpoint();
             app.UseMqttServer(server =>
             {
                 server.Started += async (sender, args) =>

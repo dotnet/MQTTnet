@@ -20,11 +20,9 @@ namespace MQTTnet.Serializer
             while (totalBytesRead < buffer.Length)
             {
                 var bytesRead = await channel.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
-                if (bytesRead <= 0)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    ExceptionHelper.ThrowGracefulSocketClose();
-                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+                ExceptionHelper.ThrowIfGracefulSocketClose(bytesRead);
 
                 totalBytesRead += bytesRead;
             }

@@ -15,6 +15,7 @@
 * [Client] The ManagedClient options now allow configuring the interval for connection checks.
 * [Server] Added the Endpoint of the Adapter (remote IP and port) to the connection validation callback.
 * [Server] The ipv4 and ipv6 endpoint can be disabled now by setting the bound IP address to _None_.
+* [Server] Fix a bug in the keep alive monitor which caused high CPU load (thanks to @GarageGadget).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

@@ -10,33 +10,12 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes> ** MQTTnet is now available at Open Collective for donations (https://opencollective.com/mqttnet). **
-* [Core] Performance optimizations.
-* [Core] Due to performance reasons the timestamp of log messages is now in UTC format.
-* [Core] Added several packet validations.
-* [Core] Log messages now contain the complete source path including parent components.
-* [Core] The adapter now has an _Endpoint_ definition as string containing remote IP and port.
-* [Client] Received messages are now processed completely in the worker thread without creating new Tasks.
-* [Client] Fixed wrong calculation for sending keep alive packets (thanks to @cstichlberger)
-* [Client] A clean disconnect (via DisconnectAsync) will no longer throw an exception.
-* [Client] Added new overloads for quick message publishing.
-* [ManagedClient] The managed client is moved to a separate nuget package.
-* [ManagedClient] Added an own message format with extended properties like ID (BREAKING CHANGE).
-* [ManagedClient] Fixed a loading issue of stored application messages (thanks to @JTrotta).
-* [ManagedClient] Added a new event which is fired when a synchronization of the subscriptions has failed.
-* [ManagedClient] Added a new event which is fired when a connection attempt has failed.
-* [ManagedClient] Exposed a new property which provides the count of not published messages (pending messages count).
-* [Server] Added support for other WebSocket sub protocol formats like mqttv-3.1.1 (thanks to @israellot).
-* [Server] The takeover of an existing client sessions is now treated as a _clean_ disconnect of the previous client.
-* [Server] The pending messages queue per client is now limited to 250 messages. Overflow strategy and count can be changed via options (thanks to @VladimirAkopyan)
-* [Server] Keep alive checking is now suspended while large packages are being received (and thus the client is connected). Keep alive checking continues after a large packet is received completely.
-* [Server] Rewritten the _ConnectedClients_ API and added new features for disconnecting and Endpoint information (IP etc.).
-* [Server] Added settings for disabling persistent sessions and defining a max pending messages queue size per session.
-* [Server] Persistent sessions are disabled by default (BREAKING CHANGE!).
-* [Server] Added a new interceptor which is invoked before a new message is added to the client queue.
-* [Server] Added support for Linux servers by dividing IPv4 and IPv6 support and adding new options (BREAKING CHANGE!).
-* [Server] Gracefully closed connections are no longer reported as warnings.
-* [Server] Added new overloads for initializing the ASP.NET Core integration.
+    <releaseNotes>* [Core] Performance optimizations.
+* [Core] Fixed a bug which prevents receiving large packets (UWP only)
+* [Client] The ManagedClient options now allow configuring the interval for connection checks.
+* [Server] Added the Endpoint of the Adapter (remote IP and port) to the connection validation callback.
+* [Server] The ipv4 and ipv6 endpoint can be disabled now by setting the bound IP address to _None_.
+* [Server] Fix a bug in the keep alive monitor which caused high CPU load (thanks to @GarageGadget).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

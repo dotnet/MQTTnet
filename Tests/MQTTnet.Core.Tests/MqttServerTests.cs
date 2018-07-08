@@ -375,6 +375,9 @@ namespace MQTTnet.Core.Tests
                 var c1 = await serverAdapter.ConnectTestClient("c1");
 
                 await c1.PublishAndWaitForAsync(s, new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
+
+                await Task.Delay(250);
+
                 await c1.DisconnectAsync();
             }
             finally
@@ -396,7 +399,7 @@ namespace MQTTnet.Core.Tests
                 c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
                 await c2.SubscribeAsync(new TopicFilterBuilder().WithTopic("retained").Build());
 
-                await Task.Delay(500);
+                await Task.Delay(250);
             }
             finally
             {

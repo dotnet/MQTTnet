@@ -29,7 +29,6 @@ namespace MQTTnet.Serializer
 
         public static ArraySegment<byte> EncodeRemainingLength(int length)
         {
-            // write the encoded remaining length right aligned on the 4 byte buffer
             if (length <= 0)
             {
                 return new ArraySegment<byte>(new byte[1], 0, 1);
@@ -38,7 +37,6 @@ namespace MQTTnet.Serializer
             var buffer = new byte[4];
             var bufferOffset = 0;
 
-            // Algorithm taken from http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html.
             var x = length;
             do
             {

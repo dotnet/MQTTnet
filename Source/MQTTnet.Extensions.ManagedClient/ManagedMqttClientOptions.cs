@@ -9,6 +9,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public TimeSpan AutoReconnectDelay { get; set; } = TimeSpan.FromSeconds(5);
 
+        public TimeSpan ConnectionCheckInterval { get; set; } = TimeSpan.FromSeconds(1);
+
         public IManagedMqttClientStorage Storage { get; set; }
     }
 }

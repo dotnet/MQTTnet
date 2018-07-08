@@ -78,8 +78,10 @@ namespace MQTTnet.Implementations
                         await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
                     }
 
-                    var protocol = _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6";
-                    _logger.Verbose($"Client '{clientSocket.RemoteEndPoint}' accepted by TCP listener '{_socket.LocalEndPoint}, {protocol}'.");
+                    _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
+                        clientSocket.RemoteEndPoint,
+                        _socket.LocalEndPoint,
+                        _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
 
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));

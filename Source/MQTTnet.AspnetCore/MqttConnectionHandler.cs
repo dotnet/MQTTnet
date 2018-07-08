@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Connections.Features;
 using MQTTnet.Adapter;
 using MQTTnet.Serializer;
 using MQTTnet.Server;
@@ -13,6 +14,14 @@ namespace MQTTnet.AspNetCore
 
         public override async Task OnConnectedAsync(ConnectionContext connection)
         {
+            // required for websocket transport to work
+            var transferFormatFeature = connection.Features.Get<ITransferFormatFeature>();
+            if (transferFormatFeature != null)
+            {
+                transferFormatFeature.ActiveFormat = TransferFormat.Binary;
+            }
+
+
             var serializer = new MqttPacketSerializer();
             using (var adapter = new MqttConnectionContext(serializer, connection))
             {

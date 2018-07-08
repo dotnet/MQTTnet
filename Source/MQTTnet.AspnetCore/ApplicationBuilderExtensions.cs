@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using MQTTnet.Server;
+using System.Collections.Generic;
 
 namespace MQTTnet.AspNetCore
 {
@@ -23,10 +24,7 @@ namespace MQTTnet.AspNetCore
 
                 if (context.Request.Headers.TryGetValue("Sec-WebSocket-Protocol", out var requestedSubProtocolValues))
                 {
-                    // Order the protocols to also match "mqtt", "mqttv-3.1", "mqttv-3.11" etc.
-                    subProtocol = requestedSubProtocolValues
-                        .OrderByDescending(p => p.Length)
-                        .FirstOrDefault(p => p.ToLower().StartsWith("mqtt"));
+                    subProtocol = SelectSubProtocol(requestedSubProtocolValues);
                 }
 
                 var adapter = app.ApplicationServices.GetRequiredService<MqttWebSocketServerAdapter>();
@@ -38,6 +36,14 @@ namespace MQTTnet.AspNetCore
             });
 
             return app;
+        }
+
+        public static string SelectSubProtocol(IList<string> requestedSubProtocolValues)
+        {
+            // Order the protocols to also match "mqtt", "mqttv-3.1", "mqttv-3.11" etc.
+            return requestedSubProtocolValues
+                .OrderByDescending(p => p.Length)
+                .FirstOrDefault(p => p.ToLower().StartsWith("mqtt"));
         }
 
         public static IApplicationBuilder UseMqttServer(this IApplicationBuilder app, Action<IMqttServer> configure)

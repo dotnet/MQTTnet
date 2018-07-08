@@ -9,6 +9,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
         TimeSpan AutoReconnectDelay { get; }
 
+        TimeSpan ConnectionCheckInterval { get; }
+
         IManagedMqttClientStorage Storage { get; }
     }
 }

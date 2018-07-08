@@ -70,7 +70,9 @@ namespace MQTTnet.Server
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     // Values described here: [MQTT-3.1.2-24].
-                    if (!_isPaused && _lastPacketReceivedTracker.Elapsed.TotalSeconds > keepAlivePeriod * 1.5D)
+                    // If the client sends 5 sec. the server will allow up to 7.5 seconds.
+                    // If the client sends 1 sec. the server will allow up to 1.5 seconds.
+                    if (!_isPaused && _lastPacketReceivedTracker.Elapsed.TotalSeconds >= keepAlivePeriod * 1.5D)
                     {
                         _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientSession.ClientId);
                         _clientSession.Stop(MqttClientDisconnectType.NotClean);
@@ -78,7 +80,11 @@ namespace MQTTnet.Server
                         return;
                     }
 
-                    await Task.Delay(keepAlivePeriod, cancellationToken).ConfigureAwait(false);
+                    // The server checks the keep alive timeout every 50 % of the overall keep alive timeout
+                    // because the server allows 1.5 times the keep alive value. This means that a value of 5 allows
+                    // up to 7.5 seconds. With an interval of 2.5 (5 / 2) the 7.5 is also affected. Waiting the whole
+                    // keep alive time will hit at 10 instead of 7.5 (but only one time instead of two times).
+                    await Task.Delay(TimeSpan.FromSeconds(keepAlivePeriod * 0.5D), cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)

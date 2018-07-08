@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
 
@@ -12,7 +13,7 @@ namespace MQTTnet.TestApp.NetCore
     {
         public static async Task RunAsync()
         {
-            //MqttNetGlobalLogger.LogMessagePublished += (s, e) => Console.WriteLine(e.TraceMessage);
+            //MqttNetConsoleLogger.ForwardToConsole();
 
             // iot.eclipse.org
             await ExecuteTestAsync("iot.eclipse.org TCP",
@@ -35,7 +36,7 @@ namespace MQTTnet.TestApp.NetCore
                 new MqttClientOptionsBuilder().WithWebSocketServer("test.mosquitto.org:8080/mqtt").Build());
 
             await ExecuteTestAsync("test.mosquitto.org WS TLS",
-                new MqttClientOptionsBuilder().WithWebSocketServer("test.mosquitto.org:8081/mqtt").Build());
+                new MqttClientOptionsBuilder().WithWebSocketServer("test.mosquitto.org:8081/mqtt").WithTls().Build());
 
             // broker.hivemq.com
             await ExecuteTestAsync("broker.hivemq.com TCP",
@@ -78,7 +79,7 @@ namespace MQTTnet.TestApp.NetCore
                 var topic = Guid.NewGuid().ToString();
 
                 MqttApplicationMessage receivedMessage = null;
-                client.ApplicationMessageReceived += (s, e) => receivedMessage = e.ApplicationMessage; 
+                client.ApplicationMessageReceived += (s, e) => receivedMessage = e.ApplicationMessage;
 
                 await client.ConnectAsync(options);
                 await client.SubscribeAsync(topic, MqttQualityOfServiceLevel.AtLeastOnce);

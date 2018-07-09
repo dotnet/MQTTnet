@@ -70,7 +70,10 @@ namespace MQTTnet.Server
                     }
                 }
 
-                _queue.Enqueue(packet);
+                if (!wait)
+                {
+                    _queue.Enqueue(packet);
+                }
             }
 
             if (wait)

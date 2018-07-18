@@ -76,6 +76,29 @@ namespace MQTTnet.Client
             return this;
         }
 
+#if NET452 || NET461
+
+        public MqttClientOptionsBuilder WithProxy(string address, string username = null, string password = null, string domain = null, bool bypassOnLocal = false, string[] bypassList = null)
+        {
+            if (_webSocketOptions == null)
+            {
+                throw new InvalidOperationException("A WebSocket channel must be set if MqttClientWebSocketProxy is configured.");
+            }
+
+            _webSocketOptions.MqttClientWebSocketProxy = new MqttClientWebSocketProxyOptions
+            {
+                Address = address,
+                Username = username,
+                Password = password,
+                Domain = domain,
+                BypassOnLocal = bypassOnLocal,
+                BypassList = bypassList
+            };
+
+            return this;
+        }
+#endif
+
         public MqttClientOptionsBuilder WithWebSocketServer(string uri)
         {
             _webSocketOptions = new MqttClientWebSocketOptions

@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Net.Security;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using MQTTnet.Serializer;
 
 namespace MQTTnet.Client
@@ -113,7 +116,9 @@ namespace MQTTnet.Client
             bool allowUntrustedCertificates = false,
             bool ignoreCertificateChainErrors = false,
             bool ignoreCertificateRevocationErrors = false,
-            params byte[][] certificates)
+            byte[][] certificates = null,
+            SslProtocols sslProtocol = SslProtocols.Tls12,
+            Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback = null)
         {
             _tlsOptions = new MqttClientTlsOptions
             {
@@ -121,7 +126,9 @@ namespace MQTTnet.Client
                 AllowUntrustedCertificates = allowUntrustedCertificates,
                 IgnoreCertificateChainErrors = ignoreCertificateChainErrors,
                 IgnoreCertificateRevocationErrors = ignoreCertificateRevocationErrors,
-                Certificates = certificates?.ToList()
+                Certificates = certificates?.ToList(),
+                SslProtocol = sslProtocol,
+                CertificateValidationCallback = certificateValidationCallback
             };
 
             return this;

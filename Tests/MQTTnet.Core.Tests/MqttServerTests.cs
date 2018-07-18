@@ -244,12 +244,12 @@ namespace MQTTnet.Core.Tests
                 .WithTcpServer("localhost")
                 .Build();
 
-            bool disconnectCalled = false;
+            var disconnectCalled = 0;
 
             await s.StartAsync(new MqttServerOptions());
 
             var c1 = new MqttFactory().CreateMqttClient();
-            c1.Disconnected += (sender, args) => disconnectCalled = true;
+            c1.Disconnected += (sender, args) => disconnectCalled++;
 
             await c1.ConnectAsync(clientOptions);
 
@@ -259,7 +259,7 @@ namespace MQTTnet.Core.Tests
 
             await Task.Delay(100);
 
-            Assert.IsTrue(disconnectCalled);
+            Assert.AreEqual(1, disconnectCalled);
         }
 
         [TestMethod]

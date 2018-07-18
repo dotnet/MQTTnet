@@ -112,8 +112,49 @@ namespace MQTTnet.Client
             return this;
         }
 
+
+        public MqttClientOptionsBuilder WithTls()
+        {
+            return WithTls(null);
+        }
+
+        public MqttClientOptionsBuilder WithTls(Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback)
+        {
+            return WithTls(SslProtocols.None, certificateValidationCallback);
+        }
+
+        public MqttClientOptionsBuilder WithTls(SslProtocols sslProtocol,
+            Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback = null)
+        {
+            return WithTls(new byte[][] { }, sslProtocol, certificateValidationCallback);
+        }
+
+        public MqttClientOptionsBuilder WithTls(byte[][] certificates,
+            SslProtocols sslProtocol = SslProtocols.Tls12,
+            Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback = null)
+        {
+            return WithTls(false, certificates, sslProtocol, certificateValidationCallback);
+        }
+
+        public MqttClientOptionsBuilder WithTls(bool ignoreCertificateRevocationErrors,
+            byte[][] certificates = null,
+            SslProtocols sslProtocol = SslProtocols.Tls12,
+            Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback = null)
+        {
+            return WithTls(false, ignoreCertificateRevocationErrors, certificates, sslProtocol, certificateValidationCallback);
+        }
+
+        public MqttClientOptionsBuilder WithTls(bool ignoreCertificateChainErrors,
+            bool ignoreCertificateRevocationErrors = false,
+            byte[][] certificates = null,
+            SslProtocols sslProtocol = SslProtocols.Tls12,
+            Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback = null)
+        {
+            return WithTls(false, ignoreCertificateChainErrors, ignoreCertificateRevocationErrors, certificates, sslProtocol, certificateValidationCallback);
+        }
+
         public MqttClientOptionsBuilder WithTls(
-            bool allowUntrustedCertificates = false,
+            bool allowUntrustedCertificates,
             bool ignoreCertificateChainErrors = false,
             bool ignoreCertificateRevocationErrors = false,
             byte[][] certificates = null,
@@ -134,15 +175,6 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithTls()
-        {
-            _tlsOptions = new MqttClientTlsOptions
-            {
-                UseTls = true
-            };
-
-            return this;
-        }
 
         public IMqttClientOptions Build()
         {

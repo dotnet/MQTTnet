@@ -73,7 +73,6 @@ namespace MQTTnet.Server
                 if (!TryDequeue(out packet))
                 {
                     packet = await DequeueAsync(cancellationToken).ConfigureAwait(false);
-                    return;
                 }
 
                 if (packet == null || cancellationToken.IsCancellationRequested)

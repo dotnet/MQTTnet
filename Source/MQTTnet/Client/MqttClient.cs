@@ -25,8 +25,8 @@ namespace MQTTnet.Client
 
         private IMqttClientOptions _options;
         private CancellationTokenSource _cancellationTokenSource;
-        private Task _packetReceiverTask;
-        private Task _keepAliveMessageSenderTask;
+        internal Task _packetReceiverTask;
+        internal Task _keepAliveMessageSenderTask;
         private IMqttChannelAdapter _adapter;
         private bool _cleanDisconnectInitiated;
         private TaskCompletionSource<bool> _disconnectReason;

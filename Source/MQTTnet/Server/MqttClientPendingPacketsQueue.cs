@@ -17,7 +17,7 @@ namespace MQTTnet.Server
         private readonly IMqttNetChildLogger _logger;
 
         public MqttClientPendingPacketsQueue(IMqttServerOptions options, MqttClientSession clientSession, IMqttNetChildLogger logger)
-            : base(options)
+            : base(options.MaxPendingMessagesPerClient, options.PendingMessagesOverflowStrategy)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));

@@ -38,7 +38,7 @@ namespace MQTTnet.Server
             Server = server ?? throw new ArgumentNullException(nameof(server));
 
             _cancellationToken = cancellationToken;
-            _messageQueue = new AsyncQueue<MqttEnqueuedApplicationMessage>(options);
+            _messageQueue = new AsyncQueue<MqttEnqueuedApplicationMessage>(options.MaxPendingMessagesOnServer, options.PendingMessagesOverflowStrategy);
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
         }
 

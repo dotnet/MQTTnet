@@ -11,12 +11,13 @@ namespace MQTTnet.Server
         private readonly Queue<T> _queue = new Queue<T>();
         private readonly AsyncAutoResetEvent _queueEmptyEvent = new AsyncAutoResetEvent();
         private readonly AsyncAutoResetEvent _queueNotFullEvent = new AsyncAutoResetEvent();
-        protected readonly IMqttServerOptions _options;
+        private readonly int _capacity;
+        private readonly MqttPendingMessagesOverflowStrategy _overflowStrategy;
 
-
-        public AsyncQueue(IMqttServerOptions options)
+        public AsyncQueue(int capacity, MqttPendingMessagesOverflowStrategy overflowStrategy)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _capacity = capacity;
+            _overflowStrategy = overflowStrategy;
         }
 
         public int Count
@@ -55,9 +56,9 @@ namespace MQTTnet.Server
             bool wait = false;
             lock (_queue)
             {
-                if (_queue.Count >= _options.MaxPendingMessagesPerClient)
+                if (_queue.Count >= _capacity)
                 {
-                    switch (_options.PendingMessagesOverflowStrategy)
+                    switch (_overflowStrategy)
                     {
                         case MqttPendingMessagesOverflowStrategy.DropNewMessage:
                             return false;

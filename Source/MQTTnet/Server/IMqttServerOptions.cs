@@ -6,6 +6,8 @@ namespace MQTTnet.Server
     {
         bool EnablePersistentSessions { get; }
 
+        int MaxPendingMessagesOnServer { get; }
+
         int MaxPendingMessagesPerClient { get; }
         MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; }
 

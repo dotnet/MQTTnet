@@ -229,11 +229,8 @@ namespace MQTTnet.Client
 
             try
             {
-                if (clientWasConnected)
-                {
-                    await WaitForTaskAsync(_packetReceiverTask, sender).ConfigureAwait(false);
-                    await WaitForTaskAsync(_keepAliveMessageSenderTask, sender).ConfigureAwait(false);
-                }
+                await WaitForTaskAsync(_packetReceiverTask, sender).ConfigureAwait(false);
+                await WaitForTaskAsync(_keepAliveMessageSenderTask, sender).ConfigureAwait(false);
 
                 if (_adapter != null)
                 {

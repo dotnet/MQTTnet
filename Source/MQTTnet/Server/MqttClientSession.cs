@@ -405,12 +405,12 @@ namespace MQTTnet.Server
 
         private void OnAdapterReadingPacketCompleted(object sender, EventArgs e)
         {
-            _keepAliveMonitor?.Pause();
+            _keepAliveMonitor?.Resume();
         }
 
         private void OnAdapterReadingPacketStarted(object sender, EventArgs e)
         {
-            _keepAliveMonitor?.Resume();
+            _keepAliveMonitor?.Pause();
         }
     }
 }

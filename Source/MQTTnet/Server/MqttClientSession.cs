@@ -126,18 +126,11 @@ namespace MQTTnet.Server
                     _logger.Error(exception, "Client '{0}': Unhandled exception while receiving client packets.", ClientId);
                 }
 
-                Stop(MqttClientDisconnectType.NotClean);
+                Stop(MqttClientDisconnectType.NotClean, true);
             }
             finally
             {
-                if (_adapter != null)
-                {
-                    _adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
-                    _adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
-                    await Cleanup().ConfigureAwait(false);
-                }
-
-                _adapter = null;
+                await Cleanup().ConfigureAwait(false);
 
                 _cleanupHandle?.Dispose();
                 _cleanupHandle = null;
@@ -153,8 +146,18 @@ namespace MQTTnet.Server
         {
             try
             {
-                await _adapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
-                _adapter.Dispose();
+                var adapter = _adapter;
+                if (adapter == null)
+                {
+                    return;
+                }
+
+                _adapter = null;
+
+                adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
+                adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
+                await adapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
+                adapter.Dispose();
             }
             catch (Exception exception)
             {
@@ -163,6 +166,11 @@ namespace MQTTnet.Server
         }
 
         public void Stop(MqttClientDisconnectType type)
+        {
+            Stop(type, false);
+        }
+
+        private void Stop(MqttClientDisconnectType type, bool isInsideSession)
         {
             try
             {
@@ -183,7 +191,10 @@ namespace MQTTnet.Server
 
                 _willMessage = null;
 
-                _workerTask?.GetAwaiter().GetResult();
+                if (!isInsideSession)
+                {
+                    _workerTask?.GetAwaiter().GetResult();
+                }
             }
             finally
             {
@@ -329,18 +340,18 @@ namespace MQTTnet.Server
 
             if (packet is MqttDisconnectPacket)
             {
-                Stop(MqttClientDisconnectType.Clean);
+                Stop(MqttClientDisconnectType.Clean, true);
                 return;
             }
 
             if (packet is MqttConnectPacket)
             {
-                Stop(MqttClientDisconnectType.NotClean);
+                Stop(MqttClientDisconnectType.NotClean, true);
                 return;
             }
 
             _logger.Warning(null, "Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
-            Stop(MqttClientDisconnectType.NotClean);
+            Stop(MqttClientDisconnectType.NotClean, true);
         }
 
         private void EnqueueSubscribedRetainedMessages(ICollection<TopicFilter> topicFilters)
@@ -359,7 +370,7 @@ namespace MQTTnet.Server
 
             if (subscribeResult.CloseConnection)
             {
-                Stop(MqttClientDisconnectType.NotClean);
+                Stop(MqttClientDisconnectType.NotClean, true);
                 return;
             }
 

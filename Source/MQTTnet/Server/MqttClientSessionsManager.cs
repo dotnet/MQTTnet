@@ -44,7 +44,7 @@ namespace MQTTnet.Server
 
         public void Start()
         {
-            Task.Factory.StartNew(() => ProcessQueuedApplicationMessages(_cancellationToken), _cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            Task.Factory.StartNew(() => TryProcessQueuedApplicationMessages(_cancellationToken), _cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         public void Stop()
@@ -133,51 +133,66 @@ namespace MQTTnet.Server
             _messageQueue?.Dispose();
         }
 
-        private void ProcessQueuedApplicationMessages(CancellationToken cancellationToken)
+        private void TryProcessQueuedApplicationMessages(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var enqueuedApplicationMessage = _messageQueue.Take(cancellationToken);
-                    var sender = enqueuedApplicationMessage.Sender;
-                    var applicationMessage = enqueuedApplicationMessage.PublishPacket.ToApplicationMessage();
-
-                    var interceptorContext = InterceptApplicationMessage(sender, applicationMessage);
-                    if (interceptorContext != null)
-                    {
-                        if (interceptorContext.CloseConnection)
-                        {
-                            enqueuedApplicationMessage.Sender.Stop(MqttClientDisconnectType.NotClean);
-                        }
-
-                        if (interceptorContext.ApplicationMessage == null || !interceptorContext.AcceptPublish)
-                        {
-                            return;
-                        }
-
-                        applicationMessage = interceptorContext.ApplicationMessage;
-                    }
-
-                    Server.OnApplicationMessageReceived(sender?.ClientId, applicationMessage);
-
-                    if (applicationMessage.Retain)
-                    {
-                        _retainedMessagesManager.HandleMessageAsync(sender?.ClientId, applicationMessage).GetAwaiter().GetResult();
-                    }
-
-                    foreach (var clientSession in GetSessions())
-                    {
-                        clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, applicationMessage.ToPublishPacket());
-                    }
+                    TryProcessNextQueuedApplicationMessage(cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
                 }
                 catch (Exception exception)
                 {
-                    _logger.Error(exception, "Unhandled exception while processing queued application message.");
+                    _logger.Error(exception, "Unhandled exception while processing queued application messages.");
                 }
+            }
+        }
+
+        private void TryProcessNextQueuedApplicationMessage(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var enqueuedApplicationMessage = _messageQueue.Take(cancellationToken);
+                var sender = enqueuedApplicationMessage.Sender;
+                var applicationMessage = enqueuedApplicationMessage.PublishPacket.ToApplicationMessage();
+
+                var interceptorContext = InterceptApplicationMessage(sender, applicationMessage);
+                if (interceptorContext != null)
+                {
+                    if (interceptorContext.CloseConnection)
+                    {
+                        enqueuedApplicationMessage.Sender.Stop(MqttClientDisconnectType.NotClean);
+                    }
+
+                    if (interceptorContext.ApplicationMessage == null || !interceptorContext.AcceptPublish)
+                    {
+                        return;
+                    }
+
+                    applicationMessage = interceptorContext.ApplicationMessage;
+                }
+
+                Server.OnApplicationMessageReceived(sender?.ClientId, applicationMessage);
+
+                if (applicationMessage.Retain)
+                {
+                    _retainedMessagesManager.HandleMessageAsync(sender?.ClientId, applicationMessage).GetAwaiter().GetResult();
+                }
+
+                foreach (var clientSession in GetSessions())
+                {
+                    clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, applicationMessage.ToPublishPacket());
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, "Unhandled exception while processing next queued application message.");
             }
         }
 

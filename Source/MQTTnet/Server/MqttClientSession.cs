@@ -65,7 +65,7 @@ namespace MQTTnet.Server
             status.LastNonKeepAlivePacketReceived = _keepAliveMonitor.LastNonKeepAlivePacketReceived;
         }
 
-        public async Task<bool> RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        public async Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
             if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
@@ -129,8 +129,6 @@ namespace MQTTnet.Server
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
             }
-
-            return _wasCleanDisconnect;
         }
 
         public void Stop(MqttClientDisconnectType type)
@@ -157,6 +155,8 @@ namespace MQTTnet.Server
             finally
             {
                 _logger.Info("Client '{0}': Session stopped.", ClientId);
+
+                _sessionsManager.Server.OnClientDisconnected(ClientId, _wasCleanDisconnect);
             }
         }
 

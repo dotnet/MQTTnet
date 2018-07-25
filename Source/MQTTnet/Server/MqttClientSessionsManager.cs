@@ -125,6 +125,7 @@ namespace MQTTnet.Server
             {
                 _sessions.Remove(clientId);
             }
+
             _logger.Verbose("Session for client '{0}' deleted.", clientId);
         }
 
@@ -207,8 +208,7 @@ namespace MQTTnet.Server
         private async Task RunSession(IMqttChannelAdapter clientAdapter, CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
-            var wasCleanDisconnect = false;
-
+            
             try
             {
                 var firstPacket = await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false);
@@ -253,7 +253,7 @@ namespace MQTTnet.Server
 
                 Server.OnClientConnected(clientId);
 
-                wasCleanDisconnect = await clientSession.RunAsync(connectPacket, clientAdapter).ConfigureAwait(false);
+                await clientSession.RunAsync(connectPacket, clientAdapter).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -278,8 +278,6 @@ namespace MQTTnet.Server
                 {
                     DeleteSession(clientId);
                 }
-
-                Server.OnClientDisconnected(clientId, wasCleanDisconnect);
             }
         }
 

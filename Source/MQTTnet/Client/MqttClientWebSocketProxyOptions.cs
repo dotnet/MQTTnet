@@ -1,6 +1,4 @@
-﻿#if NET452 || NET461
-
-namespace MQTTnet.Client
+﻿namespace MQTTnet.Client
 {
     public class MqttClientWebSocketProxyOptions
     {
@@ -17,5 +15,3 @@ namespace MQTTnet.Client
         public string[] BypassList { get; set; }
     }
 }
-
-#endif

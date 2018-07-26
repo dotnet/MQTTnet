@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net.Security;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using MQTTnet.Serializer;
 
 namespace MQTTnet.Client
@@ -10,10 +7,10 @@ namespace MQTTnet.Client
     public class MqttClientOptionsBuilder
     {
         private readonly MqttClientOptions _options = new MqttClientOptions();
+
         private MqttClientTcpOptions _tcpOptions;
         private MqttClientWebSocketOptions _webSocketOptions;
-
-        private MqttClientTlsOptions _tlsOptions;
+        private MqttClientOptionsBuilderTlsParameters _tlsParameters;
 
         public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion value)
         {
@@ -88,7 +85,7 @@ namespace MQTTnet.Client
                 throw new InvalidOperationException("A WebSocket channel must be set if MqttClientWebSocketProxy is configured.");
             }
 
-            _webSocketOptions.MqttClientWebSocketProxy = new MqttClientWebSocketProxyOptions
+            _webSocketOptions.ProxyOptions = new MqttClientWebSocketProxyOptions
             {
                 Address = address,
                 Username = username,
@@ -112,86 +109,66 @@ namespace MQTTnet.Client
             return this;
         }
 
+        public MqttClientOptionsBuilder WithTls(MqttClientOptionsBuilderTlsParameters parameters)
+        {
+            _tlsParameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
+            return this;
+        }
 
         public MqttClientOptionsBuilder WithTls()
         {
-            return WithTls(null);
+            return WithTls(new MqttClientOptionsBuilderTlsParameters { UseTls = true });
         }
 
-        public MqttClientOptionsBuilder WithTls(Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback)
-        {
-            return WithTls(SslProtocols.None, certificateValidationCallback);
-        }
-
-        public MqttClientOptionsBuilder WithTls(SslProtocols sslProtocol,
-            Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback = null)
-        {
-            return WithTls(new byte[][] { }, sslProtocol, certificateValidationCallback);
-        }
-
-        public MqttClientOptionsBuilder WithTls(byte[][] certificates,
-            SslProtocols sslProtocol = SslProtocols.Tls12,
-            Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback = null)
-        {
-            return WithTls(false, certificates, sslProtocol, certificateValidationCallback);
-        }
-
-        public MqttClientOptionsBuilder WithTls(bool ignoreCertificateRevocationErrors,
-            byte[][] certificates = null,
-            SslProtocols sslProtocol = SslProtocols.Tls12,
-            Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback = null)
-        {
-            return WithTls(false, ignoreCertificateRevocationErrors, certificates, sslProtocol, certificateValidationCallback);
-        }
-
-        public MqttClientOptionsBuilder WithTls(bool ignoreCertificateChainErrors,
-            bool ignoreCertificateRevocationErrors = false,
-            byte[][] certificates = null,
-            SslProtocols sslProtocol = SslProtocols.Tls12,
-            Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback = null)
-        {
-            return WithTls(false, ignoreCertificateChainErrors, ignoreCertificateRevocationErrors, certificates, sslProtocol, certificateValidationCallback);
-        }
-
+        [Obsolete("Use method _WithTlps_ which accepts the _MqttClientOptionsBuilderTlsParameters_.")]
         public MqttClientOptionsBuilder WithTls(
-            bool allowUntrustedCertificates,
+            bool allowUntrustedCertificates = false,
             bool ignoreCertificateChainErrors = false,
             bool ignoreCertificateRevocationErrors = false,
-            byte[][] certificates = null,
-            SslProtocols sslProtocol = SslProtocols.Tls12,
-            Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> certificateValidationCallback = null)
+            params byte[][] certificates)
         {
-            _tlsOptions = new MqttClientTlsOptions
+            _tlsParameters = new MqttClientOptionsBuilderTlsParameters
             {
                 UseTls = true,
                 AllowUntrustedCertificates = allowUntrustedCertificates,
                 IgnoreCertificateChainErrors = ignoreCertificateChainErrors,
                 IgnoreCertificateRevocationErrors = ignoreCertificateRevocationErrors,
-                Certificates = certificates?.ToList(),
-                SslProtocol = sslProtocol,
-                CertificateValidationCallback = certificateValidationCallback
+                Certificates = certificates?.ToList()
             };
 
             return this;
         }
 
-
         public IMqttClientOptions Build()
         {
-            if (_tlsOptions != null)
+            if (_tlsParameters != null)
             {
                 if (_tcpOptions == null && _webSocketOptions == null)
                 {
                     throw new InvalidOperationException("A channel (TCP or WebSocket) must be set if TLS is configured.");
                 }
 
-                if (_tcpOptions != null)
+                if (_tlsParameters?.UseTls == true)
                 {
-                    _tcpOptions.TlsOptions = _tlsOptions;
-                }
-                else if (_webSocketOptions != null)
-                {
-                    _webSocketOptions.TlsOptions = _tlsOptions;
+                    var tlsOptions = new MqttClientTlsOptions
+                    {
+                        UseTls = true,
+                        SslProtocol = _tlsParameters.SslProtocol,
+                        AllowUntrustedCertificates = _tlsParameters.AllowUntrustedCertificates,
+                        Certificates = _tlsParameters.Certificates?.Select(c => c.ToArray()).ToList(),
+                        CertificateValidationCallback = _tlsParameters.CertificateValidationCallback,
+                        IgnoreCertificateChainErrors = _tlsParameters.IgnoreCertificateChainErrors,
+                        IgnoreCertificateRevocationErrors = _tlsParameters.IgnoreCertificateRevocationErrors
+                    };
+
+                    if (_tcpOptions != null)
+                    {
+                        _tcpOptions.TlsOptions = tlsOptions;
+                    }
+                    else if (_webSocketOptions != null)
+                    {
+                        _webSocketOptions.TlsOptions = tlsOptions;
+                    }
                 }
             }
 

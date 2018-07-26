@@ -1,14 +1,11 @@
 ﻿using System;
+using System.Net;
 using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Client;
-
-#if NET452 || NET461
-    using System.Net;
-#endif
 
 namespace MQTTnet.Implementations
 {
@@ -49,25 +46,10 @@ namespace MQTTnet.Implementations
 
             var clientWebSocket = new ClientWebSocket();
 
-#if NET452 || NET461
-            // use proxy if we have an address
-            if (string.IsNullOrEmpty(_options.MqttClientWebSocketProxy.Address) == false)
+            if (_options.ProxyOptions != null)
             {
-                var proxyUri = new Uri(_options.MqttClientWebSocketProxy.Address);
-
-                // use proxy credentials if we have them
-                if (string.IsNullOrEmpty(_options.MqttClientWebSocketProxy.Username) == false && string.IsNullOrEmpty(_options.MqttClientWebSocketProxy.Password) == false)
-                {
-                    var credentials = new NetworkCredential(_options.MqttClientWebSocketProxy.Username, _options.MqttClientWebSocketProxy.Password, _options.MqttClientWebSocketProxy.Domain);
-                    clientWebSocket.Options.Proxy = new WebProxy(proxyUri, _options.MqttClientWebSocketProxy.BypassOnLocal, _options.MqttClientWebSocketProxy.BypassList, credentials);
-                }
-                else
-                {
-                    // use proxy without credentials
-                    clientWebSocket.Options.Proxy = new WebProxy(proxyUri, _options.MqttClientWebSocketProxy.BypassOnLocal, _options.MqttClientWebSocketProxy.BypassList);
-                }
+                clientWebSocket.Options.Proxy = CreateProxy();
             }
-#endif
 
             if (_options.RequestHeaders != null)
             {
@@ -155,6 +137,32 @@ namespace MQTTnet.Implementations
             {
                 _webSocket = null;
             }
+        }
+
+        private IWebProxy CreateProxy()
+        {
+            if (string.IsNullOrEmpty(_options.ProxyOptions?.Address))
+            {
+                return null;
+            }
+
+#if WINDOWS_UWP
+            throw new NotSupportedException("Proxies are not supported in UWP.");
+#elif NETSTANDARD1_3
+            throw new NotSupportedException("Proxies are not supported in netstandard 1.3.");
+#else
+            var proxyUri = new Uri(_options.ProxyOptions.Address);
+
+            if (!string.IsNullOrEmpty(_options.ProxyOptions.Username) && !string.IsNullOrEmpty(_options.ProxyOptions.Password))
+            {
+                var credentials =
+                    new NetworkCredential(_options.ProxyOptions.Username, _options.ProxyOptions.Password, _options.ProxyOptions.Domain);
+
+                return new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList, credentials);
+            }
+
+            return new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList);
+#endif
         }
     }
 }

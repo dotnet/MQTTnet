@@ -106,13 +106,13 @@ namespace MQTTnet.Server
 
                 _cancellationTokenSource.Cancel(false);
                 
+                _clientSessionsManager.Stop();
+
                 foreach (var adapter in _adapters)
                 {
                     adapter.ClientAccepted -= OnClientAccepted;
                     await adapter.StopAsync().ConfigureAwait(false);
                 }
-
-                _clientSessionsManager.Stop();
 
                 _logger.Info("Stopped.");
                 Stopped?.Invoke(this, EventArgs.Empty);

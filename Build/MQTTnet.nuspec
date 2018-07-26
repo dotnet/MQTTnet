@@ -11,11 +11,11 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
     <releaseNotes>* [Core] Performance optimizations.
-* [Core] Fixed a bug which prevents receiving large packets (UWP only)
-* [Client] The ManagedClient options now allow configuring the interval for connection checks.
-* [Server] Added the Endpoint of the Adapter (remote IP and port) to the connection validation callback.
-* [Server] The ipv4 and ipv6 endpoint can be disabled now by setting the bound IP address to _None_.
-* [Server] Fix a bug in the keep alive monitor which caused high CPU load (thanks to @GarageGadget).
+* [Client] Added support for proxies when using web socket connections (thanks to PitySOFT).
+* [Client] Refactored TLS parameter usage and added more parameters (thanks to PitySOFT).
+* [Server] Fixed an issue in client keep alive checks (thanks to @jenscski).
+* [Server] Changed the order of _ClientConnected_ and _ClientDisconnected_ events so that _ClientConnected_ is fired at first (thanks to @jenscski).
+* [Server] Fixed an iussue which lets the server stop processing messages when using the application message interceptor (thanks to @alamsor).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
@@ -56,6 +56,9 @@
     <file src="..\Source\MQTTnet\bin\Release\net452\MQTTnet.*" target="lib\net452\"/>
 
     <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net461\"/>
+    <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net462\"/>
+    <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net470\"/>
+    <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net471\"/>
     <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net472\"/>
   </files>
 </package>

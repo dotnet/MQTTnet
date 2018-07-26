@@ -11,6 +11,7 @@ namespace MQTTnet.Client
         private MqttClientTcpOptions _tcpOptions;
         private MqttClientWebSocketOptions _webSocketOptions;
         private MqttClientOptionsBuilderTlsParameters _tlsParameters;
+        private MqttClientWebSocketProxyOptions _proxyOptions;
 
         public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion value)
         {
@@ -76,16 +77,9 @@ namespace MQTTnet.Client
             return this;
         }
 
-#if NET452 || NET461
-
         public MqttClientOptionsBuilder WithProxy(string address, string username = null, string password = null, string domain = null, bool bypassOnLocal = false, string[] bypassList = null)
         {
-            if (_webSocketOptions == null)
-            {
-                throw new InvalidOperationException("A WebSocket channel must be set if MqttClientWebSocketProxy is configured.");
-            }
-
-            _webSocketOptions.ProxyOptions = new MqttClientWebSocketProxyOptions
+            _proxyOptions = new MqttClientWebSocketProxyOptions
             {
                 Address = address,
                 Username = username,
@@ -97,7 +91,6 @@ namespace MQTTnet.Client
 
             return this;
         }
-#endif
 
         public MqttClientOptionsBuilder WithWebSocketServer(string uri)
         {
@@ -120,7 +113,7 @@ namespace MQTTnet.Client
             return WithTls(new MqttClientOptionsBuilderTlsParameters { UseTls = true });
         }
 
-        [Obsolete("Use method _WithTlps_ which accepts the _MqttClientOptionsBuilderTlsParameters_.")]
+        [Obsolete("Use method _WithTls_ which accepts the _MqttClientOptionsBuilderTlsParameters_.")]
         public MqttClientOptionsBuilder WithTls(
             bool allowUntrustedCertificates = false,
             bool ignoreCertificateChainErrors = false,
@@ -141,13 +134,13 @@ namespace MQTTnet.Client
 
         public IMqttClientOptions Build()
         {
+            if (_tcpOptions == null && _webSocketOptions == null)
+            {
+                throw new InvalidOperationException("A channel must be set.");
+            }
+
             if (_tlsParameters != null)
             {
-                if (_tcpOptions == null && _webSocketOptions == null)
-                {
-                    throw new InvalidOperationException("A channel (TCP or WebSocket) must be set if TLS is configured.");
-                }
-
                 if (_tlsParameters?.UseTls == true)
                 {
                     var tlsOptions = new MqttClientTlsOptions
@@ -170,6 +163,16 @@ namespace MQTTnet.Client
                         _webSocketOptions.TlsOptions = tlsOptions;
                     }
                 }
+            }
+
+            if (_proxyOptions != null)
+            {
+                if (_webSocketOptions == null)
+                {
+                    throw new InvalidOperationException("Proxies are only supported for WebSocket connections.");
+                }
+
+                _webSocketOptions.ProxyOptions = _proxyOptions;
             }
 
             _options.ChannelOptions = (IMqttClientChannelOptions)_tcpOptions ?? _webSocketOptions;

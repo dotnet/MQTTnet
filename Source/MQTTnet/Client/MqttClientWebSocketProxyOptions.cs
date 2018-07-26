@@ -10,7 +10,7 @@
 
         public string Domain { get; set; }
 
-        public bool BypassOnLocal { get; set; } = true;
+        public bool BypassOnLocal { get; set; }
 
         public string[] BypassList { get; set; }
     }

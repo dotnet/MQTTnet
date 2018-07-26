@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Client;
 
+#if NET452 || NET461
+    using System.Net;
+#endif
+
 namespace MQTTnet.Implementations
 {
     public class MqttWebSocketChannel : IMqttChannel
@@ -14,7 +18,7 @@ namespace MQTTnet.Implementations
         private readonly MqttClientWebSocketOptions _options;
 
         private WebSocket _webSocket;
-        
+
         public MqttWebSocketChannel(MqttClientWebSocketOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -44,6 +48,26 @@ namespace MQTTnet.Implementations
             }
 
             var clientWebSocket = new ClientWebSocket();
+
+#if NET452 || NET461
+            // use proxy if we have an address
+            if (string.IsNullOrEmpty(_options.MqttClientWebSocketProxy.Address) == false)
+            {
+                var proxyUri = new Uri(_options.MqttClientWebSocketProxy.Address);
+
+                // use proxy credentials if we have them
+                if (string.IsNullOrEmpty(_options.MqttClientWebSocketProxy.Username) == false && string.IsNullOrEmpty(_options.MqttClientWebSocketProxy.Password) == false)
+                {
+                    var credentials = new NetworkCredential(_options.MqttClientWebSocketProxy.Username, _options.MqttClientWebSocketProxy.Password, _options.MqttClientWebSocketProxy.Domain);
+                    clientWebSocket.Options.Proxy = new WebProxy(proxyUri, _options.MqttClientWebSocketProxy.BypassOnLocal, _options.MqttClientWebSocketProxy.BypassList, credentials);
+                }
+                else
+                {
+                    // use proxy without credentials
+                    clientWebSocket.Options.Proxy = new WebProxy(proxyUri, _options.MqttClientWebSocketProxy.BypassOnLocal, _options.MqttClientWebSocketProxy.BypassList);
+                }
+            }
+#endif
 
             if (_options.RequestHeaders != null)
             {

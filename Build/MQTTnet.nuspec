@@ -13,9 +13,11 @@
     <releaseNotes>* [Core] Performance optimizations.
 * [Client] Added support for proxies when using web socket connections (thanks to PitySOFT).
 * [Client] Refactored TLS parameter usage and added more parameters (thanks to PitySOFT).
+* [Client] Fixed a deadlock when clients are disconnecting (thanks to @JanEggers).
 * [Server] Fixed an issue in client keep alive checks (thanks to @jenscski).
 * [Server] Changed the order of _ClientConnected_ and _ClientDisconnected_ events so that _ClientConnected_ is fired at first (thanks to @jenscski).
 * [Server] Fixed an iussue which lets the server stop processing messages when using the application message interceptor (thanks to @alamsor).
+* [Server] Fixed a deadlock when clients are disconnecting (thanks to @JanEggers).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

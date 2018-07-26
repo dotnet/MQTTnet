@@ -29,7 +29,7 @@ namespace MQTTnet.Server
         private MqttApplicationMessage _willMessage;
         private bool _wasCleanDisconnect;
         private IMqttChannelAdapter _adapter;
-        private Task<bool> _workerTask;
+        private Task _workerTask;
         private IDisposable _cleanupHandle;
 
         public MqttClientSession(
@@ -89,6 +89,7 @@ namespace MQTTnet.Server
                 //woraround for https://github.com/dotnet/corefx/issues/24430
                 _cleanupHandle = _cancellationTokenSource.Token.Register(() => Cleanup());
                 //endworkaround
+
                 _wasCleanDisconnect = false;
                 _willMessage = connectPacket.WillMessage;
 

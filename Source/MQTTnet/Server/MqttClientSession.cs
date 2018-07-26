@@ -81,13 +81,16 @@ namespace MQTTnet.Server
             try
             {
                 _adapter = adapter;
+
                 adapter.ReadingPacketStarted += OnAdapterReadingPacketStarted;
                 adapter.ReadingPacketCompleted += OnAdapterReadingPacketCompleted;
 
                 _cancellationTokenSource = new CancellationTokenSource();
 
                 //woraround for https://github.com/dotnet/corefx/issues/24430
-                _cleanupHandle = _cancellationTokenSource.Token.Register(() => Cleanup());
+#pragma warning disable 4014
+                _cleanupHandle = _cancellationTokenSource.Token.Register(() => CleanupAsync());
+#pragma warning restore 4014
                 //endworkaround
 
                 _wasCleanDisconnect = false;
@@ -131,7 +134,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                await Cleanup().ConfigureAwait(false);
+                await CleanupAsync().ConfigureAwait(false);
 
                 _cleanupHandle?.Dispose();
                 _cleanupHandle = null;
@@ -141,11 +144,11 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task Cleanup()
+        private async Task CleanupAsync()
         {
+            var adapter = _adapter;
             try
             {
-                var adapter = _adapter;
                 if (adapter == null)
                 {
                     return;
@@ -155,12 +158,16 @@ namespace MQTTnet.Server
 
                 adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
                 adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
+
                 await adapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
-                adapter.Dispose();
             }
             catch (Exception exception)
             {
                 _logger.Error(exception, exception.Message);
+            }
+            finally
+            {
+                adapter?.Dispose();
             }
         }
 

@@ -7,10 +7,11 @@ namespace MQTTnet.Client
     public class MqttClientOptionsBuilder
     {
         private readonly MqttClientOptions _options = new MqttClientOptions();
+
         private MqttClientTcpOptions _tcpOptions;
         private MqttClientWebSocketOptions _webSocketOptions;
-
-        private MqttClientTlsOptions _tlsOptions;
+        private MqttClientOptionsBuilderTlsParameters _tlsParameters;
+        private MqttClientWebSocketProxyOptions _proxyOptions;
 
         public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion value)
         {
@@ -76,6 +77,21 @@ namespace MQTTnet.Client
             return this;
         }
 
+        public MqttClientOptionsBuilder WithProxy(string address, string username = null, string password = null, string domain = null, bool bypassOnLocal = false, string[] bypassList = null)
+        {
+            _proxyOptions = new MqttClientWebSocketProxyOptions
+            {
+                Address = address,
+                Username = username,
+                Password = password,
+                Domain = domain,
+                BypassOnLocal = bypassOnLocal,
+                BypassList = bypassList
+            };
+
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithWebSocketServer(string uri)
         {
             _webSocketOptions = new MqttClientWebSocketOptions
@@ -86,13 +102,25 @@ namespace MQTTnet.Client
             return this;
         }
 
+        public MqttClientOptionsBuilder WithTls(MqttClientOptionsBuilderTlsParameters parameters)
+        {
+            _tlsParameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithTls()
+        {
+            return WithTls(new MqttClientOptionsBuilderTlsParameters { UseTls = true });
+        }
+
+        [Obsolete("Use method _WithTls_ which accepts the _MqttClientOptionsBuilderTlsParameters_.")]
         public MqttClientOptionsBuilder WithTls(
             bool allowUntrustedCertificates = false,
             bool ignoreCertificateChainErrors = false,
             bool ignoreCertificateRevocationErrors = false,
             params byte[][] certificates)
         {
-            _tlsOptions = new MqttClientTlsOptions
+            _tlsParameters = new MqttClientOptionsBuilderTlsParameters
             {
                 UseTls = true,
                 AllowUntrustedCertificates = allowUntrustedCertificates,
@@ -104,33 +132,47 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithTls()
-        {
-            _tlsOptions = new MqttClientTlsOptions
-            {
-                UseTls = true
-            };
-
-            return this;
-        }
-
         public IMqttClientOptions Build()
         {
-            if (_tlsOptions != null)
+            if (_tcpOptions == null && _webSocketOptions == null)
             {
-                if (_tcpOptions == null && _webSocketOptions == null)
+                throw new InvalidOperationException("A channel must be set.");
+            }
+
+            if (_tlsParameters != null)
+            {
+                if (_tlsParameters?.UseTls == true)
                 {
-                    throw new InvalidOperationException("A channel (TCP or WebSocket) must be set if TLS is configured.");
+                    var tlsOptions = new MqttClientTlsOptions
+                    {
+                        UseTls = true,
+                        SslProtocol = _tlsParameters.SslProtocol,
+                        AllowUntrustedCertificates = _tlsParameters.AllowUntrustedCertificates,
+                        Certificates = _tlsParameters.Certificates?.Select(c => c.ToArray()).ToList(),
+                        CertificateValidationCallback = _tlsParameters.CertificateValidationCallback,
+                        IgnoreCertificateChainErrors = _tlsParameters.IgnoreCertificateChainErrors,
+                        IgnoreCertificateRevocationErrors = _tlsParameters.IgnoreCertificateRevocationErrors
+                    };
+
+                    if (_tcpOptions != null)
+                    {
+                        _tcpOptions.TlsOptions = tlsOptions;
+                    }
+                    else if (_webSocketOptions != null)
+                    {
+                        _webSocketOptions.TlsOptions = tlsOptions;
+                    }
+                }
+            }
+
+            if (_proxyOptions != null)
+            {
+                if (_webSocketOptions == null)
+                {
+                    throw new InvalidOperationException("Proxies are only supported for WebSocket connections.");
                 }
 
-                if (_tcpOptions != null)
-                {
-                    _tcpOptions.TlsOptions = _tlsOptions;
-                }
-                else if (_webSocketOptions != null)
-                {
-                    _webSocketOptions.TlsOptions = _tlsOptions;
-                }
+                _webSocketOptions.ProxyOptions = _proxyOptions;
             }
 
             _options.ChannelOptions = (IMqttClientChannelOptions)_tcpOptions ?? _webSocketOptions;

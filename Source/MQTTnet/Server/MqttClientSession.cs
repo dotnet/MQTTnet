@@ -67,13 +67,13 @@ namespace MQTTnet.Server
             status.LastNonKeepAlivePacketReceived = _keepAliveMonitor.LastNonKeepAlivePacketReceived;
         }
 
-        public Task<bool> RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        public Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
             _workerTask = RunInternalAsync(connectPacket, adapter);
             return _workerTask;
         }
 
-        private async Task<bool> RunInternalAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        private async Task RunInternalAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
             if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
@@ -138,8 +138,6 @@ namespace MQTTnet.Server
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
             }
-
-            return _wasCleanDisconnect;
         }
 
         private async Task Cleanup()
@@ -199,6 +197,8 @@ namespace MQTTnet.Server
             finally
             {
                 _logger.Info("Client '{0}': Session stopped.", ClientId);
+
+                _sessionsManager.Server.OnClientDisconnected(ClientId, _wasCleanDisconnect);
             }
         }
 
@@ -447,12 +447,12 @@ namespace MQTTnet.Server
 
         private void OnAdapterReadingPacketCompleted(object sender, EventArgs e)
         {
-            _keepAliveMonitor?.Pause();
+            _keepAliveMonitor?.Resume();
         }
 
         private void OnAdapterReadingPacketStarted(object sender, EventArgs e)
         {
-            _keepAliveMonitor?.Resume();
+            _keepAliveMonitor?.Pause();
         }
     }
 }

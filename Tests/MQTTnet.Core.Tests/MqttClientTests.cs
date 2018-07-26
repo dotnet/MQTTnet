@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,13 +8,14 @@ using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
+using MQTTnet.Implementations;
+using MQTTnet.Server;
 
 namespace MQTTnet.Core.Tests
 {
     [TestClass]
     public class MqttClientTests
     {
-
         [TestMethod]
         public async Task ClientDisconnectException()
         {

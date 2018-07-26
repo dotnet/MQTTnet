@@ -14,9 +14,9 @@ namespace MQTTnet.Server
 
         private readonly IMqttClientSession _clientSession;
         private readonly IMqttNetChildLogger _logger;
-        
+
         private bool _isPaused;
-        
+
         public MqttClientKeepAliveMonitor(IMqttClientSession clientSession, IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -76,7 +76,7 @@ namespace MQTTnet.Server
                     {
                         _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientSession.ClientId);
                         _clientSession.Stop(MqttClientDisconnectType.NotClean);
-                        
+
                         return;
                     }
 
@@ -96,7 +96,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _logger.Verbose("Client {0}: Stopped checking keep alive timeout.", _clientSession.ClientId);
+                _logger.Verbose("Client '{0}': Stopped checking keep alive timeout.", _clientSession.ClientId);
             }
         }
     }

@@ -13,6 +13,10 @@ namespace MQTTnet.Client
 
         public CookieContainer CookieContainer { get; set; }
 
+#if NET452 || NET461
+        public MqttClientWebSocketProxyOptions MqttClientWebSocketProxy { get; set; } = new MqttClientWebSocketProxyOptions();
+#endif
+
         public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
 
         public override string ToString()

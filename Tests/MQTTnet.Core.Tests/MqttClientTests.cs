@@ -8,8 +8,6 @@ using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
-using MQTTnet.Implementations;
-using MQTTnet.Server;
 
 namespace MQTTnet.Core.Tests
 {
@@ -41,6 +39,7 @@ namespace MQTTnet.Core.Tests
             Assert.IsInstanceOfType(ex.InnerException, typeof(SocketException));
         }
 
+#if DEBUG
         [TestMethod]
         public async Task ClientCleanupOnAuthentificationFails()
         {
@@ -55,11 +54,11 @@ namespace MQTTnet.Core.Tests
             });
 
 
-            
+
             var fake = new TestMqttCommunicationAdapterFactory(channel);
 
             var client = new MqttClient(fake, new MqttNetLogger());
-            
+
             try
             {
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("any-server").Build());
@@ -72,5 +71,6 @@ namespace MQTTnet.Core.Tests
             Assert.IsTrue(client._packetReceiverTask == null || client._packetReceiverTask.IsCompleted, "receive loop not completed");
             Assert.IsTrue(client._keepAliveMessageSenderTask == null || client._keepAliveMessageSenderTask.IsCompleted, "keepalive loop not completed");
         }
+#endif
     }
 }

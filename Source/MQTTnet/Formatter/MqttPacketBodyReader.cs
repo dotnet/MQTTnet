@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using MQTTnet.Exceptions;
 
 namespace MQTTnet.Formatter
 {
-    public class MqttPacketBodyReader
+    public class MqttPacketBodyReader : IMqttPacketBodyReader
     {
         private readonly byte[] _buffer;
         private readonly ulong _initialOffset;
@@ -68,9 +69,9 @@ namespace MQTTnet.Formatter
             throw new MqttProtocolViolationException("Boolean values can be 0 or 1 only.");
         }
 
-        public ArraySegment<byte> ReadRemainingData()
+        public byte[] ReadRemainingData()
         {
-            return new ArraySegment<byte>(_buffer, (int)Offset, (int)(_length - Offset));
+            return new ArraySegment<byte>(_buffer, (int)Offset, (int)(_length - Offset)).ToArray();
         }
 
         public ushort ReadTwoByteInteger()
@@ -95,7 +96,12 @@ namespace MQTTnet.Formatter
             return (uint)(byte0 << 24 | byte1 << 16 | byte2 << 8 | byte3);
         }
 
-        public ArraySegment<byte> ReadWithLengthPrefix()
+        public byte[] ReadWithLengthPrefix()
+        {
+            return ReadSegmentWithLengthPrefix().ToArray();
+        }
+
+        private ArraySegment<byte> ReadSegmentWithLengthPrefix()
         {
             var length = ReadTwoByteInteger();
 
@@ -140,7 +146,7 @@ namespace MQTTnet.Formatter
 
         public string ReadStringWithLengthPrefix()
         {
-            var buffer = ReadWithLengthPrefix();
+            var buffer = ReadSegmentWithLengthPrefix();
             return Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
         }
     }

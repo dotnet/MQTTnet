@@ -2,7 +2,6 @@
 using System.Linq;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -100,7 +99,7 @@ namespace MQTTnet.Formatter.V3
             }
         }
 
-        private static MqttBasePacket DecodeUnsubAckPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeUnsubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -110,7 +109,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubCompPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubCompPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -120,7 +119,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubRelPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubRelPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -130,7 +129,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubRecPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubRecPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -140,7 +139,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubAckPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -150,7 +149,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodeUnsubscribePacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeUnsubscribePacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -167,7 +166,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubscribePacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeSubscribePacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -223,7 +222,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private MqttBasePacket DecodeConnectPacket(MqttPacketBodyReader body)
+        private MqttBasePacket DecodeConnectPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -264,7 +263,7 @@ namespace MQTTnet.Formatter.V3
                 packet.WillMessage = new MqttApplicationMessage
                 {
                     Topic = body.ReadStringWithLengthPrefix(),
-                    Payload = body.ReadWithLengthPrefix().ToArray(),
+                    Payload = body.ReadWithLengthPrefix(),
                     QualityOfServiceLevel = (MqttQualityOfServiceLevel)willQoS,
                     Retain = willRetain
                 };
@@ -284,7 +283,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubAckPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeSubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -301,7 +300,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        protected virtual MqttBasePacket DecodeConnAckPacket(MqttPacketBodyReader body)
+        protected virtual MqttBasePacket DecodeConnAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -577,7 +576,7 @@ namespace MQTTnet.Formatter.V3
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        protected static void ThrowIfBodyIsEmpty(MqttPacketBodyReader body)
+        protected static void ThrowIfBodyIsEmpty(IMqttPacketBodyReader body)
         {
             if (body == null || body.Length == 0)
             {

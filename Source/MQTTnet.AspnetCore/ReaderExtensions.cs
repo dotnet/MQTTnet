@@ -35,18 +35,22 @@ namespace MQTTnet.AspNetCore
             }
 
             var bodySlice = copy.Slice(0, bodyLength);
-            var buffer = bodySlice.GetArray();
-            packet = formatter.Decode(new ReceivedMqttPacket(fixedheader, new MqttPacketBodyReader(buffer, 0, buffer.Length), buffer.Length + 2));
+            var buffer = bodySlice.GetMemory();
+
+            var reader = new SpanBasedMqttPacketBodyReader();
+            reader.SetBuffer(buffer);
+
+            packet = formatter.Decode(new ReceivedMqttPacket(fixedheader, reader, buffer.Length + 2));
             consumed = bodySlice.End;
             observed = bodySlice.End;
             return true;
         }
 
-        private static byte[] GetArray(this in ReadOnlySequence<byte> input)
+        private static ReadOnlyMemory<byte> GetMemory(this in ReadOnlySequence<byte> input)
         {
             if (input.IsSingleSegment)
             {
-                return input.First.Span.ToArray();
+                return input.First;
             }
 
             // Should be rare
@@ -62,7 +66,7 @@ namespace MQTTnet.AspNetCore
             var index = 1;
             result = 0;
 
-            var temp = input.Slice(0, Math.Min(5, input.Length)).GetArray();
+            var temp = input.Slice(0, Math.Min(5, input.Length)).GetMemory();
 
             do
             {
@@ -70,13 +74,13 @@ namespace MQTTnet.AspNetCore
                 {
                     return false;
                 }
-                encodedByte = temp[index];
+                encodedByte = temp.Span[index];
                 index++;
 
                 value += (byte)(encodedByte & 127) * multiplier;
                 if (multiplier > 128 * 128 * 128)
                 {
-                    throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", temp.AsSpan(1, index).ToArray())}).");
+                    throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", temp.Slice(1, index).ToArray())}).");
                 }
 
                 multiplier *= 128;

@@ -82,7 +82,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }
 
-        protected override MqttBasePacket DecodeConnAckPacket(MqttPacketBodyReader body)
+        protected override MqttBasePacket DecodeConnAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 

@@ -19,7 +19,7 @@ namespace MQTTnet.Tests
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; } = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
 
         public event EventHandler ReadingPacketStarted;
-        public event EventHandler ReadingPacketCompleted;
+        public event EventHandler<MqttBasePacket> ReadingPacketCompleted;
 
         public void Dispose()
         {
@@ -92,6 +92,14 @@ namespace MQTTnet.Tests
             if (Partner == null)
             {
                 throw new InvalidOperationException("Partner is not set.");
+            }
+        }
+
+        public async Task ReceivePacketAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await ReceivePacketAsync(TimeSpan.Zero, cancellationToken);
             }
         }
     }

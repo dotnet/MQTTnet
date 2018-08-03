@@ -45,7 +45,7 @@ namespace MQTTnet.Adapter
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
         public event EventHandler ReadingPacketStarted;
-        public event EventHandler ReadingPacketCompleted;
+        public event EventHandler<MqttBasePacket> ReadingPacketCompleted;
 
         public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
@@ -154,6 +154,9 @@ namespace MQTTnet.Adapter
 
                 _logger.Verbose("RX ({0} bytes) <<< {1}", receivedMqttPacket.TotalLength, packet);
 
+
+                ReadingPacketCompleted?.Invoke(this, packet);
+
                 return packet;
             }
             catch (OperationCanceledException)
@@ -176,26 +179,24 @@ namespace MQTTnet.Adapter
         {
             var fixedHeader = await _packetReader.ReadFixedHeaderAsync(_fixedHeaderBuffer, cancellationToken).ConfigureAwait(false);
 
-            try
-            {
-                ReadingPacketStarted?.Invoke(this, EventArgs.Empty);
+            ReadingPacketStarted?.Invoke(this, EventArgs.Empty);
 
                 if (fixedHeader.RemainingLength == 0)
                 {
                     return new ReceivedMqttPacket(fixedHeader.Flags, null, 2);
                 }
 
-                var body = new byte[fixedHeader.RemainingLength];
-                var bodyOffset = 0;
-                var chunkSize = Math.Min(ReadBufferSize, fixedHeader.RemainingLength);
+            var body = new byte[fixedHeader.RemainingLength];
+            var bodyOffset = 0;
+            var chunkSize = Math.Min(ReadBufferSize, fixedHeader.RemainingLength);
 
-                do
+            do
+            {
+                var bytesLeft = body.Length - bodyOffset;
+                if (chunkSize > bytesLeft)
                 {
-                    var bytesLeft = body.Length - bodyOffset;
-                    if (chunkSize > bytesLeft)
-                    {
-                        chunkSize = bytesLeft;
-                    }
+                    chunkSize = bytesLeft;
+                }
 
 #if WINDOWS_UWP
                     var readBytes = await _channel.ReadAsync(body, bodyOffset, (int)chunkSize, cancellationToken).ConfigureAwait(false);
@@ -205,19 +206,14 @@ namespace MQTTnet.Adapter
                     var readBytes = _channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
 #endif
 
-                    cancellationToken.ThrowIfCancellationRequested();
-                    ExceptionHelper.ThrowIfGracefulSocketClose(readBytes);
+                cancellationToken.ThrowIfCancellationRequested();
+                ExceptionHelper.ThrowIfGracefulSocketClose(readBytes);
 
-                    bodyOffset += readBytes;
-                } while (bodyOffset < body.Length);
+                bodyOffset += readBytes;
+            } while (bodyOffset < body.Length);
 
-                var bodyReader = new MqttPacketBodyReader(body, 0, body.Length);
-                return new ReceivedMqttPacket(fixedHeader.Flags, bodyReader, fixedHeader.TotalLength);
-            }
-            finally
-            {
-                ReadingPacketCompleted?.Invoke(this, EventArgs.Empty);
-            }
+            var bodyReader = new MqttPacketBodyReader(body, 0, body.Length);
+            return new ReceivedMqttPacket(fixedHeader.Flags, bodyReader, fixedHeader.TotalLength);
         }
 
         public void Dispose()
@@ -263,6 +259,14 @@ namespace MQTTnet.Adapter
             }
 
             throw new MqttCommunicationException(exception);
+        }
+
+        public async Task ReceivePacketAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false); ;
+            }
         }
     }
 }

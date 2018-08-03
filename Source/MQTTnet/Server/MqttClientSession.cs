@@ -212,15 +212,7 @@ namespace MQTTnet.Server
 
                 _isCleanSession = false;
 
-                while (!cancellationTokenSource.IsCancellationRequested)
-                {
-                    var packet = await channelAdapter.ReceivePacketAsync(TimeSpan.Zero, cancellationTokenSource.Token).ConfigureAwait(false);
-                    if (packet != null)
-                    {
-                        _keepAliveMonitor.PacketReceived(packet);
-                        await ProcessReceivedPacketAsync(channelAdapter, packet, cancellationTokenSource.Token).ConfigureAwait(false);
-                    }
-                }
+                await adapter.ReceivePacketAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -439,9 +431,10 @@ namespace MQTTnet.Server
             return adapter.SendPacketAsync(response, cancellationToken);
         }
 
-        private void OnAdapterReadingPacketCompleted(object sender, EventArgs e)
+        private void OnAdapterReadingPacketCompleted(object sender, MqttBasePacket packet)
         {
             _keepAliveMonitor?.Resume();
+            ProcessReceivedPacket((IMqttChannelAdapter)sender, packet, _cancellationTokenSource.Token);
         }
 
         private void OnAdapterReadingPacketStarted(object sender, EventArgs e)

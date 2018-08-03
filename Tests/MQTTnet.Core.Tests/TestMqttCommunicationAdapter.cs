@@ -71,7 +71,9 @@ namespace MQTTnet.Tests
             {
                 try
                 {
-                    return _incomingPackets.Take(cancellationToken);
+                    var result = _incomingPackets.Take(cancellationToken);
+                    ReadingPacketCompleted?.Invoke(this, result);
+                    return result;
                 }
                 catch
                 {

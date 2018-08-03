@@ -30,7 +30,7 @@ namespace MQTTnet.AspNetCore
 
         public byte[] ReadRemainingData()
         {
-            return _buffer.ToArray();
+            return _buffer.Slice(_offset).ToArray();
         }
 
         public ushort ReadUInt16()
@@ -47,13 +47,13 @@ namespace MQTTnet.AspNetCore
             return ReadSegmentWithLengthPrefix().ToArray();
         }
 
-        private ReadOnlyMemory<byte> ReadSegmentWithLengthPrefix()
+        private ReadOnlySpan<byte> ReadSegmentWithLengthPrefix()
         {
             var length = ReadUInt16();
 
             ValidateReceiveBuffer(length);
 
-            var result = _buffer.Slice(_offset, length);
+            var result = _buffer.Slice(_offset, length).Span;
             _offset += length;
             return result;
         }
@@ -69,7 +69,7 @@ namespace MQTTnet.AspNetCore
         public unsafe string ReadStringWithLengthPrefix()
         {
             var buffer = ReadSegmentWithLengthPrefix();
-            fixed (byte* bytes = &buffer.Span.GetPinnableReference())
+            fixed (byte* bytes = &buffer.GetPinnableReference())
             {
                 var result = Encoding.UTF8.GetString(bytes, buffer.Length);
                 return result;

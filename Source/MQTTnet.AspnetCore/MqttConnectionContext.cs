@@ -47,6 +47,7 @@ namespace MQTTnet.AspNetCore
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             var input = Connection.Transport.Input;
+            var reader = new SpanBasedMqttPacketBodyReader();
 
             try
             {

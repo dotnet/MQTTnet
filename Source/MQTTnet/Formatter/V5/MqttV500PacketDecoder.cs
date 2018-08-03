@@ -41,7 +41,7 @@ namespace MQTTnet.Formatter.V5
             }
         }
 
-        private static MqttBasePacket DecodeConnectPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeConnectPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -134,7 +134,7 @@ namespace MQTTnet.Formatter.V5
             if (packet.WillMessage != null)
             {
                 packet.WillMessage.Topic = body.ReadStringWithLengthPrefix();
-                packet.WillMessage.Payload = body.ReadWithLengthPrefix().ToArray();
+                packet.WillMessage.Payload = body.ReadWithLengthPrefix();
             }
 
             if (usernameFlag)
@@ -150,7 +150,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeConnAckPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeConnAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -239,7 +239,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeDisconnectPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeDisconnectPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -277,7 +277,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubscribePacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeSubscribePacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -327,7 +327,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubAckPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeSubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -363,7 +363,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeUnsubscribePacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeUnsubscribePacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -394,7 +394,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeUnsubAckPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeUnsubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -440,7 +440,7 @@ namespace MQTTnet.Formatter.V5
             return new MqttPingRespPacket();
         }
 
-        private static MqttBasePacket DecodePublishPacket(byte header, MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePublishPacket(byte header, IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -508,7 +508,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodePubAckPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -546,7 +546,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodePubRecPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubRecPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -584,7 +584,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodePubRelPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubRelPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -622,7 +622,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodePubCompPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubCompPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -660,7 +660,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeAuthPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeAuthPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -706,7 +706,7 @@ namespace MQTTnet.Formatter.V5
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        private static void ThrowIfBodyIsEmpty(MqttPacketBodyReader body)
+        private static void ThrowIfBodyIsEmpty(IMqttPacketBodyReader body)
         {
             if (body == null || body.Length == 0)
             {

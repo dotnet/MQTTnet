@@ -2,7 +2,6 @@
 using System.Linq;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -100,7 +99,7 @@ namespace MQTTnet.Formatter.V3
             }
         }
 
-        private static MqttBasePacket DecodeUnsubAck(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeUnsubAck(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -110,7 +109,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubComp(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubComp(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -120,7 +119,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubRel(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubRel(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -130,7 +129,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubRec(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubRec(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -140,7 +139,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubAck(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubAck(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -150,7 +149,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodeUnsubscribe(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeUnsubscribe(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -167,7 +166,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubscribe(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeSubscribe(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -211,7 +210,7 @@ namespace MQTTnet.Formatter.V3
                 PacketIdentifier = packetIdentifier,
                 Retain = retain,
                 Topic = topic,
-                Payload = receivedMqttPacket.Body.ReadRemainingData().ToArray(),
+                Payload = receivedMqttPacket.Body.ReadRemainingData(),
                 QualityOfServiceLevel = qualityOfServiceLevel,
                 Dup = dup
             };
@@ -219,7 +218,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private MqttBasePacket DecodeConnectPacket(MqttPacketBodyReader body)
+        protected virtual MqttBasePacket DecodeConnectPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -251,7 +250,7 @@ namespace MQTTnet.Formatter.V3
                 packet.WillMessage = new MqttApplicationMessage
                 {
                     Topic = body.ReadStringWithLengthPrefix(),
-                    Payload = body.ReadWithLengthPrefix().ToArray(),
+                    Payload = body.ReadWithLengthPrefix(),
                     QualityOfServiceLevel = (MqttQualityOfServiceLevel)willQoS,
                     Retain = willRetain
                 };
@@ -271,7 +270,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubAck(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeSubAck(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -288,7 +287,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        protected virtual MqttBasePacket DecodeConnAckPacket(MqttPacketBodyReader body)
+        protected virtual MqttBasePacket DecodeConnAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -564,7 +563,7 @@ namespace MQTTnet.Formatter.V3
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        protected static void ThrowIfBodyIsEmpty(MqttPacketBodyReader body)
+        protected static void ThrowIfBodyIsEmpty(IMqttPacketBodyReader body)
         {
             if (body == null || body.Length == 0)
             {

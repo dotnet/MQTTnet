@@ -3,6 +3,7 @@
     public enum MqttPendingMessagesOverflowStrategy
     {
         DropOldestQueuedMessage,
-        DropNewMessage
+        DropNewMessage,
+        Block
     }
 }

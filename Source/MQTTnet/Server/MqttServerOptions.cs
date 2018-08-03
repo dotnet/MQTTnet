@@ -11,6 +11,9 @@ namespace MQTTnet.Server
         public bool EnablePersistentSessions { get; set; }
 
         public int MaxPendingMessagesPerClient { get; set; } = 250;
+
+        public int MaxPendingMessagesOnServer { get; set; } = 100_000;
+
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage;
 
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(15);

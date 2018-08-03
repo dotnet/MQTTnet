@@ -11,35 +11,20 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientPendingPacketsQueue : IDisposable
+    public class MqttClientPendingPacketsQueue : AsyncQueue<MqttBasePacket>
     {
-        private readonly Queue<MqttBasePacket> _queue = new Queue<MqttBasePacket>();
-        private readonly AsyncAutoResetEvent _queueAutoResetEvent = new AsyncAutoResetEvent();
-
-        private readonly IMqttServerOptions _options;
         private readonly MqttClientSession _clientSession;
         private readonly IMqttNetChildLogger _logger;
 
         public MqttClientPendingPacketsQueue(IMqttServerOptions options, MqttClientSession clientSession, IMqttNetChildLogger logger)
+            : base(options.MaxPendingMessagesPerClient, options.PendingMessagesOverflowStrategy)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _options = options ?? throw new ArgumentNullException(nameof(options));
             _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));
 
             _logger = logger.CreateChildLogger(nameof(MqttClientPendingPacketsQueue));
         }
-
-        public int Count
-        {
-            get
-            {
-                lock (_queue)
-                {
-                    return _queue.Count;
-                }
-            }
-        }
-
+        
         public void Start(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
@@ -52,43 +37,14 @@ namespace MQTTnet.Server
             Task.Run(() => SendQueuedPacketsAsync(adapter, cancellationToken), cancellationToken);
         }
 
-        public void Enqueue(MqttBasePacket packet)
+        protected override bool TryEnqueue(MqttBasePacket packet)
         {
-            if (packet == null) throw new ArgumentNullException(nameof(packet));
-
-            lock (_queue)
+            var didEnqueue = base.TryEnqueue(packet);
+            if (didEnqueue)
             {
-                if (_queue.Count >= _options.MaxPendingMessagesPerClient)
-                {
-                    if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
-                    {
-                        return;
-                    }
-
-                    if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
-                    {
-                        _queue.Dequeue();
-                    }
-                }
-                
-                _queue.Enqueue(packet);
+                _logger.Verbose("Enqueued packet (ClientId: {0}).", _clientSession.ClientId);
             }
-
-            _queueAutoResetEvent.Set();
-
-            _logger.Verbose("Enqueued packet (ClientId: {0}).", _clientSession.ClientId);
-        }
-
-        public void Clear()
-        {
-            lock (_queue)
-            {
-                _queue.Clear();
-            }
-        }
-
-        public void Dispose()
-        {
+            return didEnqueue;
         }
 
         private async Task SendQueuedPacketsAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
@@ -114,21 +70,12 @@ namespace MQTTnet.Server
             MqttBasePacket packet = null;
             try
             {
-                lock (_queue)
+                if (!TryDequeue(out packet))
                 {
-                    if (_queue.Count > 0)
-                    {
-                        packet = _queue.Dequeue();
-                    }
+                    packet = await DequeueAsync(cancellationToken).ConfigureAwait(false);
                 }
 
-                if (packet == null)
-                {
-                    await _queueAutoResetEvent.WaitOneAsync(cancellationToken).ConfigureAwait(false);
-                    return;
-                }
-
-                if (cancellationToken.IsCancellationRequested)
+                if (packet == null || cancellationToken.IsCancellationRequested)
                 {
                     return;
                 }

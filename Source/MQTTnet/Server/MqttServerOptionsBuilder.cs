@@ -20,6 +20,18 @@ namespace MQTTnet.Server
             return this;
         }
 
+        public MqttServerOptionsBuilder WithMaxPendingMessagesOnServer(int value)
+        {
+            _options.MaxPendingMessagesOnServer = value;
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithPendingMessagesOverflowStrategy(MqttPendingMessagesOverflowStrategy value)
+        {
+            _options.PendingMessagesOverflowStrategy = value;
+            return this;
+        }
+
         public MqttServerOptionsBuilder WithDefaultCommunicationTimeout(TimeSpan value)
         {
             _options.DefaultCommunicationTimeout = value;

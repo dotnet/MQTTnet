@@ -66,7 +66,7 @@ namespace MQTTnet.AspNetCore
             var index = 1;
             result = 0;
 
-            var temp = input.Slice(0, Math.Min(5, input.Length)).GetMemory();
+            var temp = input.Slice(0, Math.Min(5, input.Length)).GetMemory().Span;
 
             do
             {
@@ -74,7 +74,7 @@ namespace MQTTnet.AspNetCore
                 {
                     return false;
                 }
-                encodedByte = temp.Span[index];
+                encodedByte = temp[index];
                 index++;
 
                 value += (byte)(encodedByte & 127) * multiplier;

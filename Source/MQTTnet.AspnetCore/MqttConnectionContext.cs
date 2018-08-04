@@ -105,13 +105,15 @@ namespace MQTTnet.AspNetCore
 
         public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            var buffer = PacketFormatterAdapter.Encode(packet).AsMemory();
+            var msg = PacketFormatterAdapter.Encode(packet).AsMemory();
             var output = Connection.Transport.Output;
 
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                await output.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+                msg.CopyTo(output.GetMemory(msg.Length));
+                output.Advance(msg.Length);
+                await output.FlushAsync().ConfigureAwait(false);
             }
             finally
             {

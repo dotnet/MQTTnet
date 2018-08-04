@@ -528,7 +528,12 @@ namespace MQTTnet.Tests
             Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(data)));
         }
 
-        private static void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
+        protected virtual IPacketBodyReader ReaderFactory(byte[] data)
+        {
+            return new MqttPacketBodyReader(data, 0, data.Length);
+        }
+
+        private void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
             IMqttPacketFormatter serializer;
             if (protocolVersion == MqttProtocolVersion.V311)

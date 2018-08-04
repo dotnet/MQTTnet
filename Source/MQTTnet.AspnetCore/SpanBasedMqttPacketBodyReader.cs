@@ -24,7 +24,6 @@ namespace MQTTnet.AspNetCore
 
         public byte ReadByte()
         {
-            ValidateReceiveBuffer(1);
             return _buffer.Span[_offset++];
         }
 
@@ -35,9 +34,7 @@ namespace MQTTnet.AspNetCore
 
         public ushort ReadUInt16()
         {
-            ValidateReceiveBuffer(2);
-
-            var result = BinaryPrimitives.ReadUInt16BigEndian(_buffer.Span);
+            var result = BinaryPrimitives.ReadUInt16BigEndian(_buffer.Span.Slice(_offset));
             _offset += 2;
             return result;
         }
@@ -49,23 +46,14 @@ namespace MQTTnet.AspNetCore
 
         private ReadOnlySpan<byte> ReadSegmentWithLengthPrefix()
         {
-            var length = ReadUInt16();
+            var span = _buffer.Span;
+            var length = BinaryPrimitives.ReadUInt16BigEndian(span.Slice(_offset));
 
-            ValidateReceiveBuffer(length);
-
-            var result = _buffer.Slice(_offset, length).Span;
-            _offset += length;
+            var result = span.Slice(_offset+2, length);
+            _offset += 2 + length;
             return result;
         }
-
-        private void ValidateReceiveBuffer(ushort length)
-        {
-            if (_buffer.Length < _offset + length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(_buffer), $"expected at least {_offset + length} bytes but there are only {_buffer.Length} bytes");
-            }
-        }
-
+        
         public unsafe string ReadStringWithLengthPrefix()
         {
             var buffer = ReadSegmentWithLengthPrefix();

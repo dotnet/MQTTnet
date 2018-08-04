@@ -306,14 +306,14 @@ namespace MQTTnet.Extensions.ManagedClient
 
             try
             {
-                if (subscriptions.Any())
-                {
-                    await _mqttClient.SubscribeAsync(subscriptions).ConfigureAwait(false);
-                }
-
                 if (unsubscriptions.Any())
                 {
                     await _mqttClient.UnsubscribeAsync(unsubscriptions).ConfigureAwait(false);
+                }
+
+                if (subscriptions.Any())
+                {
+                    await _mqttClient.SubscribeAsync(subscriptions).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

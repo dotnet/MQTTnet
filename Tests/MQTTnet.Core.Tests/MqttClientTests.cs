@@ -8,6 +8,7 @@ using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
+using MQTTnet.Packets.V3;
 
 namespace MQTTnet.Core.Tests
 {
@@ -50,7 +51,7 @@ namespace MQTTnet.Core.Tests
 
             Task.Run(async () => {
                 var connect = await channel2.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None);
-                await channel2.SendPacketAsync(new MqttConnAckPacket() { ConnectReturnCode = Protocol.MqttConnectReturnCode.ConnectionRefusedNotAuthorized }, CancellationToken.None);
+                await channel2.SendPacketAsync(new MqttV3ConnAckPacket() { ConnectReturnCode = Protocol.MqttConnectReturnCode.ConnectionRefusedNotAuthorized }, CancellationToken.None);
             });
 
 

@@ -14,7 +14,7 @@ namespace MQTTnet.Server
         void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttPublishPacket publishPacket);
         void ClearPendingApplicationMessages();
         
-        Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter);
+        Task RunAsync(MqttApplicationMessage willMessage, int keepAliveInterval, IMqttChannelAdapter adapter);
         void Stop(MqttClientDisconnectType disconnectType);
 
         Task SubscribeAsync(IList<TopicFilter> topicFilters);

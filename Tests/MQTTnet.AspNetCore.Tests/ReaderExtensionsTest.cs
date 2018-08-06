@@ -1,3 +1,4 @@
+#if NETCOREAPP
 using System.Buffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.AspNetCore;
@@ -12,7 +13,7 @@ namespace MQTTnet.AspNetCore.Tests
         [TestMethod]
         public void TestTryDeserialize()
         {
-            var serializer = new MqttPacketSerializer();
+            var serializer = new MqttV311PacketSerializer();
 
             var buffer = serializer.Serialize(new MqttPublishPacket() {Topic = "a", Payload = new byte[5]});
 
@@ -43,3 +44,4 @@ namespace MQTTnet.AspNetCore.Tests
         }
     }
 }
+#endif

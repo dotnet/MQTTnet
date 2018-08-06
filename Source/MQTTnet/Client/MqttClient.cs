@@ -9,6 +9,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
+using MQTTnet.Packets.V3;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
@@ -61,7 +62,7 @@ namespace MQTTnet.Client
                 _packetDispatcher.Reset();
 
                 _adapter = _adapterFactory.CreateClientAdapter(options, _logger);
-
+                
                 _logger.Verbose($"Trying to connect with server ({_options.ChannelOptions}).");
                 await _adapter.ConnectAsync(_options.CommunicationTimeout, _cancellationTokenSource.Token).ConfigureAwait(false);
                 _logger.Verbose("Connection with server established.");
@@ -189,9 +190,9 @@ namespace MQTTnet.Client
             _adapter?.Dispose();
         }
 
-        private async Task<MqttConnAckPacket> AuthenticateAsync(MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)
+        private async Task<MqttV3ConnAckPacket> AuthenticateAsync(MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)
         {
-            var connectPacket = new MqttConnectPacket
+            var connectPacket = new MqttV3ConnectPacket
             {
                 ClientId = _options.ClientId,
                 Username = _options.Credentials?.Username,
@@ -201,7 +202,7 @@ namespace MQTTnet.Client
                 WillMessage = willApplicationMessage
             };
 
-            var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
+            var response = await SendAndReceiveAsync<MqttV3ConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
             if (response.ConnectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
             {
                 throw new MqttConnectingFailedException(response.ConnectReturnCode);

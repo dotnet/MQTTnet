@@ -77,7 +77,7 @@ namespace MQTTnet.Core.Tests
                 throw new NotSupportedException();
             }
 
-            public Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+            public Task RunAsync(MqttApplicationMessage willMessage, int keepAlivePeriod, IMqttChannelAdapter adapter)
             {
                 throw new NotSupportedException();
             }

@@ -83,7 +83,7 @@ namespace MQTTnet.Implementations
                         _socket.LocalEndPoint,
                         _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
 
-                    var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializer(), _logger);
+                    var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketSerializerAdapter(), _logger);
                     ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }
                 catch (ObjectDisposedException)

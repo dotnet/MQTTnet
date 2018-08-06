@@ -14,6 +14,7 @@ using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
+using MQTTnet.Serializer;
 using MQTTnet.Server;
 using MqttClientConnectedEventArgs = MQTTnet.Client.MqttClientConnectedEventArgs;
 using MqttClientDisconnectedEventArgs = MQTTnet.Client.MqttClientDisconnectedEventArgs;
@@ -87,7 +88,8 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             var options = new MqttClientOptions
             {
-                ClientId = ClientId.Text
+                ClientId = ClientId.Text,
+                ProtocolVersion = MqttProtocolVersion.V500
             };
 
             if (UseTcp.IsChecked == true)

@@ -14,15 +14,13 @@ namespace MQTTnet.AspNetCore.Client
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            var serializer = new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion };
-
             switch (options.ChannelOptions)
             {
                 case MqttClientTcpOptions tcpOptions:
                     {
                         var endpoint = new DnsEndPoint(tcpOptions.Server, tcpOptions.GetPort());
                         var tcpConnection = new TcpConnection(endpoint);
-                        return new MqttConnectionContext(serializer, tcpConnection);
+                        return new MqttConnectionContext(new MqttPacketSerializerAdapter(options.ProtocolVersion), tcpConnection);
                     }
                 default:
                     {

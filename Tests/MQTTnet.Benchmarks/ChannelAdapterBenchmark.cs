@@ -26,7 +26,8 @@ namespace MQTTnet.Benchmarks
                 .Build();
 
             _packet = message.ToPublishPacket();
-            var serializer = new MqttPacketSerializer();
+            var serializer = new MqttPacketSerializerAdapter(MqttProtocolVersion.V311);
+            
             var serializedPacket = Join(serializer.Serialize(_packet));
 
             _iterations = 10000;

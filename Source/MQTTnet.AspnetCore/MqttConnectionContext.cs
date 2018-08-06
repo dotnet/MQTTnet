@@ -12,17 +12,15 @@ namespace MQTTnet.AspNetCore
 {
     public class MqttConnectionContext : IMqttChannelAdapter
     {
-        public MqttConnectionContext(
-            IMqttPacketSerializer packetSerializer,
-            ConnectionContext connection)
+        public MqttConnectionContext(MqttPacketSerializerAdapter packetSerializerAdapter, ConnectionContext connection)
         {
-            PacketSerializer = packetSerializer;
-            Connection = connection;
+            PacketSerializerAdapter = packetSerializerAdapter ?? throw new ArgumentNullException(nameof(packetSerializerAdapter));
+            Connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
         public string Endpoint => Connection.ConnectionId;
         public ConnectionContext Connection { get; }
-        public IMqttPacketSerializer PacketSerializer { get; }
+        public MqttPacketSerializerAdapter PacketSerializerAdapter { get; }
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;
 
@@ -71,7 +69,7 @@ namespace MQTTnet.AspNetCore
                     {
                         if (!buffer.IsEmpty)
                         {
-                            if (PacketSerializer.TryDeserialize(buffer, out var packet, out consumed, out observed))
+                            if (PacketSerializerAdapter.Serializer.TryDeserialize(buffer, out var packet, out consumed, out observed))
                             {
                                 return packet;
                             }
@@ -106,7 +104,7 @@ namespace MQTTnet.AspNetCore
 
         public Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            var buffer = PacketSerializer.Serialize(packet);
+            var buffer = PacketSerializerAdapter.Serialize(packet);
             return Connection.Transport.Output.WriteAsync(buffer.AsMemory(), cancellationToken).AsTask();
         }
 

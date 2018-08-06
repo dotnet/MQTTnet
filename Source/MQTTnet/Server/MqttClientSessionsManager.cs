@@ -9,6 +9,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
+using MQTTnet.Packets.V3;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
@@ -217,21 +218,18 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                if (!(firstPacket is MqttConnectPacket connectPacket))
+                if (!(firstPacket is MqttV3ConnectPacket connectPacket))
                 {
                     throw new MqttProtocolViolationException("The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
                 }
 
                 clientId = connectPacket.ClientId;
 
-                // Switch to the required protocol version before sending any response.
-                clientAdapter.PacketSerializer.ProtocolVersion = connectPacket.ProtocolVersion;
-
                 var connectReturnCode = ValidateConnection(connectPacket, clientAdapter);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
                     await clientAdapter.SendPacketAsync(
-                        new MqttConnAckPacket
+                        new MqttV3ConnAckPacket
                         {
                             ConnectReturnCode = connectReturnCode
                         },
@@ -244,7 +242,7 @@ namespace MQTTnet.Server
                 var clientSession = result.Session;
 
                 await clientAdapter.SendPacketAsync(
-                    new MqttConnAckPacket
+                    new MqttV3ConnAckPacket
                     {
                         ConnectReturnCode = connectReturnCode,
                         IsSessionPresent = result.IsExistingSession
@@ -253,7 +251,7 @@ namespace MQTTnet.Server
 
                 Server.OnClientConnected(clientId);
 
-                await clientSession.RunAsync(connectPacket, clientAdapter).ConfigureAwait(false);
+                await clientSession.RunAsync(connectPacket.WillMessage, connectPacket.KeepAlivePeriod, clientAdapter).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -271,7 +269,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private MqttConnectReturnCode ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
+        private MqttConnectReturnCode ValidateConnection(MqttV3ConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
         {
             if (_options.ConnectionValidator == null)
             {
@@ -289,7 +287,7 @@ namespace MQTTnet.Server
             return context.ReturnCode;
         }
 
-        private PrepareClientSessionResult PrepareClientSession(MqttConnectPacket connectPacket)
+        private PrepareClientSessionResult PrepareClientSession(MqttV3ConnectPacket connectPacket)
         {
             lock (_sessions)
             {

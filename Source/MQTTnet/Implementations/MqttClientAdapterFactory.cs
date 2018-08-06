@@ -11,19 +11,17 @@ namespace MQTTnet.Implementations
         public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetChildLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-
-            var serializer = new MqttPacketSerializer { ProtocolVersion = options.ProtocolVersion };
-
+            
             switch (options.ChannelOptions)
             {
                 case MqttClientTcpOptions _:
                     {
-                        return new MqttChannelAdapter(new MqttTcpChannel(options), serializer, logger);
+                        return new MqttChannelAdapter(new MqttTcpChannel(options), new MqttPacketSerializerAdapter(options.ProtocolVersion), logger);
                     }
 
                 case MqttClientWebSocketOptions webSocketOptions:
                     {
-                        return new MqttChannelAdapter(new MqttWebSocketChannel(webSocketOptions), serializer, logger);
+                        return new MqttChannelAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketSerializerAdapter(options.ProtocolVersion), logger);
                     }
 
                 default:

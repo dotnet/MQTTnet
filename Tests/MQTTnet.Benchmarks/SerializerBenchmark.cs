@@ -19,7 +19,7 @@ namespace MQTTnet.Benchmarks
     {
         private MqttBasePacket _packet;
         private ArraySegment<byte> _serializedPacket;
-        private MqttPacketSerializer _serializer;
+        private IMqttPacketSerializer _serializer;
 
         [GlobalSetup]
         public void Setup()
@@ -29,7 +29,7 @@ namespace MQTTnet.Benchmarks
                 .Build();
 
             _packet = message.ToPublishPacket();
-            _serializer = new MqttPacketSerializer();
+            _serializer = new MqttV311PacketSerializer();
             _serializedPacket = _serializer.Serialize(_packet);
         }
 

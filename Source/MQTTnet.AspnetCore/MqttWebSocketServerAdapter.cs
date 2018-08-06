@@ -27,7 +27,7 @@ namespace MQTTnet.AspNetCore
         {
             if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
 
-            var clientAdapter = new MqttChannelAdapter(new MqttWebSocketChannel(webSocket, endpoint), new MqttPacketSerializer(), new MqttNetLogger().CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
+            var clientAdapter = new MqttChannelAdapter(new MqttWebSocketChannel(webSocket, endpoint), new MqttPacketSerializerAdapter(), new MqttNetLogger().CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
             ClientAccepted?.Invoke(this, eventArgs);
@@ -37,7 +37,7 @@ namespace MQTTnet.AspNetCore
                 await eventArgs.SessionTask.ConfigureAwait(false);
             }
         }
-        
+
         public void Dispose()
         {
             StopAsync().GetAwaiter().GetResult();

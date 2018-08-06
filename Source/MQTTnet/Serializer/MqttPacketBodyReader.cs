@@ -6,6 +6,7 @@ namespace MQTTnet.Serializer
     public class MqttPacketBodyReader
     {
         private readonly byte[] _buffer;
+        private readonly int _initialOffset;
         private readonly int _length;
 
         private int _offset;
@@ -13,6 +14,7 @@ namespace MQTTnet.Serializer
         public MqttPacketBodyReader(byte[] buffer, int offset, int length)
         {
             _buffer = buffer;
+            _initialOffset = offset;
             _offset = offset;
             _length = length;
         }
@@ -20,6 +22,11 @@ namespace MQTTnet.Serializer
         public int Length => _length - _offset;
 
         public bool EndOfStream => _offset == _length;
+
+        public void Seek(int position)
+        {
+            _offset = _initialOffset + position;
+        }
 
         public byte ReadByte()
         {

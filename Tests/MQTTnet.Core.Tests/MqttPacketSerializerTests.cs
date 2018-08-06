@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
+using MQTTnet.Packets.V3;
 using MQTTnet.Protocol;
 using MQTTnet.Serializer;
 
@@ -18,7 +19,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void SerializeV310_MqttConnectPacket()
         {
-            var p = new MqttConnectPacket
+            var p = new MqttV3ConnectPacket
             {
                 ClientId = "XYZ",
                 Password = "PASS",
@@ -33,7 +34,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void SerializeV311_MqttConnectPacket()
         {
-            var p = new MqttConnectPacket
+            var p = new MqttV3ConnectPacket
             {
                 ClientId = "XYZ",
                 Password = "PASS",
@@ -48,7 +49,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void SerializeV311_MqttConnectPacketWithWillMessage()
         {
-            var p = new MqttConnectPacket
+            var p = new MqttV3ConnectPacket
             {
                 ClientId = "XYZ",
                 Password = "PASS",
@@ -70,7 +71,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void DeserializeV311_MqttConnectPacket()
         {
-            var p = new MqttConnectPacket
+            var p = new MqttV3ConnectPacket
             {
                 ClientId = "XYZ",
                 Password = "PASS",
@@ -85,7 +86,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void DeserializeV311_MqttConnectPacketWithWillMessage()
         {
-            var p = new MqttConnectPacket
+            var p = new MqttV3ConnectPacket
             {
                 ClientId = "XYZ",
                 Password = "PASS",
@@ -107,7 +108,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void SerializeV311_MqttConnAckPacket()
         {
-            var p = new MqttConnAckPacket
+            var p = new MqttV3ConnAckPacket
             {
                 IsSessionPresent = true,
                 ConnectReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized
@@ -119,7 +120,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void SerializeV310_MqttConnAckPacket()
         {
-            var p = new MqttConnAckPacket
+            var p = new MqttV3ConnAckPacket
             {
                 ConnectReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized
             };
@@ -130,7 +131,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void DeserializeV311_MqttConnAckPacket()
         {
-            var p = new MqttConnAckPacket
+            var p = new MqttV3ConnAckPacket
             {
                 IsSessionPresent = true,
                 ConnectReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized
@@ -142,7 +143,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void DeserializeV310_MqttConnAckPacket()
         {
-            var p = new MqttConnAckPacket
+            var p = new MqttV3ConnAckPacket
             {
                 ConnectReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized
             };
@@ -153,7 +154,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void Serialize_LargePacket()
         {
-            var serializer = new MqttPacketSerializer { ProtocolVersion = MqttProtocolVersion.V311 };
+            var serializer = new MqttV311PacketSerializer();
 
             const int payloadLength = 80000;
 
@@ -509,7 +510,20 @@ namespace MQTTnet.Core.Tests
 
         private static void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
-            var serializer = new MqttPacketSerializer { ProtocolVersion = protocolVersion };
+            IMqttPacketSerializer serializer;
+            if (protocolVersion == MqttProtocolVersion.V311)
+            {
+                serializer = new MqttV311PacketSerializer();
+            }
+            else if (protocolVersion == MqttProtocolVersion.V310)
+            {
+                serializer = new MqttV310PacketSerializer();
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+
             var data = serializer.Serialize(packet);
 
             Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(data)));
@@ -517,7 +531,19 @@ namespace MQTTnet.Core.Tests
 
         private static void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
-            var serializer = new MqttPacketSerializer { ProtocolVersion = protocolVersion };
+            IMqttPacketSerializer serializer;
+            if (protocolVersion == MqttProtocolVersion.V311)
+            {
+                serializer = new MqttV311PacketSerializer();
+            }
+            else if (protocolVersion == MqttProtocolVersion.V310)
+            {
+                serializer = new MqttV310PacketSerializer();
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
 
             var buffer1 = serializer.Serialize(packet);
 
@@ -541,7 +567,19 @@ namespace MQTTnet.Core.Tests
         private static T Roundtrip<T>(T packet, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
             where T : MqttBasePacket
         {
-            var serializer = new MqttPacketSerializer { ProtocolVersion = protocolVersion };
+            IMqttPacketSerializer serializer;
+            if (protocolVersion == MqttProtocolVersion.V311)
+            {
+                serializer = new MqttV311PacketSerializer();
+            }
+            else if (protocolVersion == MqttProtocolVersion.V310)
+            {
+                serializer = new MqttV310PacketSerializer();
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
 
             var buffer1 = serializer.Serialize(packet);
 

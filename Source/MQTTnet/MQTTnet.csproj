@@ -63,4 +63,8 @@
   <ItemGroup Condition="'$(TargetFramework)'=='net461'">
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Packets\V5\" />
+  </ItemGroup>
+
 </Project>

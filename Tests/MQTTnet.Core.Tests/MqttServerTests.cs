@@ -171,14 +171,14 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public async Task MqttServer_Publish_MultipleClients()
         {
-            var serverAdapter = new MqttTcpServerAdapter(new MqttNetLogger().CreateChildLogger());
-            var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
+            var s = new MqttFactory().CreateMqttServer();
             var receivedMessagesCount = 0;
             var locked = new object();
 
             var clientOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer("localhost")
                 .Build();
+
             var clientOptions2 = new MqttClientOptionsBuilder()
                 .WithTcpServer("localhost")
                 .Build();

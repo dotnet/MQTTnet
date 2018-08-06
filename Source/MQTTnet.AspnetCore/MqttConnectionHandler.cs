@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace MQTTnet.AspNetCore
 {
     public class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
-    {        
+    {
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
 
         public override async Task OnConnectedAsync(ConnectionContext connection)
@@ -21,9 +21,7 @@ namespace MQTTnet.AspNetCore
                 transferFormatFeature.ActiveFormat = TransferFormat.Binary;
             }
 
-
-            var serializer = new MqttPacketSerializer();
-            using (var adapter = new MqttConnectionContext(serializer, connection))
+            using (var adapter = new MqttConnectionContext(new MqttPacketSerializerAdapter(), connection))
             {
                 var args = new MqttServerAdapterClientAcceptedEventArgs(adapter);
                 ClientAccepted?.Invoke(this, args);
@@ -41,7 +39,7 @@ namespace MQTTnet.AspNetCore
         {
             return Task.CompletedTask;
         }
-        
+
         public void Dispose()
         {
         }

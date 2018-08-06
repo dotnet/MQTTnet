@@ -100,10 +100,10 @@ namespace MQTTnet.Serializer
             Length = 5;
         }
 
-        public void Seek(int offset)
+        public void Seek(int position)
         {
-            EnsureCapacity(offset);
-            _position = offset;
+            EnsureCapacity(position);
+            _position = position;
         }
 
         public byte[] GetBuffer()

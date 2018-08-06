@@ -22,26 +22,25 @@ namespace MQTTnet.Adapter
 
         private readonly IMqttNetChildLogger _logger;
         private readonly IMqttChannel _channel;
-
+        
         private readonly byte[] _fixedHeaderBuffer = new byte[2];
-
         private readonly byte[] _singleByteBuffer = new byte[1];
 
         private bool _isDisposed;
 
-        public MqttChannelAdapter(IMqttChannel channel, IMqttPacketSerializer serializer, IMqttNetChildLogger logger)
+        public MqttChannelAdapter(IMqttChannel channel, MqttPacketSerializerAdapter packetSerializerAdapter, IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
-            PacketSerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-
+            PacketSerializerAdapter = packetSerializerAdapter ?? throw new ArgumentNullException(nameof(packetSerializerAdapter));
+            
             _logger = logger.CreateChildLogger(nameof(MqttChannelAdapter));
         }
 
         public string Endpoint => _channel.Endpoint;
 
-        public IMqttPacketSerializer PacketSerializer { get; }
+        public MqttPacketSerializerAdapter PacketSerializerAdapter { get; }
 
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;
@@ -91,15 +90,15 @@ namespace MQTTnet.Adapter
                 WrapException(exception);
             }
         }
-
+        
         public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                var packetData = PacketSerializer.Serialize(packet);
+                var packetData = PacketSerializerAdapter.Serialize(packet);
                 await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
-                PacketSerializer.FreeBuffer();
+                PacketSerializerAdapter.FreeBuffer();
 
                 _logger.Verbose("TX >>> {0}", packet);
             }
@@ -140,7 +139,12 @@ namespace MQTTnet.Adapter
                     return null;
                 }
 
-                var packet = PacketSerializer.Deserialize(receivedMqttPacket);
+                if (!PacketSerializerAdapter.ProtocolVersion.HasValue)
+                {
+                    PacketSerializerAdapter.DetectProtocolVersion(receivedMqttPacket);
+                }
+
+                var packet = PacketSerializerAdapter.Deserialize(receivedMqttPacket);
                 if (packet == null)
                 {
                     throw new MqttProtocolViolationException("Received malformed packet.");

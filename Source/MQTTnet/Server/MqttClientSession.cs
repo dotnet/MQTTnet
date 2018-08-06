@@ -61,21 +61,20 @@ namespace MQTTnet.Server
             status.ClientId = ClientId;
             status.IsConnected = _adapter != null;
             status.Endpoint = _adapter?.Endpoint;
-            status.ProtocolVersion = _adapter?.PacketSerializer?.ProtocolVersion;
+            status.ProtocolVersion = _adapter?.PacketSerializerAdapter?.ProtocolVersion;
             status.PendingApplicationMessagesCount = _pendingPacketsQueue.Count;
             status.LastPacketReceived = _keepAliveMonitor.LastPacketReceived;
             status.LastNonKeepAlivePacketReceived = _keepAliveMonitor.LastNonKeepAlivePacketReceived;
         }
 
-        public Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        public Task RunAsync(MqttApplicationMessage willMessage, int keepAlivePeriod, IMqttChannelAdapter adapter)
         {
-            _workerTask = RunInternalAsync(connectPacket, adapter);
+            _workerTask = RunInternalAsync(willMessage, keepAlivePeriod, adapter);
             return _workerTask;
         }
 
-        private async Task RunInternalAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        private async Task RunInternalAsync(MqttApplicationMessage willMessage, int keepAlivePeriod, IMqttChannelAdapter adapter)
         {
-            if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 
             try
@@ -94,10 +93,10 @@ namespace MQTTnet.Server
                 //endworkaround
 
                 _wasCleanDisconnect = false;
-                _willMessage = connectPacket.WillMessage;
+                _willMessage = willMessage;
 
                 _pendingPacketsQueue.Start(adapter, _cancellationTokenSource.Token);
-                _keepAliveMonitor.Start(connectPacket.KeepAlivePeriod, _cancellationTokenSource.Token);
+                _keepAliveMonitor.Start(keepAlivePeriod, _cancellationTokenSource.Token);
 
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {

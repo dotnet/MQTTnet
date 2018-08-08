@@ -57,11 +57,17 @@ namespace MQTTnet.AspNetCore
         public unsafe string ReadStringWithLengthPrefix()
         {
             var buffer = ReadSegmentWithLengthPrefix();
+
+#if NETCOREAPP2_1
+            return Encoding.UTF8.GetString(buffer);
+#else
+
             fixed (byte* bytes = &buffer.GetPinnableReference())
             {
                 var result = Encoding.UTF8.GetString(bytes, buffer.Length);
                 return result;
             }
+#endif
         }
 
         public ushort ReadTwoByteInteger()

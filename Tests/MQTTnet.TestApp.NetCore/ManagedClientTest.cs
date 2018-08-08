@@ -4,7 +4,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using MQTTnet.Client;
-using MQTTnet.ManagedClient;
+using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore
@@ -39,15 +39,15 @@ namespace MQTTnet.TestApp.NetCore
                     Console.WriteLine(">> RECEIVED: " + e.ApplicationMessage.Topic);
                 };
 
-                await managedClient.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("Step").WithPayload("1").Build());
-                await managedClient.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("Step").WithPayload("2").WithAtLeastOnceQoS().Build());
+                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("1"));
+                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("2").WithAtLeastOnceQoS());
 
                 await managedClient.StartAsync(options);
 
                 await managedClient.SubscribeAsync(new TopicFilter("xyz", MqttQualityOfServiceLevel.AtMostOnce));
                 await managedClient.SubscribeAsync(new TopicFilter("abc", MqttQualityOfServiceLevel.AtMostOnce));
                 
-                await managedClient.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("Step").WithPayload("3").Build());
+                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("3"));
 
                 Console.WriteLine("Managed client started.");
                 Console.ReadLine();
@@ -76,23 +76,23 @@ namespace MQTTnet.TestApp.NetCore
         {
             private const string Filename = @"RetainedMessages.json";
 
-            public Task SaveQueuedMessagesAsync(IList<MqttApplicationMessage> messages)
+            public Task SaveQueuedMessagesAsync(IList<ManagedMqttApplicationMessage> messages)
             {
                 File.WriteAllText(Filename, JsonConvert.SerializeObject(messages));
                 return Task.FromResult(0);
             }
 
-            public Task<IList<MqttApplicationMessage>> LoadQueuedMessagesAsync()
+            public Task<IList<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync()
             {
-                IList<MqttApplicationMessage> retainedMessages;
+                IList<ManagedMqttApplicationMessage> retainedMessages;
                 if (File.Exists(Filename))
                 {
                     var json = File.ReadAllText(Filename);
-                    retainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(json);
+                    retainedMessages = JsonConvert.DeserializeObject<List<ManagedMqttApplicationMessage>>(json);
                 }
                 else
                 {
-                    retainedMessages = new List<MqttApplicationMessage>();
+                    retainedMessages = new List<ManagedMqttApplicationMessage>();
                 }
 
                 return Task.FromResult(retainedMessages);

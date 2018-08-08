@@ -13,7 +13,7 @@ namespace MQTTnet.Core.Tests
             _adapter = adapter;
         }
         
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetChildLogger logger)
         {
             return _adapter;
         }

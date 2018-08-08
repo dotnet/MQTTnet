@@ -11,7 +11,7 @@
     <AssemblyName>MQTTnet.TestApp.UniversalWindows</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.16299.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.17134.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.16299.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
@@ -127,21 +127,25 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Extensions\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj">
+    <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj">
+      <Project>{C400533A-8EBA-4F0B-BF4D-295C3708604B}</Project>
+      <Name>MQTTnet.Extensions.ManagedClient</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj">
       <Project>{c444e9c8-95fa-430e-9126-274129de16cd}</Project>
       <Name>MQTTnet.Extensions.Rpc</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Frameworks\MQTTnet.Netstandard\MQTTnet.NetStandard.csproj">
+    <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj">
       <Project>{3587e506-55a2-4eb3-99c7-dc01e42d25d2}</Project>
-      <Name>MQTTnet.NetStandard</Name>
+      <Name>MQTTnet</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>6.0.8</Version>
+      <Version>6.1.5</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Toolkit.Uwp.UI.Controls">
-      <Version>2.2.0</Version>
+      <Version>3.0.0</Version>
     </PackageReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

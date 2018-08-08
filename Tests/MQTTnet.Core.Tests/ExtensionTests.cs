@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 
 namespace MQTTnet.Core.Tests
 {
@@ -14,20 +14,20 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public async Task TimeoutAfter()
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(500)).TimeoutAfter(TimeSpan.FromMilliseconds(100));
+            await MQTTnet.Internal.TaskExtensions.TimeoutAfterAsync(ct => Task.Delay(TimeSpan.FromMilliseconds(500), ct), TimeSpan.FromMilliseconds(100), CancellationToken.None);
         }
 
         [ExpectedException(typeof(MqttCommunicationTimedOutException))]
         [TestMethod]
         public async Task TimeoutAfterWithResult()
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(500)).ContinueWith(t => 5).TimeoutAfter(TimeSpan.FromMilliseconds(100));
+            await MQTTnet.Internal.TaskExtensions.TimeoutAfterAsync(ct => Task.Delay(TimeSpan.FromMilliseconds(500), ct).ContinueWith(t => 5, ct), TimeSpan.FromMilliseconds(100), CancellationToken.None);
         }
 
         [TestMethod]
         public async Task TimeoutAfterCompleteInTime()
         {
-            var result = await Task.Delay(TimeSpan.FromMilliseconds(100)).ContinueWith(t => 5).TimeoutAfter(TimeSpan.FromMilliseconds(500));
+            var result = await MQTTnet.Internal.TaskExtensions.TimeoutAfterAsync(ct => Task.Delay(TimeSpan.FromMilliseconds(100), ct).ContinueWith(t => 5, ct), TimeSpan.FromMilliseconds(500), CancellationToken.None);
             Assert.AreEqual(5, result);
         }
 
@@ -36,17 +36,17 @@ namespace MQTTnet.Core.Tests
         {
             try
             {
-                await Task.Run(() =>
+                await MQTTnet.Internal.TaskExtensions.TimeoutAfterAsync(ct => Task.Run(() =>
                 {
                     var iis = new int[0];
                     iis[1] = 0;
-                }).TimeoutAfter(TimeSpan.FromSeconds(1));
+                }, ct), TimeSpan.FromSeconds(1), CancellationToken.None);
 
                 Assert.Fail();
             }
-            catch (MqttCommunicationException e)
+            catch (Exception e)
             {
-                Assert.IsTrue(e.InnerException is IndexOutOfRangeException);
+                Assert.IsTrue(e is IndexOutOfRangeException);
             }
         }
 
@@ -55,17 +55,18 @@ namespace MQTTnet.Core.Tests
         {
             try
             {
-                await Task.Run(() =>
+                await MQTTnet.Internal.TaskExtensions.TimeoutAfterAsync(ct => Task.Run(() =>
                 {
                     var iis = new int[0];
-                    return iis[1];
-                }).TimeoutAfter(TimeSpan.FromSeconds(1));
+                    iis[1] = 0;
+                    return iis[0];
+                }, ct), TimeSpan.FromSeconds(1), CancellationToken.None);
 
                 Assert.Fail();
             }
-            catch (MqttCommunicationException e)
+            catch (Exception e)
             {
-                Assert.IsTrue(e.InnerException is IndexOutOfRangeException);
+                Assert.IsTrue(e is IndexOutOfRangeException);
             }
         }
 
@@ -73,7 +74,10 @@ namespace MQTTnet.Core.Tests
         public async Task TimeoutAfterMemoryUsage()
         {
             var tasks = Enumerable.Range(0, 100000)
-                .Select(i => Task.Delay(TimeSpan.FromMilliseconds(1)).TimeoutAfter(TimeSpan.FromMinutes(1)));
+                .Select(i =>
+                {
+                    return MQTTnet.Internal.TaskExtensions.TimeoutAfterAsync(ct => Task.Delay(TimeSpan.FromMilliseconds(1), ct), TimeSpan.FromMinutes(1), CancellationToken.None);
+                });
 
             await Task.WhenAll(tasks);
             AssertIsLess(3_000_000, GC.GetTotalMemory(true));

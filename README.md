@@ -5,6 +5,8 @@
 [![NuGet Badge](https://buildstats.info/nuget/MQTTnet)](https://www.nuget.org/packages/MQTTnet)
 [![Build status](https://ci.appveyor.com/api/projects/status/ycit86voxfevm2aa/branch/master?svg=true)](https://ci.appveyor.com/project/chkr1011/mqttnet/branch/develop)
 [![BCH compliance](https://bettercodehub.com/edge/badge/chkr1011/MQTTnet?branch=master)](https://bettercodehub.com/)
+[![OpenCollective](https://opencollective.com/mqttnet/backers/badge.svg)](https://opencollective.com/mqttnet) 
+[![OpenCollective](https://opencollective.com/mqttnet/sponsors/badge.svg)](https://opencollective.com/mqttnet)
 
 # MQTTnet
 
@@ -18,10 +20,10 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * TLS 1.2 support for client and server (but not UWP servers)
 * Extensible communication channels (i.e. In-Memory, TCP, TCP+TLS, WS)
 * Lightweight (only the low level implementation of MQTT, no overhead)
-* Performance optimized (processing ~40.000 messages / second)*
+* Performance optimized (processing ~70.000 messages / second)*
 * Interfaces included for mocking and testing
 * Access to internal trace messages
-* Unit tested (70+ tests)
+* Unit tested (~90 tests)
 
 \* Tested on local machine (Intel i7 8700K) with MQTTnet client and server running in the same process using the TCP channel. The app for verification is part of this repository and stored in _/Tests/MQTTnet.TestApp.NetCore_.
 
@@ -50,14 +52,15 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * .NET Standard 1.3+
 * .NET Core 1.1+
 * .NET Core App 1.1+
-* Universal Windows Platform (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU, Windows 10 IoT Core)
 * .NET Framework 4.5.2+ (x86, x64, AnyCPU)
 * Mono 5.2+
+* Universal Windows Platform (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU, Windows 10 IoT Core)
 * Xamarin.Android 7.5+
 * Xamarin.iOS 10.14+
 
 ## Supported MQTT versions
 
+* 5.0.0 (planned)
 * 3.1.1
 * 3.1.0
 
@@ -72,6 +75,9 @@ Please find examples and the documentation at the Wiki of this repository (<http
 ## Contributions
 
 If you want to contribute to this project just create a pull request. But only pull requests which are matching the code style of this library will be accepted. Before creating a pull request please have a look at the library to get an overview of the required style.
+Also additions and updates in the Wiki are welcome.
+
+This project also listed at Open Collective (https://opencollective.com/mqttnet).
 
 ## References
 
@@ -79,14 +85,13 @@ This library is used in the following projects:
 
 * MQTT Client Rx (Wrapper for Reactive Extensions, <https://github.com/1iveowl/MQTTClient.rx>)
 * MQTT Tester (MQTT client test app for [Android](https://play.google.com/store/apps/details?id=com.liveowl.mqtttester) and [iOS](https://itunes.apple.com/us/app/mqtt-tester/id1278621826?mt=8))
-* Wirehome (Open Source Home Automation system for .NET, <https://github.com/chkr1011/Wirehome>)
-
+* HA4IoT (Open Source Home Automation system for .NET, <https://github.com/chkr1011/HA4IoT>)
 
 If you use this library and want to see your project here please let me know.
 
 ## MIT License
 
-Copyright (c) 2017 Christian Kratky
+Copyright (c) 2017-2018 Christian Kratky
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>MQTTnet.Extensions.ManagedClient</id>
+    <version>0.0.0</version>
+    <authors>Christian Kratky</authors>
+    <owners>Christian Kratky</owners>
+    <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>This is an extension library which provides a managed MQTT client with additional features using MQTTnet.</description>
+    <releaseNotes>* Updated to MQTTnet 2.8.1.
+* For more release notes please check the MQTTnet release notes.
+    </releaseNotes>
+    <copyright>Copyright Christian Kratky 2016-2018</copyright>
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
+    <dependencies>
+      <dependency id="MQTTnet" version="2.8.1" />
+    </dependencies>
+  </metadata>
+
+  <files>
+    <!-- .NET Standard 1.3 -->
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard1.3\MQTTnet.Extensions.ManagedClient.*" target="lib\netstandard1.3\"/>
+
+    <!-- .NET Standard 2.0 -->
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\netstandard2.0\"/>
+
+    <!-- Universal Windows -->
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\uap10.0\MQTTnet.Extensions.ManagedClient.*" target="lib\uap10.0\"/>
+
+    <!-- .NET Framework -->
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\net452\MQTTnet.Extensions.ManagedClient.*" target="lib\net452\"/>
+
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\net461\"/>
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\net472\"/>
+  </files>
+</package>

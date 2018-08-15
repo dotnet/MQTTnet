@@ -8,6 +8,8 @@ namespace MQTTnet.Server
     {
         IMqttServer CreateMqttServer();
 
+        IMqttServer CreateMqttServer(IMqttNetLogger logger);
+
         IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger);
     }
 }

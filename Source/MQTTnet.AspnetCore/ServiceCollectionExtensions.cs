@@ -20,14 +20,27 @@ namespace MQTTnet.AspNetCore
 
             return services;
         }
-        
+
         public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<MqttServerOptionsBuilder> configure)
         {
-            var builder = new MqttServerOptionsBuilder();
+            services.AddSingleton<IMqttServerOptions>(s => {
+                var builder = new MqttServerOptionsBuilder();
+                configure(builder);
+                return builder.Build();
+            });
 
-            configure(builder);
-            
-            services.AddSingleton<IMqttServerOptions>(builder.Build());
+            services.AddHostedMqttServer();
+
+            return services;
+        }
+
+        public static IServiceCollection AddHostedMqttServerWithServices(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configure)
+        {
+            services.AddSingleton<IMqttServerOptions>(s => {
+                var builder = new AspNetMqttServerOptionsBuilder(s);
+                configure(builder);
+                return builder.Build();
+            });
 
             services.AddHostedMqttServer();
 

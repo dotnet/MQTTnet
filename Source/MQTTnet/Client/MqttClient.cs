@@ -176,10 +176,12 @@ namespace MQTTnet.Client
 
         public void Dispose()
         {
+			_cancellationTokenSource?.Cancel ();
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
 
             _adapter?.Dispose();
+			_adapter = null;
         }
 
         private async Task<MqttConnAckPacket> AuthenticateAsync(MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)
@@ -238,10 +240,7 @@ namespace MQTTnet.Client
             }
             finally
             {
-                _adapter?.Dispose();
-                _adapter = null;
-                _cancellationTokenSource?.Dispose();
-                _cancellationTokenSource = null;
+				Dispose ();
                 _cleanDisconnectInitiated = false;
 
                 _logger.Info("Disconnected.");
@@ -384,6 +383,7 @@ namespace MQTTnet.Client
 
                 if (exception is OperationCanceledException)
                 {
+					_logger.Info ("MQTT OperationCanceled exception while receiving packets.");
                 }
                 else if (exception is MqttCommunicationException)
                 {

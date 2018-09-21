@@ -383,7 +383,7 @@ namespace MQTTnet.Client
 
                 if (exception is OperationCanceledException)
                 {
-					_logger.Info ("MQTT OperationCanceled exception while receiving packets.");
+                    _logger.Verbose ("MQTT OperationCanceled exception while receiving packets.");
                 }
                 else if (exception is MqttCommunicationException)
                 {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Authentication;
 
 namespace MQTTnet.Client
 {
@@ -16,6 +17,8 @@ namespace MQTTnet.Client
         public bool AllowUntrustedCertificates { get; set; }
 
         public List<byte[]> Certificates { get; set; }
+
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
 
         public Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> CertificateValidationCallback { get; set; }
     }

@@ -29,6 +29,8 @@ namespace MQTTnet.Server
         private MqttApplicationMessage _willMessage;
         private bool _wasCleanDisconnect;
         private IMqttChannelAdapter _adapter;
+        private Task _workerTask;
+        private IDisposable _cleanupHandle;
 
         public MqttClientSession(
             string clientId,
@@ -65,7 +67,13 @@ namespace MQTTnet.Server
             status.LastNonKeepAlivePacketReceived = _keepAliveMonitor.LastNonKeepAlivePacketReceived;
         }
 
-        public async Task<bool> RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        public Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        {
+            _workerTask = RunInternalAsync(connectPacket, adapter);
+            return _workerTask;
+        }
+
+        private async Task RunInternalAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
             if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
@@ -73,10 +81,18 @@ namespace MQTTnet.Server
             try
             {
                 _adapter = adapter;
+
                 adapter.ReadingPacketStarted += OnAdapterReadingPacketStarted;
                 adapter.ReadingPacketCompleted += OnAdapterReadingPacketCompleted;
 
                 _cancellationTokenSource = new CancellationTokenSource();
+
+                //woraround for https://github.com/dotnet/corefx/issues/24430
+#pragma warning disable 4014
+                _cleanupHandle = _cancellationTokenSource.Token.Register(() => CleanupAsync());
+#pragma warning restore 4014
+                //endworkaround
+
                 _wasCleanDisconnect = false;
                 _willMessage = connectPacket.WillMessage;
 
@@ -114,26 +130,55 @@ namespace MQTTnet.Server
                     _logger.Error(exception, "Client '{0}': Unhandled exception while receiving client packets.", ClientId);
                 }
 
-                Stop(MqttClientDisconnectType.NotClean);
+                Stop(MqttClientDisconnectType.NotClean, true);
             }
             finally
             {
-                if (_adapter != null)
-                {
-                    _adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
-                    _adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
-                }
+                await CleanupAsync().ConfigureAwait(false);
 
+                _cleanupHandle?.Dispose();
+                _cleanupHandle = null;
+                
                 _adapter = null;
-                _cancellationTokenSource?.Cancel ();
+                _cancellationTokenSource?.Cancel(false);
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
             }
+        }
 
-            return _wasCleanDisconnect;
+        private async Task CleanupAsync()
+        {
+            var adapter = _adapter;
+            try
+            {
+                if (adapter == null)
+                {
+                    return;
+                }
+
+                _adapter = null;
+
+                adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
+                adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
+
+                await adapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, exception.Message);
+            }
+            finally
+            {
+                adapter?.Dispose();
+            }
         }
 
         public void Stop(MqttClientDisconnectType type)
+        {
+            Stop(type, false);
+        }
+
+        private void Stop(MqttClientDisconnectType type, bool isInsideSession)
         {
             try
             {
@@ -153,10 +198,17 @@ namespace MQTTnet.Server
                 }
 
                 _willMessage = null;
+
+                if (!isInsideSession)
+                {
+                    _workerTask?.GetAwaiter().GetResult();
+                }
             }
             finally
             {
                 _logger.Info("Client '{0}': Session stopped.", ClientId);
+
+                _sessionsManager.Server.OnClientDisconnected(ClientId, _wasCleanDisconnect);
             }
         }
 
@@ -300,18 +352,18 @@ namespace MQTTnet.Server
 
             if (packet is MqttDisconnectPacket)
             {
-                Stop(MqttClientDisconnectType.Clean);
+                Stop(MqttClientDisconnectType.Clean, true);
                 return;
             }
 
             if (packet is MqttConnectPacket)
             {
-                Stop(MqttClientDisconnectType.NotClean);
+                Stop(MqttClientDisconnectType.NotClean, true);
                 return;
             }
 
             _logger.Warning(null, "Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
-            Stop(MqttClientDisconnectType.NotClean);
+            Stop(MqttClientDisconnectType.NotClean, true);
         }
 
         private void EnqueueSubscribedRetainedMessages(ICollection<TopicFilter> topicFilters)
@@ -330,7 +382,7 @@ namespace MQTTnet.Server
 
             if (subscribeResult.CloseConnection)
             {
-                Stop(MqttClientDisconnectType.NotClean);
+                Stop(MqttClientDisconnectType.NotClean, true);
                 return;
             }
 
@@ -407,12 +459,12 @@ namespace MQTTnet.Server
 
         private void OnAdapterReadingPacketCompleted(object sender, EventArgs e)
         {
-            _keepAliveMonitor?.Pause();
+            _keepAliveMonitor?.Resume();
         }
 
         private void OnAdapterReadingPacketStarted(object sender, EventArgs e)
         {
-            _keepAliveMonitor?.Resume();
+            _keepAliveMonitor?.Pause();
         }
     }
 }

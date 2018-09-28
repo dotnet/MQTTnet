@@ -60,7 +60,7 @@ namespace MQTTnet.Core.Tests
         {
             public string ClientId { get; }
 
-            public int StopCalledCount { get; set; }
+            public int StopCalledCount { get; private set; }
 
             public void FillStatus(MqttClientSessionStatus status)
             {
@@ -77,7 +77,7 @@ namespace MQTTnet.Core.Tests
                 throw new NotSupportedException();
             }
 
-            public Task<bool> RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+            public Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
             {
                 throw new NotSupportedException();
             }

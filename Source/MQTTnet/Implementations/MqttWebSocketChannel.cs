@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -14,7 +15,7 @@ namespace MQTTnet.Implementations
         private readonly MqttClientWebSocketOptions _options;
 
         private WebSocket _webSocket;
-        
+
         public MqttWebSocketChannel(MqttClientWebSocketOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -44,6 +45,11 @@ namespace MQTTnet.Implementations
             }
 
             var clientWebSocket = new ClientWebSocket();
+
+            if (_options.ProxyOptions != null)
+            {
+                clientWebSocket.Options.Proxy = CreateProxy();
+            }
 
             if (_options.RequestHeaders != null)
             {
@@ -131,6 +137,32 @@ namespace MQTTnet.Implementations
             {
                 _webSocket = null;
             }
+        }
+
+        private IWebProxy CreateProxy()
+        {
+            if (string.IsNullOrEmpty(_options.ProxyOptions?.Address))
+            {
+                return null;
+            }
+
+#if WINDOWS_UWP
+            throw new NotSupportedException("Proxies are not supported in UWP.");
+#elif NETSTANDARD1_3
+            throw new NotSupportedException("Proxies are not supported in netstandard 1.3.");
+#else
+            var proxyUri = new Uri(_options.ProxyOptions.Address);
+
+            if (!string.IsNullOrEmpty(_options.ProxyOptions.Username) && !string.IsNullOrEmpty(_options.ProxyOptions.Password))
+            {
+                var credentials =
+                    new NetworkCredential(_options.ProxyOptions.Username, _options.ProxyOptions.Password, _options.ProxyOptions.Domain);
+
+                return new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList, credentials);
+            }
+
+            return new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList);
+#endif
         }
     }
 }

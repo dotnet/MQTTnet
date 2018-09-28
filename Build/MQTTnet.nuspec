@@ -10,12 +10,8 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* [Core] Performance optimizations.
-* [Core] Fixed a bug which prevents receiving large packets (UWP only)
-* [Client] The ManagedClient options now allow configuring the interval for connection checks.
-* [Server] Added the Endpoint of the Adapter (remote IP and port) to the connection validation callback.
-* [Server] The ipv4 and ipv6 endpoint can be disabled now by setting the bound IP address to _None_.
-* [Server] Fix a bug in the keep alive monitor which caused high CPU load (thanks to @GarageGadget).
+    <releaseNotes>* [Core] Added all factory methods to the factory interface.
+* [Server] Added a new overload for configuring the ASP.net integration (thanks to @JanEggers).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
@@ -56,6 +52,9 @@
     <file src="..\Source\MQTTnet\bin\Release\net452\MQTTnet.*" target="lib\net452\"/>
 
     <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net461\"/>
+    <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net462\"/>
+    <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net470\"/>
+    <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net471\"/>
     <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\net472\"/>
   </files>
 </package>

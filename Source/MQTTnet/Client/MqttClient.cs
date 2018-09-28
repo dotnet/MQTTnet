@@ -176,7 +176,7 @@ namespace MQTTnet.Client
 
         public void Dispose()
         {
-            _cancellationTokenSource?.Cancel ();
+            _cancellationTokenSource?.Cancel (false);
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
 

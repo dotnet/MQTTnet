@@ -176,12 +176,12 @@ namespace MQTTnet.Client
 
         public void Dispose()
         {
-			_cancellationTokenSource?.Cancel ();
+            _cancellationTokenSource?.Cancel ();
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
 
             _adapter?.Dispose();
-			_adapter = null;
+            _adapter = null;
         }
 
         private async Task<MqttConnAckPacket> AuthenticateAsync(MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)

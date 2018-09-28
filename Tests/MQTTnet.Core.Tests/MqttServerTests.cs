@@ -233,6 +233,74 @@ namespace MQTTnet.Core.Tests
                 await c1.PublishAsync(message);
             }
         }
+        
+        [TestMethod]
+        public async Task MqttServer_ShutdownDisconnectsClientsGracefully()
+        {
+            var serverAdapter = new MqttTcpServerAdapter(new MqttNetLogger().CreateChildLogger());
+            var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
+
+            var clientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("localhost")
+                .Build();
+
+            var disconnectCalled = 0;
+
+            await s.StartAsync(new MqttServerOptions());
+
+            var c1 = new MqttFactory().CreateMqttClient();
+            c1.Disconnected += (sender, args) => disconnectCalled++;
+
+            await c1.ConnectAsync(clientOptions);
+
+            await Task.Delay(100);
+
+            await s.StopAsync();
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(1, disconnectCalled);
+        }
+
+        [TestMethod]
+        public async Task MqttServer_HandleCleanDisconnect()
+        {
+            MqttNetGlobalLogger.LogMessagePublished += (_, e) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"[{e.TraceMessage.Timestamp:s}] {e.TraceMessage.Source} {e.TraceMessage.Message}");
+            };
+
+            var serverAdapter = new MqttTcpServerAdapter(new MqttNetLogger().CreateChildLogger());
+            var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
+
+            var clientConnectedCalled = 0;
+            var clientDisconnectedCalled = 0;
+
+            s.ClientConnected += (_, __) => clientConnectedCalled++;
+            s.ClientDisconnected += (_, __) => clientDisconnectedCalled++;
+
+            var clientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("localhost")
+                .Build();
+
+            await s.StartAsync(new MqttServerOptions());
+
+            var c1 = new MqttFactory().CreateMqttClient();
+
+            await c1.ConnectAsync(clientOptions);
+
+            await Task.Delay(100);
+
+            await c1.DisconnectAsync();
+
+            await Task.Delay(100);
+
+            await s.StopAsync();
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(clientConnectedCalled, clientDisconnectedCalled);
+        }
 
         [TestMethod]
         public async Task MqttServer_RetainedMessagesFlow()
@@ -482,6 +550,54 @@ namespace MQTTnet.Core.Tests
             }
 
             Assert.IsTrue(bodyIsMatching);
+        }
+
+        [TestMethod]
+        public async Task MqttServer_SameClientIdConnectDisconnectEventOrder()
+        {
+            var serverAdapter = new MqttTcpServerAdapter(new MqttNetLogger().CreateChildLogger());
+            var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
+
+            var connectedClient = false;
+            var connecteCalledBeforeConnectedClients = false;
+
+            s.ClientConnected += (_, __) =>
+            {
+                connecteCalledBeforeConnectedClients |= connectedClient;
+                connectedClient = true;
+            };
+
+            s.ClientDisconnected += (_, __) =>
+            {
+                connectedClient = false;
+            };
+
+            var clientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("localhost")
+                .WithClientId(Guid.NewGuid().ToString())
+                .Build();
+
+            await s.StartAsync(new MqttServerOptions());
+
+            var c1 = new MqttFactory().CreateMqttClient();
+            var c2 = new MqttFactory().CreateMqttClient();
+
+            await c1.ConnectAsync(clientOptions);
+
+            await Task.Delay(100);
+
+            await c2.ConnectAsync(clientOptions);
+
+            await Task.Delay(100);
+
+            await c1.DisconnectAsync();
+            await c2.DisconnectAsync();
+
+            await s.StopAsync();
+
+            await Task.Delay(100);
+
+            Assert.IsFalse(connecteCalledBeforeConnectedClients, "ClientConnected was called before ClientDisconnect was called");
         }
 
         private class TestStorage : IMqttServerStorage

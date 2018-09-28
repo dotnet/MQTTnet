@@ -13,6 +13,8 @@ namespace MQTTnet.Client
 
         public CookieContainer CookieContainer { get; set; }
 
+        public MqttClientWebSocketProxyOptions ProxyOptions { get; set; }
+
         public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
 
         public override string ToString()

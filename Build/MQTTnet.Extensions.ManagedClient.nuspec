@@ -10,13 +10,12 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>This is an extension library which provides a managed MQTT client with additional features using MQTTnet.</description>
-    <releaseNotes>* Updated to MQTTnet 2.8.1.
-* For more release notes please check the MQTTnet release notes.
+    <releaseNotes>* For more release notes please check the MQTTnet release notes.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
-      <dependency id="MQTTnet" version="2.8.1" />
+      <dependency id="MQTTnet" version="2.8.2" />
     </dependencies>
   </metadata>
 
@@ -34,6 +33,9 @@
     <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\net452\MQTTnet.Extensions.ManagedClient.*" target="lib\net452\"/>
 
     <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\net461\"/>
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\net462\"/>
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\net470\"/>
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\net471\"/>
     <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\net472\"/>
   </files>
 </package>

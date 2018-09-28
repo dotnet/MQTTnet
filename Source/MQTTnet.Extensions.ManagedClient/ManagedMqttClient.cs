@@ -226,7 +226,7 @@ namespace MQTTnet.Extensions.ManagedClient
         {
             try
             {
-                while (!cancellationToken.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested && _mqttClient.IsConnected)
                 {
                     var message = _messageQueue.Take(cancellationToken);
                     if (message == null)
@@ -306,14 +306,14 @@ namespace MQTTnet.Extensions.ManagedClient
 
             try
             {
-                if (subscriptions.Any())
-                {
-                    await _mqttClient.SubscribeAsync(subscriptions).ConfigureAwait(false);
-                }
-
                 if (unsubscriptions.Any())
                 {
                     await _mqttClient.UnsubscribeAsync(unsubscriptions).ConfigureAwait(false);
+                }
+
+                if (subscriptions.Any())
+                {
+                    await _mqttClient.SubscribeAsync(subscriptions).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
@@ -367,7 +367,6 @@ namespace MQTTnet.Extensions.ManagedClient
             }
 
             var cts = new CancellationTokenSource();
-
             _publishingCancellationToken = cts;
 
             Task.Factory.StartNew(() => PublishQueuedMessages(cts.Token), cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);

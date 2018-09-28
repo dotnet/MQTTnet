@@ -240,7 +240,7 @@ namespace MQTTnet.Client
             }
             finally
             {
-				Dispose ();
+                Dispose ();
                 _cleanDisconnectInitiated = false;
 
                 _logger.Info("Disconnected.");

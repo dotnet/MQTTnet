@@ -138,7 +138,9 @@ namespace MQTTnet.Server
 
                 _cleanupHandle?.Dispose();
                 _cleanupHandle = null;
-
+                
+                _adapter = null;
+                _cancellationTokenSource?.Cancel(false);
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
             }
@@ -290,7 +292,9 @@ namespace MQTTnet.Server
         {
             _pendingPacketsQueue?.Dispose();
 
+            _cancellationTokenSource?.Cancel ();
             _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
         }
 
         private void ProcessReceivedPacket(IMqttChannelAdapter adapter, MqttBasePacket packet, CancellationToken cancellationToken)

@@ -84,6 +84,16 @@ namespace MQTTnet.Server
             return retainedMessages;
         }
 
+        public Task ClearMessagesAsync()
+        {
+            lock (_messages)
+            {
+                _messages.Clear();
+            }
+
+            return _options.Storage.SaveRetainedMessagesAsync(new List<MqttApplicationMessage>());
+        }
+
         private async Task HandleMessageInternalAsync(string clientId, MqttApplicationMessage applicationMessage)
         {
             var saveIsRequired = false;

@@ -129,6 +129,11 @@ namespace MQTTnet.Server
             }
         }
 
+        public Task ClearRetainedMessagesAsync()
+        {
+            return _retainedMessagesManager?.ClearMessagesAsync();
+        }
+
         internal void OnClientConnected(string clientId)
         {
             _logger.Info("Client '{0}': Connected.", clientId);

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Adapter;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.Core.Tests
@@ -550,6 +551,51 @@ namespace MQTTnet.Core.Tests
             }
 
             Assert.IsTrue(bodyIsMatching);
+        }
+
+        [TestMethod]
+        public async Task MqttServer_ConnectionDenied()
+        {
+            var server = new MqttFactory().CreateMqttServer();
+            var client = new MqttFactory().CreateMqttClient();
+
+            try
+            {
+                var options = new MqttServerOptionsBuilder().WithConnectionValidator(context =>
+                {
+                    context.ReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized;
+                }).Build();
+
+                await server.StartAsync(options);
+
+                
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost").Build();
+
+                try
+                {
+                    await client.ConnectAsync(clientOptions);
+                    Assert.Fail("An exception should be raised.");
+                }
+                catch (Exception exception)
+                {
+                    if (exception is MqttConnectingFailedException)
+                    {
+
+                    }
+                    else
+                    {
+                        Assert.Fail("Wrong exception.");
+                    }
+                }
+            }
+            finally
+            {
+                await client.DisconnectAsync();
+                await server.StopAsync();
+                
+                client.Dispose();
+            }
         }
 
         [TestMethod]

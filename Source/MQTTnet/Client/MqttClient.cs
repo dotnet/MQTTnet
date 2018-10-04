@@ -29,7 +29,7 @@ namespace MQTTnet.Client
         internal Task _keepAliveMessageSenderTask;
         private IMqttChannelAdapter _adapter;
         private bool _cleanDisconnectInitiated;
-        private TaskCompletionSource<bool> _disconnectReason;
+        private int _disconnectGate;
 
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
@@ -59,7 +59,7 @@ namespace MQTTnet.Client
                 _packetDispatcher.Reset();
 
                 _cancellationTokenSource = new CancellationTokenSource();
-                _disconnectReason = new TaskCompletionSource<bool>();
+                _disconnectGate = 0;
                 _adapter = _adapterFactory.CreateClientAdapter(options, _logger);
 
                 _logger.Verbose($"Trying to connect with server ({_options.ChannelOptions}).");
@@ -88,7 +88,7 @@ namespace MQTTnet.Client
             {
                 _logger.Error(exception, "Error while connecting with server.");
 
-                if (_disconnectReason.TrySetException(exception))
+                if (!DisconnectIsPending())
                 {
                     await DisconnectInternalAsync(null, exception).ConfigureAwait(false);
                 }
@@ -110,7 +110,7 @@ namespace MQTTnet.Client
             }
             finally
             {
-                if (_disconnectReason.TrySetCanceled())
+                if (!DisconnectIsPending())
                 {
                     await DisconnectInternalAsync(null, null).ConfigureAwait(false);
                 }
@@ -361,7 +361,7 @@ namespace MQTTnet.Client
                     _logger.Error(exception, "Unhandled exception while sending/receiving keep alive packets.");
                 }
 
-                if (_disconnectReason.TrySetException(exception))
+                if (!DisconnectIsPending())
                 {
                     await DisconnectInternalAsync(_keepAliveMessageSenderTask, exception).ConfigureAwait(false);
                 }
@@ -410,7 +410,7 @@ namespace MQTTnet.Client
 
                 _packetDispatcher.Dispatch(exception);
 
-                if (_disconnectReason.TrySetException(exception))
+                if (!DisconnectIsPending())
                 {
                     await DisconnectInternalAsync(_packetReceiverTask, exception).ConfigureAwait(false);
                 }
@@ -544,6 +544,11 @@ namespace MQTTnet.Client
             catch (OperationCanceledException)
             {
             }
+        }
+
+        private bool DisconnectIsPending()
+        {
+            return Interlocked.CompareExchange(ref _disconnectGate, 1, 0) != 0;
         }
     }
 }

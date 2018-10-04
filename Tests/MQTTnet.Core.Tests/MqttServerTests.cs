@@ -669,25 +669,24 @@ namespace MQTTnet.Core.Tests
             MqttQualityOfServiceLevel filterQualityOfServiceLevel,
             int expectedReceivedMessagesCount)
         {
-            var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
+            var s = new MqttFactory().CreateMqttServer();
 
             var receivedMessagesCount = 0;
             try
             {
                 await s.StartAsync(new MqttServerOptions());
 
-                var c1 = await serverAdapter.ConnectTestClient("c1");
-                var c2 = await serverAdapter.ConnectTestClient("c2");
-
+                var c1 = new MqttFactory().CreateMqttClient();
                 c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
-
+                await c1.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost").Build());
                 await c1.SubscribeAsync(new TopicFilterBuilder().WithTopic(topicFilter).WithQualityOfServiceLevel(filterQualityOfServiceLevel).Build());
+
+                var c2 = new MqttFactory().CreateMqttClient();
+                await c2.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost").Build());
                 await c2.PublishAsync(builder => builder.WithTopic(topic).WithPayload(new byte[0]).WithQualityOfServiceLevel(qualityOfServiceLevel));
 
                 await Task.Delay(500);
                 await c1.UnsubscribeAsync(topicFilter);
-
                 await Task.Delay(500);
             }
             finally

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Connections;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
+using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Serializer;
 using System;
@@ -83,7 +84,7 @@ namespace MQTTnet.AspNetCore
                         }
                         else if (readResult.IsCompleted)
                         {
-                            break;
+                            throw new MqttCommunicationException("Connection Aborted");
                         }
                     }
                     finally

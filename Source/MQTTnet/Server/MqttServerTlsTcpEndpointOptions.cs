@@ -1,4 +1,6 @@
-﻿namespace MQTTnet.Server
+﻿using System.Security.Authentication;
+
+namespace MQTTnet.Server
 {
     public class MqttServerTlsTcpEndpointOptions : MqttServerTcpEndpointBaseOptions
     {
@@ -8,5 +10,8 @@
         }
 
         public byte[] Certificate { get; set; }
+
+
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
     }
 }

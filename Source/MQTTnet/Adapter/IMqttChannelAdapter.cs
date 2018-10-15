@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Packets;
@@ -9,6 +10,8 @@ namespace MQTTnet.Adapter
     public interface IMqttChannelAdapter : IDisposable
     {
         string Endpoint { get; }
+
+        X509Certificate RemoteCertificate { get; }
 
         IMqttPacketSerializer PacketSerializer { get; }
 

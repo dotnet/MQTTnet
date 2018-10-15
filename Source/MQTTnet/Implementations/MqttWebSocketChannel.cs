@@ -29,6 +29,8 @@ namespace MQTTnet.Implementations
 
         public string Endpoint { get; }
 
+        public X509Certificate RemoteCertificate => null;
+
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             var uri = _options.Uri;
@@ -108,7 +110,7 @@ namespace MQTTnet.Implementations
 
         public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            // This lock is required because the client will throw an exception if _SendAsync_ is 
+            // This lock is required because the client will throw an exception if _SendAsync_ is
             // called from multiple threads at the same time. But this issue only happens with several
             // framework versions.
             await _sendLock.WaitAsync(cancellationToken).ConfigureAwait(false);

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
@@ -40,6 +41,8 @@ namespace MQTTnet.Adapter
         }
 
         public string Endpoint => _channel.Endpoint;
+
+        public X509Certificate RemoteCertificate => _channel.RemoteCertificate;
 
         public IMqttPacketSerializer PacketSerializer { get; }
 

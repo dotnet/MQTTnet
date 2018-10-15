@@ -53,6 +53,8 @@ namespace MQTTnet.Implementations
             }
         }
 
+        public X509Certificate RemoteCertificate => null;
+
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             if (_socket == null)

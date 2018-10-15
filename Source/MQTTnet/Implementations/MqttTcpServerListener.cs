@@ -1,5 +1,6 @@
 ﻿#if !WINDOWS_UWP
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -36,7 +37,7 @@ namespace MQTTnet.Implementations
             _tlsCertificate = tlsCertificate;
             _cancellationToken = cancellationToken;
             _logger = logger.CreateChildLogger(nameof(MqttTcpServerListener));
-            
+
             if (_options is MqttServerTlsTcpEndpointOptions tlsOptions)
             {
                 _tlsOptions = tlsOptions;
@@ -79,8 +80,8 @@ namespace MQTTnet.Implementations
 
                     if (_tlsCertificate != null)
                     {
-                        sslStream = new SslStream(new NetworkStream(clientSocket), false);
-                        await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, _tlsOptions.SslProtocol, false).ConfigureAwait(false);
+                        sslStream = new SslStream(new NetworkStream(clientSocket), false, UserCertificateValidationCallback);
+                        await sslStream.AuthenticateAsServerAsync(_tlsCertificate, _tlsOptions.ClientTlsParameters.ClientCertificateRequired, _tlsOptions.SslProtocol, false).ConfigureAwait(false);
                     }
 
                     _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
@@ -106,6 +107,37 @@ namespace MQTTnet.Implementations
                     await Task.Delay(TimeSpan.FromSeconds(1), _cancellationToken).ConfigureAwait(false);
                 }
             }
+        }
+
+        private bool UserCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            if (_tlsOptions.ClientTlsParameters.ClientCertificateValidationCallback != null)
+            {
+                return _tlsOptions.ClientTlsParameters.ClientCertificateValidationCallback(certificate, chain, sslPolicyErrors);
+            }
+
+            if (sslPolicyErrors == SslPolicyErrors.None)
+            {
+                return true;
+            }
+
+            if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.OfflineRevocation))
+            {
+                if (!_tlsOptions.ClientTlsParameters.IgnoreCertificateRevocationErrors)
+                {
+                    return false;
+                }
+            }
+
+            if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.PartialChain))
+            {
+                if (!_tlsOptions.ClientTlsParameters.IgnoreCertificateChainErrors)
+                {
+                    return false;
+                }
+            }
+
+            return _tlsOptions.ClientTlsParameters.AllowUntrustedCertificates;
         }
 
         public void Dispose()

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Channel;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MQTTnet.Benchmarks
 {
@@ -76,6 +77,8 @@ namespace MQTTnet.Benchmarks
             }
 
             public string Endpoint { get; }
+
+            public X509Certificate RemoteCertificate => null;
 
             public void Reset()
             {

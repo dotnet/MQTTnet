@@ -17,9 +17,10 @@ namespace MQTTnet.Implementations
     {
         private readonly IMqttClientOptions _clientOptions;
         private readonly MqttClientTcpOptions _options;
-        
+
         private Socket _socket;
         private Stream _stream;
+        private X509Certificate _remoteCertificate;
 
         /// <summary>
         /// called on client sockets are created in connect
@@ -38,6 +39,10 @@ namespace MQTTnet.Implementations
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
 
+            if (sslStream != null) {
+                _remoteCertificate = sslStream.RemoteCertificate;
+            }
+
             CreateStream(sslStream);
         }
 
@@ -45,6 +50,8 @@ namespace MQTTnet.Implementations
         public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
 
         public string Endpoint => _socket?.RemoteEndPoint?.ToString();
+
+        public X509Certificate RemoteCertificate => _remoteCertificate;
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
@@ -64,6 +71,7 @@ namespace MQTTnet.Implementations
             {
                 sslStream = new SslStream(new NetworkStream(_socket, true), false, InternalUserCertificateValidationCallback);
                 await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+                _remoteCertificate = sslStream.RemoteCertificate;
             }
 
             CreateStream(sslStream);

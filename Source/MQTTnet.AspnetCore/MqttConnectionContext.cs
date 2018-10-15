@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Connections;
+﻿using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Http.Features;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Exceptions;
@@ -26,6 +28,16 @@ namespace MQTTnet.AspNetCore
         public IMqttPacketSerializer PacketSerializer { get; }
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;
+
+        public X509Certificate RemoteCertificate {
+            get {
+                var tlsFeature = Connection.Features.Get<ITlsConnectionFeature>();
+                if (tlsFeature != null) {
+                    return tlsFeature.ClientCertificate;
+                }
+                return null;
+            }
+        }
 
         public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {

@@ -208,7 +208,7 @@ namespace MQTTnet.Server
         private async Task RunSession(IMqttChannelAdapter clientAdapter, CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
-            
+
             try
             {
                 var firstPacket = await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false);
@@ -280,6 +280,7 @@ namespace MQTTnet.Server
 
             var context = new MqttConnectionValidatorContext(
                 connectPacket.ClientId,
+                clientAdapter.RemoteCertificate,
                 connectPacket.Username,
                 connectPacket.Password,
                 connectPacket.WillMessage,

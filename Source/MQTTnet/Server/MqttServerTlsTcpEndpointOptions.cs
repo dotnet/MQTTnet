@@ -1,4 +1,7 @@
-﻿using System.Security.Authentication;
+﻿using System;
+using System.Net.Security;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MQTTnet.Server
 {
@@ -11,7 +14,8 @@ namespace MQTTnet.Server
 
         public byte[] Certificate { get; set; }
 
-
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
+
+        public MqttServerOptionsBuilderClientTlsParameters ClientTlsParameters  { get; set; } = new MqttServerOptionsBuilderClientTlsParameters();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -17,6 +18,8 @@ namespace MQTTnet.Core.Tests
         public string Endpoint { get; }
 
         public IMqttPacketSerializer PacketSerializer { get; } = new MqttPacketSerializer();
+
+        public X509Certificate RemoteCertificate => null;
 
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;

@@ -1,12 +1,14 @@
-﻿using MQTTnet.Protocol;
+﻿using System.Security.Cryptography.X509Certificates;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
     public class MqttConnectionValidatorContext
     {
-        public MqttConnectionValidatorContext(string clientId, string username, string password, MqttApplicationMessage willMessage, string endpoint)
+        public MqttConnectionValidatorContext(string clientId, X509Certificate clientCertificate, string username, string password, MqttApplicationMessage willMessage, string endpoint)
         {
             ClientId = clientId;
+            ClientCertificate = clientCertificate;
             Username = username;
             Password = password;
             WillMessage = willMessage;
@@ -14,6 +16,8 @@ namespace MQTTnet.Server
         }
 
         public string ClientId { get; }
+
+        public X509Certificate ClientCertificate { get; }
 
         public string Username { get; }
 

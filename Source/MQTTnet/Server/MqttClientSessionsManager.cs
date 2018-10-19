@@ -65,7 +65,7 @@ namespace MQTTnet.Server
             return Task.Run(() => RunSession(clientAdapter, _cancellationToken), _cancellationToken);
         }
 
-        public Task<IList<IMqttClientSessionStatus>> GetClientStatusAsync()
+        public IList<IMqttClientSessionStatus> GetClientStatus()
         {
             var result = new List<IMqttClientSessionStatus>();
 
@@ -77,7 +77,7 @@ namespace MQTTnet.Server
                 result.Add(status);
             }
 
-            return Task.FromResult((IList<IMqttClientSessionStatus>)result);
+            return result;
         }
 
         public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)

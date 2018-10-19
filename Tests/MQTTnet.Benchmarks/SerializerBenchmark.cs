@@ -2,8 +2,6 @@
 using MQTTnet.Packets;
 using MQTTnet.Serializer;
 using MQTTnet.Internal;
-using BenchmarkDotNet.Attributes.Jobs;
-using BenchmarkDotNet.Attributes.Exporters;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

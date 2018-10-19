@@ -20,8 +20,8 @@ namespace MQTTnet.Implementations
         private readonly CancellationToken _cancellationToken;
         private readonly AddressFamily _addressFamily;
         private readonly MqttServerTcpEndpointBaseOptions _options;
+        private readonly MqttServerTlsTcpEndpointOptions _tlsOptions;
         private readonly X509Certificate2 _tlsCertificate;
-
         private Socket _socket;
 
         public MqttTcpServerListener(
@@ -36,6 +36,11 @@ namespace MQTTnet.Implementations
             _tlsCertificate = tlsCertificate;
             _cancellationToken = cancellationToken;
             _logger = logger.CreateChildLogger(nameof(MqttTcpServerListener));
+            
+            if (_options is MqttServerTlsTcpEndpointOptions tlsOptions)
+            {
+                _tlsOptions = tlsOptions;
+            }
         }
 
         public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
@@ -75,7 +80,7 @@ namespace MQTTnet.Implementations
                     if (_tlsCertificate != null)
                     {
                         sslStream = new SslStream(new NetworkStream(clientSocket), false);
-                        await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, SslProtocols.Tls12, false).ConfigureAwait(false);
+                        await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, _tlsOptions.SslProtocol, false).ConfigureAwait(false);
                     }
 
                     _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",

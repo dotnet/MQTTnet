@@ -340,6 +340,8 @@ namespace MQTTnet.Core.Tests
                     }
                 });
 
+                await Task.Delay(100);
+
                 var retainedMessages = server.GetRetainedMessages();
 
                 Assert.AreEqual(ClientCount, retainedMessages.Count);

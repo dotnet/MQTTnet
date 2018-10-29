@@ -1,5 +1,6 @@
 ﻿using System;
 using MQTTnet.Client;
+using MQTTnet.Server;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -12,5 +13,9 @@ namespace MQTTnet.Extensions.ManagedClient
         public TimeSpan ConnectionCheckInterval { get; set; } = TimeSpan.FromSeconds(1);
 
         public IManagedMqttClientStorage Storage { get; set; }
+
+        public int MaxPendingMessages { get; set; } = int.MaxValue;
+
+        public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropNewMessage;
     }
 }

@@ -45,7 +45,9 @@ namespace MQTTnet.Core.Tests
                 stopwatch.Stop();
                 times.Add(stopwatch.Elapsed);
                 stopwatch.Restart();
-            }           
+            }
+
+            await server.StopAsync();
         }
     }
 }

@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
     <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
   </ItemGroup>
 

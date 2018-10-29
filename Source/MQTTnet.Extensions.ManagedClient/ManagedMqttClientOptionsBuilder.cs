@@ -1,5 +1,6 @@
 ﻿using System;
 using MQTTnet.Client;
+using MQTTnet.Server;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -7,6 +8,18 @@ namespace MQTTnet.Extensions.ManagedClient
     {
         private readonly ManagedMqttClientOptions _options = new ManagedMqttClientOptions();
         private MqttClientOptionsBuilder _clientOptionsBuilder;
+
+        public ManagedMqttClientOptionsBuilder WithMaxPendingMessages(int value)
+        {
+            _options.MaxPendingMessages = value;
+            return this;
+        }
+
+        public ManagedMqttClientOptionsBuilder WithPendingMessagesOverflowStrategy(MqttPendingMessagesOverflowStrategy value)
+        {
+            _options.PendingMessagesOverflowStrategy = value;
+            return this;
+        }
 
         public ManagedMqttClientOptionsBuilder WithAutoReconnectDelay(TimeSpan value)
         {

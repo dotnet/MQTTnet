@@ -116,7 +116,7 @@ namespace MQTTnet.Extensions.ManagedClient
             ManagedMqttApplicationMessage skippedMessage = null;
             lock (_messageQueue)
             {
-                if (_messageQueue.Count > _options.MaxPendingMessages)
+                if (_messageQueue.Count >= _options.MaxPendingMessages)
                 {
                     if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
                     {

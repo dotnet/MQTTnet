@@ -27,6 +27,8 @@ namespace MQTTnet.AspNetCore
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;
 
+        private readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
+
         public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             if (Connection is TcpConnection tcp && !tcp.IsConnected)
@@ -105,10 +107,20 @@ namespace MQTTnet.AspNetCore
             return null;
         }
 
-        public Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            var buffer = PacketSerializer.Serialize(packet);
-            return Connection.Transport.Output.WriteAsync(buffer.AsMemory(), cancellationToken).AsTask();
+            var buffer = PacketSerializer.Serialize(packet).AsMemory();
+            var output = Connection.Transport.Output;
+
+            await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await output.WriteAsync(buffer, cancellationToken);
+            }
+            finally
+            {
+                _writerSemaphore.Release();
+            }
         }
 
         public void Dispose()

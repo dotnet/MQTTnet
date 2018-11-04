@@ -62,7 +62,7 @@ namespace MQTTnet.AspNetCore
                     }
                     else
                     {
-                        readResult = await readTask;
+                        readResult = await readTask.ConfigureAwait(false);
                     }
 
                     var buffer = readResult.Buffer;
@@ -115,7 +115,7 @@ namespace MQTTnet.AspNetCore
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                await output.WriteAsync(buffer, cancellationToken);
+                await output.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
             }
             finally
             {

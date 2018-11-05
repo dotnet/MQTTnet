@@ -62,6 +62,7 @@ namespace MQTTnet.Internal
             {
                 var item = _items.First;
                 _items.RemoveFirst();
+
                 return item.Value;
             }
         }

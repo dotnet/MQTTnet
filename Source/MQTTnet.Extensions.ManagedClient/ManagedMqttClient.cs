@@ -113,7 +113,7 @@ namespace MQTTnet.Extensions.ManagedClient
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            ManagedMqttApplicationMessage skippedMessage = null;
+            ManagedMqttApplicationMessage removedMessage = null;
             lock (_messageQueue)
             {
                 if (_messageQueue.Count >= _options.MaxPendingMessages)
@@ -127,9 +127,9 @@ namespace MQTTnet.Extensions.ManagedClient
 
                     if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
                     {
-                        skippedMessage = _messageQueue.RemoveFirst();
+                        removedMessage = _messageQueue.RemoveFirst();
                         _logger.Verbose("Removed oldest application message from internal queue because it is full.");
-                        ApplicationMessageSkipped?.Invoke(this, new ApplicationMessageSkippedEventArgs(skippedMessage));
+                        ApplicationMessageSkipped?.Invoke(this, new ApplicationMessageSkippedEventArgs(removedMessage));
                     }
                 }
 
@@ -138,9 +138,9 @@ namespace MQTTnet.Extensions.ManagedClient
 
             if (_storageManager != null)
             {
-                if (skippedMessage != null)
+                if (removedMessage != null)
                 {
-                    await _storageManager.RemoveAsync(skippedMessage).ConfigureAwait(false);
+                    await _storageManager.RemoveAsync(removedMessage).ConfigureAwait(false);
                 }
 
                 await _storageManager.AddAsync(applicationMessage).ConfigureAwait(false);

@@ -64,7 +64,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Packets\V5\" />
+    <Compile Remove="NewFolder\**" />
+    <EmbeddedResource Remove="NewFolder\**" />
+    <None Remove="NewFolder\**" />
   </ItemGroup>
 
 </Project>

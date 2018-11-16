@@ -19,7 +19,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void SerializeV310_MqttConnectPacket()
         {
-            var p = new MqttV3ConnectPacket
+            var p = new MqttConnectPacket
             {
                 ClientId = "XYZ",
                 Password = "PASS",
@@ -34,7 +34,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void SerializeV311_MqttConnectPacket()
         {
-            var p = new MqttV3ConnectPacket
+            var p = new MqttConnectPacket
             {
                 ClientId = "XYZ",
                 Password = "PASS",
@@ -49,7 +49,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void SerializeV311_MqttConnectPacketWithWillMessage()
         {
-            var p = new MqttV3ConnectPacket
+            var p = new MqttConnectPacket
             {
                 ClientId = "XYZ",
                 Password = "PASS",
@@ -71,7 +71,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void DeserializeV311_MqttConnectPacket()
         {
-            var p = new MqttV3ConnectPacket
+            var p = new MqttConnectPacket
             {
                 ClientId = "XYZ",
                 Password = "PASS",
@@ -86,7 +86,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void DeserializeV311_MqttConnectPacketWithWillMessage()
         {
-            var p = new MqttV3ConnectPacket
+            var p = new MqttConnectPacket
             {
                 ClientId = "XYZ",
                 Password = "PASS",

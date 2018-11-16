@@ -36,6 +36,8 @@ namespace MQTTnet.Core.Tests
             var times = new List<TimeSpan>();
             var stopwatch = Stopwatch.StartNew();
 
+            await Task.Delay(1000);
+
             for (var i = 0; i < 100; i++)
             {
                 response = new TaskCompletionSource<string>();

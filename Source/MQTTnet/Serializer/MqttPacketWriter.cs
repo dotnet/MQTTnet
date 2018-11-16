@@ -27,9 +27,9 @@ namespace MQTTnet.Serializer
             return (byte)fixedHeader;
         }
 
-        public static ArraySegment<byte> EncodeRemainingLength(int length)
+        public static ArraySegment<byte> EncodeVariableByteInteger(int value)
         {
-            if (length <= 0)
+            if (value <= 0)
             {
                 return new ArraySegment<byte>(new byte[1], 0, 1);
             }
@@ -37,7 +37,7 @@ namespace MQTTnet.Serializer
             var buffer = new byte[4];
             var bufferOffset = 0;
 
-            var x = length;
+            var x = value;
             do
             {
                 var encodedByte = x % 128;
@@ -52,6 +52,11 @@ namespace MQTTnet.Serializer
             } while (x > 0);
 
             return new ArraySegment<byte>(buffer, 0, bufferOffset);
+        }
+
+        public void WriteVariableLengthInteger(int value)
+        {
+            Write(EncodeVariableByteInteger(value));
         }
 
         public void WriteWithLengthPrefix(string value)
@@ -85,14 +90,28 @@ namespace MQTTnet.Serializer
             IncreasePostition(1);
         }
 
-        public void Write(byte[] array, int offset, int count)
+        public void Write(byte[] buffer, int offset, int count)
         {
-            if (array == null) throw new ArgumentNullException(nameof(array));
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
             EnsureAdditionalCapacity(count);
 
-            Array.Copy(array, offset, _buffer, _position, count);
+            Array.Copy(buffer, offset, _buffer, _position, count);
             IncreasePostition(count);
+        }
+
+        public void Write(ArraySegment<byte> buffer)
+        {
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+
+            Write(buffer.Array, buffer.Offset, buffer.Count);
+        }
+
+        public void Write(MqttPacketWriter propertyWriter)
+        {
+            if (propertyWriter == null) throw new ArgumentNullException(nameof(propertyWriter));
+            
+            Write(propertyWriter._buffer, 0, propertyWriter.Length);
         }
 
         public void Reset()

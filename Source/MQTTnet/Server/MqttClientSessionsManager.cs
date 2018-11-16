@@ -218,7 +218,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                if (!(firstPacket is MqttV3ConnectPacket connectPacket))
+                if (!(firstPacket is MqttConnectPacket connectPacket))
                 {
                     throw new MqttProtocolViolationException("The first packet from a client must be a 'CONNECT' packet [MQTT-3.1.0-1].");
                 }
@@ -269,7 +269,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private MqttConnectReturnCode ValidateConnection(MqttV3ConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
+        private MqttConnectReturnCode ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
         {
             if (_options.ConnectionValidator == null)
             {
@@ -287,7 +287,7 @@ namespace MQTTnet.Server
             return context.ReturnCode;
         }
 
-        private PrepareClientSessionResult PrepareClientSession(MqttV3ConnectPacket connectPacket)
+        private PrepareClientSessionResult PrepareClientSession(MqttConnectPacket connectPacket)
         {
             lock (_sessions)
             {

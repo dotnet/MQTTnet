@@ -107,7 +107,7 @@ namespace MQTTnet.AspNetCore
 
         public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            var buffer = PacketSerializer.Serialize(packet).AsMemory();
+            var buffer = PacketSerializerAdapter.Serialize(packet).AsMemory();
             var output = Connection.Transport.Output;
 
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);

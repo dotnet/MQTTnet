@@ -29,7 +29,7 @@ namespace MQTTnet.Client
         internal Task _keepAliveMessageSenderTask;
         private IMqttChannelAdapter _adapter;
         private bool _cleanDisconnectInitiated;
-        private int _disconnectGate;
+        private long _disconnectGate;
 
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
@@ -216,7 +216,7 @@ namespace MQTTnet.Client
 
         private void ThrowIfNotConnected()
         {
-            if (!IsConnected) throw new MqttCommunicationException("The client is not connected.");
+            if (!IsConnected || Interlocked.Read(ref _disconnectGate) == 1) throw new MqttCommunicationException("The client is not connected.");
         }
 
         private void ThrowIfConnected(string message)

@@ -11,11 +11,13 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
     <releaseNotes> * [Core] Updated nuget packages due to security issues.
+* [Client] Fixed wrong behavior of publish method when client is disconnecting (thanks to @PaulFake).
 * [ManagedClient] Added max pending messages count option.
 * [ManagedClient] Add pending messages overflow strategy option.
 * [Server] Added new method which exposes all retained messages.
 * [Server] Removed (wrong) setter from the server options interface.
-* [Server] fixed cpu spike in case a client disconnectes (issue 421)
+* [Server] fixed cpu spike in case a client disconnectes (issue 421).
+* [Server] fixed concurrent sends with Aspnetcore.Connections.Abstractions based transport.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

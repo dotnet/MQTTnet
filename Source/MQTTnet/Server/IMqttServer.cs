@@ -16,7 +16,13 @@ namespace MQTTnet.Server
         
         IMqttServerOptions Options { get; }
 
+        [Obsolete("This method is no longer async. Use the not async method.")]
         Task<IList<IMqttClientSessionStatus>> GetClientSessionsStatusAsync();
+
+        IList<IMqttClientSessionStatus> GetClientSessionsStatus();
+
+        IList<MqttApplicationMessage> GetRetainedMessages();
+        Task ClearRetainedMessagesAsync();
 
         Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters);
         Task UnsubscribeAsync(string clientId, IList<string> topicFilters);

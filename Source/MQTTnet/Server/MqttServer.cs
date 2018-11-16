@@ -41,7 +41,17 @@ namespace MQTTnet.Server
 
         public Task<IList<IMqttClientSessionStatus>> GetClientSessionsStatusAsync()
         {
-            return _clientSessionsManager.GetClientStatusAsync();
+            return Task.FromResult(_clientSessionsManager.GetClientStatus());
+        }
+
+        public IList<IMqttClientSessionStatus> GetClientSessionsStatus()
+        {
+            return _clientSessionsManager.GetClientStatus();
+        }
+
+        public IList<MqttApplicationMessage> GetRetainedMessages()
+        {
+            return _retainedMessagesManager.GetMessages();
         }
 
         public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
@@ -127,6 +137,11 @@ namespace MQTTnet.Server
                 _clientSessionsManager?.Dispose();
                 _clientSessionsManager = null;
             }
+        }
+
+        public Task ClearRetainedMessagesAsync()
+        {
+            return _retainedMessagesManager?.ClearMessagesAsync();
         }
 
         internal void OnClientConnected(string clientId)

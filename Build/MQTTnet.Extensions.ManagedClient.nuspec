@@ -10,12 +10,11 @@
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>This is an extension library which provides a managed MQTT client with additional features using MQTTnet.</description>
-    <releaseNotes>* For more release notes please check the MQTTnet release notes.
-    </releaseNotes>
+    <releaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
-      <dependency id="MQTTnet" version="2.8.2" />
+      <dependency id="MQTTnet" version="2.8.5-rc3" />
     </dependencies>
   </metadata>
 

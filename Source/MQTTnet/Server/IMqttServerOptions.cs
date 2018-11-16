@@ -14,7 +14,7 @@ namespace MQTTnet.Server
         Action<MqttConnectionValidatorContext> ConnectionValidator { get; }
         Action<MqttSubscriptionInterceptorContext> SubscriptionInterceptor { get; }
         Action<MqttApplicationMessageInterceptorContext> ApplicationMessageInterceptor { get; }
-        Action<MqttClientMessageQueueInterceptorContext> ClientMessageQueueInterceptor { get; set; }
+        Action<MqttClientMessageQueueInterceptorContext> ClientMessageQueueInterceptor { get; }
 
         MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
         MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }

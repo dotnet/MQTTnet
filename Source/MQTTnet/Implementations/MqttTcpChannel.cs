@@ -116,7 +116,7 @@ namespace MQTTnet.Implementations
                 return true;
             }
 
-            if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.RevocationStatusUnknown))
+            if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.OfflineRevocation))
             {
                 if (!_options.TlsOptions.IgnoreCertificateRevocationErrors)
                 {

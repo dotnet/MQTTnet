@@ -1,9 +1,11 @@
 <p align="center">
 <img src="https://github.com/chkr1011/MQTTnet/blob/master/Images/Logo_128x128.png?raw=true" width="128">
+<br/>
+<br/>
 </p>
 
 [![NuGet Badge](https://buildstats.info/nuget/MQTTnet)](https://www.nuget.org/packages/MQTTnet)
-[![Build status](https://ci.appveyor.com/api/projects/status/ycit86voxfevm2aa/branch/master?svg=true)](https://ci.appveyor.com/project/chkr1011/mqttnet/branch/develop)
+[![Build status](https://ci.appveyor.com/api/projects/status/ycit86voxfevm2aa/branch/master?svg=true)](https://ci.appveyor.com/project/chkr1011/mqttnet)
 [![BCH compliance](https://bettercodehub.com/edge/badge/chkr1011/MQTTnet?branch=master)](https://bettercodehub.com/)
 [![OpenCollective](https://opencollective.com/mqttnet/backers/badge.svg)](https://opencollective.com/mqttnet) 
 [![OpenCollective](https://opencollective.com/mqttnet/sponsors/badge.svg)](https://opencollective.com/mqttnet)
@@ -23,7 +25,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Performance optimized (processing ~70.000 messages / second)*
 * Interfaces included for mocking and testing
 * Access to internal trace messages
-* Unit tested (~90 tests)
+* Unit tested (~100 tests)
 
 \* Tested on local machine (Intel i7 8700K) with MQTTnet client and server running in the same process using the TCP channel. The app for verification is part of this repository and stored in _/Tests/MQTTnet.TestApp.NetCore_.
 

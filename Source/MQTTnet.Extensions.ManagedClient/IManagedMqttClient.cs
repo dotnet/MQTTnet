@@ -15,6 +15,7 @@ namespace MQTTnet.Extensions.ManagedClient
         event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
         event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
+        event EventHandler<ApplicationMessageSkippedEventArgs> ApplicationMessageSkipped;
 
         event EventHandler<MqttManagedProcessFailedEventArgs> ConnectingFailed;
         event EventHandler<MqttManagedProcessFailedEventArgs> SynchronizingSubscriptionsFailed;

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Connections;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
+using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Serializer;
 using System;
@@ -23,6 +24,8 @@ namespace MQTTnet.AspNetCore
         public MqttPacketSerializerAdapter PacketSerializerAdapter { get; }
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;
+
+        private readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
 
         public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
@@ -57,7 +60,7 @@ namespace MQTTnet.AspNetCore
                     }
                     else
                     {
-                        readResult = await readTask;
+                        readResult = await readTask.ConfigureAwait(false);
                     }
 
                     var buffer = readResult.Buffer;
@@ -81,7 +84,7 @@ namespace MQTTnet.AspNetCore
                         }
                         else if (readResult.IsCompleted)
                         {
-                            break;
+                            throw new MqttCommunicationException("Connection Aborted");
                         }
                     }
                     finally
@@ -102,10 +105,20 @@ namespace MQTTnet.AspNetCore
             return null;
         }
 
-        public Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            var buffer = PacketSerializerAdapter.Serialize(packet);
-            return Connection.Transport.Output.WriteAsync(buffer.AsMemory(), cancellationToken).AsTask();
+            var buffer = PacketSerializer.Serialize(packet).AsMemory();
+            var output = Connection.Transport.Output;
+
+            await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await output.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                _writerSemaphore.Release();
+            }
         }
 
         public void Dispose()

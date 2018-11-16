@@ -52,7 +52,51 @@ namespace MQTTnet.Server
 
             try
             {
-                await HandleMessageInternalAsync(clientId, applicationMessage).ConfigureAwait(false);
+                List<MqttApplicationMessage> messagesForSave = null;
+                lock (_messages)
+                {
+                    var saveIsRequired = false;
+
+                    if (applicationMessage.Payload?.Length == 0)
+                    {
+                        saveIsRequired = _messages.Remove(applicationMessage.Topic);
+                        _logger.Verbose("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                    }
+                    else
+                    {
+                        if (!_messages.TryGetValue(applicationMessage.Topic, out var existingMessage))
+                        {
+                            _messages[applicationMessage.Topic] = applicationMessage;
+                            saveIsRequired = true;
+                        }
+                        else
+                        {
+                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? new byte[0]))
+                            {
+                                _messages[applicationMessage.Topic] = applicationMessage;
+                                saveIsRequired = true;
+                            }
+                        }
+
+                        _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                    }
+
+                    if (saveIsRequired)
+                    {
+                        messagesForSave = new List<MqttApplicationMessage>(_messages.Values);
+                    }
+                }
+
+                if (messagesForSave == null)
+                {
+                    _logger.Verbose("Skipped saving retained messages because no changes were detected.");
+                    return;
+                }
+
+                if (_options.Storage != null)
+                {
+                    await _options.Storage.SaveRetainedMessagesAsync(messagesForSave).ConfigureAwait(false);
+                }
             }
             catch (Exception exception)
             {
@@ -84,52 +128,27 @@ namespace MQTTnet.Server
             return retainedMessages;
         }
 
-        private async Task HandleMessageInternalAsync(string clientId, MqttApplicationMessage applicationMessage)
+        public IList<MqttApplicationMessage> GetMessages()
         {
-            var saveIsRequired = false;
-
             lock (_messages)
             {
-                if (applicationMessage.Payload?.Length == 0)
-                {
-                    saveIsRequired = _messages.Remove(applicationMessage.Topic);
-                    _logger.Info("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
-                }
-                else
-                {
-                    if (!_messages.TryGetValue(applicationMessage.Topic, out var existingMessage))
-                    {
-                        _messages[applicationMessage.Topic] = applicationMessage;
-                        saveIsRequired = true;
-                    }
-                    else
-                    {
-                        if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? new byte[0]))
-                        {
-                            _messages[applicationMessage.Topic] = applicationMessage;
-                            saveIsRequired = true;
-                        }
-                    }
-
-                    _logger.Info("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
-                }
+                return _messages.Values.ToList();
             }
+        }
 
-            if (!saveIsRequired)
+        public Task ClearMessagesAsync()
+        {
+            lock (_messages)
             {
-                _logger.Verbose("Skipped saving retained messages because no changes were detected.");
+                _messages.Clear();
             }
 
-            if (saveIsRequired && _options.Storage != null)
+            if (_options.Storage != null)
             {
-                List<MqttApplicationMessage> messages;
-                lock (_messages)
-                {
-                    messages = _messages.Values.ToList();
-                }
-
-                await _options.Storage.SaveRetainedMessagesAsync(messages).ConfigureAwait(false);
+                return _options.Storage.SaveRetainedMessagesAsync(new List<MqttApplicationMessage>());
             }
+
+            return Task.FromResult((object)null);
         }
     }
 }

@@ -11,19 +11,20 @@ namespace MQTTnet.Core.Tests
         /// publishes a message with a client and waits in the server until a message with the same topic is received
         /// </summary>
         /// <returns></returns>
-        public static async Task PublishAndWaitForAsync(this IMqttClient client, IMqttServer server, MqttApplicationMessage message) 
+        public static async Task PublishAndWaitForAsync(this IMqttClient client, IMqttServer server, MqttApplicationMessage message)
         {
             var tcs = new TaskCompletionSource<object>();
 
-            EventHandler<MqttApplicationMessageReceivedEventArgs> handler = (sender, args) =>
+            void Handler(object sender, MqttApplicationMessageReceivedEventArgs args)
             {
                 if (args.ApplicationMessage.Topic == message.Topic)
                 {
                     tcs.SetResult(true);
                 }
-            };
-            server.ApplicationMessageReceived += handler;
-            
+            }
+
+            server.ApplicationMessageReceived += Handler;
+
             try
             {
                 await client.PublishAsync(message).ConfigureAwait(false);
@@ -31,7 +32,7 @@ namespace MQTTnet.Core.Tests
             }
             finally
             {
-                server.ApplicationMessageReceived -= handler;
+                server.ApplicationMessageReceived -= Handler;
             }
         }
     }

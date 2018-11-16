@@ -28,6 +28,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public async Task AddAsync(ManagedMqttApplicationMessage applicationMessage)
         {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
             using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 _messages.Add(applicationMessage);
@@ -37,6 +39,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public async Task RemoveAsync(ManagedMqttApplicationMessage applicationMessage)
         {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
             using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 var index = _messages.IndexOf(applicationMessage);

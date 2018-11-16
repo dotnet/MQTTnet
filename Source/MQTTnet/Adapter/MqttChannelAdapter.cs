@@ -154,6 +154,9 @@ namespace MQTTnet.Adapter
 
                 return packet;
             }
+            catch (OperationCanceledException)
+            {
+            }
             catch (Exception exception)
             {
                 if (IsWrappedException(exception))
@@ -241,7 +244,8 @@ namespace MQTTnet.Adapter
         {
             if (exception is IOException && exception.InnerException is SocketException socketException)
             {
-                if (socketException.SocketErrorCode == SocketError.ConnectionAborted)
+                if (socketException.SocketErrorCode == SocketError.ConnectionAborted ||
+                    socketException.SocketErrorCode == SocketError.OperationAborted)
                 {
                     throw new OperationCanceledException();
                 }

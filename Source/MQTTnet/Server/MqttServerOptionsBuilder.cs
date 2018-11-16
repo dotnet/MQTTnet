@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Security.Authentication;
 
 namespace MQTTnet.Server
 {
@@ -77,6 +78,12 @@ namespace MQTTnet.Server
         public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value)
         {
             _options.TlsEndpointOptions.Certificate = value;
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithEncryptionSslProtocol(SslProtocols value)
+        {
+            _options.TlsEndpointOptions.SslProtocol = value;
             return this;
         }
 

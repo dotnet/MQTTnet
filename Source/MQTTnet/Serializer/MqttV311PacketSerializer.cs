@@ -7,7 +7,7 @@ namespace MQTTnet.Serializer
 {
     public class MqttV311PacketSerializer : MqttV310PacketSerializer
     {
-        protected override byte SerializeConnectPacket(MqttV3ConnectPacket packet, MqttPacketWriter packetWriter)
+        protected override byte SerializeConnectPacket(MqttConnectPacket packet, MqttPacketWriter packetWriter)
         {
             ValidateConnectPacket(packet);
 

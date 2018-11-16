@@ -25,7 +25,7 @@ namespace MQTTnet.Serializer
             var fixedHeader = SerializePacket(packet, _packetWriter);
             var remainingLength = _packetWriter.Length - 5;
 
-            var remainingLengthBuffer = MqttPacketWriter.EncodeRemainingLength(remainingLength);
+            var remainingLengthBuffer = MqttPacketWriter.EncodeVariableByteInteger(remainingLength);
 
             var headerSize = FixedHeaderSize + remainingLengthBuffer.Count;
             var headerOffset = 5 - headerSize;
@@ -79,7 +79,7 @@ namespace MQTTnet.Serializer
         {
             switch (packet)
             {
-                case MqttV3ConnectPacket connectPacket: return SerializeConnectPacket(connectPacket, packetWriter);
+                case MqttConnectPacket connectPacket: return SerializeConnectPacket(connectPacket, packetWriter);
                 case MqttV3ConnAckPacket connAckPacket: return SerializeConnAckPacket(connAckPacket, packetWriter);
                 case MqttDisconnectPacket _: return SerializeEmptyPacket(MqttControlPacketType.Disconnect);
                 case MqttPingReqPacket _: return SerializeEmptyPacket(MqttControlPacketType.PingReq);
@@ -216,7 +216,7 @@ namespace MQTTnet.Serializer
         {
             ThrowIfBodyIsEmpty(body);
 
-            var packet = new MqttV3ConnectPacket
+            var packet = new MqttConnectPacket
             {
                 ProtocolName = body.ReadStringWithLengthPrefix(),
                 ProtocolLevel = body.ReadByte()
@@ -293,13 +293,18 @@ namespace MQTTnet.Serializer
             return packet;
         }
 
-        protected void ValidateConnectPacket(MqttV3ConnectPacket packet)
+        protected void ValidateConnectPacket(MqttConnectPacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
             if (string.IsNullOrEmpty(packet.ClientId) && !packet.CleanSession)
             {
                 throw new MqttProtocolViolationException("CleanSession must be set if ClientId is empty [MQTT-3.1.3-7].");
+            }
+
+            if (packet.Properties != null)
+            {
+                throw new MqttProtocolViolationException("Properties are only supported in MQTT Version 5.");
             }
         }
 
@@ -312,7 +317,7 @@ namespace MQTTnet.Serializer
             }
         }
 
-        protected virtual byte SerializeConnectPacket(MqttV3ConnectPacket packet, MqttPacketWriter packetWriter)
+        protected virtual byte SerializeConnectPacket(MqttConnectPacket packet, MqttPacketWriter packetWriter)
         {
             ValidateConnectPacket(packet);
 

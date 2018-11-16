@@ -196,7 +196,7 @@ namespace MQTTnet.Client
 
         private async Task<MqttV3ConnAckPacket> AuthenticateAsync(MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)
         {
-            var connectPacket = new MqttV3ConnectPacket
+            var connectPacket = new MqttConnectPacket
             {
                 ClientId = _options.ClientId,
                 Username = _options.Credentials?.Username,

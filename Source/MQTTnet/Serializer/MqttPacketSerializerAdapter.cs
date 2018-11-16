@@ -34,7 +34,7 @@ namespace MQTTnet.Serializer
         {
             if (Serializer == null)
             {
-                throw new InvalidOperationException("Protocol version nor set or detected.");
+                throw new InvalidOperationException("Protocol version not set or detected.");
             }
 
             return Serializer.Deserialize(receivedMqttPacket);
@@ -48,6 +48,10 @@ namespace MQTTnet.Serializer
         public void DetectProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
         {
             var protocolVersion = ParseProtocolVersion(receivedMqttPacket);
+
+            // Reset the position of the stream beacuse the protocol version is part of 
+            // the regular CONNECT packet. So it will not properly deserialized if this
+            // data is missing.
             receivedMqttPacket.Body.Seek(0);
 
             UseProtocolVersion(protocolVersion);

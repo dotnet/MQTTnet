@@ -2,7 +2,6 @@
 using System;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.IO;
@@ -17,7 +16,7 @@ namespace MQTTnet.Implementations
     {
         private readonly IMqttClientOptions _clientOptions;
         private readonly MqttClientTcpOptions _options;
-        
+
         private Socket _socket;
         private Stream _stream;
 
@@ -87,8 +86,9 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            Cleanup(ref _stream, (s) => s.Dispose());
-            Cleanup(ref _socket, (s) => {
+            Cleanup(ref _stream, s => s.Dispose());
+            Cleanup(ref _socket, s =>
+            {
                 if (s.Connected)
                 {
                     s.Shutdown(SocketShutdown.Both);
@@ -102,7 +102,7 @@ namespace MQTTnet.Implementations
             // Try the instance callback.
             if (_options.TlsOptions.CertificateValidationCallback != null)
             {
-                return _options.TlsOptions.CertificateValidationCallback(x509Certificate, chain, sslPolicyErrors,_clientOptions);
+                return _options.TlsOptions.CertificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _clientOptions);
             }
 
             // Try static callback.

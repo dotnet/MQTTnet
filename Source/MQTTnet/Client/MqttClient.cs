@@ -139,7 +139,7 @@ namespace MQTTnet.Client
             return subscribePacket.TopicFilters.Select((t, i) => new MqttSubscribeResult(t, response.SubscribeReturnCodes[i])).ToList();
         }
 
-        public async Task UnsubscribeAsync(IEnumerable<string> topicFilters)
+        public Task UnsubscribeAsync(IEnumerable<string> topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
@@ -151,7 +151,7 @@ namespace MQTTnet.Client
                 TopicFilters = topicFilters.ToList()
             };
 
-            await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, _cancellationTokenSource.Token).ConfigureAwait(false);
+            return SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, _cancellationTokenSource.Token);
         }
 
         public Task PublishAsync(MqttApplicationMessage applicationMessage)
@@ -234,14 +234,14 @@ namespace MQTTnet.Client
 
             try
             {
-                await WaitForTaskAsync(_packetReceiverTask, sender).ConfigureAwait(false);
-                await WaitForTaskAsync(_keepAliveMessageSenderTask, sender).ConfigureAwait(false);
-
                 if (_adapter != null)
                 {
                     await _adapter.DisconnectAsync(_options.CommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
                 }
 
+                await WaitForTaskAsync(_packetReceiverTask, sender).ConfigureAwait(false);
+                await WaitForTaskAsync(_keepAliveMessageSenderTask, sender).ConfigureAwait(false);
+                
                 _logger.Verbose("Disconnected from adapter.");
             }
             catch (Exception adapterException)
@@ -320,10 +320,10 @@ namespace MQTTnet.Client
 
         private async Task SendKeepAliveMessagesAsync(CancellationToken cancellationToken)
         {
-            _logger.Verbose("Start sending keep alive packets.");
-
             try
             {
+                _logger.Verbose("Start sending keep alive packets.");
+
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var keepAliveSendInterval = TimeSpan.FromSeconds(_options.KeepAlivePeriod.TotalSeconds * 0.75);
@@ -374,10 +374,10 @@ namespace MQTTnet.Client
 
         private async Task ReceivePacketsAsync(CancellationToken cancellationToken)
         {
-            _logger.Verbose("Start receiving packets.");
-
             try
             {
+                _logger.Verbose("Start receiving packets.");
+
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var packet = await _adapter.ReceivePacketAsync(TimeSpan.Zero, cancellationToken)
@@ -500,7 +500,7 @@ namespace MQTTnet.Client
                 () => ReceivePacketsAsync(cancellationToken),
                 cancellationToken,
                 TaskCreationOptions.LongRunning, 
-                TaskScheduler.Default);
+                TaskScheduler.Default).Unwrap();
         }
 
         private void StartSendingKeepAliveMessages(CancellationToken cancellationToken)
@@ -509,7 +509,7 @@ namespace MQTTnet.Client
                 () => SendKeepAliveMessagesAsync(cancellationToken),
                 cancellationToken,
                 TaskCreationOptions.LongRunning,
-                TaskScheduler.Default);
+                TaskScheduler.Default).Unwrap();
         }
 
         private void FireApplicationMessageReceivedEvent(MqttPublishPacket publishPacket)

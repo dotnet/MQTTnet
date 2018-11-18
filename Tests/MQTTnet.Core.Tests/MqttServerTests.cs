@@ -4,6 +4,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -389,6 +390,8 @@ namespace MQTTnet.Core.Tests
             }
 
             await c2.DisconnectAsync();
+
+            await s.StopAsync();
         }
 
         [TestMethod]
@@ -655,26 +658,23 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public async Task MqttServer_SameClientIdConnectDisconnectEventOrder()
         {
-            var serverAdapter = new MqttTcpServerAdapter(new MqttNetLogger().CreateChildLogger());
-            var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
+            var s = new MqttFactory().CreateMqttServer();
 
-            var connectedClient = false;
-            var connecteCalledBeforeConnectedClients = false;
+            var events = new ConcurrentBag<string>();
 
             s.ClientConnected += (_, __) =>
             {
-                connecteCalledBeforeConnectedClients |= connectedClient;
-                connectedClient = true;
+                events.Add("c");
             };
 
             s.ClientDisconnected += (_, __) =>
             {
-                connectedClient = false;
+                events.Add("d");
             };
 
             var clientOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer("localhost")
-                .WithClientId(Guid.NewGuid().ToString())
+                .WithClientId("same_id")
                 .Build();
 
             await s.StartAsync(new MqttServerOptions());
@@ -684,20 +684,24 @@ namespace MQTTnet.Core.Tests
 
             await c1.ConnectAsync(clientOptions);
 
-            await Task.Delay(100);
+            await Task.Delay(250);
 
             await c2.ConnectAsync(clientOptions);
 
-            await Task.Delay(100);
+            await Task.Delay(250);
 
             await c1.DisconnectAsync();
             await c2.DisconnectAsync();
 
+            await Task.Delay(250);
+
+            var flow = string.Join(string.Empty, events);
+            
             await s.StopAsync();
 
-            await Task.Delay(100);
+            Assert.AreEqual("cdcd", flow);
 
-            Assert.IsFalse(connecteCalledBeforeConnectedClients, "ClientConnected was called before ClientDisconnect was called");
+            //Assert.IsFalse(connecteCalledBeforeConnectedClients, "ClientConnected was called before ClientDisconnect was called");
         }
 
 
@@ -725,6 +729,8 @@ namespace MQTTnet.Core.Tests
             await server.StartAsync(new MqttServerOptions());
             var client3 = new MqttFactory().CreateMqttClient();
             await client3.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost").Build());
+
+            await server.StopAsync();
         }
 
         private class TestStorage : IMqttServerStorage

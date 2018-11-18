@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Serializer
+﻿namespace MQTTnet.Formatter
 {
     public enum MqttProtocolVersion
     {

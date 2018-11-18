@@ -1,5 +1,5 @@
 ﻿using System;
-using MQTTnet.Serializer;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.Client
 {

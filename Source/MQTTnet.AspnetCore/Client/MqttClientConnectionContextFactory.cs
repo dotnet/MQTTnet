@@ -4,7 +4,7 @@ using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
-using MQTTnet.Serializer;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.AspNetCore.Client
 {

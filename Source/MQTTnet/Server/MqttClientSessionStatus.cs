@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MQTTnet.Serializer;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.Server
 {

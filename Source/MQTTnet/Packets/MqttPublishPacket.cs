@@ -1,4 +1,6 @@
-﻿using MQTTnet.Protocol;
+﻿using System.Collections.Generic;
+using MQTTnet.Packets.Properties;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
@@ -13,6 +15,11 @@ namespace MQTTnet.Packets
         public string Topic { get; set; }
 
         public byte[] Payload { get; set; }
+
+        /// <summary>
+        /// Added in MQTTv5.0.0.
+        /// </summary>
+        public List<IProperty> Properties { get; set; }
 
         public override string ToString()
         {

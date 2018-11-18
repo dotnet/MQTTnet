@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 
 namespace MQTTnet.Adapter
 {
@@ -96,7 +96,7 @@ namespace MQTTnet.Adapter
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                var packetData = PacketSerializerAdapter.Serialize(packet);
+                var packetData = PacketSerializerAdapter.Encode(packet);
                 await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
                 PacketSerializerAdapter.FreeBuffer();
 
@@ -144,7 +144,7 @@ namespace MQTTnet.Adapter
                     PacketSerializerAdapter.DetectProtocolVersion(receivedMqttPacket);
                 }
 
-                var packet = PacketSerializerAdapter.Deserialize(receivedMqttPacket);
+                var packet = PacketSerializerAdapter.Decode(receivedMqttPacket);
                 if (packet == null)
                 {
                     throw new MqttProtocolViolationException("Received malformed packet.");

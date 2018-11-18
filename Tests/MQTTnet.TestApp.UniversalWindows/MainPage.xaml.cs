@@ -12,9 +12,9 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Extensions.Rpc;
+using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
-using MQTTnet.Serializer;
 using MQTTnet.Server;
 using MqttClientConnectedEventArgs = MQTTnet.Client.MqttClientConnectedEventArgs;
 using MqttClientDisconnectedEventArgs = MQTTnet.Client.MqttClientDisconnectedEventArgs;
@@ -124,7 +124,20 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             options.CleanSession = CleanSession.IsChecked == true;
             options.KeepAlivePeriod = TimeSpan.FromSeconds(double.Parse(KeepAliveInterval.Text));
-            
+
+            if (UseMqtt310.IsChecked == true)
+            {
+                options.ProtocolVersion = MqttProtocolVersion.V310;
+            }
+            else if (UseMqtt311.IsChecked == true)
+            {
+                options.ProtocolVersion = MqttProtocolVersion.V311;
+            }
+            else if (UseMqtt500.IsChecked == true)
+            {
+                options.ProtocolVersion = MqttProtocolVersion.V500;
+            }
+
             try
             {
                 if (_mqttClient != null)
@@ -426,14 +439,14 @@ namespace MQTTnet.TestApp.UniversalWindows
             _sessions.Clear();
         }
 
-        private async void RefreshSessions(object sender, RoutedEventArgs e)
+        private void RefreshSessions(object sender, RoutedEventArgs e)
         {
             if (_mqttServer == null)
             {
                 return;
             }
 
-            var sessions = await _mqttServer.GetClientSessionsStatusAsync();
+            var sessions = _mqttServer.GetClientSessionsStatus();
             _sessions.Clear();
 
             foreach (var session in sessions)

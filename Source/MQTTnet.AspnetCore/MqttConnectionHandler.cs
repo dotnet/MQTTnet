@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using MQTTnet.Adapter;
-using MQTTnet.Serializer;
 using MQTTnet.Server;
 using System;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.AspNetCore
 {

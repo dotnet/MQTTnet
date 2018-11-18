@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using MQTTnet.Serializer;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.Client
 {

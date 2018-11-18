@@ -5,7 +5,7 @@ namespace MQTTnet.Packets.Properties
     public class WillDelayIntervalProperty : FourByteIntegerValue
     {
         public WillDelayIntervalProperty(uint value) 
-            : base((byte)PropertyID.WillDelayInterval, value)
+            : base((byte)MqttMessagePropertyID.WillDelayInterval, value)
         {
         }
     }

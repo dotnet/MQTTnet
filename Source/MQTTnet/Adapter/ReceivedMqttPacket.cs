@@ -1,4 +1,4 @@
-﻿using MQTTnet.Serializer;
+﻿using MQTTnet.Formatter;
 
 namespace MQTTnet.Adapter
 {

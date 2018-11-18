@@ -1,9 +1,11 @@
-﻿namespace MQTTnet.Packets.Properties
+﻿using MQTTnet.Packets.Properties.BaseTypes;
+
+namespace MQTTnet.Packets.Properties
 {
     public class AssignedClientIdentifierProperty : StringProperty
     {
         public AssignedClientIdentifierProperty(string value) 
-            : base((byte)PropertyID.AssignedClientIdentifer, value)
+            : base((byte)MqttMessagePropertyID.AssignedClientIdentifer, value)
         {
         }
     }

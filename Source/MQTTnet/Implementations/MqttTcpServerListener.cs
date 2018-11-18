@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
-using MQTTnet.Serializer;
+using MQTTnet.Formatter;
 using MQTTnet.Server;
 
 namespace MQTTnet.Implementations

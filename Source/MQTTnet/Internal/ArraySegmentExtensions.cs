@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace MQTTnet.Serializer
+namespace MQTTnet.Internal
 {
-    public static class Extensions
+    public static class ArraySegmentExtensions
     {
         public static byte[] ToArray(this ArraySegment<byte> source)
         {

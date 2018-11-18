@@ -4,7 +4,7 @@ using MQTTnet.Channel;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 
-namespace MQTTnet.Serializer
+namespace MQTTnet.Formatter
 {
     public static class MqttPacketReader
     {

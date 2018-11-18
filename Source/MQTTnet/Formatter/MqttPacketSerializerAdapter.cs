@@ -1,9 +1,12 @@
 ﻿using System;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter.V310;
+using MQTTnet.Formatter.V311;
+using MQTTnet.Formatter.V500;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Serializer
+namespace MQTTnet.Formatter
 {
     public class MqttPacketSerializerAdapter
     {
@@ -18,31 +21,31 @@ namespace MQTTnet.Serializer
 
         public MqttProtocolVersion? ProtocolVersion { get; private set; }
 
-        public IMqttPacketSerializer Serializer { get; private set; }
+        public IMqttPacketFormatter Formatter { get; private set; }
 
-        public ArraySegment<byte> Serialize(MqttBasePacket packet)
+        public ArraySegment<byte> Encode(MqttBasePacket packet)
         {
-            if (Serializer == null)
+            if (Formatter == null)
             {
                 throw new InvalidOperationException("Protocol version not set or detected.");
             }
 
-            return Serializer.Serialize(packet);
+            return Formatter.Encode(packet);
         }
 
-        public MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket)
+        public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
-            if (Serializer == null)
+            if (Formatter == null)
             {
                 throw new InvalidOperationException("Protocol version not set or detected.");
             }
 
-            return Serializer.Deserialize(receivedMqttPacket);
+            return Formatter.Decode(receivedMqttPacket);
         }
 
         public void FreeBuffer()
         {
-            Serializer?.FreeBuffer();
+            Formatter?.FreeBuffer();
         }
 
         public void DetectProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
@@ -65,20 +68,20 @@ namespace MQTTnet.Serializer
             {
                 case MqttProtocolVersion.V500:
                     {
-                        Serializer = new MqttV500PacketSerializer();
+                        Formatter = new MqttV500PacketFormatter();
                         break;
                     }
 
                 case MqttProtocolVersion.V311:
                     {
-                        Serializer = new MqttV311PacketSerializer();
+                        Formatter = new MqttV311PacketFormatter();
                         break;
                     }
 
                 case MqttProtocolVersion.V310:
                     {
 
-                        Serializer = new MqttV310PacketSerializer();
+                        Formatter = new MqttV310PacketFormatter();
                         break;
                     }
                     

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Serializer
+namespace MQTTnet.Formatter
 {
     /// <summary>
     /// This is a custom implementation of a memory stream which provides only MQTTnet relevant features.

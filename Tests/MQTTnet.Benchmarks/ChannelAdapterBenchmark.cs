@@ -3,10 +3,10 @@ using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 using System;
 using System.IO;
 using System.Threading;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.Benchmarks
 {
@@ -28,7 +28,7 @@ namespace MQTTnet.Benchmarks
             _packet = message.ToPublishPacket();
             var serializer = new MqttPacketSerializerAdapter(MqttProtocolVersion.V311);
             
-            var serializedPacket = Join(serializer.Serialize(_packet));
+            var serializedPacket = Join(serializer.Encode(_packet));
 
             _iterations = 10000;
 

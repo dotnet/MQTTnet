@@ -2,8 +2,8 @@
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Internal;
-using MQTTnet.Serializer;
 
 namespace MQTTnet.Core.Tests
 {

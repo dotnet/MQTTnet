@@ -1,9 +1,11 @@
-﻿namespace MQTTnet.Packets.Properties
+﻿using MQTTnet.Packets.Properties.BaseTypes;
+
+namespace MQTTnet.Packets.Properties
 {
     public class RequestResponseInformationProperty : ByteProperty
     {
         public RequestResponseInformationProperty(byte value) 
-            : base((byte)PropertyID.RequestResponseInformation, value)
+            : base((byte)MqttMessagePropertyID.RequestResponseInformation, value)
         {
         }
     }

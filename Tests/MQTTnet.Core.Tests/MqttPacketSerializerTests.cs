@@ -7,7 +7,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
-using MQTTnet.Packets.V3;
 using MQTTnet.Protocol;
 using MQTTnet.Serializer;
 
@@ -108,7 +107,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void SerializeV311_MqttConnAckPacket()
         {
-            var p = new MqttV3ConnAckPacket
+            var p = new MqttConnAckPacket
             {
                 IsSessionPresent = true,
                 ConnectReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized
@@ -120,7 +119,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void SerializeV310_MqttConnAckPacket()
         {
-            var p = new MqttV3ConnAckPacket
+            var p = new MqttConnAckPacket
             {
                 ConnectReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized
             };
@@ -131,7 +130,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void DeserializeV311_MqttConnAckPacket()
         {
-            var p = new MqttV3ConnAckPacket
+            var p = new MqttConnAckPacket
             {
                 IsSessionPresent = true,
                 ConnectReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized
@@ -143,7 +142,7 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public void DeserializeV310_MqttConnAckPacket()
         {
-            var p = new MqttV3ConnAckPacket
+            var p = new MqttConnAckPacket
             {
                 ConnectReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized
             };

@@ -9,7 +9,6 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
-using MQTTnet.Packets.V3;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
@@ -229,7 +228,7 @@ namespace MQTTnet.Server
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
                     await clientAdapter.SendPacketAsync(
-                        new MqttV3ConnAckPacket
+                        new MqttConnAckPacket
                         {
                             ConnectReturnCode = connectReturnCode
                         },
@@ -242,7 +241,7 @@ namespace MQTTnet.Server
                 var clientSession = result.Session;
 
                 await clientAdapter.SendPacketAsync(
-                    new MqttV3ConnAckPacket
+                    new MqttConnAckPacket
                     {
                         ConnectReturnCode = connectReturnCode,
                         IsSessionPresent = result.IsExistingSession

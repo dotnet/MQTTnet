@@ -3,20 +3,23 @@ using MQTTnet.Serializer;
 
 namespace MQTTnet.Packets.Properties
 {
-    public class StringValue : IPropertyValue
+    public class ByteProperty : IProperty
     {
-        public StringValue(string value)
+        public ByteProperty(byte id, byte value)
         {
+            Id = id;
             Value = value;
         }
 
-        public string Value { get; }
+        public byte Id { get; }
+
+        public byte Value { get; }
 
         public void WriteTo(MqttPacketWriter writer)
         {
             if (writer == null) throw new ArgumentNullException(nameof(writer));
-
-            writer.WriteWithLengthPrefix(Value);
+            
+            writer.Write(Value);
         }
     }
 }

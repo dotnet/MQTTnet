@@ -1,21 +1,24 @@
 ﻿using System;
 using MQTTnet.Serializer;
 
-namespace MQTTnet.Packets.Properties
+namespace MQTTnet.Packets.Properties.BaseTypes
 {
-    public class ByteValue : IPropertyValue
+    public class TwoByteIntegerProperty : IProperty
     {
-        public ByteValue(byte value)
+        public TwoByteIntegerProperty(byte id, ushort value)
         {
+            Id = id;
             Value = value;
         }
 
-        public byte Value { get; }
+        public byte Id { get; }
+
+        public ushort Value { get; }
 
         public void WriteTo(MqttPacketWriter writer)
         {
             if (writer == null) throw new ArgumentNullException(nameof(writer));
-            
+
             writer.Write(Value);
         }
     }

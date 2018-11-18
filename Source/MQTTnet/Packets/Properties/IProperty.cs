@@ -2,8 +2,10 @@
 
 namespace MQTTnet.Packets.Properties
 {
-    public interface IPropertyValue
+    public interface IProperty
     {
+        byte Id { get; }
+
         void WriteTo(MqttPacketWriter writer);
     }
 }

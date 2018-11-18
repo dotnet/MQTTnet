@@ -100,9 +100,18 @@ namespace MQTTnet.Formatter.V500
             WriteProperty(MqttMessagePropertyID.SessionExpiryInterval, packet.SessionExpiryIntervalProperty, packetWriter);
             WriteProperty(MqttMessagePropertyID.AuthenticationMethod, packet.AuthenticationMethodProperty, packetWriter);
             WriteProperty(MqttMessagePropertyID.AuthenticationData, packet.AuthenticationDataProperty, packetWriter);
+            WriteProperty(MqttMessagePropertyID.RetainAvailable, packet.RetainAvailableProperty, packetWriter);
             WriteProperty(MqttMessagePropertyID.ReceiveMaximum, packet.ReceiveMaximumProperty, packetWriter);
+            WriteProperty(MqttMessagePropertyID.AssignedClientIdentifer, packet.AssignedClientIdentifierProperty, packetWriter);
             WriteProperty(MqttMessagePropertyID.TopicAlias, packet.TopicAliasMaximumProperty, packetWriter);
+            WriteProperty(MqttMessagePropertyID.ReasonString, packet.ReasonStringProperty, packetWriter);
             WriteProperty(MqttMessagePropertyID.MaximumPacketSize, packet.MaximumPacketSizeProperty, packetWriter);
+            WriteProperty(MqttMessagePropertyID.WildcardSubscriptionAvailable, packet.WildcardSubscriptionAvailableProperty, packetWriter);
+            WriteProperty(MqttMessagePropertyID.SubscriptionIdentifierAvailable, packet.SubscriptionIdentifiersAvailableProperty, packetWriter);
+            WriteProperty(MqttMessagePropertyID.SharedSubscriptionAvailable, packet.SharedSubscriptionAvailableProperty, packetWriter);
+            WriteProperty(MqttMessagePropertyID.ServerKeepAlive, packet.ServerKeepAliveProperty, packetWriter);
+            WriteProperty(MqttMessagePropertyID.ResponseInformation, packet.ResponseInformationProperty, packetWriter);
+            WriteProperty(MqttMessagePropertyID.ServerReference, packet.ServerReferenceProperty, packetWriter);
             WriteUserProperties(packet.UserPropertiesProperty, packetWriter);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);

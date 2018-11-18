@@ -1,10 +1,11 @@
 ﻿using MQTTnet.Exceptions;
+using MQTTnet.Formatter.V310;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Serializer
+namespace MQTTnet.Formatter.V311
 {
-    public class MqttV311PacketSerializer : MqttV310PacketSerializer
+    public class MqttV311PacketFormatter : MqttV310PacketFormatter
     {
         protected override byte SerializeConnectPacket(MqttConnectPacket packet, MqttPacketWriter packetWriter)
         {

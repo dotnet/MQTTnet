@@ -5,7 +5,7 @@ namespace MQTTnet.Packets.Properties
     public class MessageExpiryIntervalProperty : FourByteIntegerValue
     {
         public MessageExpiryIntervalProperty(uint value) 
-            : base((byte)PropertyID.MessageExpiryInterval, value)
+            : base((byte)MqttMessagePropertyID.MessageExpiryInterval, value)
         {
         }
     }

@@ -5,7 +5,7 @@ namespace MQTTnet.Packets.Properties
     public class SubscriptionIdentifierProperty : VariableByteIntegerProperty
     {
         public SubscriptionIdentifierProperty(uint value) 
-            : base((byte)PropertyID.SubscriptionIdentifier, value)
+            : base((byte)MqttMessagePropertyID.SubscriptionIdentifier, value)
         {
         }
     }

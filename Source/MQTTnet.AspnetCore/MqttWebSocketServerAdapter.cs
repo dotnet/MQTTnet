@@ -3,8 +3,8 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
+using MQTTnet.Formatter;
 using MQTTnet.Implementations;
-using MQTTnet.Serializer;
 using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore

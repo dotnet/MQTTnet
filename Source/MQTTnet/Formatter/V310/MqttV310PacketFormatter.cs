@@ -1,19 +1,20 @@
-﻿using MQTTnet.Exceptions;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
-using System;
+﻿using System;
 using System.Linq;
 using MQTTnet.Adapter;
+using MQTTnet.Exceptions;
+using MQTTnet.Internal;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
-namespace MQTTnet.Serializer
+namespace MQTTnet.Formatter.V310
 {
-    public class MqttV310PacketSerializer : IMqttPacketSerializer
+    public class MqttV310PacketFormatter : IMqttPacketFormatter
     {
         private const int FixedHeaderSize = 1;
 
         private readonly MqttPacketWriter _packetWriter = new MqttPacketWriter();
 
-        public ArraySegment<byte> Serialize(MqttBasePacket packet)
+        public ArraySegment<byte> Encode(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
@@ -38,7 +39,7 @@ namespace MQTTnet.Serializer
             return new ArraySegment<byte>(buffer, headerOffset, _packetWriter.Length - headerOffset);
         }
 
-        public MqttBasePacket Deserialize(ReceivedMqttPacket receivedMqttPacket)
+        public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
             if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
 
@@ -299,11 +300,6 @@ namespace MQTTnet.Serializer
             if (string.IsNullOrEmpty(packet.ClientId) && !packet.CleanSession)
             {
                 throw new MqttProtocolViolationException("CleanSession must be set if ClientId is empty [MQTT-3.1.3-7].");
-            }
-
-            if (packet.Properties != null)
-            {
-                throw new MqttProtocolViolationException("Properties are only supported in MQTT Version 5.");
             }
         }
 

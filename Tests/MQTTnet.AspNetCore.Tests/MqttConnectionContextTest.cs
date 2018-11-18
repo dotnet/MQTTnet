@@ -3,11 +3,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.AspNetCore.Tests.Mockups;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.AspNetCore.Tests
 {

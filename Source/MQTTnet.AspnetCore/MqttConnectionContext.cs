@@ -3,11 +3,11 @@ using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 using System;
 using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.AspNetCore
 {
@@ -72,7 +72,7 @@ namespace MQTTnet.AspNetCore
                     {
                         if (!buffer.IsEmpty)
                         {
-                            if (PacketSerializerAdapter.Serializer.TryDeserialize(buffer, out var packet, out consumed, out observed))
+                            if (PacketSerializerAdapter.Formatter.TryDeserialize(buffer, out var packet, out consumed, out observed))
                             {
                                 return packet;
                             }
@@ -107,7 +107,7 @@ namespace MQTTnet.AspNetCore
 
         public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            var buffer = PacketSerializerAdapter.Serialize(packet).AsMemory();
+            var buffer = PacketSerializerAdapter.Encode(packet).AsMemory();
             var output = Connection.Transport.Output;
 
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);

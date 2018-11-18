@@ -1,5 +1,5 @@
 ﻿using System;
-using MQTTnet.Serializer;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.Packets.Properties.BaseTypes
 {
@@ -20,6 +20,7 @@ namespace MQTTnet.Packets.Properties.BaseTypes
             if (writer == null) throw new ArgumentNullException(nameof(writer));
 
             // TODO: Check if order must be reversed like for ushort.
+            writer.Write(Id);
             var bytes = BitConverter.GetBytes(Value);
             writer.Write(bytes, 0, bytes.Length);
         }

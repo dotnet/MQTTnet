@@ -1,9 +1,11 @@
-﻿namespace MQTTnet.Packets.Properties
+﻿using MQTTnet.Packets.Properties.BaseTypes;
+
+namespace MQTTnet.Packets.Properties
 {
     public class ContentTypeProperty : StringProperty
     {
         public ContentTypeProperty(string value) 
-            : base((byte)PropertyID.ContentType, value)
+            : base((byte)MqttMessagePropertyID.ContentType, value)
         {
         }
     }

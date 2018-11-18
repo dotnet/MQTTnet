@@ -37,6 +37,7 @@
                             <RowDefinition></RowDefinition>
                             <RowDefinition></RowDefinition>
                             <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Column="0" Grid.Row="0">Server:</TextBlock>
@@ -57,11 +58,18 @@
                         <TextBlock Grid.Column="0" Grid.Row="5">Keep Alive interval:</TextBlock>
                         <TextBox Grid.Column="1" Grid.Row="5" x:Name="KeepAliveInterval" Text="5"></TextBox>
 
-                        <TextBlock Grid.Column="0" Grid.Row="6">Protocol:</TextBlock>
+                        <TextBlock Grid.Column="0" Grid.Row="6">Transport:</TextBlock>
                         <StackPanel Grid.Column="1" Grid.Row="6" Orientation="Horizontal">
-                            <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="connection">TCP</RadioButton>
-                            <RadioButton x:Name="UseWs" GroupName="connection">WS</RadioButton>
+                            <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="transport">TCP</RadioButton>
+                            <RadioButton x:Name="UseWs" GroupName="transport">WS</RadioButton>
                             <CheckBox x:Name="UseTls">Use TLS</CheckBox>
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="0" Grid.Row="7">Protocol:</TextBlock>
+                        <StackPanel Grid.Column="1" Grid.Row="7" Orientation="Horizontal">
+                            <RadioButton x:Name="UseMqtt500" GroupName="protocol">5.0.0</RadioButton>
+                            <RadioButton x:Name="UseMqtt311" GroupName="protocol" IsChecked="True">3.1.1</RadioButton>
+                            <RadioButton x:Name="UseMqtt310" GroupName="protocol">3.1.0</RadioButton>
                         </StackPanel>
                     </Grid>
                    

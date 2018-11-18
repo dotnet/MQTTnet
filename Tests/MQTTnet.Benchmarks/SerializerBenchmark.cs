@@ -1,12 +1,13 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 using MQTTnet.Internal;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Channel;
+using MQTTnet.Formatter;
+using MQTTnet.Formatter.V311;
 
 namespace MQTTnet.Benchmarks
 {
@@ -17,7 +18,7 @@ namespace MQTTnet.Benchmarks
     {
         private MqttBasePacket _packet;
         private ArraySegment<byte> _serializedPacket;
-        private IMqttPacketSerializer _serializer;
+        private IMqttPacketFormatter _serializer;
 
         [GlobalSetup]
         public void Setup()
@@ -27,8 +28,8 @@ namespace MQTTnet.Benchmarks
                 .Build();
 
             _packet = message.ToPublishPacket();
-            _serializer = new MqttV311PacketSerializer();
-            _serializedPacket = _serializer.Serialize(_packet);
+            _serializer = new MqttV311PacketFormatter();
+            _serializedPacket = _serializer.Encode(_packet);
         }
 
         [Benchmark]
@@ -36,7 +37,7 @@ namespace MQTTnet.Benchmarks
         {
             for (var i = 0; i < 10000; i++)
             {
-                _serializer.Serialize(_packet);
+                _serializer.Encode(_packet);
                 _serializer.FreeBuffer();
             }
         }
@@ -58,7 +59,7 @@ namespace MQTTnet.Benchmarks
                     header.Flags,
                     new MqttPacketBodyReader(_serializedPacket.Array, _serializedPacket.Count - header.RemainingLength, _serializedPacket.Array.Length));
 
-                _serializer.Deserialize(receivedPacket);
+                _serializer.Decode(receivedPacket);
             }
         }
 

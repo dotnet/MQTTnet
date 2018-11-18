@@ -2,8 +2,8 @@
 using System.Buffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.AspNetCore;
+using MQTTnet.Formatter.V311;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 
 namespace MQTTnet.AspNetCore.Tests
 {
@@ -13,9 +13,9 @@ namespace MQTTnet.AspNetCore.Tests
         [TestMethod]
         public void TestTryDeserialize()
         {
-            var serializer = new MqttV311PacketSerializer();
+            var serializer = new MqttV311PacketFormatter();
 
-            var buffer = serializer.Serialize(new MqttPublishPacket() {Topic = "a", Payload = new byte[5]});
+            var buffer = serializer.Encode(new MqttPublishPacket() {Topic = "a", Payload = new byte[5]});
 
             var sequence = new ReadOnlySequence<byte>(buffer.Array, buffer.Offset, buffer.Count);
 

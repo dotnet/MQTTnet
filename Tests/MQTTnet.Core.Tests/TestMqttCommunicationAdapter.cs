@@ -3,8 +3,8 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
+using MQTTnet.Formatter;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 
 namespace MQTTnet.Core.Tests
 {

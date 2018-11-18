@@ -1,7 +1,7 @@
 ﻿using System;
-using MQTTnet.Serializer;
+using MQTTnet.Formatter;
 
-namespace MQTTnet.Packets.Properties
+namespace MQTTnet.Packets.Properties.BaseTypes
 {
     public class ByteProperty : IProperty
     {
@@ -18,7 +18,8 @@ namespace MQTTnet.Packets.Properties
         public void WriteTo(MqttPacketWriter writer)
         {
             if (writer == null) throw new ArgumentNullException(nameof(writer));
-            
+
+            writer.Write(Id);
             writer.Write(Value);
         }
     }

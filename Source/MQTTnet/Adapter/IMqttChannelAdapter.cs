@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 
 namespace MQTTnet.Adapter
 {

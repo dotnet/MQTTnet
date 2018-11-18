@@ -1,5 +1,5 @@
 ﻿using System;
-using MQTTnet.Serializer;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.Packets.Properties.BaseTypes
 {
@@ -20,6 +20,8 @@ namespace MQTTnet.Packets.Properties.BaseTypes
             if (writer == null) throw new ArgumentNullException(nameof(writer));
 
             var buffer = MqttPacketWriter.EncodeVariableByteInteger(Value);
+
+            writer.Write(Id);
             writer.Write(buffer);
         }
     }

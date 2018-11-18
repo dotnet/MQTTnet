@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace MQTTnet.Serializer
+namespace MQTTnet.Formatter
 {
     public class MqttPacketBodyReader
     {

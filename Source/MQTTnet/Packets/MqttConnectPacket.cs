@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using MQTTnet.Packets.Properties;
 
 namespace MQTTnet.Packets
 {
@@ -24,7 +23,29 @@ namespace MQTTnet.Packets
 
         public MqttApplicationMessage WillMessage { get; set; }
 
-        public List<IProperty> Properties { get; set; }
+        #region Added in MQTTv5
+
+        public uint? WillDelayIntervalProperty { get; set; }
+
+        public uint? SessionExpiryIntervalProperty { get; set; }
+
+        public string AuthenticationMethodProperty { get; set; }
+
+        public byte[] AuthenticationDataProperty { get; set; }
+
+        public bool? RequestProblemInformationProperty { get; set; }
+
+        public bool? RequestResponseInformationProperty { get; set; }
+
+        public ushort? ReceiveMaximumProperty { get; set; }
+
+        public ushort? TopicAliasMaximumProperty { get; set; }
+
+        public uint? MaximumPacketSizeProperty { get; set; }
+
+        public List<MqttUserProperty> UserPropertiesProperty { get; set; }
+
+        #endregion
 
         public override string ToString()
         {

@@ -2,15 +2,17 @@
 using System.Buffers;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 
 namespace MQTTnet.AspNetCore
 {
     public static class ReaderExtensions
     {
-        public static bool TryDeserialize(this IMqttPacketSerializer serializer, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)
+        public static bool TryDeserialize(this IMqttPacketFormatter formatter, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)
         {
+            if (formatter == null) throw new ArgumentNullException(nameof(formatter));
+
             packet = null;
             consumed = input.Start;
             observed = input.End;
@@ -33,7 +35,7 @@ namespace MQTTnet.AspNetCore
 
             var bodySlice = copy.Slice(0, bodyLength);
             var buffer = bodySlice.GetArray();
-            packet = serializer.Deserialize(new ReceivedMqttPacket(fixedheader, new MqttPacketBodyReader(buffer, 0, buffer.Length)));
+            packet = formatter.Decode(new ReceivedMqttPacket(fixedheader, new MqttPacketBodyReader(buffer, 0, buffer.Length)));
             consumed = bodySlice.End;
             observed = bodySlice.End;
             return true;

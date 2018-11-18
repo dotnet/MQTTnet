@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Windows.Networking.Sockets;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
-using MQTTnet.Serializer;
+using MQTTnet.Formatter;
 using MQTTnet.Server;
 
 namespace MQTTnet.Implementations

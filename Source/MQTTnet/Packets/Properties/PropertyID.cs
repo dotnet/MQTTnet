@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Packets.Properties
 {
-    public enum PropertyType
+    public enum PropertyID
     {
         PayloadFormatIndicator = 1,
         MessageExpiryInterval = 2,

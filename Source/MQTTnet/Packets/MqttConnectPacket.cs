@@ -24,7 +24,7 @@ namespace MQTTnet.Packets
 
         public MqttApplicationMessage WillMessage { get; set; }
 
-        public List<Property> Properties { get; set; }
+        public List<IProperty> Properties { get; set; }
 
         public override string ToString()
         {

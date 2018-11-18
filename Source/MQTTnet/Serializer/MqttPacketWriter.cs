@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Text;
 using MQTTnet.Protocol;
 
@@ -27,7 +28,7 @@ namespace MQTTnet.Serializer
             return (byte)fixedHeader;
         }
 
-        public static ArraySegment<byte> EncodeVariableByteInteger(int value)
+        public static ArraySegment<byte> EncodeVariableByteInteger(uint value)
         {
             if (value <= 0)
             {
@@ -54,7 +55,7 @@ namespace MQTTnet.Serializer
             return new ArraySegment<byte>(buffer, 0, bufferOffset);
         }
 
-        public void WriteVariableLengthInteger(int value)
+        public void WriteVariableLengthInteger(uint value)
         {
             Write(EncodeVariableByteInteger(value));
         }
@@ -146,6 +147,7 @@ namespace MQTTnet.Serializer
             Array.Resize(ref _buffer, MaxBufferSize);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureAdditionalCapacity(int additionalCapacity)
         {
             var freeSpace = _buffer.Length - _position;
@@ -157,6 +159,7 @@ namespace MQTTnet.Serializer
             EnsureCapacity(_buffer.Length + additionalCapacity - freeSpace);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureCapacity(int capacity)
         {
             var newBufferLength = _buffer.Length;
@@ -174,6 +177,7 @@ namespace MQTTnet.Serializer
             Array.Resize(ref _buffer, newBufferLength);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void IncreasePostition(int length)
         {
             _position += length;

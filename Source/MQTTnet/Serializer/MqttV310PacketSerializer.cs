@@ -23,7 +23,7 @@ namespace MQTTnet.Serializer
             _packetWriter.Seek(5);
 
             var fixedHeader = SerializePacket(packet, _packetWriter);
-            var remainingLength = _packetWriter.Length - 5;
+            var remainingLength = (uint)(_packetWriter.Length - 5);
 
             var remainingLengthBuffer = MqttPacketWriter.EncodeVariableByteInteger(remainingLength);
 

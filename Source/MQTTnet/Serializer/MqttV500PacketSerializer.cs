@@ -82,11 +82,11 @@ namespace MQTTnet.Serializer
                 var propertyWriter = new MqttPacketWriter();
                 foreach (var property in packet.Properties)
                 {
-                    propertyWriter.Write((byte)property.Key);
-                    property.Value.WriteTo(propertyWriter);
+                    propertyWriter.Write(property.Id);
+                    property.WriteTo(propertyWriter);
                 }
 
-                packetWriter.WriteVariableLengthInteger(propertyWriter.Length);
+                packetWriter.WriteVariableLengthInteger((uint)propertyWriter.Length);
                 packetWriter.Write(propertyWriter);
             }
 

@@ -4,7 +4,6 @@ using MQTTnet.Protocol;
 using System;
 using System.Linq;
 using MQTTnet.Adapter;
-using MQTTnet.Packets.V3;
 
 namespace MQTTnet.Serializer
 {
@@ -80,7 +79,7 @@ namespace MQTTnet.Serializer
             switch (packet)
             {
                 case MqttConnectPacket connectPacket: return SerializeConnectPacket(connectPacket, packetWriter);
-                case MqttV3ConnAckPacket connAckPacket: return SerializeConnAckPacket(connAckPacket, packetWriter);
+                case MqttConnAckPacket connAckPacket: return SerializeConnAckPacket(connAckPacket, packetWriter);
                 case MqttDisconnectPacket _: return SerializeEmptyPacket(MqttControlPacketType.Disconnect);
                 case MqttPingReqPacket _: return SerializeEmptyPacket(MqttControlPacketType.PingReq);
                 case MqttPingRespPacket _: return SerializeEmptyPacket(MqttControlPacketType.PingResp);
@@ -285,7 +284,7 @@ namespace MQTTnet.Serializer
         {
             ThrowIfBodyIsEmpty(body);
 
-            var packet = new MqttV3ConnAckPacket();
+            var packet = new MqttConnAckPacket();
 
             body.ReadByte(); // Reserved.
             packet.ConnectReturnCode = (MqttConnectReturnCode)body.ReadByte();
@@ -379,7 +378,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Connect);
         }
 
-        protected virtual byte SerializeConnAckPacket(MqttV3ConnAckPacket packet, MqttPacketWriter packetWriter)
+        protected virtual byte SerializeConnAckPacket(MqttConnAckPacket packet, MqttPacketWriter packetWriter)
         {
             packetWriter.Write(0); // Reserved.
             packetWriter.Write((byte)packet.ConnectReturnCode);

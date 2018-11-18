@@ -1,6 +1,5 @@
 ﻿using MQTTnet.Exceptions;
 using MQTTnet.Packets;
-using MQTTnet.Packets.V3;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Serializer
@@ -69,7 +68,7 @@ namespace MQTTnet.Serializer
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Connect);
         }
 
-        protected override byte SerializeConnAckPacket(MqttV3ConnAckPacket packet, MqttPacketWriter packetWriter)
+        protected override byte SerializeConnAckPacket(MqttConnAckPacket packet, MqttPacketWriter packetWriter)
         {
             byte connectAcknowledgeFlags = 0x0;
             if (packet.IsSessionPresent)
@@ -87,7 +86,7 @@ namespace MQTTnet.Serializer
         {
             ThrowIfBodyIsEmpty(body);
 
-            var packet = new MqttV3ConnAckPacket();
+            var packet = new MqttConnAckPacket();
 
             var acknowledgeFlags = body.ReadByte();
 

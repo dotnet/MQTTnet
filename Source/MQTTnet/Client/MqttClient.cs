@@ -9,7 +9,6 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
-using MQTTnet.Packets.V3;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
@@ -194,7 +193,7 @@ namespace MQTTnet.Client
             _adapter = null;
         }
 
-        private async Task<MqttV3ConnAckPacket> AuthenticateAsync(MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)
+        private async Task<MqttConnAckPacket> AuthenticateAsync(MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)
         {
             var connectPacket = new MqttConnectPacket
             {
@@ -206,7 +205,7 @@ namespace MQTTnet.Client
                 WillMessage = willApplicationMessage
             };
 
-            var response = await SendAndReceiveAsync<MqttV3ConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
+            var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
             if (response.ConnectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
             {
                 throw new MqttConnectingFailedException(response.ConnectReturnCode);

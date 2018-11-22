@@ -300,7 +300,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     //in the queue is equal to this message, then it's safe to remove
                     //it from the queue.  If not, that means this.PublishAsync has already
                     //removed it, in which case we don't want to do anything.
-                    _messageQueue.RemoveFirstIfEqual(message);
+                    _messageQueue.RemoveFirstIfEqual(message, IdsAreEqual);
                 }
                 _storageManager?.RemoveAsync(message).GetAwaiter().GetResult();
             }
@@ -321,7 +321,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     //with prior behavior in that way.
                     lock (_messageQueue) //lock to avoid conflict with this.PublishAsync
                     {
-                        _messageQueue.RemoveFirstIfEqual(message);
+                        _messageQueue.RemoveFirstIfEqual(message, IdsAreEqual);
                     }
                 }
             }
@@ -334,6 +334,11 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 ApplicationMessageProcessed?.Invoke(this, new ApplicationMessageProcessedEventArgs(message, transmitException));
             }
+        }
+        
+        private bool IdsAreEqual(ManagedMqttApplicationMessage message1, ManagedMqttApplicationMessage message2)
+        {
+            return message1.Id.Equals(message2.Id);
         }
 
         private async Task SynchronizeSubscriptionsAsync()

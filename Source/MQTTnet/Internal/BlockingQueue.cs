@@ -77,11 +77,11 @@ namespace MQTTnet.Internal
             }
         }
 
-        public void RemoveFirstIfEqual(TItem item)
+        public void RemoveFirstIfEqual(TItem item, Func<TItem, TItem, bool> areEqual)
         {
             lock (_syncRoot)
             {
-                if (_items.Count > 0 && EqualityComparer<TItem>.Default.Equals(_items.First.Value, item))
+                if (_items.Count > 0 && areEqual(_items.First.Value, item))
                 {
                     _items.RemoveFirst();
                 }

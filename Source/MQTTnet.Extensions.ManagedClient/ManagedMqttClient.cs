@@ -336,7 +336,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
         
-        private bool IdsAreEqual(ManagedMqttApplicationMessage message1, ManagedMqttApplicationMessage message2)
+        private static bool IdsAreEqual(ManagedMqttApplicationMessage message1, ManagedMqttApplicationMessage message2)
         {
             return message1.Id.Equals(message2.Id);
         }

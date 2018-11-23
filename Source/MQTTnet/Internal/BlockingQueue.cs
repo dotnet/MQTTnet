@@ -77,11 +77,13 @@ namespace MQTTnet.Internal
             }
         }
 
-        public void RemoveFirstIfEqual(TItem item, Func<TItem, TItem, bool> areEqual)
+        public void RemoveFirst(Predicate<TItem> match)
         {
+            if (match == null) throw new ArgumentNullException(nameof(match));
+
             lock (_syncRoot)
             {
-                if (_items.Count > 0 && areEqual(_items.First.Value, item))
+                if (_items.Count > 0 && match(_items.First.Value))
                 {
                     _items.RemoveFirst();
                 }

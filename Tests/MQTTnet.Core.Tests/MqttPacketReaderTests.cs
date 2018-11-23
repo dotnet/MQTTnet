@@ -15,8 +15,8 @@ namespace MQTTnet.Core.Tests
         public void MqttPacketReader_EmptyStream()
         {
             var fixedHeader = new byte[2];
-            var singleByteBuffer = new byte[1];
-            MqttPacketReader.ReadFixedHeaderAsync(new TestMqttChannel(new MemoryStream()), fixedHeader, singleByteBuffer, CancellationToken.None).GetAwaiter().GetResult();
+            var reader = new MqttPacketReader(new TestMqttChannel(new MemoryStream()));
+            reader.ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult();
         }
     }
 }

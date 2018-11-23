@@ -9,7 +9,7 @@ namespace MQTTnet.AspNetCore
 {
     public static class ReaderExtensions
     {
-        public static bool TryDeserialize(this IMqttPacketFormatter formatter, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)
+        public static bool TryDecode(this MqttPacketFormatterAdapter formatter, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)
         {
             if (formatter == null) throw new ArgumentNullException(nameof(formatter));
 
@@ -17,6 +17,7 @@ namespace MQTTnet.AspNetCore
             consumed = input.Start;
             observed = input.End;
             var copy = input;
+
             if (copy.Length < 2)
             {
                 return false;

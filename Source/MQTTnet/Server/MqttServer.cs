@@ -76,7 +76,7 @@ namespace MQTTnet.Server
 
             if (_cancellationTokenSource == null) throw new InvalidOperationException("The server is not started.");
 
-            _clientSessionsManager.EnqueueApplicationMessage(null, applicationMessage.ToPublishPacket());
+            _clientSessionsManager.EnqueueApplicationMessage(null, applicationMessage);
 
             return Task.FromResult(0);
         }

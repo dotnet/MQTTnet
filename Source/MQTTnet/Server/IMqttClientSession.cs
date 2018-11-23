@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
-using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
@@ -11,7 +10,7 @@ namespace MQTTnet.Server
         string ClientId { get; }
         void FillStatus(MqttClientSessionStatus status);
 
-        void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttPublishPacket publishPacket);
+        void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage);
         void ClearPendingApplicationMessages();
         
         Task RunAsync(MqttApplicationMessage willMessage, int keepAliveInterval, IMqttChannelAdapter adapter);

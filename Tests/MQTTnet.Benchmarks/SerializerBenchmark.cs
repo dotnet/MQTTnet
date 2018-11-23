@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQTTnet.Packets;
-using MQTTnet.Internal;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,11 +22,11 @@ namespace MQTTnet.Benchmarks
         [GlobalSetup]
         public void Setup()
         {
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic("A")
-                .Build();
+            _packet = new MqttPublishPacket
+            {
+                Topic = "A"
+            };
 
-            _packet = message.ToPublishPacket();
             _serializer = new MqttV311PacketFormatter();
             _serializedPacket = _serializer.Encode(_packet);
         }
@@ -47,17 +46,17 @@ namespace MQTTnet.Benchmarks
         {
             var channel = new BenchmarkMqttChannel(_serializedPacket);
             var fixedHeader = new byte[2];
-            var singleByteBuffer = new byte[1];
+            var reader = new MqttPacketReader(channel);
 
             for (var i = 0; i < 10000; i++)
             {
                 channel.Reset();
 
-                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, fixedHeader, singleByteBuffer, CancellationToken.None).GetAwaiter().GetResult();
+                var header = reader.ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult();
 
                 var receivedPacket = new ReceivedMqttPacket(
                     header.Flags,
-                    new MqttPacketBodyReader(_serializedPacket.Array, _serializedPacket.Count - header.RemainingLength, _serializedPacket.Array.Length));
+                    new MqttPacketBodyReader(_serializedPacket.Array, (ulong)(_serializedPacket.Count - header.RemainingLength), (ulong)_serializedPacket.Array.Length));
 
                 _serializer.Decode(receivedPacket);
             }

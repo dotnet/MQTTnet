@@ -10,7 +10,7 @@ namespace MQTTnet.Adapter
     {
         string Endpoint { get; }
 
-        MqttPacketSerializerAdapter PacketSerializerAdapter { get; }
+        MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
         event EventHandler ReadingPacketStarted;
 

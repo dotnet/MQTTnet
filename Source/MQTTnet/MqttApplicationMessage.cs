@@ -1,4 +1,6 @@
-﻿using MQTTnet.Protocol;
+﻿using System.Collections.Generic;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet
 {
@@ -9,6 +11,8 @@ namespace MQTTnet
         public byte[] Payload { get; set; }
 
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
+
+        public List<MqttUserProperty> UserProperties { get; set; }
 
         public bool Retain { get; set; }
     }

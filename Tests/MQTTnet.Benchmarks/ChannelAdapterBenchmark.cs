@@ -21,12 +21,12 @@ namespace MQTTnet.Benchmarks
         [GlobalSetup]
         public void Setup()
         {
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic("A")
-                .Build();
+            _packet = new MqttPublishPacket
+            {
+                Topic = "A"
+            };
 
-            _packet = message.ToPublishPacket();
-            var serializer = new MqttPacketSerializerAdapter(MqttProtocolVersion.V311);
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
             
             var serializedPacket = Join(serializer.Encode(_packet));
 

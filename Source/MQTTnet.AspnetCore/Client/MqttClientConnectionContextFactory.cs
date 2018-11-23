@@ -20,7 +20,7 @@ namespace MQTTnet.AspNetCore.Client
                     {
                         var endpoint = new DnsEndPoint(tcpOptions.Server, tcpOptions.GetPort());
                         var tcpConnection = new TcpConnection(endpoint);
-                        return new MqttConnectionContext(new MqttPacketSerializerAdapter(options.ProtocolVersion), tcpConnection);
+                        return new MqttConnectionContext(new MqttPacketFormatterAdapter(options.ProtocolVersion), tcpConnection);
                     }
                 default:
                     {

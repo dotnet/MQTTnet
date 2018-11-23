@@ -1,17 +1,15 @@
-﻿using MQTTnet.Packets;
-
-namespace MQTTnet.Server
+﻿namespace MQTTnet.Server
 {
     public class MqttEnqueuedApplicationMessage
     {
-        public MqttEnqueuedApplicationMessage(MqttClientSession sender, MqttPublishPacket publishPacket)
+        public MqttEnqueuedApplicationMessage(MqttClientSession sender, MqttApplicationMessage applicationMessage)
         {
             Sender = sender;
-            PublishPacket = publishPacket;
+            ApplicationMessage = applicationMessage;
         }
 
         public MqttClientSession Sender { get; }
 
-        public MqttPublishPacket PublishPacket { get; }
+        public MqttApplicationMessage ApplicationMessage { get; }
     }
 }

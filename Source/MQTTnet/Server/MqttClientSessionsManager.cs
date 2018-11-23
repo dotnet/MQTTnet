@@ -80,11 +80,11 @@ namespace MQTTnet.Server
             return result;
         }
 
-        public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
+        public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
         {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            _messageQueue.Add(new MqttEnqueuedApplicationMessage(senderClientSession, publishPacket), _cancellationToken);
+            _messageQueue.Add(new MqttEnqueuedApplicationMessage(senderClientSession, applicationMessage), _cancellationToken);
         }
 
         public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
@@ -157,8 +157,9 @@ namespace MQTTnet.Server
             try
             {
                 var enqueuedApplicationMessage = _messageQueue.Take(cancellationToken);
+
                 var sender = enqueuedApplicationMessage.Sender;
-                var applicationMessage = enqueuedApplicationMessage.PublishPacket.ToApplicationMessage();
+                var applicationMessage = enqueuedApplicationMessage.ApplicationMessage;
 
                 var interceptorContext = InterceptApplicationMessage(sender, applicationMessage);
                 if (interceptorContext != null)
@@ -185,7 +186,7 @@ namespace MQTTnet.Server
 
                 foreach (var clientSession in GetSessions())
                 {
-                    clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, applicationMessage.ToPublishPacket());
+                    clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, applicationMessage);
                 }
             }
             catch (OperationCanceledException)

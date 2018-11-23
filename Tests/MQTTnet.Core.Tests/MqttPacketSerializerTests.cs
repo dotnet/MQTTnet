@@ -181,17 +181,15 @@ namespace MQTTnet.Core.Tests
             var buffer = serializer.Encode(publishPacket);
             var testChannel = new TestMqttChannel(new MemoryStream(buffer.Array, buffer.Offset, buffer.Count));
 
-            var header = MqttPacketReader.ReadFixedHeaderAsync(
-                testChannel, 
+            var header = new MqttPacketReader(testChannel).ReadFixedHeaderAsync(
                 new byte[2],
-                new byte[1], 
                 CancellationToken.None).GetAwaiter().GetResult();
 
             var eof = buffer.Offset + buffer.Count;
 
             var receivedPacket = new ReceivedMqttPacket(
                 header.Flags,
-                new MqttPacketBodyReader(buffer.Array, eof - header.RemainingLength, buffer.Count + buffer.Offset));
+                new MqttPacketBodyReader(buffer.Array, (uint)eof - header.RemainingLength, (uint)(buffer.Count + buffer.Offset)));
 
             var packet = (MqttPublishPacket)serializer.Decode(receivedPacket);
 
@@ -552,10 +550,9 @@ namespace MQTTnet.Core.Tests
             {
                 var channel = new TestMqttChannel(headerStream);
                 var fixedHeader = new byte[2];
-                var singleByteBuffer = new byte[1];
-                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, fixedHeader, singleByteBuffer, CancellationToken.None).GetAwaiter().GetResult();
+                var header = new MqttPacketReader(channel).ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult();
 
-                using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.RemainingLength))
+                using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, (int)header.RemainingLength))
                 {
                     var deserializedPacket = serializer.Decode(new ReceivedMqttPacket(header.Flags, new MqttPacketBodyReader(bodyStream.ToArray(), 0, (int)bodyStream.Length)));
                     var buffer2 = serializer.Encode(deserializedPacket);
@@ -588,11 +585,10 @@ namespace MQTTnet.Core.Tests
             {
                 var channel = new TestMqttChannel(headerStream);
                 var fixedHeader = new byte[2];
-                var singleByteBuffer = new byte[1];
 
-                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, fixedHeader, singleByteBuffer, CancellationToken.None).GetAwaiter().GetResult();
+                var header = new MqttPacketReader(channel).ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult();
 
-                using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.RemainingLength))
+                using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, (int)header.RemainingLength))
                 {
                     return (T)serializer.Decode(new ReceivedMqttPacket(header.Flags, new MqttPacketBodyReader(bodyStream.ToArray(), 0, (int)bodyStream.Length)));
                 }

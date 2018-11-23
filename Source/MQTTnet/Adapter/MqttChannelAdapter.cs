@@ -16,31 +16,33 @@ namespace MQTTnet.Adapter
     public class MqttChannelAdapter : IMqttChannelAdapter
     {
         private const uint ErrorOperationAborted = 0x800703E3;
-        private const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
+        private const uint ReadBufferSize = 4096;  // TODO: Move buffer size to config
 
         private readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
 
         private readonly IMqttNetChildLogger _logger;
         private readonly IMqttChannel _channel;
-        
-        private readonly byte[] _fixedHeaderBuffer = new byte[2];
-        private readonly byte[] _singleByteBuffer = new byte[1];
+        private readonly MqttPacketReader _packetReader;
 
+        private readonly byte[] _fixedHeaderBuffer = new byte[2];
+       
         private bool _isDisposed;
 
-        public MqttChannelAdapter(IMqttChannel channel, MqttPacketSerializerAdapter packetSerializerAdapter, IMqttNetChildLogger logger)
+        public MqttChannelAdapter(IMqttChannel channel, MqttPacketFormatterAdapter packetFormatterAdapter, IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
-            PacketSerializerAdapter = packetSerializerAdapter ?? throw new ArgumentNullException(nameof(packetSerializerAdapter));
+            PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             
+            _packetReader = new MqttPacketReader(_channel);
+
             _logger = logger.CreateChildLogger(nameof(MqttChannelAdapter));
         }
 
         public string Endpoint => _channel.Endpoint;
 
-        public MqttPacketSerializerAdapter PacketSerializerAdapter { get; }
+        public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;
@@ -96,9 +98,9 @@ namespace MQTTnet.Adapter
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                var packetData = PacketSerializerAdapter.Encode(packet);
+                var packetData = PacketFormatterAdapter.Encode(packet);
                 await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
-                PacketSerializerAdapter.FreeBuffer();
+                PacketFormatterAdapter.FreeBuffer();
 
                 _logger.Verbose("TX >>> {0}", packet);
             }
@@ -139,12 +141,12 @@ namespace MQTTnet.Adapter
                     return null;
                 }
 
-                if (!PacketSerializerAdapter.ProtocolVersion.HasValue)
+                if (!PacketFormatterAdapter.ProtocolVersion.HasValue)
                 {
-                    PacketSerializerAdapter.DetectProtocolVersion(receivedMqttPacket);
+                    PacketFormatterAdapter.DetectProtocolVersion(receivedMqttPacket);
                 }
 
-                var packet = PacketSerializerAdapter.Decode(receivedMqttPacket);
+                var packet = PacketFormatterAdapter.Decode(receivedMqttPacket);
                 if (packet == null)
                 {
                     throw new MqttProtocolViolationException("Received malformed packet.");
@@ -172,7 +174,7 @@ namespace MQTTnet.Adapter
 
         private async Task<ReceivedMqttPacket> ReceiveAsync(CancellationToken cancellationToken)
         {
-            var fixedHeader = await MqttPacketReader.ReadFixedHeaderAsync(_channel, _fixedHeaderBuffer, _singleByteBuffer, cancellationToken).ConfigureAwait(false);
+            var fixedHeader = await _packetReader.ReadFixedHeaderAsync(_fixedHeaderBuffer, cancellationToken).ConfigureAwait(false);
 
             try
             {
@@ -192,15 +194,15 @@ namespace MQTTnet.Adapter
                     var bytesLeft = body.Length - bodyOffset;
                     if (chunkSize > bytesLeft)
                     {
-                        chunkSize = bytesLeft;
+                        chunkSize = (uint)bytesLeft;
                     }
 
 #if WINDOWS_UWP
-                    var readBytes = await _channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false);
+                    var readBytes = await _channel.ReadAsync(body, bodyOffset, (int)chunkSize, cancellationToken).ConfigureAwait(false);
 #else
                     // async/await is not used to avoid the overhead of context switches. We assume that the reamining data
                     // has been sent from the sender directly after the initial bytes.
-                    var readBytes = _channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
+                    var readBytes = _channel.ReadAsync(body, bodyOffset, (int)chunkSize, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
 #endif
 
                     cancellationToken.ThrowIfCancellationRequested();

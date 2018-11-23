@@ -70,6 +70,23 @@ namespace MQTTnet.Formatter.V310
             }
         }
 
+        public virtual MqttPublishPacket ConvertApplicationMessageToPublishPacket(MqttApplicationMessage applicationMessage)
+        {
+            if (applicationMessage.UserProperties != null)
+            {
+                throw new MqttProtocolViolationException("User properties are not supported in MQTT version 3.");
+            }
+
+            return new MqttPublishPacket
+            {
+                Topic = applicationMessage.Topic,
+                Payload = applicationMessage.Payload,
+                QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
+                Retain = applicationMessage.Retain,
+                Dup = false
+            };
+        }
+
         public void FreeBuffer()
         {
             _packetWriter.FreeBuffer();
@@ -103,7 +120,7 @@ namespace MQTTnet.Formatter.V310
 
             return new MqttUnsubAckPacket
             {
-                PacketIdentifier = body.ReadUInt16()
+                PacketIdentifier = body.ReadTwoByteInteger()
             };
         }
 
@@ -113,7 +130,7 @@ namespace MQTTnet.Formatter.V310
 
             return new MqttPubCompPacket
             {
-                PacketIdentifier = body.ReadUInt16()
+                PacketIdentifier = body.ReadTwoByteInteger()
             };
         }
 
@@ -123,7 +140,7 @@ namespace MQTTnet.Formatter.V310
 
             return new MqttPubRelPacket
             {
-                PacketIdentifier = body.ReadUInt16()
+                PacketIdentifier = body.ReadTwoByteInteger()
             };
         }
 
@@ -133,7 +150,7 @@ namespace MQTTnet.Formatter.V310
 
             return new MqttPubRecPacket
             {
-                PacketIdentifier = body.ReadUInt16()
+                PacketIdentifier = body.ReadTwoByteInteger()
             };
         }
 
@@ -143,7 +160,7 @@ namespace MQTTnet.Formatter.V310
 
             return new MqttPubAckPacket
             {
-                PacketIdentifier = body.ReadUInt16()
+                PacketIdentifier = body.ReadTwoByteInteger()
             };
         }
 
@@ -153,7 +170,7 @@ namespace MQTTnet.Formatter.V310
 
             var packet = new MqttUnsubscribePacket
             {
-                PacketIdentifier = body.ReadUInt16(),
+                PacketIdentifier = body.ReadTwoByteInteger(),
             };
 
             while (!body.EndOfStream)
@@ -170,7 +187,7 @@ namespace MQTTnet.Formatter.V310
 
             var packet = new MqttSubscribePacket
             {
-                PacketIdentifier = body.ReadUInt16()
+                PacketIdentifier = body.ReadTwoByteInteger()
             };
 
             while (!body.EndOfStream)
@@ -196,7 +213,7 @@ namespace MQTTnet.Formatter.V310
             ushort? packetIdentifier = null;
             if (qualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
             {
-                packetIdentifier = receivedMqttPacket.Body.ReadUInt16();
+                packetIdentifier = receivedMqttPacket.Body.ReadTwoByteInteger();
             }
 
             var packet = new MqttPublishPacket
@@ -236,7 +253,7 @@ namespace MQTTnet.Formatter.V310
             var passwordFlag = (connectFlags & 0x40) > 0;
             var usernameFlag = (connectFlags & 0x80) > 0;
 
-            packet.KeepAlivePeriod = body.ReadUInt16();
+            packet.KeepAlivePeriod = body.ReadTwoByteInteger();
             packet.ClientId = body.ReadStringWithLengthPrefix();
 
             if (willFlag)
@@ -270,7 +287,7 @@ namespace MQTTnet.Formatter.V310
 
             var packet = new MqttSubAckPacket
             {
-                PacketIdentifier = body.ReadUInt16()
+                PacketIdentifier = body.ReadTwoByteInteger()
             };
 
             while (!body.EndOfStream)
@@ -394,7 +411,7 @@ namespace MQTTnet.Formatter.V310
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRel, 0x02);
         }
 
-        private static byte SerializePublishPacket(MqttPublishPacket packet, MqttPacketWriter packetWriter)
+        protected virtual byte SerializePublishPacket(MqttPublishPacket packet, MqttPacketWriter packetWriter)
         {
             ValidatePublishPacket(packet);
 
@@ -439,7 +456,7 @@ namespace MQTTnet.Formatter.V310
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Publish, fixedHeader);
         }
 
-        private static byte SerializePubAckPacket(MqttPubAckPacket packet, MqttPacketWriter packetWriter)
+        protected virtual byte SerializePubAckPacket(MqttPubAckPacket packet, MqttPacketWriter packetWriter)
         {
             if (!packet.PacketIdentifier.HasValue)
             {

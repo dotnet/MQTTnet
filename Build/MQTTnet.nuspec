@@ -14,9 +14,10 @@
 * [Client] Fixed wrong behavior of publish method when client is disconnecting (thanks to @PaulFake).
 * [ManagedClient] Added max pending messages count option.
 * [ManagedClient] Add pending messages overflow strategy option.
+* [ManagedClient] Fixed an issue which deletes the wrong message from the internal queue (thanks to @PaulFake).
 * [Server] Added new method which exposes all retained messages.
 * [Server] Removed (wrong) setter from the server options interface.
-* [Server] fixed cpu spike in case a client disconnectes (issue 421).
+* [Server] fixed cpu spike in case a client disconnects (issue 421).
 * [Server] fixed concurrent sends with Aspnetcore.Connections.Abstractions based transport.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>

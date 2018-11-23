@@ -16,12 +16,12 @@ namespace MQTTnet.Implementations
             {
                 case MqttClientTcpOptions _:
                     {
-                        return new MqttChannelAdapter(new MqttTcpChannel(options), new MqttPacketSerializerAdapter(options.ProtocolVersion), logger);
+                        return new MqttChannelAdapter(new MqttTcpChannel(options), new MqttPacketFormatterAdapter(options.ProtocolVersion), logger);
                     }
 
                 case MqttClientWebSocketOptions webSocketOptions:
                     {
-                        return new MqttChannelAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketSerializerAdapter(options.ProtocolVersion), logger);
+                        return new MqttChannelAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketFormatterAdapter(options.ProtocolVersion), logger);
                     }
 
                 default:

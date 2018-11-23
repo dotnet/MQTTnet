@@ -16,7 +16,7 @@ namespace MQTTnet.Core.Tests
 
         public string Endpoint { get; }
 
-        public MqttPacketSerializerAdapter PacketSerializerAdapter { get; } = new MqttPacketSerializerAdapter(MqttProtocolVersion.V311);
+        public MqttPacketFormatterAdapter PacketFormatterAdapter { get; } = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
 
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;

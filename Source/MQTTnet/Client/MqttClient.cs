@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -156,9 +158,11 @@ namespace MQTTnet.Client
 
         public Task PublishAsync(MqttApplicationMessage applicationMessage)
         {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
             ThrowIfNotConnected();
 
-            var publishPacket = applicationMessage.ToPublishPacket();
+            var publishPacket = _adapter.PacketFormatterAdapter.ConvertApplicationMessageToPublishPacket(applicationMessage);
 
             switch (applicationMessage.QualityOfServiceLevel)
             {
@@ -204,6 +208,9 @@ namespace MQTTnet.Client
                 KeepAlivePeriod = (ushort)_options.KeepAlivePeriod.TotalSeconds,
                 WillMessage = willApplicationMessage
             };
+
+            //connectPacket.RequestProblemInformationProperty = true;
+            //connectPacket.RequestResponseInformationProperty = true;
 
             var response = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
             if (response.ConnectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
@@ -516,6 +523,7 @@ namespace MQTTnet.Client
         {
             try
             {
+                // TODO: Move conversion to formatter.
                 var applicationMessage = publishPacket.ToApplicationMessage();
                 ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(_options.ClientId, applicationMessage));
             }

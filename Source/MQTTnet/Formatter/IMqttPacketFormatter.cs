@@ -10,6 +10,8 @@ namespace MQTTnet.Formatter
 
         MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket);
 
+        MqttPublishPacket ConvertApplicationMessageToPublishPacket(MqttApplicationMessage applicationMessage);
+
         void FreeBuffer();
     }
 }

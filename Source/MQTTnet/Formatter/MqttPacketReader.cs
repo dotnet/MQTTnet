@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Exceptions;
@@ -6,9 +7,18 @@ using MQTTnet.Internal;
 
 namespace MQTTnet.Formatter
 {
-    public static class MqttPacketReader
+    public class MqttPacketReader
     {
-        public static async Task<MqttFixedHeader> ReadFixedHeaderAsync(IMqttChannel channel, byte[] fixedHeaderBuffer, byte[] singleByteBuffer, CancellationToken cancellationToken)
+        private readonly byte[] _singleByteBuffer = new byte[1];
+
+        private readonly IMqttChannel _channel;
+
+        public MqttPacketReader(IMqttChannel channel)
+        {
+            _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+        }
+
+        public async Task<MqttFixedHeader> ReadFixedHeaderAsync(byte[] fixedHeaderBuffer, CancellationToken cancellationToken)
         {
             // The MQTT fixed header contains 1 byte of flags and at least 1 byte for the remaining data length.
             // So in all cases at least 2 bytes must be read for a complete MQTT packet.
@@ -19,7 +29,7 @@ namespace MQTTnet.Formatter
 
             while (totalBytesRead < buffer.Length)
             {
-                var bytesRead = await channel.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
+                var bytesRead = await _channel.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
 
                 cancellationToken.ThrowIfCancellationRequested();
                 ExceptionHelper.ThrowIfGracefulSocketClose(bytesRead);
@@ -35,24 +45,24 @@ namespace MQTTnet.Formatter
 
 #if WINDOWS_UWP
             // UWP will have a dead lock when calling this not async.
-            var bodyLength = await ReadBodyLengthAsync(channel, buffer[1], singleByteBuffer, cancellationToken).ConfigureAwait(false);
+            var bodyLength = await ReadBodyLengthAsync(buffer[1], cancellationToken).ConfigureAwait(false);
 #else
             // Here the async/await pattern is not used becuase the overhead of context switches
             // is too big for reading 1 byte in a row. We expect that the remaining data was sent
             // directly after the initial bytes. If the client disconnects just in this moment we
             // will get an exception anyway.
-            var bodyLength = ReadBodyLength(channel, buffer[1], singleByteBuffer, cancellationToken);
+            var bodyLength = ReadBodyLength(buffer[1], cancellationToken);
 #endif
 
             return new MqttFixedHeader(buffer[0], bodyLength);
         }
 
 #if !WINDOWS_UWP
-        private static int ReadBodyLength(IMqttChannel channel, byte initialEncodedByte, byte[] singleByteBuffer, CancellationToken cancellationToken)
+        private uint ReadBodyLength(byte initialEncodedByte, CancellationToken cancellationToken)
         {
             var offset = 0;
             var multiplier = 128;
-            var value = initialEncodedByte & 127;
+            var value = (uint)(initialEncodedByte & 127);
             int encodedByte = initialEncodedByte;
 
             while ((encodedByte & 128) != 0)
@@ -65,18 +75,18 @@ namespace MQTTnet.Formatter
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                encodedByte = ReadByte(channel, singleByteBuffer, cancellationToken);
+                encodedByte = ReadByte(cancellationToken);
 
-                value += (byte)(encodedByte & 127) * multiplier;
+                value += (uint)((encodedByte & 127) * multiplier);
                 multiplier *= 128;
             }
 
             return value;
         }
 
-        private static byte ReadByte(IMqttChannel channel, byte[] singleByteBuffer, CancellationToken cancellationToken)
+        private byte ReadByte(CancellationToken cancellationToken)
         {
-            var readCount = channel.ReadAsync(singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
+            var readCount = _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -85,16 +95,16 @@ namespace MQTTnet.Formatter
                 ExceptionHelper.ThrowGracefulSocketClose();
             }
 
-            return singleByteBuffer[0];
+            return _singleByteBuffer[0];
         }
 
 #else
         
-        private static async Task<int> ReadBodyLengthAsync(IMqttChannel channel, byte initialEncodedByte, byte[] singleByteBuffer, CancellationToken cancellationToken)
+        private async Task<uint> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
         {
             var offset = 0;
             var multiplier = 128;
-            var value = initialEncodedByte & 127;
+            var value = (uint)(initialEncodedByte & 127);
             int encodedByte = initialEncodedByte;
 
             while ((encodedByte & 128) != 0)
@@ -107,18 +117,18 @@ namespace MQTTnet.Formatter
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                encodedByte = await ReadByteAsync(channel, singleByteBuffer, cancellationToken).ConfigureAwait(false);
+                encodedByte = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
 
-                value += (byte)(encodedByte & 127) * multiplier;
+                value += (uint)((encodedByte & 127) * multiplier);
                 multiplier *= 128;
             }
 
             return value;
         }
 
-        private static async Task<byte> ReadByteAsync(IMqttChannel channel, byte[] singleByteBuffer, CancellationToken cancellationToken)
+        private async Task<byte> ReadByteAsync(CancellationToken cancellationToken)
         {
-            var readCount = await channel.ReadAsync(singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
+            var readCount = await _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -127,7 +137,7 @@ namespace MQTTnet.Formatter
                 ExceptionHelper.ThrowGracefulSocketClose();
             }
 
-            return singleByteBuffer[0];
+            return _singleByteBuffer[0];
         }
 
 #endif

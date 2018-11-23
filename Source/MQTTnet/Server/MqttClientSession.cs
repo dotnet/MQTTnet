@@ -61,7 +61,7 @@ namespace MQTTnet.Server
             status.ClientId = ClientId;
             status.IsConnected = _adapter != null;
             status.Endpoint = _adapter?.Endpoint;
-            status.ProtocolVersion = _adapter?.PacketSerializerAdapter?.ProtocolVersion;
+            status.ProtocolVersion = _adapter?.PacketFormatterAdapter?.ProtocolVersion;
             status.PendingApplicationMessagesCount = _pendingPacketsQueue.Count;
             status.LastPacketReceived = _keepAliveMonitor.LastPacketReceived;
             status.LastNonKeepAlivePacketReceived = _keepAliveMonitor.LastNonKeepAlivePacketReceived;
@@ -193,7 +193,7 @@ namespace MQTTnet.Server
 
                 if (_willMessage != null && !_wasCleanDisconnect)
                 {
-                    _sessionsManager.EnqueueApplicationMessage(this, _willMessage.ToPublishPacket());
+                    _sessionsManager.EnqueueApplicationMessage(this, _willMessage);
                 }
 
                 _willMessage = null;
@@ -211,24 +211,20 @@ namespace MQTTnet.Server
             }
         }
 
-        public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
+        public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
         {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            var checkSubscriptionsResult = _subscriptionsManager.CheckSubscriptions(publishPacket.Topic, publishPacket.QualityOfServiceLevel);
+            var checkSubscriptionsResult = _subscriptionsManager.CheckSubscriptions(applicationMessage.Topic, applicationMessage.QualityOfServiceLevel);
             if (!checkSubscriptionsResult.IsSubscribed)
             {
                 return;
             }
 
-            publishPacket = new MqttPublishPacket
-            {
-                Topic = publishPacket.Topic,
-                Payload = publishPacket.Payload,
-                QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel,
-                Retain = false,
-                Dup = false
-            };
+            var publishPacket = _adapter.PacketFormatterAdapter.ConvertApplicationMessageToPublishPacket(applicationMessage);
+            publishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
+            publishPacket.Retain = false;
+            publishPacket.Dup = false;
 
             if (publishPacket.QualityOfServiceLevel > 0)
             {
@@ -370,7 +366,7 @@ namespace MQTTnet.Server
             var retainedMessages = _retainedMessagesManager.GetSubscribedMessages(topicFilters);
             foreach (var applicationMessage in retainedMessages)
             {
-                EnqueueApplicationMessage(null, applicationMessage.ToPublishPacket());
+                EnqueueApplicationMessage(null, applicationMessage);
             }
         }
 
@@ -422,7 +418,7 @@ namespace MQTTnet.Server
 
         private void HandleIncomingPublishPacketWithQoS0(MqttPublishPacket publishPacket)
         {
-            _sessionsManager.EnqueueApplicationMessage(this, publishPacket);
+            _sessionsManager.EnqueueApplicationMessage(this, publishPacket.ToApplicationMessage());
         }
 
         private void HandleIncomingPublishPacketWithQoS1(
@@ -430,7 +426,7 @@ namespace MQTTnet.Server
             MqttPublishPacket publishPacket,
             CancellationToken cancellationToken)
         {
-            _sessionsManager.EnqueueApplicationMessage(this, publishPacket);
+            _sessionsManager.EnqueueApplicationMessage(this, publishPacket.ToApplicationMessage());
 
             var response = new MqttPubAckPacket
             {
@@ -446,7 +442,7 @@ namespace MQTTnet.Server
             CancellationToken cancellationToken)
         {
             // QoS 2 is implement as method "B" (4.3.3 QoS 2: Exactly once delivery)
-            _sessionsManager.EnqueueApplicationMessage(this, publishPacket);
+            _sessionsManager.EnqueueApplicationMessage(this, publishPacket.ToApplicationMessage());
 
             var response = new MqttPubRecPacket
             {

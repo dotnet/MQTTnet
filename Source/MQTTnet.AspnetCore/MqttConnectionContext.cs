@@ -13,15 +13,15 @@ namespace MQTTnet.AspNetCore
 {
     public class MqttConnectionContext : IMqttChannelAdapter
     {
-        public MqttConnectionContext(MqttPacketSerializerAdapter packetSerializerAdapter, ConnectionContext connection)
+        public MqttConnectionContext(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
         {
-            PacketSerializerAdapter = packetSerializerAdapter ?? throw new ArgumentNullException(nameof(packetSerializerAdapter));
+            PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
         public string Endpoint => Connection.ConnectionId;
         public ConnectionContext Connection { get; }
-        public MqttPacketSerializerAdapter PacketSerializerAdapter { get; }
+        public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
         public event EventHandler ReadingPacketStarted;
         public event EventHandler ReadingPacketCompleted;
 
@@ -72,7 +72,7 @@ namespace MQTTnet.AspNetCore
                     {
                         if (!buffer.IsEmpty)
                         {
-                            if (PacketSerializerAdapter.Formatter.TryDeserialize(buffer, out var packet, out consumed, out observed))
+                            if (PacketFormatterAdapter.TryDecode(buffer, out var packet, out consumed, out observed))
                             {
                                 return packet;
                             }
@@ -107,7 +107,7 @@ namespace MQTTnet.AspNetCore
 
         public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            var buffer = PacketSerializerAdapter.Encode(packet).AsMemory();
+            var buffer = PacketFormatterAdapter.Encode(packet).AsMemory();
             var output = Connection.Transport.Output;
 
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);

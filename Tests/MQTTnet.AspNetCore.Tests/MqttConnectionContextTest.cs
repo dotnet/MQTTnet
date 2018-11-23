@@ -17,7 +17,7 @@ namespace MQTTnet.AspNetCore.Tests
         [TestMethod]
         public async Task TestReceivePacketAsyncThrowsWhenReaderCompleted()
         {
-            var serializer = new MqttPacketSerializerAdapter(MqttProtocolVersion.V311);
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
@@ -31,7 +31,7 @@ namespace MQTTnet.AspNetCore.Tests
         [TestMethod]
         public async Task TestParallelWrites()
         {
-            var serializer = new MqttPacketSerializerAdapter(MqttProtocolVersion.V311);
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;

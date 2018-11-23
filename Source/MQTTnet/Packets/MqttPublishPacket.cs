@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using MQTTnet.Packets.Properties;
-using MQTTnet.Protocol;
+﻿using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
@@ -16,10 +14,11 @@ namespace MQTTnet.Packets
 
         public byte[] Payload { get; set; }
 
-        /// <summary>
-        /// Added in MQTTv5.0.0.
-        /// </summary>
-        public List<IProperty> Properties { get; set; }
+        #region Added in MQTTv5
+        
+        public MqttPublishPacketProperties Properties { get; set; }
+        
+        #endregion
 
         public override string ToString()
         {

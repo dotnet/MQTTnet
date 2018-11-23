@@ -17,7 +17,7 @@ namespace MQTTnet.Formatter
 
         private byte[] _buffer = new byte[128];
 
-        private int _position;
+        private int _offset;
 
         public int Length { get; private set; }
 
@@ -77,7 +77,7 @@ namespace MQTTnet.Formatter
         {
             EnsureAdditionalCapacity(1);
 
-            _buffer[_position] = @byte;
+            _buffer[_offset] = @byte;
             IncreasePostition(1);
         }
 
@@ -85,9 +85,9 @@ namespace MQTTnet.Formatter
         {
             EnsureAdditionalCapacity(2);
 
-            _buffer[_position] = (byte)(value >> 8);
+            _buffer[_offset] = (byte)(value >> 8);
             IncreasePostition(1);
-            _buffer[_position] = (byte)value;
+            _buffer[_offset] = (byte)value;
             IncreasePostition(1);
         }
 
@@ -97,7 +97,7 @@ namespace MQTTnet.Formatter
 
             EnsureAdditionalCapacity(count);
 
-            Array.Copy(buffer, offset, _buffer, _position, count);
+            Array.Copy(buffer, offset, _buffer, _offset, count);
             IncreasePostition(count);
         }
 
@@ -111,7 +111,12 @@ namespace MQTTnet.Formatter
         public void Write(MqttPacketWriter propertyWriter)
         {
             if (propertyWriter == null) throw new ArgumentNullException(nameof(propertyWriter));
-            
+
+            if (propertyWriter.Length == 0)
+            {
+                return;
+            }
+
             Write(propertyWriter._buffer, 0, propertyWriter.Length);
         }
 
@@ -123,7 +128,7 @@ namespace MQTTnet.Formatter
         public void Seek(int position)
         {
             EnsureCapacity(position);
-            _position = position;
+            _offset = position;
         }
 
         public byte[] GetBuffer()
@@ -150,7 +155,7 @@ namespace MQTTnet.Formatter
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureAdditionalCapacity(int additionalCapacity)
         {
-            var freeSpace = _buffer.Length - _position;
+            var freeSpace = _buffer.Length - _offset;
             if (freeSpace >= additionalCapacity)
             {
                 return;
@@ -180,11 +185,11 @@ namespace MQTTnet.Formatter
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void IncreasePostition(int length)
         {
-            _position += length;
+            _offset += length;
 
-            if (_position > Length)
+            if (_offset > Length)
             {
-                Length = _position;
+                Length = _offset;
             }
         }
     }

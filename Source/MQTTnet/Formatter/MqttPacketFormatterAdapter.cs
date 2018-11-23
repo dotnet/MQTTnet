@@ -8,44 +8,56 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Formatter
 {
-    public class MqttPacketSerializerAdapter
+    public class MqttPacketFormatterAdapter
     {
-        public MqttPacketSerializerAdapter()
+        private IMqttPacketFormatter _formatter;
+
+        public MqttPacketFormatterAdapter()
         {
         }
 
-        public MqttPacketSerializerAdapter(MqttProtocolVersion protocolVersion)
+        public MqttPacketFormatterAdapter(MqttProtocolVersion protocolVersion)
         {
             UseProtocolVersion(protocolVersion);
         }
 
         public MqttProtocolVersion? ProtocolVersion { get; private set; }
-
-        public IMqttPacketFormatter Formatter { get; private set; }
-
-        public ArraySegment<byte> Encode(MqttBasePacket packet)
+        
+        public MqttPublishPacket ConvertApplicationMessageToPublishPacket(MqttApplicationMessage applicationMessage)
         {
-            if (Formatter == null)
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
+            if (_formatter == null)
             {
                 throw new InvalidOperationException("Protocol version not set or detected.");
             }
 
-            return Formatter.Encode(packet);
+            return _formatter.ConvertApplicationMessageToPublishPacket(applicationMessage);
+        }
+
+        public ArraySegment<byte> Encode(MqttBasePacket packet)
+        {
+            if (_formatter == null)
+            {
+                throw new InvalidOperationException("Protocol version not set or detected.");
+            }
+
+            return _formatter.Encode(packet);
         }
 
         public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
-            if (Formatter == null)
+            if (_formatter == null)
             {
                 throw new InvalidOperationException("Protocol version not set or detected.");
             }
 
-            return Formatter.Decode(receivedMqttPacket);
+            return _formatter.Decode(receivedMqttPacket);
         }
 
         public void FreeBuffer()
         {
-            Formatter?.FreeBuffer();
+            _formatter?.FreeBuffer();
         }
 
         public void DetectProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
@@ -68,20 +80,20 @@ namespace MQTTnet.Formatter
             {
                 case MqttProtocolVersion.V500:
                     {
-                        Formatter = new MqttV500PacketFormatter();
+                        _formatter = new MqttV500PacketFormatter();
                         break;
                     }
 
                 case MqttProtocolVersion.V311:
                     {
-                        Formatter = new MqttV311PacketFormatter();
+                        _formatter = new MqttV311PacketFormatter();
                         break;
                     }
 
                 case MqttProtocolVersion.V310:
                     {
 
-                        Formatter = new MqttV310PacketFormatter();
+                        _formatter = new MqttV310PacketFormatter();
                         break;
                     }
                     

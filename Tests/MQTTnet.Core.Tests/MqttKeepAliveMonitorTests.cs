@@ -67,7 +67,7 @@ namespace MQTTnet.Core.Tests
                 throw new NotSupportedException();
             }
 
-            public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
+            public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
             {
                 throw new NotSupportedException();
             }

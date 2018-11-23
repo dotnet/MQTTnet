@@ -254,7 +254,15 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 while (!cancellationToken.IsCancellationRequested && _mqttClient.IsConnected)
                 {
-                    var message = _messageQueue.Dequeue();
+                    //Peek at the message without dequeueing in order to prevent the
+                    //possibility of the queue growing beyond the configured cap.
+                    //Previously, messages could be re-enqueued if there was an
+                    //exception, and this re-enqueueing did not honor the cap.
+                    //Furthermore, because re-enqueueing would shuffle the order
+                    //of the messages, the DropOldestQueuedMessage strategy would
+                    //be unable to know which message is actually the oldest and would
+                    //instead drop the first item in the queue.
+                    var message = _messageQueue.PeekAndWait();
                     if (message == null)
                     {
                         continue;
@@ -284,6 +292,16 @@ namespace MQTTnet.Extensions.ManagedClient
             try
             {
                 _mqttClient.PublishAsync(message.ApplicationMessage).GetAwaiter().GetResult();
+                lock (_messageQueue) //lock to avoid conflict with this.PublishAsync
+                {
+                    //While publishing this message, this.PublishAsync could have booted this
+                    //message off the queue to make room for another (when using a cap
+                    //with the DropOldestQueuedMessage strategy).  If the first item
+                    //in the queue is equal to this message, then it's safe to remove
+                    //it from the queue.  If not, that means this.PublishAsync has already
+                    //removed it, in which case we don't want to do anything.
+                    _messageQueue.RemoveFirstIfEqual(message, IdsAreEqual);
+                }
                 _storageManager?.RemoveAsync(message).GetAwaiter().GetResult();
             }
             catch (MqttCommunicationException exception)
@@ -292,9 +310,19 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 _logger.Warning(exception, $"Publishing application ({message.Id}) message failed.");
 
-                if (message.ApplicationMessage.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
+                if (message.ApplicationMessage.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
                 {
-                    _messageQueue.Enqueue(message);
+                    //If QoS 0, we don't want this message to stay on the queue.
+                    //If QoS 1 or 2, it's possible that, when using a cap, this message
+                    //has been booted off the queue by this.PublishAsync, in which case this
+                    //thread will not continue to try to publish it. While this does
+                    //contradict the expected behavior of QoS 1 and 2, that's also true
+                    //for the usage of a message queue cap, so it's still consistent
+                    //with prior behavior in that way.
+                    lock (_messageQueue) //lock to avoid conflict with this.PublishAsync
+                    {
+                        _messageQueue.RemoveFirstIfEqual(message, IdsAreEqual);
+                    }
                 }
             }
             catch (Exception exception)
@@ -306,6 +334,11 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 ApplicationMessageProcessed?.Invoke(this, new ApplicationMessageProcessedEventArgs(message, transmitException));
             }
+        }
+        
+        private static bool IdsAreEqual(ManagedMqttApplicationMessage message1, ManagedMqttApplicationMessage message2)
+        {
+            return message1.Id.Equals(message2.Id);
         }
 
         private async Task SynchronizeSubscriptionsAsync()

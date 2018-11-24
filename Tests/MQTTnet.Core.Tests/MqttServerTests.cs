@@ -660,16 +660,22 @@ namespace MQTTnet.Core.Tests
         {
             var s = new MqttFactory().CreateMqttServer();
 
-            var events = new ConcurrentBag<string>();
+            var events = new List<string>();
 
             s.ClientConnected += (_, __) =>
             {
-                events.Add("c");
+                lock (events)
+                {
+                    events.Add("c");
+                }
             };
 
             s.ClientDisconnected += (_, __) =>
             {
-                events.Add("d");
+                lock (events)
+                {
+                    events.Add("d");
+                }
             };
 
             var clientOptions = new MqttClientOptionsBuilder()
@@ -691,17 +697,17 @@ namespace MQTTnet.Core.Tests
             await Task.Delay(250);
 
             await c1.DisconnectAsync();
+
+            await Task.Delay(250);
+
             await c2.DisconnectAsync();
 
             await Task.Delay(250);
 
-            var flow = string.Join(string.Empty, events);
-            
             await s.StopAsync();
 
+            var flow = string.Join(string.Empty, events);
             Assert.AreEqual("cdcd", flow);
-
-            //Assert.IsFalse(connecteCalledBeforeConnectedClients, "ClientConnected was called before ClientDisconnect was called");
         }
 
 

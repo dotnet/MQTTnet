@@ -62,7 +62,7 @@ namespace MQTTnet.Server
 
         public Task StartSession(IMqttChannelAdapter clientAdapter)
         {
-            return Task.Run(() => RunSession(clientAdapter, _cancellationToken), _cancellationToken);
+            return Task.Run(() => RunSessionAsync(clientAdapter, _cancellationToken), _cancellationToken);
         }
 
         public IList<IMqttClientSessionStatus> GetClientStatus()
@@ -205,7 +205,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task RunSession(IMqttChannelAdapter clientAdapter, CancellationToken cancellationToken)
+        private async Task RunSessionAsync(IMqttChannelAdapter clientAdapter, CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
             
@@ -241,7 +241,8 @@ namespace MQTTnet.Server
                 }
 
                 var result = PrepareClientSession(connectPacket);
-                var clientSession = result.Session;
+
+                Server.OnClientConnected(clientId);
 
                 await clientAdapter.SendPacketAsync(
                     new MqttConnAckPacket
@@ -251,9 +252,7 @@ namespace MQTTnet.Server
                     },
                     cancellationToken).ConfigureAwait(false);
 
-                Server.OnClientConnected(clientId);
-
-                await clientSession.RunAsync(connectPacket, clientAdapter).ConfigureAwait(false);
+                await result.Session.RunAsync(connectPacket, clientAdapter).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {

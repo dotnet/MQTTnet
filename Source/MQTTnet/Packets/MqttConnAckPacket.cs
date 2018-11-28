@@ -13,7 +13,7 @@ namespace MQTTnet.Packets
 
         #region Added in MQTTv5
 
-        public MqttConnectReasonCode? ConnectReasonCode { get; set; }
+        public MqttConnectReasonCode? ReasonCode { get; set; }
 
         public MqttConnAckPacketProperties Properties { get; set; }
 
@@ -21,7 +21,7 @@ namespace MQTTnet.Packets
 
         public override string ToString()
         {
-            return "ConnAck: [ConnectReturnCode=" + ConnectReturnCode + "] [IsSessionPresent=" + IsSessionPresent + "]";
+            return string.Concat("ConnAck: [ConnectReturnCode=", ConnectReturnCode, "] [ReasonCode=", ReasonCode, "] [IsSessionPresent=", IsSessionPresent, "]");
         }
     }
 }

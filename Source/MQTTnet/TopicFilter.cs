@@ -14,6 +14,25 @@ namespace MQTTnet
 
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
 
+        #region Added in MQTTv5
+
+        /// <summary>
+        /// This is only available when using MQTT version 5.
+        /// </summary>
+        public bool? NoLocal { get; set; }
+
+        /// <summary>
+        /// This is only available when using MQTT version 5.
+        /// </summary>
+        public bool? RetainAsPublished { get; set; }
+
+        /// <summary>
+        /// This is only available when using MQTT version 5.
+        /// </summary>
+        public MqttRetainHandling? RetainHandling { get; set; }
+
+        #endregion
+
         public override string ToString()
         {
             return Topic + "@" + QualityOfServiceLevel;

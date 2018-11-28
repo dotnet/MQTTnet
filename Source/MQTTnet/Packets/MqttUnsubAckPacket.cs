@@ -6,7 +6,7 @@
 
         public override string ToString()
         {
-            return "UnsubAck: [PacketIdentifier=" + PacketIdentifier + "]";
+            return string.Concat("UnsubAck: [PacketIdentifier=", PacketIdentifier, "]");
         }
     }
 }

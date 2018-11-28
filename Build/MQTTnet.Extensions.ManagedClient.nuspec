@@ -14,7 +14,7 @@
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
-      <dependency id="MQTTnet" version="2.8.5-rc4" />
+      <dependency id="MQTTnet" version="2.8.5-rc5" />
     </dependencies>
   </metadata>
 

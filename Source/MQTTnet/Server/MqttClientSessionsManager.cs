@@ -185,7 +185,12 @@ namespace MQTTnet.Server
 
                 foreach (var clientSession in GetSessions())
                 {
-                    clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, applicationMessage.ToPublishPacket());
+                    var publishPacket = applicationMessage.ToPublishPacket();
+
+                    // Set the retain flag to true according to [MQTT-3.3.1-9].
+                    publishPacket.Retain = false;
+
+                    clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, publishPacket);
                 }
             }
             catch (OperationCanceledException)

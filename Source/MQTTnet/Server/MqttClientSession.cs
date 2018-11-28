@@ -227,7 +227,7 @@ namespace MQTTnet.Server
                 Topic = publishPacket.Topic,
                 Payload = publishPacket.Payload,
                 QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel,
-                Retain = false,
+                Retain = publishPacket.Retain,
                 Dup = false
             };
 
@@ -371,7 +371,12 @@ namespace MQTTnet.Server
             var retainedMessages = _retainedMessagesManager.GetSubscribedMessages(topicFilters);
             foreach (var applicationMessage in retainedMessages)
             {
-                EnqueueApplicationMessage(null, applicationMessage.ToPublishPacket());
+                var publishPacket = applicationMessage.ToPublishPacket();
+
+                // Set the retain flag to true according to [MQTT-3.3.1-8].
+                publishPacket.Retain = true;
+
+                EnqueueApplicationMessage(null, publishPacket);
             }
         }
 

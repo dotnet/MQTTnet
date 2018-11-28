@@ -17,8 +17,9 @@
 * [ManagedClient] Fixed an issue which deletes the wrong message from the internal queue (thanks to @PaulFake).
 * [Server] Added new method which exposes all retained messages.
 * [Server] Removed (wrong) setter from the server options interface.
-* [Server] fixed cpu spike in case a client disconnects (issue 421).
-* [Server] fixed concurrent sends with Aspnetcore.Connections.Abstractions based transport.
+* [Server] Fixed cpu spike in case a client disconnects (issue 421).
+* [Server] Fixed concurrent sends with Aspnetcore.Connections.Abstractions based transport.
+* [Server] Fixed wrong retain flag when distributing application messages (thanks to @trev0115).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

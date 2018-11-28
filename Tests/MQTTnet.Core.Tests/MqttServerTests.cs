@@ -430,7 +430,7 @@ namespace MQTTnet.Core.Tests
             var serverAdapter = new TestMqttServerAdapter();
             var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
 
-            var receivedMessagesCount = 0;
+            var receivedMessages = new List<MqttApplicationMessage>();
             try
             {
                 await s.StartAsync(new MqttServerOptions());
@@ -440,7 +440,14 @@ namespace MQTTnet.Core.Tests
                 await c1.DisconnectAsync();
 
                 var c2 = await serverAdapter.ConnectTestClient("c2");
-                c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
+                c2.ApplicationMessageReceived += (_, e) =>
+                {
+                    lock (receivedMessages)
+                    {
+                        receivedMessages.Add(e.ApplicationMessage);
+                    }
+                };
+
                 await c2.SubscribeAsync(new TopicFilterBuilder().WithTopic("retained").Build());
 
                 await Task.Delay(500);
@@ -450,7 +457,8 @@ namespace MQTTnet.Core.Tests
                 await s.StopAsync();
             }
 
-            Assert.AreEqual(1, receivedMessagesCount);
+            Assert.AreEqual(1, receivedMessages.Count);
+            Assert.IsTrue(receivedMessages.First().Retain);
         }
 
         [TestMethod]

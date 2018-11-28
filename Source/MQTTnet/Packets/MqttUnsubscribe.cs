@@ -11,7 +11,7 @@ namespace MQTTnet.Packets
         public override string ToString()
         {
             var topicFiltersText = string.Join(",", TopicFilters);
-            return "Unsubscribe: [PacketIdentifier=" + PacketIdentifier + "] [TopicFilters=" + topicFiltersText + "]";
+            return string.Concat("Unsubscribe: [PacketIdentifier=", PacketIdentifier, "] [TopicFilters=", topicFiltersText, "]");
         }
     }
 }

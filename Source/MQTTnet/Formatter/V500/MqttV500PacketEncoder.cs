@@ -97,9 +97,9 @@ namespace MQTTnet.Formatter.V500
             if (packet == null) throw new ArgumentNullException(nameof(packet));
             if (packetWriter == null) throw new ArgumentNullException(nameof(packetWriter));
 
-            if (!packet.ConnectReasonCode.HasValue)
+            if (!packet.ReasonCode.HasValue)
             {
-                throw new MqttProtocolViolationException("The ConnectReasonCode must be set for MQTT version 5.");
+                throw new MqttProtocolViolationException("The ReasonCode must be set for MQTT version 5.");
             }
 
             byte connectAcknowledgeFlags = 0x0;
@@ -110,7 +110,7 @@ namespace MQTTnet.Formatter.V500
 
             packetWriter.Write(connectAcknowledgeFlags);
             packetWriter.Write((byte)packet.ConnectReturnCode);
-            packetWriter.Write((byte)packet.ConnectReasonCode.Value);
+            packetWriter.Write((byte)packet.ReasonCode.Value);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
             if (packet.Properties != null)
@@ -209,13 +209,13 @@ namespace MQTTnet.Formatter.V500
                 throw new MqttProtocolViolationException("PubAck packet has no packet identifier.");
             }
 
-            if (!packet.ConnectReasonCode.HasValue)
+            if (!packet.ReasonCode.HasValue)
             {
                 throw new MqttProtocolViolationException("PubAck packet must contain a connect reason.");
             }
 
             packetWriter.Write(packet.PacketIdentifier.Value);
-            packetWriter.Write((byte)packet.ConnectReasonCode.Value);
+            packetWriter.Write((byte)packet.ReasonCode.Value);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubAck);
         }

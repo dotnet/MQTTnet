@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MQTTnet.Formatter.V311;
 using MQTTnet.Packets;
 
@@ -22,7 +23,7 @@ namespace MQTTnet.Formatter.V500
                 Dup = false,
                 Properties = new MqttPublishPacketProperties
                 {
-                    UserProperties = applicationMessage.UserProperties
+                    UserProperties = new List<MqttUserProperty>(applicationMessage.UserProperties)
                 }
             };
         }

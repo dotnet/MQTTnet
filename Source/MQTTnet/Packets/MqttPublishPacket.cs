@@ -15,19 +15,14 @@ namespace MQTTnet.Packets
         public byte[] Payload { get; set; }
 
         #region Added in MQTTv5
-        
+
         public MqttPublishPacketProperties Properties { get; set; }
-        
+
         #endregion
 
         public override string ToString()
         {
-            return "Publish: [Topic=" + Topic + "]" +
-                " [Payload.Length=" + Payload?.Length + "]" +
-                " [QoSLevel=" + QualityOfServiceLevel + "]" +
-                " [Dup=" + Dup + "]" +
-                " [Retain=" + Retain + "]" +
-                " [PacketIdentifier=" + PacketIdentifier + "]";
+            return string.Concat("Publish: [Topic=", Topic, "] [Payload.Length=", Payload?.Length, "] [QoSLevel=", QualityOfServiceLevel, "] [Dup=", Dup, "] [Retain=", Retain, "] [PacketIdentifier=", PacketIdentifier, "]");
         }
     }
 }

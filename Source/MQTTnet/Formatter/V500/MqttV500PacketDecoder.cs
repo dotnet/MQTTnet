@@ -21,7 +21,7 @@ namespace MQTTnet.Formatter.V500
 
             packet.IsSessionPresent = (acknowledgeFlags & 0x1) > 0;
             packet.ConnectReturnCode = (MqttConnectReturnCode)body.ReadByte();
-            packet.ConnectReasonCode = (MqttConnectReasonCode)body.ReadByte();
+            packet.ReasonCode = (MqttConnectReasonCode)body.ReadByte();
 
             var propertiesLength = body.ReadVariableLengthInteger();
             if (propertiesLength > 0)

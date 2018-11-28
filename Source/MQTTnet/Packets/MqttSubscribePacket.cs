@@ -9,10 +9,16 @@ namespace MQTTnet.Packets
 
         public IList<TopicFilter> TopicFilters { get; set; } = new List<TopicFilter>();
 
+        #region Added in MQTTv5
+
+        public MqttSubscribePacketProperties Properties { get; set; }
+
+        #endregion
+
         public override string ToString()
         {
             var topicFiltersText = string.Join(",", TopicFilters.Select(f => f.Topic + "@" + f.QualityOfServiceLevel));
-            return "Subscribe: [PacketIdentifier=" + PacketIdentifier + "] [TopicFilters=" + topicFiltersText + "]";
+            return string.Concat("Subscribe: [PacketIdentifier=", PacketIdentifier, "] [TopicFilters=", topicFiltersText, "]");
         }
     }
 }

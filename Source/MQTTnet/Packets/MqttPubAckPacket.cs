@@ -6,7 +6,7 @@ namespace MQTTnet.Packets
     {
         #region Added in MQTTv5
 
-        public MqttPubAckReasonCode? ConnectReasonCode { get; set; }
+        public MqttPubAckReasonCode? ReasonCode { get; set; }
 
         public MqttPubAckPacketProperties Properties { get; set; }
 
@@ -14,7 +14,7 @@ namespace MQTTnet.Packets
 
         public override string ToString()
         {
-            return $"PubAck: [PacketIdentifier={PacketIdentifier}] [ConnectReasonCode={ConnectReasonCode}]";
+            return string.Concat("PubAck: [PacketIdentifier=", PacketIdentifier, "] [ConnectReasonCode=", ReasonCode, "]");
         }
     }
 }

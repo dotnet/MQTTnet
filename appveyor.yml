@@ -3,7 +3,7 @@ image: Visual Studio 2017
 configuration: Release
 before_build:
 - cmd: >-
-    msbuild /t:restore
+    msbuild /t:restore MQTTnet.sln
 
     cd Tests/MQTTnet.TestApp.AspNetCore2/
 

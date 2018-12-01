@@ -312,6 +312,8 @@ namespace MQTTnet.Server
                     }
                     else
                     {
+                        clientSession.ResumeSession();
+
                         _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
                     }
                 }

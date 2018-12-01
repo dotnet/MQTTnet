@@ -56,6 +56,11 @@ namespace MQTTnet.Server
 
         public string ClientId { get; }
 
+        public void ResumeSession()
+        {
+            _keepAliveMonitor.Reset();
+        }
+
         public void FillStatus(MqttClientSessionStatus status)
         {
             status.ClientId = ClientId;
@@ -87,11 +92,11 @@ namespace MQTTnet.Server
 
                 _cancellationTokenSource = new CancellationTokenSource();
 
-                //woraround for https://github.com/dotnet/corefx/issues/24430
+                //workaround for https://github.com/dotnet/corefx/issues/24430
 #pragma warning disable 4014
                 _cleanupHandle = _cancellationTokenSource.Token.Register(() => CleanupAsync());
 #pragma warning restore 4014
-                //endworkaround
+                //end workaround
 
                 _wasCleanDisconnect = false;
                 _willMessage = connectPacket.WillMessage;

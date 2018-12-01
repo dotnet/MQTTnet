@@ -50,6 +50,12 @@ namespace MQTTnet.Server
             _isPaused = false;
         }
 
+        public void Reset()
+        {
+            _lastPacketReceivedTracker.Restart();
+            _lastNonKeepAlivePacketReceivedTracker.Restart();
+        }
+
         public void PacketReceived(MqttBasePacket packet)
         {
             _lastPacketReceivedTracker.Restart();

@@ -9,6 +9,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Serializer;
 
 namespace MQTTnet.Server
 {
@@ -17,6 +18,7 @@ namespace MQTTnet.Server
         private readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
 
         private readonly MqttRetainedMessagesManager _retainedMessagesManager;
+        private readonly MqttServerEventDispatcher _eventDispatcher;
         private readonly MqttClientKeepAliveMonitor _keepAliveMonitor;
         private readonly MqttClientPendingPacketsQueue _pendingPacketsQueue;
         private readonly MqttClientSubscriptionsManager _subscriptionsManager;
@@ -28,45 +30,44 @@ namespace MQTTnet.Server
         private CancellationTokenSource _cancellationTokenSource;
         private MqttApplicationMessage _willMessage;
         private bool _wasCleanDisconnect;
-        private IMqttChannelAdapter _adapter;
         private Task _workerTask;
         private IDisposable _cleanupHandle;
 
+        private string _adapterEndpoint;
+        private MqttProtocolVersion? _adapterProtocolVersion;
+        
         public MqttClientSession(
             string clientId,
             IMqttServerOptions options,
             MqttClientSessionsManager sessionsManager,
             MqttRetainedMessagesManager retainedMessagesManager,
+            MqttServerEventDispatcher eventDispatcher,
             IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _sessionsManager = sessionsManager;
+            _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
+            _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
 
             ClientId = clientId;
 
             _logger = logger.CreateChildLogger(nameof(MqttClientSession));
 
             _keepAliveMonitor = new MqttClientKeepAliveMonitor(this, _logger);
-            _subscriptionsManager = new MqttClientSubscriptionsManager(clientId, _options, sessionsManager.Server);
+            _subscriptionsManager = new MqttClientSubscriptionsManager(clientId, _options, eventDispatcher);
             _pendingPacketsQueue = new MqttClientPendingPacketsQueue(_options, this, _logger);
         }
 
         public string ClientId { get; }
 
-        public void ResumeSession()
-        {
-            _keepAliveMonitor.Reset();
-        }
-
         public void FillStatus(MqttClientSessionStatus status)
         {
             status.ClientId = ClientId;
-            status.IsConnected = _adapter != null;
-            status.Endpoint = _adapter?.Endpoint;
-            status.ProtocolVersion = _adapter?.PacketSerializer?.ProtocolVersion;
+            status.IsConnected = _cancellationTokenSource != null;
+            status.Endpoint = _adapterEndpoint;
+            status.ProtocolVersion = _adapterProtocolVersion;
             status.PendingApplicationMessagesCount = _pendingPacketsQueue.Count;
             status.LastPacketReceived = _keepAliveMonitor.LastPacketReceived;
             status.LastNonKeepAlivePacketReceived = _keepAliveMonitor.LastNonKeepAlivePacketReceived;
@@ -85,7 +86,10 @@ namespace MQTTnet.Server
 
             try
             {
-                _adapter = adapter;
+                if (_cancellationTokenSource != null)
+                {
+                    Stop(MqttClientDisconnectType.Clean, true);
+                }
 
                 adapter.ReadingPacketStarted += OnAdapterReadingPacketStarted;
                 adapter.ReadingPacketCompleted += OnAdapterReadingPacketCompleted;
@@ -94,7 +98,7 @@ namespace MQTTnet.Server
 
                 //workaround for https://github.com/dotnet/corefx/issues/24430
 #pragma warning disable 4014
-                _cleanupHandle = _cancellationTokenSource.Token.Register(() => CleanupAsync());
+                _cleanupHandle = _cancellationTokenSource.Token.Register(() => TryDisposeAdapterAsync(adapter));
 #pragma warning restore 4014
                 //end workaround
 
@@ -103,6 +107,9 @@ namespace MQTTnet.Server
 
                 _pendingPacketsQueue.Start(adapter, _cancellationTokenSource.Token);
                 _keepAliveMonitor.Start(connectPacket.KeepAlivePeriod, _cancellationTokenSource.Token);
+
+                _adapterEndpoint = adapter.Endpoint;
+                _adapterProtocolVersion = adapter.PacketSerializer.ProtocolVersion;
 
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
@@ -139,30 +146,29 @@ namespace MQTTnet.Server
             }
             finally
             {
-                await CleanupAsync().ConfigureAwait(false);
+                _adapterEndpoint = null;
+                _adapterProtocolVersion = null;
+
+                await TryDisposeAdapterAsync(adapter).ConfigureAwait(false);
 
                 _cleanupHandle?.Dispose();
                 _cleanupHandle = null;
                 
-                _adapter = null;
                 _cancellationTokenSource?.Cancel(false);
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
             }
         }
 
-        private async Task CleanupAsync()
+        private async Task TryDisposeAdapterAsync(IMqttChannelAdapter adapter)
         {
-            var adapter = _adapter;
+            if (adapter == null)
+            {
+                return;
+            }
+
             try
             {
-                if (adapter == null)
-                {
-                    return;
-                }
-
-                _adapter = null;
-
                 adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
                 adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
 
@@ -174,7 +180,13 @@ namespace MQTTnet.Server
             }
             finally
             {
-                adapter?.Dispose();
+                try
+                {
+                    adapter.Dispose();
+                }
+                catch
+                {
+                }
             }
         }
 
@@ -193,9 +205,9 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                _wasCleanDisconnect = type == MqttClientDisconnectType.Clean;
-
                 _cancellationTokenSource?.Cancel(false);
+
+                _wasCleanDisconnect = type == MqttClientDisconnectType.Clean;
 
                 if (_willMessage != null && !_wasCleanDisconnect)
                 {
@@ -211,9 +223,8 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _logger.Info("Client '{0}': Session stopped.", ClientId);
-
-                _sessionsManager.Server.OnClientDisconnected(ClientId, _wasCleanDisconnect);
+                _logger.Info("Client '{0}': Disconnected (clean={1}).", ClientId, _wasCleanDisconnect);
+                _eventDispatcher.OnClientDisconnected(ClientId, _wasCleanDisconnect);
             }
         }
 

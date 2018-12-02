@@ -228,6 +228,39 @@ namespace MQTTnet.Core.Tests
 
             Assert.AreEqual(2000, receivedMessagesCount);
         }
+        
+        [TestMethod]
+        public async Task MqttServer_SessionTakeover()
+        {
+            var server = new MqttFactory().CreateMqttServer();
+            try
+            {
+                await server.StartAsync(new MqttServerOptions());
+
+                var client1 = new MqttFactory().CreateMqttClient();
+                var client2 = new MqttFactory().CreateMqttClient();
+
+                var options = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost")
+                    .WithCleanSession(false)
+                    .WithClientId("a").Build();
+
+                await client1.ConnectAsync(options);
+
+                await Task.Delay(500);
+
+                await client2.ConnectAsync(options);
+
+                await Task.Delay(500);
+
+                Assert.IsFalse(client1.IsConnected);
+                Assert.IsTrue(client2.IsConnected);
+            }
+            finally
+            {
+                await server.StopAsync();
+            }
+        }
 
         private static async Task Publish(IMqttClient c1, MqttApplicationMessage message)
         {

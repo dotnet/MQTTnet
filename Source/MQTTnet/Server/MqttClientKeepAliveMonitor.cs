@@ -36,8 +36,8 @@ namespace MQTTnet.Server
             {
                 return;
             }
-
-            Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken);
+            
+            Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken).ConfigureAwait(false);
         }
 
         public void Pause()

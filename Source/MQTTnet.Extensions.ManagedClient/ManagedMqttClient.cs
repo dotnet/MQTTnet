@@ -27,8 +27,7 @@ namespace MQTTnet.Extensions.ManagedClient
         private CancellationTokenSource _publishingCancellationToken;
 
         private ManagedMqttClientStorageManager _storageManager;
-        private IManagedMqttClientOptions _options;
-
+        
         private bool _subscriptionsNotPushed;
 
         public ManagedMqttClient(IMqttClient mqttClient, IMqttNetChildLogger logger)
@@ -47,6 +46,7 @@ namespace MQTTnet.Extensions.ManagedClient
         public bool IsConnected => _mqttClient.IsConnected;
         public bool IsStarted => _connectionCancellationToken != null;
         public int PendingApplicationMessagesCount => _messageQueue.Count;
+        public IManagedMqttClientOptions Options { get; private set; }
 
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
@@ -70,11 +70,11 @@ namespace MQTTnet.Extensions.ManagedClient
 
             if (_connectionCancellationToken != null) throw new InvalidOperationException("The managed client is already started.");
 
-            _options = options;
+            Options = options;
 
-            if (_options.Storage != null)
+            if (Options.Storage != null)
             {
-                _storageManager = new ManagedMqttClientStorageManager(_options.Storage);
+                _storageManager = new ManagedMqttClientStorageManager(Options.Storage);
                 var messages = await _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false);
 
                 foreach (var message in messages)
@@ -116,16 +116,16 @@ namespace MQTTnet.Extensions.ManagedClient
             ManagedMqttApplicationMessage removedMessage = null;
             lock (_messageQueue)
             {
-                if (_messageQueue.Count >= _options.MaxPendingMessages)
+                if (_messageQueue.Count >= Options.MaxPendingMessages)
                 {
-                    if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
+                    if (Options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
                     {
                         _logger.Verbose("Skipping publish of new application message because internal queue is full.");
                         ApplicationMessageSkipped?.Invoke(this, new ApplicationMessageSkippedEventArgs(applicationMessage));
                         return;
                     }
 
-                    if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
+                    if (Options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
                     {
                         removedMessage = _messageQueue.RemoveFirst();
                         _logger.Verbose("Removed oldest application message from internal queue because it is full.");
@@ -219,7 +219,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 if (connectionState == ReconnectionResult.NotConnected)
                 {
                     StopPublishing();
-                    await Task.Delay(_options.AutoReconnectDelay, cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(Options.AutoReconnectDelay, cancellationToken).ConfigureAwait(false);
                     return;
                 }
 
@@ -232,7 +232,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 if (connectionState == ReconnectionResult.StillConnected)
                 {
-                    await Task.Delay(_options.ConnectionCheckInterval, cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(Options.ConnectionCheckInterval, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -388,7 +388,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
             try
             {
-                await _mqttClient.ConnectAsync(_options.ClientOptions).ConfigureAwait(false);
+                await _mqttClient.ConnectAsync(Options.ClientOptions).ConfigureAwait(false);
                 return ReconnectionResult.Reconnected;
             }
             catch (Exception exception)

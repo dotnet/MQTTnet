@@ -18,7 +18,7 @@ namespace MQTTnet.Core.Tests
     public class MqttClientTests
     {
         [TestMethod]
-        public async Task ClientDisconnectException()
+        public async Task Client_Disconnect_Exception()
         {
             var factory = new MqttFactory();
             var client = factory.CreateMqttClient();
@@ -43,7 +43,7 @@ namespace MQTTnet.Core.Tests
         }
 
         [TestMethod]
-        public async Task ClientPublish()
+        public async Task Client_Publish()
         {
             var server = new MqttFactory().CreateMqttServer();
             
@@ -81,9 +81,56 @@ namespace MQTTnet.Core.Tests
             }
         }
 
+        [TestMethod]
+        public async Task Publish_Special_Content()
+        {
+            var factory = new MqttFactory();
+            var server = factory.CreateMqttServer();
+            var serverOptions = new MqttServerOptionsBuilder().Build();
+
+            var receivedMessages = new List<MqttApplicationMessage>();
+
+            var client = factory.CreateMqttClient();
+
+            try
+            {
+                await server.StartAsync(serverOptions);
+
+                client.Connected += async (s, e) =>
+                {
+                    await client.SubscribeAsync("RCU/P1/H0001/R0003");
+
+                    var msg = new MqttApplicationMessageBuilder()
+                        .WithPayload("DA|18RS00SC00XI0000RV00R100R200R300R400L100L200L300L400Y100Y200AC0102031800BELK0000BM0000|")
+                        .WithTopic("RCU/P1/H0001/R0003");
+
+                    await client.PublishAsync(msg.Build());
+                };
+
+                client.ApplicationMessageReceived += (s, e) =>
+                {
+                    lock (receivedMessages)
+                    {
+                        receivedMessages.Add(e.ApplicationMessage);
+                    }
+                };
+
+                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost").Build());
+
+                await Task.Delay(500);
+
+                Assert.AreEqual(1, receivedMessages.Count);
+                Assert.AreEqual("DA|18RS00SC00XI0000RV00R100R200R300R400L100L200L300L400Y100Y200AC0102031800BELK0000BM0000|", receivedMessages.First().ConvertPayloadToString());
+            }
+            finally
+            {
+                await server.StopAsync();
+            }
+        }
+
 #if DEBUG
         [TestMethod]
-        public async Task ClientCleanupOnAuthentificationFails()
+        public async Task Client_Cleanup_On_Authentification_Fails()
         {
             var channel = new TestMqttCommunicationAdapter();
             var channel2 = new TestMqttCommunicationAdapter();

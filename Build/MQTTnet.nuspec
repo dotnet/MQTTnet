@@ -22,6 +22,7 @@
 * [Server] Fixed cpu spike in case a client disconnects (issue 421).
 * [Server] Fixed concurrent sends with Aspnetcore.Connections.Abstractions based transport.
 * [Server] Fixed wrong retain flag when distributing application messages (thanks to @trev0115).
+* [Server] Fixed issue which closes a connection when reconnecting with the same client ID (thanks to @fogzot).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

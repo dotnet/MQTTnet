@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -190,12 +189,7 @@ namespace MQTTnet.Server
 
                 foreach (var clientSession in GetSessions())
                 {
-                    var publishPacket = applicationMessage.ToPublishPacket();
-
-                    // Set the retain flag to true according to [MQTT-3.3.1-9].
-                    publishPacket.Retain = false;
-
-                    clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, publishPacket);
+                    clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, enqueuedApplicationMessage.ApplicationMessage, false);
                 }
             }
             catch (OperationCanceledException)

@@ -301,11 +301,6 @@ namespace MQTTnet.Core.Tests
         [TestMethod]
         public async Task MqttServer_HandleCleanDisconnect()
         {
-            MqttNetGlobalLogger.LogMessagePublished += (_, e) =>
-            {
-                System.Diagnostics.Debug.WriteLine($"[{e.TraceMessage.Timestamp:s}] {e.TraceMessage.Source} {e.TraceMessage.Message}");
-            };
-
             var serverAdapter = new MqttTcpServerAdapter(new MqttNetLogger().CreateChildLogger());
             var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
 
@@ -336,6 +331,51 @@ namespace MQTTnet.Core.Tests
             await Task.Delay(100);
 
             Assert.AreEqual(clientConnectedCalled, clientDisconnectedCalled);
+        }
+
+        [TestMethod]
+        public async Task MqttServer_Client_Disconnect_Without_Errors()
+        {
+            var errors = 0;
+
+            MqttNetGlobalLogger.LogMessagePublished += (_, e) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"[{e.TraceMessage.Timestamp:s}] {e.TraceMessage.Source} {e.TraceMessage.Message}");
+
+                if (e.TraceMessage.Level == MqttNetLogLevel.Error)
+                {
+                    errors++;
+                }
+            };
+
+            bool clientWasConnected;
+
+            var server = new MqttFactory().CreateMqttServer();
+            try
+            {
+                var options = new MqttServerOptionsBuilder().Build();
+                await server.StartAsync(options);
+
+                var client = new MqttFactory().CreateMqttClient();
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost")
+                    .Build();
+
+                await client.ConnectAsync(clientOptions);
+
+                clientWasConnected = true;
+
+                await client.DisconnectAsync();
+
+                await Task.Delay(500);
+            }
+            finally
+            {
+                await server.StopAsync();
+            }
+            
+            Assert.IsTrue(clientWasConnected);
+            Assert.AreEqual(0, errors);
         }
 
         [TestMethod]

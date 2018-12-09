@@ -6,10 +6,10 @@ using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Serializer;
 
 namespace MQTTnet.Server
 {
@@ -35,7 +35,8 @@ namespace MQTTnet.Server
 
         private string _adapterEndpoint;
         private MqttProtocolVersion? _adapterProtocolVersion;
-        
+        private IMqttChannelAdapter _channelAdapter;
+
         public MqttClientSession(
             string clientId,
             IMqttServerOptions options,
@@ -73,61 +74,15 @@ namespace MQTTnet.Server
             status.LastNonKeepAlivePacketReceived = _keepAliveMonitor.LastNonKeepAlivePacketReceived;
         }
 
-        public Task RunAsync(MqttApplicationMessage willMessage, int keepAlivePeriod, IMqttChannelAdapter adapter)
+        public Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
-            _workerTask = RunInternalAsync(willMessage, keepAlivePeriod, adapter);
+            _workerTask = RunInternalAsync(connectPacket, adapter);
             return _workerTask;
         }
 
         public void Stop(MqttClientDisconnectType type)
         {
             Stop(type, false);
-        }
-
-        public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
-        {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
-
-            var checkSubscriptionsResult = _subscriptionsManager.CheckSubscriptions(publishPacket.Topic, publishPacket.QualityOfServiceLevel);
-            if (!checkSubscriptionsResult.IsSubscribed)
-            {
-                return;
-            }
-
-            publishPacket = new MqttPublishPacket
-            {
-                Topic = publishPacket.Topic,
-                Payload = publishPacket.Payload,
-                QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel,
-                Retain = publishPacket.Retain,
-                Dup = false
-            };
-
-            if (publishPacket.QualityOfServiceLevel > 0)
-            {
-                publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
-            }
-
-            if (_options.ClientMessageQueueInterceptor != null)
-            {
-                var context = new MqttClientMessageQueueInterceptorContext(
-                    senderClientSession?.ClientId,
-                    ClientId,
-                    publishPacket.ToApplicationMessage());
-
-                _options.ClientMessageQueueInterceptor?.Invoke(context);
-
-                if (!context.AcceptEnqueue || context.ApplicationMessage == null)
-                {
-                    return;
-                }
-
-                publishPacket.Topic = context.ApplicationMessage.Topic;
-                publishPacket.Payload = context.ApplicationMessage.Payload;
-                publishPacket.QualityOfServiceLevel = context.ApplicationMessage.QualityOfServiceLevel;
-            }
-
-            _pendingPacketsQueue.Enqueue(publishPacket);
         }
 
         public Task SubscribeAsync(IList<TopicFilter> topicFilters)
@@ -164,44 +119,11 @@ namespace MQTTnet.Server
         {
             _pendingPacketsQueue?.Dispose();
 
-            _cancellationTokenSource?.Cancel ();
+            _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
         }
-
-        private void Stop(MqttClientDisconnectType type, bool isInsideSession)
-        {
-            try
-            {
-                var cts = _cancellationTokenSource;
-                if (cts == null || cts.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                _cancellationTokenSource?.Cancel(false);
-
-                _wasCleanDisconnect = type == MqttClientDisconnectType.Clean;
-
-                if (_willMessage != null && !_wasCleanDisconnect)
-                {
-                    _sessionsManager.EnqueueApplicationMessage(this, _willMessage.ToPublishPacket());
-                }
-
-                _willMessage = null;
-
-                if (!isInsideSession)
-                {
-                    _workerTask?.GetAwaiter().GetResult();
-                }
-            }
-            finally
-            {
-                _logger.Info("Client '{0}': Disconnected (clean={1}).", ClientId, _wasCleanDisconnect);
-                _eventDispatcher.OnClientDisconnected(ClientId, _wasCleanDisconnect);
-            }
-        }
-
+        
         private async Task RunInternalAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
@@ -229,13 +151,14 @@ namespace MQTTnet.Server
                 //end workaround
 
                 _wasCleanDisconnect = false;
-                _willMessage = willMessage;
+                _willMessage = connectPacket.WillMessage;
 
                 _pendingPacketsQueue.Start(adapter, _cancellationTokenSource.Token);
-                _keepAliveMonitor.Start(keepAlivePeriod, _cancellationTokenSource.Token);
+                _keepAliveMonitor.Start(connectPacket.KeepAlivePeriod, _cancellationTokenSource.Token);
 
                 _adapterEndpoint = adapter.Endpoint;
-                _adapterProtocolVersion = adapter.PacketSerializer.ProtocolVersion;
+                _adapterProtocolVersion = adapter.PacketFormatterAdapter.ProtocolVersion;
+                _channelAdapter = adapter;
 
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
@@ -308,13 +231,8 @@ namespace MQTTnet.Server
             }
             finally
             {
-                adapter?.Dispose();
+                adapter.Dispose();
             }
-        }
-
-        public void Stop(MqttClientDisconnectType type)
-        {
-            Stop(type, false);
         }
 
         private void Stop(MqttClientDisconnectType type, bool isInsideSession)
@@ -346,12 +264,11 @@ namespace MQTTnet.Server
             finally
             {
                 _logger.Info("Client '{0}': Session stopped.", ClientId);
-
-                _sessionsManager.Server.OnClientDisconnected(ClientId, _wasCleanDisconnect);
+                _eventDispatcher.OnClientDisconnected(ClientId, _wasCleanDisconnect);
             }
         }
 
-        public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
+        public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage, bool isRetainedApplicationMessage)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
@@ -361,15 +278,37 @@ namespace MQTTnet.Server
                 return;
             }
 
-            var publishPacket = _adapter.PacketFormatterAdapter.ConvertApplicationMessageToPublishPacket(applicationMessage);
-            publishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
-            publishPacket.Retain = false;
-            publishPacket.Dup = false;
-
+            var publishPacket = _channelAdapter.PacketFormatterAdapter.ConvertApplicationMessageToPublishPacket(applicationMessage);
+            
+            // Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
+            publishPacket.Retain = isRetainedApplicationMessage;
+            
             if (publishPacket.QualityOfServiceLevel > 0)
             {
                 publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
             }
+
+            if (_options.ClientMessageQueueInterceptor != null)
+            {
+                var context = new MqttClientMessageQueueInterceptorContext(
+                    senderClientSession?.ClientId,
+                    ClientId,
+                    applicationMessage);
+
+                _options.ClientMessageQueueInterceptor?.Invoke(context);
+
+                if (!context.AcceptEnqueue || context.ApplicationMessage == null)
+                {
+                    return;
+                }
+
+                publishPacket.Topic = context.ApplicationMessage.Topic;
+                publishPacket.Payload = context.ApplicationMessage.Payload;
+                publishPacket.QualityOfServiceLevel = context.ApplicationMessage.QualityOfServiceLevel;
+            }
+
+            _pendingPacketsQueue.Enqueue(publishPacket);
+        }
 
         private async Task TryDisconnectAdapterAsync(IMqttChannelAdapter adapter)
         {
@@ -454,6 +393,7 @@ namespace MQTTnet.Server
             }
 
             _logger.Warning(null, "Client '{0}': Received not supported packet ({1}). Closing connection.", ClientId, packet);
+
             Stop(MqttClientDisconnectType.NotClean, true);
         }
 
@@ -462,12 +402,7 @@ namespace MQTTnet.Server
             var retainedMessages = _retainedMessagesManager.GetSubscribedMessages(topicFilters);
             foreach (var applicationMessage in retainedMessages)
             {
-                var publishPacket = applicationMessage.ToPublishPacket();
-
-                // Set the retain flag to true according to [MQTT-3.3.1-8].
-                publishPacket.Retain = true;
-
-                EnqueueApplicationMessage(null, publishPacket);
+                EnqueueApplicationMessage(null, applicationMessage, true);
             }
         }
 

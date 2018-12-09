@@ -79,153 +79,9 @@ namespace MQTTnet.Server
             return _workerTask;
         }
 
-        private async Task RunInternalAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
-        {
-            if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
-            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
-
-            try
-            {
-                if (_cancellationTokenSource != null)
-                {
-                    Stop(MqttClientDisconnectType.Clean, true);
-                }
-
-                adapter.ReadingPacketStarted += OnAdapterReadingPacketStarted;
-                adapter.ReadingPacketCompleted += OnAdapterReadingPacketCompleted;
-
-                _cancellationTokenSource = new CancellationTokenSource();
-
-                //workaround for https://github.com/dotnet/corefx/issues/24430
-#pragma warning disable 4014
-                _cleanupHandle = _cancellationTokenSource.Token.Register(() => TryDisposeAdapterAsync(adapter));
-#pragma warning restore 4014
-                //end workaround
-
-                _wasCleanDisconnect = false;
-                _willMessage = connectPacket.WillMessage;
-
-                _pendingPacketsQueue.Start(adapter, _cancellationTokenSource.Token);
-                _keepAliveMonitor.Start(connectPacket.KeepAlivePeriod, _cancellationTokenSource.Token);
-
-                _adapterEndpoint = adapter.Endpoint;
-                _adapterProtocolVersion = adapter.PacketSerializer.ProtocolVersion;
-
-                while (!_cancellationTokenSource.IsCancellationRequested)
-                {
-                    var packet = await adapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationTokenSource.Token).ConfigureAwait(false);
-                    if (packet != null)
-                    {
-                        _keepAliveMonitor.PacketReceived(packet);
-                        ProcessReceivedPacket(adapter, packet, _cancellationTokenSource.Token);
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception exception)
-            {
-                if (exception is MqttCommunicationException)
-                {
-                    if (exception is MqttCommunicationClosedGracefullyException)
-                    {
-                        _logger.Verbose("Client '{0}': Connection closed gracefully.", ClientId);
-                    }
-                    else
-                    {
-                        _logger.Warning(exception, "Client '{0}': Communication exception while receiving client packets.", ClientId);
-                    }
-                }
-                else
-                {
-                    _logger.Error(exception, "Client '{0}': Unhandled exception while receiving client packets.", ClientId);
-                }
-
-                Stop(MqttClientDisconnectType.NotClean, true);
-            }
-            finally
-            {
-                _adapterEndpoint = null;
-                _adapterProtocolVersion = null;
-
-                await TryDisposeAdapterAsync(adapter).ConfigureAwait(false);
-
-                _cleanupHandle?.Dispose();
-                _cleanupHandle = null;
-                
-                _cancellationTokenSource?.Cancel(false);
-                _cancellationTokenSource?.Dispose();
-                _cancellationTokenSource = null;
-            }
-        }
-
-        private async Task TryDisposeAdapterAsync(IMqttChannelAdapter adapter)
-        {
-            if (adapter == null)
-            {
-                return;
-            }
-
-            try
-            {
-                adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
-                adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
-
-                await adapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                _logger.Error(exception, exception.Message);
-            }
-            finally
-            {
-                try
-                {
-                    adapter.Dispose();
-                }
-                catch
-                {
-                }
-            }
-        }
-
         public void Stop(MqttClientDisconnectType type)
         {
             Stop(type, false);
-        }
-
-        private void Stop(MqttClientDisconnectType type, bool isInsideSession)
-        {
-            try
-            {
-                var cts = _cancellationTokenSource;
-                if (cts == null || cts.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                _cancellationTokenSource?.Cancel(false);
-
-                _wasCleanDisconnect = type == MqttClientDisconnectType.Clean;
-
-                if (_willMessage != null && !_wasCleanDisconnect)
-                {
-                    _sessionsManager.EnqueueApplicationMessage(this, _willMessage.ToPublishPacket());
-                }
-
-                _willMessage = null;
-
-                if (!isInsideSession)
-                {
-                    _workerTask?.GetAwaiter().GetResult();
-                }
-            }
-            finally
-            {
-                _logger.Info("Client '{0}': Disconnected (clean={1}).", ClientId, _wasCleanDisconnect);
-                _eventDispatcher.OnClientDisconnected(ClientId, _wasCleanDisconnect);
-            }
         }
 
         public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttPublishPacket publishPacket)
@@ -311,6 +167,163 @@ namespace MQTTnet.Server
             _cancellationTokenSource?.Cancel ();
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
+        }
+
+        private void Stop(MqttClientDisconnectType type, bool isInsideSession)
+        {
+            try
+            {
+                var cts = _cancellationTokenSource;
+                if (cts == null || cts.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                _cancellationTokenSource?.Cancel(false);
+
+                _wasCleanDisconnect = type == MqttClientDisconnectType.Clean;
+
+                if (_willMessage != null && !_wasCleanDisconnect)
+                {
+                    _sessionsManager.EnqueueApplicationMessage(this, _willMessage.ToPublishPacket());
+                }
+
+                _willMessage = null;
+
+                if (!isInsideSession)
+                {
+                    _workerTask?.GetAwaiter().GetResult();
+                }
+            }
+            finally
+            {
+                _logger.Info("Client '{0}': Disconnected (clean={1}).", ClientId, _wasCleanDisconnect);
+                _eventDispatcher.OnClientDisconnected(ClientId, _wasCleanDisconnect);
+            }
+        }
+
+        private async Task RunInternalAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        {
+            if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
+            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
+
+            try
+            {
+                if (_cancellationTokenSource != null)
+                {
+                    Stop(MqttClientDisconnectType.Clean, true);
+                }
+
+                adapter.ReadingPacketStarted += OnAdapterReadingPacketStarted;
+                adapter.ReadingPacketCompleted += OnAdapterReadingPacketCompleted;
+
+                _cancellationTokenSource = new CancellationTokenSource();
+
+                //workaround for https://github.com/dotnet/corefx/issues/24430
+#pragma warning disable 4014
+                _cleanupHandle = _cancellationTokenSource.Token.Register(async () =>
+                {
+                    await TryDisconnectAdapterAsync(adapter).ConfigureAwait(false);
+                    TryDisposeAdapter(adapter);
+                });
+#pragma warning restore 4014
+                //end workaround
+
+                _wasCleanDisconnect = false;
+                _willMessage = connectPacket.WillMessage;
+
+                _pendingPacketsQueue.Start(adapter, _cancellationTokenSource.Token);
+                _keepAliveMonitor.Start(connectPacket.KeepAlivePeriod, _cancellationTokenSource.Token);
+
+                _adapterEndpoint = adapter.Endpoint;
+                _adapterProtocolVersion = adapter.PacketSerializer.ProtocolVersion;
+
+                while (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    var packet = await adapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationTokenSource.Token).ConfigureAwait(false);
+                    if (packet != null)
+                    {
+                        _keepAliveMonitor.PacketReceived(packet);
+                        ProcessReceivedPacket(adapter, packet, _cancellationTokenSource.Token);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                if (exception is MqttCommunicationException)
+                {
+                    if (exception is MqttCommunicationClosedGracefullyException)
+                    {
+                        _logger.Verbose("Client '{0}': Connection closed gracefully.", ClientId);
+                    }
+                    else
+                    {
+                        _logger.Warning(exception, "Client '{0}': Communication exception while receiving client packets.", ClientId);
+                    }
+                }
+                else
+                {
+                    _logger.Error(exception, "Client '{0}': Unhandled exception while receiving client packets.", ClientId);
+                }
+
+                Stop(MqttClientDisconnectType.NotClean, true);
+            }
+            finally
+            {
+                _adapterEndpoint = null;
+                _adapterProtocolVersion = null;
+
+                // Uncomment as soon as the workaround above is no longer needed.
+                //await TryDisconnectAdapterAsync(adapter).ConfigureAwait(false);
+                //TryDisposeAdapter(adapter);
+
+                _cleanupHandle?.Dispose();
+                _cleanupHandle = null;
+                
+                _cancellationTokenSource?.Cancel(false);
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+            }
+        }
+
+        private void TryDisposeAdapter(IMqttChannelAdapter adapter)
+        {
+            if (adapter == null)
+            {
+                return;
+            }
+
+            try
+            {
+                adapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
+                adapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
+
+                adapter.Dispose();
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, "Error while disposing channel adapter.");
+            }
+        }
+
+        private async Task TryDisconnectAdapterAsync(IMqttChannelAdapter adapter)
+        {
+            if (adapter == null)
+            {
+                return;
+            }
+
+            try
+            {
+                await adapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, "Error while disconnecting channel adapter.");
+            }
         }
 
         private void ProcessReceivedPacket(IMqttChannelAdapter adapter, MqttBasePacket packet, CancellationToken cancellationToken)

@@ -36,8 +36,8 @@ namespace MQTTnet.Server
             {
                 return;
             }
-
-            Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken);
+            
+            Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken).ConfigureAwait(false);
         }
 
         public void Pause()
@@ -48,6 +48,12 @@ namespace MQTTnet.Server
         public void Resume()
         {
             _isPaused = false;
+        }
+
+        public void Reset()
+        {
+            _lastPacketReceivedTracker.Restart();
+            _lastNonKeepAlivePacketReceivedTracker.Restart();
         }
 
         public void PacketReceived(MqttBasePacket packet)

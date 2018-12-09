@@ -27,8 +27,7 @@ namespace MQTTnet.Extensions.ManagedClient
         private CancellationTokenSource _publishingCancellationToken;
 
         private ManagedMqttClientStorageManager _storageManager;
-        private IManagedMqttClientOptions _options;
-
+        
         private bool _subscriptionsNotPushed;
 
         public ManagedMqttClient(IMqttClient mqttClient, IMqttNetChildLogger logger)
@@ -47,6 +46,7 @@ namespace MQTTnet.Extensions.ManagedClient
         public bool IsConnected => _mqttClient.IsConnected;
         public bool IsStarted => _connectionCancellationToken != null;
         public int PendingApplicationMessagesCount => _messageQueue.Count;
+        public IManagedMqttClientOptions Options { get; private set; }
 
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
@@ -70,11 +70,11 @@ namespace MQTTnet.Extensions.ManagedClient
 
             if (_connectionCancellationToken != null) throw new InvalidOperationException("The managed client is already started.");
 
-            _options = options;
+            Options = options;
 
-            if (_options.Storage != null)
+            if (Options.Storage != null)
             {
-                _storageManager = new ManagedMqttClientStorageManager(_options.Storage);
+                _storageManager = new ManagedMqttClientStorageManager(Options.Storage);
                 var messages = await _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false);
 
                 foreach (var message in messages)
@@ -116,16 +116,16 @@ namespace MQTTnet.Extensions.ManagedClient
             ManagedMqttApplicationMessage removedMessage = null;
             lock (_messageQueue)
             {
-                if (_messageQueue.Count >= _options.MaxPendingMessages)
+                if (_messageQueue.Count >= Options.MaxPendingMessages)
                 {
-                    if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
+                    if (Options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
                     {
                         _logger.Verbose("Skipping publish of new application message because internal queue is full.");
                         ApplicationMessageSkipped?.Invoke(this, new ApplicationMessageSkippedEventArgs(applicationMessage));
                         return;
                     }
 
-                    if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
+                    if (Options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
                     {
                         removedMessage = _messageQueue.RemoveFirst();
                         _logger.Verbose("Removed oldest application message from internal queue because it is full.");
@@ -219,7 +219,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 if (connectionState == ReconnectionResult.NotConnected)
                 {
                     StopPublishing();
-                    await Task.Delay(_options.AutoReconnectDelay, cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(Options.AutoReconnectDelay, cancellationToken).ConfigureAwait(false);
                     return;
                 }
 
@@ -232,7 +232,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 if (connectionState == ReconnectionResult.StillConnected)
                 {
-                    await Task.Delay(_options.ConnectionCheckInterval, cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(Options.ConnectionCheckInterval, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -254,7 +254,15 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 while (!cancellationToken.IsCancellationRequested && _mqttClient.IsConnected)
                 {
-                    var message = _messageQueue.Dequeue();
+                    //Peek at the message without dequeueing in order to prevent the
+                    //possibility of the queue growing beyond the configured cap.
+                    //Previously, messages could be re-enqueued if there was an
+                    //exception, and this re-enqueueing did not honor the cap.
+                    //Furthermore, because re-enqueueing would shuffle the order
+                    //of the messages, the DropOldestQueuedMessage strategy would
+                    //be unable to know which message is actually the oldest and would
+                    //instead drop the first item in the queue.
+                    var message = _messageQueue.PeekAndWait();
                     if (message == null)
                     {
                         continue;
@@ -284,6 +292,16 @@ namespace MQTTnet.Extensions.ManagedClient
             try
             {
                 _mqttClient.PublishAsync(message.ApplicationMessage).GetAwaiter().GetResult();
+                lock (_messageQueue) //lock to avoid conflict with this.PublishAsync
+                {
+                    //While publishing this message, this.PublishAsync could have booted this
+                    //message off the queue to make room for another (when using a cap
+                    //with the DropOldestQueuedMessage strategy).  If the first item
+                    //in the queue is equal to this message, then it's safe to remove
+                    //it from the queue.  If not, that means this.PublishAsync has already
+                    //removed it, in which case we don't want to do anything.
+                    _messageQueue.RemoveFirst(i => i.Id.Equals(message.Id));
+                }
                 _storageManager?.RemoveAsync(message).GetAwaiter().GetResult();
             }
             catch (MqttCommunicationException exception)
@@ -292,9 +310,19 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 _logger.Warning(exception, $"Publishing application ({message.Id}) message failed.");
 
-                if (message.ApplicationMessage.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
+                if (message.ApplicationMessage.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
                 {
-                    _messageQueue.Enqueue(message);
+                    //If QoS 0, we don't want this message to stay on the queue.
+                    //If QoS 1 or 2, it's possible that, when using a cap, this message
+                    //has been booted off the queue by this.PublishAsync, in which case this
+                    //thread will not continue to try to publish it. While this does
+                    //contradict the expected behavior of QoS 1 and 2, that's also true
+                    //for the usage of a message queue cap, so it's still consistent
+                    //with prior behavior in that way.
+                    lock (_messageQueue) //lock to avoid conflict with this.PublishAsync
+                    {
+                        _messageQueue.RemoveFirst(i => i.Id.Equals(message.Id));
+                    }
                 }
             }
             catch (Exception exception)
@@ -360,7 +388,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
             try
             {
-                await _mqttClient.ConnectAsync(_options.ClientOptions).ConfigureAwait(false);
+                await _mqttClient.ConnectAsync(Options.ClientOptions).ConfigureAwait(false);
                 return ReconnectionResult.Reconnected;
             }
             catch (Exception exception)

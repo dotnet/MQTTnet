@@ -11,6 +11,7 @@ namespace MQTTnet.Server
 {
     public class MqttServer : IMqttServer
     {
+        private readonly MqttServerEventDispatcher _eventDispatcher = new MqttServerEventDispatcher();
         private readonly ICollection<IMqttServerAdapter> _adapters;
         private readonly IMqttNetChildLogger _logger;
 
@@ -21,10 +22,16 @@ namespace MQTTnet.Server
         public MqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetChildLogger logger)
         {
             if (adapters == null) throw new ArgumentNullException(nameof(adapters));
+            _adapters = adapters.ToList();
+
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttServer));
 
-            _adapters = adapters.ToList();
+            _eventDispatcher.ClientConnected += (s, e) => ClientConnected?.Invoke(s, e);
+            _eventDispatcher.ClientDisconnected += (s, e) => ClientDisconnected?.Invoke(s, e);
+            _eventDispatcher.ClientSubscribedTopic += (s, e) => ClientSubscribedTopic?.Invoke(s, e);
+            _eventDispatcher.ClientUnsubscribedTopic += (s, e) => ClientUnsubscribedTopic?.Invoke(s, e);
+            _eventDispatcher.ApplicationMessageReceived += (s, e) => ApplicationMessageReceived?.Invoke(s, e);
         }
 
         public event EventHandler Started;
@@ -92,7 +99,7 @@ namespace MQTTnet.Server
             _retainedMessagesManager = new MqttRetainedMessagesManager(Options, _logger);
             await _retainedMessagesManager.LoadMessagesAsync().ConfigureAwait(false);
 
-            _clientSessionsManager = new MqttClientSessionsManager(Options, this, _retainedMessagesManager, _cancellationTokenSource.Token, _logger);
+            _clientSessionsManager = new MqttClientSessionsManager(Options, _retainedMessagesManager, _cancellationTokenSource.Token, _eventDispatcher, _logger);
             _clientSessionsManager.Start();
 
             foreach (var adapter in _adapters)
@@ -142,33 +149,6 @@ namespace MQTTnet.Server
         public Task ClearRetainedMessagesAsync()
         {
             return _retainedMessagesManager?.ClearMessagesAsync();
-        }
-
-        internal void OnClientConnected(string clientId)
-        {
-            _logger.Info("Client '{0}': Connected.", clientId);
-            ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientId));
-        }
-
-        internal void OnClientDisconnected(string clientId, bool wasCleanDisconnect)
-        {
-            _logger.Info("Client '{0}': Disconnected (clean={1}).", clientId, wasCleanDisconnect);
-            ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientId, wasCleanDisconnect));
-        }
-
-        internal void OnClientSubscribedTopic(string clientId, TopicFilter topicFilter)
-        {
-            ClientSubscribedTopic?.Invoke(this, new MqttClientSubscribedTopicEventArgs(clientId, topicFilter));
-        }
-
-        internal void OnClientUnsubscribedTopic(string clientId, string topicFilter)
-        {
-            ClientUnsubscribedTopic?.Invoke(this, new MqttClientUnsubscribedTopicEventArgs(clientId, topicFilter));
-        }
-
-        internal void OnApplicationMessageReceived(string clientId, MqttApplicationMessage applicationMessage)
-        {
-            ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(clientId, applicationMessage));
         }
 
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)

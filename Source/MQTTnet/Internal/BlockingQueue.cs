@@ -55,6 +55,40 @@ namespace MQTTnet.Internal
                 _gate.WaitOne();
             }
         }
+        
+        public TItem PeekAndWait()
+        {
+            while (true)
+            {
+                lock (_syncRoot)
+                {
+                    if (_items.Count > 0)
+                    {
+                        return _items.First.Value;
+                    }
+
+                    if (_items.Count == 0)
+                    {
+                        _gate.Reset();
+                    }
+                }
+
+                _gate.WaitOne();
+            }
+        }
+
+        public void RemoveFirst(Predicate<TItem> match)
+        {
+            if (match == null) throw new ArgumentNullException(nameof(match));
+
+            lock (_syncRoot)
+            {
+                if (_items.Count > 0 && match(_items.First.Value))
+                {
+                    _items.RemoveFirst();
+                }
+            }
+        }
 
         public TItem RemoveFirst()
         {

@@ -3,8 +3,9 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <DebugType>Full</DebugType>
-    <TargetFramework>net461</TargetFramework>
-      <LangVersion>7.2</LangVersion>
+    <TargetFramework Condition=" '$(OS)' == 'Windows_NT' ">net461</TargetFramework>
+    <TargetFramework Condition=" '$(OS)' != 'Windows_NT' ">netcoreapp2.1</TargetFramework>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

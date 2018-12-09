@@ -10,14 +10,14 @@ namespace MQTTnet.Server
     {
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly IMqttServerOptions _options;
-        private readonly MqttServer _server;
+        private readonly MqttServerEventDispatcher _eventDispatcher;
         private readonly string _clientId;
 
-        public MqttClientSubscriptionsManager(string clientId, IMqttServerOptions options, MqttServer server)
+        public MqttClientSubscriptionsManager(string clientId, IMqttServerOptions options, MqttServerEventDispatcher eventDispatcher)
         {
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _server = server;
+            _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
         }
 
         public MqttClientSubscribeResult Subscribe(MqttSubscribePacket subscribePacket)
@@ -58,7 +58,7 @@ namespace MQTTnet.Server
                         _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
                     }
 
-                    _server.OnClientSubscribedTopic(_clientId, topicFilter);
+                    _eventDispatcher.OnClientSubscribedTopic(_clientId, topicFilter);
                 }
             }
 
@@ -75,7 +75,7 @@ namespace MQTTnet.Server
                 {
                     _subscriptions.Remove(topicFilter);
 
-                    _server.OnClientUnsubscribedTopic(_clientId, topicFilter);
+                    _eventDispatcher.OnClientUnsubscribedTopic(_clientId, topicFilter);
                 }
             }
 

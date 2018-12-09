@@ -23,24 +23,28 @@ namespace MQTTnet.Server
         private readonly Dictionary<string, MqttClientSession> _sessions = new Dictionary<string, MqttClientSession>();
 
         private readonly CancellationToken _cancellationToken;
+        private readonly MqttServerEventDispatcher _eventDispatcher;
 
         private readonly MqttRetainedMessagesManager _retainedMessagesManager;
         private readonly IMqttServerOptions _options;
         private readonly IMqttNetChildLogger _logger;
 
-        public MqttClientSessionsManager(IMqttServerOptions options, MqttServer server, MqttRetainedMessagesManager retainedMessagesManager, CancellationToken cancellationToken, IMqttNetChildLogger logger)
+        public MqttClientSessionsManager(
+            IMqttServerOptions options, 
+            MqttRetainedMessagesManager retainedMessagesManager, 
+            CancellationToken cancellationToken,
+            MqttServerEventDispatcher eventDispatcher,
+            IMqttNetChildLogger logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            _cancellationToken = cancellationToken;
 
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttClientSessionsManager));
 
-            _cancellationToken = cancellationToken;
+            _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            Server = server ?? throw new ArgumentNullException(nameof(server));
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
         }
-
-        public MqttServer Server { get; }
 
         public void Start()
         {
@@ -62,7 +66,7 @@ namespace MQTTnet.Server
 
         public Task StartSession(IMqttChannelAdapter clientAdapter)
         {
-            return Task.Run(() => RunSession(clientAdapter, _cancellationToken), _cancellationToken);
+            return Task.Run(() => RunSessionAsync(clientAdapter, _cancellationToken), _cancellationToken);
         }
 
         public IList<IMqttClientSessionStatus> GetClientStatus()
@@ -177,7 +181,7 @@ namespace MQTTnet.Server
                     applicationMessage = interceptorContext.ApplicationMessage;
                 }
 
-                Server.OnApplicationMessageReceived(sender?.ClientId, applicationMessage);
+                _eventDispatcher.OnApplicationMessageReceived(sender?.ClientId, applicationMessage);
 
                 if (applicationMessage.Retain)
                 {
@@ -186,7 +190,12 @@ namespace MQTTnet.Server
 
                 foreach (var clientSession in GetSessions())
                 {
-                    clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, applicationMessage);
+                    var publishPacket = applicationMessage.ToPublishPacket();
+
+                    // Set the retain flag to true according to [MQTT-3.3.1-9].
+                    publishPacket.Retain = false;
+
+                    clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, publishPacket);
                 }
             }
             catch (OperationCanceledException)
@@ -206,7 +215,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task RunSession(IMqttChannelAdapter clientAdapter, CancellationToken cancellationToken)
+        private async Task RunSessionAsync(IMqttChannelAdapter clientAdapter, CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
             
@@ -239,7 +248,6 @@ namespace MQTTnet.Server
                 }
 
                 var result = PrepareClientSession(connectPacket);
-                var clientSession = result.Session;
 
                 await clientAdapter.SendPacketAsync(
                     new MqttConnAckPacket
@@ -249,9 +257,10 @@ namespace MQTTnet.Server
                     },
                     cancellationToken).ConfigureAwait(false);
 
-                Server.OnClientConnected(clientId);
+                _logger.Info("Client '{0}': Connected.", clientId);
+                _eventDispatcher.OnClientConnected(clientId);
 
-                await clientSession.RunAsync(connectPacket.WillMessage, connectPacket.KeepAlivePeriod, clientAdapter).ConfigureAwait(false);
+                await result.Session.RunAsync(connectPacket, clientAdapter).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -315,7 +324,7 @@ namespace MQTTnet.Server
                 {
                     isExistingSession = false;
 
-                    clientSession = new MqttClientSession(connectPacket.ClientId, _options, this, _retainedMessagesManager, _logger);
+                    clientSession = new MqttClientSession(connectPacket.ClientId, _options, this, _retainedMessagesManager, _eventDispatcher, _logger);
                     _sessions[connectPacket.ClientId] = clientSession;
 
                     _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);

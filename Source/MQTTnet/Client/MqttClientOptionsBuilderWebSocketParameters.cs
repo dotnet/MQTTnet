@@ -7,6 +7,6 @@ namespace MQTTnet.Client
     {
         public IDictionary<string, string> RequestHeaders { get; set; }
 
-        public CookieContainer CookierContainer { get; set; }
+        public CookieContainer CookieContainer { get; set; }
     }
 }

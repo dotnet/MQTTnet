@@ -113,7 +113,7 @@ namespace MQTTnet.Client
             {
                 Uri = uri,
                 RequestHeaders = parameters.RequestHeaders,
-                CookieContainer = parameters.CookierContainer
+                CookieContainer = parameters.CookieContainer
             };
 
             return this;

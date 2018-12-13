@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using MQTTnet.Serializer;
 
 namespace MQTTnet.Client
@@ -97,6 +99,23 @@ namespace MQTTnet.Client
             _webSocketOptions = new MqttClientWebSocketOptions
             {
                 Uri = uri
+            };
+
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWebSocketServer(string uri, MqttClientOptionsBuilderWebSocketParameters parameters)
+        {
+            if(parameters == null)
+            {
+                throw new ArgumentNullException(nameof(parameters));
+            }
+
+            _webSocketOptions = new MqttClientWebSocketOptions
+            {
+                Uri = uri,
+                RequestHeaders = parameters.RequestHeaders,
+                CookieContainer = parameters.CookierContainer
             };
 
             return this;

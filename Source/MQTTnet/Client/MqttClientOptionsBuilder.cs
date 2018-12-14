@@ -92,11 +92,13 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithWebSocketServer(string uri)
+        public MqttClientOptionsBuilder WithWebSocketServer(string uri, MqttClientOptionsBuilderWebSocketParameters parameters = null)
         {
             _webSocketOptions = new MqttClientWebSocketOptions
             {
-                Uri = uri
+                Uri = uri,
+                RequestHeaders = parameters?.RequestHeaders,
+                CookieContainer = parameters?.CookieContainer
             };
 
             return this;

@@ -1,19 +1,19 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
-using MQTTnet.Diagnostics;
-using MQTTnet.Protocol;
-using MQTTnet.Server;
-using System;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
+using MQTTnet.Client;
+using MQTTnet.Client.Options;
+using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Tests
 {
     [TestClass]
     public class MqttServerTests
@@ -111,7 +111,7 @@ namespace MQTTnet.Core.Tests
                         subscribeEventCalled = e.TopicFilter.Topic == "a" && e.ClientId == "c1";
                     };
 
-                await c1.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
+                await c1.SubscribeAsync(new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
                 await Task.Delay(500);
                 Assert.IsTrue(subscribeEventCalled, "Subscribe event not called.");
 
@@ -158,7 +158,7 @@ namespace MQTTnet.Core.Tests
                 c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
-                await c1.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
+                await c1.SubscribeAsync(new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
                 await s.PublishAsync(message);
                 await Task.Delay(500);
@@ -213,8 +213,8 @@ namespace MQTTnet.Core.Tests
                 };
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
-                await c1.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
-                await c2.SubscribeAsync(new TopicFilter("a", MqttQualityOfServiceLevel.AtLeastOnce));
+                await c1.SubscribeAsync(new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+                await c2.SubscribeAsync(new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
                 //await Task.WhenAll(Publish(c1, message), Publish(c2, message));
                 await Publish(c1, message);
@@ -228,7 +228,7 @@ namespace MQTTnet.Core.Tests
 
             Assert.AreEqual(2000, receivedMessagesCount);
         }
-        
+
         [TestMethod]
         public async Task MqttServer_SessionTakeover()
         {
@@ -373,7 +373,7 @@ namespace MQTTnet.Core.Tests
             {
                 await server.StopAsync();
             }
-            
+
             Assert.IsTrue(clientWasConnected);
             Assert.AreEqual(0, errors);
         }
@@ -554,7 +554,7 @@ namespace MQTTnet.Core.Tests
                 c2.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
 
                 await Task.Delay(200);
-                await c2.SubscribeAsync(new TopicFilter("retained", MqttQualityOfServiceLevel.AtMostOnce));
+                await c2.SubscribeAsync(new TopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
                 await Task.Delay(500);
             }
             finally

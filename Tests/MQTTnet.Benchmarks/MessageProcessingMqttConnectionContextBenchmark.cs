@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using MQTTnet.Server;
 using MQTTnet.Diagnostics;
 using MQTTnet.AspNetCore.Client;
+using MQTTnet.Client.Options;
 
 namespace MQTTnet.Benchmarks
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Tests
 {
     [TestClass]
     public class MqttPacketWriterTests

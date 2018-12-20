@@ -11,7 +11,7 @@ namespace MQTTnet.Adapter
         string Endpoint { get; }
 
         MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
-
+        
         event EventHandler ReadingPacketStarted;
 
         event EventHandler ReadingPacketCompleted;

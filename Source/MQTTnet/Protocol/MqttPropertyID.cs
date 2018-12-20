@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Protocol
 {
-    public enum MqttPropertyID
+    public enum MqttPropertyId
     {
         PayloadFormatIndicator = 1,
         MessageExpiryInterval = 2,
@@ -27,7 +27,7 @@
         UserProperty = 38,
         MaximumPacketSize = 39,
         WildcardSubscriptionAvailable = 40,
-        SubscriptionIdentifierAvailable = 41,
+        SubscriptionIdentifiersAvailable = 41,
         SharedSubscriptionAvailable = 42
     }
 }

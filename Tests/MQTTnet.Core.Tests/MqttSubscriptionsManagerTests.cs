@@ -3,7 +3,7 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Tests
 {
     [TestClass]
     public class MqttSubscriptionsManagerTests
@@ -29,7 +29,7 @@ namespace MQTTnet.Core.Tests
             var sm = new MqttClientSubscriptionsManager("", new MqttServerOptions(), new MqttServerEventDispatcher());
 
             var sp = new MqttSubscribePacket();
-            sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtMostOnce));
+            sp.TopicFilters.Add(new TopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
 
             sm.Subscribe(sp);
 
@@ -44,8 +44,8 @@ namespace MQTTnet.Core.Tests
             var sm = new MqttClientSubscriptionsManager("", new MqttServerOptions(), new MqttServerEventDispatcher());
 
             var sp = new MqttSubscribePacket();
-            sp.TopicFilters.Add(new TopicFilter("#", MqttQualityOfServiceLevel.AtMostOnce));
-            sp.TopicFilters.Add(new TopicFilter("A/B/C", MqttQualityOfServiceLevel.AtLeastOnce));
+            sp.TopicFilters.Add(new TopicFilter { Topic = "#", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+            sp.TopicFilters.Add(new TopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
             sm.Subscribe(sp);
 

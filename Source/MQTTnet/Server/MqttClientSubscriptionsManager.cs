@@ -39,11 +39,13 @@ namespace MQTTnet.Server
                 var interceptorContext = InterceptSubscribe(topicFilter);
                 if (!interceptorContext.AcceptSubscription)
                 {
-                    result.ResponsePacket.SubscribeReturnCodes.Add(MqttSubscribeReturnCode.Failure);
+                    result.ResponsePacket.ReturnCodes.Add(MqttSubscribeReturnCode.Failure);
+                    result.ResponsePacket.ReasonCodes.Add(MqttSubscribeReasonCode.UnspecifiedError);
                 }
                 else
                 {
-                    result.ResponsePacket.SubscribeReturnCodes.Add(ConvertToMaximumQoS(topicFilter.QualityOfServiceLevel));
+                    result.ResponsePacket.ReturnCodes.Add(ConvertToSubscribeReturnCode(topicFilter.QualityOfServiceLevel));
+                    result.ResponsePacket.ReasonCodes.Add(ConvertToSubscribeReasonCode(topicFilter.QualityOfServiceLevel));
                 }
 
                 if (interceptorContext.CloseConnection)
@@ -69,20 +71,29 @@ namespace MQTTnet.Server
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
 
+            var unsubAckPacket = new MqttUnsubAckPacket
+            {
+                PacketIdentifier = unsubscribePacket.PacketIdentifier
+            };
+
             lock (_subscriptions)
             {
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
-                    _subscriptions.Remove(topicFilter);
+                    if (_subscriptions.Remove(topicFilter))
+                    {
+                        unsubAckPacket.ReasonCodes.Add(MqttUnsubscribeReasonCode.Success);
+                    }
+                    else
+                    {
+                        unsubAckPacket.ReasonCodes.Add(MqttUnsubscribeReasonCode.NoSubscriptionExisted);
+                    }
 
                     _eventDispatcher.OnClientUnsubscribedTopic(_clientId, topicFilter);
                 }
             }
 
-            return new MqttUnsubAckPacket
-            {
-                PacketIdentifier = unsubscribePacket.PacketIdentifier
-            };
+            return unsubAckPacket;
         }
 
         public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel)
@@ -113,7 +124,7 @@ namespace MQTTnet.Server
             return CreateSubscriptionResult(qosLevel, qosLevels);
         }
 
-        private static MqttSubscribeReturnCode ConvertToMaximumQoS(MqttQualityOfServiceLevel qualityOfServiceLevel)
+        private static MqttSubscribeReturnCode ConvertToSubscribeReturnCode(MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             switch (qualityOfServiceLevel)
             {
@@ -121,6 +132,17 @@ namespace MQTTnet.Server
                 case MqttQualityOfServiceLevel.AtLeastOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS1;
                 case MqttQualityOfServiceLevel.ExactlyOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS2;
                 default: return MqttSubscribeReturnCode.Failure;
+            }
+        }
+
+        private static MqttSubscribeReasonCode ConvertToSubscribeReasonCode(MqttQualityOfServiceLevel qualityOfServiceLevel)
+        {
+            switch (qualityOfServiceLevel)
+            {
+                case MqttQualityOfServiceLevel.AtMostOnce: return MqttSubscribeReasonCode.GrantedQoS0;
+                case MqttQualityOfServiceLevel.AtLeastOnce: return MqttSubscribeReasonCode.GrantedQoS1;
+                case MqttQualityOfServiceLevel.ExactlyOnce: return MqttSubscribeReasonCode.GrantedQoS2;
+                default: return MqttSubscribeReasonCode.UnspecifiedError;
             }
         }
 

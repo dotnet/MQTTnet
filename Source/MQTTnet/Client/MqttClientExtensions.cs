@@ -1,14 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MQTTnet.Client.Subscribing;
+using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
 {
     public static class MqttClientExtensions
     {
-        public static Task<IList<MqttSubscribeResult>> SubscribeAsync(this IMqttClient client, params TopicFilter[] topicFilters)
+        public static Task DisconnectAsync(this IMqttClient client)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            return client.DisconnectAsync(null);
+        }
+
+        public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, params TopicFilter[] topicFilters)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
@@ -16,7 +24,7 @@ namespace MQTTnet.Client
             return client.SubscribeAsync(topicFilters.ToList());
         }
 
-        public static Task<IList<MqttSubscribeResult>> SubscribeAsync(this IMqttClient client, string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -24,7 +32,7 @@ namespace MQTTnet.Client
             return client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
         }
 
-        public static Task<IList<MqttSubscribeResult>> SubscribeAsync(this IMqttClient client, string topic)
+        public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, string topic)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -32,7 +40,7 @@ namespace MQTTnet.Client
             return client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
         }
 
-        public static Task UnsubscribeAsync(this IMqttClient client, params string[] topicFilters)
+        public static Task<MqttClientUnsubscribeResult> UnsubscribeAsync(this IMqttClient client, params string[] topicFilters)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));

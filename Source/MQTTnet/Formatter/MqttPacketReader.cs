@@ -40,29 +40,30 @@ namespace MQTTnet.Formatter
             var hasRemainingLength = buffer[1] != 0;
             if (!hasRemainingLength)
             {
-                return new MqttFixedHeader(buffer[0], 0);
+                return new MqttFixedHeader(buffer[0], 0, totalBytesRead);
             }
 
 #if WINDOWS_UWP
             // UWP will have a dead lock when calling this not async.
             var bodyLength = await ReadBodyLengthAsync(buffer[1], cancellationToken).ConfigureAwait(false);
 #else
-            // Here the async/await pattern is not used becuase the overhead of context switches
+            // Here the async/await pattern is not used because the overhead of context switches
             // is too big for reading 1 byte in a row. We expect that the remaining data was sent
             // directly after the initial bytes. If the client disconnects just in this moment we
             // will get an exception anyway.
             var bodyLength = ReadBodyLength(buffer[1], cancellationToken);
 #endif
 
-            return new MqttFixedHeader(buffer[0], bodyLength);
+            totalBytesRead += bodyLength;
+            return new MqttFixedHeader(buffer[0], bodyLength, totalBytesRead);
         }
 
 #if !WINDOWS_UWP
-        private uint ReadBodyLength(byte initialEncodedByte, CancellationToken cancellationToken)
+        private int ReadBodyLength(byte initialEncodedByte, CancellationToken cancellationToken)
         {
             var offset = 0;
             var multiplier = 128;
-            var value = (uint)(initialEncodedByte & 127);
+            var value = (initialEncodedByte & 127);
             int encodedByte = initialEncodedByte;
 
             while ((encodedByte & 128) != 0)
@@ -77,7 +78,7 @@ namespace MQTTnet.Formatter
 
                 encodedByte = ReadByte(cancellationToken);
 
-                value += (uint)((encodedByte & 127) * multiplier);
+                value += (encodedByte & 127) * multiplier;
                 multiplier *= 128;
             }
 
@@ -100,11 +101,11 @@ namespace MQTTnet.Formatter
 
 #else
         
-        private async Task<uint> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
+        private async Task<int> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
         {
             var offset = 0;
             var multiplier = 128;
-            var value = (uint)(initialEncodedByte & 127);
+            var value = initialEncodedByte & 127;
             int encodedByte = initialEncodedByte;
 
             while ((encodedByte & 128) != 0)
@@ -119,7 +120,7 @@ namespace MQTTnet.Formatter
 
                 encodedByte = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
 
-                value += (uint)((encodedByte & 127) * multiplier);
+                value += (encodedByte & 127) * multiplier;
                 multiplier *= 128;
             }
 

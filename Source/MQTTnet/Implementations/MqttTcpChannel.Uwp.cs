@@ -10,7 +10,7 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography.Certificates;
 using MQTTnet.Channel;
-using MQTTnet.Client;
+using MQTTnet.Client.Options;
 using MQTTnet.Server;
 
 namespace MQTTnet.Implementations

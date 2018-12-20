@@ -6,6 +6,7 @@ using MQTTnet.Implementations;
 using MQTTnet.Server;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client.Options;
 
 namespace MQTTnet.Benchmarks
 {

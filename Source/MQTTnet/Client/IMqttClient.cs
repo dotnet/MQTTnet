@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
+using MQTTnet.Client.Options;
+using MQTTnet.Client.Subscribing;
+using MQTTnet.Client.Unsubscribing;
 
 namespace MQTTnet.Client
 {
@@ -13,9 +18,9 @@ namespace MQTTnet.Client
         event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
         Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options);
-        Task DisconnectAsync();
+        Task DisconnectAsync(MqttClientDisconnectOptions options);
 
-        Task<IList<MqttSubscribeResult>> SubscribeAsync(IEnumerable<TopicFilter> topicFilters);
-        Task UnsubscribeAsync(IEnumerable<string> topics);
+        Task<MqttClientSubscribeResult> SubscribeAsync(IEnumerable<TopicFilter> topicFilters);
+        Task<MqttClientUnsubscribeResult> UnsubscribeAsync(IEnumerable<string> topics);
     }
 }

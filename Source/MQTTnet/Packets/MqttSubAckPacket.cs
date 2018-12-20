@@ -8,11 +8,11 @@ namespace MQTTnet.Packets
     {
         public ushort? PacketIdentifier { get; set; }
 
-        public List<MqttSubscribeReturnCode> SubscribeReturnCodes { get; } = new List<MqttSubscribeReturnCode>();
+        public List<MqttSubscribeReturnCode> ReturnCodes { get; } = new List<MqttSubscribeReturnCode>();
 
-        #region Added in MQTTv5
+        #region Added in MQTTv5.0.0
 
-        public List<MqttSubscribeReasonCode?> ReasonCodes { get; set; }
+        public List<MqttSubscribeReasonCode> ReasonCodes { get; } = new List<MqttSubscribeReasonCode>();
 
         public MqttSubAckPacketProperties Properties { get; set; }
 
@@ -20,8 +20,10 @@ namespace MQTTnet.Packets
 
         public override string ToString()
         {
-            var subscribeReturnCodesText = string.Join(",", SubscribeReturnCodes.Select(f => f.ToString()));
-            return string.Concat("SubAck: [PacketIdentifier=", PacketIdentifier, "] [SubscribeReturnCodes=", subscribeReturnCodesText, "]");
+            var returnCodesText = string.Join(",", ReturnCodes.Select(f => f.ToString()));
+            var reasonCodesText = string.Join(",", ReasonCodes.Select(f => f.ToString()));
+
+            return string.Concat("SubAck: [PacketIdentifier=", PacketIdentifier, "] [ReturnCodes=", returnCodesText, "] [ReasonCode=", reasonCodesText, "]");
         }
     }
 }

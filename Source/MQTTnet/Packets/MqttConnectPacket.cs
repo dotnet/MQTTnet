@@ -14,14 +14,12 @@
 
         public ushort KeepAlivePeriod { get; set; }
 
-        /// <summary>
-        /// MQTTv5: Also called "Clean Start".
-        /// </summary>
+        // Also called "Clean Start" in MQTTv5.
         public bool CleanSession { get; set; }
 
         public MqttApplicationMessage WillMessage { get; set; }
 
-        #region Added in MQTTv5
+        #region Added in MQTTv5.0.0
 
         public MqttConnectPacketProperties Properties { get; set; }
 

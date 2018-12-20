@@ -4,14 +4,15 @@ namespace MQTTnet.Packets
 {
     public class MqttConnAckPacket : MqttBasePacket
     {
-        public MqttConnectReturnCode ConnectReturnCode { get; set; }
+        public MqttConnectReturnCode? ReturnCode { get; set; }
 
-        /// <summary>
-        /// Added in MQTTv3.1.1.
-        /// </summary>
+        #region Added in MQTTv3.1.1
+
         public bool IsSessionPresent { get; set; }
 
-        #region Added in MQTTv5
+        #endregion
+
+        #region Added in MQTTv5.0.0
 
         public MqttConnectReasonCode? ReasonCode { get; set; }
 
@@ -21,7 +22,7 @@ namespace MQTTnet.Packets
 
         public override string ToString()
         {
-            return string.Concat("ConnAck: [ConnectReturnCode=", ConnectReturnCode, "] [ReasonCode=", ReasonCode, "] [IsSessionPresent=", IsSessionPresent, "]");
+            return string.Concat("ConnAck: [ReturnCode=", ReturnCode, "] [ReasonCode=", ReasonCode, "] [IsSessionPresent=", IsSessionPresent, "]");
         }
     }
 }

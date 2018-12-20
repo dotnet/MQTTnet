@@ -12,8 +12,22 @@ namespace MQTTnet
 
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
 
-        public List<MqttUserProperty> UserProperties { get; set; }
-
         public bool Retain { get; set; }
+
+        public List<MqttUserProperty> UserProperties { get; set; } = new List<MqttUserProperty>();
+
+        public string ContentType { get; set; }
+
+        public string ResponseTopic { get; set; }
+
+        public MqttPayloadFormatIndicator? PayloadFormatIndicator { get; set; }
+
+        public uint? MessageExpiryInterval { get; set; }
+
+        public ushort? TopicAlias { get; set; }
+
+        public byte[] CorrelationData { get; set; }
+
+        public uint? SubscriptionIdentifier { get; set; }
     }
 }

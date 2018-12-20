@@ -3,10 +3,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
+using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Tests
 {
     public class TestMqttServerAdapter : IMqttServerAdapter
     {

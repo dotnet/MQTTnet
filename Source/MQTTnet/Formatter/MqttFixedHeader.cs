@@ -2,14 +2,17 @@
 {
     public struct MqttFixedHeader
     {
-        public MqttFixedHeader(byte flags, uint remainingLength)
+        public MqttFixedHeader(byte flags, int remainingLength, int totalLength)
         {
             Flags = flags;
             RemainingLength = remainingLength;
+            TotalLength = totalLength;
         }
 
         public byte Flags { get; }
 
-        public uint RemainingLength { get; }
+        public int RemainingLength { get; }
+
+        public int TotalLength { get; }
     }
 }

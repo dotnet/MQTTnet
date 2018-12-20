@@ -8,7 +8,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Packets;
 using MQTTnet.Server;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Tests
 {
     [TestClass]
     public class MqttKeepAliveMonitorTests

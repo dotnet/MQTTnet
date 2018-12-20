@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Client.Publishing;
 using MQTTnet.Protocol;
 
 namespace MQTTnet
@@ -29,7 +30,7 @@ namespace MQTTnet
             }
         }
 
-        public static Task PublishAsync(this IApplicationMessagePublisher publisher, string topic)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -38,7 +39,7 @@ namespace MQTTnet
                 .WithTopic(topic));
         }
 
-        public static Task PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -48,7 +49,7 @@ namespace MQTTnet
                 .WithPayload(payload));
         }
 
-        public static Task PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -59,7 +60,7 @@ namespace MQTTnet
                 .WithQualityOfServiceLevel(qualityOfServiceLevel));
         }
 
-        public static Task PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -71,7 +72,7 @@ namespace MQTTnet
                 .WithRetainFlag(retain));
         }
 
-        public static Task PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
         {
             var message = builder(new MqttApplicationMessageBuilder()).Build();
             return publisher.PublishAsync(message);

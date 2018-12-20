@@ -215,6 +215,7 @@ namespace MQTTnet.Server
             
             try
             {
+                // TODO: Catch cancel exception here if the first packet was not received and log properly.
                 var firstPacket = await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false);
                 if (firstPacket == null)
                 {
@@ -234,7 +235,7 @@ namespace MQTTnet.Server
                     await clientAdapter.SendPacketAsync(
                         new MqttConnAckPacket
                         {
-                            ConnectReturnCode = connectReturnCode
+                            ReturnCode = connectReturnCode
                         },
                         cancellationToken).ConfigureAwait(false);
 
@@ -246,7 +247,8 @@ namespace MQTTnet.Server
                 await clientAdapter.SendPacketAsync(
                     new MqttConnAckPacket
                     {
-                        ConnectReturnCode = connectReturnCode,
+                        ReturnCode = connectReturnCode,
+                        ReasonCode = MqttConnectReasonCode.Success,
                         IsSessionPresent = result.IsExistingSession
                     },
                     cancellationToken).ConfigureAwait(false);

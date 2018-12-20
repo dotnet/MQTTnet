@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
+using MQTTnet.Client.Publishing;
 using MQTTnet.Diagnostics;
-using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
@@ -77,7 +77,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.UnsubscribeAsync(clientId, topicFilters);
         }
 
-        public Task PublishAsync(MqttApplicationMessage applicationMessage)
+        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
@@ -85,7 +85,7 @@ namespace MQTTnet.Server
 
             _clientSessionsManager.EnqueueApplicationMessage(null, applicationMessage);
 
-            return Task.FromResult(0);
+            return Task.FromResult(new MqttClientPublishResult());
         }
 
         public async Task StartAsync(IMqttServerOptions options)

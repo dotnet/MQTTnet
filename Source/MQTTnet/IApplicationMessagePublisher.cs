@@ -1,9 +1,10 @@
 ﻿using System.Threading.Tasks;
+using MQTTnet.Client.Publishing;
 
 namespace MQTTnet
 {
     public interface IApplicationMessagePublisher
     {
-        Task PublishAsync(MqttApplicationMessage applicationMessage);
+        Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage);
     }
 }

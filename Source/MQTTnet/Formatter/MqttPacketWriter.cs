@@ -67,12 +67,14 @@ namespace MQTTnet.Formatter
 
         public void WriteWithLengthPrefix(byte[] value)
         {
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
             EnsureAdditionalCapacity(value.Length + 2);
 
             Write((ushort)value.Length);
             Write(value, 0, value.Length);
         }
-        
+
         public void Write(byte @byte)
         {
             EnsureAdditionalCapacity(1);
@@ -173,7 +175,7 @@ namespace MQTTnet.Formatter
             {
                 return;
             }
-            
+
             while (newBufferLength < capacity)
             {
                 newBufferLength *= 2;

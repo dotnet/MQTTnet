@@ -12,5 +12,7 @@ before_build:
 build:
   project: MQTTnet.sln
   verbosity: minimal
+
 test_script:
-- cmd: dotnet vstest "%APPVEYOR_BUILD_FOLDER%\Tests\MQTTnet.Core.Tests\bin\Release\netcoreapp2.0\MQTTnet.Core.Tests.dll"
+- cmd: dotnet vstest "%APPVEYOR_BUILD_FOLDER%\Tests\MQTTnet.Core.Tests\bin\Release\netcoreapp2.1\MQTTnet.Core.Tests.dll"
+- cmd: dotnet vstest "%APPVEYOR_BUILD_FOLDER%\Tests\MQTTnet.TestApp.AspNetCore\bin\Release\netcoreapp2.1\MQTTnet.TestApp.AspNetCore.dll"

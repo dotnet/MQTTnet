@@ -18,7 +18,7 @@
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
     <PackageCertificateKeyFile>MQTTnet.TestApp.UniversalWindows_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <PackageCertificateThumbprint>6B99AEE2D6C4A05C2FC9162A71D02388D66DFEEF</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>1D7434E482CF034DD18C9E6AB6B12622E08FD733</PackageCertificateThumbprint>
     <RuntimeIdentifiers>win10;win10-arm;win10-arm-aot;win10-x86;win10-x86-aot;win10-x64;win10-x64-aot</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">

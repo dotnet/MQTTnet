@@ -2,6 +2,7 @@
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Client.Options;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore
@@ -23,7 +24,7 @@ namespace MQTTnet.TestApp.NetCore
                         Server = "127.0.0.1"
                     }
                 };
-                
+
                 client.ApplicationMessageReceived += (s, e) =>
                 {
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
@@ -73,14 +74,14 @@ namespace MQTTnet.TestApp.NetCore
                 {
                     Console.ReadLine();
 
-                    await client.SubscribeAsync(new TopicFilter("test", MqttQualityOfServiceLevel.AtMostOnce));
+                    await client.SubscribeAsync(new TopicFilter { Topic = "test", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
 
                     var applicationMessage = new MqttApplicationMessageBuilder()
                         .WithTopic("A/B/C")
                         .WithPayload("Hello World")
                         .WithAtLeastOnceQoS()
                         .Build();
-                    
+
                     await client.PublishAsync(applicationMessage);
                 }
             }

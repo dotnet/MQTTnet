@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using MQTTnet.Channel;
-using MQTTnet.Client;
+using MQTTnet.Client.Options;
 
 namespace MQTTnet.Implementations
 {

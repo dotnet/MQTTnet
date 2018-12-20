@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
     public class MqttPublishPacketProperties
     {
-        public byte? PayloadFormatIndicator { get; set; }
+        public MqttPayloadFormatIndicator? PayloadFormatIndicator { get; set; }
 
         public uint? MessageExpiryInterval { get; set; }
 
@@ -14,7 +15,7 @@ namespace MQTTnet.Packets
 
         public byte[] CorrelationData { get; set; }
 
-        public List<MqttUserProperty> UserProperties { get; set; }
+        public List<MqttUserProperty> UserProperties { get; } = new List<MqttUserProperty>();
 
         public uint? SubscriptionIdentifier { get; set; }
 

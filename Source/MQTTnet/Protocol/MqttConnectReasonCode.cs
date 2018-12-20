@@ -9,7 +9,7 @@
         ImplementationSpecificError = 131,
         UnsupportedProtocolVersion = 132,
         ClientIdentifierNotValid = 133,
-        BadUserNameorPassword = 134,
+        BadUserNameOrPassword = 134,
         NotAuthorized = 135,
         ServerUnavailable = 136,
         ServerBusy = 137,

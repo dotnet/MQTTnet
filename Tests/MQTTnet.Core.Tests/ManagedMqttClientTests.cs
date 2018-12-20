@@ -1,9 +1,9 @@
-﻿using MQTTnet.Extensions.ManagedClient;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Server;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Tests
 {
     [TestClass]
     public class ManagedMqttClientTests

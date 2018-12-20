@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Client.Options;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 

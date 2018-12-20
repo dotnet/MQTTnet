@@ -4,13 +4,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Client.Publishing;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using MqttClientConnectedEventArgs = MQTTnet.Client.MqttClientConnectedEventArgs;
-using MqttClientDisconnectedEventArgs = MQTTnet.Client.MqttClientDisconnectedEventArgs;
+using MqttClientConnectedEventArgs = MQTTnet.Client.Connecting.MqttClientConnectedEventArgs;
+using MqttClientDisconnectedEventArgs = MQTTnet.Client.Disconnecting.MqttClientDisconnectedEventArgs;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -27,7 +28,7 @@ namespace MQTTnet.Extensions.ManagedClient
         private CancellationTokenSource _publishingCancellationToken;
 
         private ManagedMqttClientStorageManager _storageManager;
-        
+
         private bool _subscriptionsNotPushed;
 
         public ManagedMqttClient(IMqttClient mqttClient, IMqttNetChildLogger logger)
@@ -102,11 +103,12 @@ namespace MQTTnet.Extensions.ManagedClient
             return Task.FromResult(0);
         }
 
-        public Task PublishAsync(MqttApplicationMessage applicationMessage)
+        public async Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            return PublishAsync(new ManagedMqttApplicationMessageBuilder().WithApplicationMessage(applicationMessage).Build());
+            await PublishAsync(new ManagedMqttApplicationMessageBuilder().WithApplicationMessage(applicationMessage).Build()).ConfigureAwait(false);
+            return new MqttClientPublishResult();
         }
 
         public async Task PublishAsync(ManagedMqttApplicationMessage applicationMessage)
@@ -206,7 +208,15 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             finally
             {
-                await _mqttClient.DisconnectAsync().ConfigureAwait(false);
+                try
+                {
+                    await _mqttClient.DisconnectAsync().ConfigureAwait(false);
+                }
+                catch (Exception exception)
+                {
+                    _logger.Error(exception, "Error while disconnecting.");
+                }
+
                 _logger.Info("Stopped");
             }
         }
@@ -345,7 +355,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
             lock (_subscriptions)
             {
-                subscriptions = _subscriptions.Select(i => new TopicFilter(i.Key, i.Value)).ToList();
+                subscriptions = _subscriptions.Select(i => new TopicFilter { Topic = i.Key, QualityOfServiceLevel = i.Value }).ToList();
 
                 unsubscriptions = new HashSet<string>(_unsubscriptions);
                 _unsubscriptions.Clear();

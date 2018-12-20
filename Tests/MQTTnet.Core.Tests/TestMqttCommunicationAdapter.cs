@@ -6,7 +6,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Tests
 {
     public class TestMqttCommunicationAdapter : IMqttChannelAdapter
     {

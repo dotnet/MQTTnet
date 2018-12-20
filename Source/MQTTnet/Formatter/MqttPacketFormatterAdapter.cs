@@ -1,9 +1,8 @@
 ﻿using System;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
-using MQTTnet.Formatter.V310;
-using MQTTnet.Formatter.V311;
-using MQTTnet.Formatter.V500;
+using MQTTnet.Formatter.V3;
+using MQTTnet.Formatter.V5;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Formatter
@@ -22,35 +21,26 @@ namespace MQTTnet.Formatter
         }
 
         public MqttProtocolVersion? ProtocolVersion { get; private set; }
-        
-        public MqttPublishPacket ConvertApplicationMessageToPublishPacket(MqttApplicationMessage applicationMessage)
+
+        public IMqttDataConverter DataConverter
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
-
-            if (_formatter == null)
+            get
             {
-                throw new InvalidOperationException("Protocol version not set or detected.");
+                ThrowIfFormatterNotSet();
+                return _formatter.DataConverter;
             }
-
-            return _formatter.ConvertApplicationMessageToPublishPacket(applicationMessage);
         }
 
         public ArraySegment<byte> Encode(MqttBasePacket packet)
         {
-            if (_formatter == null)
-            {
-                throw new InvalidOperationException("Protocol version not set or detected.");
-            }
+            ThrowIfFormatterNotSet();
 
             return _formatter.Encode(packet);
         }
 
         public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
-            if (_formatter == null)
-            {
-                throw new InvalidOperationException("Protocol version not set or detected.");
-            }
+            ThrowIfFormatterNotSet();
 
             return _formatter.Decode(receivedMqttPacket);
         }
@@ -64,7 +54,7 @@ namespace MQTTnet.Formatter
         {
             var protocolVersion = ParseProtocolVersion(receivedMqttPacket);
 
-            // Reset the position of the stream beacuse the protocol version is part of 
+            // Reset the position of the stream because the protocol version is part of 
             // the regular CONNECT packet. So it will not properly deserialized if this
             // data is missing.
             receivedMqttPacket.Body.Seek(0);
@@ -137,6 +127,14 @@ namespace MQTTnet.Formatter
             }
 
             throw new MqttProtocolViolationException($"Protocol '{protocolName}' not supported.");
+        }
+
+        private void ThrowIfFormatterNotSet()
+        {
+            if (_formatter == null)
+            {
+                throw new InvalidOperationException("Protocol version not set or detected.");
+            }
         }
     }
 }

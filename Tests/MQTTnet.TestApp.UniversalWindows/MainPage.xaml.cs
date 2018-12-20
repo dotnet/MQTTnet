@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using MQTTnet.Client;
+using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.ManagedClient;
@@ -16,8 +16,8 @@ using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using MqttClientConnectedEventArgs = MQTTnet.Client.MqttClientConnectedEventArgs;
-using MqttClientDisconnectedEventArgs = MQTTnet.Client.MqttClientDisconnectedEventArgs;
+using MqttClientConnectedEventArgs = MQTTnet.Client.Connecting.MqttClientConnectedEventArgs;
+using MqttClientDisconnectedEventArgs = MQTTnet.Client.Disconnecting.MqttClientDisconnectedEventArgs;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
@@ -234,6 +234,8 @@ namespace MQTTnet.TestApp.UniversalWindows
                 }
 
                 var message = new MqttApplicationMessageBuilder()
+                    .WithContentType(ContentType.Text)
+                    .WithResponseTopic(ResponseTopic.Text)
                     .WithTopic(Topic.Text)
                     .WithPayload(payload)
                     .WithQualityOfServiceLevel(qos)
@@ -266,7 +268,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     _mqttClient.Dispose();
                     _mqttClient = null;
                 }
-                
+
                 if (_managedMqttClient != null)
                 {
                     await _managedMqttClient.StopAsync();
@@ -305,14 +307,16 @@ namespace MQTTnet.TestApp.UniversalWindows
                     qos = MqttQualityOfServiceLevel.ExactlyOnce;
                 }
 
+                var topicFilter = new TopicFilter { Topic = SubscribeTopic.Text, QualityOfServiceLevel = qos };
+
                 if (_mqttClient != null)
                 {
-                    await _mqttClient.SubscribeAsync(new TopicFilter(SubscribeTopic.Text, qos));
+                    await _mqttClient.SubscribeAsync(topicFilter);
                 }
 
                 if (_managedMqttClient != null)
                 {
-                    await _managedMqttClient.SubscribeAsync(new TopicFilter(SubscribeTopic.Text, qos));
+                    await _managedMqttClient.SubscribeAsync(topicFilter);
                 }
             }
             catch (Exception exception)

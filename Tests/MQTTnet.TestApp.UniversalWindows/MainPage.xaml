@@ -101,26 +101,35 @@
                             <RowDefinition></RowDefinition>
                             <RowDefinition></RowDefinition>
                             <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Column="0" Grid.Row="0">Topic:</TextBlock>
                         <TextBox Grid.Column="1" Grid.Row="0" x:Name="Topic"></TextBox>
 
-                        <TextBlock Grid.Column="0" Grid.Row="1">Payload:</TextBlock>
-                        <TextBox Grid.Column="1" Grid.Row="1" x:Name="Payload"></TextBox>
+                        <TextBlock Grid.Column="0" Grid.Row="1">Content type:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="1" x:Name="ContentType"></TextBox>
 
-                        <TextBlock Grid.Column="0" Grid.Row="2">Payload format:</TextBlock>
-                        <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal">
+                        <TextBlock Grid.Column="0" Grid.Row="2">Payload:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="2" x:Name="Payload"></TextBox>
+
+                        <TextBlock Grid.Column="0" Grid.Row="3">Payload format:</TextBlock>
+                        <StackPanel Grid.Column="1" Grid.Row="3" Orientation="Horizontal">
                             <RadioButton Margin="0,0,10,0"  x:Name="PlainText" IsChecked="True" GroupName="payload">Plain text</RadioButton>
                             <RadioButton Margin="0,0,10,0"  x:Name="Base64" GroupName="payload">Base64 string</RadioButton>
                         </StackPanel>
 
-                        <TextBlock Grid.Column="0" Grid.Row="3">QoS level:</TextBlock>
-                        <StackPanel Grid.Column="1" Grid.Row="3" Orientation="Horizontal">
+                        <TextBlock Grid.Column="0" Grid.Row="4">QoS level:</TextBlock>
+                        <StackPanel Grid.Column="1" Grid.Row="4" Orientation="Horizontal">
                             <RadioButton Margin="0,0,10,0" IsChecked="True" GroupName="qos">0 (At most once)</RadioButton>
                             <RadioButton Margin="0,0,10,0" x:Name="QoS1" GroupName="qos">1 (At least once)</RadioButton>
                             <RadioButton Margin="0,0,10,0" x:Name="QoS2" GroupName="qos">2 (Exactly once)</RadioButton>
                         </StackPanel>
+
+                        <TextBlock Grid.Column="0" Grid.Row="5">Response topic:</TextBlock>
+                        <TextBox Grid.Column="1" Grid.Row="5" x:Name="ResponseTopic"></TextBox>
                     </Grid>
 
                     <CheckBox x:Name="Retain">Retain</CheckBox>

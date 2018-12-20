@@ -1,7 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools .UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Tests
 {
     [TestClass]
     public class MqttPacketIdentifierProviderTests

@@ -1,9 +1,8 @@
-﻿using MQTTnet.Client;
+﻿using System.Threading.Tasks;
+using MQTTnet.Client;
 using MQTTnet.Server;
-using System;
-using System.Threading.Tasks;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Tests
 {
     public static class TestServerExtensions
     {

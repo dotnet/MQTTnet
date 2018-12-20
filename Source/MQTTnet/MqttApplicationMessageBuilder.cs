@@ -3,16 +3,26 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using MQTTnet.Exceptions;
+using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
 namespace MQTTnet
 {
     public class MqttApplicationMessageBuilder
     {
+        private readonly List<MqttUserProperty> _userProperties = new List<MqttUserProperty>();
+
         private MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
         private string _topic;
         private byte[] _payload;
         private bool _retain;
+        private string _contentType;
+        private string _responseTopic;
+        private byte[] _correlationData;
+        private ushort? _topicAlias;
+        private uint? _subscriptionIdentifier;
+        private uint? _messageExpiryInterval;
+        private MqttPayloadFormatIndicator? _payloadFormatIndicator;
 
         public MqttApplicationMessageBuilder WithTopic(string topic)
         {
@@ -100,6 +110,78 @@ namespace MQTTnet
             return this;
         }
 
+        /// <summary>
+        /// This is only supported when using MQTTv5.
+        /// </summary>
+        public MqttApplicationMessageBuilder WithUserProperty(string name, string value)
+        {
+            _userProperties.Add(new MqttUserProperty(name, value));
+            return this;
+        }
+
+        /// <summary>
+        /// This is only supported when using MQTTv5.
+        /// </summary>
+        public MqttApplicationMessageBuilder WithContentType(string contentType)
+        {
+            _contentType = contentType;
+            return this;
+        }
+
+        /// <summary>
+        /// This is only supported when using MQTTv5.
+        /// </summary>
+        public MqttApplicationMessageBuilder WithResponseTopic(string responseTopic)
+        {
+            _responseTopic = responseTopic;
+            return this;
+        }
+
+        /// <summary>
+        /// This is only supported when using MQTTv5.
+        /// </summary>
+        public MqttApplicationMessageBuilder WithCorrelationData(byte[] correlationData)
+        {
+            _correlationData = correlationData;
+            return this;
+        }
+
+        /// <summary>
+        /// This is only supported when using MQTTv5.
+        /// </summary>
+        public MqttApplicationMessageBuilder WithTopicAlias(ushort topicAlias)
+        {
+            _topicAlias = topicAlias;
+            return this;
+        }
+
+        /// <summary>
+        /// This is only supported when using MQTTv5.
+        /// </summary>
+        public MqttApplicationMessageBuilder WithSubscriptionIdentifier(uint subscriptionIdentifier)
+        {
+            _subscriptionIdentifier = subscriptionIdentifier;
+            return this;
+        }
+
+        /// <summary>
+        /// This is only supported when using MQTTv5.
+        /// </summary>
+        public MqttApplicationMessageBuilder WithMessageExpiryInterval(uint messageExpiryInterval)
+        {
+            _messageExpiryInterval = messageExpiryInterval;
+            return this;
+        }
+
+        /// <summary>
+        /// This is only supported when using MQTTv5.
+        /// </summary>
+        public MqttApplicationMessageBuilder WithPayloadFormatIndicator(MqttPayloadFormatIndicator payloadFormatIndicator)
+        {
+            _payloadFormatIndicator = payloadFormatIndicator;
+            return this;
+        }
+
         public MqttApplicationMessage Build()
         {
             if (string.IsNullOrEmpty(_topic))
@@ -107,13 +189,24 @@ namespace MQTTnet
                 throw new MqttProtocolViolationException("Topic is not set.");
             }
 
-            return new MqttApplicationMessage
+            var applicationMessage = new MqttApplicationMessage
             {
                 Topic = _topic,
                 Payload = _payload ?? new byte[0],
                 QualityOfServiceLevel = _qualityOfServiceLevel,
-                Retain = _retain
+                Retain = _retain,
+                ContentType = _contentType,
+                ResponseTopic = _responseTopic,
+                CorrelationData = _correlationData,
+                TopicAlias = _topicAlias,
+                SubscriptionIdentifier = _subscriptionIdentifier,
+                MessageExpiryInterval = _messageExpiryInterval,
+                PayloadFormatIndicator = _payloadFormatIndicator
             };
+
+            applicationMessage.UserProperties.AddRange(_userProperties);
+
+            return applicationMessage;
         }
     }
 }

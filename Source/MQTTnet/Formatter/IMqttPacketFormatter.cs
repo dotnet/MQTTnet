@@ -6,11 +6,11 @@ namespace MQTTnet.Formatter
 {
     public interface IMqttPacketFormatter
     {
+        IMqttDataConverter DataConverter { get; }
+
         ArraySegment<byte> Encode(MqttBasePacket mqttPacket);
 
         MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket);
-
-        MqttPublishPacket ConvertApplicationMessageToPublishPacket(MqttApplicationMessage applicationMessage);
 
         void FreeBuffer();
     }

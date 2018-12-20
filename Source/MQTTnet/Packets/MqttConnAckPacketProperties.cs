@@ -6,7 +6,6 @@ namespace MQTTnet.Packets
     {
         public uint? SessionExpiryInterval { get; set; }
 
-        // TODO: Add enum
         public ushort? ReceiveMaximum { get; set; }
 
         public bool? RetainAvailable { get; set; }
@@ -19,7 +18,7 @@ namespace MQTTnet.Packets
 
         public string ReasonString { get; set; }
 
-        public List<MqttUserProperty> UserProperties { get; set; }
+        public List<MqttUserProperty> UserProperties { get; } = new List<MqttUserProperty>();
 
         public bool? WildcardSubscriptionAvailable { get; set; }
 

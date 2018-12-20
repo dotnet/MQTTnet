@@ -1,8 +1,9 @@
 ﻿using MQTTnet.Adapter;
 using MQTTnet.Client;
+using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 
-namespace MQTTnet.Core.Tests
+namespace MQTTnet.Tests
 {
     public class TestMqttCommunicationAdapterFactory : IMqttClientAdapterFactory
     {

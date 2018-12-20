@@ -16,7 +16,7 @@ namespace MQTTnet.Adapter
     public class MqttChannelAdapter : IMqttChannelAdapter
     {
         private const uint ErrorOperationAborted = 0x800703E3;
-        private const uint ReadBufferSize = 4096;  // TODO: Move buffer size to config
+        private const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
 
         private readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
 
@@ -102,7 +102,7 @@ namespace MQTTnet.Adapter
                 await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
                 PacketFormatterAdapter.FreeBuffer();
 
-                _logger.Verbose("TX >>> {0}", packet);
+                _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Count, packet);
             }
             catch (Exception exception)
             {
@@ -152,7 +152,7 @@ namespace MQTTnet.Adapter
                     throw new MqttProtocolViolationException("Received malformed packet.");
                 }
 
-                _logger.Verbose("RX <<< {0}", packet);
+                _logger.Verbose("RX ({0} bytes) <<< {1}", receivedMqttPacket.TotalLength, packet);
 
                 return packet;
             }
@@ -182,7 +182,7 @@ namespace MQTTnet.Adapter
 
                 if (fixedHeader.RemainingLength == 0)
                 {
-                    return new ReceivedMqttPacket(fixedHeader.Flags, null);
+                    return new ReceivedMqttPacket(fixedHeader.Flags, null, 2);
                 }
 
                 var body = new byte[fixedHeader.RemainingLength];
@@ -194,15 +194,15 @@ namespace MQTTnet.Adapter
                     var bytesLeft = body.Length - bodyOffset;
                     if (chunkSize > bytesLeft)
                     {
-                        chunkSize = (uint)bytesLeft;
+                        chunkSize = bytesLeft;
                     }
 
 #if WINDOWS_UWP
                     var readBytes = await _channel.ReadAsync(body, bodyOffset, (int)chunkSize, cancellationToken).ConfigureAwait(false);
 #else
-                    // async/await is not used to avoid the overhead of context switches. We assume that the reamining data
+                    // async/await is not used to avoid the overhead of context switches. We assume that the remaining data
                     // has been sent from the sender directly after the initial bytes.
-                    var readBytes = _channel.ReadAsync(body, bodyOffset, (int)chunkSize, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
+                    var readBytes = _channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
 #endif
 
                     cancellationToken.ThrowIfCancellationRequested();
@@ -211,7 +211,8 @@ namespace MQTTnet.Adapter
                     bodyOffset += readBytes;
                 } while (bodyOffset < body.Length);
 
-                return new ReceivedMqttPacket(fixedHeader.Flags, new MqttPacketBodyReader(body, 0, body.Length));
+                var bodyReader = new MqttPacketBodyReader(body, 0, body.Length);
+                return new ReceivedMqttPacket(fixedHeader.Flags, bodyReader, fixedHeader.TotalLength);
             }
             finally
             {

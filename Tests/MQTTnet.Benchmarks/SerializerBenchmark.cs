@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Channel;
 using MQTTnet.Formatter;
-using MQTTnet.Formatter.V311;
+using MQTTnet.Formatter.V3;
 
 namespace MQTTnet.Benchmarks
 {
@@ -56,7 +56,7 @@ namespace MQTTnet.Benchmarks
 
                 var receivedPacket = new ReceivedMqttPacket(
                     header.Flags,
-                    new MqttPacketBodyReader(_serializedPacket.Array, (ulong)(_serializedPacket.Count - header.RemainingLength), (ulong)_serializedPacket.Array.Length));
+                    new MqttPacketBodyReader(_serializedPacket.Array, (ulong)(_serializedPacket.Count - header.RemainingLength), (ulong)_serializedPacket.Array.Length), 0);
 
                 _serializer.Decode(receivedPacket);
             }

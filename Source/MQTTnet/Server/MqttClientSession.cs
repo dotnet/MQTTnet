@@ -7,7 +7,6 @@ using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -89,10 +88,10 @@ namespace MQTTnet.Server
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            _subscriptionsManager.Subscribe(new MqttSubscribePacket
-            {
-                TopicFilters = topicFilters
-            });
+            var packet = new MqttSubscribePacket();
+            packet.TopicFilters.AddRange(topicFilters);
+
+            _subscriptionsManager.Subscribe(packet);
 
             EnqueueSubscribedRetainedMessages(topicFilters);
             return Task.FromResult(0);
@@ -102,10 +101,10 @@ namespace MQTTnet.Server
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            _subscriptionsManager.Unsubscribe(new MqttUnsubscribePacket
-            {
-                TopicFilters = topicFilters
-            });
+            var packet = new MqttUnsubscribePacket();
+            packet.TopicFilters.AddRange(topicFilters);
+
+            _subscriptionsManager.Unsubscribe(packet);
 
             return Task.FromResult(0);
         }
@@ -278,7 +277,7 @@ namespace MQTTnet.Server
                 return;
             }
 
-            var publishPacket = _channelAdapter.PacketFormatterAdapter.ConvertApplicationMessageToPublishPacket(applicationMessage);
+            var publishPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(applicationMessage);
             
             // Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
             publishPacket.Retain = isRetainedApplicationMessage;
@@ -345,7 +344,8 @@ namespace MQTTnet.Server
             {
                 var responsePacket = new MqttPubCompPacket
                 {
-                    PacketIdentifier = pubRelPacket.PacketIdentifier
+                    PacketIdentifier = pubRelPacket.PacketIdentifier,
+                    ReasonCode = MqttPubCompReasonCode.Success
                 };
 
                 adapter.SendPacketAsync(responsePacket, cancellationToken).GetAwaiter().GetResult();
@@ -356,7 +356,8 @@ namespace MQTTnet.Server
             {
                 var responsePacket = new MqttPubRelPacket
                 {
-                    PacketIdentifier = pubRecPacket.PacketIdentifier
+                    PacketIdentifier = pubRecPacket.PacketIdentifier,
+                    ReasonCode = MqttPubRelReasonCode.Success
                 };
 
                 adapter.SendPacketAsync(responsePacket, cancellationToken).GetAwaiter().GetResult();
@@ -454,7 +455,9 @@ namespace MQTTnet.Server
 
         private void HandleIncomingPublishPacketWithQoS0(MqttPublishPacket publishPacket)
         {
-            _sessionsManager.EnqueueApplicationMessage(this, publishPacket.ToApplicationMessage());
+            _sessionsManager.EnqueueApplicationMessage(
+                this, 
+                _channelAdapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket));
         }
 
         private void HandleIncomingPublishPacketWithQoS1(
@@ -462,11 +465,14 @@ namespace MQTTnet.Server
             MqttPublishPacket publishPacket,
             CancellationToken cancellationToken)
         {
-            _sessionsManager.EnqueueApplicationMessage(this, publishPacket.ToApplicationMessage());
+            _sessionsManager.EnqueueApplicationMessage(
+                this, 
+                _channelAdapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket));
 
             var response = new MqttPubAckPacket
             {
-                PacketIdentifier = publishPacket.PacketIdentifier
+                PacketIdentifier = publishPacket.PacketIdentifier,
+                ReasonCode = MqttPubAckReasonCode.Success
             };
 
             adapter.SendPacketAsync(response, cancellationToken).GetAwaiter().GetResult();
@@ -478,11 +484,12 @@ namespace MQTTnet.Server
             CancellationToken cancellationToken)
         {
             // QoS 2 is implement as method "B" (4.3.3 QoS 2: Exactly once delivery)
-            _sessionsManager.EnqueueApplicationMessage(this, publishPacket.ToApplicationMessage());
+            _sessionsManager.EnqueueApplicationMessage(this, _channelAdapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket));
 
             var response = new MqttPubRecPacket
             {
-                PacketIdentifier = publishPacket.PacketIdentifier
+                PacketIdentifier = publishPacket.PacketIdentifier,
+                ReasonCode = MqttPubRecReasonCode.Success
             };
 
             adapter.SendPacketAsync(response, cancellationToken).GetAwaiter().GetResult();

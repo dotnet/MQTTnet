@@ -14,6 +14,8 @@
 * [Client] Added new MQTTv5 features to options builder.
 * [Client] Added uniform API across all supported MQTT versions (BREAKING CHANGE!)
 * [Server] Added support for MQTTv5 clients. The server will still return _success_ for all cases at the moment even if more granular codes are available.
+
+* [Note] Due to MQTTv5 a lot of new classes were introduced. This required adding new namespaces as well. Most classes are backward compatible but new namespaces must be added.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2018</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

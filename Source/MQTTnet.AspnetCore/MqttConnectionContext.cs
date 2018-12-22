@@ -17,6 +17,9 @@ namespace MQTTnet.AspNetCore
         {
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            
+            _reader = new SpanBasedMqttPacketBodyReader();
+            _received = new ReceivedMqttPacket(0, _reader, 0);
 
             if (Connection.Transport != null)
             {
@@ -27,6 +30,8 @@ namespace MQTTnet.AspNetCore
 
         private PipeReader _input;
         private PipeWriter _output;
+        private readonly SpanBasedMqttPacketBodyReader _reader;
+        private readonly ReceivedMqttPacket _received;
 
         public string Endpoint => Connection.ConnectionId;
         public ConnectionContext Connection { get; }
@@ -81,7 +86,7 @@ namespace MQTTnet.AspNetCore
                 {
                     if (!buffer.IsEmpty)
                     {
-                        if (PacketFormatterAdapter.TryDecode(buffer, out var packet, out consumed, out observed))
+                        if (PacketFormatterAdapter.TryDecode(_reader, _received, buffer, out var packet, out consumed, out observed))
                         {
                             ReadingPacketCompleted?.Invoke(this, packet);
                             return packet;
@@ -136,6 +141,8 @@ namespace MQTTnet.AspNetCore
         public async Task ReceivePacketAsync(CancellationToken cancellationToken)
         {
             var input = _input;
+            var reader = _reader;
+            var received = _received;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -159,7 +166,7 @@ namespace MQTTnet.AspNetCore
                 {
                     if (!buffer.IsEmpty)
                     {
-                        while (PacketFormatterAdapter.TryDecode(buffer, out var packet, out consumed, out observed))
+                        while (PacketFormatterAdapter.TryDecode(reader, received, buffer, out var packet, out consumed, out observed))
                         {
                             ReadingPacketCompleted?.Invoke(this, packet);
                             buffer = buffer.Slice(consumed);

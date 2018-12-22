@@ -9,7 +9,7 @@ namespace MQTTnet.AspNetCore
 {
     public static class ReaderExtensions
     {
-        public static bool TryDecode(this MqttPacketFormatterAdapter formatter, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)
+        public static bool TryDecode(this MqttPacketFormatterAdapter formatter, SpanBasedMqttPacketBodyReader reader, ReceivedMqttPacket receivedMqttPacket, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)
         {
             if (formatter == null) throw new ArgumentNullException(nameof(formatter));
 
@@ -37,10 +37,8 @@ namespace MQTTnet.AspNetCore
             var bodySlice = copy.Slice(0, bodyLength);
             var buffer = bodySlice.GetMemory();
 
-            var reader = new SpanBasedMqttPacketBodyReader();
             reader.SetBuffer(buffer);
-
-            var receivedMqttPacket = new ReceivedMqttPacket(fixedheader, reader, buffer.Length + 2);
+            receivedMqttPacket.FixedHeader = fixedheader;
 
             if (!formatter.ProtocolVersion.HasValue)
             {

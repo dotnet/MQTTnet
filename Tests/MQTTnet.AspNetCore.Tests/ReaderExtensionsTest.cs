@@ -1,6 +1,7 @@
 #if NETCOREAPP
 using System.Buffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
@@ -24,21 +25,29 @@ namespace MQTTnet.AspNetCore.Tests
             var observed = part.Start;
             var result = false;
 
+            var reader = new SpanBasedMqttPacketBodyReader();
+            var received = new ReceivedMqttPacket(0, reader, 0);
+
+
             part = sequence.Slice(sequence.Start, 0); // empty message should fail
-            result = serializer.TryDecode(part, out packet, out consumed, out observed);
+            reader.SetBuffer(part.ToArray());
+            result = serializer.TryDecode(reader, received, part, out packet, out consumed, out observed);
             Assert.IsFalse(result);
 
 
             part = sequence.Slice(sequence.Start, 1); // partial fixed header should fail
-            result = serializer.TryDecode(part, out packet, out consumed, out observed);
+            reader.SetBuffer(part.ToArray());
+            result = serializer.TryDecode(reader, received, part, out packet, out consumed, out observed);
             Assert.IsFalse(result);
 
             part = sequence.Slice(sequence.Start, 4); // partial body should fail
-            result = serializer.TryDecode(part, out packet, out consumed, out observed);
+            reader.SetBuffer(part.ToArray());
+            result = serializer.TryDecode(reader, received, part, out packet, out consumed, out observed);
             Assert.IsFalse(result);
 
             part = sequence; // complete msg should work
-            result = serializer.TryDecode(part, out packet, out consumed, out observed);
+            reader.SetBuffer(part.ToArray());
+            result = serializer.TryDecode(reader, received, part, out packet, out consumed, out observed);
             Assert.IsTrue(result);
         }
     }

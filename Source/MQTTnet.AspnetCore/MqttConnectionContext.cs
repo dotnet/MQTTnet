@@ -17,6 +17,12 @@ namespace MQTTnet.AspNetCore
         {
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
+
+            if (Connection.Transport != null)
+            {
+                _input = Connection.Transport.Input;
+                _output = Connection.Transport.Output;
+            }
         }
         private PipeReader _input;
         private PipeWriter _output;
@@ -117,8 +123,9 @@ namespace MQTTnet.AspNetCore
 
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            var buffer = PacketFormatterAdapter.Encode(packet).AsMemory();
-            var output = Connection.Transport.Output;
+            var buffer = PacketFormatterAdapter.Encode(packet);
+            var msg = buffer.AsMemory();
+            var output = _output;
 
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try

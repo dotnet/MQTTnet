@@ -1,4 +1,5 @@
-﻿using MQTTnet.Formatter;
+﻿using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using System;
 using System.Buffers.Binary;
 using System.Text;
@@ -30,13 +31,6 @@ namespace MQTTnet.AspNetCore
         public byte[] ReadRemainingData()
         {
             return _buffer.Slice(_offset).ToArray();
-        }
-
-        public ushort ReadUInt16()
-        {
-            var result = BinaryPrimitives.ReadUInt16BigEndian(_buffer.Span.Slice(_offset));
-            _offset += 2;
-            return result;
         }
 
         public byte[] ReadWithLengthPrefix()
@@ -72,27 +66,61 @@ namespace MQTTnet.AspNetCore
 
         public ushort ReadTwoByteInteger()
         {
-            throw new NotImplementedException();
+            var result = BinaryPrimitives.ReadUInt16BigEndian(_buffer.Span.Slice(_offset));
+            _offset += 2;
+            return result;
         }
 
         public uint ReadFourByteInteger()
         {
-            throw new NotImplementedException();
+            var result = BinaryPrimitives.ReadUInt32BigEndian(_buffer.Span.Slice(_offset));
+            _offset += 4;
+            return result;
         }
 
         public uint ReadVariableLengthInteger()
         {
-            throw new NotImplementedException();
+            var multiplier = 1;
+            var value = 0U;
+            byte encodedByte;
+
+            do
+            {
+                encodedByte = ReadByte();
+                value += (uint)((encodedByte & 127) * multiplier);
+
+                if (multiplier > 2097152)
+                {
+                    throw new MqttProtocolViolationException("Variable length integer is invalid.");
+                }
+
+                multiplier *= 128;
+            } while ((encodedByte & 128) != 0);
+
+            return value;
         }
 
         public bool ReadBoolean()
         {
-            throw new NotImplementedException();
+            ValidateReceiveBuffer(1);
+            var buffer = _buffer[Offset++];
+
+            if (buffer == 0)
+            {
+                return false;
+            }
+
+            if (buffer == 1)
+            {
+                return true;
+            }
+
+            throw new MqttProtocolViolationException("Boolean values can be 0 or 1 only.");
         }
 
         public void Seek(ulong position)
         {
-            throw new NotImplementedException();
+            _offset = (int)position;
         }
     }
 }

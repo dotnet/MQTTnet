@@ -528,7 +528,7 @@ namespace MQTTnet.Tests
             Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(data)));
         }
 
-        protected virtual IPacketBodyReader ReaderFactory(byte[] data)
+        protected virtual IMqttPacketBodyReader ReaderFactory(byte[] data)
         {
             return new MqttPacketBodyReader(data, 0, data.Length);
         }

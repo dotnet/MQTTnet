@@ -18,6 +18,7 @@ namespace MQTTnet.AspNetCore
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
+
         private PipeReader _input;
         private PipeWriter _output;
 

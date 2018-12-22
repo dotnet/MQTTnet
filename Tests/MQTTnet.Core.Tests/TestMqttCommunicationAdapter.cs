@@ -101,7 +101,7 @@ namespace MQTTnet.Tests
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                await ReceivePacketAsync(TimeSpan.Zero, cancellationToken);
+                await ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
             }
         }
     }

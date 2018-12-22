@@ -265,7 +265,7 @@ namespace MQTTnet.Adapter
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                await ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false); ;
+                await ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
             }
         }
     }

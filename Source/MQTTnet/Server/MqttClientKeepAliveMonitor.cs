@@ -45,19 +45,9 @@ namespace MQTTnet.Server
             _isPaused = true;
         }
 
-        public void Resume()
-        {
-            _isPaused = false;
-        }
-
-        public void Reset()
-        {
-            _lastPacketReceivedTracker.Restart();
-            _lastNonKeepAlivePacketReceivedTracker.Restart();
-        }
-
         public void PacketReceived(MqttBasePacket packet)
         {
+            _isPaused = false;
             _lastPacketReceivedTracker.Restart();
 
             if (!(packet is MqttPingReqPacket))

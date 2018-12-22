@@ -433,7 +433,7 @@ namespace MQTTnet.Server
 
         private void OnAdapterReadingPacketCompleted(object sender, MqttBasePacket packet)
         {
-            _keepAliveMonitor?.Resume();
+            _keepAliveMonitor?.PacketReceived(packet);
             ProcessReceivedPacket((IMqttChannelAdapter)sender, packet, _cancellationTokenSource.Token);
         }
 

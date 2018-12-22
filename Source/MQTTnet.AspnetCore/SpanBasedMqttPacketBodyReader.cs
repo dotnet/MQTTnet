@@ -102,8 +102,7 @@ namespace MQTTnet.AspNetCore
 
         public bool ReadBoolean()
         {
-            ValidateReceiveBuffer(1);
-            var buffer = _buffer[Offset++];
+            var buffer = ReadByte();
 
             if (buffer == 0)
             {

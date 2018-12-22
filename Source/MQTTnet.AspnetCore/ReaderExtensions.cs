@@ -40,7 +40,14 @@ namespace MQTTnet.AspNetCore
             var reader = new SpanBasedMqttPacketBodyReader();
             reader.SetBuffer(buffer);
 
-            packet = formatter.Decode(new ReceivedMqttPacket(fixedheader, reader, buffer.Length + 2));
+            var receivedMqttPacket = new ReceivedMqttPacket(fixedheader, reader, buffer.Length + 2);
+
+            if (!formatter.ProtocolVersion.HasValue)
+            {
+                formatter.DetectProtocolVersion(receivedMqttPacket);
+            }
+
+            packet = formatter.Decode(receivedMqttPacket);
             consumed = bodySlice.End;
             observed = bodySlice.End;
             return true;

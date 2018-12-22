@@ -7,7 +7,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Formatter
 {
-    public class MqttPacketFormatterAdapter
+    public class MqttPacketFormatterAdapter : IMqttPacketFormatter
     {
         private IMqttPacketFormatter _formatter;
 
@@ -28,6 +28,15 @@ namespace MQTTnet.Formatter
             {
                 ThrowIfFormatterNotSet();
                 return _formatter.DataConverter;
+            }
+        }
+
+        public IMqttPacketFormatter Formatter
+        {
+            get
+            {
+                ThrowIfFormatterNotSet();
+                return _formatter;
             }
         }
 

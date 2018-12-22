@@ -143,6 +143,7 @@ namespace MQTTnet.AspNetCore
             var input = _input;
             var reader = _reader;
             var received = _received;
+            var formatter = PacketFormatterAdapter.Formatter;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -166,7 +167,7 @@ namespace MQTTnet.AspNetCore
                 {
                     if (!buffer.IsEmpty)
                     {
-                        while (PacketFormatterAdapter.TryDecode(reader, received, buffer, out var packet, out consumed, out observed))
+                        while (formatter.TryDecode(reader, received, buffer, out var packet, out consumed, out observed))
                         {
                             ReadingPacketCompleted?.Invoke(this, packet);
                             buffer = buffer.Slice(consumed);

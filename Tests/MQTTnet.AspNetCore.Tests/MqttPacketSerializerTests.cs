@@ -1,13 +1,13 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Core.Tests;
-using MQTTnet.Serializer;
+using MQTTnet.Formatter;
+using MQTTnet.Tests;
 
 namespace MQTTnet.AspNetCore.Tests
 {
     [TestClass]
-    public class MqttPacketSerializerTestsWithSpanBasedReader : MqttPacketSerializerTests
+    public class MqttPacketSerializerTestsWithSpanBasedReader : MqttPacketSerializer_Tests
     {
-        protected override IPacketBodyReader ReaderFactory(byte[] data)
+        protected override IMqttPacketBodyReader ReaderFactory(byte[] data)
         {
             var result = new SpanBasedMqttPacketBodyReader();
             result.SetBuffer(data);

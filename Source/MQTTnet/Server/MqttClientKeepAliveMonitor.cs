@@ -48,6 +48,7 @@ namespace MQTTnet.Server
         public void Resume()
         {
             _isPaused = false;
+            Reset();
         }
 
         public void Reset()

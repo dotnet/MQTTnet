@@ -39,7 +39,11 @@ if ($path) {
 
 	Remove-Item .\NuGet -Force -Recurse -ErrorAction SilentlyContinue
 
-    New-Item -ItemType Directory -Force -Path .\NuGet
+	(Get-Content MQTTnet.AspNetCore.nuspec) -replace '$nugetVersion', $nugetVersion | Set-Content MQTTnet.AspNetCore.nuspec
+	(Get-Content MQTTnet.Extensions.Rpc.nuspec) -replace '$nugetVersion', $nugetVersion | Set-Content MQTTnet.Extensions.Rpc.nuspec
+	(Get-Content MQTTnet.Extensions.ManagedClient.nuspec) -replace '$nugetVersion', $nugetVersion | Set-Content Extensions.ManagedClient.nuspec
+	
+	New-Item -ItemType Directory -Force -Path .\NuGet
     .\nuget.exe pack MQTTnet.nuspec -Verbosity detailed -Symbols -OutputDir "NuGet" -Version $nugetVersion
     .\nuget.exe pack MQTTnet.AspNetCore.nuspec -Verbosity detailed -Symbols -OutputDir "NuGet" -Version $nugetVersion
 	.\nuget.exe pack MQTTnet.Extensions.Rpc.nuspec -Verbosity detailed -Symbols -OutputDir "NuGet" -Version $nugetVersion

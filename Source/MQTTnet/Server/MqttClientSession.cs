@@ -30,7 +30,7 @@ namespace MQTTnet.Server
         private MqttApplicationMessage _willMessage;
         private bool _wasCleanDisconnect;
         private Task _workerTask;
-        private IDisposable _cleanupHandle;
+        //private IDisposable _cleanupHandle;
 
         private string _adapterEndpoint;
         private MqttProtocolVersion? _adapterProtocolVersion;
@@ -73,11 +73,11 @@ namespace MQTTnet.Server
             status.LastNonKeepAlivePacketReceived = _keepAliveMonitor.LastNonKeepAlivePacketReceived;
         }
 
-        public Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
-        {
-            _workerTask = RunInternalAsync(connectPacket, adapter);
-            return _workerTask;
-        }
+        //public Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        //{
+        //    _workerTask = RunInternalAsync(connectPacket, adapter);
+        //    return _workerTask;
+        //}
 
         public Task StopAsync(MqttClientDisconnectType type)
         {
@@ -121,16 +121,22 @@ namespace MQTTnet.Server
             _cancellationTokenSource = null;
         }
 
+        public Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
+        {
+            _workerTask = RunInternalAsync(connectPacket, adapter);
+            return _workerTask;
+        }
+
         private async Task RunInternalAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter)
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
 
             try
             {
-                if (_cancellationTokenSource != null)
-                {
-                    await StopAsync(MqttClientDisconnectType.Clean, true).ConfigureAwait(false);
-                }
+                //if (_cancellationTokenSource != null)
+                //{
+                //    await StopAsync(MqttClientDisconnectType.Clean, true).ConfigureAwait(false);
+                //}
 
                 adapter.ReadingPacketStarted += OnAdapterReadingPacketStarted;
                 adapter.ReadingPacketCompleted += OnAdapterReadingPacketCompleted;
@@ -203,12 +209,14 @@ namespace MQTTnet.Server
                 //await TryDisconnectAdapterAsync(adapter).ConfigureAwait(false);
                 //TryDisposeAdapter(adapter);
 
-                _cleanupHandle?.Dispose();
-                _cleanupHandle = null;
+                //_cleanupHandle?.Dispose();
+                //_cleanupHandle = null;
 
                 _cancellationTokenSource?.Cancel(false);
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
+
+                _workerTask = null;
             }
         }
 
@@ -264,6 +272,8 @@ namespace MQTTnet.Server
                         await _workerTask.ConfigureAwait(false);
                     }
                 }
+                
+                await Task.FromResult(0);
             }
             finally
             {

@@ -450,7 +450,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 return;
             }
 
-            var sessions = _mqttServer.GetClientSessionsStatus();
+            var sessions = _mqttServer.GetClientSessionsStatusAsync().GetAwaiter().GetResult();
             _sessions.Clear();
 
             foreach (var session in sessions)
@@ -568,7 +568,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             {
                 var options = new MqttServerOptions();
 
-                options.ConnectionValidator = c =>
+                options.ConnectionValidator = new MqttServerConnectionValidatorDelegate(c =>
                 {
                     if (c.ClientId.Length < 10)
                     {
@@ -589,7 +589,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     }
 
                     c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
-                };
+                });
 
                 var factory = new MqttFactory();
                 var mqttServer = factory.CreateMqttServer();
@@ -633,7 +633,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                 };
 
-                options.ConnectionValidator = c =>
+                options.ConnectionValidator = new MqttServerConnectionValidatorDelegate(c =>
                 {
                     if (c.ClientId != "Highlander")
                     {
@@ -642,7 +642,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     }
 
                     c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
-                };
+                });
 
                 var mqttServer = new MqttFactory().CreateMqttServer();
                 await mqttServer.StartAsync(optionsBuilder.Build());
@@ -652,7 +652,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 // Setup client validator.
                 var options = new MqttServerOptions
                 {
-                    ConnectionValidator = c =>
+                    ConnectionValidator = new MqttServerConnectionValidatorDelegate(c =>
                     {
                         if (c.ClientId.Length < 10)
                         {
@@ -673,7 +673,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                         }
 
                         c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
-                    }
+                    })
                 };
             }
 

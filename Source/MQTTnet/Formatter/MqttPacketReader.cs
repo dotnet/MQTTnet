@@ -63,7 +63,7 @@ namespace MQTTnet.Formatter
         {
             var offset = 0;
             var multiplier = 128;
-            var value = (initialEncodedByte & 127);
+            var value = initialEncodedByte & 127;
             int encodedByte = initialEncodedByte;
 
             while ((encodedByte & 128) != 0)

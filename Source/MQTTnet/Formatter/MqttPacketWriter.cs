@@ -15,6 +15,7 @@ namespace MQTTnet.Formatter
     {
         public static int MaxBufferSize = 4096;
 
+        // TODO: Consider using the ArrayPool here together with FreeBuffer.
         private byte[] _buffer = new byte[128];
 
         private int _offset;
@@ -28,11 +29,16 @@ namespace MQTTnet.Formatter
             return (byte)fixedHeader;
         }
 
-        public static ArraySegment<byte> EncodeVariableByteInteger(uint value)
+        public static ArraySegment<byte> EncodeVariableLengthInteger(uint value)
         {
-            if (value <= 0)
+            if (value == 0)
             {
                 return new ArraySegment<byte>(new byte[1], 0, 1);
+            }
+
+            if (value <= 127)
+            {
+                return new ArraySegment<byte>(new[] { (byte)value }, 0, 1);
             }
 
             var buffer = new byte[4];
@@ -57,7 +63,7 @@ namespace MQTTnet.Formatter
 
         public void WriteVariableLengthInteger(uint value)
         {
-            Write(EncodeVariableByteInteger(value));
+            Write(EncodeVariableLengthInteger(value));
         }
 
         public void WriteWithLengthPrefix(string value)
@@ -80,7 +86,7 @@ namespace MQTTnet.Formatter
             EnsureAdditionalCapacity(1);
 
             _buffer[_offset] = @byte;
-            IncreasePostition(1);
+            IncreasePosition(1);
         }
 
         public void Write(ushort value)
@@ -88,9 +94,9 @@ namespace MQTTnet.Formatter
             EnsureAdditionalCapacity(2);
 
             _buffer[_offset] = (byte)(value >> 8);
-            IncreasePostition(1);
+            IncreasePosition(1);
             _buffer[_offset] = (byte)value;
-            IncreasePostition(1);
+            IncreasePosition(1);
         }
 
         public void Write(byte[] buffer, int offset, int count)
@@ -100,7 +106,7 @@ namespace MQTTnet.Formatter
             EnsureAdditionalCapacity(count);
 
             Array.Copy(buffer, offset, _buffer, _offset, count);
-            IncreasePostition(count);
+            IncreasePosition(count);
         }
 
         public void Write(ArraySegment<byte> buffer)
@@ -122,9 +128,9 @@ namespace MQTTnet.Formatter
             Write(propertyWriter._buffer, 0, propertyWriter.Length);
         }
 
-        public void Reset()
+        public void Reset(int length)
         {
-            Length = 5;
+            Length = length;
         }
 
         public void Seek(int position)
@@ -185,7 +191,7 @@ namespace MQTTnet.Formatter
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void IncreasePostition(int length)
+        private void IncreasePosition(int length)
         {
             _offset += length;
 

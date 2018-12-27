@@ -25,22 +25,19 @@ namespace MQTTnet.Server
 
         public Task DisconnectAsync()
         {
-            _session.Stop(MqttClientDisconnectType.NotClean);
-            return Task.FromResult(0);
+            return _session.StopAsync(MqttClientDisconnectType.NotClean);
         }
 
-        public Task DeleteSessionAsync()
+        public async Task DeleteSessionAsync()
         {
             try
             {
-                _session.Stop(MqttClientDisconnectType.NotClean);
+                await _session.StopAsync(MqttClientDisconnectType.NotClean).ConfigureAwait(false);
             }
             finally
             {
-                _sessionsManager.DeleteSession(ClientId);
+                await _sessionsManager.DeleteSessionAsync(ClientId).ConfigureAwait(false);
             }
-
-            return Task.FromResult(0);
         }
 
         public Task ClearPendingApplicationMessagesAsync()

@@ -30,7 +30,7 @@ namespace MQTTnet.Extensions.ManagedClient
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _messagesLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 _messages.Add(applicationMessage);
                 await SaveAsync().ConfigureAwait(false);
@@ -41,7 +41,7 @@ namespace MQTTnet.Extensions.ManagedClient
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            using (await _messagesLock.LockAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _messagesLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 var index = _messages.IndexOf(applicationMessage);
                 if (index == -1)

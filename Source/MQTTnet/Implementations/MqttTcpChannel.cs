@@ -52,11 +52,15 @@ namespace MQTTnet.Implementations
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             }
 
+            // Workaround for: workaround for https://github.com/dotnet/corefx/issues/24430
+            using (cancellationToken.Register(() => _socket.Dispose()))
+            {
 #if NET452 || NET461
-            await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
+                await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
 #else
-            await _socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
+                await _socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
 #endif
+            }
 
             SslStream sslStream = null;
             if (_options.TlsOptions.UseTls)
@@ -74,14 +78,23 @@ namespace MQTTnet.Implementations
             return Task.FromResult(0);
         }
 
-        public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return _stream.ReadAsync(buffer, offset, count, cancellationToken);
+            // Workaround for: https://github.com/dotnet/corefx/issues/24430
+            using (cancellationToken.Register(() => _socket.Dispose()))
+            {
+                return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+            }
         }
 
-        public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return _stream.WriteAsync(buffer, offset, count, cancellationToken);
+            // Workaround for: https://github.com/dotnet/corefx/issues/24430
+            using (cancellationToken.Register(() => _socket.Dispose()))
+            {
+                await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+                await _stream.FlushAsync(cancellationToken);
+            }
         }
 
         public void Dispose()
@@ -89,10 +102,11 @@ namespace MQTTnet.Implementations
             Cleanup(ref _stream, s => s.Dispose());
             Cleanup(ref _socket, s =>
             {
-                if (s.Connected)
-                {
-                    s.Shutdown(SocketShutdown.Both);
-                }
+                //if (s.Connected)
+                //{
+                //    s.Shutdown(SocketShutdown.Both);
+                //}
+
                 s.Dispose();
             });
         }

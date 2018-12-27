@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -20,7 +21,7 @@ namespace MQTTnet.Server
             _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
         }
 
-        public MqttClientSubscribeResult Subscribe(MqttSubscribePacket subscribePacket)
+        public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttSubscribePacket subscribePacket)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
 
@@ -36,7 +37,7 @@ namespace MQTTnet.Server
 
             foreach (var topicFilter in subscribePacket.TopicFilters)
             {
-                var interceptorContext = InterceptSubscribe(topicFilter);
+                var interceptorContext = await InterceptSubscribeAsync(topicFilter).ConfigureAwait(false);
                 if (!interceptorContext.AcceptSubscription)
                 {
                     result.ResponsePacket.ReturnCodes.Add(MqttSubscribeReturnCode.Failure);
@@ -146,11 +147,15 @@ namespace MQTTnet.Server
             }
         }
 
-        private MqttSubscriptionInterceptorContext InterceptSubscribe(TopicFilter topicFilter)
+        private async Task<MqttSubscriptionInterceptorContext> InterceptSubscribeAsync(TopicFilter topicFilter)
         {
-            var interceptorContext = new MqttSubscriptionInterceptorContext(_clientId, topicFilter);
-            _options.SubscriptionInterceptor?.Invoke(interceptorContext);
-            return interceptorContext;
+            var context = new MqttSubscriptionInterceptorContext(_clientId, topicFilter);
+            if (_options.SubscriptionInterceptor != null)
+            {
+                await _options.SubscriptionInterceptor.InterceptSubscriptionAsync(context).ConfigureAwait(false);
+            }
+
+            return context;
         }
 
         private static CheckSubscriptionsResult CreateSubscriptionResult(MqttQualityOfServiceLevel qosLevel, HashSet<MqttQualityOfServiceLevel> subscribedQoSLevels)

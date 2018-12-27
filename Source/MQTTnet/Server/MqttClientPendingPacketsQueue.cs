@@ -133,7 +133,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                adapter.SendPacketAsync(packet, cancellationToken).GetAwaiter().GetResult();
+                await adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
 
                 _logger.Verbose("Enqueued packet sent (ClientId: {0}).", _clientSession.ClientId);
             }
@@ -167,7 +167,7 @@ namespace MQTTnet.Server
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    _clientSession.Stop(MqttClientDisconnectType.NotClean);
+                    await _clientSession.StopAsync(MqttClientDisconnectType.NotClean).ConfigureAwait(false);
                 }
             }
         }

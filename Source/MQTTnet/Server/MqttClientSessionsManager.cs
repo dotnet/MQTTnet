@@ -60,9 +60,9 @@ namespace MQTTnet.Server
             }
         }
 
-        public Task StartSession(IMqttChannelAdapter clientAdapter)
+        public Task HandleConnectionAsync(IMqttChannelAdapter clientAdapter)
         {
-            return Task.Run(() => RunSessionAsync(clientAdapter, _cancellationToken), _cancellationToken);
+            return Task.Run(() => HandleConnectionAsync(clientAdapter, _cancellationToken), _cancellationToken);
         }
 
         public async Task<IList<IMqttClientSessionStatus>> GetClientStatusAsync()
@@ -207,7 +207,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task RunSessionAsync(IMqttChannelAdapter clientAdapter, CancellationToken cancellationToken)
+        private async Task HandleConnectionAsync(IMqttChannelAdapter clientAdapter, CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
             
@@ -295,11 +295,11 @@ namespace MQTTnet.Server
                 var isSessionPresent = _sessions.TryGetValue(connectPacket.ClientId, out var clientSession);
                 if (isSessionPresent)
                 {
+                    await clientSession.StopAsync(MqttClientDisconnectType.Clean).ConfigureAwait(false);
+
                     if (connectPacket.CleanSession)
                     {
                         _sessions.Remove(connectPacket.ClientId);
-
-                        await clientSession.StopAsync(MqttClientDisconnectType.Clean).ConfigureAwait(false);
                         clientSession.Dispose();
                         clientSession = null;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
@@ -6,6 +7,6 @@ namespace MQTTnet.Server
     {
         string ClientId { get; }
 
-        void Stop(MqttClientDisconnectType disconnectType);
+        Task StopAsync(MqttClientDisconnectType disconnectType);
     }
 }

@@ -23,7 +23,7 @@ namespace MQTTnet.TestApp.NetCore
             {
                 var options = new MqttServerOptions
                 {
-                    ConnectionValidator = p =>
+                    ConnectionValidator = new MqttServerConnectionValidatorDelegate(p =>
                     {
                         if (p.ClientId == "SpecialClient")
                         {
@@ -32,11 +32,11 @@ namespace MQTTnet.TestApp.NetCore
                                 p.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
                             }
                         }
-                    },
+                    }),
 
                     Storage = new RetainedMessageHandler(),
 
-                    ApplicationMessageInterceptor = context =>
+                    ApplicationMessageInterceptor = new MqttServerApplicationMessageInterceptorDelegate(context =>
                     {
                         if (MqttTopicFilterComparer.IsMatch(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#"))
                         {
@@ -50,8 +50,9 @@ namespace MQTTnet.TestApp.NetCore
                             context.AcceptPublish = false;
                             context.CloseConnection = true;
                         }
-                    },
-                    SubscriptionInterceptor = context =>
+                    }),
+
+                    SubscriptionInterceptor = new MqttServerSubscriptionInterceptorDelegate(context =>
                     {
                         if (context.TopicFilter.Topic.StartsWith("admin/foo/bar") && context.ClientId != "theAdmin")
                         {
@@ -63,7 +64,7 @@ namespace MQTTnet.TestApp.NetCore
                             context.AcceptSubscription = false;
                             context.CloseConnection = true;
                         }
-                    }
+                    })
                 };
 
                 // Extend the timestamp for all messages from clients.

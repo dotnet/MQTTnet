@@ -21,13 +21,13 @@ namespace MQTTnet.Formatter.V3
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
             // Leave enough head space for max header size (fixed + 4 variable remaining length = 5 bytes)
-            _packetWriter.Reset();
+            _packetWriter.Reset(5);
             _packetWriter.Seek(5);
 
             var fixedHeader = EncodePacket(packet, _packetWriter);
             var remainingLength = (uint)(_packetWriter.Length - 5);
 
-            var remainingLengthBuffer = MqttPacketWriter.EncodeVariableByteInteger(remainingLength);
+            var remainingLengthBuffer = MqttPacketWriter.EncodeVariableLengthInteger(remainingLength);
 
             var headerSize = FixedHeaderSize + remainingLengthBuffer.Count;
             var headerOffset = 5 - headerSize;

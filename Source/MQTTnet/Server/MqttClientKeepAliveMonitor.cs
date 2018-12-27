@@ -81,7 +81,7 @@ namespace MQTTnet.Server
                     if (!_isPaused && _lastPacketReceivedTracker.Elapsed.TotalSeconds >= keepAlivePeriod * 1.5D)
                     {
                         _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientSession.ClientId);
-                        _clientSession.Stop(MqttClientDisconnectType.NotClean);
+                        await _clientSession.StopAsync(MqttClientDisconnectType.NotClean).ConfigureAwait(false);
 
                         return;
                     }

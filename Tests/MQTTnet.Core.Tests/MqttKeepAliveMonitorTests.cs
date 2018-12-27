@@ -82,9 +82,10 @@ namespace MQTTnet.Tests
                 throw new NotSupportedException();
             }
 
-            public void Stop(MqttClientDisconnectType disconnectType)
+            public Task StopAsync(MqttClientDisconnectType disconnectType)
             {
                 StopCalledCount++;
+                return Task.FromResult(0);
             }
 
             public Task SubscribeAsync(IList<TopicFilter> topicFilters)

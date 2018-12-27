@@ -11,10 +11,10 @@ namespace MQTTnet.Server
 
         TimeSpan DefaultCommunicationTimeout { get; }
 
-        Action<MqttConnectionValidatorContext> ConnectionValidator { get; }
-        Action<MqttSubscriptionInterceptorContext> SubscriptionInterceptor { get; }
-        Action<MqttApplicationMessageInterceptorContext> ApplicationMessageInterceptor { get; }
-        Action<MqttClientMessageQueueInterceptorContext> ClientMessageQueueInterceptor { get; }
+        IMqttServerConnectionValidator ConnectionValidator { get; }
+        IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; }
+        IMqttServerApplicationMessageInterceptor ApplicationMessageInterceptor { get; }
+        IMqttServerClientMessageQueueInterceptor ClientMessageQueueInterceptor { get; }
 
         MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
         MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }

@@ -66,24 +66,26 @@ namespace MQTTnet.Client
                 _packetIdentifierProvider.Reset();
                 _packetDispatcher.Reset();
 
-                _cancellationTokenSource = new CancellationTokenSource();
+                var cancellationTokenSource = new CancellationTokenSource();
+                _cancellationTokenSource = cancellationTokenSource;
+
                 _disconnectGate = 0;
                 _adapter = _adapterFactory.CreateClientAdapter(options, _logger);
 
                 _logger.Verbose($"Trying to connect with server ({Options.ChannelOptions}).");
-                await _adapter.ConnectAsync(Options.CommunicationTimeout, _cancellationTokenSource.Token).ConfigureAwait(false);
+                await _adapter.ConnectAsync(Options.CommunicationTimeout, cancellationTokenSource.Token).ConfigureAwait(false);
                 _logger.Verbose("Connection with server established.");
 
-                StartReceivingPackets(_cancellationTokenSource.Token);
+                StartReceivingPackets(cancellationTokenSource.Token);
 
-                var connectResult = await AuthenticateAsync(options.WillMessage, _cancellationTokenSource.Token).ConfigureAwait(false);
+                var connectResult = await AuthenticateAsync(options.WillMessage, cancellationTokenSource.Token).ConfigureAwait(false);
                 _logger.Verbose("MQTT connection with server established.");
 
                 _sendTracker.Restart();
 
                 if (Options.KeepAlivePeriod != TimeSpan.Zero)
                 {
-                    StartSendingKeepAliveMessages(_cancellationTokenSource.Token);
+                    StartSendingKeepAliveMessages(cancellationTokenSource.Token);
                 }
 
                 IsConnected = true;
@@ -112,7 +114,7 @@ namespace MQTTnet.Client
             {
                 _cleanDisconnectInitiated = true;
 
-                if (IsConnected && !_cancellationTokenSource.IsCancellationRequested)
+                if (IsConnected && _cancellationTokenSource?.IsCancellationRequested == false)
                 {
                     var disconnectPacket = CreateDisconnectPacket(options);
                     await SendAsync(disconnectPacket, _cancellationTokenSource.Token).ConfigureAwait(false);

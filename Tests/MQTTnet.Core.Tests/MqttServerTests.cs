@@ -17,7 +17,7 @@ using MQTTnet.Server;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttServerTests
+    public partial class MqttServerTests
     {
         [TestMethod]
         public void MqttServer_PublishSimple_AtMostOnce()
@@ -263,6 +263,91 @@ namespace MQTTnet.Tests
             }
         }
 
+        [TestMethod]
+        public async Task MqttServer_No_Messages_If_No_Subscription()
+        {
+            var server = new MqttFactory().CreateMqttServer();
+            try
+            {
+                await server.StartAsync(new MqttServerOptions());
+
+                var client = new MqttFactory().CreateMqttClient();
+                var receivedMessages = new List<MqttApplicationMessage>();
+
+                var options = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost").Build();
+
+                client.Connected += async (s, e) =>
+                {
+                    await client.PublishAsync("Connected");
+                };
+
+                client.ApplicationMessageReceived += (s, e) =>
+                {
+                    lock (receivedMessages)
+                    {
+                        receivedMessages.Add(e.ApplicationMessage);
+                    }
+                };
+
+                await client.ConnectAsync(options);
+
+                await Task.Delay(500);
+
+                await client.PublishAsync("Hello");
+
+                await Task.Delay(500);
+                
+                Assert.AreEqual(0, receivedMessages.Count);
+            }
+            finally
+            {
+                await server.StopAsync();
+            }
+        }
+
+        [TestMethod]
+        public async Task MqttServer_Set_Subscription_At_Server()
+        {
+            var server = new MqttFactory().CreateMqttServer();
+            try
+            {
+                await server.StartAsync(new MqttServerOptions());
+                server.ClientConnected += async (s, e) =>
+                {
+                    await server.SubscribeAsync(e.ClientId, "topic1");
+                };
+
+                var client = new MqttFactory().CreateMqttClient();
+                var receivedMessages = new List<MqttApplicationMessage>();
+
+                var options = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost").Build();
+
+                client.ApplicationMessageReceived += (s, e) =>
+                {
+                    lock (receivedMessages)
+                    {
+                        receivedMessages.Add(e.ApplicationMessage);
+                    }
+                };
+
+                await client.ConnectAsync(options);
+
+                await Task.Delay(500);
+
+                await client.PublishAsync("Hello");
+
+                await Task.Delay(500);
+
+                Assert.AreEqual(0, receivedMessages.Count);
+            }
+            finally
+            {
+                await server.StopAsync();
+            }
+        }
+
         private static async Task Publish(IMqttClient c1, MqttApplicationMessage message)
         {
             for (int i = 0; i < 1000; i++)
@@ -302,40 +387,29 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task MqttServer_Handle_Clean_Disconnect()
         {
-            var s = new MqttFactory().CreateMqttServer();
-            try
+            using (var testSetup = new TestSetup())
             {
+                var server = await testSetup.StartServerAsync(new MqttServerOptionsBuilder());
+
                 var clientConnectedCalled = 0;
                 var clientDisconnectedCalled = 0;
 
-                s.ClientConnected += (_, __) => clientConnectedCalled++;
-                s.ClientDisconnected += (_, __) => clientDisconnectedCalled++;
+                server.ClientConnected += (_, __) => Interlocked.Increment(ref clientConnectedCalled);
+                server.ClientDisconnected += (_, __) => Interlocked.Increment(ref clientDisconnectedCalled);
+                
+                var c1 = await testSetup.ConnectClient(new MqttClientOptionsBuilder());
 
-                var clientOptions = new MqttClientOptionsBuilder()
-                    .WithTcpServer("localhost")
-                    .Build();
+                Assert.AreEqual(1, clientConnectedCalled);
+                Assert.AreEqual(0, clientDisconnectedCalled);
 
-                await s.StartAsync(new MqttServerOptions());
-
-                var c1 = new MqttFactory().CreateMqttClient();
-
-                await c1.ConnectAsync(clientOptions);
-
-                await Task.Delay(100);
+                await Task.Delay(500);
 
                 await c1.DisconnectAsync();
 
-                await Task.Delay(100);
+                await Task.Delay(500);
 
-                await s.StopAsync();
-
-                await Task.Delay(100);
-
-                Assert.AreEqual(clientConnectedCalled, clientDisconnectedCalled);
-            }
-            finally
-            {
-                await s.StopAsync();
+                Assert.AreEqual(1, clientConnectedCalled);
+                Assert.AreEqual(1, clientDisconnectedCalled);
             }
         }
 
@@ -385,7 +459,7 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public async Task MqttServer_LotsOfRetainedMessages()
+        public async Task MqttServer_Lots_Of_Retained_Messages()
         {
             const int ClientCount = 100;
 
@@ -745,58 +819,64 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public async Task MqttServer_SameClientIdConnectDisconnectEventOrder()
+        public async Task MqttServer_Same_Client_Id_Connect_Disconnect_Event_Order()
         {
-            var s = new MqttFactory().CreateMqttServer();
-
-            var events = new List<string>();
-
-            s.ClientConnected += (_, __) =>
+            using (var testSetup = new TestSetup())
             {
-                lock (events)
+                var server = await testSetup.StartServerAsync(new MqttServerOptionsBuilder());
+
+                var events = new List<string>();
+
+                server.ClientConnected += (_, __) =>
                 {
-                    events.Add("c");
-                }
-            };
+                    lock (events)
+                    {
+                        events.Add("c");
+                    }
+                };
 
-            s.ClientDisconnected += (_, __) =>
-            {
-                lock (events)
+                server.ClientDisconnected += (_, __) =>
                 {
-                    events.Add("d");
-                }
-            };
+                    lock (events)
+                    {
+                        events.Add("d");
+                    }
+                };
 
-            var clientOptions = new MqttClientOptionsBuilder()
-                .WithTcpServer("localhost")
-                .WithClientId("same_id")
-                .Build();
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithClientId("same_id");
 
-            await s.StartAsync(new MqttServerOptions());
+                // c
+                var c1 = await testSetup.ConnectClient(clientOptions);
+                
+                await Task.Delay(500);
 
-            var c1 = new MqttFactory().CreateMqttClient();
-            var c2 = new MqttFactory().CreateMqttClient();
+                var flow = string.Join(string.Empty, events);
+                Assert.AreEqual("c", flow);
 
-            await c1.ConnectAsync(clientOptions);
+                // dc
+                var c2 = await testSetup.ConnectClient(clientOptions);
 
-            await Task.Delay(250);
+                await Task.Delay(500);
 
-            await c2.ConnectAsync(clientOptions);
+                flow = string.Join(string.Empty, events);
+                Assert.AreEqual("cdc", flow);
 
-            await Task.Delay(250);
+                // nothing
+                await c1.DisconnectAsync();
 
-            await c1.DisconnectAsync();
+                await Task.Delay(500);
 
-            await Task.Delay(250);
+                // d
+                await c2.DisconnectAsync();
 
-            await c2.DisconnectAsync();
+                await Task.Delay(500);
 
-            await Task.Delay(250);
+                await server.StopAsync();
 
-            await s.StopAsync();
-
-            var flow = string.Join(string.Empty, events);
-            Assert.AreEqual("cdcd", flow);
+                flow = string.Join(string.Empty, events);
+                Assert.AreEqual("cdcd", flow);
+            }
         }
 
         [TestMethod]

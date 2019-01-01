@@ -93,7 +93,7 @@ namespace MQTTnet.Implementations
             using (cancellationToken.Register(() => _socket.Dispose()))
             {
                 await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-                await _stream.FlushAsync(cancellationToken);
+                //await _stream.FlushAsync(cancellationToken);
             }
         }
 

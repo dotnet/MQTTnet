@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
@@ -21,7 +20,7 @@ namespace MQTTnet.Client
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            return client.SubscribeAsync(topicFilters.ToList());
+            return client.SubscribeAsync(topicFilters);
         }
 
         public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
@@ -45,7 +44,7 @@ namespace MQTTnet.Client
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            return client.UnsubscribeAsync(topicFilters.ToList());
+            return client.UnsubscribeAsync(topicFilters);
         }
     }
 }

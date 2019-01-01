@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -49,27 +50,31 @@ namespace MQTTnet.Server
 
         public async Task StopAsync()
         {
-            using (await _sessionsLock.WaitAsync(_cancellationToken).ConfigureAwait(false))
+            List<MqttClientSession> sessions;
+            using (await _sessionsLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
             {
-                foreach (var session in _sessions)
-                {
-                    await session.Value.StopAsync(MqttClientDisconnectType.NotClean).ConfigureAwait(false);
-                }
+                sessions = _sessions.Values.ToList();
+            }
 
-                _sessions.Clear();
+            foreach (var session in sessions)
+            {
+                await session.StopAsync(MqttClientDisconnectType.Clean).ConfigureAwait(false);
             }
         }
 
         public Task HandleConnectionAsync(IMqttChannelAdapter clientAdapter)
         {
-            return Task.Run(() => HandleConnectionAsync(clientAdapter, _cancellationToken), _cancellationToken);
+            return HandleConnectionAsync(clientAdapter, _cancellationToken);
+
+            // TODO: Check if Task.Run is required.
+            //return Task.Run(() => HandleConnectionAsync(clientAdapter, _cancellationToken), _cancellationToken);
         }
 
         public async Task<IList<IMqttClientSessionStatus>> GetClientStatusAsync()
         {
             var result = new List<IMqttClientSessionStatus>();
 
-            using (await _sessionsLock.WaitAsync(_cancellationToken).ConfigureAwait(false))
+            using (await _sessionsLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 foreach (var session in _sessions.Values)
                 {
@@ -90,42 +95,47 @@ namespace MQTTnet.Server
             _messageQueue.Add(new MqttEnqueuedApplicationMessage(senderClientSession, applicationMessage), _cancellationToken);
         }
 
-        public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
+        public async Task SubscribeAsync(string clientId, IEnumerable<TopicFilter> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            lock (_sessions)
+            using (await _sessionsLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 if (!_sessions.TryGetValue(clientId, out var session))
                 {
                     throw new InvalidOperationException($"Client session '{clientId}' is unknown.");
                 }
 
-                return session.SubscribeAsync(topicFilters);
+                await session.SubscribeAsync(topicFilters).ConfigureAwait(false);
             }
         }
 
-        public Task UnsubscribeAsync(string clientId, IList<string> topicFilters)
+        public async Task UnsubscribeAsync(string clientId, IEnumerable<string> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            lock (_sessions)
+            using (await _sessionsLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 if (!_sessions.TryGetValue(clientId, out var session))
                 {
                     throw new InvalidOperationException($"Client session '{clientId}' is unknown.");
                 }
 
-                return session.UnsubscribeAsync(topicFilters);
+                await session.UnsubscribeAsync(topicFilters).ConfigureAwait(false);
             }
         }
 
         public async Task DeleteSessionAsync(string clientId)
         {
-            using (await _sessionsLock.WaitAsync(_cancellationToken).ConfigureAwait(false))
+            using (await _sessionsLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
             {
+                if (_sessions.TryGetValue(clientId, out var session))
+                {
+                    session.Dispose();
+                }
+
                 _sessions.Remove(clientId);
             }
 
@@ -187,7 +197,7 @@ namespace MQTTnet.Server
                     await _retainedMessagesManager.HandleMessageAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
                 }
 
-                using (await _sessionsLock.WaitAsync(_cancellationToken).ConfigureAwait(false))
+                using (await _sessionsLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
                 {
                     foreach (var clientSession in _sessions.Values)
                     {
@@ -207,49 +217,37 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task HandleConnectionAsync(IMqttChannelAdapter clientAdapter, CancellationToken cancellationToken)
+        private async Task HandleConnectionAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
-            
+
             try
             {
-                var firstPacket = await clientAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false);
+                var firstPacket = await channelAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false);
                 if (!(firstPacket is MqttConnectPacket connectPacket))
                 {
-                    _logger.Warning(null, "The first packet from client '{0}' was no 'CONNECT' packet [MQTT-3.1.0-1].", clientAdapter.Endpoint);
+                    _logger.Warning(null, "The first packet from client '{0}' was no 'CONNECT' packet [MQTT-3.1.0-1].", channelAdapter.Endpoint);
                     return;
                 }
 
                 clientId = connectPacket.ClientId;
 
-                var connectReturnCode = await ValidateConnectionAsync(connectPacket, clientAdapter).ConfigureAwait(false);
+                var connectReturnCode = await ValidateConnectionAsync(connectPacket, channelAdapter).ConfigureAwait(false);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
-                    await clientAdapter.SendPacketAsync(
+                    await channelAdapter.SendPacketAsync(
                         new MqttConnAckPacket
                         {
-                            ReturnCode = connectReturnCode
+                            ReturnCode = connectReturnCode,
+                            ReasonCode = MqttConnectReasonCode.NotAuthorized
                         },
                         cancellationToken).ConfigureAwait(false);
 
                     return;
                 }
 
-                var result = await PrepareClientSessionAsync(connectPacket).ConfigureAwait(false);
-
-                await clientAdapter.SendPacketAsync(
-                    new MqttConnAckPacket
-                    {
-                        ReturnCode = connectReturnCode,
-                        ReasonCode = MqttConnectReasonCode.Success,
-                        IsSessionPresent = result.IsExistingSession
-                    },
-                    cancellationToken).ConfigureAwait(false);
-
-                _logger.Info("Client '{0}': Connected.", clientId);
-                _eventDispatcher.OnClientConnected(clientId);
-
-                await result.Session.RunAsync(connectPacket, clientAdapter).ConfigureAwait(false);
+                var session = await PrepareClientSessionAsync(connectPacket).ConfigureAwait(false);
+                await session.RunAsync(connectPacket, channelAdapter).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -260,12 +258,15 @@ namespace MQTTnet.Server
             }
             finally
             {
-                await clientAdapter.DisconnectAsync(_options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false);
-                clientAdapter.Dispose();
+                await TryCleanupChannelAsync(channelAdapter).ConfigureAwait(false);
 
                 if (!_options.EnablePersistentSessions)
                 {
-                    await DeleteSessionAsync(clientId).ConfigureAwait(false);
+                    // TODO: Check if the session will be used later.
+                    // Consider reference counter or "Recycle" property
+                    // Or add timer (will be required for MQTTv5 (session life time) "IsActiveProperty".
+                    //öö
+                    //await DeleteSessionAsync(clientId).ConfigureAwait(false);
                 }
             }
         }
@@ -288,18 +289,17 @@ namespace MQTTnet.Server
             return context.ReturnCode;
         }
 
-        private async Task<PrepareClientSessionResult> PrepareClientSessionAsync(MqttConnectPacket connectPacket)
+        private async Task<MqttClientSession> PrepareClientSessionAsync(MqttConnectPacket connectPacket)
         {
-            using (await _sessionsLock.WaitAsync(_cancellationToken).ConfigureAwait(false))
+            using (await _sessionsLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 var isSessionPresent = _sessions.TryGetValue(connectPacket.ClientId, out var clientSession);
                 if (isSessionPresent)
                 {
-                    await clientSession.StopAsync(MqttClientDisconnectType.Clean).ConfigureAwait(false);
-
                     if (connectPacket.CleanSession)
                     {
-                        _sessions.Remove(connectPacket.ClientId);
+                        await clientSession.StopAsync(MqttClientDisconnectType.Clean).ConfigureAwait(false);
+
                         clientSession.Dispose();
                         clientSession = null;
 
@@ -307,22 +307,21 @@ namespace MQTTnet.Server
                     }
                     else
                     {
+                        await clientSession.StopAsync(MqttClientDisconnectType.Clean).ConfigureAwait(false);
+
                         _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
                     }
                 }
 
-                var isExistingSession = true;
                 if (clientSession == null)
                 {
-                    isExistingSession = false;
-
                     clientSession = new MqttClientSession(connectPacket.ClientId, _options, this, _retainedMessagesManager, _eventDispatcher, _logger);
                     _sessions[connectPacket.ClientId] = clientSession;
 
                     _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);
                 }
 
-                return new PrepareClientSessionResult { IsExistingSession = isExistingSession, Session = clientSession };
+                return clientSession;
             }
         }
 
@@ -337,6 +336,22 @@ namespace MQTTnet.Server
             var interceptorContext = new MqttApplicationMessageInterceptorContext(sender?.ClientId, applicationMessage);
             await interceptor.InterceptApplicationMessagePublishAsync(interceptorContext).ConfigureAwait(false);
             return interceptorContext;
+        }
+
+        private async Task TryCleanupChannelAsync(IMqttChannelAdapter channelAdapter)
+        {
+            try
+            {
+                await channelAdapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, "Error while disconnecting client channel.");
+            }
+            finally
+            {
+                channelAdapter.Dispose();
+            }
         }
     }
 }

@@ -21,7 +21,9 @@ namespace MQTTnet.Server
         public MqttProtocolVersion? ProtocolVersion { get; set; }
         public TimeSpan LastPacketReceived { get; set; }
         public TimeSpan LastNonKeepAlivePacketReceived { get; set; }
-        public int PendingApplicationMessagesCount { get; set; }
+        public long PendingApplicationMessagesCount { get; set; }
+        public long ReceivedApplicationMessagesCount { get; set; }
+        public long SentApplicationMessagesCount { get; set; }
 
         public Task DisconnectAsync()
         {

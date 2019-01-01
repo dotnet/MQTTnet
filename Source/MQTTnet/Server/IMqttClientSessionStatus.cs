@@ -18,7 +18,11 @@ namespace MQTTnet.Server
 
         TimeSpan LastNonKeepAlivePacketReceived { get; }
 
-        int PendingApplicationMessagesCount { get; }
+        long PendingApplicationMessagesCount { get; }
+
+        long ReceivedApplicationMessagesCount { get; }
+
+        long SentApplicationMessagesCount { get; }
 
         Task DisconnectAsync();
 

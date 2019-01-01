@@ -56,7 +56,7 @@ namespace MQTTnet.Server
             return _retainedMessagesManager.GetMessagesAsync().GetAwaiter().GetResult();
         }
 
-        public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
+        public Task SubscribeAsync(string clientId, IEnumerable<TopicFilter> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
@@ -64,7 +64,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.SubscribeAsync(clientId, topicFilters);
         }
 
-        public Task UnsubscribeAsync(string clientId, IList<string> topicFilters)
+        public Task UnsubscribeAsync(string clientId, IEnumerable<string> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
@@ -118,7 +118,7 @@ namespace MQTTnet.Server
 
                 _cancellationTokenSource.Cancel(false);
                 
-                _clientSessionsManager.StopAsync().ConfigureAwait(false);
+                await _clientSessionsManager.StopAsync().ConfigureAwait(false);
 
                 foreach (var adapter in _adapters)
                 {

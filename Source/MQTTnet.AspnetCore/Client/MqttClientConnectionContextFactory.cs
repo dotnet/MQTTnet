@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Net;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.Internal;
 using MQTTnet.Adapter;
-using MQTTnet.AspNetCore.Client.Tcp;
-using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
@@ -20,7 +19,7 @@ namespace MQTTnet.AspNetCore.Client
                 case MqttClientTcpOptions tcpOptions:
                     {
                         var endpoint = new DnsEndPoint(tcpOptions.Server, tcpOptions.GetPort());
-                        var tcpConnection = new TcpConnection(endpoint);
+                        var tcpConnection = new SocketConnection(endpoint);
                         return new MqttConnectionContext(new MqttPacketFormatterAdapter(options.ProtocolVersion), tcpConnection);
                     }
                 default:

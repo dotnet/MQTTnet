@@ -8,6 +8,7 @@ using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Formatter;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.Internal;
 
 namespace MQTTnet.AspNetCore
 {
@@ -43,7 +44,7 @@ namespace MQTTnet.AspNetCore
 
         public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            if (Connection is TcpConnection tcp && !tcp.IsConnected)
+            if (Connection is SocketConnection tcp && !tcp.IsConnected)
             {
                 await tcp.StartAsync();
             }
@@ -62,7 +63,7 @@ namespace MQTTnet.AspNetCore
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            var input = Connection.Transport.Input;
+            var input = _input;
 
             while (!cancellationToken.IsCancellationRequested)
             {

@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
+using System;
 using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Net.Sockets;
@@ -6,26 +9,23 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.AspNetCore.Client.Tcp
+namespace Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.Internal
 {
-    public class SocketAwaitable : ICriticalNotifyCompletion
+    public class SocketAwaitableEventArgs : SocketAsyncEventArgs, ICriticalNotifyCompletion
     {
         private static readonly Action _callbackCompleted = () => { };
 
         private readonly PipeScheduler _ioScheduler;
 
         private Action _callback;
-        private int _bytesTransferred;
-        private SocketError _error;
 
-        public SocketAwaitable(PipeScheduler ioScheduler)
+        public SocketAwaitableEventArgs(PipeScheduler ioScheduler)
         {
             _ioScheduler = ioScheduler;
         }
 
+        public SocketAwaitableEventArgs GetAwaiter() => this;
         public bool IsCompleted => ReferenceEquals(_callback, _callbackCompleted);
-
-        public SocketAwaitable GetAwaiter() => this;
 
         public int GetResult()
         {
@@ -33,12 +33,12 @@ namespace MQTTnet.AspNetCore.Client.Tcp
 
             _callback = null;
 
-            if (_error != SocketError.Success)
+            if (SocketError != SocketError.Success)
             {
-                throw new SocketException((int)_error);
+                throw new SocketException((int)SocketError);
             }
 
-            return _bytesTransferred;
+            return BytesTransferred;
         }
 
         public void OnCompleted(Action continuation)
@@ -55,10 +55,13 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             OnCompleted(continuation);
         }
 
-        public void Complete(int bytesTransferred, SocketError socketError)
+        public void Complete()
         {
-            _error = socketError;
-            _bytesTransferred = bytesTransferred;
+            OnCompleted(this);
+        }
+
+        protected override void OnCompleted(SocketAsyncEventArgs _)
+        {
             var continuation = Interlocked.Exchange(ref _callback, _callbackCompleted);
 
             if (continuation != null)

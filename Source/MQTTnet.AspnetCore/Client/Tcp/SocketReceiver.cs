@@ -1,37 +1,51 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
+using MQTTnet.AspNetCore.Client.Tcp;
+using System;
 using System.IO.Pipelines;
 using System.Net.Sockets;
 
-namespace MQTTnet.AspNetCore.Client.Tcp
+namespace Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.Internal
 {
-    public class SocketReceiver
+    public sealed class SocketReceiver : SocketSenderReceiverBase
     {
-        private readonly Socket _socket;
-        private readonly SocketAsyncEventArgs _eventArgs = new SocketAsyncEventArgs();
-        private readonly SocketAwaitable _awaitable;
-
-        public SocketReceiver(Socket socket, PipeScheduler scheduler)
+        public SocketReceiver(Socket socket, PipeScheduler scheduler) : base(socket, scheduler)
         {
-            _socket = socket;
-            _awaitable = new SocketAwaitable(scheduler);
-            _eventArgs.UserToken = _awaitable;
-            _eventArgs.Completed += (_, e) => ((SocketAwaitable)e.UserToken).Complete(e.BytesTransferred, e.SocketError);
         }
 
-        public SocketAwaitable ReceiveAsync(Memory<byte> buffer)
+        public SocketAwaitableEventArgs WaitForDataAsync()
         {
-#if NETCOREAPP2_1
-            _eventArgs.SetBuffer(buffer);
+
+#if NETCOREAPP2_2
+            _awaitableEventArgs.SetBuffer(Memory<byte>.Empty);
 #else
-            var segment = buffer.GetArray();
-            _eventArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
+            _awaitableEventArgs.SetBuffer(new byte[0], 0, 0);
 #endif
-            if (!_socket.ReceiveAsync(_eventArgs))
+
+            if (!_socket.ReceiveAsync(_awaitableEventArgs))
             {
-                _awaitable.Complete(_eventArgs.BytesTransferred, _eventArgs.SocketError);
+                _awaitableEventArgs.Complete();
             }
 
-            return _awaitable;
+            return _awaitableEventArgs;
+        }
+
+        public SocketAwaitableEventArgs ReceiveAsync(Memory<byte> buffer)
+        {
+#if NETCOREAPP2_2
+            _awaitableEventArgs.SetBuffer(buffer);
+#else
+            var segment = buffer.GetArray();
+            _awaitableEventArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
+#endif
+
+            if (!_socket.ReceiveAsync(_awaitableEventArgs))
+            {
+                _awaitableEventArgs.Complete();
+            }
+
+            return _awaitableEventArgs;
         }
     }
 }

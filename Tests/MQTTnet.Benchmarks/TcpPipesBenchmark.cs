@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.Internal;
 using MQTTnet.AspNetCore.Client.Tcp;
 
 namespace MQTTnet.Benchmarks
@@ -23,12 +24,12 @@ namespace MQTTnet.Benchmarks
 
             var task = Task.Run(() => server.AcceptSocket());
 
-            var clientConnection = new TcpConnection(new IPEndPoint(IPAddress.Loopback, 1883));
+            var clientConnection = new SocketConnection(new IPEndPoint(IPAddress.Loopback, 1883));
 
             clientConnection.StartAsync().GetAwaiter().GetResult();
             _client = clientConnection.Transport;
 
-            var serverConnection = new TcpConnection(task.GetAwaiter().GetResult());
+            var serverConnection = new SocketConnection(task.GetAwaiter().GetResult());
             serverConnection.StartAsync().GetAwaiter().GetResult();
             _server = serverConnection.Transport;
         }

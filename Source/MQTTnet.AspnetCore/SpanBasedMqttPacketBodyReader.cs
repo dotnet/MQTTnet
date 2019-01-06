@@ -52,7 +52,7 @@ namespace MQTTnet.AspNetCore
         {
             var buffer = ReadSegmentWithLengthPrefix();
 
-#if NETCOREAPP2_1
+#if NETCOREAPP2_2
             return Encoding.UTF8.GetString(buffer);
 #else
 

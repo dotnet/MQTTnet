@@ -53,7 +53,7 @@ namespace MQTTnet.Tests
             return _server;
         }
 
-        public async Task<IMqttClient> ConnectClient(MqttClientOptionsBuilder options)
+        public async Task<IMqttClient> ConnectClientAsync(MqttClientOptionsBuilder options)
         {
             var client = _mqttFactory.CreateMqttClient(_clientLogger);
             _clients.Add(client);

@@ -120,10 +120,10 @@ namespace MQTTnet.Server
                 {
                     return;
                 }
-
-                _cancellationTokenSource.Cancel(false);
                 
                 _clientSessionsManager.Stop();
+                
+                _cancellationTokenSource.Cancel(false);
 
                 foreach (var adapter in _adapters)
                 {

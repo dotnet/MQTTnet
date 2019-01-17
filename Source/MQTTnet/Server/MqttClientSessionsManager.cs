@@ -272,7 +272,7 @@ namespace MQTTnet.Server
 
         private async Task<MqttConnectReturnCode> ValidateConnectionAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter, MqttServerEventDispatcher dispatcher)
         {
-            MqttConnectReturnCode returnCode = MqttConnectReturnCode.ConnectionAccepted;
+            MqttConnectReturnCode returnCode = MqttConnectReturnCode.ConnectionRefusedServerUnavailable;
             var context = new MqttConnectionValidatorContext(
                   connectPacket.ClientId,
                   connectPacket.Username,

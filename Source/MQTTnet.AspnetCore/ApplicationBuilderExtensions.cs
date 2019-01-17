@@ -49,7 +49,11 @@ namespace MQTTnet.AspNetCore
         public static IApplicationBuilder UseMqttServer(this IApplicationBuilder app, Action<IMqttServer> configure)
         {
             var server = app.ApplicationServices.GetRequiredService<IMqttServer>();
-
+            var _RetainedMessageHandler = app.ApplicationServices.GetRequiredService<IMqttServerStorage>();
+            if (_RetainedMessageHandler != null && server.Storage == null)
+            {
+                server.Storage = _RetainedMessageHandler;
+            }
             configure(server);
 
             return app;

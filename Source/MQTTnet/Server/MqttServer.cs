@@ -32,6 +32,7 @@ namespace MQTTnet.Server
             _eventDispatcher.ClientSubscribedTopic += (s, e) => ClientSubscribedTopic?.Invoke(s, e);
             _eventDispatcher.ClientUnsubscribedTopic += (s, e) => ClientUnsubscribedTopic?.Invoke(s, e);
             _eventDispatcher.ApplicationMessageReceived += (s, e) => ApplicationMessageReceived?.Invoke(s, e);
+            _eventDispatcher.ClientConnectionValidator += (s, e) => ClientConnectionValidator?.Invoke(s, e);
         }
 
         public event EventHandler Started;
@@ -46,6 +47,7 @@ namespace MQTTnet.Server
         public event EventHandler<MqttClientConnectionValidatorEventArgs> ClientConnectionValidator;
 
         public IMqttServerOptions Options { get; private set; }
+        public IMqttServerStorage Storage { get; set; }
 
         public Task<IList<IMqttClientSessionStatus>> GetClientSessionsStatusAsync()
         {
@@ -91,8 +93,11 @@ namespace MQTTnet.Server
             if (_cancellationTokenSource != null) throw new InvalidOperationException("The server is already started.");
 
             _cancellationTokenSource = new CancellationTokenSource();
-
-            _retainedMessagesManager = new MqttRetainedMessagesManager(Options, _logger);
+            if (Options.Storage != null && Storage == null)
+            {
+                Storage = Options.Storage;
+            }
+            _retainedMessagesManager = new MqttRetainedMessagesManager(Options, Storage, _logger);
             await _retainedMessagesManager.LoadMessagesAsync().ConfigureAwait(false);
 
             _clientSessionsManager = new MqttClientSessionsManager(Options, _retainedMessagesManager, _cancellationTokenSource.Token, _eventDispatcher, _logger);
@@ -149,7 +154,7 @@ namespace MQTTnet.Server
 
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
-                  eventArgs.SessionTask = _clientSessionsManager.HandleConnectionAsync(eventArgs.Client, _eventDispatcher);
+            eventArgs.SessionTask = _clientSessionsManager.HandleConnectionAsync(eventArgs.Client, _eventDispatcher);
         }
     }
 }

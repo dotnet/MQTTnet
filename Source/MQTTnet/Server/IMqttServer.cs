@@ -15,6 +15,7 @@ namespace MQTTnet.Server
         event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
         event EventHandler<MqttClientConnectionValidatorEventArgs> ClientConnectionValidator;
         IMqttServerOptions Options { get; }
+        IMqttServerStorage Storage { get; set; }
 
         Task<IList<IMqttClientSessionStatus>> GetClientSessionsStatusAsync();
 

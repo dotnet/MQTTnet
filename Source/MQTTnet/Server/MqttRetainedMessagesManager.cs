@@ -15,24 +15,33 @@ namespace MQTTnet.Server
 
         private readonly IMqttNetChildLogger _logger;
         private readonly IMqttServerOptions _options;
+        private readonly IMqttServerStorage _storage;
 
-        public MqttRetainedMessagesManager(IMqttServerOptions options, IMqttNetChildLogger logger)
+        public MqttRetainedMessagesManager(IMqttServerOptions options, IMqttServerStorage storage, IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttRetainedMessagesManager));
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            if (_options.Storage != null)
+            {
+                _storage = _options.Storage;
+            }
+            else
+            {
+                _storage = storage;
+            }
         }
 
         public async Task LoadMessagesAsync()
         {
-            if (_options.Storage == null)
+            if (_storage == null)
             {
                 return;
             }
 
             try
             {
-                var retainedMessages = await _options.Storage.LoadRetainedMessagesAsync().ConfigureAwait(false);
+                var retainedMessages = await _storage.LoadRetainedMessagesAsync().ConfigureAwait(false);
 
                 using (await _messagesLock.WaitAsync().ConfigureAwait(false))
                 {
@@ -85,10 +94,10 @@ namespace MQTTnet.Server
 
                     if (saveIsRequired)
                     {
-                        if (_options.Storage != null)
+                        if (_storage != null)
                         {
                             var messagesForSave = new List<MqttApplicationMessage>(_messages.Values);
-                            await _options.Storage.SaveRetainedMessagesAsync(messagesForSave).ConfigureAwait(false);
+                            await _storage.SaveRetainedMessagesAsync(messagesForSave).ConfigureAwait(false);
                         }
                     }
                 }
@@ -137,9 +146,9 @@ namespace MQTTnet.Server
             {
                 _messages.Clear();
 
-                if (_options.Storage != null)
+                if (_storage != null)
                 {
-                    await _options.Storage.SaveRetainedMessagesAsync(new List<MqttApplicationMessage>()).ConfigureAwait(false);
+                    await _storage.SaveRetainedMessagesAsync(new List<MqttApplicationMessage>()).ConfigureAwait(false);
                 }
             }
         }

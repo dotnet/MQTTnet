@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
@@ -13,6 +14,7 @@ namespace MQTTnet.Server
         public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
 
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
+        public event EventHandler<MqttClientConnectionValidatorEventArgs> ClientConnectionValidator;
 
         public void OnClientSubscribedTopic(string clientId, TopicFilter topicFilter)
         {
@@ -34,6 +36,10 @@ namespace MQTTnet.Server
             ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(senderClientId, applicationMessage));
         }
 
+        public   void  OnClientConnectionValidatorAsync( MqttConnectionValidatorContext connectionValidatorContext)
+        {
+             ClientConnectionValidator?.Invoke(this, new  MqttClientConnectionValidatorEventArgs(connectionValidatorContext));
+        }
         public void OnClientConnected(string clientId)
         {
             ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientId));

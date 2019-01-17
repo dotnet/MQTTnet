@@ -43,6 +43,7 @@ namespace MQTTnet.Server
         public event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
 
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
+        public event EventHandler<MqttClientConnectionValidatorEventArgs> ClientConnectionValidator;
 
         public IMqttServerOptions Options { get; private set; }
 
@@ -148,7 +149,7 @@ namespace MQTTnet.Server
 
         private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
-            eventArgs.SessionTask = _clientSessionsManager.HandleConnectionAsync(eventArgs.Client);
+                  eventArgs.SessionTask = _clientSessionsManager.HandleConnectionAsync(eventArgs.Client, _eventDispatcher);
         }
     }
 }

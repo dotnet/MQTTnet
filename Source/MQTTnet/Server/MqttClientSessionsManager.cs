@@ -62,9 +62,9 @@ namespace MQTTnet.Server
             }
         }
 
-        public Task HandleConnectionAsync(IMqttChannelAdapter clientAdapter)
+        public Task HandleConnectionAsync(IMqttChannelAdapter clientAdapter, MqttServerEventDispatcher dispatcher)
         {
-            return HandleConnectionAsync(clientAdapter, _cancellationToken);
+            return HandleConnectionAsync(clientAdapter, dispatcher, _cancellationToken);
 
             // TODO: Check if Task.Run is required.
             //return Task.Run(() => HandleConnectionAsync(clientAdapter, _cancellationToken), _cancellationToken);
@@ -217,7 +217,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task HandleConnectionAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
+        private async Task HandleConnectionAsync(IMqttChannelAdapter channelAdapter, MqttServerEventDispatcher dispatcher, CancellationToken cancellationToken)
         {
             var clientId = string.Empty;
 
@@ -231,8 +231,7 @@ namespace MQTTnet.Server
                 }
 
                 clientId = connectPacket.ClientId;
-
-                var connectReturnCode = await ValidateConnectionAsync(connectPacket, channelAdapter).ConfigureAwait(false);
+                var connectReturnCode = await ValidateConnectionAsync(connectPacket, channelAdapter, dispatcher).ConfigureAwait(false);
                 if (connectReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
                     await channelAdapter.SendPacketAsync(
@@ -271,22 +270,25 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task<MqttConnectReturnCode> ValidateConnectionAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
+        private async Task<MqttConnectReturnCode> ValidateConnectionAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter, MqttServerEventDispatcher dispatcher)
         {
-            if (_options.ConnectionValidator == null)
-            {
-                return MqttConnectReturnCode.ConnectionAccepted;
-            }
-
+            MqttConnectReturnCode returnCode = MqttConnectReturnCode.ConnectionAccepted;
             var context = new MqttConnectionValidatorContext(
-                connectPacket.ClientId,
-                connectPacket.Username,
-                connectPacket.Password,
-                connectPacket.WillMessage,
-                clientAdapter.Endpoint);
-
-            await _options.ConnectionValidator.ValidateConnection(context).ConfigureAwait(false);
-            return context.ReturnCode;
+                  connectPacket.ClientId,
+                  connectPacket.Username,
+                  connectPacket.Password,
+                  connectPacket.WillMessage,
+                  clientAdapter.Endpoint);
+            if (_options.ConnectionValidator != null)
+            {
+                await _options.ConnectionValidator.ValidateConnection(context).ConfigureAwait(false);
+            }
+            else
+            {
+               dispatcher.OnClientConnectionValidatorAsync(context);
+            }
+            returnCode = context.ReturnCode;
+            return returnCode;
         }
 
         private async Task<MqttClientSession> PrepareClientSessionAsync(MqttConnectPacket connectPacket)

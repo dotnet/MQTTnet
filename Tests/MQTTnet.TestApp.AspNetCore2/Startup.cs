@@ -36,6 +36,10 @@ namespace MQTTnet.TestApp.AspNetCore2
             //app.UseMqttEndpoint();
             app.UseMqttServer(server =>
             {
+                server.ClientConnectionValidator += (object sender, MqttClientConnectionValidatorEventArgs e) =>
+                     {
+                         e.Context.ReturnCode = Protocol.MqttConnectReturnCode.ConnectionAccepted;
+                     };
                 server.Started += async (sender, args) =>
                 {
                     var msg = new MqttApplicationMessageBuilder()
@@ -80,5 +84,7 @@ namespace MQTTnet.TestApp.AspNetCore2
                 FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "node_modules"))
             });
         }
+
+        
     }
 }

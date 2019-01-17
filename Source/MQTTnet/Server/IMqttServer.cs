@@ -13,7 +13,7 @@ namespace MQTTnet.Server
         event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
         event EventHandler<MqttClientSubscribedTopicEventArgs> ClientSubscribedTopic;
         event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
-        
+        event EventHandler<MqttClientConnectionValidatorEventArgs> ClientConnectionValidator;
         IMqttServerOptions Options { get; }
 
         Task<IList<IMqttClientSessionStatus>> GetClientSessionsStatusAsync();

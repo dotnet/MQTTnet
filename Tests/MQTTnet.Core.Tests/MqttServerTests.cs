@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -19,36 +20,36 @@ namespace MQTTnet.Tests
     public class MqttServerTests
     {
         [TestMethod]
-        public void MqttServer_PublishSimple_AtMostOnce()
+        public async Task MqttServer_PublishSimple_AtMostOnce()
         {
-            TestPublishAsync(
+            await TestPublishAsync(
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtMostOnce,
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtMostOnce,
-                1).Wait();
+                1);
         }
 
         [TestMethod]
-        public void MqttServer_PublishSimple_AtLeastOnce()
+        public async Task MqttServer_PublishSimple_AtLeastOnce()
         {
-            TestPublishAsync(
+            await TestPublishAsync(
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtLeastOnce,
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtLeastOnce,
-                1).Wait();
+                1);
         }
 
         [TestMethod]
-        public void MqttServer_PublishSimple_ExactlyOnce()
+        public async Task MqttServer_PublishSimple_ExactlyOnce()
         {
-            TestPublishAsync(
+            await TestPublishAsync(
                 "A/B/C",
                 MqttQualityOfServiceLevel.ExactlyOnce,
                 "A/B/C",
                 MqttQualityOfServiceLevel.ExactlyOnce,
-                1).Wait();
+                1);
         }
 
         [TestMethod]
@@ -143,32 +144,27 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public async Task MqttServer_Publish()
+        public async Task MqttServer_Publish_From_Server()
         {
-            var serverAdapter = new TestMqttServerAdapter();
-            var s = new MqttFactory().CreateMqttServer(new[] { serverAdapter }, new MqttNetLogger());
-            var receivedMessagesCount = 0;
-
-            try
+            using (var testSetup = new TestSetup())
             {
-                await s.StartAsync(new MqttServerOptions());
+                var server = await testSetup.StartServerAsync();
 
-                var c1 = await serverAdapter.ConnectTestClient("c1");
+                var receivedMessagesCount = 0;
 
-                c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
+                var client = await testSetup.ConnectClientAsync();
+                client.UseReceivedApplicationMessageHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
-                await c1.SubscribeAsync(new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+                await client.SubscribeAsync(new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
-                await s.PublishAsync(message);
-                await Task.Delay(500);
-            }
-            finally
-            {
-                await s.StopAsync();
-            }
+                await server.PublishAsync(message);
 
-            Assert.AreEqual(1, receivedMessagesCount);
+                await Task.Delay(1000);
+                await server.StopAsync();
+
+                Assert.AreEqual(1, receivedMessagesCount);
+            }
         }
 
         [TestMethod]
@@ -438,40 +434,43 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task MqttServer_Lots_Of_Retained_Messages()
         {
-            const int ClientCount = 100;
+            const int ClientCount = 25;
 
-            var server = new MqttFactory().CreateMqttServer();
-            try
+            using (var testSetup = new TestSetup())
             {
-                await server.StartAsync(new MqttServerOptionsBuilder().Build());
-
-                Parallel.For(
-                    0,
-                    ClientCount,
-                    new ParallelOptions { MaxDegreeOfParallelism = 10 },
-                    i =>
+                var server = await testSetup.StartServerAsync();
+                
+                var tasks = new ConcurrentBag<Task>();
+                for (var i = 0; i < ClientCount; i++)
                 {
-                    using (var client = new MqttFactory().CreateMqttClient())
+                    var clientId = i;
+                    tasks.Add(Task.Run(async () =>
                     {
-                        client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost").Build())
-                            .GetAwaiter().GetResult();
-
-                        for (var j = 0; j < 10; j++)
+                        try
                         {
-                            // Clear retained message.
-                            client.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("r" + i)
-                                .WithPayload(new byte[0]).WithRetainFlag().Build()).GetAwaiter().GetResult();
+                            using (var client = await testSetup.ConnectClientAsync())
+                            {
+                                // Clear retained message.
+                                await client.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("r" + clientId)
+                                    .WithPayload(new byte[0]).WithRetainFlag().Build());
 
-                            // Set retained message.
-                            client.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("r" + i)
-                                .WithPayload("value" + j).WithRetainFlag().Build()).GetAwaiter().GetResult();
+                                // Set retained message.
+                                await client.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("r" + clientId)
+                                    .WithPayload("value").WithRetainFlag().Build());
+
+                                await Task.Delay(10);
+
+                                await client.DisconnectAsync();
+                            }
                         }
+                        catch (Exception exception)
+                        {
+                            testSetup.TrackException(exception);
+                        }
+                    }));
+                }
 
-                        Thread.Sleep(100);
-
-                        client.DisconnectAsync().GetAwaiter().GetResult();
-                    }
-                });
+                await Task.WhenAll(tasks.ToArray());
 
                 await Task.Delay(1000);
 
@@ -483,10 +482,6 @@ namespace MQTTnet.Tests
                 {
                     Assert.IsTrue(retainedMessages.Any(m => m.Topic == "r" + i));
                 }
-            }
-            finally
-            {
-                await server.StopAsync();
             }
         }
 
@@ -986,6 +981,23 @@ namespace MQTTnet.Tests
             MqttQualityOfServiceLevel filterQualityOfServiceLevel,
             int expectedReceivedMessagesCount)
         {
+            //using (var testSetup = new TestSetup())
+            //{
+            //    var server = await testSetup.StartServerAsync(new MqttServerOptionsBuilder());
+
+            //    var clientOptions = new MqttClientOptionsBuilder();
+            //    var c1 = await testSetup.ConnectClientAsync(clientOptions);
+            //    await Task.Delay(500);
+            //    Assert.AreEqual(1, (await server.GetClientSessionsStatusAsync()).Count);
+
+            //    await c1.DisconnectAsync();
+            //    await Task.Delay(500);
+
+            //    Assert.AreEqual(0, (await server.GetClientSessionsStatusAsync()).Count);
+            //}
+
+
+
             var s = new MqttFactory().CreateMqttServer();
 
             var receivedMessagesCount = 0;
@@ -994,13 +1006,15 @@ namespace MQTTnet.Tests
                 await s.StartAsync(new MqttServerOptions());
 
                 var c1 = new MqttFactory().CreateMqttClient();
-                c1.ApplicationMessageReceived += (_, __) => receivedMessagesCount++;
-                await c1.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost").Build());
+                c1.UseReceivedApplicationMessageHandler(c => receivedMessagesCount++);
+
+                await c1.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build());
                 await c1.SubscribeAsync(new TopicFilterBuilder().WithTopic(topicFilter).WithQualityOfServiceLevel(filterQualityOfServiceLevel).Build());
 
                 var c2 = new MqttFactory().CreateMqttClient();
-                await c2.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost").Build());
+                await c2.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build());
                 await c2.PublishAsync(builder => builder.WithTopic(topic).WithPayload(new byte[0]).WithQualityOfServiceLevel(qualityOfServiceLevel));
+                await c2.DisconnectAsync().ConfigureAwait(false);
 
                 await Task.Delay(500);
                 await c1.UnsubscribeAsync(topicFilter);

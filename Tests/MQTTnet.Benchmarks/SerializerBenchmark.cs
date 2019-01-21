@@ -52,7 +52,7 @@ namespace MQTTnet.Benchmarks
             {
                 channel.Reset();
 
-                var header = reader.ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult();
+                var header = reader.ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult().FixedHeader;
 
                 var receivedPacket = new ReceivedMqttPacket(
                     header.Flags,

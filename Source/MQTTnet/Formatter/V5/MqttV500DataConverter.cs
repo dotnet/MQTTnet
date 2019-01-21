@@ -128,5 +128,35 @@ namespace MQTTnet.Formatter.V5
 
             return result;
         }
+
+        public MqttSubscribePacket CreateSubscribePacket(MqttClientSubscribeOptions options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            var packet = new MqttSubscribePacket
+            {
+                Properties = new MqttSubscribePacketProperties()
+            };
+
+            packet.TopicFilters.AddRange(options.TopicFilters);
+            packet.Properties.UserProperties.AddRange(options.UserProperties);
+
+            return packet;
+        }
+
+        public MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            var packet = new MqttUnsubscribePacket
+            {
+                Properties = new MqttUnsubscribePacketProperties()
+            };
+
+            packet.TopicFilters.AddRange(options.TopicFilters);
+            packet.Properties.UserProperties.AddRange(options.UserProperties);
+
+            return packet;
+        }
     }
 }

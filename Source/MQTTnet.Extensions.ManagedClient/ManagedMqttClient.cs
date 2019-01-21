@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Client.Publishing;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
@@ -51,6 +52,12 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
+
+        public IMqttApplicationMessageHandler ReceivedApplicationMessageHandler
+        {
+            get => _mqttClient.ReceivedApplicationMessageHandler;
+            set => _mqttClient.ReceivedApplicationMessageHandler = value;
+        }
 
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
         public event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
@@ -372,12 +379,12 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 if (unsubscriptions.Any())
                 {
-                    await _mqttClient.UnsubscribeAsync(unsubscriptions).ConfigureAwait(false);
+                    await _mqttClient.UnsubscribeAsync(unsubscriptions.ToArray()).ConfigureAwait(false);
                 }
 
                 if (subscriptions.Any())
                 {
-                    await _mqttClient.SubscribeAsync(subscriptions).ConfigureAwait(false);
+                    await _mqttClient.SubscribeAsync(subscriptions.ToArray()).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

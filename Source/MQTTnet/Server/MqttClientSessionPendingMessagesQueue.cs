@@ -6,6 +6,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
+using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -13,20 +14,26 @@ namespace MQTTnet.Server
 {
     public class MqttClientSessionPendingMessagesQueue : IDisposable
     {
-        private readonly Queue<MqttBasePacket> _queue = new Queue<MqttBasePacket>();
+        private readonly Queue<MqttPublishPacket> _queue = new Queue<MqttPublishPacket>();
         private readonly AsyncAutoResetEvent _queueLock = new AsyncAutoResetEvent();
 
         private readonly IMqttServerOptions _options;
         private readonly MqttClientSession _clientSession;
+        private readonly MqttPacketDispatcher _packetDispatcher;
         private readonly IMqttNetChildLogger _logger;
 
         private long _sentPacketsCount;
 
-        public MqttClientSessionPendingMessagesQueue(IMqttServerOptions options, MqttClientSession clientSession, IMqttNetChildLogger logger)
+        public MqttClientSessionPendingMessagesQueue(
+            IMqttServerOptions options,
+            MqttClientSession clientSession, 
+            MqttPacketDispatcher packetDispatcher,
+            IMqttNetChildLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));
+            _packetDispatcher = packetDispatcher ?? throw new ArgumentNullException(nameof(packetDispatcher));
 
             _logger = logger.CreateChildLogger(nameof(MqttClientSessionPendingMessagesQueue));
         }
@@ -115,7 +122,7 @@ namespace MQTTnet.Server
 
         private async Task TrySendNextQueuedPacketAsync(IMqttChannelAdapter adapter, CancellationToken cancellationToken)
         {
-            MqttBasePacket packet = null;
+            MqttPublishPacket packet = null;
             try
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -137,7 +144,34 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                await adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
+                if (packet.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
+                {
+                    await adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
+                }
+                else if (packet.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
+                {
+                    var awaiter = _packetDispatcher.AddPacketAwaiter<MqttPubAckPacket>(packet.PacketIdentifier);
+                    await adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
+                    await awaiter.WaitOneAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                }
+                else if (packet.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
+                {
+                    var awaiter1 = _packetDispatcher.AddPacketAwaiter<MqttPubRecPacket>(packet.PacketIdentifier);
+                    var awaiter2 = _packetDispatcher.AddPacketAwaiter<MqttPubCompPacket>(packet.PacketIdentifier);
+                    try
+                    {
+                        await adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
+                        await awaiter1.WaitOneAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                        
+                        await adapter.SendPacketAsync(new MqttPubRelPacket { PacketIdentifier = packet.PacketIdentifier }, cancellationToken).ConfigureAwait(false);
+                        await awaiter2.WaitOneAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        _packetDispatcher.RemovePacketAwaiter<MqttPubRecPacket>(packet.PacketIdentifier);
+                        _packetDispatcher.RemovePacketAwaiter<MqttPubCompPacket>(packet.PacketIdentifier);
+                    }
+                }
 
                 _logger.Verbose("Enqueued packet sent (ClientId: {0}).", _clientSession.ClientId);
 
@@ -153,7 +187,7 @@ namespace MQTTnet.Server
                 {
                     _logger.Warning(exception, "Sending publish packet failed: Communication exception (ClientId: {0}).", _clientSession.ClientId);
                 }
-                else if (exception is OperationCanceledException)
+                else if (exception is OperationCanceledException && cancellationToken.IsCancellationRequested)
                 {
                 }
                 else
@@ -161,14 +195,11 @@ namespace MQTTnet.Server
                     _logger.Error(exception, "Sending publish packet failed (ClientId: {0}).", _clientSession.ClientId);
                 }
 
-                if (packet is MqttPublishPacket publishPacket)
+                if (packet?.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
                 {
-                    if (publishPacket.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
-                    {
-                        publishPacket.Dup = true;
+                    packet.Dup = true;
 
-                        Enqueue(publishPacket);
-                    }
+                    Enqueue(packet);
                 }
 
                 if (!cancellationToken.IsCancellationRequested)

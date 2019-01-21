@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Exceptions;
+using MQTTnet.Protocol;
 using MQTTnet.Server;
 
 namespace MQTTnet.Tests
@@ -40,10 +43,99 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public async Task Client_Preserve_Message_Order()
+        {
+            // The messages are sent in reverse or to ensure that the delay in the handler
+            // needs longer for the first messages and later messages may be processed earlier (if there
+            // is an issue).
+            const int MessagesCount = 50;
+
+            using (var testSetup = new TestSetup())
+            {
+                await testSetup.StartServerAsync();
+
+                var client1 = await testSetup.ConnectClientAsync();
+                await client1.SubscribeAsync("x");
+
+                var receivedValues = new List<int>();
+     
+                async Task Handler1(MqttApplicationMessageHandlerContext context)
+                {
+                    var value = int.Parse(context.ApplicationMessage.ConvertPayloadToString());
+                    await Task.Delay(value);
+
+                    lock (receivedValues)
+                    {
+                        receivedValues.Add(value);
+                    }
+                }
+
+                client1.UseReceivedApplicationMessageHandler(Handler1);
+
+                var client2 = await testSetup.ConnectClientAsync();
+                for (var i = MessagesCount; i > 0; i--)
+                {
+                    await client2.PublishAsync("x", i.ToString());
+                }
+
+                await Task.Delay(5000);
+
+                for (var i = MessagesCount; i > 0; i--)
+                {
+                    Assert.AreEqual(i, receivedValues[MessagesCount - i]);
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task Client_Send_Reply_For_Any_Received_Message()
+        {
+            using (var testSetup = new TestSetup())
+            {
+                await testSetup.StartServerAsync();
+
+                var client1 = await testSetup.ConnectClientAsync();
+                await client1.SubscribeAsync("request/+");
+
+                async Task Handler1(MqttApplicationMessageHandlerContext context)
+                {
+                    await client1.PublishAsync($"reply/{context.ApplicationMessage.Topic}");
+                }
+
+                client1.UseReceivedApplicationMessageHandler(Handler1);
+
+                var client2 = await testSetup.ConnectClientAsync();
+                await client2.SubscribeAsync("reply/#");
+
+                var replies = new List<string>();
+
+                void Handler2(MqttApplicationMessageHandlerContext context)
+                {
+                    lock (replies)
+                    {
+                        replies.Add(context.ApplicationMessage.Topic);
+                    }
+                }
+                
+                client2.UseReceivedApplicationMessageHandler((Action<MqttApplicationMessageHandlerContext>) Handler2);
+
+                await Task.Delay(500);
+
+                await client2.PublishAsync("request/a");
+                await client2.PublishAsync("request/b");
+                await client2.PublishAsync("request/c");
+
+                await Task.Delay(500);
+
+                Assert.AreEqual("reply/request/a,reply/request/b,reply/request/c", string.Join("," , replies));
+            }
+        }
+
+        [TestMethod]
         public async Task Client_Publish()
         {
             var server = new MqttFactory().CreateMqttServer();
-            
+
             try
             {
                 var receivedMessages = new List<MqttApplicationMessage>();
@@ -125,39 +217,85 @@ namespace MQTTnet.Tests
             }
         }
 
-//#if DEBUG
-//        [TestMethod]
-//        public async Task Client_Cleanup_On_Authentification_Fails()
-//        {
-//            var channel = new TestMqttCommunicationAdapter();
-//            var channel2 = new TestMqttCommunicationAdapter();
-//            channel.Partner = channel2;
-//            channel2.Partner = channel;
+        [TestMethod]
+        public async Task Client_Exception_In_Application_Message_Handler()
+        {
+            using (var testSetup = new TestSetup())
+            {
+                testSetup.IgnoreClientLogErrors = true;
+                testSetup.IgnoreServerLogErrors = true;
 
-//            Task.Run(async () => {
-//                var connect = await channel2.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None);
-//                await channel2.SendPacketAsync(new MqttConnAckPacket
-//                {
-//                    ConnectReturnCode = Protocol.MqttConnectReturnCode.ConnectionRefusedNotAuthorized
-//                }, CancellationToken.None);
-//            });
-            
-//            var fake = new TestMqttCommunicationAdapterFactory(channel);
+                await testSetup.StartServerAsync(
+                    new MqttServerOptionsBuilder()
+                        .WithPersistentSessions()
+                        .WithDefaultCommunicationTimeout(TimeSpan.FromMilliseconds(50)));
 
-//            var client = new MqttClient(fake, new MqttNetLogger());
+                var client1 = await testSetup.ConnectClientAsync(new MqttClientOptionsBuilder()
+                    .WithCleanSession(false));
 
-//            try
-//            {
-//                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("any-server").Build());
-//            }
-//            catch (Exception ex)
-//            {
-//                Assert.IsInstanceOfType(ex, typeof(MqttConnectingFailedException));
-//            }
+                await client1.SubscribeAsync("x", MqttQualityOfServiceLevel.AtLeastOnce);
 
-//            Assert.IsTrue(client._packetReceiverTask == null || client._packetReceiverTask.IsCompleted, "receive loop not completed");
-//            Assert.IsTrue(client._keepAliveMessageSenderTask == null || client._keepAliveMessageSenderTask.IsCompleted, "keepalive loop not completed");
-//        }
-//#endif
+                var retries = 0;
+
+                async Task Handler1(MqttApplicationMessageHandlerContext context)
+                {
+                    retries++;
+
+                    await Task.Delay(50);
+                    throw new Exception("Broken!");
+                }
+
+                client1.UseReceivedApplicationMessageHandler(Handler1);
+
+                var client2 = await testSetup.ConnectClientAsync();
+                await client2.PublishAsync("x");
+
+                await Task.Delay(1000);
+
+                // The server should disconnect clients which are not responding.
+                Assert.IsFalse(client1.IsConnected);
+
+                await client1.ReconnectAsync().ConfigureAwait(false);
+                
+                await Task.Delay(1000);
+
+                Assert.AreEqual(2, retries);
+            }
+        }
+
+        //#if DEBUG
+        //        [TestMethod]
+        //        public async Task Client_Cleanup_On_Authentification_Fails()
+        //        {
+        //            var channel = new TestMqttCommunicationAdapter();
+        //            var channel2 = new TestMqttCommunicationAdapter();
+        //            channel.Partner = channel2;
+        //            channel2.Partner = channel;
+
+        //            Task.Run(async () => {
+        //                var connect = await channel2.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None);
+        //                await channel2.SendPacketAsync(new MqttConnAckPacket
+        //                {
+        //                    ConnectReturnCode = Protocol.MqttConnectReturnCode.ConnectionRefusedNotAuthorized
+        //                }, CancellationToken.None);
+        //            });
+
+        //            var fake = new TestMqttCommunicationAdapterFactory(channel);
+
+        //            var client = new MqttClient(fake, new MqttNetLogger());
+
+        //            try
+        //            {
+        //                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("any-server").Build());
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                Assert.IsInstanceOfType(ex, typeof(MqttConnectingFailedException));
+        //            }
+
+        //            Assert.IsTrue(client._packetReceiverTask == null || client._packetReceiverTask.IsCompleted, "receive loop not completed");
+        //            Assert.IsTrue(client._keepAliveMessageSenderTask == null || client._keepAliveMessageSenderTask.IsCompleted, "keepalive loop not completed");
+        //        }
+        //#endif
     }
 }

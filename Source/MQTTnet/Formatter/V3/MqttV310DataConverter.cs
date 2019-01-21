@@ -143,5 +143,35 @@ namespace MQTTnet.Formatter.V3
 
             return result;
         }
+
+        public MqttSubscribePacket CreateSubscribePacket(MqttClientSubscribeOptions options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            if (options.UserProperties?.Any() == true)
+            {
+                throw new MqttProtocolViolationException("User properties are not supported in MQTT version 3.");
+            }
+
+            var subscribePacket = new MqttSubscribePacket();
+            subscribePacket.TopicFilters.AddRange(options.TopicFilters);
+            
+            return subscribePacket;
+        }
+
+        public MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            if (options.UserProperties?.Any() == true)
+            {
+                throw new MqttProtocolViolationException("User properties are not supported in MQTT version 3.");
+            }
+
+            var unsubscribePacket = new MqttUnsubscribePacket();
+            unsubscribePacket.TopicFilters.AddRange(options.TopicFilters);
+
+            return unsubscribePacket;
+        }
     }
 }

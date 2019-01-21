@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
@@ -16,10 +16,15 @@ namespace MQTTnet.Tests
         private readonly IMqttNetLogger _serverLogger = new MqttNetLogger("server");
         private readonly IMqttNetLogger _clientLogger = new MqttNetLogger("client");
 
+        private readonly List<string> _serverErrors = new List<string>();
+        private readonly List<string> _clientErrors = new List<string>();
+
+        private readonly List<Exception> _exceptions = new List<Exception>();
+
         private IMqttServer _server;
 
-        private long _serverErrorsCount;
-        private long _clientErrorsCount;
+        public bool IgnoreClientLogErrors { get; set; }
+        public bool IgnoreServerLogErrors { get; set; }
 
         public TestSetup()
         {
@@ -27,17 +32,28 @@ namespace MQTTnet.Tests
             {
                 if (e.TraceMessage.Level == MqttNetLogLevel.Error)
                 {
-                    Interlocked.Increment(ref _serverErrorsCount);
+                    lock (_serverErrors)
+                    {
+                        _serverErrors.Add(e.TraceMessage.ToString());
+                    }
                 }
             };
 
             _clientLogger.LogMessagePublished += (s, e) =>
             {
-                if (e.TraceMessage.Level == MqttNetLogLevel.Error)
+                lock (_clientErrors)
                 {
-                    Interlocked.Increment(ref _clientErrorsCount);
+                    if (e.TraceMessage.Level == MqttNetLogLevel.Error)
+                    {
+                        _clientErrors.Add(e.TraceMessage.ToString());
+                    }
                 }
             };
+        }
+
+        public Task<IMqttServer> StartServerAsync()
+        {
+            return StartServerAsync(new MqttServerOptionsBuilder());
         }
 
         public async Task<IMqttServer> StartServerAsync(MqttServerOptionsBuilder options)
@@ -53,40 +69,63 @@ namespace MQTTnet.Tests
             return _server;
         }
 
+        public Task<IMqttClient> ConnectClientAsync()
+        {
+            return ConnectClientAsync(new MqttClientOptionsBuilder());
+        }
+
         public async Task<IMqttClient> ConnectClientAsync(MqttClientOptionsBuilder options)
         {
             var client = _mqttFactory.CreateMqttClient(_clientLogger);
-            _clients.Add(client);
-
             await client.ConnectAsync(options.WithTcpServer("localhost", 1888).Build());
 
+            _clients.Add(client);
             return client;
         }
 
         public void ThrowIfLogErrors()
         {
-            if (_serverErrorsCount > 0)
+            lock (_serverErrors)
             {
-                throw new Exception($"Server had {_serverErrorsCount} errors.");
+                if (!IgnoreServerLogErrors && _serverErrors.Count > 0)
+                {
+                    throw new Exception($"Server had {_serverErrors.Count} errors (${string.Join(Environment.NewLine, _serverErrors)}).");
+                }
             }
 
-            if (_clientErrorsCount > 0)
+            lock (_clientErrors)
             {
-                throw new Exception($"Client(s) had {_clientErrorsCount} errors.");
+                if (!IgnoreClientLogErrors && _clientErrors.Count > 0)
+                {
+                    throw new Exception($"Client(s) had {_clientErrors.Count} errors (${string.Join(Environment.NewLine, _clientErrors)}).");
+                }
             }
         }
 
         public void Dispose()
         {
-            ThrowIfLogErrors();
-
             foreach (var mqttClient in _clients)
             {
-                mqttClient.DisconnectAsync().GetAwaiter().GetResult();
-                mqttClient.Dispose();
+                mqttClient?.DisconnectAsync().GetAwaiter().GetResult();
+                mqttClient?.Dispose();
             }
 
             _server.StopAsync().GetAwaiter().GetResult();
+
+            ThrowIfLogErrors();
+
+            if (_exceptions.Any())
+            {
+                throw new Exception($"{_exceptions.Count} exceptions tracked.");
+            }
+        }
+
+        public void TrackException(Exception exception)
+        {
+            lock (_exceptions)
+            {
+                _exceptions.Add(exception);
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
@@ -20,7 +19,7 @@ namespace MQTTnet.Client
         Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options);
         Task DisconnectAsync(MqttClientDisconnectOptions options);
 
-        Task<MqttClientSubscribeResult> SubscribeAsync(IEnumerable<TopicFilter> topicFilters);
-        Task<MqttClientUnsubscribeResult> UnsubscribeAsync(IEnumerable<string> topics);
+        Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options);
+        Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options);
     }
 }

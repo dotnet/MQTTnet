@@ -174,12 +174,18 @@ namespace MQTTnet.Adapter
 
         private async Task<ReceivedMqttPacket> ReceiveAsync(CancellationToken cancellationToken)
         {
-            var fixedHeader = await _packetReader.ReadFixedHeaderAsync(_fixedHeaderBuffer, cancellationToken).ConfigureAwait(false);
+            var readFixedHeaderResult = await _packetReader.ReadFixedHeaderAsync(_fixedHeaderBuffer, cancellationToken).ConfigureAwait(false);
 
             try
             {
+                if (readFixedHeaderResult.ConnectionClosed)
+                {
+                    return null;
+                }
+
                 ReadingPacketStarted?.Invoke(this, EventArgs.Empty);
 
+                var fixedHeader = readFixedHeaderResult.FixedHeader;
                 if (fixedHeader.RemainingLength == 0)
                 {
                     return new ReceivedMqttPacket(fixedHeader.Flags, null, 2);
@@ -205,9 +211,16 @@ namespace MQTTnet.Adapter
                     var readBytes = _channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
 #endif
 
-                    cancellationToken.ThrowIfCancellationRequested();
-                    ExceptionHelper.ThrowIfGracefulSocketClose(readBytes);
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return null;
+                    }
 
+                    if (readBytes == 0)
+                    {
+                        return null;
+                    }
+                    
                     bodyOffset += readBytes;
                 } while (bodyOffset < body.Length);
 

@@ -13,26 +13,32 @@ namespace MQTTnet.Tests
         {
             var factory = new MqttFactory();
             var managedClient = factory.CreateManagedMqttClient();
+            try
+            {
+                var clientOptions = new ManagedMqttClientOptionsBuilder()
+                    .WithMaxPendingMessages(5)
+                    .WithPendingMessagesOverflowStrategy(MqttPendingMessagesOverflowStrategy.DropNewMessage);
 
-            var clientOptions = new ManagedMqttClientOptionsBuilder()
-                .WithMaxPendingMessages(5)
-                .WithPendingMessagesOverflowStrategy(MqttPendingMessagesOverflowStrategy.DropNewMessage);
+                clientOptions.WithClientOptions(o => o.WithTcpServer("localhost"));
 
-            clientOptions.WithClientOptions(o => o.WithTcpServer("localhost"));
+                await managedClient.StartAsync(clientOptions.Build());
 
-            await managedClient.StartAsync(clientOptions.Build());
+                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "1" });
+                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "2" });
+                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "3" });
+                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "4" });
+                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "5" });
 
-            await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "1" });
-            await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "2" });
-            await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "3" });
-            await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "4" });
-            await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "5" });
+                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "6" });
+                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "7" });
+                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "8" });
 
-            await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "6" });
-            await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "7" });
-            await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "8" });
-
-            Assert.AreEqual(5, managedClient.PendingApplicationMessagesCount);
+                Assert.AreEqual(5, managedClient.PendingApplicationMessagesCount);
+            }
+            finally
+            {
+                await managedClient.StopAsync();
+            }
         }
     }
 }

@@ -19,5 +19,9 @@ namespace MQTTnet.Formatter
         MqttClientSubscribeResult CreateClientSubscribeResult(MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket);
 
         MqttClientUnsubscribeResult CreateClientUnsubscribeResult(MqttUnsubscribePacket unsubscribePacket, MqttUnsubAckPacket unsubAckPacket);
+
+        MqttSubscribePacket CreateSubscribePacket(MqttClientSubscribeOptions options);
+
+        MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options);
     }
 }

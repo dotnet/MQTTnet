@@ -13,7 +13,7 @@
             }
         }
 
-        public ushort GetNewPacketIdentifier()
+        public ushort GetNextPacketIdentifier()
         {
             lock (_syncRoot)
             {

@@ -64,19 +64,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="NewFolder\**" />
-    <EmbeddedResource Remove="NewFolder\**" />
-    <None Remove="NewFolder\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Net.Requests">
-      <HintPath>C:\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.netcore.app\2.1.0\ref\netcoreapp2.1\System.Net.Requests.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

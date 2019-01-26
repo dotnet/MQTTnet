@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client.Publishing;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Server
@@ -31,7 +32,18 @@ namespace MQTTnet.Server
             _eventDispatcher.ClientDisconnected += (s, e) => ClientDisconnected?.Invoke(s, e);
             _eventDispatcher.ClientSubscribedTopic += (s, e) => ClientSubscribedTopic?.Invoke(s, e);
             _eventDispatcher.ClientUnsubscribedTopic += (s, e) => ClientUnsubscribedTopic?.Invoke(s, e);
-            _eventDispatcher.ApplicationMessageReceived += (s, e) => ApplicationMessageReceived?.Invoke(s, e);
+            _eventDispatcher.ApplicationMessageReceived += async (s, e) =>
+            {
+                // TODO: Migrate EventDispatcher to proper handlers and no events anymore.
+                ApplicationMessageReceived?.Invoke(s, e);
+
+                var handler = ReceivedApplicationMessageHandler;
+                if (handler != null)
+                {
+                    await handler.HandleApplicationMessageAsync(
+                        new MqttApplicationMessageHandlerContext(e.ClientId, e.ApplicationMessage)).ConfigureAwait(false);
+                }
+            };
             _eventDispatcher.ClientConnectionValidator += (s, e) => ClientConnectionValidator?.Invoke(s, e);
         }
 
@@ -43,6 +55,7 @@ namespace MQTTnet.Server
         public event EventHandler<MqttClientSubscribedTopicEventArgs> ClientSubscribedTopic;
         public event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
 
+        public IMqttApplicationMessageHandler ReceivedApplicationMessageHandler { get; set; }
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
         public event EventHandler<MqttClientConnectionValidatorEventArgs> ClientConnectionValidator;
 

@@ -18,7 +18,7 @@ namespace MQTTnet.Formatter
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
         }
 
-        public async Task<MqttFixedHeader> ReadFixedHeaderAsync(byte[] fixedHeaderBuffer, CancellationToken cancellationToken)
+        public async Task<ReadFixedHeaderResult> ReadFixedHeaderAsync(byte[] fixedHeaderBuffer, CancellationToken cancellationToken)
         {
             // The MQTT fixed header contains 1 byte of flags and at least 1 byte for the remaining data length.
             // So in all cases at least 2 bytes must be read for a complete MQTT packet.
@@ -32,15 +32,25 @@ namespace MQTTnet.Formatter
                 var bytesRead = await _channel.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
 
                 cancellationToken.ThrowIfCancellationRequested();
-                ExceptionHelper.ThrowIfGracefulSocketClose(bytesRead);
 
+                if (bytesRead == 0)
+                {
+                    return new ReadFixedHeaderResult
+                    {
+                        ConnectionClosed = true
+                    };
+                }
+                
                 totalBytesRead += bytesRead;
             }
 
             var hasRemainingLength = buffer[1] != 0;
             if (!hasRemainingLength)
             {
-                return new MqttFixedHeader(buffer[0], 0, totalBytesRead);
+                return new ReadFixedHeaderResult
+                {
+                    FixedHeader = new MqttFixedHeader(buffer[0], 0, totalBytesRead)
+                };
             }
 
 #if WINDOWS_UWP
@@ -54,12 +64,23 @@ namespace MQTTnet.Formatter
             var bodyLength = ReadBodyLength(buffer[1], cancellationToken);
 #endif
 
-            totalBytesRead += bodyLength;
-            return new MqttFixedHeader(buffer[0], bodyLength, totalBytesRead);
+            if (!bodyLength.HasValue)
+            {
+                return new ReadFixedHeaderResult
+                {
+                    ConnectionClosed = true
+                };
+            }
+
+            totalBytesRead += bodyLength.Value;
+            return new ReadFixedHeaderResult
+            {
+                FixedHeader = new MqttFixedHeader(buffer[0], bodyLength.Value, totalBytesRead)
+            };
         }
 
 #if !WINDOWS_UWP
-        private int ReadBodyLength(byte initialEncodedByte, CancellationToken cancellationToken)
+        private int? ReadBodyLength(byte initialEncodedByte, CancellationToken cancellationToken)
         {
             var offset = 0;
             var multiplier = 128;
@@ -74,9 +95,18 @@ namespace MQTTnet.Formatter
                     throw new MqttProtocolViolationException("Remaining length is invalid.");
                 }
 
-                cancellationToken.ThrowIfCancellationRequested();
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
 
-                encodedByte = ReadByte(cancellationToken);
+                var buffer = ReadByte(cancellationToken);
+                if (!buffer.HasValue)
+                {
+                    return null;
+                }
+
+                encodedByte = buffer.Value;
 
                 value += (encodedByte & 127) * multiplier;
                 multiplier *= 128;
@@ -85,15 +115,18 @@ namespace MQTTnet.Formatter
             return value;
         }
 
-        private byte ReadByte(CancellationToken cancellationToken)
+        private byte? ReadByte(CancellationToken cancellationToken)
         {
             var readCount = _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
 
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (readCount <= 0)
+            if (cancellationToken.IsCancellationRequested)
             {
-                ExceptionHelper.ThrowGracefulSocketClose();
+                return null;
+            }
+
+            if (readCount == 0)
+            {
+                return null;
             }
 
             return _singleByteBuffer[0];
@@ -101,7 +134,7 @@ namespace MQTTnet.Formatter
 
 #else
         
-        private async Task<int> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
+        private async Task<int?> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
         {
             var offset = 0;
             var multiplier = 128;
@@ -116,9 +149,18 @@ namespace MQTTnet.Formatter
                     throw new MqttProtocolViolationException("Remaining length is invalid.");
                 }
 
-                cancellationToken.ThrowIfCancellationRequested();
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
 
-                encodedByte = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
+                var buffer = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
+                if (!buffer.HasValue)
+                {
+                    return null;
+                }
+
+                encodedByte = buffer.Value;
 
                 value += (encodedByte & 127) * multiplier;
                 multiplier *= 128;
@@ -127,15 +169,18 @@ namespace MQTTnet.Formatter
             return value;
         }
 
-        private async Task<byte> ReadByteAsync(CancellationToken cancellationToken)
+        private async Task<byte?> ReadByteAsync(CancellationToken cancellationToken)
         {
             var readCount = await _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
 
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (readCount <= 0)
+            if (cancellationToken.IsCancellationRequested)
             {
-                ExceptionHelper.ThrowGracefulSocketClose();
+                return null;
+            }
+
+            if (readCount == 0)
+            {
+                return null;
             }
 
             return _singleByteBuffer[0];

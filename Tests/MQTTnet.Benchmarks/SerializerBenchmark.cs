@@ -85,7 +85,7 @@ namespace MQTTnet.Benchmarks
                 throw new NotImplementedException();
             }
 
-            public Task DisconnectAsync()
+            public Task DisconnectAsync(CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
             }

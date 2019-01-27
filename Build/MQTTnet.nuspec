@@ -11,10 +11,13 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
     <releaseNotes> * [Core] Added support for MQTTv5 packages.
+* [Core] Performance improvements (removed several exceptions).
 * [Client] Added new MQTTv5 features to options builder.
 * [Client] Added uniform API across all supported MQTT versions (BREAKING CHANGE!)
 * [Client] The client will now avoid sending an ACK if an exception has been thrown in message handler (thanks to @ramonsmits).
+* [Client] Fixed issues in QoS 2 handling which leads to message loss.
 * [Server] Added support for MQTTv5 clients. The server will still return _success_ for all cases at the moment even if more granular codes are available.
+* [Server] Fixed issues in QoS 2 handling which leads to message loss.
 
 * [Note] Due to MQTTv5 a lot of new classes were introduced. This required adding new namespaces as well. Most classes are backward compatible but new namespaces must be added.
     </releaseNotes>

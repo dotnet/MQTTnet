@@ -4,6 +4,6 @@ namespace MQTTnet.Server
 {
     public interface IMqttServerConnectionValidator
     {
-        Task ValidateConnection(MqttConnectionValidatorContext context);
+        Task ValidateConnectionAsync(MqttConnectionValidatorContext context);
     }
 }

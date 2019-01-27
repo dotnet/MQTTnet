@@ -72,7 +72,7 @@ namespace MQTTnet.Implementations
             CreateStream(sslStream);
         }
 
-        public Task DisconnectAsync()
+        public Task DisconnectAsync(CancellationToken cancellationToken)
         {
             Dispose();
             return Task.FromResult(0);
@@ -81,8 +81,13 @@ namespace MQTTnet.Implementations
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             // Workaround for: https://github.com/dotnet/corefx/issues/24430
-            using (cancellationToken.Register(() => _socket.Dispose()))
+            using (cancellationToken.Register(Dispose))
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return 0;
+                }
+
                 return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
             }
         }
@@ -90,8 +95,13 @@ namespace MQTTnet.Implementations
         public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             // Workaround for: https://github.com/dotnet/corefx/issues/24430
-            using (cancellationToken.Register(() => _socket.Dispose()))
+            using (cancellationToken.Register(Dispose))
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 //await _stream.FlushAsync(cancellationToken);
             }
@@ -99,16 +109,21 @@ namespace MQTTnet.Implementations
 
         public void Dispose()
         {
-            Cleanup(ref _stream, s => s.Dispose());
-            Cleanup(ref _socket, s =>
-            {
-                //if (s.Connected)
-                //{
-                //    s.Shutdown(SocketShutdown.Both);
-                //}
+            _socket = null;
 
-                s.Dispose();
-            });
+            // When the stream is disposed it will also close the socket and this will also dispose it.
+            // So there is no need to dispose the socket again.
+            // https://stackoverflow.com/questions/3601521/should-i-manually-dispose-the-socket-after-closing-it
+            try
+            {
+                _stream?.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (NullReferenceException)
+            {
+            }
         }
 
         private bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)

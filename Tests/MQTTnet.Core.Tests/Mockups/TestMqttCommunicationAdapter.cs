@@ -6,7 +6,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Mockups
 {
     public class TestMqttCommunicationAdapter : IMqttChannelAdapter
     {
@@ -35,7 +35,7 @@ namespace MQTTnet.Tests
             return Task.FromResult(0);
         }
 
-        public Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        public Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfPartnerIsNull();
 
@@ -44,30 +44,11 @@ namespace MQTTnet.Tests
             return Task.FromResult(0);
         }
 
-        public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfPartnerIsNull();
-
-            if (timeout > TimeSpan.Zero)
-            {
-                using (var timeoutCts = new CancellationTokenSource(timeout))
-                using (var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken))
-                {
-                    return await Task.Run(() =>
-                    {
-                        try
-                        {
-                            return _incomingPackets.Take(cts.Token);
-                        }
-                        catch
-                        {
-                            return null;
-                        }
-                    }, cts.Token);
-                }
-            }
-
-            return await Task.Run(() =>
+            
+            return Task.Run(() =>
             {
                 try
                 {

@@ -7,6 +7,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Packets;
 using MQTTnet.Server;
+using MQTTnet.Server.Status;
 
 namespace MQTTnet.Tests
 {
@@ -44,9 +45,9 @@ namespace MQTTnet.Tests
 
             // Simulate traffic.
             Thread.Sleep(1000); // Internally the keep alive timeout is multiplied with 1.5 as per protocol specification.
-            monitor.PacketReceived(new MqttPublishPacket());
+            monitor.PacketReceived();
             Thread.Sleep(1000);
-            monitor.PacketReceived(new MqttPublishPacket());
+            monitor.PacketReceived();
             Thread.Sleep(1000);
 
             Assert.AreEqual(0, clientSession.StopCalledCount);
@@ -62,12 +63,12 @@ namespace MQTTnet.Tests
 
             public int StopCalledCount { get; private set; }
 
-            public void FillStatus(MqttClientSessionStatus status)
+            public void FillStatus(MqttClientStatus status)
             {
                 throw new NotSupportedException();
             }
 
-            public void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttApplicationMessage applicationMessage)
+            public void EnqueueApplicationMessage(MqttClientConnection senderClientSession, MqttApplicationMessage applicationMessage)
             {
                 throw new NotSupportedException();
             }
@@ -82,7 +83,7 @@ namespace MQTTnet.Tests
                 throw new NotSupportedException();
             }
 
-            public Task StopAsync(MqttClientDisconnectType disconnectType)
+            public Task StopAsync()
             {
                 StopCalledCount++;
                 return Task.FromResult(0);

@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:server="using:MQTTnet.Server"
+    xmlns:status="using:MQTTnet.Server.Status"
     d:DesignHeight="800"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -228,7 +229,7 @@
 
                     <ListView ItemsSource="{Binding}" x:Name="ListViewSessions">
                         <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="server:IMqttClientSessionStatus">
+                            <DataTemplate x:DataType="status:IMqttClientStatus">
                                 <StackPanel Orientation="Horizontal">
                                     <StackPanel.Resources>
                                         <Style TargetType="TextBlock">
@@ -237,11 +238,10 @@
                                     </StackPanel.Resources>
                                     <TextBlock Text="{Binding ClientId}"></TextBlock>
                                     <TextBlock Text="{Binding Endpoint}"></TextBlock>
-                                    <TextBlock Text="{Binding IsConnected}"></TextBlock>
                                     <TextBlock Text="{Binding LastPacketReceived}"></TextBlock>
                                     <TextBlock Text="{Binding LastNonKeepAlivePacketReceived}"></TextBlock>
                                     <TextBlock Text="{Binding ProtocolVersion}"></TextBlock>
-                                    <TextBlock Text="{Binding PendingApplicationMessagesCount}"></TextBlock>
+                                    <TextBlock Text="{Binding Session}"></TextBlock>
                                 </StackPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>

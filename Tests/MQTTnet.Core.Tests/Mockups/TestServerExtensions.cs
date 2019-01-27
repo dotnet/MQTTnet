@@ -2,7 +2,7 @@
 using MQTTnet.Client;
 using MQTTnet.Server;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Mockups
 {
     public static class TestServerExtensions
     {

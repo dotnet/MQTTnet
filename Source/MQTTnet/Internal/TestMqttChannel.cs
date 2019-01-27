@@ -21,7 +21,7 @@ namespace MQTTnet.Internal
             return Task.FromResult(0);
         }
 
-        public Task DisconnectAsync()
+        public Task DisconnectAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(0);
         }

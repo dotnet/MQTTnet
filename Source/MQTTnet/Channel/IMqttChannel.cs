@@ -9,7 +9,7 @@ namespace MQTTnet.Channel
         string Endpoint { get; }
 
         Task ConnectAsync(CancellationToken cancellationToken);
-        Task DisconnectAsync();
+        Task DisconnectAsync(CancellationToken cancellationToken);
 
         Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);
         Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);

@@ -5,9 +5,9 @@ using MQTTnet.Exceptions;
 
 namespace MQTTnet.Internal
 {
-    public static class TaskExtensions
+    public static class MqttTaskTimeout
     {
-        public static async Task TimeoutAfterAsync(Func<CancellationToken, Task> action, TimeSpan timeout, CancellationToken cancellationToken)
+        public static async Task WaitAsync(Func<CancellationToken, Task> action, TimeSpan timeout, CancellationToken cancellationToken)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
 
@@ -31,7 +31,7 @@ namespace MQTTnet.Internal
             }
         }
 
-        public static async Task<TResult> TimeoutAfterAsync<TResult>(Func<CancellationToken, Task<TResult>> action, TimeSpan timeout, CancellationToken cancellationToken)
+        public static async Task<TResult> WaitAsync<TResult>(Func<CancellationToken, Task<TResult>> action, TimeSpan timeout, CancellationToken cancellationToken)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
 

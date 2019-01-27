@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Exceptions;
@@ -44,7 +46,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        public MqttClientConnectResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
+        public MqttClientAuthenticateResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
         {
             if (connAckPacket == null) throw new ArgumentNullException(nameof(connAckPacket));
 
@@ -91,7 +93,7 @@ namespace MQTTnet.Formatter.V3
                     throw new MqttProtocolViolationException("Received unexpected return code.");
             }
 
-            return new MqttClientConnectResult
+            return new MqttClientAuthenticateResult
             {
                 IsSessionPresent = connAckPacket.IsSessionPresent,
                 ResultCode = resultCode
@@ -172,6 +174,40 @@ namespace MQTTnet.Formatter.V3
             unsubscribePacket.TopicFilters.AddRange(options.TopicFilters);
 
             return unsubscribePacket;
+        }
+
+        public MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options)
+        {
+            if (options != null)
+            {
+                throw new MqttProtocolViolationException("Reason codes for disconnect are only supported for MQTTv5.");
+            }
+
+            return new MqttDisconnectPacket();
+        }
+
+        public MqttClientPublishResult CreatePublishResult(MqttPubAckPacket pubAckPacket)
+        {
+            return new MqttClientPublishResult
+            {
+                ReasonCode = MqttClientPublishReasonCode.Success
+            };
+        }
+
+        public MqttClientPublishResult CreatePublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
+        {
+            if (pubRecPacket == null || pubCompPacket == null)
+            {
+                return new MqttClientPublishResult
+                {
+                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError
+                };
+            }
+
+            return new MqttClientPublishResult
+            {
+                ReasonCode = MqttClientPublishReasonCode.Success
+            };
         }
     }
 }

@@ -7,7 +7,7 @@ using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Mockups
 {
     public class TestMqttServerAdapter : IMqttServerAdapter
     {

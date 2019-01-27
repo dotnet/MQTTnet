@@ -101,29 +101,34 @@ namespace MQTTnet.Server
 
         public async Task<List<MqttApplicationMessage>> GetSubscribedMessagesAsync(ICollection<TopicFilter> topicFilters)
         {
-            var retainedMessages = new List<MqttApplicationMessage>();
+            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
+            var matchingRetainedMessages = new List<MqttApplicationMessage>();
+
+            List<MqttApplicationMessage> retainedMessages;
             using (await _messagesLock.WaitAsync().ConfigureAwait(false))
             {
-                foreach (var retainedMessage in _messages.Values)
-                {
-                    foreach (var topicFilter in topicFilters)
-                    {
-                        if (!MqttTopicFilterComparer.IsMatch(retainedMessage.Topic, topicFilter.Topic))
-                        {
-                            continue;
-                        }
-
-                        retainedMessages.Add(retainedMessage);
-                        break;
-                    }
-                }
+                retainedMessages = _messages.Values.ToList();
             }
 
-            return retainedMessages;
+            foreach (var retainedMessage in retainedMessages)
+            {
+                foreach (var topicFilter in topicFilters)
+                {
+                    if (!MqttTopicFilterComparer.IsMatch(retainedMessage.Topic, topicFilter.Topic))
+                    {
+                        continue;
+                    }
+
+                    matchingRetainedMessages.Add(retainedMessage);
+                    break;
+                }
+            }
+            
+            return matchingRetainedMessages;
         }
 
-        public async Task<List<MqttApplicationMessage>> GetMessagesAsync()
+        public async Task<IList<MqttApplicationMessage>> GetMessagesAsync()
         {
             using (await _messagesLock.WaitAsync().ConfigureAwait(false))
             {

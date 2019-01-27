@@ -7,6 +7,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
@@ -59,17 +60,22 @@ namespace MQTTnet.Server
 
         public IMqttServerOptions Options { get; private set; }
 
-        public Task<IList<IMqttClientSessionStatus>> GetClientSessionsStatusAsync()
+        public Task<IList<IMqttClientStatus>> GetClientStatusAsync()
         {
             return _clientSessionsManager.GetClientStatusAsync();
         }
 
-        public IList<MqttApplicationMessage> GetRetainedMessages()
+        public Task<IList<IMqttSessionStatus>> GetSessionStatusAsync()
         {
-            return _retainedMessagesManager.GetMessagesAsync().GetAwaiter().GetResult();
+            return _clientSessionsManager.GetSessionStatusAsync();
         }
 
-        public Task SubscribeAsync(string clientId, IEnumerable<TopicFilter> topicFilters)
+        public Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync()
+        {
+            return _retainedMessagesManager.GetMessagesAsync();
+        }
+
+        public Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
@@ -77,7 +83,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.SubscribeAsync(clientId, topicFilters);
         }
 
-        public Task UnsubscribeAsync(string clientId, IEnumerable<string> topicFilters)
+        public Task UnsubscribeAsync(string clientId, ICollection<string> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
@@ -85,13 +91,13 @@ namespace MQTTnet.Server
             return _clientSessionsManager.UnsubscribeAsync(clientId, topicFilters);
         }
 
-        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage)
+        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
             if (_cancellationTokenSource == null) throw new InvalidOperationException("The server is not started.");
 
-            _clientSessionsManager.EnqueueApplicationMessage(null, applicationMessage);
+            _clientSessionsManager.DispatchApplicationMessage(applicationMessage, null);
 
             return Task.FromResult(new MqttClientPublishResult());
         }

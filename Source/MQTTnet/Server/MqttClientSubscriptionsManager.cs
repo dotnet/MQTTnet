@@ -14,7 +14,7 @@ namespace MQTTnet.Server
         private readonly MqttServerEventDispatcher _eventDispatcher;
         private readonly string _clientId;
 
-        public MqttClientSubscriptionsManager(string clientId, IMqttServerOptions options, MqttServerEventDispatcher eventDispatcher)
+        public MqttClientSubscriptionsManager(string clientId, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions options)
         {
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -68,7 +68,29 @@ namespace MQTTnet.Server
             return result;
         }
 
-        public MqttUnsubAckPacket Unsubscribe(MqttUnsubscribePacket unsubscribePacket)
+        public async Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
+        {
+            foreach (var topicFilter in topicFilters)
+            {
+                var interceptorContext = await InterceptSubscribeAsync(topicFilter).ConfigureAwait(false);
+                if (!interceptorContext.AcceptSubscription)
+                {
+                   continue;
+                }
+
+                if (interceptorContext.AcceptSubscription)
+                {
+                    lock (_subscriptions)
+                    {
+                        _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                    }
+
+                    _eventDispatcher.OnClientSubscribedTopic(_clientId, topicFilter);
+                }
+            }
+        }
+
+        public Task<MqttUnsubAckPacket> UnsubscribeAsync(MqttUnsubscribePacket unsubscribePacket)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
 
@@ -94,7 +116,22 @@ namespace MQTTnet.Server
                 }
             }
 
-            return unsubAckPacket;
+            return Task.FromResult(unsubAckPacket);
+        }
+
+        public Task UnsubscribeAsync(IEnumerable<string> topicFilters)
+        {
+            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
+
+            lock (_subscriptions)
+            {
+                foreach (var topicFilter in topicFilters)
+                {
+                    _subscriptions.Remove(topicFilter);
+                }
+            }
+
+            return Task.FromResult(0);
         }
 
         public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel)

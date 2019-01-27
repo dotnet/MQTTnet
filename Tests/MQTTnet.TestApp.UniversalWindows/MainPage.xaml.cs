@@ -16,6 +16,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Server.Status;
 using MqttClientConnectedEventArgs = MQTTnet.Client.Connecting.MqttClientConnectedEventArgs;
 using MqttClientDisconnectedEventArgs = MQTTnet.Client.Disconnecting.MqttClientDisconnectedEventArgs;
 
@@ -24,7 +25,7 @@ namespace MQTTnet.TestApp.UniversalWindows
     public sealed partial class MainPage
     {
         private readonly ConcurrentQueue<MqttNetLogMessage> _traceMessages = new ConcurrentQueue<MqttNetLogMessage>();
-        private readonly ObservableCollection<IMqttClientSessionStatus> _sessions = new ObservableCollection<IMqttClientSessionStatus>();
+        private readonly ObservableCollection<IMqttClientStatus> _sessions = new ObservableCollection<IMqttClientStatus>();
 
         private IMqttClient _mqttClient;
         private IManagedMqttClient _managedMqttClient;
@@ -450,7 +451,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 return;
             }
 
-            var sessions = _mqttServer.GetClientSessionsStatusAsync().GetAwaiter().GetResult();
+            var sessions = _mqttServer.GetClientStatusAsync().GetAwaiter().GetResult();
             _sessions.Clear();
 
             foreach (var session in sessions)

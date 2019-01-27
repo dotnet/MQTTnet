@@ -2,13 +2,13 @@
 {
     public class MqttEnqueuedApplicationMessage
     {
-        public MqttEnqueuedApplicationMessage(MqttClientSession sender, MqttApplicationMessage applicationMessage)
+        public MqttEnqueuedApplicationMessage(MqttApplicationMessage applicationMessage, MqttClientConnection sender)
         {
             Sender = sender;
             ApplicationMessage = applicationMessage;
         }
 
-        public MqttClientSession Sender { get; }
+        public MqttClientConnection Sender { get; }
 
         public MqttApplicationMessage ApplicationMessage { get; }
     }

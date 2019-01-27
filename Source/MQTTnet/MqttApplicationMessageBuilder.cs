@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -38,12 +39,24 @@ namespace MQTTnet
                 return this;
             }
 
-            _payload = payload.ToArray();
+            _payload = payload as byte[];
+
+            if (_payload == null)
+            {
+                _payload = payload.ToArray();
+            }
+            
             return this;
         }
 
         public MqttApplicationMessageBuilder WithPayload(Stream payload)
         {
+            if (payload == null)
+            {
+                _payload = null;
+                return this;
+            }
+
             return WithPayload(payload, payload.Length - payload.Position);
         }
 

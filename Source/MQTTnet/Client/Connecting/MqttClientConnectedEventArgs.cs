@@ -4,11 +4,11 @@ namespace MQTTnet.Client.Connecting
 {
     public class MqttClientConnectedEventArgs : EventArgs
     {
-        public MqttClientConnectedEventArgs(MqttClientConnectResult connectResult)
+        public MqttClientConnectedEventArgs(MqttClientAuthenticateResult authenticateResult)
         {
-            ConnectResult = connectResult ?? throw new ArgumentNullException(nameof(connectResult));
+            AuthenticateResult = authenticateResult ?? throw new ArgumentNullException(nameof(authenticateResult));
         }
 
-        public MqttClientConnectResult ConnectResult { get; }
+        public MqttClientAuthenticateResult AuthenticateResult { get; }
     }
 }

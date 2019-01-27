@@ -85,7 +85,7 @@ namespace MQTTnet.Implementations
             _webSocket = clientWebSocket;
         }
 
-        public async Task DisconnectAsync()
+        public async Task DisconnectAsync(CancellationToken cancellationToken)
         {
             if (_webSocket == null)
             {
@@ -94,7 +94,7 @@ namespace MQTTnet.Implementations
 
             if (_webSocket.State == WebSocketState.Open || _webSocket.State == WebSocketState.Connecting)
             {
-                await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
+                await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken).ConfigureAwait(false);
             }
 
             Dispose();

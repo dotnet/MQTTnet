@@ -3,6 +3,7 @@
     public enum MqttClientDisconnectType
     {
         Clean,
-        NotClean
+        NotClean,
+        Takeover
     }
 }

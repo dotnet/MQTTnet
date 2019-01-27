@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5
 {
@@ -55,11 +58,11 @@ namespace MQTTnet.Formatter.V5
             };
         }
 
-        public MqttClientConnectResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
+        public MqttClientAuthenticateResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
         {
             if (connAckPacket == null) throw new ArgumentNullException(nameof(connAckPacket));
 
-            return new MqttClientConnectResult
+            return new MqttClientAuthenticateResult
             {
                 IsSessionPresent = connAckPacket.IsSessionPresent,
                 ResultCode = (MqttClientConnectResultCode)connAckPacket.ReasonCode.Value
@@ -157,6 +160,66 @@ namespace MQTTnet.Formatter.V5
             packet.Properties.UserProperties.AddRange(options.UserProperties);
 
             return packet;
+        }
+
+        public MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options)
+        {
+            var packet = new MqttDisconnectPacket();
+
+            if (options == null)
+            {
+                packet.ReasonCode = MqttDisconnectReasonCode.NormalDisconnection;
+            }
+            else
+            {
+                packet.ReasonCode = (MqttDisconnectReasonCode)options.ReasonCode;
+            }
+
+            return packet;
+        }
+
+        public MqttClientPublishResult CreatePublishResult(MqttPubAckPacket pubAckPacket)
+        {
+            var result = new MqttClientPublishResult();
+
+            if (pubAckPacket?.ReasonCode != null)
+            {
+                result.ReasonCode = (MqttClientPublishReasonCode)pubAckPacket.ReasonCode;
+            }
+
+            return result;
+        }
+
+        public MqttClientPublishResult CreatePublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
+        {
+            if (pubRecPacket == null || pubCompPacket == null)
+            {
+                return new MqttClientPublishResult
+                {
+                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError
+                };
+            }
+
+            if (pubCompPacket.ReasonCode == MqttPubCompReasonCode.PacketIdentifierNotFound)
+            {
+                return new MqttClientPublishResult
+                {
+                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError
+                };
+            }
+
+            var result = new MqttClientPublishResult
+            {
+                ReasonCode = MqttClientPublishReasonCode.Success
+            };
+
+            if (pubRecPacket.ReasonCode.HasValue)
+            {
+                // Both enums share the same values.
+                result.ReasonCode = (MqttClientPublishReasonCode)pubRecPacket.ReasonCode.Value;
+            }
+
+            return result;
         }
     }
 }

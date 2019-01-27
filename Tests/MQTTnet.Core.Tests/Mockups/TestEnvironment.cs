@@ -7,9 +7,9 @@ using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Mockups
 {
-    public class TestSetup : IDisposable
+    public class TestEnvironment : IDisposable
     {
         private readonly MqttFactory _mqttFactory = new MqttFactory();
         private readonly List<IMqttClient> _clients = new List<IMqttClient>();
@@ -24,9 +24,12 @@ namespace MQTTnet.Tests
         private IMqttServer _server;
 
         public bool IgnoreClientLogErrors { get; set; }
+
         public bool IgnoreServerLogErrors { get; set; }
 
-        public TestSetup()
+        public int ServerPort { get; set; } = 1888;
+
+        public TestEnvironment()
         {
             _serverLogger.LogMessagePublished += (s, e) =>
             {
@@ -51,6 +54,11 @@ namespace MQTTnet.Tests
             };
         }
 
+        public IMqttClient CreateClient()
+        {
+            return _mqttFactory.CreateMqttClient(_clientLogger);
+        }
+
         public Task<IMqttServer> StartServerAsync()
         {
             return StartServerAsync(new MqttServerOptionsBuilder());
@@ -64,7 +72,7 @@ namespace MQTTnet.Tests
             }
 
             _server = _mqttFactory.CreateMqttServer(_serverLogger);
-            await _server.StartAsync(options.WithDefaultEndpointPort(1888).Build());
+            await _server.StartAsync(options.WithDefaultEndpointPort(ServerPort).Build());
 
             return _server;
         }
@@ -77,7 +85,7 @@ namespace MQTTnet.Tests
         public async Task<IMqttClient> ConnectClientAsync(MqttClientOptionsBuilder options)
         {
             var client = _mqttFactory.CreateMqttClient(_clientLogger);
-            await client.ConnectAsync(options.WithTcpServer("localhost", 1888).Build());
+            await client.ConnectAsync(options.WithTcpServer("localhost", ServerPort).Build());
 
             _clients.Add(client);
             return client;
@@ -106,17 +114,16 @@ namespace MQTTnet.Tests
         {
             foreach (var mqttClient in _clients)
             {
-                mqttClient?.DisconnectAsync().GetAwaiter().GetResult();
                 mqttClient?.Dispose();
             }
 
-            _server.StopAsync().GetAwaiter().GetResult();
+            _server?.StopAsync().GetAwaiter().GetResult();
 
             ThrowIfLogErrors();
 
             if (_exceptions.Any())
             {
-                throw new Exception($"{_exceptions.Count} exceptions tracked.");
+                throw new Exception($"{_exceptions.Count} exceptions tracked.\r\n" + string.Join(Environment.NewLine, _exceptions));
             }
         }
 

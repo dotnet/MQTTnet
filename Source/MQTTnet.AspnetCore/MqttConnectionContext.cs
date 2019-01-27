@@ -105,7 +105,7 @@ namespace MQTTnet.AspNetCore
             return null;
         }
 
-        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var buffer = PacketFormatterAdapter.Encode(packet).AsMemory();
             var output = Connection.Transport.Output;

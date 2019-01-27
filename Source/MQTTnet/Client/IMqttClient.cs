@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
@@ -16,10 +17,10 @@ namespace MQTTnet.Client
         event EventHandler<MqttClientConnectedEventArgs> Connected;
         event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
-        Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options);
-        Task DisconnectAsync(MqttClientDisconnectOptions options);
+        Task<MqttClientAuthenticateResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken);
+        Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken);
 
-        Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options);
-        Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options);
+        Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken);
+        Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken);
     }
 }

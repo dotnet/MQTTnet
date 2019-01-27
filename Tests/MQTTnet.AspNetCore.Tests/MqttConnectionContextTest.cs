@@ -25,7 +25,7 @@ namespace MQTTnet.AspNetCore.Tests
 
             pipe.Receive.Writer.Complete();
 
-            await Assert.ThrowsExceptionAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(TimeSpan.FromSeconds(1), CancellationToken.None));
+            await Assert.ThrowsExceptionAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None));
         }
         
         [TestMethod]
@@ -41,7 +41,7 @@ namespace MQTTnet.AspNetCore.Tests
             {
                 for (int i = 0; i < 100; i++)
                 {
-                    await ctx.SendPacketAsync(new MqttPublishPacket(), CancellationToken.None).ConfigureAwait(false);
+                    await ctx.SendPacketAsync(new MqttPublishPacket(), TimeSpan.Zero, CancellationToken.None).ConfigureAwait(false);
                 }
             }));
 

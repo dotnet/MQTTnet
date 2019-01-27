@@ -81,7 +81,7 @@ namespace MQTTnet.Implementations
             CreateStreams();
         }
 
-        public Task DisconnectAsync()
+        public Task DisconnectAsync(CancellationToken cancellationToken)
         {
             Dispose();
             return Task.FromResult(0);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 
 namespace MQTTnet.PacketDispatcher
@@ -21,7 +22,7 @@ namespace MQTTnet.PacketDispatcher
         {
             using (var timeoutToken = new CancellationTokenSource(timeout))
             {
-                timeoutToken.Token.Register(() => _taskCompletionSource.TrySetCanceled());
+                timeoutToken.Token.Register(() => _taskCompletionSource.TrySetException(new MqttCommunicationTimedOutException()));
 
                 var packet = await _taskCompletionSource.Task.ConfigureAwait(false);
                 return (TPacket)packet;

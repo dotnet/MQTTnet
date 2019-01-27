@@ -1,12 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
-    public interface IMqttClientSession : IDisposable
+    public interface IMqttClientSession
     {
         string ClientId { get; }
 
-        Task StopAsync(MqttClientDisconnectType disconnectType);
+        Task StopAsync();
     }
 }

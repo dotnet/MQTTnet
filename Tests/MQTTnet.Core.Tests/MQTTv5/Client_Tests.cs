@@ -16,7 +16,7 @@ namespace MQTTnet.Tests.MQTTv5
     public class Client_Tests
     {
         [TestMethod]
-        public async Task Client_Connect()
+        public async Task Connect()
         {
             var server = new MqttFactory().CreateMqttServer();
             var client = new MqttFactory().CreateMqttClient();
@@ -33,7 +33,7 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
-        public async Task Client_Connect_And_Disconnect()
+        public async Task Connect_And_Disconnect()
         {
             var server = new MqttFactory().CreateMqttServer();
             var client = new MqttFactory().CreateMqttClient();
@@ -52,7 +52,7 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
-        public async Task Client_Subscribe()
+        public async Task Subscribe()
         {
             var server = new MqttFactory().CreateMqttServer();
             var client = new MqttFactory().CreateMqttClient();
@@ -75,7 +75,7 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
-        public async Task Client_Unsubscribe()
+        public async Task Unsubscribe()
         {
             var server = new MqttFactory().CreateMqttServer();
             var client = new MqttFactory().CreateMqttClient();
@@ -99,7 +99,7 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
-        public async Task Client_Publish_QoS0()
+        public async Task Publish_QoS_0()
         {
             var server = new MqttFactory().CreateMqttServer();
             var client = new MqttFactory().CreateMqttClient();
@@ -121,7 +121,7 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
-        public async Task Client_Publish_QoS1()
+        public async Task Publish_QoS_1()
         {
             var server = new MqttFactory().CreateMqttServer();
             var client = new MqttFactory().CreateMqttClient();
@@ -143,7 +143,7 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
-        public async Task Client_Publish_QoS2()
+        public async Task Publish_QoS_2()
         {
             var server = new MqttFactory().CreateMqttServer();
             var client = new MqttFactory().CreateMqttClient();
@@ -165,7 +165,7 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
-        public async Task Client_Publish_With_Properties()
+        public async Task Publish_With_Properties()
         {
             var server = new MqttFactory().CreateMqttServer();
             var client = new MqttFactory().CreateMqttClient();

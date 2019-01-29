@@ -194,7 +194,7 @@ namespace MQTTnet.Server
 
                 Session.WillMessage = _connectPacket.WillMessage;
 
-                Task.Run(() => SendPendingPacketsAsync(), _cancellationToken.Token);
+                await Task.Run(() => SendPendingPacketsAsync(), _cancellationToken.Token);
 
                 // TODO: Change to single thread in SessionManager. Or use SessionManager and stats from KeepAliveMonitor.
                 _keepAliveMonitor.Start(_connectPacket.KeepAlivePeriod, _cancellationToken.Token);

@@ -59,20 +59,12 @@ namespace MQTTnet.Server
 
         public Task HandleConnectionAsync(IMqttChannelAdapter clientAdapter, MqttServerEventDispatcher dispatcher)
         {
-<<<<<<< HEAD
-            return HandleConnectionAsync(clientAdapter, dispatcher, _cancellationToken);
-
-            // TODO: Check if Task.Run is required.
-            //return Task.Run(() => HandleConnectionAsync(clientAdapter, _cancellationToken), _cancellationToken);
-=======
-            return HandleConnectionAsync(clientAdapter, _cancellationToken);
->>>>>>> 6a2bded18184a8420fb18e88318dfc162ed09efd
+            return HandleConnectionAsync(clientAdapter,dispatcher, _cancellationToken);
         }
 
         public Task<IList<IMqttClientStatus>> GetClientStatusAsync()
         {
             var result = new List<IMqttClientStatus>();
-
             foreach (var connection in _connections.Values)
             {
                 var clientStatus = new MqttClientStatus(connection, this);
@@ -84,7 +76,6 @@ namespace MQTTnet.Server
 
                 result.Add(clientStatus);
             }
-
             return Task.FromResult((IList<IMqttClientStatus>)result);
         }
 
@@ -240,7 +231,7 @@ namespace MQTTnet.Server
 
                 var validatorContext = await ValidateConnectionAsync(connectPacket, channelAdapter, dispatcher).ConfigureAwait(false);
 
-                if (validatorContext != MqttConnectReturnCode.ConnectionAccepted)
+                if (validatorContext.ReturnCode != MqttConnectReturnCode.ConnectionAccepted)
                 {
                     // TODO: Move to channel adapter data converter.
 
@@ -249,7 +240,7 @@ namespace MQTTnet.Server
                     await channelAdapter.SendPacketAsync(
                         new MqttConnAckPacket
                         {
-                            ReturnCode = validatorContext,
+                            ReturnCode = validatorContext.ReturnCode,
                             ReasonCode = MqttConnectReasonCode.NotAuthorized
                         },
                         _options.DefaultCommunicationTimeout,
@@ -302,16 +293,16 @@ namespace MQTTnet.Server
                 connectPacket.Password,
                 connectPacket.WillMessage,
                 clientAdapter.Endpoint);
-
             var connectionValidator = _options.ConnectionValidator;
-
             if (connectionValidator == null)
             {
                 context.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
-                return context;
+                dispatcher.OnClientConnectionValidatorAsync(context);
             }
-
-            await connectionValidator.ValidateConnectionAsync(context).ConfigureAwait(false);
+            else
+            {
+                await connectionValidator.ValidateConnectionAsync(context).ConfigureAwait(false);
+            }
             return context;
         }
 

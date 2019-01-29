@@ -26,9 +26,9 @@ namespace MQTTnet.Server
             ClientUnsubscribedTopic?.Invoke(this, new MqttClientUnsubscribedTopicEventArgs(clientId, topicFilter));
         }
 
-        public void OnClientDisconnected(string clientId, bool wasCleanDisconnect)
+        public void OnClientDisconnected(string clientId, MqttClientDisconnectType disconnectType)
         {
-            ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientId, wasCleanDisconnect));
+            ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientId, disconnectType));
         }
 
         public void OnApplicationMessageReceived(string senderClientId, MqttApplicationMessage applicationMessage)

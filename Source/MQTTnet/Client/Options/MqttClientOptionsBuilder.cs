@@ -31,6 +31,11 @@ namespace MQTTnet.Client.Options
             return this;
         }
 
+        public MqttClientOptionsBuilder WithNoKeepAlive()
+        {
+            return WithKeepAlivePeriod(TimeSpan.Zero);
+        }
+
         public MqttClientOptionsBuilder WithKeepAlivePeriod(TimeSpan value)
         {
             _options.KeepAlivePeriod = value;

@@ -23,7 +23,7 @@ namespace MQTTnet.Server
             _callback = callback ?? throw new ArgumentNullException(nameof(callback));
         }
 
-        public Task ValidateConnection(MqttConnectionValidatorContext context)
+        public Task ValidateConnectionAsync(MqttConnectionValidatorContext context)
         {
             return _callback(context);
         }

@@ -1,9 +1,8 @@
 ﻿using MQTTnet.Adapter;
-using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Mockups
 {
     public class TestMqttCommunicationAdapterFactory : IMqttClientAdapterFactory
     {

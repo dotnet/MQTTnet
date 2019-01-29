@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Client.Connecting
 {
-    public class MqttClientConnectResult
+    public class MqttClientAuthenticateResult
     {
         public bool IsSessionPresent { get; set; }
 

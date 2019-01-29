@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
@@ -17,13 +18,14 @@ namespace MQTTnet.Server
         IMqttServerOptions Options { get; }
         IMqttServerStorage Storage { get; set; }
 
-        Task<IList<IMqttClientSessionStatus>> GetClientSessionsStatusAsync();
+        Task<IList<IMqttClientStatus>> GetClientStatusAsync();
+        Task<IList<IMqttSessionStatus>> GetSessionStatusAsync();
 
-        IList<MqttApplicationMessage> GetRetainedMessages();
+        Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync();
         Task ClearRetainedMessagesAsync();
 
-        Task SubscribeAsync(string clientId, IEnumerable<TopicFilter> topicFilters);
-        Task UnsubscribeAsync(string clientId, IEnumerable<string> topicFilters);
+        Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters);
+        Task UnsubscribeAsync(string clientId, ICollection<string> topicFilters);
 
         Task StartAsync(IMqttServerOptions options);
         Task StopAsync();

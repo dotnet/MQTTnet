@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Concurrent;
-using System.Threading;
+using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 
 namespace MQTTnet.PacketDispatcher
@@ -8,8 +8,6 @@ namespace MQTTnet.PacketDispatcher
     public class MqttPacketDispatcher
     {
         private readonly ConcurrentDictionary<Tuple<ushort, Type>, IMqttPacketAwaiter> _packetAwaiters = new ConcurrentDictionary<Tuple<ushort, Type>, IMqttPacketAwaiter>();
-
-        private BlockingCollection<MqttBasePacket> _inboundPackagesQueue = new BlockingCollection<MqttBasePacket>();
 
         public void Dispatch(Exception exception)
         {
@@ -40,34 +38,14 @@ namespace MQTTnet.PacketDispatcher
                 return;
             }
 
-            lock (_inboundPackagesQueue)
-            {
-                _inboundPackagesQueue.Add(packet);
-            }
-        }
-
-        public MqttBasePacket Take(CancellationToken cancellationToken)
-        {
-            BlockingCollection<MqttBasePacket> inboundPackagesQueue;
-            lock (_inboundPackagesQueue)
-            {
-                inboundPackagesQueue = _inboundPackagesQueue;
-            }
-
-            return inboundPackagesQueue.Take(cancellationToken);
+            throw new MqttProtocolViolationException($"Received packet '{packet}' at an unexpected time.");
         }
 
         public void Reset()
         {
             foreach (var awaiter in _packetAwaiters)
             {
-                awaiter.Value.Cancel();
-            }
-
-            lock (_inboundPackagesQueue)
-            {
-                _inboundPackagesQueue?.Dispose();
-                _inboundPackagesQueue = new BlockingCollection<MqttBasePacket>();
+                 awaiter.Value.Cancel();
             }
 
             _packetAwaiters.Clear();

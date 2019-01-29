@@ -110,7 +110,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return Task.FromResult(0);
         }
 
-        public async Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage)
+        public async Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 

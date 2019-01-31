@@ -18,7 +18,7 @@ namespace MQTTnet.Extensions.ManagedClient
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            return new ManagedMqttClient(factory.CreateMqttClient(), logger.CreateChildLogger());
+            return new ManagedMqttClient(factory.CreateMqttClient(logger), logger.CreateChildLogger());
         }
     }
 }

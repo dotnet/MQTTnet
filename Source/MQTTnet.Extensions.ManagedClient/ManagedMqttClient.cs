@@ -193,8 +193,9 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public void Dispose()
         {
-            _connectionCancellationToken?.Dispose();
-            _publishingCancellationToken?.Dispose();
+            _mqttClient?.Dispose();
+            StopPublishing();
+            StopMaintainingConnection();
         }
 
         private async Task MaintainConnectionAsync(CancellationToken cancellationToken)
@@ -355,7 +356,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
         private async Task SynchronizeSubscriptionsAsync()
         {
-            _logger.Info(nameof(ManagedMqttClient), "Synchronizing subscriptions");
+            _logger.Info("Synchronizing subscriptions");
 
             List<TopicFilter> subscriptions;
             HashSet<string> unsubscriptions;

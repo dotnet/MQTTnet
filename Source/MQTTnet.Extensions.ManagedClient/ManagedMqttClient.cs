@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
@@ -50,8 +52,12 @@ namespace MQTTnet.Extensions.ManagedClient
         public int PendingApplicationMessagesCount => _messageQueue.Count;
         public IManagedMqttClientOptions Options { get; private set; }
 
+        public IMqttClientConnectedHandler ConnectedHandler { get; set; }
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
+
+        public IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
+
 
         public IMqttApplicationMessageHandler ReceivedApplicationMessageHandler
         {
@@ -424,13 +430,13 @@ namespace MQTTnet.Extensions.ManagedClient
         private Task OnDisconnected(MqttClientDisconnectedEventArgs eventArgs)
         {
             Disconnected?.Invoke(this, eventArgs);
-            return Task.FromResult(0);
+            return DisconnectedHandler?.HandleDisconnectedAsync(eventArgs);
         }
 
         private Task OnConnected(MqttClientConnectedEventArgs eventArgs)
         {
             Connected?.Invoke(this, eventArgs);
-            return Task.FromResult(0);
+            return ConnectedHandler?.HandleConnectedAsync(eventArgs);
         }
 
         private void StartPublishing()

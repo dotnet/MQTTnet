@@ -230,7 +230,7 @@ namespace MQTTnet.Client
             var clientWasConnected = IsConnected;
 
             InitiateDisconnect();
-            
+
             IsConnected = false;
 
             try
@@ -242,7 +242,7 @@ namespace MQTTnet.Client
 
                 await WaitForTaskAsync(_packetReceiverTask, sender).ConfigureAwait(false);
                 await WaitForTaskAsync(_keepAliveMessageSenderTask, sender).ConfigureAwait(false);
-                
+
                 _logger.Verbose("Disconnected from adapter.");
             }
             catch (Exception adapterException)
@@ -409,7 +409,7 @@ namespace MQTTnet.Client
                     _logger.Error(exception, "Unhandled exception while receiving packets.");
                 }
 
-                _packetDispatcher.Dispatch(exception);
+                await _packetDispatcher.Dispatch(exception).ConfigureAwait(false);
 
                 if (!DisconnectIsPending())
                 {
@@ -444,8 +444,7 @@ namespace MQTTnet.Client
                 return ProcessReceivedPubRelPacket(pubRelPacket, cancellationToken);
             }
 
-            _packetDispatcher.Dispatch(packet);
-            return Task.FromResult(0);
+            return _packetDispatcher.Dispatch(packet);
         }
 
         private Task ProcessReceivedPublishPacketAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
@@ -500,7 +499,7 @@ namespace MQTTnet.Client
             _packetReceiverTask = Task.Factory.StartNew(
                 () => ReceivePacketsAsync(cancellationToken),
                 cancellationToken,
-                TaskCreationOptions.LongRunning, 
+                TaskCreationOptions.LongRunning,
                 TaskScheduler.Default).Unwrap();
         }
 

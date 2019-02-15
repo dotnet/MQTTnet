@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using MQTTnet.Packets;
 
@@ -8,18 +9,29 @@ namespace MQTTnet.Client
     public class MqttPacketDispatcher
     {
         private readonly ConcurrentDictionary<Tuple<ushort, Type>, TaskCompletionSource<MqttBasePacket>> _awaiters = new ConcurrentDictionary<Tuple<ushort, Type>, TaskCompletionSource<MqttBasePacket>>();
-        
-        public void Dispatch(Exception exception)
+
+        public async Task Dispatch(Exception exception)
         {
             foreach (var awaiter in _awaiters)
             {
-                Task.Run(() => awaiter.Value.TrySetException(exception)); // Task.Run fixes a dead lock. Without this the client only receives one message.
+                awaiter.Value.TrySetException(exception);
             }
 
-            _awaiters.Clear();
+            // await the tasks to complete
+            try
+            {
+                await Task.WhenAll(_awaiters.Values.Select(t => t.Task)).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // swallow any exception that happens during exception handling to prevent
+                // exceptions bubbling into the internals of the MqttClient implementation
+            }
+
+            Reset();
         }
 
-        public void Dispatch(MqttBasePacket packet)
+        public Task Dispatch(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
@@ -31,11 +43,13 @@ namespace MQTTnet.Client
 
             var type = packet.GetType();
             var key = new Tuple<ushort, Type>(identifier, type);
-            
+
             if (_awaiters.TryRemove(key, out var awaiter))
             {
-                Task.Run(() => awaiter.TrySetResult(packet)); // Task.Run fixes a dead lock. Without this the client only receives one message.
-                return;
+                if (awaiter.TrySetResult(packet))
+                {
+                    return awaiter.Task;
+                }
             }
 
             throw new InvalidOperationException($"Packet of type '{type.Name}' not handled or dispatched.");
@@ -54,7 +68,7 @@ namespace MQTTnet.Client
             {
                 identifier = 0;
             }
-            
+
             var key = new Tuple<ushort, Type>(identifier ?? 0, typeof(TResponsePacket));
             if (!_awaiters.TryAdd(key, tcs))
             {

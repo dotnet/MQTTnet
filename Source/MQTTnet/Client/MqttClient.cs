@@ -44,7 +44,11 @@ namespace MQTTnet.Client
             _logger = logger.CreateChildLogger(nameof(MqttClient));
         }
 
+        public IMqttClientConnectedHandler ConnectedHandler { get; set; }
+
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
+
+        public IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
 
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
@@ -93,9 +97,11 @@ namespace MQTTnet.Client
                 }
 
                 IsConnected = true;
-                Connected?.Invoke(this, new MqttClientConnectedEventArgs(authenticateResult));
 
                 _logger.Info("Connected.");
+
+                Connected?.Invoke(this, new MqttClientConnectedEventArgs(authenticateResult));
+                await ConnectedHandler?.HandleConnectedAsync(new MqttClientConnectedEventArgs(authenticateResult));
 
                 return authenticateResult;
             }
@@ -259,6 +265,7 @@ namespace MQTTnet.Client
 
                 _logger.Info("Disconnected.");
                 Disconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientWasConnected, exception));
+                await DisconnectedHandler?.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception));
             }
         }
 

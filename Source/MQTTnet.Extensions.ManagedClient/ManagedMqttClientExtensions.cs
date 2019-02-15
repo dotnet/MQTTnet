@@ -3,12 +3,39 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client.Publishing;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
     public static class ManagedMqttClientExtensions
     {
+        public static IManagedMqttClient UseReceivedApplicationMessageHandler(this IManagedMqttClient client, Func<MqttApplicationMessageHandlerContext, Task> handler)
+        {
+            if (handler == null)
+            {
+                client.ReceivedApplicationMessageHandler = null;
+                return client;
+            }
+
+            client.ReceivedApplicationMessageHandler = new MqttApplicationMessageHandlerDelegate(handler);
+
+            return client;
+        }
+
+        public static IManagedMqttClient UseReceivedApplicationMessageHandler(this IManagedMqttClient client, Action<MqttApplicationMessageHandlerContext> handler)
+        {
+            if (handler == null)
+            {
+                client.ReceivedApplicationMessageHandler = null;
+                return client;
+            }
+
+            client.ReceivedApplicationMessageHandler = new MqttApplicationMessageHandlerDelegate(handler);
+
+            return client;
+        }
+
         public static Task SubscribeAsync(this IManagedMqttClient managedClient, params TopicFilter[] topicFilters)
         {
             if (managedClient == null) throw new ArgumentNullException(nameof(managedClient));

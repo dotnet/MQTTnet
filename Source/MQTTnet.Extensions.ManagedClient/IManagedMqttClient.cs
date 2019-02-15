@@ -13,7 +13,12 @@ namespace MQTTnet.Extensions.ManagedClient
         int PendingApplicationMessagesCount { get; }
         IManagedMqttClientOptions Options { get; }
 
+        IMqttClientConnectedHandler ConnectedHandler { get; set; }
+        [Obsolete("Use ConnectedHandler instead.")]
         event EventHandler<MqttClientConnectedEventArgs> Connected;
+
+        IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
+        [Obsolete("Use DisconnectedHandler instead.")]
         event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
         event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
@@ -21,7 +26,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
         event EventHandler<MqttManagedProcessFailedEventArgs> ConnectingFailed;
         event EventHandler<MqttManagedProcessFailedEventArgs> SynchronizingSubscriptionsFailed;
-        
+
         Task StartAsync(IManagedMqttClientOptions options);
         Task StopAsync();
 

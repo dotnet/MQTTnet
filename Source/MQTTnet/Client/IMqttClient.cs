@@ -14,7 +14,12 @@ namespace MQTTnet.Client
         bool IsConnected { get; }
         IMqttClientOptions Options { get; }
 
+        IMqttClientConnectedHandler ConnectedHandler { get; set; }
+        [Obsolete("Use ConnectedHandler instead.")]
         event EventHandler<MqttClientConnectedEventArgs> Connected;
+
+        IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
+        [Obsolete("Use DisconnectedHandler instead.")]
         event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
         Task<MqttClientAuthenticateResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken);

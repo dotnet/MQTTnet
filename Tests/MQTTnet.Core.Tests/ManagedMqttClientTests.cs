@@ -79,5 +79,33 @@ namespace MQTTnet.Tests
                 Assert.AreEqual(1, receivedMessagesCount);
             }
         }
+
+        [TestMethod]
+        public async Task Start_Stop()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var factory = new MqttFactory();
+
+                var server = await testEnvironment.StartServerAsync();
+
+                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger().CreateChildLogger());
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost", testEnvironment.ServerPort);
+
+                TaskCompletionSource<bool> connected = new TaskCompletionSource<bool>();
+                managedClient.Connected += (s, e) => { connected.SetResult(true); };
+
+                await managedClient.StartAsync(new ManagedMqttClientOptionsBuilder()
+                    .WithClientOptions(clientOptions)
+                    .Build());
+
+                await connected.Task;
+
+                await managedClient.StopAsync();
+
+                Assert.AreEqual(0, (await server.GetClientStatusAsync()).Count);
+            }
+        }
     }
 }

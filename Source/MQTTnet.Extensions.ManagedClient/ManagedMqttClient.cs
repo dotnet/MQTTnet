@@ -27,9 +27,11 @@ namespace MQTTnet.Extensions.ManagedClient
 
         private CancellationTokenSource _connectionCancellationToken;
         private CancellationTokenSource _publishingCancellationToken;
+        private Task _maintainConnectionTask;
 
         private ManagedMqttClientStorageManager _storageManager;
 
+        private bool _disposed = false;
         private bool _subscriptionsNotPushed;
 
         public ManagedMqttClient(IMqttClient mqttClient, IMqttNetChildLogger logger)
@@ -68,6 +70,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public async Task StartAsync(IManagedMqttClientOptions options)
         {
+            ThrowIfDisposed();
+
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (options.ClientOptions == null) throw new ArgumentException("The client options are not set.", nameof(options));
 
@@ -76,7 +80,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 throw new NotSupportedException("The managed client does not support existing sessions.");
             }
 
-            if (_connectionCancellationToken != null) throw new InvalidOperationException("The managed client is already started.");
+            if (!_maintainConnectionTask?.IsCompleted ?? false) throw new InvalidOperationException("The managed client is already started.");
 
             Options = options;
 
@@ -94,24 +98,32 @@ namespace MQTTnet.Extensions.ManagedClient
             _connectionCancellationToken = new CancellationTokenSource();
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(() => MaintainConnectionAsync(_connectionCancellationToken.Token), _connectionCancellationToken.Token);
+            _maintainConnectionTask = Task.Run(() => MaintainConnectionAsync(_connectionCancellationToken.Token), _connectionCancellationToken.Token);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
             _logger.Info("Started");
         }
 
-        public Task StopAsync()
+        public async Task StopAsync()
         {
+            ThrowIfDisposed();
+
             StopPublishing();
             StopMaintainingConnection();
 
             _messageQueue.Clear();
 
-            return Task.FromResult(0);
+            if (_maintainConnectionTask != null)
+            {
+                await Task.WhenAny(_maintainConnectionTask);
+                _maintainConnectionTask = null;
+            }
         }
 
         public async Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
+            ThrowIfDisposed();
+
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
             await PublishAsync(new ManagedMqttApplicationMessageBuilder().WithApplicationMessage(applicationMessage).Build()).ConfigureAwait(false);
@@ -120,6 +132,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public async Task PublishAsync(ManagedMqttApplicationMessage applicationMessage)
         {
+            ThrowIfDisposed();
+
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
             ManagedMqttApplicationMessage removedMessage = null;
@@ -158,6 +172,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
         {
+            ThrowIfDisposed();
+
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
             lock (_subscriptions)
@@ -174,6 +190,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public Task UnsubscribeAsync(IEnumerable<string> topics)
         {
+            ThrowIfDisposed();
+
             if (topics == null) throw new ArgumentNullException(nameof(topics));
 
             lock (_subscriptions)
@@ -193,9 +211,31 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public void Dispose()
         {
-            _mqttClient?.Dispose();
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+
             StopPublishing();
             StopMaintainingConnection();
+
+            if (_maintainConnectionTask != null)
+            {
+                Task.WaitAny(_maintainConnectionTask);
+                _maintainConnectionTask = null;
+            }
+
+            _mqttClient.Dispose();
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(ManagedMqttClient));
+            }
         }
 
         private async Task MaintainConnectionAsync(CancellationToken cancellationToken)
@@ -216,16 +256,19 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             finally
             {
-                try
+                if (!_disposed)
                 {
-                    await _mqttClient.DisconnectAsync().ConfigureAwait(false);
-                }
-                catch (Exception exception)
-                {
-                    _logger.Error(exception, "Error while disconnecting.");
-                }
+                    try
+                    {
+                        await _mqttClient.DisconnectAsync().ConfigureAwait(false);
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.Error(exception, "Error while disconnecting.");
+                    }
 
-                _logger.Info("Stopped");
+                    _logger.Info("Stopped");
+                }
             }
         }
 

@@ -15,6 +15,30 @@ namespace MQTTnet.Client
 {
     public static class MqttClientExtensions
     {
+        public static IMqttClient UseConnectedHandler(this IMqttClient client, Func<MqttClientConnectedEventArgs, Task> handler)
+        {
+            if (handler == null)
+            {
+                client.ConnectedHandler = null;
+                return client;
+            }
+
+            client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(handler);
+            return client;
+        }
+
+        public static IMqttClient UseDisconnectedHandler(this IMqttClient client, Func<MqttClientDisconnectedEventArgs, Task> handler)
+        {
+            if (handler == null)
+            {
+                client.DisconnectedHandler = null;
+                return client;
+            }
+
+            client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(handler);
+            return client;
+        }
+
         public static IMqttClient UseReceivedApplicationMessageHandler(this IMqttClient client, Func<MqttApplicationMessageHandlerContext, Task> handler)
         {
             if (handler == null)
@@ -143,7 +167,7 @@ namespace MQTTnet.Client
                 await client.PublishAsync(applicationMessage).ConfigureAwait(false);
             }
         }
-        
+
         public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
@@ -175,7 +199,7 @@ namespace MQTTnet.Client
                 .WithPayload(payload)
                 .Build());
         }
-        
+
         public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));

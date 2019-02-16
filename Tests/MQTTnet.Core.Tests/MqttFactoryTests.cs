@@ -66,9 +66,9 @@ namespace MQTTnet.Tests
             }
             finally
             {
-                MqttNetGlobalLogger.LogMessagePublished -= globalLog;
-
                 await managedClient.StopAsync();
+
+                MqttNetGlobalLogger.LogMessagePublished -= globalLog;
             }
 
             Assert.IsFalse(invalidLogIdOccured);

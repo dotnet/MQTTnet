@@ -2,13 +2,66 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Publishing;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
     public static class ManagedMqttClientExtensions
     {
+        public static IManagedMqttClient UseConnectedHandler(this IManagedMqttClient client, Func<MqttClientConnectedEventArgs, Task> handler)
+        {
+            if (handler == null)
+            {
+                client.ConnectedHandler = null;
+                return client;
+            }
+
+            client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(handler);
+            return client;
+        }
+
+        public static IManagedMqttClient UseDisconnectedHandler(this IManagedMqttClient client, Func<MqttClientDisconnectedEventArgs, Task> handler)
+        {
+            if (handler == null)
+            {
+                client.DisconnectedHandler = null;
+                return client;
+            }
+
+            client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(handler);
+            return client;
+        }
+
+        public static IManagedMqttClient UseReceivedApplicationMessageHandler(this IManagedMqttClient client, Func<MqttApplicationMessageHandlerContext, Task> handler)
+        {
+            if (handler == null)
+            {
+                client.ReceivedApplicationMessageHandler = null;
+                return client;
+            }
+
+            client.ReceivedApplicationMessageHandler = new MqttApplicationMessageHandlerDelegate(handler);
+
+            return client;
+        }
+
+        public static IManagedMqttClient UseReceivedApplicationMessageHandler(this IManagedMqttClient client, Action<MqttApplicationMessageHandlerContext> handler)
+        {
+            if (handler == null)
+            {
+                client.ReceivedApplicationMessageHandler = null;
+                return client;
+            }
+
+            client.ReceivedApplicationMessageHandler = new MqttApplicationMessageHandlerDelegate(handler);
+
+            return client;
+        }
+
         public static Task SubscribeAsync(this IManagedMqttClient managedClient, params TopicFilter[] topicFilters)
         {
             if (managedClient == null) throw new ArgumentNullException(nameof(managedClient));

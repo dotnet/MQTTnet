@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
@@ -38,9 +40,9 @@ namespace MQTTnet.Extensions.ManagedClient
 
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 
-            _mqttClient.Connected += OnConnected;
-            _mqttClient.Disconnected += OnDisconnected;
-            _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
+            _mqttClient.UseConnectedHandler(OnConnected);
+            _mqttClient.UseDisconnectedHandler(OnDisconnected);
+            _mqttClient.UseReceivedApplicationMessageHandler(OnApplicationMessageReceived);
 
             _logger = logger.CreateChildLogger(nameof(ManagedMqttClient));
         }
@@ -50,8 +52,12 @@ namespace MQTTnet.Extensions.ManagedClient
         public int PendingApplicationMessagesCount => _messageQueue.Count;
         public IManagedMqttClientOptions Options { get; private set; }
 
+        public IMqttClientConnectedHandler ConnectedHandler { get; set; }
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
+
+        public IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
+
 
         public IMqttApplicationMessageHandler ReceivedApplicationMessageHandler
         {
@@ -415,19 +421,22 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        private void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs eventArgs)
+        private Task OnApplicationMessageReceived(MqttApplicationMessageHandlerContext context)
         {
-            ApplicationMessageReceived?.Invoke(this, eventArgs);
+            ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(context.SenderClientId, context.ApplicationMessage));
+            return Task.FromResult(0);
         }
 
-        private void OnDisconnected(object sender, MqttClientDisconnectedEventArgs eventArgs)
+        private Task OnDisconnected(MqttClientDisconnectedEventArgs eventArgs)
         {
             Disconnected?.Invoke(this, eventArgs);
+            return DisconnectedHandler?.HandleDisconnectedAsync(eventArgs);
         }
 
-        private void OnConnected(object sender, MqttClientConnectedEventArgs eventArgs)
+        private Task OnConnected(MqttClientConnectedEventArgs eventArgs)
         {
             Connected?.Invoke(this, eventArgs);
+            return ConnectedHandler?.HandleConnectedAsync(eventArgs);
         }
 
         private void StartPublishing()

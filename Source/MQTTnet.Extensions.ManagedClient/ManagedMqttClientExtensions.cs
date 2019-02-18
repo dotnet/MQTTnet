@@ -24,7 +24,31 @@ namespace MQTTnet.Extensions.ManagedClient
             return client;
         }
 
+        public static IManagedMqttClient UseConnectedHandler(this IManagedMqttClient client, Action<MqttClientConnectedEventArgs> handler)
+        {
+            if (handler == null)
+            {
+                client.ConnectedHandler = null;
+                return client;
+            }
+
+            client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(handler);
+            return client;
+        }
+
         public static IManagedMqttClient UseDisconnectedHandler(this IManagedMqttClient client, Func<MqttClientDisconnectedEventArgs, Task> handler)
+        {
+            if (handler == null)
+            {
+                client.DisconnectedHandler = null;
+                return client;
+            }
+
+            client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(handler);
+            return client;
+        }
+
+        public static IManagedMqttClient UseDisconnectedHandler(this IManagedMqttClient client, Action<MqttClientDisconnectedEventArgs> handler)
         {
             if (handler == null)
             {

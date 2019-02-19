@@ -80,7 +80,7 @@ namespace MQTTnet.Tests
                 await client1.SubscribeAsync("x");
 
                 var receivedValues = new List<int>();
-     
+
                 async Task Handler1(MqttApplicationMessageHandlerContext context)
                 {
                     var value = int.Parse(context.ApplicationMessage.ConvertPayloadToString());
@@ -138,8 +138,8 @@ namespace MQTTnet.Tests
                         replies.Add(context.ApplicationMessage.Topic);
                     }
                 }
-                
-                client2.UseReceivedApplicationMessageHandler((Action<MqttApplicationMessageHandlerContext>) Handler2);
+
+                client2.UseReceivedApplicationMessageHandler((Action<MqttApplicationMessageHandlerContext>)Handler2);
 
                 await Task.Delay(500);
 
@@ -149,7 +149,7 @@ namespace MQTTnet.Tests
 
                 await Task.Delay(500);
 
-                Assert.AreEqual("reply/request/a,reply/request/b,reply/request/c", string.Join("," , replies));
+                Assert.AreEqual("reply/request/a,reply/request/b,reply/request/c", string.Join(",", replies));
             }
         }
 
@@ -260,10 +260,38 @@ namespace MQTTnet.Tests
                 Assert.IsFalse(client1.IsConnected);
 
                 await client1.ReconnectAsync().ConfigureAwait(false);
-                
+
                 await Task.Delay(1000);
 
                 Assert.AreEqual(2, retries);
+            }
+        }
+
+        [TestMethod]
+        public async Task NoConnectedHandler_Connect_DoesNotThrowException()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+
+                var client = await testEnvironment.ConnectClientAsync();
+
+                Assert.IsTrue(client.IsConnected);
+            }
+        }
+
+        [TestMethod]
+        public async Task NoDisconnectedHandler_Disconnect_DoesNotThrowException()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+                var client = await testEnvironment.ConnectClientAsync();
+                Assert.IsTrue(client.IsConnected);
+
+                await client.DisconnectAsync();
+
+                Assert.IsFalse(client.IsConnected);
             }
         }
     }

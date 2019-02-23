@@ -100,12 +100,14 @@ namespace MQTTnet.Client
 
                 _logger.Info("Connected.");
 
-                Connected?.Invoke(this, new MqttClientConnectedEventArgs(authenticateResult));
-                if(ConnectedHandler != null)
+                var connectedHandler = ConnectedHandler;
+                if (connectedHandler != null)
                 {
-                    await ConnectedHandler.HandleConnectedAsync(new MqttClientConnectedEventArgs(authenticateResult));
+                    await connectedHandler.HandleConnectedAsync(new MqttClientConnectedEventArgs(authenticateResult)).ConfigureAwait(false);
                 }
-               
+
+                // TODO: Remove!
+                Connected?.Invoke(this, new MqttClientConnectedEventArgs(authenticateResult));
 
                 return authenticateResult;
             }
@@ -268,11 +270,14 @@ namespace MQTTnet.Client
                 _cleanDisconnectInitiated = false;
 
                 _logger.Info("Disconnected.");
-                Disconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientWasConnected, exception));
-                if(DisconnectedHandler != null)
+
+                var disconnectedHandler = DisconnectedHandler;
+                if (disconnectedHandler != null)
                 {
-                    await DisconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception));
+                    await disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception)).ConfigureAwait(false);
                 }
+
+                Disconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientWasConnected, exception));
             }
         }
 

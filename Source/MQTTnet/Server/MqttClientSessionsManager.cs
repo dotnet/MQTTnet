@@ -170,6 +170,11 @@ namespace MQTTnet.Server
         {
             try
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 var enqueuedApplicationMessage = _messageQueue.Take(cancellationToken);
 
                 var sender = enqueuedApplicationMessage.Sender;

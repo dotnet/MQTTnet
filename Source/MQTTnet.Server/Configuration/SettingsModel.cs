@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MQTTnetServer.Settings
+namespace MQTTnet.Server.Configuration
 {
     /// <summary>
     /// Main Settings Model

@@ -40,7 +40,6 @@ namespace MQTTnet.AspNetCore
 
         public void Dispose()
         {
-            StopAsync().GetAwaiter().GetResult();
         }
     }
 }

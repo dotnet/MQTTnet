@@ -1,4 +1,4 @@
-﻿namespace MQTTnetServer.Settings
+﻿namespace MQTTnet.Server.Configuration
 {
     /// <summary>
     /// Listen Entry Settings Model

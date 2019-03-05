@@ -10,6 +10,17 @@ namespace MQTTnet
 {
     public class MqttFactory : IMqttClientFactory, IMqttServerFactory
     {
+        private readonly IMqttNetLogger _logger;
+
+        public MqttFactory() : this(new MqttNetLogger())
+        {
+        }
+
+        public MqttFactory(IMqttNetLogger logger)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
         public IMqttClient CreateMqttClient()
         {
             return CreateMqttClient(new MqttNetLogger());
@@ -56,6 +67,13 @@ namespace MQTTnet
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             return new MqttServer(adapters, logger.CreateChildLogger());
+        }
+
+        public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> adapters)
+        {
+            if (adapters == null) throw new ArgumentNullException(nameof(adapters));
+            
+            return new MqttServer(adapters, _logger.CreateChildLogger());
         }
     }
 }

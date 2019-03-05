@@ -8,9 +8,9 @@ namespace MQTTnet.Server
 
         public event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
 
-        public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
+        public event EventHandler<MqttServerClientConnectedEventArgs> ClientConnected;
 
-        public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
+        public event EventHandler<MqttServerClientDisconnectedEventArgs> ClientDisconnected;
 
         public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
 
@@ -26,7 +26,7 @@ namespace MQTTnet.Server
 
         public void OnClientDisconnected(string clientId, MqttClientDisconnectType disconnectType)
         {
-            ClientDisconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientId, disconnectType));
+            ClientDisconnected?.Invoke(this, new MqttServerClientDisconnectedEventArgs(clientId, disconnectType));
         }
 
         public void OnApplicationMessageReceived(string senderClientId, MqttApplicationMessage applicationMessage)
@@ -36,7 +36,7 @@ namespace MQTTnet.Server
 
         public void OnClientConnected(string clientId)
         {
-            ClientConnected?.Invoke(this, new MqttClientConnectedEventArgs(clientId));
+            ClientConnected?.Invoke(this, new MqttServerClientConnectedEventArgs(clientId));
         }
     }
 }

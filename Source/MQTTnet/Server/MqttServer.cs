@@ -50,9 +50,14 @@ namespace MQTTnet.Server
         public event EventHandler Started;
         public event EventHandler Stopped;
 
-        public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
-        public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
+        public IMqttServerClientConnectedHandler ClientConnectedHandler { get; set; }
+        public event EventHandler<MqttServerClientConnectedEventArgs> ClientConnected;
+
+        public IMqttServerClientDisconnectedHandler ClientDisconnectedHandler { get; set; }
+        public event EventHandler<MqttServerClientDisconnectedEventArgs> ClientDisconnected;
+
         public event EventHandler<MqttClientSubscribedTopicEventArgs> ClientSubscribedTopic;
+
         public event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
 
         public IMqttApplicationMessageHandler ReceivedApplicationMessageHandler { get; set; }

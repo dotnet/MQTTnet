@@ -10,9 +10,16 @@ namespace MQTTnet.Server
         event EventHandler Started;
         event EventHandler Stopped;
 
-        event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
-        event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
+        IMqttServerClientConnectedHandler ClientConnectedHandler { get; set; }
+        [Obsolete("Use ClientConnectedHandler instead.")]
+        event EventHandler<MqttServerClientConnectedEventArgs> ClientConnected;
+
+        IMqttServerClientDisconnectedHandler ClientDisconnectedHandler { get; set; }
+        [Obsolete("Use ClientDisconnectedHandler instead.")]
+        event EventHandler<MqttServerClientDisconnectedEventArgs> ClientDisconnected;
+
         event EventHandler<MqttClientSubscribedTopicEventArgs> ClientSubscribedTopic;
+
         event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
         
         IMqttServerOptions Options { get; }

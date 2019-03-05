@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
-    <AssemblyName>MQTTnetServer</AssemblyName>
-    <RootNamespace>MQTTnetServer</RootNamespace>
+    <AssemblyName>MQTTnet.Server</AssemblyName>
+    <RootNamespace>MQTTnet.Server</RootNamespace>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Company />
-    <Product />
+    <Product>MQTTnet</Product>
     <Description />
     <Authors />
     <PackageId />
@@ -16,8 +16,12 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <StartupObject></StartupObject>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>MQTTnetServer.xml</DocumentationFile>
+    <DocumentationFile></DocumentationFile>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
     <NoWarn>1701;1702</NoWarn>
   </PropertyGroup>
@@ -29,13 +33,29 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="IronPython" Version="2.7.9" />
+    <PackageReference Include="IronPython.StdLib" Version="2.7.9" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="4.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="4.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
     <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="LICENSE">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Scripts\readme.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Scripts\00_sample.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -9,6 +9,7 @@ namespace MQTTnet.Internal
     public class AsyncAutoResetEvent
     {
         private readonly LinkedList<TaskCompletionSource<bool>> _waiters = new LinkedList<TaskCompletionSource<bool>>();
+
         private bool _isSignaled;
 
         public AsyncAutoResetEvent()
@@ -19,6 +20,17 @@ namespace MQTTnet.Internal
         public AsyncAutoResetEvent(bool signaled)
         {
             _isSignaled = signaled;
+        }
+
+        public int WaitersCount
+        {
+            get
+            {
+                lock (_waiters)
+                {
+                    return _waiters.Count;
+                }
+            }
         }
 
         public Task<bool> WaitOneAsync()
@@ -59,7 +71,17 @@ namespace MQTTnet.Internal
                 _waiters.AddLast(tcs);
             }
 
-            var winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken)).ConfigureAwait(false);
+            Task winner;
+            if (timeout == Timeout.InfiniteTimeSpan)
+            {
+                await tcs.Task.ConfigureAwait(false);
+                winner = tcs.Task;
+            }
+            else
+            {
+                winner = await Task.WhenAny(tcs.Task, Task.Delay(timeout, cancellationToken)).ConfigureAwait(false);
+            }
+            
             var taskWasSignaled = winner == tcs.Task;
             if (taskWasSignaled)
             {

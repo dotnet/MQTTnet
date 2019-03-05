@@ -18,6 +18,31 @@ namespace MQTTnet.Core.Tests
         }
 
         [TestMethod]
+        public async Task Cleanup_Waiters()
+        {
+            var @lock = new AsyncAutoResetEvent();
+            
+            var waitOnePassed = false;
+
+            Task.Run(async () =>
+            {
+                await @lock.WaitOneAsync(TimeSpan.FromSeconds(2));
+                waitOnePassed = true;
+            });
+
+            await Task.Delay(500);
+
+            Assert.AreEqual(1, @lock.WaitersCount);
+
+            @lock.Set();
+
+            await Task.Delay(1000);
+
+            Assert.IsTrue(waitOnePassed);
+            Assert.AreEqual(0, @lock.WaitersCount);
+        }
+
+        [TestMethod]
         public async Task SingleThreadedPulse()
         {
             for (int i = 0; i < 5; i++)

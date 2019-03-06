@@ -14,13 +14,8 @@ namespace MQTTnet.Extensions.ManagedClient
         IManagedMqttClientOptions Options { get; }
 
         IMqttClientConnectedHandler ConnectedHandler { get; set; }
-        [Obsolete("Use ConnectedHandler instead.")]
-        event EventHandler<MqttClientConnectedEventArgs> Connected;
-
         IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
-        [Obsolete("Use DisconnectedHandler instead.")]
-        event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
-
+        
         event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
         event EventHandler<ApplicationMessageSkippedEventArgs> ApplicationMessageSkipped;
 

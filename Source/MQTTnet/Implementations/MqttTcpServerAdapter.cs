@@ -26,7 +26,7 @@ namespace MQTTnet.Implementations
             _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
         }
 
-        public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
+        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler { get; set; }
 
         public Task StartAsync(IMqttServerOptions options)
         {
@@ -87,9 +87,11 @@ namespace MQTTnet.Implementations
                     options,
                     tlsCertificate,
                     _cancellationTokenSource.Token,
-                    _logger);
+                    _logger)
+                {
+                    ClientAcceptedHandler = OnClientAccepted
+                };
 
-                listenerV4.ClientAccepted += OnClientAccepted;
                 listenerV4.Start();
                 _listeners.Add(listenerV4);
             }
@@ -101,17 +103,19 @@ namespace MQTTnet.Implementations
                     options,
                     tlsCertificate,
                     _cancellationTokenSource.Token,
-                    _logger);
+                    _logger)
+                {
+                    ClientAcceptedHandler = OnClientAccepted
+                };
 
-                listenerV6.ClientAccepted += OnClientAccepted;
                 listenerV6.Start();
                 _listeners.Add(listenerV6);
             }
         }
 
-        private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs e)
+        private void OnClientAccepted(MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
-            ClientAccepted?.Invoke(this, e);
+            ClientAcceptedHandler?.Invoke(eventArgs);
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Formatter;
@@ -213,13 +214,13 @@ namespace MQTTnet.Tests.MQTTv5
                 var receivedMessages = new List<MqttApplicationMessageReceivedEventArgs>();
 
                 await client1.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithClientId("client1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
-                client1.ApplicationMessageReceived += (s, e) =>
+                client1.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(e =>
                 {
                     lock (receivedMessages)
                     {
                         receivedMessages.Add(e);
                     }
-                };
+                });
 
                 await client1.SubscribeAsync("a");
 

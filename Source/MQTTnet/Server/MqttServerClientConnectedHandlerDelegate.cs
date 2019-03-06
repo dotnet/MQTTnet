@@ -11,9 +11,9 @@ namespace MQTTnet.Server
         {
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            _handler = context =>
+            _handler = eventArgs =>
             {
-                handler(context);
+                handler(eventArgs);
                 return Task.FromResult(0);
             };
         }

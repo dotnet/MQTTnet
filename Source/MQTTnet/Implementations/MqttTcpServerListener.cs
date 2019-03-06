@@ -42,7 +42,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
+        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler;
 
         public void Start()
         {
@@ -88,7 +88,7 @@ namespace MQTTnet.Implementations
                         _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
 
                     var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketFormatterAdapter(), _logger);
-                    ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
+                    ClientAcceptedHandler?.Invoke(new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
                 }
                 catch (ObjectDisposedException)
                 {

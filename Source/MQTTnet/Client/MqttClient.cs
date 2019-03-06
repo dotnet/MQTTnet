@@ -46,15 +46,9 @@ namespace MQTTnet.Client
 
         public IMqttClientConnectedHandler ConnectedHandler { get; set; }
 
-        public event EventHandler<MqttClientConnectedEventArgs> Connected;
-
         public IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
 
-        public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
-
-        public IMqttApplicationMessageHandler ReceivedApplicationMessageHandler { get; set; }
-
-        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
+        public IMqttApplicationMessageHandler ApplicationMessageReceivedHandler { get; set; }
 
         public bool IsConnected { get; private set; }
 
@@ -105,9 +99,6 @@ namespace MQTTnet.Client
                 {
                     await connectedHandler.HandleConnectedAsync(new MqttClientConnectedEventArgs(authenticateResult)).ConfigureAwait(false);
                 }
-
-                // TODO: Remove!
-                Connected?.Invoke(this, new MqttClientConnectedEventArgs(authenticateResult));
 
                 return authenticateResult;
             }
@@ -276,8 +267,6 @@ namespace MQTTnet.Client
                 {
                     await disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception)).ConfigureAwait(false);
                 }
-
-                Disconnected?.Invoke(this, new MqttClientDisconnectedEventArgs(clientWasConnected, exception));
             }
         }
 
@@ -587,13 +576,11 @@ namespace MQTTnet.Client
         {
             var applicationMessage = _adapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket);
 
-            ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage));
-
-            var handler = ReceivedApplicationMessageHandler;
+            var handler = ApplicationMessageReceivedHandler;
             if (handler != null)
             {
                 return handler.HandleApplicationMessageAsync(
-                    new MqttApplicationMessageHandlerContext(Options.ClientId, applicationMessage));
+                    new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage));
             }
 
             return Task.FromResult(0);

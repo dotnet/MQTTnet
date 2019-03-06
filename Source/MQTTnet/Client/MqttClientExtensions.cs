@@ -63,35 +63,35 @@ namespace MQTTnet.Client
             return client;
         }
 
-        public static IMqttClient UseReceivedApplicationMessageHandler(this IMqttClient client, Func<MqttApplicationMessageHandlerContext, Task> handler)
+        public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
         {
             if (handler == null)
             {
-                client.ReceivedApplicationMessageHandler = null;
+                client.ApplicationMessageReceivedHandler = null;
                 return client;
             }
 
-            client.ReceivedApplicationMessageHandler = new MqttApplicationMessageHandlerDelegate(handler);
+            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(handler);
 
             return client;
         }
 
-        public static IMqttClient UseReceivedApplicationMessageHandler(this IMqttClient client, Action<MqttApplicationMessageHandlerContext> handler)
+        public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, Action<MqttApplicationMessageReceivedEventArgs> handler)
         {
             if (handler == null)
             {
-                client.ReceivedApplicationMessageHandler = null;
+                client.ApplicationMessageReceivedHandler = null;
                 return client;
             }
 
-            client.ReceivedApplicationMessageHandler = new MqttApplicationMessageHandlerDelegate(handler);
+            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(handler);
 
             return client;
         }
 
-        public static IMqttClient UseReceivedApplicationMessageHandler(this IMqttClient client, IMqttApplicationMessageHandler handler)
+        public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, IMqttApplicationMessageHandler handler)
         {
-            client.ReceivedApplicationMessageHandler = handler;
+            client.ApplicationMessageReceivedHandler = handler;
 
             return client;
         }

@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 
@@ -18,7 +19,7 @@ namespace MQTTnet.Extensions.Rpc
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 
-            _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
+            _mqttClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(HandleReceivedApplicationMessageAsync);
         }
 
         public Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
@@ -102,19 +103,21 @@ namespace MQTTnet.Extensions.Rpc
             }
         }
 
-        private void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs eventArgs)
+        private Task HandleReceivedApplicationMessageAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
             if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var tcs))
             {
-                return;
+                return Task.FromResult(0);
             }
 
             if (tcs.Task.IsCompleted || tcs.Task.IsCanceled)
             {
-                return;
+                return Task.FromResult(0);
             }
 
             tcs.TrySetResult(eventArgs.ApplicationMessage.Payload);
+
+            return Task.FromResult(0);
         }
 
         public void Dispose()

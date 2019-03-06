@@ -61,7 +61,7 @@ namespace MQTTnet.Server
                         _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
                     }
 
-                    _eventDispatcher.OnClientSubscribedTopic(_clientId, topicFilter);
+                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientId, topicFilter).ConfigureAwait(false);
                 }
             }
 
@@ -85,12 +85,12 @@ namespace MQTTnet.Server
                         _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
                     }
 
-                    _eventDispatcher.OnClientSubscribedTopic(_clientId, topicFilter);
+                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientId, topicFilter).ConfigureAwait(false);
                 }
             }
         }
 
-        public Task<MqttUnsubAckPacket> UnsubscribeAsync(MqttUnsubscribePacket unsubscribePacket)
+        public async Task<MqttUnsubAckPacket> UnsubscribeAsync(MqttUnsubscribePacket unsubscribePacket)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
 
@@ -111,12 +111,15 @@ namespace MQTTnet.Server
                     {
                         unsubAckPacket.ReasonCodes.Add(MqttUnsubscribeReasonCode.NoSubscriptionExisted);
                     }
-
-                    _eventDispatcher.OnClientUnsubscribedTopic(_clientId, topicFilter);
                 }
             }
 
-            return Task.FromResult(unsubAckPacket);
+            foreach (var topicFilter in unsubscribePacket.TopicFilters)
+            {
+                await _eventDispatcher.HandleClientUnsubscribedTopicAsync(_clientId, topicFilter).ConfigureAwait(false);
+            }
+            
+            return unsubAckPacket;
         }
 
         public Task UnsubscribeAsync(IEnumerable<string> topicFilters)

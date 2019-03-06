@@ -10,7 +10,7 @@ namespace MQTTnet.Server.Mqtt
     public class MqttConnectionValidator : IMqttServerConnectionValidator
     {
         private readonly PythonScriptHostService _pythonScriptHostService;
-        private readonly ILogger<MqttConnectionValidator> _logger;
+        private readonly ILogger _logger;
 
         public MqttConnectionValidator(PythonScriptHostService pythonScriptHostService, ILogger<MqttConnectionValidator> logger)
         {

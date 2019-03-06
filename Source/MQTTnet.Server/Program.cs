@@ -48,8 +48,11 @@ namespace MQTTnet.Server
 
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(@"
- Version: 1.0.0-alpha1
- License: MIT (read LICENSE file)
+ Version:    1.0.0-alpha1
+ License:    MIT (read LICENSE file)
+ Sponsoring: https://opencollective.com/mqttnet
+ Support:    https://github.com/chkr1011/MQTTnet/issues
+ Docs:       https://github.com/chkr1011/MQTTnet/wiki/MQTTnetServer
 ");
 
             Console.BackgroundColor = ConsoleColor.White;

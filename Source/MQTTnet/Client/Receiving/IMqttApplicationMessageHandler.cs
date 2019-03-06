@@ -4,6 +4,6 @@ namespace MQTTnet.Client.Receiving
 {
     public interface IMqttApplicationMessageHandler
     {
-        Task HandleApplicationMessageAsync(MqttApplicationMessageHandlerContext context);
+        Task HandleApplicationMessageAsync(MqttApplicationMessageReceivedEventArgs eventArgs);
     }
 }

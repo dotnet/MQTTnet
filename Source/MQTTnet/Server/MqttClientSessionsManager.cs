@@ -196,7 +196,7 @@ namespace MQTTnet.Server
                     applicationMessage = interceptorContext.ApplicationMessage;
                 }
 
-                _eventDispatcher.OnApplicationMessageReceived(sender?.ClientId, applicationMessage);
+                await _eventDispatcher.HandleApplicationMessageReceivedAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
 
                 if (applicationMessage.Retain)
                 {
@@ -258,7 +258,7 @@ namespace MQTTnet.Server
 
                 var connection = await CreateConnectionAsync(channelAdapter, connectPacket).ConfigureAwait(false);
 
-                _eventDispatcher.OnClientConnected(clientId);
+                await _eventDispatcher.HandleClientConnectedAsync(clientId).ConfigureAwait(false);
                 
                 disconnectType = await connection.RunAsync().ConfigureAwait(false);
             }
@@ -288,7 +288,7 @@ namespace MQTTnet.Server
 
                 await TryCleanupChannelAsync(channelAdapter).ConfigureAwait(false);
 
-                _eventDispatcher.OnClientDisconnected(clientId, disconnectType);
+                await _eventDispatcher.HandleClientDisconnectedAsync(clientId, disconnectType).ConfigureAwait(false);
             }
         }
 

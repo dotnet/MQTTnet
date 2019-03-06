@@ -36,12 +36,12 @@ namespace MQTTnet.Server.Scripting
             }
         }
 
-        public void RegisterProxyObject(string name, object action)
+        public void RegisterProxyObject(string name, object @object)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
-            if (action == null) throw new ArgumentNullException(nameof(action));
+            if (@object == null) throw new ArgumentNullException(nameof(@object));
 
-            _proxyObjects.Add(name, action);
+            _proxyObjects.Add(name, @object);
         }
 
         public void InvokeOptionalFunction(string name, object parameters)

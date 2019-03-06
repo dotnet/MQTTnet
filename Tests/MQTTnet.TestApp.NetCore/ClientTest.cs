@@ -2,7 +2,10 @@
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore
@@ -25,7 +28,7 @@ namespace MQTTnet.TestApp.NetCore
                     }
                 };
 
-                client.ApplicationMessageReceived += (s, e) =>
+                client.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(e =>
                 {
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
                     Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
@@ -33,18 +36,18 @@ namespace MQTTnet.TestApp.NetCore
                     Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
                     Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
                     Console.WriteLine();
-                };
+                });
 
-                client.Connected += async (s, e) =>
+                client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(async e =>
                 {
                     Console.WriteLine("### CONNECTED WITH SERVER ###");
 
                     await client.SubscribeAsync(new TopicFilterBuilder().WithTopic("#").Build());
 
                     Console.WriteLine("### SUBSCRIBED ###");
-                };
+                });
 
-                client.Disconnected += async (s, e) =>
+                client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(async e => 
                 {
                     Console.WriteLine("### DISCONNECTED FROM SERVER ###");
                     await Task.Delay(TimeSpan.FromSeconds(5));
@@ -57,7 +60,7 @@ namespace MQTTnet.TestApp.NetCore
                     {
                         Console.WriteLine("### RECONNECTING FAILED ###");
                     }
-                };
+                });
 
                 try
                 {

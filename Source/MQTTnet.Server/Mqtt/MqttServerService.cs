@@ -8,7 +8,6 @@ using MQTTnet.Adapter;
 using MQTTnet.AspNetCore;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
-using MQTTnet.Server.Logging;
 using MQTTnet.Server.Scripting;
 
 namespace MQTTnet.Server.Mqtt
@@ -17,6 +16,10 @@ namespace MQTTnet.Server.Mqtt
     {
         private readonly ILogger<MqttServerService> _logger;
 
+        private readonly MqttClientConnectedHandler _mqttClientConnectedHandler;
+        private readonly MqttClientDisconnectedHandler _mqttClientDisconnectedHandler;
+        private readonly MqttClientSubscribedTopicHandler _mqttClientSubscribedTopicHandler;
+        private readonly MqttClientUnsubscribedTopicHandler _mqttClientUnsubscribedTopicHandler;
         private readonly MqttConnectionValidator _mqttConnectionValidator;
         private readonly MqttSubscriptionInterceptor _mqttSubscriptionInterceptor;
         private readonly MqttApplicationMessageInterceptor _mqttApplicationMessageInterceptor;
@@ -25,15 +28,22 @@ namespace MQTTnet.Server.Mqtt
         private readonly IMqttServer _mqttServer;
 
         public MqttServerService(
-            IMqttServerFactory mqttServerFactory,
+            CustomMqttFactory mqttFactory,
             MqttWebSocketServerAdapter webSocketServerAdapter,
-            MqttNetLoggerWrapper mqttNetLogger,
+            MqttClientConnectedHandler mqttClientConnectedHandler,
+            MqttClientDisconnectedHandler mqttClientDisconnectedHandler,
+            MqttClientSubscribedTopicHandler mqttClientSubscribedTopicHandler,
+            MqttClientUnsubscribedTopicHandler mqttClientUnsubscribedTopicHandler,
             MqttConnectionValidator mqttConnectionValidator,
             MqttSubscriptionInterceptor mqttSubscriptionInterceptor,
             MqttApplicationMessageInterceptor mqttApplicationMessageInterceptor,
             PythonScriptHostService pythonScriptHostService,
             ILogger<MqttServerService> logger)
         {
+            _mqttClientConnectedHandler = mqttClientConnectedHandler ?? throw new ArgumentNullException(nameof(mqttClientConnectedHandler));
+            _mqttClientDisconnectedHandler = mqttClientDisconnectedHandler ?? throw new ArgumentNullException(nameof(mqttClientDisconnectedHandler));
+            _mqttClientSubscribedTopicHandler = mqttClientSubscribedTopicHandler ?? throw new ArgumentNullException(nameof(mqttClientSubscribedTopicHandler));
+            _mqttClientUnsubscribedTopicHandler = mqttClientUnsubscribedTopicHandler ?? throw new ArgumentNullException(nameof(mqttClientUnsubscribedTopicHandler));
             _mqttConnectionValidator = mqttConnectionValidator ?? throw new ArgumentNullException(nameof(mqttConnectionValidator));
             _mqttSubscriptionInterceptor = mqttSubscriptionInterceptor ?? throw new ArgumentNullException(nameof(mqttSubscriptionInterceptor));
             _mqttApplicationMessageInterceptor = mqttApplicationMessageInterceptor ?? throw new ArgumentNullException(nameof(mqttApplicationMessageInterceptor));
@@ -42,11 +52,11 @@ namespace MQTTnet.Server.Mqtt
 
             var adapters = new List<IMqttServerAdapter>
             {
-                new MqttTcpServerAdapter(new MqttNetChildLoggerWrapper(null, mqttNetLogger)),
+                new MqttTcpServerAdapter(mqttFactory.Logger.CreateChildLogger(nameof(MqttTcpServerAdapter))),
                 webSocketServerAdapter
             };
 
-            _mqttServer = mqttServerFactory.CreateMqttServer(adapters);
+            _mqttServer = mqttFactory.CreateMqttServer(adapters);
         }
 
         public void Configure()
@@ -61,6 +71,11 @@ namespace MQTTnet.Server.Mqtt
                 .WithSubscriptionInterceptor(_mqttSubscriptionInterceptor)
                 .Build();
 
+            _mqttServer.ClientConnectedHandler = _mqttClientConnectedHandler;
+            _mqttServer.ClientDisconnectedHandler = _mqttClientDisconnectedHandler;
+            _mqttServer.ClientSubscribedTopicHandler = _mqttClientSubscribedTopicHandler;
+            _mqttServer.ClientUnsubscribedTopicHandler = _mqttClientUnsubscribedTopicHandler;
+
             _mqttServer.StartAsync(options).GetAwaiter().GetResult();
 
             _logger.LogInformation("MQTT server started.");
@@ -68,34 +83,48 @@ namespace MQTTnet.Server.Mqtt
 
         private void Publish(PythonDictionary parameters)
         {
-            var applicationMessageBuilder = new MqttApplicationMessageBuilder()
-                .WithTopic((string)parameters.get("topic", null))
-                .WithRetainFlag((bool)parameters.get("retain", false))
-                .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)(int)parameters.get("qos", 0));
-
-            var payload = parameters.get("payload", null);
-            var binaryPayload = new byte[0];
-
-            if (payload is string stringPayload)
+            try
             {
-                binaryPayload = Encoding.UTF8.GetBytes(stringPayload);
+                var applicationMessageBuilder = new MqttApplicationMessageBuilder()
+                    .WithTopic((string)parameters.get("topic", null))
+                    .WithRetainFlag((bool)parameters.get("retain", false))
+                    .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)(int)parameters.get("qos", 0));
+
+                var payload = parameters.get("payload", null);
+                byte[] binaryPayload;
+
+                if (payload == null)
+                {
+                    binaryPayload = new byte[0];
+                }
+                else if (payload is string stringPayload)
+                {
+                    binaryPayload = Encoding.UTF8.GetBytes(stringPayload);
+                }
+                else if (payload is ByteArray byteArray)
+                {
+                    binaryPayload = byteArray.ToArray();
+                }
+                else if (payload is IEnumerable<int> intArray)
+                {
+                    binaryPayload = intArray.Select(Convert.ToByte).ToArray();
+                }
+                else
+                {
+                    throw new NotSupportedException("Payload type not supported.");
+                }
+
+                applicationMessageBuilder = applicationMessageBuilder
+                    .WithPayload(binaryPayload);
+
+                var applicationMessage = applicationMessageBuilder.Build();
+
+                _mqttServer.PublishAsync(applicationMessage).GetAwaiter().GetResult();
             }
-            else if (payload is ByteArray byteArray)
+            catch (Exception exception)
             {
-                binaryPayload = byteArray.ToArray();
+                _logger.LogError(exception, "Error while publishing application message from server.");
             }
-            else if (payload is IEnumerable<int> intArray)
-            {
-                binaryPayload = intArray.Select(Convert.ToByte).ToArray();
-            }
-
-            applicationMessageBuilder = applicationMessageBuilder
-                .WithPayload(binaryPayload);
-
-            var applicationMessage = applicationMessageBuilder.Build();
-
-            _mqttServer.PublishAsync(applicationMessage).GetAwaiter().GetResult();
-            _logger.LogInformation($"Published topic '{applicationMessage.Topic}' from server.");
         }
     }
 }

@@ -60,28 +60,28 @@ namespace MQTTnet.Extensions.ManagedClient
             return client;
         }
 
-        public static IManagedMqttClient UseReceivedApplicationMessageHandler(this IManagedMqttClient client, Func<MqttApplicationMessageHandlerContext, Task> handler)
+        public static IManagedMqttClient UseApplicationMessageReceivedHandler(this IManagedMqttClient client, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
         {
             if (handler == null)
             {
-                client.ReceivedApplicationMessageHandler = null;
+                client.ApplicationMessageReceivedHandler = null;
                 return client;
             }
 
-            client.ReceivedApplicationMessageHandler = new MqttApplicationMessageHandlerDelegate(handler);
+            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(handler);
 
             return client;
         }
 
-        public static IManagedMqttClient UseReceivedApplicationMessageHandler(this IManagedMqttClient client, Action<MqttApplicationMessageHandlerContext> handler)
+        public static IManagedMqttClient UseApplicationMessageReceivedHandler(this IManagedMqttClient client, Action<MqttApplicationMessageReceivedEventArgs> handler)
         {
             if (handler == null)
             {
-                client.ReceivedApplicationMessageHandler = null;
+                client.ApplicationMessageReceivedHandler = null;
                 return client;
             }
 
-            client.ReceivedApplicationMessageHandler = new MqttApplicationMessageHandlerDelegate(handler);
+            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(handler);
 
             return client;
         }

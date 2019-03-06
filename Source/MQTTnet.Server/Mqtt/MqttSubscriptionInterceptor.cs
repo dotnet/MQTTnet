@@ -9,7 +9,7 @@ namespace MQTTnet.Server.Mqtt
     public class MqttSubscriptionInterceptor : IMqttServerSubscriptionInterceptor
     {
         private readonly PythonScriptHostService _pythonScriptHostService;
-        private readonly ILogger<MqttSubscriptionInterceptor> _logger;
+        private readonly ILogger _logger;
 
         public MqttSubscriptionInterceptor(PythonScriptHostService pythonScriptHostService, ILogger<MqttSubscriptionInterceptor> logger)
         {

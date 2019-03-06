@@ -11,7 +11,7 @@ namespace MQTTnet.Tests.Mockups
 {
     public class TestMqttServerAdapter : IMqttServerAdapter
     {
-        public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
+        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler { get; set; }
         
         public async Task<IMqttClient> ConnectTestClient(string clientId, MqttApplicationMessage willMessage = null)
         {
@@ -41,7 +41,7 @@ namespace MQTTnet.Tests.Mockups
         
         private void FireClientAcceptedEvent(IMqttChannelAdapter adapter)
         {
-            ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(adapter));
+            ClientAcceptedHandler?.Invoke(new MqttServerAdapterClientAcceptedEventArgs(adapter));
         }
 
         public Task StartAsync(IMqttServerOptions options)

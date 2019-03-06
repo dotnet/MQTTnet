@@ -48,6 +48,7 @@ def on_intercept_application_message(context):
     This function is invoked for every processed application message. It also allows modifying
     the message or cancel processing at all.
     """
+
     client_id = context["client_id"]
 
     if client_id != None:
@@ -72,3 +73,35 @@ def on_intercept_application_message(context):
         mqtt_net_server.publish(application_message)
 
     print("Client '{client_id}' published topic '{topic}'.".format(client_id=context["client_id"], topic=context["topic"]))
+
+
+def on_client_connected(event_args):
+    """
+    This function is called whenever a client has passed the validation is connected.
+    """
+
+    print("Client '{client_id}' is now connected.".format(client_id=event_args["client_id"]))
+
+
+def on_client_disconnected(event_args):
+    """
+    This function is called whenever a client has disconnected.
+    """
+
+    print("Client '{client_id}' is now disconnected (type = {type}).".format(client_id=event_args["client_id"], type=event_args["type"]))
+
+
+def on_client_subscribed_topic(event_args):
+    """
+    This function is called whenever a client has subscribed to a topic (when allowed).
+    """
+
+    print("Client '{client_id}' has subscribed to '{topic}'.".format(client_id=event_args["client_id"], topic=event_args["topic"]))
+
+
+def on_client_unsubscribed_topic(event_args):
+    """
+    This function is called whenever a client has unsubscribed from a topic.
+    """
+
+    print("Client '{client_id}' has unsubscribed from '{topic}'.".format(client_id=event_args["client_id"], topic=event_args["topic"]))

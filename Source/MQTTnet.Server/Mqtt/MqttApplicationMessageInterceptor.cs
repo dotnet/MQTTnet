@@ -10,7 +10,7 @@ namespace MQTTnet.Server.Mqtt
     public class MqttApplicationMessageInterceptor : IMqttServerApplicationMessageInterceptor
     {
         private readonly PythonScriptHostService _pythonScriptHostService;
-        private readonly ILogger<MqttApplicationMessageInterceptor> _logger;
+        private readonly ILogger _logger;
 
         public MqttApplicationMessageInterceptor(PythonScriptHostService pythonScriptHostService, ILogger<MqttApplicationMessageInterceptor> logger)
         {
@@ -31,7 +31,7 @@ namespace MQTTnet.Server.Mqtt
                     { "qos", (int)context.ApplicationMessage.QualityOfServiceLevel },
                     { "retain", context.ApplicationMessage.Retain }
                 };
-
+                
                 _pythonScriptHostService.InvokeOptionalFunction("on_intercept_application_message", pythonContext);
 
                 context.AcceptPublish = (bool)pythonContext.get("accept_publish", context.AcceptPublish);
@@ -45,6 +45,22 @@ namespace MQTTnet.Server.Mqtt
             }
 
             return Task.CompletedTask;
+        }
+
+        // TODO: Create dump(object) method in wrapper (creates JSON and prints it).
+        public class PythonMqttApplicationMessageInterceptorContext
+        {
+            public bool accept_connection;
+
+            public bool accept_publish;
+
+            public string client_id;
+
+            public string topic;
+
+            public int qos;
+
+            public bool retain;
         }
     }
 }

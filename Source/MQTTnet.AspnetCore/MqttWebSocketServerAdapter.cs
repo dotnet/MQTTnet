@@ -11,7 +11,7 @@ namespace MQTTnet.AspNetCore
 {
     public class MqttWebSocketServerAdapter : IMqttServerAdapter
     {
-        public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
+        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler { get; set; }
 
         public Task StartAsync(IMqttServerOptions options)
         {
@@ -30,7 +30,7 @@ namespace MQTTnet.AspNetCore
             var clientAdapter = new MqttChannelAdapter(new MqttWebSocketChannel(webSocket, endpoint), new MqttPacketFormatterAdapter(), new MqttNetLogger().CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
-            ClientAccepted?.Invoke(this, eventArgs);
+            ClientAcceptedHandler?.Invoke(eventArgs);
 
             if (eventArgs.SessionTask != null)
             {

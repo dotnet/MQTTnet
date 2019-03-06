@@ -50,20 +50,24 @@ namespace MQTTnet.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<MqttNetLoggerWrapper>();
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddSingleton<PythonIOStream>();
             services.AddSingleton<PythonScriptHostService>();
             services.AddSingleton<DataSharingService>();
 
+            services.AddSingleton<MqttNetLoggerWrapper>();
             services.AddSingleton<MqttWebSocketServerAdapter>();
-            services.AddSingleton<IMqttServerFactory, MqttFactory>();
+            services.AddSingleton<CustomMqttFactory>();
             services.AddSingleton<MqttServerService>();
+
+            services.AddSingleton<MqttClientConnectedHandler>();
+            services.AddSingleton<MqttClientDisconnectedHandler>();
+            services.AddSingleton<MqttClientSubscribedTopicHandler>();
+            services.AddSingleton<MqttClientUnsubscribedTopicHandler>();
             services.AddSingleton<MqttConnectionValidator>();
             services.AddSingleton<MqttSubscriptionInterceptor>();
             services.AddSingleton<MqttApplicationMessageInterceptor>();
-
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
     }
 }

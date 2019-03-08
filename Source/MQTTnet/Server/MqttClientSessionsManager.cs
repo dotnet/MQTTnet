@@ -15,6 +15,7 @@ namespace MQTTnet.Server
     {
         private readonly BlockingCollection<MqttEnqueuedApplicationMessage> _messageQueue = new BlockingCollection<MqttEnqueuedApplicationMessage>();
 
+        private readonly SemaphoreSlim _createConnectionGate = new SemaphoreSlim(1, 1);
         private readonly ConcurrentDictionary<string, MqttClientConnection> _connections = new ConcurrentDictionary<string, MqttClientConnection>();
         private readonly ConcurrentDictionary<string, MqttClientSession> _sessions = new ConcurrentDictionary<string, MqttClientSession>();
         
@@ -49,8 +50,6 @@ namespace MQTTnet.Server
 
         public async Task StopAsync()
         {
-            //using (await _sessionsLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
-
             foreach (var connection in _connections.Values)
             {
                 await connection.StopAsync().ConfigureAwait(false);
@@ -133,7 +132,7 @@ namespace MQTTnet.Server
         {
             if (_connections.TryGetValue(clientId, out var connection))
             {
-                await connection.StopAsync();
+                await connection.StopAsync().ConfigureAwait(false);
             }
 
             if (_sessions.TryRemove(clientId, out var session))
@@ -312,8 +311,6 @@ namespace MQTTnet.Server
             await connectionValidator.ValidateConnectionAsync(context).ConfigureAwait(false);
             return context;
         }
-
-        private readonly SemaphoreSlim _createConnectionGate = new SemaphoreSlim(1, 1);
 
         private async Task<MqttClientConnection> CreateConnectionAsync(IMqttChannelAdapter channelAdapter, MqttConnectPacket connectPacket)
         {

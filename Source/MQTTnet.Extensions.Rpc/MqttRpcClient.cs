@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
-using MQTTnet.Client.Receiving;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 
@@ -14,12 +13,17 @@ namespace MQTTnet.Extensions.Rpc
     {
         private readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
         private readonly IMqttClient _mqttClient;
+        private readonly RpcAwareApplicationMessageReceivedHandler _applicationMessageReceivedHandler;
 
         public MqttRpcClient(IMqttClient mqttClient)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 
-            _mqttClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(HandleReceivedApplicationMessageAsync);
+            _applicationMessageReceivedHandler = new RpcAwareApplicationMessageReceivedHandler(
+                mqttClient.ApplicationMessageReceivedHandler,
+                HandleApplicationMessageReceivedAsync);
+
+            _mqttClient.ApplicationMessageReceivedHandler = _applicationMessageReceivedHandler;
         }
 
         public Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
@@ -44,6 +48,11 @@ namespace MQTTnet.Extensions.Rpc
             if (methodName.Contains("/") || methodName.Contains("+") || methodName.Contains("#"))
             {
                 throw new ArgumentException("The method name cannot contain /, + or #.");
+            }
+
+            if (!(_mqttClient.ApplicationMessageReceivedHandler is RpcAwareApplicationMessageReceivedHandler))
+            {
+                throw new InvalidOperationException("The application message received handler was modified.");
             }
 
             var requestTopic = $"MQTTnet.RPC/{Guid.NewGuid():N}/{methodName}";
@@ -103,7 +112,7 @@ namespace MQTTnet.Extensions.Rpc
             }
         }
 
-        private Task HandleReceivedApplicationMessageAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
+        private Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
             if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var tcs))
             {
@@ -122,9 +131,11 @@ namespace MQTTnet.Extensions.Rpc
 
         public void Dispose()
         {
+            _mqttClient.ApplicationMessageReceivedHandler = _applicationMessageReceivedHandler.OriginalHandler;
+
             foreach (var tcs in _waitingCalls)
             {
-                tcs.Value.SetCanceled();
+                tcs.Value.TrySetCanceled();
             }
 
             _waitingCalls.Clear();

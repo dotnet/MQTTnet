@@ -68,7 +68,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 return client;
             }
 
-            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(handler);
+            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(handler);
 
             return client;
         }
@@ -81,7 +81,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 return client;
             }
 
-            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(handler);
+            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(handler);
 
             return client;
         }

@@ -2,9 +2,9 @@
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public class MqttManagedProcessFailedEventArgs : EventArgs
+    public class ManagedProcessFailedEventArgs : EventArgs
     {
-        public MqttManagedProcessFailedEventArgs(Exception exception)
+        public ManagedProcessFailedEventArgs(Exception exception)
         {
             Exception = exception;
         }

@@ -28,7 +28,7 @@ namespace MQTTnet.TestApp.NetCore
                     }
                 };
 
-                client.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(e =>
+                client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
                     Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");

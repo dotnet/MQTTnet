@@ -15,13 +15,13 @@ namespace MQTTnet.Extensions.ManagedClient
 
         IMqttClientConnectedHandler ConnectedHandler { get; set; }
         IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
+
+        IApplicationMessageProcessedHandler ApplicationMessageProcessedHandler { get; set; }
+        IApplicationMessageSkippedHandler ApplicationMessageSkippedHandler { get; set; }
+
+        IConnectingFailedHandler ConnectingFailedHandler { get; set; }
+        ISynchronizingSubscriptionsFailedHandler SynchronizingSubscriptionsFailedHandler { get; set; }
         
-        event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
-        event EventHandler<ApplicationMessageSkippedEventArgs> ApplicationMessageSkipped;
-
-        event EventHandler<MqttManagedProcessFailedEventArgs> ConnectingFailed;
-        event EventHandler<MqttManagedProcessFailedEventArgs> SynchronizingSubscriptionsFailed;
-
         Task StartAsync(IManagedMqttClientOptions options);
         Task StopAsync();
 

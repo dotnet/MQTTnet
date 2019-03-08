@@ -4,6 +4,6 @@ namespace MQTTnet
 {
     public interface IApplicationMessageReceiver
     {
-        IMqttApplicationMessageHandler ApplicationMessageReceivedHandler { get; set; }
+        IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
     }
 }

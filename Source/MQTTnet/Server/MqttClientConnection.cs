@@ -369,7 +369,7 @@ namespace MQTTnet.Server
             ////    }
             ////});
 
-            await Task.FromResult(0);
+            //await Task.FromResult(0);
         }
 
         private async Task SendPendingPacketsAsync()

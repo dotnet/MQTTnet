@@ -68,7 +68,7 @@ namespace MQTTnet.Tests
                 var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage);
 
                 var c1 = await testEnvironment.ConnectClientAsync();
-                c1.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(c => Interlocked.Increment(ref receivedMessagesCount));
+                c1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c1.SubscribeAsync(new TopicFilterBuilder().WithTopic("#").Build());
 
                 var c2 = await testEnvironment.ConnectClientAsync(clientOptions);

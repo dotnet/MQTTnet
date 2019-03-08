@@ -30,7 +30,7 @@ namespace MQTTnet.Tests
 
             TaskCompletionSource<string> response = null;
 
-            receiverClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(args =>
+            receiverClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(args =>
             {
                 response?.SetResult(args.ApplicationMessage.ConvertPayloadToString());
             });

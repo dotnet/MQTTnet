@@ -30,8 +30,9 @@ namespace MQTTnet.Server
             _logger = logger.CreateChildLogger(nameof(MqttServer));
         }
 
-        public event EventHandler Started;
-        public event EventHandler Stopped;
+        public IMqttServerStartedHandler StartedHandler { get; set; }
+
+        public IMqttServerStoppedHandler StoppedHandler { get; set; }
 
         public IMqttServerClientConnectedHandler ClientConnectedHandler
         {
@@ -57,7 +58,7 @@ namespace MQTTnet.Server
             set => _eventDispatcher.ClientUnsubscribedTopicHandler = value;
         }
         
-        public IMqttApplicationMessageHandler ApplicationMessageReceivedHandler
+        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
         {
             get => _eventDispatcher.ApplicationMessageReceivedHandler;
             set => _eventDispatcher.ApplicationMessageReceivedHandler = value;
@@ -128,7 +129,12 @@ namespace MQTTnet.Server
             }
 
             _logger.Info("Started.");
-            Started?.Invoke(this, EventArgs.Empty);
+
+            var startedHandler = StartedHandler;
+            if (startedHandler != null)
+            {
+                await startedHandler.HandleServerStartedAsync(EventArgs.Empty).ConfigureAwait(false);
+            }
         }
 
         public async Task StopAsync()
@@ -151,7 +157,6 @@ namespace MQTTnet.Server
                 }
 
                 _logger.Info("Stopped.");
-                Stopped?.Invoke(this, EventArgs.Empty);
             }
             finally
             {
@@ -162,6 +167,12 @@ namespace MQTTnet.Server
 
                 _clientSessionsManager?.Dispose();
                 _clientSessionsManager = null;
+            }
+
+            var stoppedHandler = StoppedHandler;
+            if (stoppedHandler != null)
+            {
+                await stoppedHandler.HandleServerStoppedAsync(EventArgs.Empty).ConfigureAwait(false);
             }
         }
 

@@ -214,7 +214,7 @@ namespace MQTTnet.Tests.MQTTv5
                 var receivedMessages = new List<MqttApplicationMessageReceivedEventArgs>();
 
                 await client1.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithClientId("client1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
-                client1.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(e =>
+                client1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     lock (receivedMessages)
                     {

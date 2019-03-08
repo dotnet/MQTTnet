@@ -13,7 +13,7 @@ namespace MQTTnet.Server
 
         public IMqttServerClientUnsubscribedTopicHandler ClientUnsubscribedTopicHandler { get; set; }
 
-        public IMqttApplicationMessageHandler ApplicationMessageReceivedHandler { get; set; }
+        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
 
         public Task HandleClientConnectedAsync(string clientId)
         {
@@ -67,7 +67,7 @@ namespace MQTTnet.Server
                 return Task.FromResult(0);
             }
 
-            return handler.HandleApplicationMessageAsync(new MqttApplicationMessageReceivedEventArgs(senderClientId, applicationMessage));
+            return handler.HandleApplicationMessageReceivedAsync(new MqttApplicationMessageReceivedEventArgs(senderClientId, applicationMessage));
         }
     }
 }

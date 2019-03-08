@@ -52,7 +52,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Validate subscriptions and deny subscribing of certain topics depending on requesting clients
 * Connect clients with different protocol versions at the same time.
 
-### MQTTnet Server
+## MQTTnet Server
 
 _MQTTnet Server_ is a reference implementation of a MQTT server using this library. It has the following features.
 * Running portable (no installation required)

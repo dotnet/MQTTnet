@@ -71,7 +71,7 @@ namespace MQTTnet.Client
                 return client;
             }
 
-            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(handler);
+            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(handler);
 
             return client;
         }
@@ -84,12 +84,12 @@ namespace MQTTnet.Client
                 return client;
             }
 
-            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(handler);
+            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(handler);
 
             return client;
         }
 
-        public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, IMqttApplicationMessageHandler handler)
+        public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, IMqttApplicationMessageReceivedHandler handler)
         {
             client.ApplicationMessageReceivedHandler = handler;
 

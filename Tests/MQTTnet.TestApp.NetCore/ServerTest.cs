@@ -79,7 +79,7 @@ namespace MQTTnet.TestApp.NetCore
 
                 var mqttServer = new MqttFactory().CreateMqttServer();
 
-                mqttServer.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(e =>
+                mqttServer.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     MqttNetConsoleLogger.PrintToConsole(
                         $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0])}'",

@@ -48,7 +48,7 @@ namespace MQTTnet.Client
 
         public IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
 
-        public IMqttApplicationMessageHandler ApplicationMessageReceivedHandler { get; set; }
+        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
 
         public bool IsConnected { get; private set; }
 
@@ -579,7 +579,7 @@ namespace MQTTnet.Client
             var handler = ApplicationMessageReceivedHandler;
             if (handler != null)
             {
-                return handler.HandleApplicationMessageAsync(
+                return handler.HandleApplicationMessageReceivedAsync(
                     new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage));
             }
 

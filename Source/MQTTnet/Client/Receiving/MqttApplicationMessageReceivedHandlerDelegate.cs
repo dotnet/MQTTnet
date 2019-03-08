@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Client.Receiving
 {
-    public class MqttApplicationMessageHandlerDelegate : IMqttApplicationMessageHandler
+    public class MqttApplicationMessageReceivedHandlerDelegate : IMqttApplicationMessageReceivedHandler
     {
         private readonly Func<MqttApplicationMessageReceivedEventArgs, Task> _handler;
 
-        public MqttApplicationMessageHandlerDelegate(Action<MqttApplicationMessageReceivedEventArgs> handler)
+        public MqttApplicationMessageReceivedHandlerDelegate(Action<MqttApplicationMessageReceivedEventArgs> handler)
         {
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
@@ -18,12 +18,12 @@ namespace MQTTnet.Client.Receiving
             };
         }
 
-        public MqttApplicationMessageHandlerDelegate(Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
+        public MqttApplicationMessageReceivedHandlerDelegate(Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
         {
             _handler = handler ?? throw new ArgumentNullException(nameof(handler));
         }
 
-        public Task HandleApplicationMessageAsync(MqttApplicationMessageReceivedEventArgs context)
+        public Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs context)
         {
             return _handler(context);
         }

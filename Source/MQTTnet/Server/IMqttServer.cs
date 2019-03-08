@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Server.Status;
 
@@ -7,8 +6,8 @@ namespace MQTTnet.Server
 {
     public interface IMqttServer : IApplicationMessageReceiver, IApplicationMessagePublisher
     {
-        event EventHandler Started;
-        event EventHandler Stopped;
+        IMqttServerStartedHandler StartedHandler { get; set; }
+        IMqttServerStoppedHandler StoppedHandler { get; set; }
 
         IMqttServerClientConnectedHandler ClientConnectedHandler { get; set; }
         IMqttServerClientDisconnectedHandler ClientDisconnectedHandler { get; set; }

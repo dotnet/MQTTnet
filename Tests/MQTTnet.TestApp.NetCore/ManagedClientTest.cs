@@ -35,7 +35,7 @@ namespace MQTTnet.TestApp.NetCore
             try
             {
                 var managedClient = new MqttFactory().CreateManagedMqttClient();
-                managedClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageHandlerDelegate(e =>
+                managedClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     Console.WriteLine(">> RECEIVED: " + e.ApplicationMessage.Topic);
                 });

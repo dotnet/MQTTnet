@@ -8,22 +8,22 @@ using MQTTnet.Server;
 
 namespace MQTTnet
 {
-    public class MqttFactory : IMqttClientFactory, IMqttServerFactory
+    public class MqttFactory : IMqttFactory
     {
-        private readonly IMqttNetLogger _logger;
-
         public MqttFactory() : this(new MqttNetLogger())
         {
         }
 
         public MqttFactory(IMqttNetLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            DefaultLogger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
+
+        public IMqttNetLogger DefaultLogger { get; }
 
         public IMqttClient CreateMqttClient()
         {
-            return CreateMqttClient(new MqttNetLogger());
+            return CreateMqttClient(DefaultLogger);
         }
 
         public IMqttClient CreateMqttClient(IMqttNetLogger logger)
@@ -37,7 +37,7 @@ namespace MQTTnet
         {
             if (adapterFactory == null) throw new ArgumentNullException(nameof(adapterFactory));
 
-            return new MqttClient(adapterFactory, new MqttNetLogger());
+            return new MqttClient(adapterFactory, DefaultLogger);
         }
 
         public IMqttClient CreateMqttClient(IMqttNetLogger logger, IMqttClientAdapterFactory adapterFactory)
@@ -50,8 +50,7 @@ namespace MQTTnet
 
         public IMqttServer CreateMqttServer()
         {
-            var logger = new MqttNetLogger();
-            return CreateMqttServer(logger);
+            return CreateMqttServer(DefaultLogger);
         }
 
         public IMqttServer CreateMqttServer(IMqttNetLogger logger)
@@ -73,7 +72,7 @@ namespace MQTTnet
         {
             if (adapters == null) throw new ArgumentNullException(nameof(adapters));
             
-            return new MqttServer(adapters, _logger.CreateChildLogger());
+            return new MqttServer(adapters, DefaultLogger.CreateChildLogger());
         }
     }
 }

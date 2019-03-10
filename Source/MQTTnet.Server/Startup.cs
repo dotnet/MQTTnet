@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Net.WebSockets;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using MQTTnet.AspNetCore;
 using MQTTnet.Server.Logging;
 using MQTTnet.Server.Mqtt;
 using MQTTnet.Server.Scripting;
@@ -31,8 +29,7 @@ namespace MQTTnet.Server
             IHostingEnvironment environment, 
             MqttServerService mqttServerService,
             PythonScriptHostService pythonScriptHostService,
-            DataSharingService dataSharingService,
-            MqttWebSocketServerAdapter mqttWebSocketServerAdapter)
+            DataSharingService dataSharingService)
         {
             if (environment.IsDevelopment())
             {
@@ -64,8 +61,7 @@ namespace MQTTnet.Server
                     {
                         using (var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false))
                         {
-                            await mqttWebSocketServerAdapter.RunWebSocketConnectionAsync(webSocket,
-                                $"{context.Connection.RemoteIpAddress}:{context.Connection.RemotePort}").ConfigureAwait(false);
+                            await mqttServerService.WebSocketServerAdapter.RunWebSocketConnectionAsync(webSocket, context).ConfigureAwait(false);
                         }
                     }
                     else
@@ -99,7 +95,6 @@ namespace MQTTnet.Server
             services.AddSingleton<DataSharingService>();
 
             services.AddSingleton<MqttNetLoggerWrapper>();
-            services.AddSingleton<MqttWebSocketServerAdapter>();
             services.AddSingleton<CustomMqttFactory>();
             services.AddSingleton<MqttServerService>();
 

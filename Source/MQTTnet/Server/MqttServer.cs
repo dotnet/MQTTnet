@@ -146,7 +146,7 @@ namespace MQTTnet.Server
                     return;
                 }
                 
-                _clientSessionsManager.Stop();
+                await _clientSessionsManager.StopAsync().ConfigureAwait(false);
                 
                 _cancellationTokenSource.Cancel(false);
 

@@ -90,7 +90,7 @@ namespace MQTTnet.Server
 
             // Read settings
             var settings = new Configuration.SettingsModel();
-            Configuration.Bind("MQTTnet", settings);
+            Configuration.Bind("MQTT", settings);
             services.AddSingleton(settings);
 
             // Wire up dependencies

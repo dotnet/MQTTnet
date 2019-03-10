@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Server;
 
 namespace MQTTnet.Tests
@@ -29,10 +30,10 @@ namespace MQTTnet.Tests
 
             TaskCompletionSource<string> response = null;
 
-            receiverClient.ApplicationMessageReceived += (sender, args) =>
+            receiverClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(args =>
             {
                 response?.SetResult(args.ApplicationMessage.ConvertPayloadToString());
-            };
+            });
 
             var times = new List<TimeSpan>();
             var stopwatch = Stopwatch.StartNew();

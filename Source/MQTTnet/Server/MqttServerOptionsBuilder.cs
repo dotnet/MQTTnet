@@ -75,6 +75,12 @@ namespace MQTTnet.Server
             return this;
         }
 
+        public MqttServerOptionsBuilder WithEncryptedEndpointBoundIPV6Address(IPAddress value)
+        {
+            _options.TlsEndpointOptions.BoundInterNetworkV6Address = value;
+            return this;
+        }
+
         public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value)
         {
             _options.TlsEndpointOptions.Certificate = value;

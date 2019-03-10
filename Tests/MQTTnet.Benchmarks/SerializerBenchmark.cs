@@ -73,7 +73,9 @@ namespace MQTTnet.Benchmarks
                 _position = _buffer.Offset;
             }
 
-            public string Endpoint { get; }
+            public string Endpoint { get; } = string.Empty;
+
+            public bool IsSecureConnection { get; } = false;
 
             public void Reset()
             {

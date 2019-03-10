@@ -13,8 +13,6 @@ using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using MqttClientConnectedEventArgs = MQTTnet.Client.Connecting.MqttClientConnectedEventArgs;
-using MqttClientDisconnectedEventArgs = MQTTnet.Client.Disconnecting.MqttClientDisconnectedEventArgs;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -36,14 +34,9 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public ManagedMqttClient(IMqttClient mqttClient, IMqttNetChildLogger logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
-
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 
-            _mqttClient.UseConnectedHandler(OnConnected);
-            _mqttClient.UseDisconnectedHandler(OnDisconnected);
-            _mqttClient.UseReceivedApplicationMessageHandler(OnApplicationMessageReceived);
-
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(ManagedMqttClient));
         }
 
@@ -52,25 +45,31 @@ namespace MQTTnet.Extensions.ManagedClient
         public int PendingApplicationMessagesCount => _messageQueue.Count;
         public IManagedMqttClientOptions Options { get; private set; }
 
-        public IMqttClientConnectedHandler ConnectedHandler { get; set; }
-        public event EventHandler<MqttClientConnectedEventArgs> Connected;
-
-        public IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
-        public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
-
-
-        public IMqttApplicationMessageHandler ReceivedApplicationMessageHandler
+        public IMqttClientConnectedHandler ConnectedHandler
         {
-            get => _mqttClient.ReceivedApplicationMessageHandler;
-            set => _mqttClient.ReceivedApplicationMessageHandler = value;
+            get => _mqttClient.ConnectedHandler;
+            set => _mqttClient.ConnectedHandler = value;
         }
 
-        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
-        public event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
-        public event EventHandler<ApplicationMessageSkippedEventArgs> ApplicationMessageSkipped;
+        public IMqttClientDisconnectedHandler DisconnectedHandler
+        {
+            get => _mqttClient.DisconnectedHandler;
+            set => _mqttClient.DisconnectedHandler = value;
+        }
 
-        public event EventHandler<MqttManagedProcessFailedEventArgs> ConnectingFailed;
-        public event EventHandler<MqttManagedProcessFailedEventArgs> SynchronizingSubscriptionsFailed;
+        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
+        {
+            get => _mqttClient.ApplicationMessageReceivedHandler;
+            set => _mqttClient.ApplicationMessageReceivedHandler = value;
+        }
+
+        public IApplicationMessageProcessedHandler ApplicationMessageProcessedHandler { get; set; }
+
+        public IApplicationMessageSkippedHandler ApplicationMessageSkippedHandler { get; set; }
+
+        public IConnectingFailedHandler ConnectingFailedHandler { get; set; }
+
+        public ISynchronizingSubscriptionsFailedHandler SynchronizingSubscriptionsFailedHandler { get; set; }
 
         public async Task StartAsync(IManagedMqttClientOptions options)
         {
@@ -129,28 +128,45 @@ namespace MQTTnet.Extensions.ManagedClient
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
             ManagedMqttApplicationMessage removedMessage = null;
-            lock (_messageQueue)
+            ApplicationMessageSkippedEventArgs applicationMessageSkippedEventArgs = null;
+
+            try
             {
-                if (_messageQueue.Count >= Options.MaxPendingMessages)
+                lock (_messageQueue)
                 {
-                    if (Options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
+                    if (_messageQueue.Count >= Options.MaxPendingMessages)
                     {
-                        _logger.Verbose("Skipping publish of new application message because internal queue is full.");
-                        ApplicationMessageSkipped?.Invoke(this, new ApplicationMessageSkippedEventArgs(applicationMessage));
-                        return;
+                        if (Options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
+                        {
+                            _logger.Verbose("Skipping publish of new application message because internal queue is full.");
+                            applicationMessageSkippedEventArgs = new ApplicationMessageSkippedEventArgs(applicationMessage);
+                            return;
+                        }
+
+                        if (Options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
+                        {
+                            removedMessage = _messageQueue.RemoveFirst();
+                            _logger.Verbose("Removed oldest application message from internal queue because it is full.");
+                            applicationMessageSkippedEventArgs = new ApplicationMessageSkippedEventArgs(removedMessage);
+                        }
                     }
 
-                    if (Options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
+                    _messageQueue.Enqueue(applicationMessage);
+                }
+            }
+            finally
+            {
+                if (applicationMessageSkippedEventArgs != null)
+                {
+                    var applicationMessageSkippedHandler = ApplicationMessageSkippedHandler;
+                    if (applicationMessageSkippedHandler != null)
                     {
-                        removedMessage = _messageQueue.RemoveFirst();
-                        _logger.Verbose("Removed oldest application message from internal queue because it is full.");
-                        ApplicationMessageSkipped?.Invoke(this, new ApplicationMessageSkippedEventArgs(removedMessage));
+                        await applicationMessageSkippedHandler.HandleApplicationMessageSkippedAsync(applicationMessageSkippedEventArgs).ConfigureAwait(false);
                     }
                 }
 
-                _messageQueue.Enqueue(applicationMessage);
             }
-
+            
             if (_storageManager != null)
             {
                 if (removedMessage != null)
@@ -355,7 +371,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             finally
             {
-                ApplicationMessageProcessed?.Invoke(this, new ApplicationMessageProcessedEventArgs(message, transmitException));
+                ApplicationMessageProcessedHandler?.HandleApplicationMessageProcessedAsync(new ApplicationMessageProcessedEventArgs(message, transmitException)).GetAwaiter().GetResult();
             }
         }
 
@@ -398,7 +414,11 @@ namespace MQTTnet.Extensions.ManagedClient
                 _logger.Warning(exception, "Synchronizing subscriptions failed.");
                 _subscriptionsNotPushed = true;
 
-                SynchronizingSubscriptionsFailed?.Invoke(this, new MqttManagedProcessFailedEventArgs(exception));
+                var synchronizingSubscriptionsFailedHandler = SynchronizingSubscriptionsFailedHandler;
+                if (SynchronizingSubscriptionsFailedHandler != null)
+                {
+                    await synchronizingSubscriptionsFailedHandler.HandleSynchronizingSubscriptionsFailedAsync(new ManagedProcessFailedEventArgs(exception)).ConfigureAwait(false);
+                }
             }
         }
 
@@ -416,29 +436,16 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             catch (Exception exception)
             {
-                ConnectingFailed?.Invoke(this, new MqttManagedProcessFailedEventArgs(exception));
+                var connectingFailedHandler = ConnectingFailedHandler;
+                if (connectingFailedHandler != null)
+                {
+                    await connectingFailedHandler.HandleConnectingFailedAsync(new ManagedProcessFailedEventArgs(exception)).ConfigureAwait(false);
+                }
+
                 return ReconnectionResult.NotConnected;
             }
         }
-
-        private Task OnApplicationMessageReceived(MqttApplicationMessageHandlerContext context)
-        {
-            ApplicationMessageReceived?.Invoke(this, new MqttApplicationMessageReceivedEventArgs(context.SenderClientId, context.ApplicationMessage));
-            return Task.FromResult(0);
-        }
-
-        private Task OnDisconnected(MqttClientDisconnectedEventArgs eventArgs)
-        {
-            Disconnected?.Invoke(this, eventArgs);
-            return DisconnectedHandler?.HandleDisconnectedAsync(eventArgs);
-        }
-
-        private Task OnConnected(MqttClientConnectedEventArgs eventArgs)
-        {
-            Connected?.Invoke(this, eventArgs);
-            return ConnectedHandler?.HandleConnectedAsync(eventArgs);
-        }
-
+        
         private void StartPublishing()
         {
             if (_publishingCancellationToken != null)

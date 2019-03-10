@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
@@ -80,7 +81,7 @@ namespace MQTTnet.TestApp.NetCore
                 var topic = Guid.NewGuid().ToString();
 
                 MqttApplicationMessage receivedMessage = null;
-                client.ApplicationMessageReceived += (s, e) => receivedMessage = e.ApplicationMessage;
+                client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e => receivedMessage = e.ApplicationMessage);
 
                 await client.ConnectAsync(options);
                 await client.SubscribeAsync(topic, MqttQualityOfServiceLevel.AtLeastOnce);

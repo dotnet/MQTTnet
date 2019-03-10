@@ -7,7 +7,10 @@ using Windows.Security.Cryptography.Certificates;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using MQTTnet.Client;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.ManagedClient;
@@ -144,9 +147,9 @@ namespace MQTTnet.TestApp.UniversalWindows
                 if (_mqttClient != null)
                 {
                     await _mqttClient.DisconnectAsync();
-                    _mqttClient.ApplicationMessageReceived -= OnApplicationMessageReceived;
-                    _mqttClient.Connected -= OnConnected;
-                    _mqttClient.Disconnected -= OnDisconnected;
+                    _mqttClient.UseApplicationMessageReceivedHandler(HandleReceivedApplicationMessage);
+                    _mqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected(x));
+                    _mqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected(x));
                 }
 
                 var factory = new MqttFactory();
@@ -154,9 +157,9 @@ namespace MQTTnet.TestApp.UniversalWindows
                 if (UseManagedClient.IsChecked == true)
                 {
                     _managedMqttClient = factory.CreateManagedMqttClient();
-                    _managedMqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
-                    _managedMqttClient.Connected += OnConnected;
-                    _managedMqttClient.Disconnected += OnDisconnected;
+                    _managedMqttClient.UseApplicationMessageReceivedHandler(HandleReceivedApplicationMessage);
+                    _managedMqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected(x));
+                    _managedMqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected(x));
 
                     await _managedMqttClient.StartAsync(new ManagedMqttClientOptions
                     {
@@ -166,9 +169,9 @@ namespace MQTTnet.TestApp.UniversalWindows
                 else
                 {
                     _mqttClient = factory.CreateMqttClient();
-                    _mqttClient.ApplicationMessageReceived += OnApplicationMessageReceived;
-                    _mqttClient.Connected += OnConnected;
-                    _mqttClient.Disconnected += OnDisconnected;
+                    _mqttClient.UseApplicationMessageReceivedHandler(HandleReceivedApplicationMessage);
+                    _mqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected(x));
+                    _mqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected(x));
 
                     await _mqttClient.ConnectAsync(options);
                 }
@@ -179,7 +182,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             }
         }
 
-        private void OnDisconnected(object sender, MqttClientDisconnectedEventArgs e)
+        private void OnDisconnected(MqttClientDisconnectedEventArgs e)
         {
             _traceMessages.Enqueue(new MqttNetLogMessage("", DateTime.Now, -1,
                 "", MqttNetLogLevel.Info, "! DISCONNECTED EVENT FIRED", null));
@@ -187,7 +190,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             Task.Run(UpdateLogAsync);
         }
 
-        private void OnConnected(object sender, MqttClientConnectedEventArgs e)
+        private void OnConnected(MqttClientConnectedEventArgs e)
         {
             _traceMessages.Enqueue(new MqttNetLogMessage("", DateTime.Now, -1,
                 "", MqttNetLogLevel.Info, "! CONNECTED EVENT FIRED", null));
@@ -195,7 +198,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             Task.Run(UpdateLogAsync);
         }
 
-        private async void OnApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs eventArgs)
+        private async Task HandleReceivedApplicationMessage(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
             var item = $"Timestamp: {DateTime.Now:O} | Topic: {eventArgs.ApplicationMessage.Topic} | Payload: {Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload)} | QoS: {eventArgs.ApplicationMessage.QualityOfServiceLevel}";
 

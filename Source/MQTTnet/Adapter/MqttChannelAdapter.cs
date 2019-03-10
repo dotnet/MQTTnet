@@ -42,6 +42,8 @@ namespace MQTTnet.Adapter
 
         public string Endpoint => _channel.Endpoint;
 
+        public bool IsSecureConnection => _channel.IsSecureConnection;
+
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
         public event EventHandler ReadingPacketStarted;

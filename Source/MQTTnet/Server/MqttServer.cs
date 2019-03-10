@@ -28,35 +28,41 @@ namespace MQTTnet.Server
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttServer));
-
-            _eventDispatcher.ClientConnected += (s, e) => ClientConnected?.Invoke(s, e);
-            _eventDispatcher.ClientDisconnected += (s, e) => ClientDisconnected?.Invoke(s, e);
-            _eventDispatcher.ClientSubscribedTopic += (s, e) => ClientSubscribedTopic?.Invoke(s, e);
-            _eventDispatcher.ClientUnsubscribedTopic += (s, e) => ClientUnsubscribedTopic?.Invoke(s, e);
-            _eventDispatcher.ApplicationMessageReceived += async (s, e) =>
-            {
-                // TODO: Migrate EventDispatcher to proper handlers and no events anymore.
-                ApplicationMessageReceived?.Invoke(s, e);
-
-                var handler = ReceivedApplicationMessageHandler;
-                if (handler != null)
-                {
-                    await handler.HandleApplicationMessageAsync(
-                        new MqttApplicationMessageHandlerContext(e.ClientId, e.ApplicationMessage)).ConfigureAwait(false);
-                }
-            };
         }
 
-        public event EventHandler Started;
-        public event EventHandler Stopped;
+        public IMqttServerStartedHandler StartedHandler { get; set; }
 
-        public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
-        public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
-        public event EventHandler<MqttClientSubscribedTopicEventArgs> ClientSubscribedTopic;
-        public event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
+        public IMqttServerStoppedHandler StoppedHandler { get; set; }
 
-        public IMqttApplicationMessageHandler ReceivedApplicationMessageHandler { get; set; }
-        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
+        public IMqttServerClientConnectedHandler ClientConnectedHandler
+        {
+            get => _eventDispatcher.ClientConnectedHandler;
+            set => _eventDispatcher.ClientConnectedHandler = value;
+        }
+
+        public IMqttServerClientDisconnectedHandler ClientDisconnectedHandler
+        {
+            get => _eventDispatcher.ClientDisconnectedHandler;
+            set => _eventDispatcher.ClientDisconnectedHandler = value;
+        }
+        
+        public IMqttServerClientSubscribedTopicHandler ClientSubscribedTopicHandler
+        {
+            get => _eventDispatcher.ClientSubscribedTopicHandler;
+            set => _eventDispatcher.ClientSubscribedTopicHandler = value;
+        }
+
+        public IMqttServerClientUnsubscribedTopicHandler ClientUnsubscribedTopicHandler
+        {
+            get => _eventDispatcher.ClientUnsubscribedTopicHandler;
+            set => _eventDispatcher.ClientUnsubscribedTopicHandler = value;
+        }
+        
+        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
+        {
+            get => _eventDispatcher.ApplicationMessageReceivedHandler;
+            set => _eventDispatcher.ApplicationMessageReceivedHandler = value;
+        }
 
         public IMqttServerOptions Options { get; private set; }
 
@@ -118,12 +124,17 @@ namespace MQTTnet.Server
 
             foreach (var adapter in _adapters)
             {
-                adapter.ClientAccepted += OnClientAccepted;
+                adapter.ClientAcceptedHandler = OnClientAccepted;
                 await adapter.StartAsync(Options).ConfigureAwait(false);
             }
 
             _logger.Info("Started.");
-            Started?.Invoke(this, EventArgs.Empty);
+
+            var startedHandler = StartedHandler;
+            if (startedHandler != null)
+            {
+                await startedHandler.HandleServerStartedAsync(EventArgs.Empty).ConfigureAwait(false);
+            }
         }
 
         public async Task StopAsync()
@@ -141,12 +152,11 @@ namespace MQTTnet.Server
 
                 foreach (var adapter in _adapters)
                 {
-                    adapter.ClientAccepted -= OnClientAccepted;
+                    adapter.ClientAcceptedHandler = null;
                     await adapter.StopAsync().ConfigureAwait(false);
                 }
 
                 _logger.Info("Stopped.");
-                Stopped?.Invoke(this, EventArgs.Empty);
             }
             finally
             {
@@ -158,6 +168,12 @@ namespace MQTTnet.Server
                 _clientSessionsManager?.Dispose();
                 _clientSessionsManager = null;
             }
+
+            var stoppedHandler = StoppedHandler;
+            if (stoppedHandler != null)
+            {
+                await stoppedHandler.HandleServerStoppedAsync(EventArgs.Empty).ConfigureAwait(false);
+            }
         }
 
         public Task ClearRetainedMessagesAsync()
@@ -165,7 +181,7 @@ namespace MQTTnet.Server
             return _retainedMessagesManager?.ClearMessagesAsync();
         }
 
-        private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
+        private void OnClientAccepted(MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
             eventArgs.SessionTask = _clientSessionsManager.HandleConnectionAsync(eventArgs.Client);
         }

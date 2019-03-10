@@ -5,8 +5,9 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
-using MQTTnet.Client.Receiving;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -45,10 +46,10 @@ namespace MQTTnet.Tests
             using (var client = factory.CreateMqttClient())
             {
                 Exception ex = null;
-                client.Disconnected += (s, e) =>
+                client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(e =>
                 {
                     ex = e.Exception;
-                };
+                });
 
                 try
                 {
@@ -81,9 +82,9 @@ namespace MQTTnet.Tests
 
                 var receivedValues = new List<int>();
 
-                async Task Handler1(MqttApplicationMessageHandlerContext context)
+                async Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
-                    var value = int.Parse(context.ApplicationMessage.ConvertPayloadToString());
+                    var value = int.Parse(eventArgs.ApplicationMessage.ConvertPayloadToString());
                     await Task.Delay(value);
 
                     lock (receivedValues)
@@ -92,7 +93,7 @@ namespace MQTTnet.Tests
                     }
                 }
 
-                client1.UseReceivedApplicationMessageHandler(Handler1);
+                client1.UseApplicationMessageReceivedHandler(Handler1);
 
                 var client2 = await testEnvironment.ConnectClientAsync();
                 for (var i = MessagesCount; i > 0; i--)
@@ -119,27 +120,27 @@ namespace MQTTnet.Tests
                 var client1 = await testEnvironment.ConnectClientAsync();
                 await client1.SubscribeAsync("request/+");
 
-                async Task Handler1(MqttApplicationMessageHandlerContext context)
+                async Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
-                    await client1.PublishAsync($"reply/{context.ApplicationMessage.Topic}");
+                    await client1.PublishAsync($"reply/{eventArgs.ApplicationMessage.Topic}");
                 }
 
-                client1.UseReceivedApplicationMessageHandler(Handler1);
+                client1.UseApplicationMessageReceivedHandler(Handler1);
 
                 var client2 = await testEnvironment.ConnectClientAsync();
                 await client2.SubscribeAsync("reply/#");
 
                 var replies = new List<string>();
 
-                void Handler2(MqttApplicationMessageHandlerContext context)
+                void Handler2(MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
                     lock (replies)
                     {
-                        replies.Add(context.ApplicationMessage.Topic);
+                        replies.Add(eventArgs.ApplicationMessage.Topic);
                     }
                 }
 
-                client2.UseReceivedApplicationMessageHandler((Action<MqttApplicationMessageHandlerContext>)Handler2);
+                client2.UseApplicationMessageReceivedHandler((Action<MqttApplicationMessageReceivedEventArgs>)Handler2);
 
                 await Task.Delay(500);
 
@@ -163,7 +164,7 @@ namespace MQTTnet.Tests
                 var receivedMessages = new List<MqttApplicationMessage>();
 
                 var client1 = await testEnvironment.ConnectClientAsync();
-                client1.UseReceivedApplicationMessageHandler(c =>
+                client1.UseApplicationMessageReceivedHandler(c =>
                 {
                     lock (receivedMessages)
                     {
@@ -195,7 +196,7 @@ namespace MQTTnet.Tests
 
                 var client = testEnvironment.CreateClient();
 
-                client.Connected += async (s, e) =>
+                client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(async e =>
                 {
                     await client.SubscribeAsync("RCU/P1/H0001/R0003");
 
@@ -204,9 +205,9 @@ namespace MQTTnet.Tests
                         .WithTopic("RCU/P1/H0001/R0003");
 
                     await client.PublishAsync(msg.Build());
-                };
+                });
 
-                client.UseReceivedApplicationMessageHandler(c =>
+                client.UseApplicationMessageReceivedHandler(c =>
                 {
                     lock (receivedMessages)
                     {
@@ -241,7 +242,7 @@ namespace MQTTnet.Tests
 
                 var retries = 0;
 
-                async Task Handler1(MqttApplicationMessageHandlerContext context)
+                async Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
                     retries++;
 
@@ -249,7 +250,7 @@ namespace MQTTnet.Tests
                     throw new Exception("Broken!");
                 }
 
-                client1.UseReceivedApplicationMessageHandler(Handler1);
+                client1.UseApplicationMessageReceivedHandler(Handler1);
 
                 var client2 = await testEnvironment.ConnectClientAsync();
                 await client2.PublishAsync("x");

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
@@ -78,12 +79,12 @@ namespace MQTTnet.TestApp.NetCore
 
                 var mqttServer = new MqttFactory().CreateMqttServer();
 
-                mqttServer.ApplicationMessageReceived += (s, e) =>
+                mqttServer.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     MqttNetConsoleLogger.PrintToConsole(
                         $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0])}'",
                         ConsoleColor.Magenta);
-                };
+                });
 
                 //options.ApplicationMessageInterceptor = c =>
                 //{
@@ -107,10 +108,10 @@ namespace MQTTnet.TestApp.NetCore
                 //    }
                 //};
 
-                mqttServer.ClientDisconnected += (s, e) =>
+                mqttServer.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(e =>
                 {
                     Console.Write("Client disconnected event fired.");
-                };
+                });
 
                 await mqttServer.StartAsync(options);
 

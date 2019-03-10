@@ -9,7 +9,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -66,7 +68,7 @@ namespace MQTTnet.Tests
                 var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage);
 
                 var c1 = await testEnvironment.ConnectClientAsync();
-                c1.UseReceivedApplicationMessageHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c1.SubscribeAsync(new TopicFilterBuilder().WithTopic("#").Build());
 
                 var c2 = await testEnvironment.ConnectClientAsync(clientOptions);
@@ -92,7 +94,7 @@ namespace MQTTnet.Tests
                 var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage);
 
                 var c1 = await testEnvironment.ConnectClientAsync();
-                c1.UseReceivedApplicationMessageHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c1.SubscribeAsync(new TopicFilterBuilder().WithTopic("#").Build());
 
                 var c2 = await testEnvironment.ConnectClientAsync(clientOptions);
@@ -114,7 +116,7 @@ namespace MQTTnet.Tests
                 var server = await testEnvironment.StartServerAsync();
 
                 var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("c1"));
-                c1.UseReceivedApplicationMessageHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
                 var c2 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("c2"));
 
@@ -125,10 +127,10 @@ namespace MQTTnet.Tests
                 Assert.AreEqual(0, receivedMessagesCount);
 
                 var subscribeEventCalled = false;
-                server.ClientSubscribedTopic += (_, e) =>
+                server.ClientSubscribedTopicHandler = new MqttServerClientSubscribedHandlerDelegate(e =>
                 {
                     subscribeEventCalled = e.TopicFilter.Topic == "a" && e.ClientId == "c1";
-                };
+                });
 
                 await c1.SubscribeAsync(new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
                 await Task.Delay(250);
@@ -139,10 +141,10 @@ namespace MQTTnet.Tests
                 Assert.AreEqual(1, receivedMessagesCount);
 
                 var unsubscribeEventCalled = false;
-                server.ClientUnsubscribedTopic += (_, e) =>
+                server.ClientUnsubscribedTopicHandler = new MqttServerClientUnsubscribedTopicHandlerDelegate(e => 
                 {
                     unsubscribeEventCalled = e.TopicFilter == "a" && e.ClientId == "c1";
-                };
+                });
 
                 await c1.UnsubscribeAsync("a");
                 await Task.Delay(250);
@@ -168,7 +170,7 @@ namespace MQTTnet.Tests
                 var receivedMessagesCount = 0;
 
                 var client = await testEnvironment.ConnectClientAsync();
-                client.UseReceivedApplicationMessageHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                client.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
                 await client.SubscribeAsync(new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
@@ -194,7 +196,7 @@ namespace MQTTnet.Tests
                 var c1 = await testEnvironment.ConnectClientAsync();
                 var c2 = await testEnvironment.ConnectClientAsync();
 
-                c1.UseReceivedApplicationMessageHandler(c =>
+                c1.UseApplicationMessageReceivedHandler(c =>
                 {
                     lock (locked)
                     {
@@ -202,7 +204,7 @@ namespace MQTTnet.Tests
                     }
                 });
 
-                c2.UseReceivedApplicationMessageHandler(c =>
+                c2.UseApplicationMessageReceivedHandler(c =>
                 {
                     lock (locked)
                     {
@@ -258,12 +260,12 @@ namespace MQTTnet.Tests
                 var client = await testEnvironment.ConnectClientAsync();
                 var receivedMessages = new List<MqttApplicationMessage>();
 
-                client.Connected += async (s, e) =>
+                client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(async e =>
                 {
                     await client.PublishAsync("Connected");
-                };
+                });
 
-                client.UseReceivedApplicationMessageHandler(c =>
+                client.UseApplicationMessageReceivedHandler(c =>
                 {
                     lock (receivedMessages)
                     {
@@ -287,15 +289,12 @@ namespace MQTTnet.Tests
             using (var testEnvironment = new TestEnvironment())
             {
                 var server = await testEnvironment.StartServerAsync();
-                server.ClientConnected += async (s, e) =>
-                {
-                    await server.SubscribeAsync(e.ClientId, "topic1");
-                };
+                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(e  => server.SubscribeAsync(e.ClientId, "topic1"));
 
                 var client = await testEnvironment.ConnectClientAsync();
                 var receivedMessages = new List<MqttApplicationMessage>();
 
-                client.UseReceivedApplicationMessageHandler(c =>
+                client.UseApplicationMessageReceivedHandler(c =>
                 {
                     lock (receivedMessages)
                     {
@@ -325,7 +324,7 @@ namespace MQTTnet.Tests
                 var disconnectCalled = 0;
 
                 var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder());
-                c1.Disconnected += (sender, args) => disconnectCalled++;
+                c1.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(e => disconnectCalled++);
 
                 await Task.Delay(100);
 
@@ -347,8 +346,8 @@ namespace MQTTnet.Tests
                 var clientConnectedCalled = 0;
                 var clientDisconnectedCalled = 0;
 
-                server.ClientConnected += (_, __) => Interlocked.Increment(ref clientConnectedCalled);
-                server.ClientDisconnected += (_, __) => Interlocked.Increment(ref clientDisconnectedCalled);
+                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(_ => Interlocked.Increment(ref clientConnectedCalled));
+                server.ClientDisconnectedHandler = new MqttServerClientDisconnectedHandlerDelegate(_ => Interlocked.Increment(ref clientDisconnectedCalled));
 
                 var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder());
 
@@ -462,7 +461,7 @@ namespace MQTTnet.Tests
                 var receivedMessages = 0;
 
                 var c2 = await testEnvironment.ConnectClientAsync();
-                c2.UseReceivedApplicationMessageHandler(c =>
+                c2.UseApplicationMessageReceivedHandler(c =>
                 {
                     Interlocked.Increment(ref receivedMessages);
                 });
@@ -500,7 +499,7 @@ namespace MQTTnet.Tests
                 var receivedMessagesCount = 0;
 
                 var c2 = await testEnvironment.ConnectClientAsync();
-                c2.UseReceivedApplicationMessageHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c2.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c2.SubscribeAsync(new TopicFilterBuilder().WithTopic("retained_other").Build());
 
                 await Task.Delay(500);
@@ -523,7 +522,7 @@ namespace MQTTnet.Tests
                 var receivedMessages = new List<MqttApplicationMessage>();
 
                 var c2 = await testEnvironment.ConnectClientAsync();
-                c2.UseReceivedApplicationMessageHandler(c =>
+                c2.UseApplicationMessageReceivedHandler(c =>
                 {
                     lock (receivedMessages)
                     {
@@ -558,7 +557,7 @@ namespace MQTTnet.Tests
 
                 var c2 = await testEnvironment.ConnectClientAsync();
 
-                c2.UseReceivedApplicationMessageHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c2.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
                 await Task.Delay(200);
                 await c2.SubscribeAsync(new TopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
@@ -604,7 +603,7 @@ namespace MQTTnet.Tests
                 await c2.SubscribeAsync(new TopicFilterBuilder().WithTopic("test").Build());
 
                 var isIntercepted = false;
-                c2.UseReceivedApplicationMessageHandler(c =>
+                c2.UseApplicationMessageReceivedHandler(c =>
                 {
                     isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(c.ApplicationMessage.Payload), StringComparison.Ordinal) == 0;
                 });
@@ -645,7 +644,7 @@ namespace MQTTnet.Tests
 
                 await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
                 var client1 = await testEnvironment.ConnectClientAsync();
-                client1.UseReceivedApplicationMessageHandler(c =>
+                client1.UseApplicationMessageReceivedHandler(c =>
                 {
                     receivedBody = c.ApplicationMessage.Payload;
                 });
@@ -703,21 +702,21 @@ namespace MQTTnet.Tests
 
                 var events = new List<string>();
 
-                server.ClientConnected += (_, __) =>
+                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(_ => 
                 {
                     lock (events)
                     {
                         events.Add("c");
                     }
-                };
+                });
 
-                server.ClientDisconnected += (_, __) =>
+                server.ClientDisconnectedHandler = new MqttServerClientDisconnectedHandlerDelegate(_ =>
                 {
                     lock (events)
                     {
                         events.Add("d");
                     }
-                };
+                });
 
                 var clientOptions = new MqttClientOptionsBuilder()
                     .WithClientId("same_id");
@@ -888,7 +887,7 @@ namespace MQTTnet.Tests
 
                 var buffer = new StringBuilder();
                 
-                client2.UseReceivedApplicationMessageHandler(c =>
+                client2.UseApplicationMessageReceivedHandler(c =>
                 {
                     lock (buffer)
                     {
@@ -952,7 +951,7 @@ namespace MQTTnet.Tests
                 await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
 
                 var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("receiver"));
-                c1.UseReceivedApplicationMessageHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c1.SubscribeAsync(new TopicFilterBuilder().WithTopic(topicFilter).WithQualityOfServiceLevel(filterQualityOfServiceLevel).Build());
 
                 var c2 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("sender"));

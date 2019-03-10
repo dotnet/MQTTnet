@@ -235,6 +235,7 @@ FakesAssemblies/
 # Node.js Tools for Visual Studio
 .ntvs_analysis.dat
 node_modules/
+/*/**/package-lock.json
 
 # Typescript v1 declaration files
 typings/

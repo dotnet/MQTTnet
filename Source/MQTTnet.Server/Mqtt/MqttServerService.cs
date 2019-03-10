@@ -30,7 +30,6 @@ namespace MQTTnet.Server.Mqtt
         public MqttServerService(
             Configuration.SettingsModel settings,
             CustomMqttFactory mqttFactory,
-            MqttWebSocketServerAdapter webSocketServerAdapter,
             MqttClientConnectedHandler mqttClientConnectedHandler,
             MqttClientDisconnectedHandler mqttClientDisconnectedHandler,
             MqttClientSubscribedTopicHandler mqttClientSubscribedTopicHandler,
@@ -52,14 +51,18 @@ namespace MQTTnet.Server.Mqtt
             _pythonScriptHostService = pythonScriptHostService ?? throw new ArgumentNullException(nameof(pythonScriptHostService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+            WebSocketServerAdapter = new MqttWebSocketServerAdapter(mqttFactory.Logger.CreateChildLogger());
+
             var adapters = new List<IMqttServerAdapter>
             {
-                new MqttTcpServerAdapter(mqttFactory.Logger.CreateChildLogger(nameof(MqttTcpServerAdapter))),
-                webSocketServerAdapter
+                new MqttTcpServerAdapter(mqttFactory.Logger.CreateChildLogger()),
+                WebSocketServerAdapter
             };
 
             _mqttServer = mqttFactory.CreateMqttServer(adapters);
         }
+
+        public MqttWebSocketServerAdapter WebSocketServerAdapter { get; }
 
         public void Configure()
         {

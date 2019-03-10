@@ -79,8 +79,8 @@ namespace MQTTnet.Server.Configuration
 
             if (IPv4 == "disable")
             {
-                address = null;
-                return false;
+                address = IPAddress.None;
+                return true;
             }
 
             if (IPAddress.TryParse(IPv4, out var ip))
@@ -114,8 +114,8 @@ namespace MQTTnet.Server.Configuration
 
             if (IPv6 == "disable")
             {
-                address = null;
-                return false;
+                address = IPAddress.None;
+                return true;
             }
 
             if (IPAddress.TryParse(IPv6, out var ip))

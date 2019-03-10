@@ -16,18 +16,19 @@ namespace MQTTnet.Server.Mqtt
     {
         private readonly ILogger<MqttServerService> _logger;
 
+        private readonly Configuration.SettingsModel _settings;
+        private readonly MqttApplicationMessageInterceptor _mqttApplicationMessageInterceptor;
         private readonly MqttClientConnectedHandler _mqttClientConnectedHandler;
         private readonly MqttClientDisconnectedHandler _mqttClientDisconnectedHandler;
         private readonly MqttClientSubscribedTopicHandler _mqttClientSubscribedTopicHandler;
         private readonly MqttClientUnsubscribedTopicHandler _mqttClientUnsubscribedTopicHandler;
         private readonly MqttConnectionValidator _mqttConnectionValidator;
+        private readonly IMqttServer _mqttServer;
         private readonly MqttSubscriptionInterceptor _mqttSubscriptionInterceptor;
-        private readonly MqttApplicationMessageInterceptor _mqttApplicationMessageInterceptor;
         private readonly PythonScriptHostService _pythonScriptHostService;
 
-        private readonly IMqttServer _mqttServer;
-
         public MqttServerService(
+            Configuration.SettingsModel settings,
             CustomMqttFactory mqttFactory,
             MqttWebSocketServerAdapter webSocketServerAdapter,
             MqttClientConnectedHandler mqttClientConnectedHandler,
@@ -40,6 +41,7 @@ namespace MQTTnet.Server.Mqtt
             PythonScriptHostService pythonScriptHostService,
             ILogger<MqttServerService> logger)
         {
+            _settings = settings;
             _mqttClientConnectedHandler = mqttClientConnectedHandler ?? throw new ArgumentNullException(nameof(mqttClientConnectedHandler));
             _mqttClientDisconnectedHandler = mqttClientDisconnectedHandler ?? throw new ArgumentNullException(nameof(mqttClientDisconnectedHandler));
             _mqttClientSubscribedTopicHandler = mqttClientSubscribedTopicHandler ?? throw new ArgumentNullException(nameof(mqttClientSubscribedTopicHandler));
@@ -64,19 +66,75 @@ namespace MQTTnet.Server.Mqtt
             _pythonScriptHostService.RegisterProxyObject("publish", new Action<PythonDictionary>(Publish));
 
             var options = new MqttServerOptionsBuilder()
-                .WithDefaultEndpoint()
-                .WithDefaultEndpointPort(1883)
+                .WithMaxPendingMessagesPerClient(_settings.MaxPendingMessagesPerClient)
+                .WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(_settings.CommunicationTimeout))
                 .WithConnectionValidator(_mqttConnectionValidator)
                 .WithApplicationMessageInterceptor(_mqttApplicationMessageInterceptor)
-                .WithSubscriptionInterceptor(_mqttSubscriptionInterceptor)
-                .Build();
+                .WithSubscriptionInterceptor(_mqttSubscriptionInterceptor);
+
+            // Configure unencrypted connections
+            if (_settings.Listen.Enabled)
+            {
+                options.WithDefaultEndpoint();
+                if (_settings.Listen.TryReadIPv6(out var address4))
+                {
+                    options.WithDefaultEndpointBoundIPAddress(address4);
+                }
+
+                if (_settings.Listen.TryReadIPv6(out var address6))
+                {
+                    options.WithDefaultEndpointBoundIPV6Address(address6);
+                }
+
+                if (_settings.Listen.Port > 0)
+                {
+                    options.WithDefaultEndpointPort(_settings.Listen.Port);
+                }
+            }
+            else
+            {
+                options.WithoutDefaultEndpoint();
+            }
+
+            // Configure encrypted connections
+            if (_settings.ListenEncryption.Enabled)
+            {
+                options
+                    .WithEncryptedEndpoint()
+                    .WithEncryptionSslProtocol(System.Security.Authentication.SslProtocols.Tls12)
+                    .WithEncryptionCertificate(_settings.ListenEncryption.ReadCertificate());
+
+                if (_settings.ListenEncryption.TryReadIPv6(out var address4))
+                {
+                    options.WithDefaultEndpointBoundIPAddress(address4);
+                }
+
+                if (_settings.ListenEncryption.TryReadIPv6(out var address6))
+                {
+                    options.WithDefaultEndpointBoundIPV6Address(address6);
+                }
+
+                if (_settings.Listen.Port > 0)
+                {
+                    options.WithEncryptedEndpointPort(_settings.ListenEncryption.Port);
+                }
+            }
+            else
+            {
+                options.WithoutEncryptedEndpoint();
+            }
+
+            if (_settings.ConnectionBacklog > 0)
+            {
+                options.WithConnectionBacklog(_settings.ConnectionBacklog);
+            }
 
             _mqttServer.ClientConnectedHandler = _mqttClientConnectedHandler;
             _mqttServer.ClientDisconnectedHandler = _mqttClientDisconnectedHandler;
             _mqttServer.ClientSubscribedTopicHandler = _mqttClientSubscribedTopicHandler;
             _mqttServer.ClientUnsubscribedTopicHandler = _mqttClientUnsubscribedTopicHandler;
 
-            _mqttServer.StartAsync(options).GetAwaiter().GetResult();
+            _mqttServer.StartAsync(options.Build()).GetAwaiter().GetResult();
 
             _logger.LogInformation("MQTT server started.");
         }

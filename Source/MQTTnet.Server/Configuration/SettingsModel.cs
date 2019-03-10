@@ -1,15 +1,42 @@
-﻿using System.Collections.Generic;
-
-namespace MQTTnet.Server.Configuration
+﻿namespace MQTTnet.Server.Configuration
 {
     /// <summary>
     /// Main Settings Model
     /// </summary>
     public class SettingsModel
     {
+        public SettingsModel()
+        {
+        }
+
+        /// <summary>
+        /// Set default connection timeout in seconds
+        /// </summary>
+        public int CommunicationTimeout { get; set; } = 15;
+
+        /// <summary>
+        /// Set 0 to disable connection backlogging
+        /// </summary>
+        public int ConnectionBacklog { get; set; }
+
+        /// <summary>
+        /// Enable support for persistent sessions
+        /// </summary>
+        public bool EnablePersistentSessions { get; set; } = false;
+
         /// <summary>
         /// Listen Settings
         /// </summary>
-        public IEnumerable<ListenModel> Listen { get; set; }
+        public ListenModel Listen { get; set; } = new ListenModel();
+
+        /// <summary>
+        /// Encryption Listen Settings
+        /// </summary>
+        public ListenModel ListenEncryption { get; set; } = new ListenModel();
+
+        /// <summary>
+        /// Set limit for max pending messages per client
+        /// </summary>
+        public int MaxPendingMessagesPerClient { get; set; } = 250;
     }
 }

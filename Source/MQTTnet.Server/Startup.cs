@@ -15,11 +15,11 @@ namespace MQTTnet.Server
     {
         public Startup(IConfiguration configuration)
         {
-            //var builder = new ConfigurationBuilder()
-            //    .AddJsonFile("appsettings.json")
-            //    .AddEnvironmentVariables();
+            var builder = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables();
 
-            //Configuration = builder.Build();
+            Configuration = builder.Build();
         }
         
         public IConfigurationRoot Configuration { get; }
@@ -52,6 +52,12 @@ namespace MQTTnet.Server
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
+            // Read settings
+            var settings = new Configuration.SettingsModel();
+            Configuration.Bind("MQTTnet", settings);
+            services.AddSingleton(settings);
+
+            // Wire up dependencies
             services.AddSingleton<PythonIOStream>();
             services.AddSingleton<PythonScriptHostService>();
             services.AddSingleton<DataSharingService>();

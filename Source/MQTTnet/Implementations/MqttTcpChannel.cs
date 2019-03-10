@@ -27,6 +27,8 @@ namespace MQTTnet.Implementations
         {
             _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
             _options = (MqttClientTcpOptions)clientOptions.ChannelOptions;
+
+            IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
         }
 
         /// <summary>
@@ -37,6 +39,8 @@ namespace MQTTnet.Implementations
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
 
+            IsSecureConnection = sslStream != null;
+
             CreateStream(sslStream);
         }
 
@@ -44,6 +48,8 @@ namespace MQTTnet.Implementations
         public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
 
         public string Endpoint => _socket?.RemoteEndPoint?.ToString();
+
+        public bool IsSecureConnection { get; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {

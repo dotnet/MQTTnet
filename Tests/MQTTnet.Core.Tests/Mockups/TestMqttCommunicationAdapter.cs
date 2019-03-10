@@ -14,7 +14,9 @@ namespace MQTTnet.Tests.Mockups
 
         public TestMqttCommunicationAdapter Partner { get; set; }
 
-        public string Endpoint { get; }
+        public string Endpoint { get; } = string.Empty;
+
+        public bool IsSecureConnection { get; } = false;
 
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; } = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
 

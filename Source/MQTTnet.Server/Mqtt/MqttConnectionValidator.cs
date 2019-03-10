@@ -26,6 +26,7 @@ namespace MQTTnet.Server.Mqtt
                 {
                     { "client_id", context.ClientId },
                     { "endpoint", context.Endpoint },
+                    { "is_secure_connection", context.IsSecureConnection },
                     { "username", context.Username },
                     { "password", context.Password },
                     { "result", PythonConvert.Pythonfy(context.ReturnCode) }

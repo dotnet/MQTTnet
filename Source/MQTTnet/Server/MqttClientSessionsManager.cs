@@ -298,7 +298,8 @@ namespace MQTTnet.Server
                 connectPacket.Username,
                 connectPacket.Password,
                 connectPacket.WillMessage,
-                clientAdapter.Endpoint);
+                clientAdapter.Endpoint,
+                clientAdapter.IsSecureConnection);
 
             var connectionValidator = _options.ConnectionValidator;
 

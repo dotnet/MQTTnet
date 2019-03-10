@@ -114,7 +114,7 @@ namespace MQTTnet.Server.Mqtt
 
                 if (_settings.EndpointEncryption.TryReadIPv6(out var address6))
                 {
-                    options.WithEncryptedEndpointBoundIPAddress(address6);
+                    options.WithEncryptedEndpointBoundIPV6Address(address6);
                 }
 
                 if (_settings.Endpoint.Port > 0)

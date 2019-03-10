@@ -36,6 +36,8 @@ namespace MQTTnet.Implementations
             _bufferSize = serverOptions.DefaultEndpointOptions.BufferSize;
 
             CreateStreams();
+
+            IsSecureConnection = socket.Information.ProtectionLevel >= SocketProtectionLevel.Tls12;
         }
 
         public static Func<MqttClientTcpOptions, IEnumerable<ChainValidationResult>> CustomIgnorableServerCertificateErrorsResolver { get; set; }
@@ -52,6 +54,8 @@ namespace MQTTnet.Implementations
                 return null;
             }
         }
+
+        public bool IsSecureConnection { get; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {

@@ -25,6 +25,8 @@
 * [Server] Added support for MQTTv5 clients. The server will still return _success_ for all cases at the moment even if more granular codes are available.
 * [Server] Fixed issues in QoS 2 handling which leads to message loss.
 * [Server] Replaced all events with proper async compatible handlers (BREAKING CHANGE!).
+* [Server] The used logger instance is now propagated to the WebSocket server adapter.
+* [Server] Added the flag "IsSecureConnection" which is set to true when the connection is encrypted.
 * [MQTTnet Server] Added as first Alpha version.
 
 * [Note] Due to MQTTv5 a lot of new classes were introduced. This required adding new namespaces as well. Most classes are backward compatible but new namespaces must be added.

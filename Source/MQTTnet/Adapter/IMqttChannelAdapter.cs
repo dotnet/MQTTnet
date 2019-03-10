@@ -10,6 +10,8 @@ namespace MQTTnet.Adapter
     {
         string Endpoint { get; }
 
+        bool IsSecureConnection { get; }
+
         MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
         
         event EventHandler ReadingPacketStarted;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Net;
 using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
@@ -21,13 +22,17 @@ namespace MQTTnet.Implementations
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public MqttWebSocketChannel(WebSocket webSocket, string endpoint)
+        public MqttWebSocketChannel(WebSocket webSocket, string endpoint, bool isSecureConnection)
         {
             _webSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
+
             Endpoint = endpoint;
+            IsSecureConnection = isSecureConnection;
         }
 
         public string Endpoint { get; }
+
+        public bool IsSecureConnection { get; private set; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
@@ -83,6 +88,8 @@ namespace MQTTnet.Implementations
 
             await clientWebSocket.ConnectAsync(new Uri(uri), cancellationToken).ConfigureAwait(false);
             _webSocket = clientWebSocket;
+
+            IsSecureConnection = uri.StartsWith("wss://", StringComparison.OrdinalIgnoreCase);
         }
 
         public async Task DisconnectAsync(CancellationToken cancellationToken)

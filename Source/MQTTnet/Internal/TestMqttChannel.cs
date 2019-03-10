@@ -16,6 +16,8 @@ namespace MQTTnet.Internal
 
         public string Endpoint { get; } = "<Test channel>";
 
+        public bool IsSecureConnection { get; } = false;
+
         public Task ConnectAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(0);

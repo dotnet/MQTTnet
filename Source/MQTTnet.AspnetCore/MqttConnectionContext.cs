@@ -20,6 +20,7 @@ namespace MQTTnet.AspNetCore
         }
 
         public string Endpoint => Connection.ConnectionId;
+        public bool IsSecureConnection => false; // TODO: Fix detection.
         public ConnectionContext Connection { get; }
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
         public event EventHandler ReadingPacketStarted;

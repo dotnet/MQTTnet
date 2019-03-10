@@ -38,12 +38,13 @@ namespace MQTTnet.AspNetCore
             if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
 
             var endpoint = $"{httpContext.Connection.RemoteIpAddress}:{httpContext.Connection.RemotePort}";
-            var channel = new MqttWebSocketChannel(webSocket, endpoint);
-            var clientAdapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(), _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
-
+            
             var clientCertificate = await httpContext.Connection.GetClientCertificateAsync().ConfigureAwait(false);
             var isSecureConnection = clientCertificate != null;
             clientCertificate?.Dispose();
+
+            var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection);
+            var clientAdapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(), _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
             ClientAcceptedHandler?.Invoke(eventArgs);

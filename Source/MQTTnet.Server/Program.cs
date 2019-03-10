@@ -29,6 +29,7 @@ namespace MQTTnet.Server
 
         private static void PrintLogo()
         {
+            Console.ResetColor();
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(@"
   __  __  ____ _______ _______         _      _____
@@ -60,6 +61,7 @@ namespace MQTTnet.Server
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(" ! THIS IS AN ALPHA VERSION! IT IS NOT RECOMMENDED TO USE IT FOR ANY DIFFERENT PURPOSE THAN TESTING OR EVALUATING!");
             Console.WriteLine();
+            Console.ResetColor();
         }
     }
 }

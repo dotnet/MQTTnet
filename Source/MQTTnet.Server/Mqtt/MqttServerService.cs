@@ -76,22 +76,22 @@ namespace MQTTnet.Server.Mqtt
                 .WithSubscriptionInterceptor(_mqttSubscriptionInterceptor);
 
             // Configure unencrypted connections
-            if (_settings.Endpoint.Enabled)
+            if (_settings.EndPoint.Enabled)
             {
                 options.WithDefaultEndpoint();
-                if (_settings.Endpoint.TryReadIPv4(out var address4))
+                if (_settings.EndPoint.TryReadIPv4(out var address4))
                 {
                     options.WithDefaultEndpointBoundIPAddress(address4);
                 }
 
-                if (_settings.Endpoint.TryReadIPv6(out var address6))
+                if (_settings.EndPoint.TryReadIPv6(out var address6))
                 {
                     options.WithDefaultEndpointBoundIPV6Address(address6);
                 }
 
-                if (_settings.Endpoint.Port > 0)
+                if (_settings.EndPoint.Port > 0)
                 {
-                    options.WithDefaultEndpointPort(_settings.Endpoint.Port);
+                    options.WithDefaultEndpointPort(_settings.EndPoint.Port);
                 }
             }
             else
@@ -100,26 +100,26 @@ namespace MQTTnet.Server.Mqtt
             }
 
             // Configure encrypted connections
-            if (_settings.EndpointEncryption.Enabled)
+            if (_settings.EndPointEncryption.Enabled)
             {
                 options
                     .WithEncryptedEndpoint()
                     .WithEncryptionSslProtocol(System.Security.Authentication.SslProtocols.Tls12)
-                    .WithEncryptionCertificate(_settings.EndpointEncryption.ReadCertificate());
+                    .WithEncryptionCertificate(_settings.EndPointEncryption.ReadCertificate());
 
-                if (_settings.EndpointEncryption.TryReadIPv4(out var address4))
+                if (_settings.EndPointEncryption.TryReadIPv4(out var address4))
                 {
                     options.WithEncryptedEndpointBoundIPAddress(address4);
                 }
 
-                if (_settings.EndpointEncryption.TryReadIPv6(out var address6))
+                if (_settings.EndPointEncryption.TryReadIPv6(out var address6))
                 {
                     options.WithEncryptedEndpointBoundIPV6Address(address6);
                 }
 
-                if (_settings.Endpoint.Port > 0)
+                if (_settings.EndPoint.Port > 0)
                 {
-                    options.WithEncryptedEndpointPort(_settings.EndpointEncryption.Port);
+                    options.WithEncryptedEndpointPort(_settings.EndPointEncryption.Port);
                 }
             }
             else

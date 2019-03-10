@@ -145,10 +145,10 @@ namespace MQTTnet.Server
                 {
                     return;
                 }
-
-                _cancellationTokenSource.Cancel(false);
                 
-                await _clientSessionsManager.StopAsync().ConfigureAwait(false);
+                _clientSessionsManager.Stop();
+                
+                _cancellationTokenSource.Cancel(false);
 
                 foreach (var adapter in _adapters)
                 {

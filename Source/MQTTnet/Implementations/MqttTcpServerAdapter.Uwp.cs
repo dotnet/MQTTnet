@@ -23,7 +23,7 @@ namespace MQTTnet.Implementations
             _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
         }
 
-        public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
+        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler { get; set; }
 
         public async Task StartAsync(IMqttServerOptions options)
         {
@@ -73,7 +73,7 @@ namespace MQTTnet.Implementations
             try
             {
                 var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, _options), new MqttPacketFormatterAdapter(), _logger);
-                ClientAccepted?.Invoke(this, new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
+                ClientAcceptedHandler?.Invoke(new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
             }
             catch (Exception exception)
             {

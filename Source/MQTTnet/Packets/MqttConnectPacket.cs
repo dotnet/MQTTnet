@@ -27,7 +27,13 @@
 
         public override string ToString()
         {
-            return string.Concat("Connect: [ProtocolLevel=", ProtocolLevel, "] [ClientId=", ClientId, "] [Username=", Username, "] [Password=", Password, "] [KeepAlivePeriod=", KeepAlivePeriod, "] [CleanSession=", CleanSession, "]");
+            var password = Password;
+            if (!string.IsNullOrEmpty(password))
+            {
+                password = "****";
+            }
+
+            return string.Concat("Connect: [ProtocolLevel=", ProtocolLevel, "] [ClientId=", ClientId, "] [Username=", Username, "] [Password=", password, "] [KeepAlivePeriod=", KeepAlivePeriod, "] [CleanSession=", CleanSession, "]");
         }
     }
 }

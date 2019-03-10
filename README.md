@@ -26,7 +26,8 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Uniform API across all supported versions of the MQTT protocol
 * Interfaces included for mocking and testing
 * Access to internal trace messages
-* Unit tested (~130 tests)
+* Unit tested (~150 tests)
+* No external dependencies
 
 \* Tested on local machine (Intel i7 8700K) with MQTTnet client and server running in the same process using the TCP channel. The app for verification is part of this repository and stored in _/Tests/MQTTnet.TestApp.NetCore_.
 
@@ -50,6 +51,16 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * A custom message interceptor can be added which allows transforming or extending every received application message
 * Validate subscriptions and deny subscribing of certain topics depending on requesting clients
 * Connect clients with different protocol versions at the same time.
+
+## MQTTnet Server
+
+_MQTTnet Server_ is a reference implementation of a MQTT server using this library. It has the following features.
+* Running portable (no installation required)
+* Python scripting support for manipulating messages, validation of clients etc.
+* Runs und Windows, Linux, macOS, Raspberry Pi
+* Supports WebSocket and TCP (with and without TLS) connections
+* Provides a HTTP based API (including Swagger endpoint)
+* Extensive configuration
 
 ## Supported frameworks
 

@@ -4,6 +4,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
 
@@ -34,10 +35,10 @@ namespace MQTTnet.TestApp.NetCore
             try
             {
                 var managedClient = new MqttFactory().CreateManagedMqttClient();
-                managedClient.ApplicationMessageReceived += (s, e) =>
+                managedClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     Console.WriteLine(">> RECEIVED: " + e.ApplicationMessage.Topic);
-                };
+                });
 
                 await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("1"));
                 await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("2").WithAtLeastOnceQoS());

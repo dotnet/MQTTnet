@@ -2,9 +2,9 @@
 
 namespace MQTTnet.Server
 {
-    public class MqttClientDisconnectedEventArgs : EventArgs
+    public class MqttServerClientDisconnectedEventArgs : EventArgs
     {
-        public MqttClientDisconnectedEventArgs(string clientId, MqttClientDisconnectType disconnectType)
+        public MqttServerClientDisconnectedEventArgs(string clientId, MqttClientDisconnectType disconnectType)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             DisconnectType = disconnectType;

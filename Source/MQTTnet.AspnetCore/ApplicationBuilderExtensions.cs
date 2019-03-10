@@ -30,8 +30,7 @@ namespace MQTTnet.AspNetCore
                 var adapter = app.ApplicationServices.GetRequiredService<MqttWebSocketServerAdapter>();
                 using (var webSocket = await context.WebSockets.AcceptWebSocketAsync(subProtocol))
                 {
-                    var endpoint = $"{context.Connection.RemoteIpAddress}:{context.Connection.RemotePort}";
-                    await adapter.RunWebSocketConnectionAsync(webSocket, endpoint);
+                    await adapter.RunWebSocketConnectionAsync(webSocket, context);
                 }
             });
 

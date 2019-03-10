@@ -7,6 +7,7 @@ namespace MQTTnet.Channel
     public interface IMqttChannel : IDisposable
     {
         string Endpoint { get; }
+        bool IsSecureConnection { get; }
 
         Task ConnectAsync(CancellationToken cancellationToken);
         Task DisconnectAsync(CancellationToken cancellationToken);

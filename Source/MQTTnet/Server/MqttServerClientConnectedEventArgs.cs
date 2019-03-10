@@ -2,9 +2,9 @@
 
 namespace MQTTnet.Server
 {
-    public class MqttClientConnectedEventArgs : EventArgs
+    public class MqttServerClientConnectedEventArgs : EventArgs
     {
-        public MqttClientConnectedEventArgs(string clientId)
+        public MqttServerClientConnectedEventArgs(string clientId)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
         }

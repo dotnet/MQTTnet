@@ -14,19 +14,14 @@ namespace MQTTnet.Extensions.ManagedClient
         IManagedMqttClientOptions Options { get; }
 
         IMqttClientConnectedHandler ConnectedHandler { get; set; }
-        [Obsolete("Use ConnectedHandler instead.")]
-        event EventHandler<MqttClientConnectedEventArgs> Connected;
-
         IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
-        [Obsolete("Use DisconnectedHandler instead.")]
-        event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
 
-        event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
-        event EventHandler<ApplicationMessageSkippedEventArgs> ApplicationMessageSkipped;
+        IApplicationMessageProcessedHandler ApplicationMessageProcessedHandler { get; set; }
+        IApplicationMessageSkippedHandler ApplicationMessageSkippedHandler { get; set; }
 
-        event EventHandler<MqttManagedProcessFailedEventArgs> ConnectingFailed;
-        event EventHandler<MqttManagedProcessFailedEventArgs> SynchronizingSubscriptionsFailed;
-
+        IConnectingFailedHandler ConnectingFailedHandler { get; set; }
+        ISynchronizingSubscriptionsFailedHandler SynchronizingSubscriptionsFailedHandler { get; set; }
+        
         Task StartAsync(IManagedMqttClientOptions options);
         Task StopAsync();
 

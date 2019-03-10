@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using System.Net.WebSockets;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -29,7 +31,8 @@ namespace MQTTnet.Server
             IHostingEnvironment environment, 
             MqttServerService mqttServerService,
             PythonScriptHostService pythonScriptHostService,
-            DataSharingService dataSharingService)
+            DataSharingService dataSharingService,
+            MqttWebSocketServerAdapter mqttWebSocketServerAdapter)
         {
             if (environment.IsDevelopment())
             {
@@ -40,8 +43,41 @@ namespace MQTTnet.Server
                 application.UseHsts();
             }
 
+            application.UseStaticFiles();
+
+            var webSocketOptions = new WebSocketOptions
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(120),
+                ReceiveBufferSize = 4 * 1024
+            };
+
+            application.UseWebSockets(webSocketOptions);
+
             application.UseHttpsRedirection();
             application.UseMvc();
+
+            application.Use(async (context, next) =>
+            {
+                if (context.Request.Path == "/mqtt") // TODO: Full path to config.
+                {
+                    if (context.WebSockets.IsWebSocketRequest)
+                    {
+                        using (var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false))
+                        {
+                            await mqttWebSocketServerAdapter.RunWebSocketConnectionAsync(webSocket,
+                                $"{context.Connection.RemoteIpAddress}:{context.Connection.RemotePort}").ConfigureAwait(false);
+                        }
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = 400;
+                    }
+                }
+                else
+                {
+                    await next().ConfigureAwait(false);
+                }
+            });
 
             dataSharingService.Configure();
             pythonScriptHostService.Configure();

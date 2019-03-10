@@ -13,5 +13,7 @@ namespace MQTTnet
         public string ClientId { get; }
 
         public MqttApplicationMessage ApplicationMessage { get; }
+
+        public bool ProcessingFailed { get; set; }
     }
 }

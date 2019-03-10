@@ -63,41 +63,17 @@ namespace MQTTnet.Server.Configuration
         /// Read IPv4
         /// </summary>
         /// <returns></returns>
-        public IPAddress ReafIPv4()
-        {
-            if (IPv4 == "*")
-            {
-                return IPAddress.Parse("0.0.0.0");
-            }
-
-            if (IPv4 == "localhost")
-            {
-                return IPAddress.Parse("127.0.0.1");
-            }
-
-            if (IPAddress.TryParse(IPv4, out var ip))
-            {
-                return ip;
-            }
-
-            throw new System.Exception($"Could not parse IPv4 address: {IPv4}");
-        }
-
-        /// <summary>
-        /// Read IPv4
-        /// </summary>
-        /// <returns></returns>
         public bool TryReadIPv4(out IPAddress address)
         {
             if (IPv4 == "*")
             {
-                address = IPAddress.Parse("::");
+                address = IPAddress.Parse("0.0.0.0");
                 return true;
             }
 
             if (IPv4 == "localhost")
             {
-                address = IPAddress.Parse("::1");
+                address = IPAddress.Parse("127.0.0.1");
                 return true;
             }
 

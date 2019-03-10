@@ -27,12 +27,12 @@
         /// <summary>
         /// Listen Settings
         /// </summary>
-        public ListenModel Listen { get; set; } = new ListenModel();
+        public ListenModel Endpoint { get; set; } = new ListenModel();
 
         /// <summary>
         /// Encryption Listen Settings
         /// </summary>
-        public ListenModel ListenEncryption { get; set; } = new ListenModel();
+        public ListenModel EndpointEncryption { get; set; } = new ListenModel();
 
         /// <summary>
         /// Set limit for max pending messages per client

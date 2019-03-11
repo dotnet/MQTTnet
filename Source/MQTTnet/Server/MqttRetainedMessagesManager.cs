@@ -33,13 +33,16 @@ namespace MQTTnet.Server
             try
             {
                 var retainedMessages = await _options.Storage.LoadRetainedMessagesAsync().ConfigureAwait(false);
-
-                using (await _messagesLock.WaitAsync().ConfigureAwait(false))
+                if (retainedMessages?.Any() == true)
                 {
-                    _messages.Clear();
-                    foreach (var retainedMessage in retainedMessages)
+                    using (await _messagesLock.WaitAsync().ConfigureAwait(false))
                     {
-                        _messages[retainedMessage.Topic] = retainedMessage;
+                        _messages.Clear();
+
+                        foreach (var retainedMessage in retainedMessages)
+                        {
+                            _messages[retainedMessage.Topic] = retainedMessage;
+                        }
                     }
                 }
             }

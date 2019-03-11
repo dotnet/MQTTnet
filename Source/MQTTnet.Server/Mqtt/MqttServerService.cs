@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
 using IronPython.Runtime;
@@ -146,7 +147,7 @@ namespace MQTTnet.Server.Mqtt
                 .WithApplicationMessageInterceptor(_mqttApplicationMessageInterceptor)
                 .WithSubscriptionInterceptor(_mqttSubscriptionInterceptor)
                 .WithStorage(_mqttServerStorage);
-                
+            
             // Configure unencrypted connections
             if (_settings.TcpEndPoint.Enabled)
             {
@@ -176,7 +177,7 @@ namespace MQTTnet.Server.Mqtt
             {
                 options
                     .WithEncryptedEndpoint()
-                    .WithEncryptionSslProtocol(System.Security.Authentication.SslProtocols.Tls12)
+                    .WithEncryptionSslProtocol(SslProtocols.Tls12)
                     .WithEncryptionCertificate(_settings.EncryptedTcpEndPoint.ReadCertificate());
 
                 if (_settings.EncryptedTcpEndPoint.TryReadIPv4(out var address4))
@@ -202,6 +203,11 @@ namespace MQTTnet.Server.Mqtt
             if (_settings.ConnectionBacklog > 0)
             {
                 options.WithConnectionBacklog(_settings.ConnectionBacklog);
+            }
+
+            if (_settings.EnablePersistentSessions)
+            {
+                options.WithPersistentSessions();
             }
 
             return options.Build();

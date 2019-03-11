@@ -6,15 +6,8 @@ namespace MQTTnet.Server.Configuration
     /// <summary>
     /// Listen Entry Settings Model
     /// </summary>
-    public class TcpEndpointModel
+    public class TcpEndPointModel
     {
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public TcpEndpointModel()
-        {
-        }
-
         /// <summary>
         /// Path to Certificate
         /// </summary>

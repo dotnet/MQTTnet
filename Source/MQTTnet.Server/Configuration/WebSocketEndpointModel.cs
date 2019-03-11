@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MQTTnet.Server.Configuration
 {
-    public class WebSocketEndpointModel
+    public class WebSocketEndPointModel
     {
         public bool Enabled { get; set; } = true;
 

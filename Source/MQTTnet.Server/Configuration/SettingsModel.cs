@@ -44,5 +44,7 @@
         /// The settings for retained messages.
         /// </summary>
         public RetainedApplicationMessagesModel RetainedApplicationMessages { get; set; } = new RetainedApplicationMessagesModel();
+
+        public bool EnableDebugLogging { get; set; } = false;
     }
 }

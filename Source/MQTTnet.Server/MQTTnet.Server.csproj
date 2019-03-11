@@ -66,6 +66,9 @@
     <None Update="LICENSE">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Run.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Scripts\readme.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

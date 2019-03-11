@@ -2,8 +2,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Scripting.Utils;
+using MQTTnet.Server.Configuration;
 using MQTTnet.Server.Logging;
 using MQTTnet.Server.Mqtt;
 using MQTTnet.Server.Scripting;
@@ -21,15 +24,16 @@ namespace MQTTnet.Server
 
             Configuration = builder.Build();
         }
-        
+
         public IConfigurationRoot Configuration { get; }
 
         public void Configure(
-            IApplicationBuilder application, 
-            IHostingEnvironment environment, 
+            IApplicationBuilder application,
+            IHostingEnvironment environment,
             MqttServerService mqttServerService,
             PythonScriptHostService pythonScriptHostService,
-            DataSharingService dataSharingService)
+            DataSharingService dataSharingService,
+            SettingsModel settings)
         {
             if (environment.IsDevelopment())
             {
@@ -42,38 +46,10 @@ namespace MQTTnet.Server
 
             application.UseStaticFiles();
 
-            var webSocketOptions = new WebSocketOptions
-            {
-                KeepAliveInterval = TimeSpan.FromSeconds(120),
-                ReceiveBufferSize = 4 * 1024
-            };
-
-            application.UseWebSockets(webSocketOptions);
-
             application.UseHttpsRedirection();
             application.UseMvc();
 
-            application.Use(async (context, next) =>
-            {
-                if (context.Request.Path == "/mqtt") // TODO: Full path to config.
-                {
-                    if (context.WebSockets.IsWebSocketRequest)
-                    {
-                        using (var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false))
-                        {
-                            await mqttServerService.WebSocketServerAdapter.RunWebSocketConnectionAsync(webSocket, context).ConfigureAwait(false);
-                        }
-                    }
-                    else
-                    {
-                        context.Response.StatusCode = 400;
-                    }
-                }
-                else
-                {
-                    await next().ConfigureAwait(false);
-                }
-            });
+            ConfigureWebSocketEndpoint(application, mqttServerService, settings);
 
             dataSharingService.Configure();
             pythonScriptHostService.Configure();
@@ -84,12 +60,8 @@ namespace MQTTnet.Server
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            // Read settings
-            var settings = new Configuration.SettingsModel();
-            Configuration.Bind("MQTT", settings);
-            services.AddSingleton(settings);
+            services.AddSingleton(ReadSettings());
 
-            // Wire up dependencies
             services.AddSingleton<PythonIOStream>();
             services.AddSingleton<PythonScriptHostService>();
             services.AddSingleton<DataSharingService>();
@@ -105,6 +77,64 @@ namespace MQTTnet.Server
             services.AddSingleton<MqttConnectionValidator>();
             services.AddSingleton<MqttSubscriptionInterceptor>();
             services.AddSingleton<MqttApplicationMessageInterceptor>();
+        }
+
+        private SettingsModel ReadSettings()
+        {
+            var settings = new Configuration.SettingsModel();
+            Configuration.Bind("MQTT", settings);
+            return settings;
+        }
+
+        private static void ConfigureWebSocketEndpoint(
+            IApplicationBuilder application,
+            MqttServerService mqttServerService,
+            SettingsModel settings)
+        {
+            if (settings?.WebSocketEndpoint?.Enabled != true)
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(settings.WebSocketEndpoint.Path))
+            {
+                return;
+            }
+
+            var webSocketOptions = new WebSocketOptions
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(settings.WebSocketEndpoint.KeepAliveInterval),
+                ReceiveBufferSize = settings.WebSocketEndpoint.ReceiveBufferSize
+            };
+
+            if (settings.WebSocketEndpoint.AllowedOrigins?.Any() == true)
+            {
+                webSocketOptions.AllowedOrigins.AddRange(settings.WebSocketEndpoint.AllowedOrigins);
+            }
+            
+            application.UseWebSockets(webSocketOptions);
+
+            application.Use(async (context, next) =>
+            {
+                if (context.Request.Path == settings.WebSocketEndpoint.Path)
+                {
+                    if (context.WebSockets.IsWebSocketRequest)
+                    {
+                        using (var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false))
+                        {
+                            await mqttServerService.RunWebSocketConnectionAsync(webSocket, context).ConfigureAwait(false);
+                        }
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = 400;
+                    }
+                }
+                else
+                {
+                    await next().ConfigureAwait(false);
+                }
+            });
         }
     }
 }

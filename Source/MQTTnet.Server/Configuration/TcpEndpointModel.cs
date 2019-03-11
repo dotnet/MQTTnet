@@ -6,12 +6,12 @@ namespace MQTTnet.Server.Configuration
     /// <summary>
     /// Listen Entry Settings Model
     /// </summary>
-    public class ListenModel
+    public class TcpEndpointModel
     {
         /// <summary>
         /// Constructor
         /// </summary>
-        public ListenModel()
+        public TcpEndpointModel()
         {
         }
 

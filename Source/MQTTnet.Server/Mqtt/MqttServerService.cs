@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Text;
+using System.Threading.Tasks;
 using IronPython.Runtime;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore;
@@ -26,6 +29,7 @@ namespace MQTTnet.Server.Mqtt
         private readonly IMqttServer _mqttServer;
         private readonly MqttSubscriptionInterceptor _mqttSubscriptionInterceptor;
         private readonly PythonScriptHostService _pythonScriptHostService;
+        private readonly MqttWebSocketServerAdapter _webSocketServerAdapter;
 
         public MqttServerService(
             Configuration.SettingsModel settings,
@@ -51,95 +55,34 @@ namespace MQTTnet.Server.Mqtt
             _pythonScriptHostService = pythonScriptHostService ?? throw new ArgumentNullException(nameof(pythonScriptHostService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            WebSocketServerAdapter = new MqttWebSocketServerAdapter(mqttFactory.Logger.CreateChildLogger());
+            _webSocketServerAdapter = new MqttWebSocketServerAdapter(mqttFactory.Logger.CreateChildLogger());
 
             var adapters = new List<IMqttServerAdapter>
             {
                 new MqttTcpServerAdapter(mqttFactory.Logger.CreateChildLogger()),
-                WebSocketServerAdapter
+                _webSocketServerAdapter
             };
 
             _mqttServer = mqttFactory.CreateMqttServer(adapters);
         }
 
-        public MqttWebSocketServerAdapter WebSocketServerAdapter { get; }
-
         public void Configure()
         {
             _pythonScriptHostService.RegisterProxyObject("publish", new Action<PythonDictionary>(Publish));
-
-            var options = new MqttServerOptionsBuilder()
-                .WithMaxPendingMessagesPerClient(_settings.MaxPendingMessagesPerClient)
-                .WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(_settings.CommunicationTimeout))
-                .WithConnectionValidator(_mqttConnectionValidator)
-                .WithApplicationMessageInterceptor(_mqttApplicationMessageInterceptor)
-                .WithSubscriptionInterceptor(_mqttSubscriptionInterceptor);
-
-            // Configure unencrypted connections
-            if (_settings.EndPoint.Enabled)
-            {
-                options.WithDefaultEndpoint();
-                if (_settings.EndPoint.TryReadIPv4(out var address4))
-                {
-                    options.WithDefaultEndpointBoundIPAddress(address4);
-                }
-
-                if (_settings.EndPoint.TryReadIPv6(out var address6))
-                {
-                    options.WithDefaultEndpointBoundIPV6Address(address6);
-                }
-
-                if (_settings.EndPoint.Port > 0)
-                {
-                    options.WithDefaultEndpointPort(_settings.EndPoint.Port);
-                }
-            }
-            else
-            {
-                options.WithoutDefaultEndpoint();
-            }
-
-            // Configure encrypted connections
-            if (_settings.EndPointEncryption.Enabled)
-            {
-                options
-                    .WithEncryptedEndpoint()
-                    .WithEncryptionSslProtocol(System.Security.Authentication.SslProtocols.Tls12)
-                    .WithEncryptionCertificate(_settings.EndPointEncryption.ReadCertificate());
-
-                if (_settings.EndPointEncryption.TryReadIPv4(out var address4))
-                {
-                    options.WithEncryptedEndpointBoundIPAddress(address4);
-                }
-
-                if (_settings.EndPointEncryption.TryReadIPv6(out var address6))
-                {
-                    options.WithEncryptedEndpointBoundIPV6Address(address6);
-                }
-
-                if (_settings.EndPoint.Port > 0)
-                {
-                    options.WithEncryptedEndpointPort(_settings.EndPointEncryption.Port);
-                }
-            }
-            else
-            {
-                options.WithoutEncryptedEndpoint();
-            }
-
-            if (_settings.ConnectionBacklog > 0)
-            {
-                options.WithConnectionBacklog(_settings.ConnectionBacklog);
-            }
 
             _mqttServer.ClientConnectedHandler = _mqttClientConnectedHandler;
             _mqttServer.ClientDisconnectedHandler = _mqttClientDisconnectedHandler;
             _mqttServer.ClientSubscribedTopicHandler = _mqttClientSubscribedTopicHandler;
             _mqttServer.ClientUnsubscribedTopicHandler = _mqttClientUnsubscribedTopicHandler;
 
-            _mqttServer.StartAsync(options.Build()).GetAwaiter().GetResult();
+            _mqttServer.StartAsync(CreateMqttServerOptions()).GetAwaiter().GetResult();
 
             _logger.LogInformation("MQTT server started.");
+        }
+
+        public Task RunWebSocketConnectionAsync(WebSocket webSocket, HttpContext httpContext)
+        {
+            return _webSocketServerAdapter.RunWebSocketConnectionAsync(webSocket, httpContext);
         }
 
         private void Publish(PythonDictionary parameters)
@@ -186,6 +129,76 @@ namespace MQTTnet.Server.Mqtt
             {
                 _logger.LogError(exception, "Error while publishing application message from server.");
             }
+        }
+
+        private IMqttServerOptions CreateMqttServerOptions()
+        {
+            var options = new MqttServerOptionsBuilder()
+                .WithMaxPendingMessagesPerClient(_settings.MaxPendingMessagesPerClient)
+                .WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(_settings.CommunicationTimeout))
+                .WithConnectionValidator(_mqttConnectionValidator)
+                .WithApplicationMessageInterceptor(_mqttApplicationMessageInterceptor)
+                .WithSubscriptionInterceptor(_mqttSubscriptionInterceptor)
+                .WithStorage(new MqttServerStorage(_settings));
+                
+            // Configure unencrypted connections
+            if (_settings.TcpEndPoint.Enabled)
+            {
+                options.WithDefaultEndpoint();
+                if (_settings.TcpEndPoint.TryReadIPv4(out var address4))
+                {
+                    options.WithDefaultEndpointBoundIPAddress(address4);
+                }
+
+                if (_settings.TcpEndPoint.TryReadIPv6(out var address6))
+                {
+                    options.WithDefaultEndpointBoundIPV6Address(address6);
+                }
+
+                if (_settings.TcpEndPoint.Port > 0)
+                {
+                    options.WithDefaultEndpointPort(_settings.TcpEndPoint.Port);
+                }
+            }
+            else
+            {
+                options.WithoutDefaultEndpoint();
+            }
+
+            // Configure encrypted connections
+            if (_settings.EncryptedTcpEndPoint.Enabled)
+            {
+                options
+                    .WithEncryptedEndpoint()
+                    .WithEncryptionSslProtocol(System.Security.Authentication.SslProtocols.Tls12)
+                    .WithEncryptionCertificate(_settings.EncryptedTcpEndPoint.ReadCertificate());
+
+                if (_settings.EncryptedTcpEndPoint.TryReadIPv4(out var address4))
+                {
+                    options.WithEncryptedEndpointBoundIPAddress(address4);
+                }
+
+                if (_settings.EncryptedTcpEndPoint.TryReadIPv6(out var address6))
+                {
+                    options.WithEncryptedEndpointBoundIPV6Address(address6);
+                }
+
+                if (_settings.EncryptedTcpEndPoint.Port > 0)
+                {
+                    options.WithEncryptedEndpointPort(_settings.EncryptedTcpEndPoint.Port);
+                }
+            }
+            else
+            {
+                options.WithoutEncryptedEndpoint();
+            }
+
+            if (_settings.ConnectionBacklog > 0)
+            {
+                options.WithConnectionBacklog(_settings.ConnectionBacklog);
+            }
+
+            return options.Build();
         }
     }
 }

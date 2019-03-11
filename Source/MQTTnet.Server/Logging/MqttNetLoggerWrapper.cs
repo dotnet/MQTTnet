@@ -23,12 +23,6 @@ namespace MQTTnet.Server.Logging
         public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
         {
             var convertedLogLevel = ConvertLogLevel(logLevel);
-
-            if (!_logger.IsEnabled(convertedLogLevel))
-            {
-                return;
-            }
-
             _logger.Log(convertedLogLevel, exception, message, parameters);
         }
 
@@ -39,7 +33,7 @@ namespace MQTTnet.Server.Logging
                 case MqttNetLogLevel.Error: return LogLevel.Error;
                 case MqttNetLogLevel.Warning: return LogLevel.Warning;
                 case MqttNetLogLevel.Info: return LogLevel.Information;
-                case MqttNetLogLevel.Verbose: return LogLevel.Trace;
+                case MqttNetLogLevel.Verbose: return LogLevel.Debug;
             }
 
             return LogLevel.Debug;

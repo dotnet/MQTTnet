@@ -93,32 +93,32 @@ namespace MQTTnet.Server
             MqttServerService mqttServerService,
             SettingsModel settings)
         {
-            if (settings?.WebSocketEndpoint?.Enabled != true)
+            if (settings?.WebSocketEndPoint?.Enabled != true)
             {
                 return;
             }
 
-            if (string.IsNullOrEmpty(settings.WebSocketEndpoint.Path))
+            if (string.IsNullOrEmpty(settings.WebSocketEndPoint.Path))
             {
                 return;
             }
 
             var webSocketOptions = new WebSocketOptions
             {
-                KeepAliveInterval = TimeSpan.FromSeconds(settings.WebSocketEndpoint.KeepAliveInterval),
-                ReceiveBufferSize = settings.WebSocketEndpoint.ReceiveBufferSize
+                KeepAliveInterval = TimeSpan.FromSeconds(settings.WebSocketEndPoint.KeepAliveInterval),
+                ReceiveBufferSize = settings.WebSocketEndPoint.ReceiveBufferSize
             };
 
-            if (settings.WebSocketEndpoint.AllowedOrigins?.Any() == true)
+            if (settings.WebSocketEndPoint.AllowedOrigins?.Any() == true)
             {
-                webSocketOptions.AllowedOrigins.AddRange(settings.WebSocketEndpoint.AllowedOrigins);
+                webSocketOptions.AllowedOrigins.AddRange(settings.WebSocketEndPoint.AllowedOrigins);
             }
             
             application.UseWebSockets(webSocketOptions);
 
             application.Use(async (context, next) =>
             {
-                if (context.Request.Path == settings.WebSocketEndpoint.Path)
+                if (context.Request.Path == settings.WebSocketEndPoint.Path)
                 {
                     if (context.WebSockets.IsWebSocketRequest)
                     {

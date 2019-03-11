@@ -23,17 +23,17 @@
         /// <summary>
         /// Listen Settings
         /// </summary>
-        public TcpEndpointModel TcpEndPoint { get; set; } = new TcpEndpointModel();
+        public TcpEndPointModel TcpEndPoint { get; set; } = new TcpEndPointModel();
 
         /// <summary>
         /// Encryption Listen Settings
         /// </summary>
-        public TcpEndpointModel EncryptedTcpEndPoint { get; set; } = new TcpEndpointModel();
+        public TcpEndPointModel EncryptedTcpEndPoint { get; set; } = new TcpEndPointModel();
 
         /// <summary>
         /// Settings for the Web Socket endpoint.
         /// </summary>
-        public WebSocketEndpointModel WebSocketEndpoint { get; set; } = new WebSocketEndpointModel();
+        public WebSocketEndPointModel WebSocketEndPoint { get; set; } = new WebSocketEndPointModel();
 
         /// <summary>
         /// Set limit for max pending messages per client

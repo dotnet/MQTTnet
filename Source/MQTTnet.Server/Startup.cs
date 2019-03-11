@@ -53,6 +53,7 @@ namespace MQTTnet.Server
 
             dataSharingService.Configure();
             pythonScriptHostService.Configure();
+
             mqttServerService.Configure();
         }
 
@@ -69,6 +70,7 @@ namespace MQTTnet.Server
             services.AddSingleton<MqttNetLoggerWrapper>();
             services.AddSingleton<CustomMqttFactory>();
             services.AddSingleton<MqttServerService>();
+            services.AddSingleton<MqttServerStorage>();
 
             services.AddSingleton<MqttClientConnectedHandler>();
             services.AddSingleton<MqttClientDisconnectedHandler>();

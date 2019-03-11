@@ -11,6 +11,7 @@ using MQTTnet.Adapter;
 using MQTTnet.AspNetCore;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Configuration;
 using MQTTnet.Server.Scripting;
 
 namespace MQTTnet.Server.Mqtt
@@ -19,8 +20,9 @@ namespace MQTTnet.Server.Mqtt
     {
         private readonly ILogger<MqttServerService> _logger;
 
-        private readonly Configuration.SettingsModel _settings;
+        private readonly SettingsModel _settings;
         private readonly MqttApplicationMessageInterceptor _mqttApplicationMessageInterceptor;
+        private readonly MqttServerStorage _mqttServerStorage;
         private readonly MqttClientConnectedHandler _mqttClientConnectedHandler;
         private readonly MqttClientDisconnectedHandler _mqttClientDisconnectedHandler;
         private readonly MqttClientSubscribedTopicHandler _mqttClientSubscribedTopicHandler;
@@ -32,7 +34,7 @@ namespace MQTTnet.Server.Mqtt
         private readonly MqttWebSocketServerAdapter _webSocketServerAdapter;
 
         public MqttServerService(
-            Configuration.SettingsModel settings,
+            SettingsModel settings,
             CustomMqttFactory mqttFactory,
             MqttClientConnectedHandler mqttClientConnectedHandler,
             MqttClientDisconnectedHandler mqttClientDisconnectedHandler,
@@ -41,10 +43,11 @@ namespace MQTTnet.Server.Mqtt
             MqttConnectionValidator mqttConnectionValidator,
             MqttSubscriptionInterceptor mqttSubscriptionInterceptor,
             MqttApplicationMessageInterceptor mqttApplicationMessageInterceptor,
-            PythonScriptHostService pythonScriptHostService,
+            MqttServerStorage mqttServerStorage,
+            PythonScriptHostService pythonScriptHostService,            
             ILogger<MqttServerService> logger)
         {
-            _settings = settings;
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _mqttClientConnectedHandler = mqttClientConnectedHandler ?? throw new ArgumentNullException(nameof(mqttClientConnectedHandler));
             _mqttClientDisconnectedHandler = mqttClientDisconnectedHandler ?? throw new ArgumentNullException(nameof(mqttClientDisconnectedHandler));
             _mqttClientSubscribedTopicHandler = mqttClientSubscribedTopicHandler ?? throw new ArgumentNullException(nameof(mqttClientSubscribedTopicHandler));
@@ -52,6 +55,7 @@ namespace MQTTnet.Server.Mqtt
             _mqttConnectionValidator = mqttConnectionValidator ?? throw new ArgumentNullException(nameof(mqttConnectionValidator));
             _mqttSubscriptionInterceptor = mqttSubscriptionInterceptor ?? throw new ArgumentNullException(nameof(mqttSubscriptionInterceptor));
             _mqttApplicationMessageInterceptor = mqttApplicationMessageInterceptor ?? throw new ArgumentNullException(nameof(mqttApplicationMessageInterceptor));
+            _mqttServerStorage = mqttServerStorage ?? throw new ArgumentNullException(nameof(mqttServerStorage));
             _pythonScriptHostService = pythonScriptHostService ?? throw new ArgumentNullException(nameof(pythonScriptHostService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -69,6 +73,8 @@ namespace MQTTnet.Server.Mqtt
         public void Configure()
         {
             _pythonScriptHostService.RegisterProxyObject("publish", new Action<PythonDictionary>(Publish));
+
+            _mqttServerStorage.Configure();
 
             _mqttServer.ClientConnectedHandler = _mqttClientConnectedHandler;
             _mqttServer.ClientDisconnectedHandler = _mqttClientDisconnectedHandler;
@@ -139,7 +145,7 @@ namespace MQTTnet.Server.Mqtt
                 .WithConnectionValidator(_mqttConnectionValidator)
                 .WithApplicationMessageInterceptor(_mqttApplicationMessageInterceptor)
                 .WithSubscriptionInterceptor(_mqttSubscriptionInterceptor)
-                .WithStorage(new MqttServerStorage(_settings));
+                .WithStorage(_mqttServerStorage);
                 
             // Configure unencrypted connections
             if (_settings.TcpEndPoint.Enabled)

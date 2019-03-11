@@ -5,10 +5,6 @@
     /// </summary>
     public class SettingsModel
     {
-        public SettingsModel()
-        {
-        }
-
         /// <summary>
         /// Set default connection timeout in seconds
         /// </summary>
@@ -43,5 +39,10 @@
         /// Set limit for max pending messages per client
         /// </summary>
         public int MaxPendingMessagesPerClient { get; set; } = 250;
+
+        /// <summary>
+        /// The settings for retained messages.
+        /// </summary>
+        public RetainedApplicationMessagesModel RetainedApplicationMessages { get; set; } = new RetainedApplicationMessagesModel();
     }
 }

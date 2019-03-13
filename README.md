@@ -79,7 +79,7 @@ Please find examples and the documentation at the Wiki of this repository (<http
 If you want to contribute to this project just create a pull request. But only pull requests which are matching the code style of this library will be accepted. Before creating a pull request please have a look at the library to get an overview of the required style.
 Also additions and updates in the Wiki are welcome.
 
-**This project, like all projects requires time and money.  if you feel compelled to support the development team, you can do so through Open Collective (https://opencollective.com/mqttnet)**.
+**This project, like all projects requires time and money.  If you feel compelled to support the development team, you can do so through Open Collective (https://opencollective.com/mqttnet)**.
 
 ## References
 

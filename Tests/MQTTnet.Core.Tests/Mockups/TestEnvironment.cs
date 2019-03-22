@@ -29,6 +29,10 @@ namespace MQTTnet.Tests.Mockups
 
         public int ServerPort { get; set; } = 1888;
 
+        public IMqttNetLogger ServerLogger => _serverLogger;
+
+        public IMqttNetLogger ClientLogger => _clientLogger;
+
         public TestEnvironment()
         {
             _serverLogger.LogMessagePublished += (s, e) =>
@@ -56,7 +60,9 @@ namespace MQTTnet.Tests.Mockups
 
         public IMqttClient CreateClient()
         {
-            return _mqttFactory.CreateMqttClient(_clientLogger);
+            var client = _mqttFactory.CreateMqttClient(_clientLogger);
+            _clients.Add(client);
+            return client;
         }
 
         public Task<IMqttServer> StartServerAsync()
@@ -84,10 +90,9 @@ namespace MQTTnet.Tests.Mockups
 
         public async Task<IMqttClient> ConnectClientAsync(MqttClientOptionsBuilder options)
         {
-            var client = _mqttFactory.CreateMqttClient(_clientLogger);
+            var client = CreateClient();
             await client.ConnectAsync(options.WithTcpServer("localhost", ServerPort).Build());
 
-            _clients.Add(client);
             return client;
         }
 

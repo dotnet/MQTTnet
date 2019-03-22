@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
+using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
@@ -70,7 +71,7 @@ namespace MQTTnet.Tests
                 var recievingClient = await testEnvironment.ConnectClientAsync();
                 await recievingClient.SubscribeAsync("My/last/will");
 
-                recievingClient.UseReceivedApplicationMessageHandler(context => Interlocked.Increment(ref receivedMessagesCount));
+                recievingClient.UseApplicationMessageReceivedHandler(context => Interlocked.Increment(ref receivedMessagesCount));
 
                 dyingManagedClient.Dispose();
 
@@ -94,7 +95,7 @@ namespace MQTTnet.Tests
                     .WithTcpServer("localhost", testEnvironment.ServerPort);
 
                 TaskCompletionSource<bool> connected = new TaskCompletionSource<bool>();
-                managedClient.Connected += (s, e) => { connected.SetResult(true); };
+                managedClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(e => { connected.SetResult(true);});
 
                 await managedClient.StartAsync(new ManagedMqttClientOptionsBuilder()
                     .WithClientOptions(clientOptions)

@@ -127,6 +127,8 @@ namespace MQTTnet.Extensions.ManagedClient
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
+            MqttTopicValidator.ThrowIfInvalid(applicationMessage.ApplicationMessage.Topic);
+
             ManagedMqttApplicationMessage removedMessage = null;
             ApplicationMessageSkippedEventArgs applicationMessageSkippedEventArgs = null;
 

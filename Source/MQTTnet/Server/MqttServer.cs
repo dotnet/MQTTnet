@@ -7,6 +7,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
@@ -100,6 +101,8 @@ namespace MQTTnet.Server
         public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
+            MqttTopicValidator.ThrowIfInvalid(applicationMessage.Topic);
 
             if (_cancellationTokenSource == null) throw new InvalidOperationException("The server is not started.");
 

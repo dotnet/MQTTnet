@@ -166,6 +166,8 @@ namespace MQTTnet.Client
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
+            MqttTopicValidator.ThrowIfInvalid(applicationMessage.Topic);
+
             ThrowIfNotConnected();
 
             var publishPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(applicationMessage);

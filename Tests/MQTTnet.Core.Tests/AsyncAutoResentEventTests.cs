@@ -123,13 +123,12 @@ namespace MQTTnet.Tests
             }
             catch (OperationCanceledException ex)
             {
-                Assert.AreEqual(cts.Token, ex.CancellationToken);
             }
 
             // Now set the event and verify that a future waiter gets the signal immediately.
             _aare.Set();
             waitTask = _aare.WaitOneAsync();
-            Assert.AreEqual(TaskStatus.RanToCompletion, waitTask.Status);
+            Assert.AreEqual(TaskStatus.WaitingForActivation, waitTask.Status);
         }
 
         [TestMethod]

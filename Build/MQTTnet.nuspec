@@ -15,6 +15,7 @@
 * [Core] Fixed a memory leak when processing lots of messages (thanks to @tschanko)
 * [Core] Added more overloads for MQTT factory.
 * [Core] The client password is now hidden from the logs (replaced with **** if set).
+* [Client] Added validation of topics before publishing.
 * [Client] Added new MQTTv5 features to options builder.
 * [Client] Added uniform API across all supported MQTT versions (BREAKING CHANGE!)
 * [Client] The client will now avoid sending an ACK if an exception has been thrown in message handler (thanks to @ramonsmits).
@@ -22,13 +23,16 @@
 * [Client] Replaced all events with proper async compatible handlers (BREAKING CHANGE!).
 * [ManagedClient] Replaced all events with proper async compatible handlers (BREAKING CHANGE!).
 * [ManagedClient] The log ID is now propagated to the internal client (thanks to @vbBerni).
+* [ManagedClient] Added validation of topics before publishing.
+* [ManagedClient] The internal MQTT client is now closed properly (thanks to @vbBerni).
 * [Server] Added support for MQTTv5 clients. The server will still return _success_ for all cases at the moment even if more granular codes are available.
 * [Server] Fixed issues in QoS 2 handling which leads to message loss.
 * [Server] Replaced all events with proper async compatible handlers (BREAKING CHANGE!).
 * [Server] The used logger instance is now propagated to the WebSocket server adapter.
 * [Server] Added the flag "IsSecureConnection" which is set to true when the connection is encrypted.
 * [Server] Fixed wrong will message behavior when stopping server (thanks to @JohBa)
-* [MQTTnet Server] Added as first Alpha version.
+* [Server] Added validation of topics before publishing.
+* [MQTTnet Server] Added as first Alpha version of standalone cross platform MQTT server.
 
 * [Note] Due to MQTTv5 a lot of new classes were introduced. This required adding new namespaces as well. Most classes are backward compatible but new namespaces must be added.
     </releaseNotes>

@@ -340,7 +340,7 @@ namespace MQTTnet.Server
             return SendAsync(response);
         }
 
-        private async Task HandleIncomingPublishPacketWithQoS2Async(MqttPublishPacket publishPacket)
+        private Task HandleIncomingPublishPacketWithQoS2Async(MqttPublishPacket publishPacket)
         {
             var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
             _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
@@ -351,7 +351,7 @@ namespace MQTTnet.Server
                 ReasonCode = MqttPubRecReasonCode.Success
             };
 
-            await SendAsync(pubRecPacket).ConfigureAwait(false);
+            return SendAsync(pubRecPacket);
 
             ////Task.Run(async () =>
             ////{
@@ -374,15 +374,15 @@ namespace MQTTnet.Server
 
         private async Task SendPendingPacketsAsync()
         {
-            MqttPendingApplicationMessage enqueuedApplicationMessage = null;
+            MqttPendingApplicationMessage queuedApplicationMessage = null;
             MqttPublishPacket publishPacket = null;
 
             try
             {
                 while (!_cancellationToken.IsCancellationRequested)
                 {
-                    enqueuedApplicationMessage = await Session.ApplicationMessagesQueue.TakeAsync(_cancellationToken.Token).ConfigureAwait(false);
-                    if (enqueuedApplicationMessage == null)
+                    queuedApplicationMessage = await Session.ApplicationMessagesQueue.TakeAsync(_cancellationToken.Token).ConfigureAwait(false);
+                    if (queuedApplicationMessage == null)
                     {
                         return;
                     }
@@ -392,11 +392,11 @@ namespace MQTTnet.Server
                         return;
                     }
 
-                    publishPacket = _dataConverter.CreatePublishPacket(enqueuedApplicationMessage.ApplicationMessage);
-                    publishPacket.QualityOfServiceLevel = enqueuedApplicationMessage.QualityOfServiceLevel;
+                    publishPacket = _dataConverter.CreatePublishPacket(queuedApplicationMessage.ApplicationMessage);
+                    publishPacket.QualityOfServiceLevel = queuedApplicationMessage.QualityOfServiceLevel;
 
                     // Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
-                    publishPacket.Retain = enqueuedApplicationMessage.IsRetainedMessage;
+                    publishPacket.Retain = queuedApplicationMessage.IsRetainedMessage;
 
                     if (publishPacket.QualityOfServiceLevel > 0)
                     {
@@ -406,9 +406,9 @@ namespace MQTTnet.Server
                     if (_serverOptions.ClientMessageQueueInterceptor != null)
                     {
                         var context = new MqttClientMessageQueueInterceptorContext(
-                            enqueuedApplicationMessage.SenderClientId,
+                            queuedApplicationMessage.SenderClientId,
                             ClientId,
-                            enqueuedApplicationMessage.ApplicationMessage);
+                            queuedApplicationMessage.ApplicationMessage);
 
                         if (_serverOptions.ClientMessageQueueInterceptor != null)
                         {
@@ -448,7 +448,7 @@ namespace MQTTnet.Server
                         }
                     }
 
-                    _logger.Verbose("Enqueued application message sent (ClientId: {0}).", ClientId);
+                    _logger.Verbose("Queued application message sent (ClientId: {0}).", ClientId);
 
                     // TODO:
                     //Interlocked.Increment(ref _sentPacketsCount);
@@ -475,9 +475,9 @@ namespace MQTTnet.Server
 
                 if (publishPacket?.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
                 {
-                    enqueuedApplicationMessage.IsDuplicate = true;
+                    queuedApplicationMessage.IsDuplicate = true;
 
-                    Session.ApplicationMessagesQueue.Enqueue(enqueuedApplicationMessage);
+                    Session.ApplicationMessagesQueue.Enqueue(queuedApplicationMessage);
                 }
 
                 if (!_cancellationToken.Token.IsCancellationRequested)

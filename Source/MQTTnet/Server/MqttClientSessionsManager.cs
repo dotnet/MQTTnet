@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
@@ -13,7 +14,7 @@ namespace MQTTnet.Server
 {
     public class MqttClientSessionsManager : IDisposable
     {
-        private readonly BlockingCollection<MqttEnqueuedApplicationMessage> _messageQueue = new BlockingCollection<MqttEnqueuedApplicationMessage>();
+        private readonly AsyncQueue<MqttEnqueuedApplicationMessage> _messageQueue = new AsyncQueue<MqttEnqueuedApplicationMessage>();
 
         private readonly SemaphoreSlim _createConnectionGate = new SemaphoreSlim(1, 1);
         private readonly ConcurrentDictionary<string, MqttClientConnection> _connections = new ConcurrentDictionary<string, MqttClientConnection>();
@@ -99,7 +100,7 @@ namespace MQTTnet.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            _messageQueue.Add(new MqttEnqueuedApplicationMessage(applicationMessage, sender), _cancellationToken);
+            _messageQueue.Enqueue(new MqttEnqueuedApplicationMessage(applicationMessage, sender));
         }
 
         public Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters)
@@ -174,17 +175,17 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                var enqueuedApplicationMessage = _messageQueue.Take(cancellationToken);
+                var queuedApplicationMessage = await _messageQueue.DequeueAsync(cancellationToken).ConfigureAwait(false);
 
-                var sender = enqueuedApplicationMessage.Sender;
-                var applicationMessage = enqueuedApplicationMessage.ApplicationMessage;
+                var sender = queuedApplicationMessage.Sender;
+                var applicationMessage = queuedApplicationMessage.ApplicationMessage;
 
                 var interceptorContext = await InterceptApplicationMessageAsync(sender, applicationMessage).ConfigureAwait(false);
                 if (interceptorContext != null)
                 {
                     if (interceptorContext.CloseConnection)
                     {
-                        await enqueuedApplicationMessage.Sender.StopAsync().ConfigureAwait(false);
+                        await queuedApplicationMessage.Sender.StopAsync().ConfigureAwait(false);
                     }
 
                     if (interceptorContext.ApplicationMessage == null || !interceptorContext.AcceptPublish)
@@ -205,7 +206,7 @@ namespace MQTTnet.Server
                 foreach (var clientSession in _sessions.Values)
                 {
                     clientSession.EnqueueApplicationMessage(
-                        enqueuedApplicationMessage.ApplicationMessage,
+                        queuedApplicationMessage.ApplicationMessage,
                         sender?.ClientId,
                         false);
                 }

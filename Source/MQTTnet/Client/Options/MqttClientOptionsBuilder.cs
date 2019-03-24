@@ -169,25 +169,6 @@ namespace MQTTnet.Client.Options
             return WithTls(new MqttClientOptionsBuilderTlsParameters { UseTls = true });
         }
 
-        [Obsolete("Use method _WithTls_ which accepts the _MqttClientOptionsBuilderTlsParameters_.")]
-        public MqttClientOptionsBuilder WithTls(
-            bool allowUntrustedCertificates = false,
-            bool ignoreCertificateChainErrors = false,
-            bool ignoreCertificateRevocationErrors = false,
-            params byte[][] certificates)
-        {
-            _tlsParameters = new MqttClientOptionsBuilderTlsParameters
-            {
-                UseTls = true,
-                AllowUntrustedCertificates = allowUntrustedCertificates,
-                IgnoreCertificateChainErrors = ignoreCertificateChainErrors,
-                IgnoreCertificateRevocationErrors = ignoreCertificateRevocationErrors,
-                Certificates = certificates?.ToList()
-            };
-
-            return this;
-        }
-
         public IMqttClientOptions Build()
         {
             if (_tcpOptions == null && _webSocketOptions == null)

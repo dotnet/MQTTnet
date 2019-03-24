@@ -106,9 +106,11 @@ This library is used in the following projects:
 
 If you use this library and want to see your project here please create a pull request.
 
-## MIT License
+## License
 
-Copyright (c) 2017-2019 Christian Kratky
+MIT License
+
+MQTTnet Copyright (c) 2016-2019 Christian Kratky
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

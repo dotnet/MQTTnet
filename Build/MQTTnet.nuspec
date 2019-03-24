@@ -12,6 +12,7 @@
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
     <releaseNotes> * [Core] Added support for MQTTv5 packages.
 * [Core] Performance improvements (removed several exceptions).
+* [Core] Removed obsolete methods.
 * [Core] Fixed a memory leak when processing lots of messages (thanks to @tschanko)
 * [Core] Added more overloads for MQTT factory.
 * [Core] The client password is now hidden from the logs (replaced with **** if set).
@@ -36,7 +37,7 @@
 
 * [Note] Due to MQTTv5 a lot of new classes were introduced. This required adding new namespaces as well. Most classes are backward compatible but new namespaces must be added.
     </releaseNotes>
-    <copyright>Copyright Christian Kratky 2016-2018</copyright>
+    <copyright>Copyright Christian Kratky 2016-2019</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
       <group targetFramework="netstandard1.3">

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>MQTTnet.NETStandard</id>
+    <version>0.0.0</version>
+    <authors>Christian Kratky</authors>
+    <owners>Christian Kratky</owners>
+    <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker). This package contains the .NET Standard version of the library only.</description>
+    <releaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</releaseNotes>
+    <copyright>Copyright Christian Kratky 2016-2019</copyright>
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
+    <dependencies>
+      <group targetFramework="netstandard1.3">
+        <dependency id="NETStandard.Library" version="1.3.0" />
+        <dependency id="System.Net.Security" version="4.3.2" />
+        <dependency id="System.Net.WebSockets" version="4.3.0" />
+        <dependency id="System.Net.WebSockets.Client" version="4.3.2" />      
+      </group>
+      <group targetFramework="netstandard2.0">
+        <dependency id="NETStandard.Library" version="2.0.0" />
+        <dependency id="System.Net.Security" version="4.3.2" />
+        <dependency id="System.Net.WebSockets" version="4.3.0" />
+        <dependency id="System.Net.WebSockets.Client" version="4.3.2" />
+      </group>
+    </dependencies>
+  </metadata>
+
+  <files>
+    <file src="..\Source\MQTTnet\bin\Release\netstandard1.3\MQTTnet.*" target="lib\netstandard1.3\"/>   
+    <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\netstandard2.0\"/>
+  </files>
+</package>

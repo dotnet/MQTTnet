@@ -44,9 +44,6 @@ namespace MQTTnet.Implementations
             CreateStream(sslStream);
         }
 
-        [Obsolete("There is a new callback at the TLS options. This one will be deleted soon.")]
-        public static Func<X509Certificate, X509Chain, SslPolicyErrors, MqttClientTcpOptions, bool> CustomCertificateValidationCallback { get; set; }
-
         public string Endpoint => _socket?.RemoteEndPoint?.ToString();
 
         public bool IsSecureConnection { get; }
@@ -134,16 +131,9 @@ namespace MQTTnet.Implementations
 
         private bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            // Try the instance callback.
             if (_options.TlsOptions.CertificateValidationCallback != null)
             {
                 return _options.TlsOptions.CertificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _clientOptions);
-            }
-
-            // Try static callback.
-            if (CustomCertificateValidationCallback != null)
-            {
-                return CustomCertificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _options);
             }
 
             if (sslPolicyErrors == SslPolicyErrors.None)
@@ -195,25 +185,6 @@ namespace MQTTnet.Implementations
             else
             {
                 _stream = new NetworkStream(_socket, true);
-            }
-        }
-
-        private static void Cleanup<T>(ref T item, Action<T> handler) where T : class
-        {
-            var temp = item;
-            item = null;
-            try
-            {
-                if (temp != null)
-                {
-                    handler(temp);
-                }
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (NullReferenceException)
-            {
             }
         }
     }

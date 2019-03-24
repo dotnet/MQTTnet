@@ -138,7 +138,9 @@ namespace MQTTnet.Server
 
                 Session.WillMessage = _connectPacket.WillMessage;
 
-                Task.Run(() => SendPendingPacketsAsync(), _cancellationToken.Token);
+#pragma warning disable 4014
+                Task.Run(() => SendPendingPacketsAsync(_cancellationToken.Token), _cancellationToken.Token);
+#pragma warning restore 4014
 
                 // TODO: Change to single thread in SessionManager. Or use SessionManager and stats from KeepAliveMonitor.
                 _keepAliveMonitor.Start(_connectPacket.KeepAlivePeriod, _cancellationToken.Token);
@@ -372,22 +374,22 @@ namespace MQTTnet.Server
             //await Task.FromResult(0);
         }
 
-        private async Task SendPendingPacketsAsync()
+        private async Task SendPendingPacketsAsync(CancellationToken cancellationToken)
         {
             MqttPendingApplicationMessage queuedApplicationMessage = null;
             MqttPublishPacket publishPacket = null;
 
             try
             {
-                while (!_cancellationToken.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    queuedApplicationMessage = await Session.ApplicationMessagesQueue.TakeAsync(_cancellationToken.Token).ConfigureAwait(false);
+                    queuedApplicationMessage = await Session.ApplicationMessagesQueue.TakeAsync(cancellationToken).ConfigureAwait(false);
                     if (queuedApplicationMessage == null)
                     {
                         return;
                     }
 
-                    if (_cancellationToken.IsCancellationRequested)
+                    if (cancellationToken.IsCancellationRequested)
                     {
                         return;
                     }

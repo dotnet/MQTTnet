@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 
 namespace MQTTnet.Formatter
 {
@@ -31,8 +30,11 @@ namespace MQTTnet.Formatter
             {
                 var bytesRead = await _channel.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
 
-                cancellationToken.ThrowIfCancellationRequested();
-
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
+                
                 if (bytesRead == 0)
                 {
                     return new ReadFixedHeaderResult
@@ -100,13 +102,19 @@ namespace MQTTnet.Formatter
                     return null;
                 }
 
-                var buffer = ReadByte(cancellationToken);
-                if (!buffer.HasValue)
+                var readCount = _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).GetAwaiter().GetResult();
+
+                if (cancellationToken.IsCancellationRequested)
                 {
                     return null;
                 }
 
-                encodedByte = buffer.Value;
+                if (readCount == 0)
+                {
+                    return null;
+                }
+
+                encodedByte = _singleByteBuffer[0];
 
                 value += (encodedByte & 127) * multiplier;
                 multiplier *= 128;
@@ -114,26 +122,8 @@ namespace MQTTnet.Formatter
 
             return value;
         }
-
-        private byte? ReadByte(CancellationToken cancellationToken)
-        {
-            var readCount = _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
-
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return null;
-            }
-
-            if (readCount == 0)
-            {
-                return null;
-            }
-
-            return _singleByteBuffer[0];
-        }
-
 #else
-        
+
         private async Task<int?> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
         {
             var offset = 0;
@@ -154,13 +144,19 @@ namespace MQTTnet.Formatter
                     return null;
                 }
 
-                var buffer = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
-                if (!buffer.HasValue)
+                var readCount = await _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
+
+                if (cancellationToken.IsCancellationRequested)
                 {
                     return null;
                 }
 
-                encodedByte = buffer.Value;
+                if (readCount == 0)
+                {
+                    return null;
+                }
+
+                encodedByte = _singleByteBuffer[0];
 
                 value += (encodedByte & 127) * multiplier;
                 multiplier *= 128;
@@ -168,24 +164,6 @@ namespace MQTTnet.Formatter
 
             return value;
         }
-
-        private async Task<byte?> ReadByteAsync(CancellationToken cancellationToken)
-        {
-            var readCount = await _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
-
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return null;
-            }
-
-            if (readCount == 0)
-            {
-                return null;
-            }
-
-            return _singleByteBuffer[0];
-        }
-
 #endif
     }
 }

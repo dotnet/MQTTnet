@@ -8,7 +8,10 @@ namespace MQTTnet.Internal
     public sealed class AsyncQueue<TItem> : IDisposable
     {
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
-        private readonly ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
+
+        private ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
+
+        public int Count => _queue.Count;
 
         public void Enqueue(TItem item)
         {
@@ -16,9 +19,9 @@ namespace MQTTnet.Internal
             _semaphore.Release();
         }
 
-        public async Task<TItem> DequeueAsync(CancellationToken cancellationToken)
+        public async Task<AsyncQueueDequeueResult<TItem>> TryDequeueAsync(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -26,9 +29,26 @@ namespace MQTTnet.Internal
 
                 if (_queue.TryDequeue(out var item))
                 {
-                    return item;
+                    return new AsyncQueueDequeueResult<TItem>(true, item);
                 }
             }
+
+            return new AsyncQueueDequeueResult<TItem>(false, default(TItem));
+        }
+
+        public AsyncQueueDequeueResult<TItem> TryDequeue()
+        {
+            if (_queue.TryDequeue(out var item))
+            {
+                return new AsyncQueueDequeueResult<TItem>(true, item);
+            }
+
+            return new AsyncQueueDequeueResult<TItem>(false, default(TItem));
+        }
+
+        public void Clear()
+        {
+            Interlocked.Exchange(ref _queue, new ConcurrentQueue<TItem>());
         }
 
         public void Dispose()

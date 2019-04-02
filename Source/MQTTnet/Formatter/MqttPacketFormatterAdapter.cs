@@ -20,7 +20,7 @@ namespace MQTTnet.Formatter
             UseProtocolVersion(protocolVersion);
         }
 
-        public MqttProtocolVersion? ProtocolVersion { get; private set; }
+        public MqttProtocolVersion ProtocolVersion { get; private set; }
 
         public IMqttDataConverter DataConverter
         {
@@ -64,6 +64,11 @@ namespace MQTTnet.Formatter
 
         private void UseProtocolVersion(MqttProtocolVersion protocolVersion)
         {
+            if (protocolVersion == MqttProtocolVersion.Unknown)
+            {
+                throw new InvalidOperationException("MQTT protocol version is invalid.");
+            }
+
             ProtocolVersion = protocolVersion;
 
             switch (protocolVersion)

@@ -68,7 +68,7 @@ namespace MQTTnet.Server
 
             foreach (var connection in _connections.Values)
             {
-                var clientStatus = new MqttClientStatus(connection, this);
+                var clientStatus = new MqttClientStatus(connection);
                 connection.FillStatus(clientStatus);
                 
                 var sessionStatus = new MqttSessionStatus(connection.Session, this);
@@ -175,7 +175,8 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                var queuedApplicationMessage = await _messageQueue.DequeueAsync(cancellationToken).ConfigureAwait(false);
+                var dequeueResult = await _messageQueue.TryDequeueAsync(cancellationToken).ConfigureAwait(false);
+                var queuedApplicationMessage = dequeueResult.Item;
 
                 var sender = queuedApplicationMessage.Sender;
                 var applicationMessage = queuedApplicationMessage.ApplicationMessage;

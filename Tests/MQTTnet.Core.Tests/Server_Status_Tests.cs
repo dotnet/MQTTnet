@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using MQTTnet.Client.Options;
@@ -148,7 +147,9 @@ namespace MQTTnet.Tests
                     var clientStatus = await server.GetClientStatusAsync();
 
                     Assert.AreEqual(i, clientStatus.First().SentApplicationMessagesCount, "SAMC invalid!");
-                    Assert.AreEqual(i, clientStatus.First().SentPacketsCount, "SPC invalid!");
+
+                    // + 1 because CONNECT is also counted.
+                    Assert.AreEqual(i + 1, clientStatus.First().SentPacketsCount, "SPC invalid!");
 
                     // +1 because ConnACK package is already counted.
                     Assert.AreEqual(i + 1, clientStatus.First().ReceivedPacketsCount, "RPC invalid!");

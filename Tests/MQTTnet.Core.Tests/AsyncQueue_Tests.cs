@@ -16,10 +16,26 @@ namespace MQTTnet.Tests
             queue.Enqueue("2");
             queue.Enqueue("3");
 
-            Assert.AreEqual("1", await queue.DequeueAsync(CancellationToken.None));
-            Assert.AreEqual("2", await queue.DequeueAsync(CancellationToken.None));
-            Assert.AreEqual("3", await queue.DequeueAsync(CancellationToken.None));
+            Assert.AreEqual("1", (await queue.TryDequeueAsync(CancellationToken.None)).Item);
+            Assert.AreEqual("2", (await queue.TryDequeueAsync(CancellationToken.None)).Item);
+            Assert.AreEqual("3", (await queue.TryDequeueAsync(CancellationToken.None)).Item);
         }
+
+        [TestMethod]
+        public void Count()
+        {
+            var queue = new AsyncQueue<string>();
+
+            queue.Enqueue("1");
+            Assert.AreEqual(1, queue.Count);
+
+            queue.Enqueue("2");
+            Assert.AreEqual(2, queue.Count);
+
+            queue.Enqueue("3");
+            Assert.AreEqual(3, queue.Count);
+        }
+
 
         [TestMethod]
         public async Task Preserve_ProcessAsync()
@@ -31,7 +47,7 @@ namespace MQTTnet.Tests
             {
                 while (sum < 6)
                 {
-                    sum += await queue.DequeueAsync(CancellationToken.None);
+                    sum += (await queue.TryDequeueAsync(CancellationToken.None)).Item;
                 }
             });
             
@@ -46,6 +62,36 @@ namespace MQTTnet.Tests
 
             Assert.AreEqual(6, sum);
             Assert.AreEqual(TaskStatus.RanToCompletion, worker.Status);
+        }
+
+        [TestMethod]
+        public void Dequeue_Sync()
+        {
+            var queue = new AsyncQueue<string>();
+            queue.Enqueue("1");
+            queue.Enqueue("2");
+            queue.Enqueue("3");
+
+            Assert.AreEqual("1", queue.TryDequeue().Item);
+            Assert.AreEqual("2", queue.TryDequeue().Item);
+            Assert.AreEqual("3", queue.TryDequeue().Item);
+        }
+
+        [TestMethod]
+        public void Clear()
+        {
+            var queue = new AsyncQueue<string>();
+            queue.Enqueue("1");
+            queue.Enqueue("2");
+            queue.Enqueue("3");
+
+            queue.Clear();
+            Assert.AreEqual(0, queue.Count);
+
+            queue.Enqueue("4");
+
+            Assert.AreEqual(1, queue.Count);
+            Assert.AreEqual("4", queue.TryDequeue().Item);
         }
     }
 }

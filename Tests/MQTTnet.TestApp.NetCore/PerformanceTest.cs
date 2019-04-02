@@ -160,7 +160,7 @@ namespace MQTTnet.TestApp.NetCore
                         msgCount += msgs.Count;
                         //send multiple
                     }
-                    
+
                     var now = DateTime.Now;
                     if (last < now - TimeSpan.FromSeconds(1))
                     {
@@ -192,6 +192,159 @@ namespace MQTTnet.TestApp.NetCore
         {
             Interlocked.Increment(ref count);
             return Task.Run(() => client.PublishAsync(applicationMessage));
+        }
+
+        public static async Task RunQoS2Test()
+        {
+            try
+            {
+                var mqttServer = new MqttFactory().CreateMqttServer();
+                await mqttServer.StartAsync(new MqttServerOptions());
+
+                var options = new MqttClientOptions
+                {
+                    ChannelOptions = new MqttClientTcpOptions
+                    {
+                        Server = "127.0.0.1"
+                    },
+                    CleanSession = true
+                };
+
+                var client = new MqttFactory().CreateMqttClient();
+                await client.ConnectAsync(options);
+
+                var message = new MqttApplicationMessage
+                {
+                    Topic = "A/B/C",
+                    Payload = Encoding.UTF8.GetBytes("Hello World"),
+                    QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
+                };
+
+                var stopwatch = new Stopwatch();
+
+                var iteration = 1;
+                while (true)
+                {
+                    stopwatch.Restart();
+
+                    var sentMessagesCount = 0;
+                    while (stopwatch.ElapsedMilliseconds < 1000)
+                    {
+                        await client.PublishAsync(message).ConfigureAwait(false);
+                        sentMessagesCount++;
+                    }
+
+                    Console.WriteLine($"Sent {sentMessagesCount} messages in iteration #" + iteration);
+
+                    iteration++;
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
+        }
+
+        public static async Task RunQoS1Test()
+        {
+            try
+            {
+                var mqttServer = new MqttFactory().CreateMqttServer();
+                await mqttServer.StartAsync(new MqttServerOptions());
+
+                var options = new MqttClientOptions
+                {
+                    ChannelOptions = new MqttClientTcpOptions
+                    {
+                        Server = "127.0.0.1"
+                    },
+                    CleanSession = true
+                };
+
+                var client = new MqttFactory().CreateMqttClient();
+                await client.ConnectAsync(options);
+
+                var message = new MqttApplicationMessage
+                {
+                    Topic = "A/B/C",
+                    Payload = Encoding.UTF8.GetBytes("Hello World"),
+                    QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce
+                };
+
+                var stopwatch = new Stopwatch();
+
+                var iteration = 1;
+                while (true)
+                {
+                    stopwatch.Restart();
+
+                    var sentMessagesCount = 0;
+                    while (stopwatch.ElapsedMilliseconds < 1000)
+                    {
+                        await client.PublishAsync(message).ConfigureAwait(false);
+                        sentMessagesCount++;
+                    }
+
+                    Console.WriteLine($"Sent {sentMessagesCount} messages in iteration #" + iteration);
+
+                    iteration++;
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
+        }
+
+        public static async Task RunQoS0Test()
+        {
+            try
+            {
+                var mqttServer = new MqttFactory().CreateMqttServer();
+                await mqttServer.StartAsync(new MqttServerOptions());
+
+                var options = new MqttClientOptions
+                {
+                    ChannelOptions = new MqttClientTcpOptions
+                    {
+                        Server = "127.0.0.1"
+                    },
+                    CleanSession = true
+                };
+
+                var client = new MqttFactory().CreateMqttClient();
+                await client.ConnectAsync(options);
+
+                var message = new MqttApplicationMessage
+                {
+                    Topic = "A/B/C",
+                    Payload = Encoding.UTF8.GetBytes("Hello World"),
+                    QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
+                };
+
+                var stopwatch = new Stopwatch();
+
+                var iteration = 1;
+                while (true)
+                {
+                    stopwatch.Restart();
+
+                    var sentMessagesCount = 0;
+                    while (stopwatch.ElapsedMilliseconds < 1000)
+                    {
+                        await client.PublishAsync(message).ConfigureAwait(false);
+                        sentMessagesCount++;
+                    }
+
+                    Console.WriteLine($"Sent {sentMessagesCount} messages in iteration #" + iteration);
+
+                    iteration++;
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
         }
     }
 }

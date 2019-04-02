@@ -20,8 +20,11 @@ namespace MQTTnet.Tests.Mockups
 
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; } = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
 
-        public event EventHandler ReadingPacketStarted;
-        public event EventHandler ReadingPacketCompleted;
+        public long BytesSent { get; }
+        public long BytesReceived { get; }
+
+        public Action ReadingPacketStartedCallback { get; set; }
+        public Action ReadingPacketCompletedCallback { get; set; }
 
         public void Dispose()
         {

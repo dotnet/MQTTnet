@@ -34,8 +34,10 @@ namespace MQTTnet.Server
         private readonly MqttConnectPacket _connectPacket;
 
         private DateTime _lastPacketReceivedTimestamp;
+        private DateTime _lastNonKeepAlivePacketReceivedTimestamp;
+
         private long _receivedPacketsCount;
-        private long _sentPacketsCount;
+        private long _sentPacketsCount = 1; // Start with 1 because the CONNECT packet is not counted anywhere.
         private long _receivedApplicationMessagesCount;
         private long _sentApplicationMessagesCount;
 
@@ -64,6 +66,7 @@ namespace MQTTnet.Server
             _keepAliveMonitor = new MqttClientKeepAliveMonitor(this, _logger);
 
             _lastPacketReceivedTimestamp = DateTime.UtcNow;
+            _lastNonKeepAlivePacketReceivedTimestamp = _lastPacketReceivedTimestamp;
         }
 
         public string ClientId => _connectPacket.ClientId;
@@ -85,7 +88,7 @@ namespace MQTTnet.Server
         {
             status.ClientId = ClientId;
             status.Endpoint = _endpoint;
-            status.ProtocolVersion = _channelAdapter.PacketFormatterAdapter.ProtocolVersion.Value;
+            status.ProtocolVersion = _channelAdapter.PacketFormatterAdapter.ProtocolVersion;
 
             status.ReceivedApplicationMessagesCount = Interlocked.Read(ref _receivedApplicationMessagesCount);
             status.SentApplicationMessagesCount = Interlocked.Read(ref _sentApplicationMessagesCount);
@@ -94,8 +97,10 @@ namespace MQTTnet.Server
             status.SentPacketsCount = Interlocked.Read(ref _sentPacketsCount);
 
             status.LastPacketReceivedTimestamp = _lastPacketReceivedTimestamp;
+            status.LastNonKeepAlivePacketReceivedTimestamp = _lastNonKeepAlivePacketReceivedTimestamp;
 
-            //status.LastNonKeepAlivePacketReceived = _keepAliveMonitor.LastNonKeepAlivePacketReceived;
+            status.BytesSent = _channelAdapter.BytesSent;
+            status.BytesReceived = _channelAdapter.BytesReceived;
         }
         
         //public void ClearPendingApplicationMessages()
@@ -131,10 +136,9 @@ namespace MQTTnet.Server
             try
             {
                 _logger.Info("Client '{0}': Session started.", ClientId);
-                //_eventDispatcher.OnClientConnected(ClientId);
-
-                _channelAdapter.ReadingPacketStarted += OnAdapterReadingPacketStarted;
-                _channelAdapter.ReadingPacketCompleted += OnAdapterReadingPacketCompleted;
+                
+                _channelAdapter.ReadingPacketStartedCallback = OnAdapterReadingPacketStarted;
+                _channelAdapter.ReadingPacketCompletedCallback = OnAdapterReadingPacketCompleted;
 
                 Session.WillMessage = _connectPacket.WillMessage;
 
@@ -166,7 +170,12 @@ namespace MQTTnet.Server
 
                     Interlocked.Increment(ref _sentPacketsCount);
                     _lastPacketReceivedTimestamp = DateTime.UtcNow;
-                    
+
+                    if (!(packet is MqttPingReqPacket || packet is MqttPingRespPacket))
+                    {
+                        _lastNonKeepAlivePacketReceivedTimestamp = _lastPacketReceivedTimestamp;
+                    }
+
                     _keepAliveMonitor.PacketReceived();
 
                     if (packet is MqttPublishPacket publishPacket)
@@ -243,12 +252,11 @@ namespace MQTTnet.Server
 
                 _packetDispatcher.Reset();
 
-                _channelAdapter.ReadingPacketStarted -= OnAdapterReadingPacketStarted;
-                _channelAdapter.ReadingPacketCompleted -= OnAdapterReadingPacketCompleted;
+                _channelAdapter.ReadingPacketStartedCallback = null;
+                _channelAdapter.ReadingPacketCompletedCallback = null;
 
                 _logger.Info("Client '{0}': Session stopped.", ClientId);
-                //_eventDispatcher.OnClientDisconnected(ClientId);
-
+                
                 _packageReceiverTask = null;
             }
 
@@ -376,7 +384,7 @@ namespace MQTTnet.Server
 
         private async Task SendPendingPacketsAsync(CancellationToken cancellationToken)
         {
-            MqttPendingApplicationMessage queuedApplicationMessage = null;
+            MqttQueuedApplicationMessage queuedApplicationMessage = null;
             MqttPublishPacket publishPacket = null;
 
             try
@@ -501,12 +509,12 @@ namespace MQTTnet.Server
             }
         }
 
-        private void OnAdapterReadingPacketCompleted(object sender, EventArgs e)
+        private void OnAdapterReadingPacketCompleted()
         {
             _keepAliveMonitor?.Resume();
         }
 
-        private void OnAdapterReadingPacketStarted(object sender, EventArgs e)
+        private void OnAdapterReadingPacketStarted()
         {
             _keepAliveMonitor?.Pause();
         }

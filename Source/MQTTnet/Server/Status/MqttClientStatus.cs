@@ -6,13 +6,11 @@ namespace MQTTnet.Server.Status
 {
     public class MqttClientStatus : IMqttClientStatus
     {
-        private readonly MqttClientSessionsManager _sessionsManager;
         private readonly MqttClientConnection _connection;
 
-        public MqttClientStatus(MqttClientConnection connection, MqttClientSessionsManager sessionsManager)
+        public MqttClientStatus(MqttClientConnection connection)
         {
             _connection = connection;
-            _sessionsManager = sessionsManager;
         }
 
         public string ClientId { get; set; }
@@ -34,6 +32,10 @@ namespace MQTTnet.Server.Status
         public long SentPacketsCount { get; set; }
 
         public IMqttSessionStatus Session { get; set; }
+
+        public long BytesSent { get; set; }
+
+        public long BytesReceived { get; set; }
 
         public Task DisconnectAsync()
         {

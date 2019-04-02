@@ -26,6 +26,10 @@ namespace MQTTnet.Server.Status
 
         IMqttSessionStatus Session { get; }
 
+        long BytesSent { get; }
+
+        long BytesReceived { get; }
+
         Task DisconnectAsync();
     }
 }

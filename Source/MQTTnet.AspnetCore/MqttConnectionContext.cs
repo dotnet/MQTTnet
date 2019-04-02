@@ -20,12 +20,17 @@ namespace MQTTnet.AspNetCore
         }
 
         public string Endpoint => Connection.ConnectionId;
-        public bool IsSecureConnection => false; // TODO: Fix detection.
+        public bool IsSecureConnection => false; // TODO: Fix detection (WS vs. WSS).
+
         public ConnectionContext Connection { get; }
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
-        public event EventHandler ReadingPacketStarted;
-        public event EventHandler ReadingPacketCompleted;
 
+        public long BytesSent { get; } // TODO: Fix calculation.
+        public long BytesReceived { get; } // TODO: Fix calculation.
+
+        public Action ReadingPacketStartedCallback { get; set; }
+        public Action ReadingPacketCompletedCallback { get; set; }
+        
         private readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
 
         public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
@@ -34,6 +39,7 @@ namespace MQTTnet.AspNetCore
             {
                 return tcp.StartAsync();
             }
+
             return Task.CompletedTask;
         }
 
@@ -80,7 +86,7 @@ namespace MQTTnet.AspNetCore
                             else
                             {
                                 // we did receive something but the message is not yet complete
-                                ReadingPacketStarted?.Invoke(this, EventArgs.Empty);
+                                ReadingPacketStartedCallback?.Invoke();
                             }
                         }
                         else if (readResult.IsCompleted)
@@ -99,7 +105,7 @@ namespace MQTTnet.AspNetCore
             }
             finally
             {
-                ReadingPacketCompleted?.Invoke(this, EventArgs.Empty);
+                ReadingPacketCompletedCallback?.Invoke();
             }
 
             cancellationToken.ThrowIfCancellationRequested();

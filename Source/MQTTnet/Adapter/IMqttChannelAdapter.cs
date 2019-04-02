@@ -13,10 +13,14 @@ namespace MQTTnet.Adapter
         bool IsSecureConnection { get; }
 
         MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
-        
-        event EventHandler ReadingPacketStarted;
 
-        event EventHandler ReadingPacketCompleted;
+        long BytesSent { get; }
+
+        long BytesReceived { get; }
+
+        Action ReadingPacketStartedCallback { get; set; }
+
+        Action ReadingPacketCompletedCallback { get; set; }
 
         Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken);
 

@@ -25,8 +25,11 @@ namespace MQTTnet.Adapter
         private readonly MqttPacketReader _packetReader;
 
         private readonly byte[] _fixedHeaderBuffer = new byte[2];
-       
+
         private bool _isDisposed;
+
+        private long _bytesReceived;
+        private long _bytesSent;
 
         public MqttChannelAdapter(IMqttChannel channel, MqttPacketFormatterAdapter packetFormatterAdapter, IMqttNetChildLogger logger)
         {
@@ -34,7 +37,7 @@ namespace MQTTnet.Adapter
 
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
-            
+
             _packetReader = new MqttPacketReader(_channel);
 
             _logger = logger.CreateChildLogger(nameof(MqttChannelAdapter));
@@ -46,9 +49,12 @@ namespace MQTTnet.Adapter
 
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
-        public event EventHandler ReadingPacketStarted;
-        public event EventHandler ReadingPacketCompleted;
+        public long BytesSent => Interlocked.Read(ref _bytesSent);
+        public long BytesReceived => Interlocked.Read(ref _bytesReceived);
 
+        public Action ReadingPacketStartedCallback { get; set; }
+        public Action ReadingPacketCompletedCallback { get; set; }
+            
         public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -62,7 +68,7 @@ namespace MQTTnet.Adapter
                 else
                 {
                     await MqttTaskTimeout.WaitAsync(t => _channel.ConnectAsync(t), timeout, cancellationToken).ConfigureAwait(false);
-                }               
+                }
             }
             catch (Exception exception)
             {
@@ -101,7 +107,7 @@ namespace MQTTnet.Adapter
                 WrapException(exception);
             }
         }
-        
+
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -118,7 +124,9 @@ namespace MQTTnet.Adapter
                     await MqttTaskTimeout.WaitAsync(
                         t => _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, t), timeout, cancellationToken).ConfigureAwait(false);
                 }
-                
+
+                Interlocked.Add(ref _bytesReceived, packetData.Count);
+
                 PacketFormatterAdapter.FreeBuffer();
 
                 _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Count, packet);
@@ -159,7 +167,9 @@ namespace MQTTnet.Adapter
                     return null;
                 }
 
-                if (!PacketFormatterAdapter.ProtocolVersion.HasValue)
+                Interlocked.Add(ref _bytesSent, receivedMqttPacket.TotalLength);
+
+                if (PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.Unknown)
                 {
                     PacketFormatterAdapter.DetectProtocolVersion(receivedMqttPacket);
                 }
@@ -190,9 +200,20 @@ namespace MQTTnet.Adapter
             return null;
         }
 
+        public void ResetStatistics()
+        {
+            Interlocked.Exchange(ref _bytesReceived, 0L);
+            Interlocked.Exchange(ref _bytesSent, 0L);
+        }
+
         private async Task<ReceivedMqttPacket> ReceiveAsync(CancellationToken cancellationToken)
         {
             var readFixedHeaderResult = await _packetReader.ReadFixedHeaderAsync(_fixedHeaderBuffer, cancellationToken).ConfigureAwait(false);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
 
             try
             {
@@ -201,7 +222,7 @@ namespace MQTTnet.Adapter
                     return null;
                 }
 
-                ReadingPacketStarted?.Invoke(this, EventArgs.Empty);
+                ReadingPacketStartedCallback?.Invoke();
 
                 var fixedHeader = readFixedHeaderResult.FixedHeader;
                 if (fixedHeader.RemainingLength == 0)
@@ -221,13 +242,7 @@ namespace MQTTnet.Adapter
                         chunkSize = bytesLeft;
                     }
 
-#if WINDOWS_UWP
-                    var readBytes = await _channel.ReadAsync(body, bodyOffset, (int)chunkSize, cancellationToken).ConfigureAwait(false);
-#else
-                    // async/await is not used to avoid the overhead of context switches. We assume that the remaining data
-                    // has been sent from the sender directly after the initial bytes.
-                    var readBytes = _channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
-#endif
+                    var readBytes = await _channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false);
 
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -238,7 +253,7 @@ namespace MQTTnet.Adapter
                     {
                         return null;
                     }
-                    
+
                     bodyOffset += readBytes;
                 } while (bodyOffset < body.Length);
 
@@ -247,7 +262,7 @@ namespace MQTTnet.Adapter
             }
             finally
             {
-                ReadingPacketCompleted?.Invoke(this, EventArgs.Empty);
+                ReadingPacketCompletedCallback?.Invoke();
             }
         }
 

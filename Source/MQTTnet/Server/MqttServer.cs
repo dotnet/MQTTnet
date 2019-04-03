@@ -186,7 +186,7 @@ namespace MQTTnet.Server
 
         private void OnClientAccepted(MqttServerAdapterClientAcceptedEventArgs eventArgs)
         {
-            eventArgs.SessionTask = _clientSessionsManager.HandleConnectionAsync(eventArgs.Client);
+            eventArgs.SessionTask = _clientSessionsManager.HandleConnectionAsync(eventArgs.ChannelAdapter);
         }
     }
 }

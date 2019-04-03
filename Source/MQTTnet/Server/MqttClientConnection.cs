@@ -127,7 +127,7 @@ namespace MQTTnet.Server
 
             Session.EnqueueApplicationMessage(applicationMessage, senderClientId, isRetainedApplicationMessage);
 
-            _logger.Verbose("Enqueued application message (ClientId: {0}).", ClientId);
+            _logger.Verbose("Queued application message (ClientId: {0}).", ClientId);
         }
 
         private async Task<MqttClientDisconnectType> RunInternalAsync()
@@ -362,24 +362,6 @@ namespace MQTTnet.Server
             };
 
             return SendAsync(pubRecPacket);
-
-            ////Task.Run(async () =>
-            ////{
-            ////    using (var pubRelPacketAwaiter = _packetDispatcher.AddPacketAwaiter<MqttPubRelPacket>(publishPacket.PacketIdentifier))
-            ////    {
-            ////        await pubRelPacketAwaiter.WaitOneAsync(_options.DefaultCommunicationTimeout).ConfigureAwait(false);
-
-            ////        var pubCompPacket = new MqttPubCompPacket
-            ////        {
-            ////            PacketIdentifier = publishPacket.PacketIdentifier,
-            ////            ReasonCode = MqttPubCompReasonCode.Success
-            ////        };
-
-            ////        await SendAsync(pubCompPacket).ConfigureAwait(false);
-            ////    }
-            ////});
-
-            //await Task.FromResult(0);
         }
 
         private async Task SendPendingPacketsAsync(CancellationToken cancellationToken)

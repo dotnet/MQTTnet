@@ -1,5 +1,6 @@
 ﻿#if !WINDOWS_UWP
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -35,14 +36,14 @@ namespace MQTTnet.Implementations
             _tlsCertificate = tlsCertificate;
             _cancellationToken = cancellationToken;
             _logger = logger.CreateChildLogger(nameof(MqttTcpServerListener));
-            
+
             if (_options is MqttServerTlsTcpEndpointOptions tlsOptions)
             {
                 _tlsOptions = tlsOptions;
             }
         }
 
-        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler;
+        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler { get; set; }
 
         public void Start()
         {
@@ -58,53 +59,7 @@ namespace MQTTnet.Implementations
             _logger.Info($"Starting TCP listener for {_socket.LocalEndPoint} TLS={_tlsCertificate != null}.");
 
             _socket.Listen(_options.ConnectionBacklog);
-            Task.Run(AcceptClientConnectionsAsync, _cancellationToken);
-        }
-
-        private async Task AcceptClientConnectionsAsync()
-        {
-            while (!_cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-#if NET452 || NET461
-                    var clientSocket = await Task.Factory.FromAsync(_socket.BeginAccept, _socket.EndAccept, null).ConfigureAwait(false);
-#else
-                    var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
-#endif
-                    clientSocket.NoDelay = true;
-
-                    SslStream sslStream = null;
-
-                    if (_tlsCertificate != null)
-                    {
-                        sslStream = new SslStream(new NetworkStream(clientSocket), false);
-                        await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, _tlsOptions.SslProtocol, false).ConfigureAwait(false);
-                    }
-
-                    _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
-                        clientSocket.RemoteEndPoint,
-                        _socket.LocalEndPoint,
-                        _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
-
-                    var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(clientSocket, sslStream), new MqttPacketFormatterAdapter(), _logger);
-                    ClientAcceptedHandler?.Invoke(new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
-                }
-                catch (ObjectDisposedException)
-                {
-                    // It can happen that the listener socket is accessed after the cancellation token is already set and the listener socket is disposed.
-                }
-                catch (Exception exception)
-                {
-                    if (exception is SocketException s && s.SocketErrorCode == SocketError.OperationAborted)
-                    {
-                        return;
-                    }
-
-                    _logger.Error(exception, $"Error while accepting connection at TCP listener {_socket.LocalEndPoint} TLS={_tlsCertificate != null}.");
-                    await Task.Delay(TimeSpan.FromSeconds(1), _cancellationToken).ConfigureAwait(false);
-                }
-            }
+            Task.Run(() => AcceptClientConnectionsAsync(_cancellationToken), _cancellationToken);
         }
 
         public void Dispose()
@@ -114,6 +69,78 @@ namespace MQTTnet.Implementations
 #if NETSTANDARD1_3 || NETSTANDARD2_0 || NET461 || NET472
             _tlsCertificate?.Dispose();
 #endif
+        }
+
+        private async Task AcceptClientConnectionsAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+#if NET452 || NET461
+                    var clientSocket = await Task.Factory.FromAsync(_socket.BeginAccept, _socket.EndAccept, null).ConfigureAwait(false);
+#else
+                    var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
+#endif
+                    await HandleClientConnection(clientSocket).ConfigureAwait(false);
+                }
+                catch (Exception exception)
+                {
+                    _logger.Error(exception, $"Error while accepting connection at TCP listener {_socket.LocalEndPoint} TLS={_tlsCertificate != null}.");
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private async Task HandleClientConnection(Socket clientSocket)
+        {
+            Stream stream = null;
+
+            try
+            {
+                clientSocket.NoDelay = _options.NoDelay;
+
+                stream = new NetworkStream(clientSocket, true);
+
+                if (_tlsCertificate != null)
+                {
+                    var sslStream = new SslStream(stream, false);
+                    await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, _tlsOptions.SslProtocol, false).ConfigureAwait(false);
+                    stream = sslStream;
+                }
+
+                _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
+                    clientSocket.RemoteEndPoint,
+                    _socket.LocalEndPoint,
+                    _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
+
+                var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(stream), new MqttPacketFormatterAdapter(), _logger);
+                ClientAcceptedHandler?.Invoke(new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
+            }
+            catch (Exception exception)
+            {
+                if (exception is ObjectDisposedException)
+                {
+                    // It can happen that the listener socket is accessed after the cancellation token is already set and the listener socket is disposed.
+                    return;
+                }
+
+                if (exception is SocketException socketException && socketException.SocketErrorCode == SocketError.OperationAborted)
+                {
+                    return;
+                }
+
+                try
+                {
+                    // Dispose already allocated resources.
+                    stream?.Dispose();
+                    clientSocket?.Dispose();
+                }
+                catch (Exception disposeException)
+                {
+                    throw new AggregateException(exception, disposeException);
+                }
+            }
         }
     }
 }

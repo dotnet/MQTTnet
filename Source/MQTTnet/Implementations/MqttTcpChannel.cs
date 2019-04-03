@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using MQTTnet.Channel;
 using MQTTnet.Client.Options;
@@ -17,12 +18,8 @@ namespace MQTTnet.Implementations
         private readonly IMqttClientOptions _clientOptions;
         private readonly MqttClientTcpOptions _options;
 
-        private Socket _socket;
         private Stream _stream;
 
-        /// <summary>
-        /// called on client sockets are created in connect
-        /// </summary>
         public MqttTcpChannel(IMqttClientOptions clientOptions)
         {
             _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
@@ -31,48 +28,60 @@ namespace MQTTnet.Implementations
             IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
         }
 
-        /// <summary>
-        /// called on server, sockets are passed in
-        /// connect will not be called
-        /// </summary>
-        public MqttTcpChannel(Socket socket, SslStream sslStream)
+        public MqttTcpChannel(Stream stream)
         {
-            _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
-            IsSecureConnection = sslStream != null;
-
-            CreateStream(sslStream);
+            IsSecureConnection = stream is SslStream;
         }
 
-        public string Endpoint => _socket?.RemoteEndPoint?.ToString();
+        public string Endpoint { get; private set; }
 
         public bool IsSecureConnection { get; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
-            if (_socket == null)
+            Socket socket;
+
+            if (_options.AddressFamily == AddressFamily.Unspecified)
             {
-                _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+                socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            }
+            else
+            {
+                socket = new Socket(_options.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             }
 
+            socket.ReceiveBufferSize = _options.BufferSize;
+            socket.SendBufferSize = _options.BufferSize;
+            socket.DualMode = _options.DualMode;
+            socket.NoDelay = _options.NoDelay;
+
             // Workaround for: workaround for https://github.com/dotnet/corefx/issues/24430
-            using (cancellationToken.Register(() => _socket.Dispose()))
+            using (cancellationToken.Register(() => socket.Dispose()))
             {
 #if NET452 || NET461
-                await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
+                await Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
 #else
-                await _socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
+                await socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
 #endif
             }
 
-            SslStream sslStream = null;
+            var networkStream = new NetworkStream(socket, true);
+
             if (_options.TlsOptions.UseTls)
             {
-                sslStream = new SslStream(new NetworkStream(_socket, true), false, InternalUserCertificateValidationCallback);
+                var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                 await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+
+                _stream = sslStream;
+            }
+            else
+            {
+                _stream = networkStream;
             }
 
-            CreateStream(sslStream);
+            Endpoint = socket.RemoteEndPoint?.ToString();
         }
 
         public Task DisconnectAsync(CancellationToken cancellationToken)
@@ -83,37 +92,58 @@ namespace MQTTnet.Implementations
 
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            // Workaround for: https://github.com/dotnet/corefx/issues/24430
-            using (cancellationToken.Register(Dispose))
+            try
             {
-                if (cancellationToken.IsCancellationRequested)
+                // Workaround for: https://github.com/dotnet/corefx/issues/24430
+                using (cancellationToken.Register(Dispose))
                 {
-                    return 0;
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return 0;
+                    }
+
+                    return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            catch (IOException exception)
+            {
+                if (exception.InnerException is SocketException socketException)
+                {
+                    ExceptionDispatchInfo.Capture(socketException).Throw();
                 }
 
-                return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+                throw;
             }
         }
 
         public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            // Workaround for: https://github.com/dotnet/corefx/issues/24430
-            using (cancellationToken.Register(Dispose))
+            try
             {
-                if (cancellationToken.IsCancellationRequested)
+                // Workaround for: https://github.com/dotnet/corefx/issues/24430
+                using (cancellationToken.Register(Dispose))
                 {
-                    return;
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            catch (IOException exception)
+            {
+                if (exception.InnerException is SocketException socketException)
+                {
+                    ExceptionDispatchInfo.Capture(socketException).Throw();
                 }
 
-                await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-                //await _stream.FlushAsync(cancellationToken);
+                throw;
             }
         }
 
         public void Dispose()
         {
-            _socket = null;
-
             // When the stream is disposed it will also close the socket and this will also dispose it.
             // So there is no need to dispose the socket again.
             // https://stackoverflow.com/questions/3601521/should-i-manually-dispose-the-socket-after-closing-it
@@ -127,6 +157,8 @@ namespace MQTTnet.Implementations
             catch (NullReferenceException)
             {
             }
+
+            _stream = null;
         }
 
         private bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -174,18 +206,6 @@ namespace MQTTnet.Implementations
             }
 
             return certificates;
-        }
-
-        private void CreateStream(Stream stream)
-        {
-            if (stream != null)
-            {
-                _stream = stream;
-            }
-            else
-            {
-                _stream = new NetworkStream(_socket, true);
-            }
         }
     }
 }

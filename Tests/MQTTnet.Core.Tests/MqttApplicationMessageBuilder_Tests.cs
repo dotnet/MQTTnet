@@ -7,7 +7,7 @@ using MQTTnet.Protocol;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttApplicationMessageBuilderTests
+    public class MqttApplicationMessageBuilder_Tests
     {
         [TestMethod]
         public void CreateApplicationMessage_TopicOnly()

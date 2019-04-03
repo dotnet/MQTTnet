@@ -8,11 +8,11 @@ namespace MQTTnet.Tests
 {
     [TestClass]
     // Inspired from the vs-threading tests (https://github.com/Microsoft/vs-threading/blob/master/src/Microsoft.VisualStudio.Threading.Tests/AsyncAutoResetEventTests.cs)
-    public class AsyncAutoResetEventTests
+    public class AsyncAutoResetEvent_Tests
     {
         private readonly AsyncAutoResetEvent _aare;
 
-        public AsyncAutoResetEventTests()
+        public AsyncAutoResetEvent_Tests()
         {
             _aare = new AsyncAutoResetEvent();
         }

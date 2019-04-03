@@ -4,7 +4,7 @@ using MQTTnet.Client;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttPacketIdentifierProviderTests
+    public class MqttPacketIdentifierProvider_Tests
     {
         [TestMethod]
         public void Reset()

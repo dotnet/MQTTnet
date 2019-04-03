@@ -5,14 +5,13 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
-using MQTTnet.Packets;
 using MQTTnet.Server;
 using MQTTnet.Server.Status;
 
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttKeepAliveMonitorTests
+    public class MqttKeepAliveMonitor_Tests
     {
         [TestMethod]
         public void KeepAlive_Timeout()

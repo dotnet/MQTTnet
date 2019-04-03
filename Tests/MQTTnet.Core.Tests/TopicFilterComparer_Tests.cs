@@ -4,7 +4,7 @@ using MQTTnet.Server;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class TopicFilterComparerTests
+    public class TopicFilterComparer_Tests
     {
         [TestMethod]
         public void TopicFilterComparer_DirectMatch()

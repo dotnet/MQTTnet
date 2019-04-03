@@ -4,7 +4,7 @@ using MQTTnet.Formatter;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttPacketWriterTests
+    public class MqttPacketWriter_Tests
     {
         [TestMethod]
         public void WritePacket()

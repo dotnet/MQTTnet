@@ -6,7 +6,7 @@ using MQTTnet.Internal;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class AsyncLockTests
+    public class AsyncLock_Tests
     {
         [TestMethod]
         public void AsyncLock()

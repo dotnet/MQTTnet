@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using MQTTnet.Adapter;
 using MQTTnet.Packets;
 

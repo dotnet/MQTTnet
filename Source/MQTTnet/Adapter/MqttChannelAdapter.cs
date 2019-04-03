@@ -283,15 +283,19 @@ namespace MQTTnet.Adapter
 
         private static bool IsWrappedException(Exception exception)
         {
-            return exception is TaskCanceledException ||
-                   exception is OperationCanceledException ||
+            return exception is OperationCanceledException ||
                    exception is MqttCommunicationTimedOutException ||
                    exception is MqttCommunicationException;
         }
 
         private static void WrapException(Exception exception)
         {
-            if (exception is IOException && exception.InnerException is SocketException socketException)
+            if (exception is IOException && exception.InnerException is SocketException innerException)
+            {
+                exception = innerException;
+            }
+
+            if (exception is SocketException socketException)
             {
                 if (socketException.SocketErrorCode == SocketError.ConnectionAborted ||
                     socketException.SocketErrorCode == SocketError.OperationAborted)

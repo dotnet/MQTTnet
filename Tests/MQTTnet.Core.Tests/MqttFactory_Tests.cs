@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttFactoryTests
+    public class MqttFactory_Tests
     {
         [TestMethod]
         public async Task Create_Managed_Client_With_Logger()

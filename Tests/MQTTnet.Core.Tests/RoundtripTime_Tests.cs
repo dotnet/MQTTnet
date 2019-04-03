@@ -11,7 +11,7 @@ using MQTTnet.Server;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class RoundtripTimeTests
+    public class RoundtripTime_Tests
     {
         [TestMethod]
         public async Task Round_Trip_Time()

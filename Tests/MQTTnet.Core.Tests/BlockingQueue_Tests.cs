@@ -6,7 +6,7 @@ using MQTTnet.Internal;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class BlockingQueueTests
+    public class BlockingQueue_Tests
     {
         [TestMethod]
         public void Preserve_Order()

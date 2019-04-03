@@ -14,7 +14,7 @@ using MQTTnet.Protocol;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttPacketSerializerTests
+    public class MqttPacketSerializer_Tests
     {
         [TestMethod]
         public void SerializeV310_MqttConnectPacket()

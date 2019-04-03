@@ -6,7 +6,7 @@ using MQTTnet.Server;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttSubscriptionsManagerTests
+    public class MqttSubscriptionsManager_Tests
     {
         [TestMethod]
         public void MqttSubscriptionsManager_SubscribeSingleSuccess()

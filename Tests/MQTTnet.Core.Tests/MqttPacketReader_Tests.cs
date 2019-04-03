@@ -8,7 +8,7 @@ using MQTTnet.Internal;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttPacketReaderTests
+    public class MqttPacketReader_Tests
     {
         [TestMethod]
         public async Task MqttPacketReader_EmptyStream()

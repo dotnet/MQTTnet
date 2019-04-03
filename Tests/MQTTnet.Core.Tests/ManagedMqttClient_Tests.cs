@@ -12,7 +12,7 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class ManagedMqttClientTests
+    public class ManagedMqttClient_Tests
     {
         [TestMethod]
         public async Task Drop_New_Messages_On_Full_Queue()

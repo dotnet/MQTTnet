@@ -28,21 +28,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\app\app.ts" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\app\app.js">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\app\app.js.map">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Index.html">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
@@ -81,9 +68,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TypeScriptCompile Include="wwwroot\app\app.ts">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </TypeScriptCompile>
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

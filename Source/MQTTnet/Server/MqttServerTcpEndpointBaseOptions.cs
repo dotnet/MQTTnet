@@ -10,6 +10,8 @@ namespace MQTTnet.Server
 
         public int ConnectionBacklog { get; set; } = 10;
 
+        public bool NoDelay { get; set; } = true;
+
 #if WINDOWS_UWP
         public int BufferSize { get; set; } = 4096;
 #endif

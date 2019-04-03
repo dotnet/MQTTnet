@@ -1,4 +1,6 @@
-﻿namespace MQTTnet.Client.Options
+﻿using System.Net.Sockets;
+
+namespace MQTTnet.Client.Options
 {
     public class MqttClientTcpOptions : IMqttClientChannelOptions
     {
@@ -6,7 +8,13 @@
 
         public int? Port { get; set; }
 
-        public int BufferSize { get; set; } = 4096;
+        public int BufferSize { get; set; } = 1024;
+
+        public bool DualMode { get; set; } = true;
+
+        public bool NoDelay { get; set; } = true;
+
+        public AddressFamily AddressFamily { get; set; } = AddressFamily.Unspecified;
 
         public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
 

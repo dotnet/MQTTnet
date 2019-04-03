@@ -13,10 +13,14 @@ namespace MQTTnet.Formatter
     /// </summary>
     public class MqttPacketWriter
     {
+        private static readonly ArraySegment<byte> ZeroVariableLengthIntegerArray = new ArraySegment<byte>(new byte[1], 0, 1);
+        private static readonly ArraySegment<byte> ZeroTwoByteIntegerArray = new ArraySegment<byte>(new byte[2], 0, 2);
+
+        public static int InitialBufferSize = 128;
         public static int MaxBufferSize = 4096;
 
         // TODO: Consider using the ArrayPool here together with FreeBuffer.
-        private byte[] _buffer = new byte[128];
+        private byte[] _buffer = new byte[InitialBufferSize];
 
         private int _offset;
 
@@ -33,7 +37,7 @@ namespace MQTTnet.Formatter
         {
             if (value == 0)
             {
-                return new ArraySegment<byte>(new byte[1], 0, 1);
+                return ZeroVariableLengthIntegerArray;
             }
 
             if (value <= 127)
@@ -68,7 +72,14 @@ namespace MQTTnet.Formatter
 
         public void WriteWithLengthPrefix(string value)
         {
-            WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value ?? string.Empty));
+            if (string.IsNullOrEmpty(value))
+            {
+                Write(ZeroTwoByteIntegerArray);
+            }
+            else
+            {
+                WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value));
+            }         
         }
 
         public void WriteWithLengthPrefix(byte[] value)
@@ -77,8 +88,15 @@ namespace MQTTnet.Formatter
 
             EnsureAdditionalCapacity(value.Length + 2);
 
-            Write((ushort)value.Length);
-            Write(value, 0, value.Length);
+            if (value.Length == 0)
+            {
+                Write(ZeroTwoByteIntegerArray);   
+            }
+            else
+            {
+                Write((ushort)value.Length);
+                Write(value, 0, value.Length);
+            }           
         }
 
         public void Write(byte @byte)
@@ -103,19 +121,17 @@ namespace MQTTnet.Formatter
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
+            if (count == 0)
+            {
+                return;
+            }
+
             EnsureAdditionalCapacity(count);
 
             Array.Copy(buffer, offset, _buffer, _offset, count);
             IncreasePosition(count);
         }
-
-        public void Write(ArraySegment<byte> buffer)
-        {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
-
-            Write(buffer.Array, buffer.Offset, buffer.Count);
-        }
-
+        
         public void Write(MqttPacketWriter propertyWriter)
         {
             if (propertyWriter == null) throw new ArgumentNullException(nameof(propertyWriter));
@@ -158,6 +174,11 @@ namespace MQTTnet.Formatter
             }
 
             Array.Resize(ref _buffer, MaxBufferSize);
+        }
+
+        private void Write(ArraySegment<byte> buffer)
+        {
+            Write(buffer.Array, buffer.Offset, buffer.Count);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

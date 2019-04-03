@@ -36,7 +36,7 @@ namespace MQTTnet.Implementations
                 _listener = new StreamSocketListener();
 
                 // This also affects the client sockets.
-                _listener.Control.NoDelay = true;
+                _listener.Control.NoDelay = options.DefaultEndpointOptions.NoDelay;
                 _listener.Control.KeepAlive = true;
                 _listener.Control.QualityOfService = SocketQualityOfService.LowLatency;
                 _listener.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;

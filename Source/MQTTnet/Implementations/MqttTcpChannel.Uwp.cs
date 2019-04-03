@@ -62,7 +62,7 @@ namespace MQTTnet.Implementations
             if (_socket == null)
             {
                 _socket = new StreamSocket();
-                _socket.Control.NoDelay = true;
+                _socket.Control.NoDelay = _options.NoDelay;
                 _socket.Control.KeepAlive = true;
             }
 

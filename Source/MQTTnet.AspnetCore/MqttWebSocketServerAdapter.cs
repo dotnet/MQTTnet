@@ -44,9 +44,9 @@ namespace MQTTnet.AspNetCore
             clientCertificate?.Dispose();
 
             var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection);
-            var clientAdapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(), _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
+            var channelAdapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(), _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
 
-            var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(clientAdapter);
+            var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(channelAdapter);
             ClientAcceptedHandler?.Invoke(eventArgs);
 
             if (eventArgs.SessionTask != null)

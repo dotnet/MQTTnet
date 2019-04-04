@@ -20,19 +20,22 @@ namespace MQTTnet.Formatter
             UseProtocolVersion(protocolVersion);
         }
 
-        public MqttProtocolVersion ProtocolVersion { get; private set; }
+        public MqttProtocolVersion ProtocolVersion { get; private set; } = MqttProtocolVersion.Unknown;
 
         public IMqttDataConverter DataConverter
         {
             get
             {
                 ThrowIfFormatterNotSet();
+
                 return _formatter.DataConverter;
             }
         }
 
         public ArraySegment<byte> Encode(MqttBasePacket packet)
         {
+            if (packet == null) throw new ArgumentNullException(nameof(packet));
+
             ThrowIfFormatterNotSet();
 
             return _formatter.Encode(packet);
@@ -40,6 +43,8 @@ namespace MQTTnet.Formatter
 
         public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
+            if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
+
             ThrowIfFormatterNotSet();
 
             return _formatter.Decode(receivedMqttPacket);

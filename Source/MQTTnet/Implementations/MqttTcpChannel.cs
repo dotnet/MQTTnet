@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using MQTTnet.Channel;
 using MQTTnet.Client;
+using System.Net;
 
 namespace MQTTnet.Implementations
 {
@@ -49,7 +50,8 @@ namespace MQTTnet.Implementations
         {
             if (_socket == null)
             {
-                _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+                var serverIp = IPAddress.Parse(_options.Server);
+                _socket = new Socket(serverIp.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             }
 
 #if NET452 || NET461

@@ -5,7 +5,7 @@
     <version>0.0.0</version>
     <authors>Christian Kratky</authors>
     <owners>Christian Kratky</owners>
-    <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>
+    <license type="file">LICENSE</license>
     <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -19,6 +19,9 @@
   </metadata>
 
   <files>
+    <!-- License -->
+    <file src="..\LICENSE" />
+
     <!-- .NET Standard 1.3 -->
     <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard1.3\MQTTnet.Extensions.ManagedClient.*" target="lib\netstandard1.3\"/>
 

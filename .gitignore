@@ -288,8 +288,6 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 
-
-Build/nuget.exe
 *.js
 *.map
 

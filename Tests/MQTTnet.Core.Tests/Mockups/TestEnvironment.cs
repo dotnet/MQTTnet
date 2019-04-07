@@ -21,7 +21,7 @@ namespace MQTTnet.Tests.Mockups
 
         private readonly List<Exception> _exceptions = new List<Exception>();
 
-        private IMqttServer _server;
+        public IMqttServer Server { get; private set; }
 
         public bool IgnoreClientLogErrors { get; set; }
 
@@ -72,15 +72,15 @@ namespace MQTTnet.Tests.Mockups
 
         public async Task<IMqttServer> StartServerAsync(MqttServerOptionsBuilder options)
         {
-            if (_server != null)
+            if (Server != null)
             {
                 throw new InvalidOperationException("Server already started.");
             }
 
-            _server = _mqttFactory.CreateMqttServer(_serverLogger);
-            await _server.StartAsync(options.WithDefaultEndpointPort(ServerPort).Build());
+            Server = _mqttFactory.CreateMqttServer(_serverLogger);
+            await Server.StartAsync(options.WithDefaultEndpointPort(ServerPort).Build());
 
-            return _server;
+            return Server;
         }
 
         public Task<IMqttClient> ConnectClientAsync()
@@ -122,7 +122,7 @@ namespace MQTTnet.Tests.Mockups
                 mqttClient?.Dispose();
             }
 
-            _server?.StopAsync().GetAwaiter().GetResult();
+            Server?.StopAsync().GetAwaiter().GetResult();
 
             ThrowIfLogErrors();
 

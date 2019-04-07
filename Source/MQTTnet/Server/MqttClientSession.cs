@@ -1,20 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics;
 using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
     public class MqttClientSession
     {
+        private readonly IMqttNetChildLogger _logger;
+
         private readonly DateTime _createdTimestamp = DateTime.UtcNow;
 
-        public MqttClientSession(string clientId, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions)
+        public MqttClientSession(string clientId, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttNetChildLogger logger)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
 
             SubscriptionsManager = new MqttClientSubscriptionsManager(clientId, eventDispatcher, serverOptions);
             ApplicationMessagesQueue = new MqttClientSessionApplicationMessagesQueue(serverOptions);
+
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            _logger = logger.CreateChildLogger(nameof(MqttClientSession));
         }
 
         public string ClientId { get; }
@@ -35,12 +41,15 @@ namespace MQTTnet.Server
                 return;
             }
 
+            _logger.Verbose("Queued application message with topic '{0}' (ClientId: {1}).", applicationMessage.Topic, ClientId);
+
             ApplicationMessagesQueue.Enqueue(applicationMessage, senderClientId, checkSubscriptionsResult.QualityOfServiceLevel, isRetainedApplicationMessage);
         }
 
         public async Task SubscribeAsync(ICollection<TopicFilter> topicFilters, MqttRetainedMessagesManager retainedMessagesManager)
         {
             await SubscriptionsManager.SubscribeAsync(topicFilters).ConfigureAwait(false);
+
             var matchingRetainedMessages = await retainedMessagesManager.GetSubscribedMessagesAsync(topicFilters).ConfigureAwait(false);
             foreach (var matchingRetainedMessage in matchingRetainedMessages)
             {

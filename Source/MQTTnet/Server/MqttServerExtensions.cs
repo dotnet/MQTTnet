@@ -2,14 +2,46 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client;
 using MQTTnet.Client.Publishing;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
     public static class MqttServerExtensions
     {
+        public static IMqttServer UseApplicationMessageReceivedHandler(this IMqttServer server, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
+        {
+            if (server == null) throw new ArgumentNullException(nameof(server));
+
+            if (handler == null)
+            {
+                return server.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
+            }
+
+            return server.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
+        }
+
+        public static IMqttServer UseApplicationMessageReceivedHandler(this IMqttServer server, Action<MqttApplicationMessageReceivedEventArgs> handler)
+        {
+            if (server == null) throw new ArgumentNullException(nameof(server));
+
+            if (handler == null)
+            {
+                return server.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
+            }
+
+            return server.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
+        }
+
+        public static IMqttServer UseApplicationMessageReceivedHandler(this IMqttServer server, IMqttApplicationMessageReceivedHandler handler)
+        {
+            if (server == null) throw new ArgumentNullException(nameof(server));
+
+            server.ApplicationMessageReceivedHandler = handler;
+            return server;
+        }
+
         public static Task SubscribeAsync(this IMqttServer server, string clientId, params TopicFilter[] topicFilters)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
@@ -120,12 +152,16 @@ namespace MQTTnet.Server
 
         public static Task<MqttClientPublishResult> PublishAsync(this IMqttServer server, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
         {
+            if (server == null) throw new ArgumentNullException(nameof(server));
+
             var message = builder(new MqttApplicationMessageBuilder()).Build();
             return server.PublishAsync(message, cancellationToken);
         }
 
         public static Task<MqttClientPublishResult> PublishAsync(this IMqttServer server, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
         {
+            if (server == null) throw new ArgumentNullException(nameof(server));
+
             var message = builder(new MqttApplicationMessageBuilder()).Build();
             return server.PublishAsync(message, CancellationToken.None);
         }

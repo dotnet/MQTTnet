@@ -121,15 +121,6 @@ namespace MQTTnet.Server
             return _packageReceiverTask;
         }
 
-        public void EnqueueApplicationMessage(MqttApplicationMessage applicationMessage, string senderClientId, bool isRetainedApplicationMessage)
-        {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
-
-            Session.EnqueueApplicationMessage(applicationMessage, senderClientId, isRetainedApplicationMessage);
-
-            _logger.Verbose("Queued application message (ClientId: {0}).", ClientId);
-        }
-
         private async Task<MqttClientDisconnectType> RunInternalAsync()
         {
             var disconnectType = MqttClientDisconnectType.NotClean;
@@ -273,7 +264,7 @@ namespace MQTTnet.Server
             var retainedMessages = await _retainedMessagesManager.GetSubscribedMessagesAsync(topicFilters).ConfigureAwait(false);
             foreach (var applicationMessage in retainedMessages)
             {
-                EnqueueApplicationMessage(applicationMessage, ClientId, true);
+                Session.EnqueueApplicationMessage(applicationMessage, ClientId, true);
             }
         }
 

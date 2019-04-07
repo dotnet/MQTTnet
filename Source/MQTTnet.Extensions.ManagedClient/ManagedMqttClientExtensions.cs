@@ -14,106 +14,128 @@ namespace MQTTnet.Extensions.ManagedClient
     {
         public static IManagedMqttClient UseConnectedHandler(this IManagedMqttClient client, Func<MqttClientConnectedEventArgs, Task> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.ConnectedHandler = null;
-                return client;
+                return client.UseConnectedHandler((IMqttClientConnectedHandler)null);
             }
 
-            client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(handler);
-            return client;
+            return client.UseConnectedHandler(new MqttClientConnectedHandlerDelegate(handler));
         }
 
         public static IManagedMqttClient UseConnectedHandler(this IManagedMqttClient client, Action<MqttClientConnectedEventArgs> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.ConnectedHandler = null;
-                return client;
+                return client.UseConnectedHandler((IMqttClientConnectedHandler)null);
             }
 
-            client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(handler);
+            return client.UseConnectedHandler(new MqttClientConnectedHandlerDelegate(handler));
+        }
+
+        public static IManagedMqttClient UseConnectedHandler(this IManagedMqttClient client, IMqttClientConnectedHandler handler)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            client.ConnectedHandler = handler;
             return client;
         }
 
         public static IManagedMqttClient UseDisconnectedHandler(this IManagedMqttClient client, Func<MqttClientDisconnectedEventArgs, Task> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.DisconnectedHandler = null;
-                return client;
+                return client.UseDisconnectedHandler((IMqttClientDisconnectedHandler)null);
             }
 
-            client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(handler);
-            return client;
+            return client.UseDisconnectedHandler(new MqttClientDisconnectedHandlerDelegate(handler));
         }
 
         public static IManagedMqttClient UseDisconnectedHandler(this IManagedMqttClient client, Action<MqttClientDisconnectedEventArgs> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.DisconnectedHandler = null;
-                return client;
+                return client.UseDisconnectedHandler((IMqttClientDisconnectedHandler)null);
             }
 
-            client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(handler);
+            return client.UseDisconnectedHandler(new MqttClientDisconnectedHandlerDelegate(handler));
+        }
+
+        public static IManagedMqttClient UseDisconnectedHandler(this IManagedMqttClient client, IMqttClientDisconnectedHandler handler)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            client.DisconnectedHandler = handler;
             return client;
         }
 
         public static IManagedMqttClient UseApplicationMessageReceivedHandler(this IManagedMqttClient client, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.ApplicationMessageReceivedHandler = null;
-                return client;
+                return client.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
             }
 
-            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(handler);
-
-            return client;
+            return client.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
         }
 
         public static IManagedMqttClient UseApplicationMessageReceivedHandler(this IManagedMqttClient client, Action<MqttApplicationMessageReceivedEventArgs> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.ApplicationMessageReceivedHandler = null;
-                return client;
+                return client.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
             }
 
-            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(handler);
+            return client.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
+        }
 
+        public static IManagedMqttClient UseApplicationMessageReceivedHandler(this IManagedMqttClient client, IMqttApplicationMessageReceivedHandler handler)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            client.ApplicationMessageReceivedHandler = handler;
             return client;
         }
 
-        public static Task SubscribeAsync(this IManagedMqttClient managedClient, params TopicFilter[] topicFilters)
+        public static Task SubscribeAsync(this IManagedMqttClient client, params TopicFilter[] topicFilters)
         {
-            if (managedClient == null) throw new ArgumentNullException(nameof(managedClient));
+            if (client == null) throw new ArgumentNullException(nameof(client));
 
-            return managedClient.SubscribeAsync(topicFilters);
+            return client.SubscribeAsync(topicFilters);
         }
 
-        public static Task SubscribeAsync(this IManagedMqttClient managedClient, string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static Task SubscribeAsync(this IManagedMqttClient client, string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
-            if (managedClient == null) throw new ArgumentNullException(nameof(managedClient));
+            if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return managedClient.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
+            return client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
         }
 
-        public static Task SubscribeAsync(this IManagedMqttClient managedClient, string topic)
+        public static Task SubscribeAsync(this IManagedMqttClient client, string topic)
         {
-            if (managedClient == null) throw new ArgumentNullException(nameof(managedClient));
+            if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return managedClient.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
+            return client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
         }
 
-        public static Task UnsubscribeAsync(this IManagedMqttClient managedClient, params string[] topicFilters)
+        public static Task UnsubscribeAsync(this IManagedMqttClient client, params string[] topicFilters)
         {
-            if (managedClient == null) throw new ArgumentNullException(nameof(managedClient));
+            if (client == null) throw new ArgumentNullException(nameof(client));
 
-            return managedClient.UnsubscribeAsync(topicFilters);
+            return client.UnsubscribeAsync(topicFilters);
         }
 
         public static async Task PublishAsync(this IManagedMqttClient client, IEnumerable<MqttApplicationMessage> applicationMessages)
@@ -190,12 +212,16 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             var message = builder(new MqttApplicationMessageBuilder()).Build();
             return client.PublishAsync(message, cancellationToken);
         }
 
         public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             var message = builder(new MqttApplicationMessageBuilder()).Build();
             return client.PublishAsync(message, CancellationToken.None);
         }

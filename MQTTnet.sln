@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{67C28AC1
 		Build\MQTTnet.AspNetCore.nuspec = Build\MQTTnet.AspNetCore.nuspec
 		Build\MQTTnet.Extensions.ManagedClient.nuspec = Build\MQTTnet.Extensions.ManagedClient.nuspec
 		Build\MQTTnet.Extensions.Rpc.nuspec = Build\MQTTnet.Extensions.Rpc.nuspec
+		Build\MQTTnet.NETStandard.nuspec = Build\MQTTnet.NETStandard.nuspec
 		Build\MQTTnet.nuspec = Build\MQTTnet.nuspec
 		Build\upload.ps1 = Build\upload.ps1
 	EndProjectSection

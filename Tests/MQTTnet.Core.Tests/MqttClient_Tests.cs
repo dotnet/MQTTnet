@@ -295,5 +295,49 @@ namespace MQTTnet.Tests
                 Assert.IsFalse(client.IsConnected);
             }
         }
+
+        [TestMethod]
+        public async Task Frequent_Connects()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+
+                var clients = new List<IMqttClient>();
+                for (var i = 0; i < 100; i++)
+                {
+                    clients.Add(await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("a")));
+                }
+
+                var clientStatus = await testEnvironment.Server.GetClientStatusAsync();
+                var sessionStatus = await testEnvironment.Server.GetSessionStatusAsync();
+
+                for (var i = 0; i < 98; i++)
+                {
+                    Assert.IsFalse(clients[i].IsConnected);
+                }
+                
+                Assert.IsTrue(clients[99].IsConnected);
+
+                Assert.AreEqual(1, clientStatus.Count);
+                Assert.AreEqual(1, sessionStatus.Count);
+
+                var receiveClient = clients[99];
+                object receivedPayload = null;
+                receiveClient.UseApplicationMessageReceivedHandler(e =>
+                {
+                    receivedPayload = e.ApplicationMessage.ConvertPayloadToString();
+                });
+
+                await receiveClient.SubscribeAsync("x");
+
+                var sendClient = await testEnvironment.ConnectClientAsync();
+                await sendClient.PublishAsync("x", "1");
+
+                await Task.Delay(100);
+
+                Assert.AreEqual("1", receivedPayload);
+            }
+        }
     }
 }

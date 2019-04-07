@@ -10,7 +10,6 @@ using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
-using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.ManagedClient;
@@ -470,18 +469,6 @@ namespace MQTTnet.TestApp.UniversalWindows
         private async Task WikiCode()
         {
             {
-                // Write all trace messages to the console window.
-                MqttNetGlobalLogger.LogMessagePublished += (s, e) =>
-                {
-                    Console.WriteLine($">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
-                    if (e.TraceMessage.Exception != null)
-                    {
-                        Console.WriteLine(e.TraceMessage.Exception);
-                    }
-                };
-            }
-
-            {
                 // Use a custom identifier for the trace messages.
                 var clientOptions = new MqttClientOptionsBuilder()
                     .Build();
@@ -490,20 +477,77 @@ namespace MQTTnet.TestApp.UniversalWindows
             {
                 // Create a new MQTT client.
                 var factory = new MqttFactory();
-                var mqttClient = factory.CreateMqttClient();
+                var client = factory.CreateMqttClient();
 
+                // Create TCP based options using the builder.
+                var options = new MqttClientOptionsBuilder()
+                    .WithClientId("Client1")
+                    .WithTcpServer("broker.hivemq.com")
+                    .WithCredentials("bud", "%spencer%")
+                    .WithTls()
+                    .WithCleanSession()
+                    .Build();
+
+                await client.ConnectAsync(options);
+
+                // Reconnecting
+
+                client.UseDisconnectedHandler(async e =>
                 {
-                    // Create TCP based options using the builder.
-                    var options = new MqttClientOptionsBuilder()
-                        .WithClientId("Client1")
-                        .WithTcpServer("broker.hivemq.com")
-                        .WithCredentials("bud", "%spencer%")
-                        .WithTls()
-                        .WithCleanSession()
-                        .Build();
+                    Console.WriteLine("### DISCONNECTED FROM SERVER ###");
+                    await Task.Delay(TimeSpan.FromSeconds(5));
 
-                    await mqttClient.ConnectAsync(options);
-                }
+                    try
+                    {
+                        await client.ConnectAsync(options);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("### RECONNECTING FAILED ###");
+                    }
+                });
+
+                // Consuming messages
+
+                client.UseApplicationMessageReceivedHandler(e =>
+                {
+                    Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
+                    Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
+                    Console.WriteLine($"+ Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                    Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
+                    Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
+                    Console.WriteLine();
+                });
+
+                // Subscribe after connect
+
+                client.UseConnectedHandler(async e =>
+                {
+                    Console.WriteLine("### CONNECTED WITH SERVER ###");
+
+                    // Subscribe to a topic
+                    await client.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
+
+                    Console.WriteLine("### SUBSCRIBED ###");
+                });
+
+                // Subscribe to a topic
+                await client.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
+
+                // Unsubscribe from a topic
+                await client.UnsubscribeAsync("my/topic");
+
+                // Publish an application message
+                var applicationMessage = new MqttApplicationMessageBuilder()
+                    .WithTopic("A/B/C")
+                    .WithPayload("Hello World")
+                    .WithAtLeastOnceQoS()
+                    .Build();
+
+                await client.PublishAsync(applicationMessage);
+            }
+
+            {
 
                 {
                     // Use TCP connection.
@@ -525,8 +569,6 @@ namespace MQTTnet.TestApp.UniversalWindows
                     var options = new MqttClientOptionsBuilder()
                         .WithWebSocketServer("broker.hivemq.com:8000/mqtt")
                         .Build();
-
-                    await mqttClient.ConnectAsync(options);
                 }
 
                 {
@@ -548,23 +590,6 @@ namespace MQTTnet.TestApp.UniversalWindows
                             }
                         },
                     };
-                }
-
-                {
-                    // Subscribe to a topic
-                    await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
-
-                    // Unsubscribe from a topic
-                    await mqttClient.UnsubscribeAsync("my/topic");
-
-                    // Publish an application message
-                    var applicationMessage = new MqttApplicationMessageBuilder()
-                        .WithTopic("A/B/C")
-                        .WithPayload("Hello World")
-                        .WithAtLeastOnceQoS()
-                        .Build();
-
-                    await mqttClient.PublishAsync(applicationMessage);
                 }
             }
 
@@ -699,6 +724,39 @@ namespace MQTTnet.TestApp.UniversalWindows
                 var mqttClient = new MqttFactory().CreateManagedMqttClient();
                 await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
                 await mqttClient.StartAsync(options);
+            }
+
+            {
+                // Use a custom log ID for the logger.
+                var factory = new MqttFactory();
+                var client = factory.CreateMqttClient(new MqttNetLogger("MyCustomId"));
+            }
+
+            {
+                var client = new MqttFactory().CreateMqttClient();
+
+                var message = new MqttApplicationMessageBuilder()
+                    .WithTopic("MyTopic")
+                    .WithPayload("Hello World")
+                    .WithExactlyOnceQoS()
+                    .WithRetainFlag()
+                    .Build();
+
+                await client.PublishAsync(message);
+            }
+
+            {
+                // Write all trace messages to the console window.
+                MqttNetGlobalLogger.LogMessagePublished += (s, e) =>
+                {
+                    var trace = $">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}";
+                    if (e.TraceMessage.Exception != null)
+                    {
+                        trace += Environment.NewLine + e.TraceMessage.Exception.ToString();
+                    }
+
+                    Console.WriteLine(trace);
+                };
             }
         }
 

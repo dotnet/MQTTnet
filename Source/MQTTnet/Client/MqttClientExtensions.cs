@@ -17,82 +17,97 @@ namespace MQTTnet.Client
     {
         public static IMqttClient UseConnectedHandler(this IMqttClient client, Func<MqttClientConnectedEventArgs, Task> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.ConnectedHandler = null;
-                return client;
+                return client.UseConnectedHandler((IMqttClientConnectedHandler)null);
             }
 
-            client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(handler);
-            return client;
+            return client.UseConnectedHandler(new MqttClientConnectedHandlerDelegate(handler));
         }
 
         public static IMqttClient UseConnectedHandler(this IMqttClient client, Action<MqttClientConnectedEventArgs> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.ConnectedHandler = null;
-                return client;
+                return client.UseConnectedHandler((IMqttClientConnectedHandler)null);
             }
 
-            client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(handler);
+            return client.UseConnectedHandler(new MqttClientConnectedHandlerDelegate(handler));
+        }
+
+        public static IMqttClient UseConnectedHandler(this IMqttClient client, IMqttClientConnectedHandler handler)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            client.ConnectedHandler = handler;
             return client;
         }
 
         public static IMqttClient UseDisconnectedHandler(this IMqttClient client, Func<MqttClientDisconnectedEventArgs, Task> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.DisconnectedHandler = null;
-                return client;
+                return client.UseDisconnectedHandler((IMqttClientDisconnectedHandler)null);
             }
 
-            client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(handler);
-            return client;
+            return client.UseDisconnectedHandler(new MqttClientDisconnectedHandlerDelegate(handler));
         }
 
         public static IMqttClient UseDisconnectedHandler(this IMqttClient client, Action<MqttClientDisconnectedEventArgs> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.DisconnectedHandler = null;
-                return client;
+                return client.UseDisconnectedHandler((IMqttClientDisconnectedHandler)null);
             }
 
-            client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(handler);
+            return client.UseDisconnectedHandler(new MqttClientDisconnectedHandlerDelegate(handler));
+        }
+
+        public static IMqttClient UseDisconnectedHandler(this IMqttClient client, IMqttClientDisconnectedHandler handler)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            client.DisconnectedHandler = handler;
             return client;
         }
 
         public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.ApplicationMessageReceivedHandler = null;
-                return client;
+                return client.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
             }
 
-            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(handler);
-
-            return client;
+            return client.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
         }
 
         public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, Action<MqttApplicationMessageReceivedEventArgs> handler)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             if (handler == null)
             {
-                client.ApplicationMessageReceivedHandler = null;
-                return client;
+                return client.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
             }
 
-            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(handler);
-
-            return client;
+            return client.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
         }
 
         public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, IMqttApplicationMessageReceivedHandler handler)
         {
-            client.ApplicationMessageReceivedHandler = handler;
+            if (client == null) throw new ArgumentNullException(nameof(client));
 
+            client.ApplicationMessageReceivedHandler = handler;
             return client;
         }
 

@@ -332,8 +332,6 @@ namespace MQTTnet.Server
                 {
                     if (connectPacket.CleanSession)
                     {
-                        // TODO: Check if required.
-                        //session.Dispose();
                         session = null;
                         
                         _logger.Verbose("Deleting existing session of client '{0}'.", connectPacket.ClientId);
@@ -346,7 +344,7 @@ namespace MQTTnet.Server
 
                 if (session == null)
                 {
-                    session = new MqttClientSession(connectPacket.ClientId, _eventDispatcher, _options);
+                    session = new MqttClientSession(connectPacket.ClientId, _eventDispatcher, _options, _logger);
                     _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);
                 }
 

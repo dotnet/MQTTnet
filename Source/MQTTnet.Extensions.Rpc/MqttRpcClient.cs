@@ -119,11 +119,6 @@ namespace MQTTnet.Extensions.Rpc
                 return Task.FromResult(0);
             }
 
-            if (tcs.Task.IsCompleted || tcs.Task.IsCanceled)
-            {
-                return Task.FromResult(0);
-            }
-
             tcs.TrySetResult(eventArgs.ApplicationMessage.Payload);
 
             return Task.FromResult(0);

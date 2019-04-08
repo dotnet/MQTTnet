@@ -56,17 +56,17 @@ namespace MQTTnet.Formatter.V3
                 case MqttControlPacketType.Connect: return DecodeConnectPacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.ConnAck: return DecodeConnAckPacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.Disconnect: return new MqttDisconnectPacket();
-                case MqttControlPacketType.Publish: return DecodePublish(receivedMqttPacket);
-                case MqttControlPacketType.PubAck: return DecodePubAck(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubRec: return DecodePubRec(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubRel: return DecodePubRel(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubComp: return DecodePubComp(receivedMqttPacket.Body);
+                case MqttControlPacketType.Publish: return DecodePublishPacket(receivedMqttPacket);
+                case MqttControlPacketType.PubAck: return DecodePubAckPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.PubRec: return DecodePubRecPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.PubRel: return DecodePubRelPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.PubComp: return DecodePubCompPacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.PingReq: return new MqttPingReqPacket();
                 case MqttControlPacketType.PingResp: return new MqttPingRespPacket();
-                case MqttControlPacketType.Subscribe: return DecodeSubscribe(receivedMqttPacket.Body);
-                case MqttControlPacketType.SubAck: return DecodeSubAck(receivedMqttPacket.Body);
-                case MqttControlPacketType.Unsubscibe: return DecodeUnsubscribe(receivedMqttPacket.Body);
-                case MqttControlPacketType.UnsubAck: return DecodeUnsubAck(receivedMqttPacket.Body);
+                case MqttControlPacketType.Subscribe: return DecodeSubscribePacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.SubAck: return DecodeSubAckPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.Unsubscibe: return DecodeUnsubscribePacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.UnsubAck: return DecodeUnsubAckPacket(receivedMqttPacket.Body);
 
                 default: throw new MqttProtocolViolationException($"Packet type ({controlPacketType}) not supported.");
             }
@@ -100,7 +100,7 @@ namespace MQTTnet.Formatter.V3
             }
         }
 
-        private static MqttBasePacket DecodeUnsubAck(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeUnsubAckPacket(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -110,7 +110,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubComp(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubCompPacket(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -120,7 +120,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubRel(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubRelPacket(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -130,7 +130,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubRec(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubRecPacket(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -140,7 +140,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubAck(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubAckPacket(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -150,7 +150,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodeUnsubscribe(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeUnsubscribePacket(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -167,7 +167,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubscribe(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeSubscribePacket(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -190,7 +190,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private static MqttBasePacket DecodePublish(ReceivedMqttPacket receivedMqttPacket)
+        private static MqttBasePacket DecodePublishPacket(ReceivedMqttPacket receivedMqttPacket)
         {
             ThrowIfBodyIsEmpty(receivedMqttPacket.Body);
 
@@ -211,10 +211,14 @@ namespace MQTTnet.Formatter.V3
                 PacketIdentifier = packetIdentifier,
                 Retain = retain,
                 Topic = topic,
-                Payload = receivedMqttPacket.Body.ReadRemainingData().ToArray(),
                 QualityOfServiceLevel = qualityOfServiceLevel,
                 Dup = dup
             };
+
+            if (!receivedMqttPacket.Body.EndOfStream)
+            {
+                packet.Payload = receivedMqttPacket.Body.ReadRemainingData().ToArray();
+            }
 
             return packet;
         }
@@ -271,7 +275,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubAck(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeSubAckPacket(MqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 

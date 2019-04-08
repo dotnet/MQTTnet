@@ -380,7 +380,7 @@ namespace MQTTnet.Formatter.V5
 
         private static byte EncodeSubscribePacket(MqttSubscribePacket packet, MqttPacketWriter packetWriter)
         {
-            if (!packet.TopicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
+            if (packet.TopicFilters?.Any() != true) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
 
             ThrowIfPacketIdentifierIsInvalid(packet);
 
@@ -427,12 +427,9 @@ namespace MQTTnet.Formatter.V5
 
         private static byte EncodeSubAckPacket(MqttSubAckPacket packet, MqttPacketWriter packetWriter)
         {
-            ThrowIfPacketIdentifierIsInvalid(packet);
+            if (packet.ReasonCodes?.Any() != true) throw new MqttProtocolViolationException("At least one reason code must be set[MQTT - 3.8.3 - 3].");
 
-            if (packet.ReasonCodes == null || !packet.ReasonCodes.Any())
-            {
-                throw new MqttProtocolViolationException("At least one reason code must be set[MQTT - 3.8.3 - 3].");
-            }
+            ThrowIfPacketIdentifierIsInvalid(packet);
 
             packetWriter.Write(packet.PacketIdentifier.Value);
 
@@ -455,7 +452,7 @@ namespace MQTTnet.Formatter.V5
 
         private static byte EncodeUnsubscribePacket(MqttUnsubscribePacket packet, MqttPacketWriter packetWriter)
         {
-            if (!packet.TopicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.10.3-2].");
+            if (packet.TopicFilters?.Any() != true) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.10.3-2].");
 
             ThrowIfPacketIdentifierIsInvalid(packet);
 
@@ -479,13 +476,10 @@ namespace MQTTnet.Formatter.V5
 
         private static byte EncodeUnsubAckPacket(MqttUnsubAckPacket packet, MqttPacketWriter packetWriter)
         {
+            if (packet.ReasonCodes?.Any() != true) throw new MqttProtocolViolationException("At least one reason code must be set[MQTT - 3.8.3 - 3].");
+
             ThrowIfPacketIdentifierIsInvalid(packet);
-
-            if (packet.ReasonCodes == null || !packet.ReasonCodes.Any())
-            {
-                throw new MqttProtocolViolationException("At least one reason code must be set[MQTT - 3.8.3 - 3].");
-            }
-
+            
             packetWriter.Write(packet.PacketIdentifier.Value);
 
             var propertiesWriter = new MqttV500PropertiesWriter();

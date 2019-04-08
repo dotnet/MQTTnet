@@ -503,7 +503,10 @@ namespace MQTTnet.Formatter.V5
                 }
             }
 
-            packet.Payload = body.ReadRemainingData().ToArray();
+            if (!body.EndOfStream)
+            {
+                packet.Payload = body.ReadRemainingData().ToArray();
+            }
 
             return packet;
         }

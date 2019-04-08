@@ -14,7 +14,7 @@ namespace MQTTnet
 
         public bool Retain { get; set; }
 
-        public List<MqttUserProperty> UserProperties { get; set; } = new List<MqttUserProperty>();
+        public List<MqttUserProperty> UserProperties { get; set; }
 
         public string ContentType { get; set; }
 

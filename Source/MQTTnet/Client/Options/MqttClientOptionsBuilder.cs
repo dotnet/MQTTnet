@@ -15,6 +15,11 @@ namespace MQTTnet.Client.Options
 
         public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion value)
         {
+            if (value == MqttProtocolVersion.Unknown)
+            {
+                throw new ArgumentException("Protocol version is invalid.");
+            }
+
             _options.ProtocolVersion = value;
             return this;
         }

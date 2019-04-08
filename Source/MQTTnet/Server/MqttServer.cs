@@ -73,7 +73,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.UnsubscribeAsync(clientId, topicFilters);
         }
 
-        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage)
+        public ValueTask<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 

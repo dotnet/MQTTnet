@@ -16,6 +16,6 @@ namespace MQTTnet.Internal
 
         public static Task Completed { get; }
 
-        public static Task<MqttClientPublishResult> PublishedSuccessfully { get; } = Task.FromResult(new MqttClientPublishResult());
+        public static ValueTask<MqttClientPublishResult> PublishedSuccessfully { get; } = new ValueTask<MqttClientPublishResult>(new MqttClientPublishResult());
     }
 }

@@ -16,7 +16,7 @@ namespace MQTTnet.Formatter.V3
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            if (applicationMessage.UserProperties?.Any() == true)
+            if (applicationMessage.UserProperties?.Count > 0)
             {
                 throw new MqttProtocolViolationException("User properties are not supported in MQTT version 3.");
             }

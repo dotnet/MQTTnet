@@ -5,6 +5,6 @@ namespace MQTTnet
 {
     public interface IApplicationMessagePublisher
     {
-        Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage);
+        ValueTask<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage);
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,8 +10,6 @@ namespace MQTTnet
 {
     public class MqttApplicationMessageBuilder
     {
-        private readonly List<MqttUserProperty> _userProperties = new List<MqttUserProperty>();
-
         private MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
         private string _topic;
         private byte[] _payload;
@@ -24,6 +21,7 @@ namespace MQTTnet
         private uint? _subscriptionIdentifier;
         private uint? _messageExpiryInterval;
         private MqttPayloadFormatIndicator? _payloadFormatIndicator;
+        private List<MqttUserProperty> _userProperties;
 
         public MqttApplicationMessageBuilder WithTopic(string topic)
         {
@@ -70,7 +68,7 @@ namespace MQTTnet
 
             if (payload.Length == 0)
             {
-                _payload = new byte[0];
+                _payload = null;
             }
             else
             {
@@ -89,7 +87,7 @@ namespace MQTTnet
                 return this;
             }
 
-            _payload = string.IsNullOrEmpty(payload) ? new byte[0] : Encoding.UTF8.GetBytes(payload);
+            _payload = string.IsNullOrEmpty(payload) ? null : Encoding.UTF8.GetBytes(payload);
             return this;
         }
 
@@ -128,6 +126,11 @@ namespace MQTTnet
         /// </summary>
         public MqttApplicationMessageBuilder WithUserProperty(string name, string value)
         {
+            if (_userProperties == null)
+            {
+                _userProperties = new List<MqttUserProperty>();
+            }
+
             _userProperties.Add(new MqttUserProperty(name, value));
             return this;
         }
@@ -205,7 +208,7 @@ namespace MQTTnet
             var applicationMessage = new MqttApplicationMessage
             {
                 Topic = _topic,
-                Payload = _payload ?? new byte[0],
+                Payload = _payload,
                 QualityOfServiceLevel = _qualityOfServiceLevel,
                 Retain = _retain,
                 ContentType = _contentType,
@@ -217,8 +220,11 @@ namespace MQTTnet
                 PayloadFormatIndicator = _payloadFormatIndicator
             };
 
-            applicationMessage.UserProperties.AddRange(_userProperties);
-
+            if (_userProperties?.Any() == true)
+            {
+                applicationMessage.UserProperties = _userProperties;
+            }
+            
             return applicationMessage;
         }
     }

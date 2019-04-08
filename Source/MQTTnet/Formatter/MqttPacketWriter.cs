@@ -79,24 +79,21 @@ namespace MQTTnet.Formatter
             else
             {
                 WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value));
-            }         
+            }
         }
 
         public void WriteWithLengthPrefix(byte[] value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-
-            EnsureAdditionalCapacity(value.Length + 2);
-
-            if (value.Length == 0)
+            if (value == null || value.Length == 0)
             {
-                Write(ZeroTwoByteIntegerArray);   
+                Write(ZeroTwoByteIntegerArray);
             }
             else
             {
+                EnsureAdditionalCapacity(value.Length + 2);
                 Write((ushort)value.Length);
                 Write(value, 0, value.Length);
-            }           
+            }
         }
 
         public void Write(byte @byte)
@@ -131,7 +128,7 @@ namespace MQTTnet.Formatter
             Array.Copy(buffer, offset, _buffer, _offset, count);
             IncreasePosition(count);
         }
-        
+
         public void Write(MqttPacketWriter propertyWriter)
         {
             if (propertyWriter == null) throw new ArgumentNullException(nameof(propertyWriter));

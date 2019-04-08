@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using MQTTnet.Channel;
 using MQTTnet.Client.Options;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations
 {
@@ -75,7 +76,7 @@ namespace MQTTnet.Implementations
         public Task DisconnectAsync()
         {
             Dispose();
-            return Task.FromResult(0);
+            return MqttTask.Completed;
         }
 
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)

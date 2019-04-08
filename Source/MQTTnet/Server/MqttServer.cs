@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Diagnostics;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
@@ -80,7 +81,7 @@ namespace MQTTnet.Server
 
             _clientSessionsManager.EnqueueApplicationMessage(null, applicationMessage);
 
-            return Task.FromResult(new MqttClientPublishResult());
+            return MqttTask.PublishedSuccessfully;
         }
 
         public async Task StartAsync(IMqttServerOptions options)

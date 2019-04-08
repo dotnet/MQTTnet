@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MQTTnet.Internal;
+using System;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Server
@@ -14,7 +15,7 @@ namespace MQTTnet.Server
             _callback = context =>
             {
                 callback(context);
-                return Task.FromResult(0);
+                return MqttTask.Completed;
             };
         }
 

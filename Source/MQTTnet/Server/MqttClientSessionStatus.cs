@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using MQTTnet.Formatter;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
@@ -46,7 +47,7 @@ namespace MQTTnet.Server
         {
             _session.ClearPendingApplicationMessages();
 
-            return Task.FromResult(0);
+            return MqttTask.Completed;
         }
     }
 }

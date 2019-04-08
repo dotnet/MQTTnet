@@ -7,6 +7,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -107,7 +108,7 @@ namespace MQTTnet.Server
 
             _subscriptionsManager.Unsubscribe(packet);
 
-            return Task.FromResult(0);
+            return MqttTask.Completed;
         }
 
         public void ClearPendingApplicationMessages()
@@ -390,7 +391,7 @@ namespace MQTTnet.Server
                 this,
                 _channelAdapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket));
 
-            return Task.FromResult(0);
+            return MqttTask.Completed;
         }
 
         private Task HandleIncomingPublishPacketWithQoS1Async(

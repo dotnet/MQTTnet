@@ -15,6 +15,7 @@ using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -460,7 +461,7 @@ namespace MQTTnet.Client
             }
 
             _packetDispatcher.Dispatch(packet);
-            return Task.FromResult(0);
+            return MqttTask.Completed;
         }
 
         private Task ProcessReceivedPublishPacketAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
@@ -468,7 +469,7 @@ namespace MQTTnet.Client
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
                 FireApplicationMessageReceivedEvent(publishPacket);
-                return Task.FromResult(0);
+                return MqttTask.Completed;
             }
 
             if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)

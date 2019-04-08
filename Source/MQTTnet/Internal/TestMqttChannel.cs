@@ -18,12 +18,12 @@ namespace MQTTnet.Internal
 
         public Task ConnectAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(0);
+            return MqttTask.Completed;
         }
 
         public Task DisconnectAsync()
         {
-            return Task.FromResult(0);
+            return MqttTask.Completed;
         }
 
         public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)

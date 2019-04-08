@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
+using MQTTnet.Internal;
 using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
@@ -55,13 +56,13 @@ namespace MQTTnet.Implementations
                 RegisterListeners(options.TlsEndpointOptions, tlsCertificate);
             }
 
-            return Task.FromResult(0);
+            return MqttTask.Completed;
         }
 
         public Task StopAsync()
         {
             Dispose();
-            return Task.FromResult(0);
+            return MqttTask.Completed;
         }
 
         public void Dispose()

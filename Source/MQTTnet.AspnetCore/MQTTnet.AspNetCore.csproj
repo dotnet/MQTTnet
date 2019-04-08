@@ -6,7 +6,7 @@
     <Company />
     <Authors />
     <PackageId />
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>preview</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 

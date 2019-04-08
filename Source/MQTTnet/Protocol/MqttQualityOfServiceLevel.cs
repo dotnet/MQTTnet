@@ -1,5 +1,8 @@
-﻿namespace MQTTnet.Protocol
+﻿using System;
+
+namespace MQTTnet.Protocol
 {
+    [Flags]
     public enum MqttQualityOfServiceLevel
     {
         AtMostOnce = 0x00,

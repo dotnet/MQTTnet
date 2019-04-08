@@ -204,7 +204,7 @@ namespace MQTTnet
                 PayloadFormatIndicator = _payloadFormatIndicator
             };
 
-            applicationMessage.UserProperties.AddRange(_userProperties);
+            applicationMessage.UserProperties = new List<MqttUserProperty>(_userProperties);
 
             return applicationMessage;
         }

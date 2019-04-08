@@ -2,13 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Subscribing;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -337,6 +340,37 @@ namespace MQTTnet.Tests
                 await Task.Delay(100);
 
                 Assert.AreEqual("1", receivedPayload);
+            }
+        }
+
+        [TestMethod]
+        public async Task No_Payload()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+
+                var sender = await testEnvironment.ConnectClientAsync();
+                var receiver = await testEnvironment.ConnectClientAsync();
+
+                var message = new MqttApplicationMessageBuilder()
+                    .WithTopic("A");
+
+                await receiver.SubscribeAsync(new MqttClientSubscribeOptions
+                {
+                    TopicFilters = new List<TopicFilter> { new TopicFilter { Topic = "#" } }
+                }, CancellationToken.None);
+
+                MqttApplicationMessage receivedMessage = null;
+                receiver.UseApplicationMessageReceivedHandler(e => receivedMessage = e.ApplicationMessage);
+
+                await sender.PublishAsync(message.Build(), CancellationToken.None);
+
+                await Task.Delay(1000);
+
+                Assert.IsNotNull(receivedMessage);
+                Assert.AreEqual("A", receivedMessage.Topic);
+                Assert.AreEqual(null, receivedMessage.Payload);
             }
         }
     }

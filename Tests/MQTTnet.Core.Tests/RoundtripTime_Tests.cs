@@ -4,9 +4,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Receiving;
-using MQTTnet.Server;
+using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests
 {
@@ -16,42 +14,37 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Round_Trip_Time()
         {
-            var factory = new MqttFactory();
-            var server = factory.CreateMqttServer();
-            var receiverClient = factory.CreateMqttClient();
-            var senderClient = factory.CreateMqttClient();
-
-            await server.StartAsync(new MqttServerOptionsBuilder().Build());
-
-            await receiverClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost").Build());
-            await receiverClient.SubscribeAsync("#");
-
-            await senderClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost").Build());
-
-            TaskCompletionSource<string> response = null;
-
-            receiverClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(args =>
+            using (var testEnvironment = new TestEnvironment())
             {
-                response?.SetResult(args.ApplicationMessage.ConvertPayloadToString());
-            });
+                await testEnvironment.StartServerAsync();
+                var receiverClient = await testEnvironment.ConnectClientAsync();
+                var senderClient = await testEnvironment.ConnectClientAsync();
 
-            var times = new List<TimeSpan>();
-            var stopwatch = Stopwatch.StartNew();
+                await receiverClient.SubscribeAsync("#");
+                
+                TaskCompletionSource<string> response = null;
 
-            await Task.Delay(1000);
+                receiverClient.UseApplicationMessageReceivedHandler(e => 
+                {
+                    response?.SetResult(e.ApplicationMessage.ConvertPayloadToString());
+                });
 
-            for (var i = 0; i < 100; i++)
-            {
-                response = new TaskCompletionSource<string>();
-                await senderClient.PublishAsync("test", DateTime.UtcNow.Ticks.ToString());
-                response.Task.GetAwaiter().GetResult();
+                var times = new List<TimeSpan>();
+                var stopwatch = Stopwatch.StartNew();
 
-                stopwatch.Stop();
-                times.Add(stopwatch.Elapsed);
-                stopwatch.Restart();
+                await Task.Delay(1000);
+
+                for (var i = 0; i < 100; i++)
+                {
+                    response = new TaskCompletionSource<string>();
+                    await senderClient.PublishAsync("test", DateTime.UtcNow.Ticks.ToString());
+                    response.Task.GetAwaiter().GetResult();
+
+                    stopwatch.Stop();
+                    times.Add(stopwatch.Elapsed);
+                    stopwatch.Restart();
+                }
             }
-
-            await server.StopAsync();
         }
     }
 }

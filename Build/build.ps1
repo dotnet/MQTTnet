@@ -36,6 +36,17 @@ Write-Host
 &$msbuild ..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netstandard2.0" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"
 &$msbuild ..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="uap10.0" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"
 
+# Build MQTTnet.Server
+Remove-Item ..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2 -Recurse -Force -ErrorAction SilentlyContinue
+&$msbuild ..\Source\MQTTnet.Server\MQTTnet.Server.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp2.2" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"
+
+$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2"
+$destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Portable-v$nugetVersion.zip"
+If(Test-path $destination) {Remove-item $destination}
+ Add-Type -assembly "system.io.compression.filesystem"
+[io.compression.zipfile]::CreateFromDirectory($Source, $destination) 
+
+# Create NuGet packages.
 Remove-Item .\NuGet -Force -Recurse -ErrorAction SilentlyContinue
 
 Copy-Item MQTTnet.AspNetCore.nuspec -Destination MQTTnet.AspNetCore.nuspec.old -Force

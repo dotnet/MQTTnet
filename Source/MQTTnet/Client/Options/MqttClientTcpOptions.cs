@@ -8,7 +8,7 @@ namespace MQTTnet.Client.Options
 
         public int? Port { get; set; }
 
-        public int BufferSize { get; set; } = 1024;
+        public int BufferSize { get; set; } = 65536;
 
         public bool DualMode { get; set; } = true;
 

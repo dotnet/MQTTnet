@@ -2,10 +2,6 @@
 {
     public class MqttConnectPacket : MqttBasePacket
     {
-        public string ProtocolName { get; set; }
-
-        public byte? ProtocolLevel { get; set; }
-
         public string ClientId { get; set; }
 
         public string Username { get; set; }
@@ -33,7 +29,7 @@
                 password = "****";
             }
 
-            return string.Concat("Connect: [ProtocolLevel=", ProtocolLevel, "] [ClientId=", ClientId, "] [Username=", Username, "] [Password=", password, "] [KeepAlivePeriod=", KeepAlivePeriod, "] [CleanSession=", CleanSession, "]");
+            return string.Concat("Connect: [ClientId=", ClientId, "] [Username=", Username, "] [Password=", password, "] [KeepAlivePeriod=", KeepAlivePeriod, "] [CleanSession=", CleanSession, "]");
         }
     }
 }

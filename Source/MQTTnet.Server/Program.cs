@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reflection;
+using System.Threading;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
@@ -30,15 +32,26 @@ namespace MQTTnet.Server
         private static void PrintLogo()
         {
             Console.ResetColor();
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(@"
-  __  __  ____ _______ _______         _      _____
- |  \/  |/ __ \__   __|__   __|       | |    / ____|
- | \  / | |  | | | |     | |_ __   ___| |_  | (___   ___ _ ____   _____ _ __
- | |\/| | |  | | | |     | | '_ \ / _ \ __|  \___ \ / _ \ '__\ \ / / _ \ '__|
- | |  | | |__| | | |     | | | | |  __/ |_   ____) |  __/ |   \ V /  __/ |
- |_|  |_|\___\_\ |_|     |_|_| |_|\___|\__| |_____/ \___|_|    \_/ \___|_|");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.BackgroundColor = ConsoleColor.Red;
+            var logoText =
+@"|                                                                                      |
+|      __  __  ____ _______ _______         _      _____                               |
+|     |  \/  |/ __ \__   __|__   __|       | |    / ____|                              |
+|     | \  / | |  | | | |     | |_ __   ___| |_  | (___   ___ _ ____   _____ _ __      |
+|     | |\/| | |  | | | |     | | '_ \ / _ \ __|  \___ \ / _ \ '__\ \ / / _ \ '__|     |
+|     | |  | | |__| | | |     | | | | |  __/ |_   ____) |  __/ |   \ V /  __/ |        |
+|     |_|  |_|\___\_\ |_|     |_|_| |_|\___|\__| |_____/ \___|_|    \_/ \___|_|        |
+|                                                                                      |
+|                                                                                      |";
+            foreach (var @char in logoText)
+            {
+                Console.Write(@char);
+                Thread.Sleep(1);
+            }
 
+            Console.ResetColor();
+            Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(@"
           -- The official MQTT server implementation of MQTTnet --
@@ -49,8 +62,8 @@ namespace MQTTnet.Server
                    https://github.com/chkr1011/MQTTnet");
 
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(@"
- Version:    1.0.0-alpha2
+            Console.WriteLine($@"
+ Version:    {Assembly.GetExecutingAssembly().GetName().Version}
  License:    MIT (read LICENSE file)
  Sponsoring: https://opencollective.com/mqttnet
  Support:    https://github.com/chkr1011/MQTTnet/issues

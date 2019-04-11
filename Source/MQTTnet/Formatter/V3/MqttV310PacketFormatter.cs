@@ -227,11 +227,20 @@ namespace MQTTnet.Formatter.V3
         {
             ThrowIfBodyIsEmpty(body);
 
-            var packet = new MqttConnectPacket
+            var protocolName = body.ReadStringWithLengthPrefix();
+            var protocolVersion = body.ReadByte();
+
+            if (protocolName != "MQTT" && protocolName != "MQIsdp")
             {
-                ProtocolName = body.ReadStringWithLengthPrefix(),
-                ProtocolLevel = body.ReadByte()
-            };
+                throw new MqttProtocolViolationException("MQTT protocol name do not match MQTT v3.");
+            }
+
+            if (protocolVersion != 3 && protocolVersion != 4)
+            {
+                throw new MqttProtocolViolationException("MQTT protocol version do not match MQTT v3.");
+            }
+
+            var packet = new MqttConnectPacket();
 
             var connectFlags = body.ReadByte();
             if ((connectFlags & 0x1) > 0)

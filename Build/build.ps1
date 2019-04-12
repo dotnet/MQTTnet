@@ -44,7 +44,7 @@ $source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2"
 $destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Portable-v$nugetVersion.zip"
 If(Test-path $destination) {Remove-item $destination}
  Add-Type -assembly "system.io.compression.filesystem"
-[io.compression.zipfile]::CreateFromDirectory($Source, $destination) 
+[io.compression.zipfile]::CreateFromDirectory($source, $destination) 
 
 # Create NuGet packages.
 Remove-Item .\NuGet -Force -Recurse -ErrorAction SilentlyContinue

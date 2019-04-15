@@ -13,5 +13,10 @@ namespace MQTTnet.AspNetCore.Tests
             result.SetBuffer(data);
             return result;
         }
+
+        protected override IMqttPacketWriter WriterFactory()
+        {
+            return new SpanBasedMqttPacketWriter();
+        }
     }
 }

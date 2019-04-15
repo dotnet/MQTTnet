@@ -528,6 +528,11 @@ namespace MQTTnet.Tests
             Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(data)));
         }
 
+        protected virtual IMqttPacketWriter WriterFactory()
+        {
+            return new MqttPacketWriter();
+        }
+
         protected virtual IMqttPacketBodyReader ReaderFactory(byte[] data)
         {
             return new MqttPacketBodyReader(data, 0, data.Length);
@@ -535,14 +540,16 @@ namespace MQTTnet.Tests
 
         private void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
+            var writer = WriterFactory();
+
             IMqttPacketFormatter serializer;
             if (protocolVersion == MqttProtocolVersion.V311)
             {
-                serializer = new MqttV311PacketFormatter();
+                serializer = new MqttV311PacketFormatter(writer);
             }
             else if (protocolVersion == MqttProtocolVersion.V310)
             {
-                serializer = new MqttV310PacketFormatter();
+                serializer = new MqttV310PacketFormatter(writer);
             }
             else
             {
@@ -559,7 +566,8 @@ namespace MQTTnet.Tests
 
                 using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.RemainingLength))
                 {
-                    var deserializedPacket = serializer.Decode(new ReceivedMqttPacket(header.Flags, new MqttPacketBodyReader(bodyStream.ToArray(), 0, (int)bodyStream.Length), 0));
+                    var reader = ReaderFactory(bodyStream.ToArray());
+                    var deserializedPacket = serializer.Decode(new ReceivedMqttPacket(header.Flags, reader, 0));
                     var buffer2 = serializer.Encode(deserializedPacket);
 
                     Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(buffer2)));
@@ -567,17 +575,19 @@ namespace MQTTnet.Tests
             }
         }
 
-        private static T Roundtrip<T>(T packet, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
+        private T Roundtrip<T>(T packet, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
             where T : MqttBasePacket
         {
+            var writer = WriterFactory();
+
             IMqttPacketFormatter serializer;
             if (protocolVersion == MqttProtocolVersion.V311)
             {
-                serializer = new MqttV311PacketFormatter();
+                serializer = new MqttV311PacketFormatter(writer);
             }
             else if (protocolVersion == MqttProtocolVersion.V310)
             {
-                serializer = new MqttV310PacketFormatter();
+                serializer = new MqttV310PacketFormatter(writer);
             }
             else
             {
@@ -590,12 +600,12 @@ namespace MQTTnet.Tests
             {
                 var channel = new TestMqttChannel(headerStream);
                 var fixedHeader = new byte[2];
-
                 var header = new MqttPacketReader(channel).ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult();
 
                 using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, (int)header.RemainingLength))
                 {
-                    return (T)serializer.Decode(new ReceivedMqttPacket(header.Flags, new MqttPacketBodyReader(bodyStream.ToArray(), 0, (int)bodyStream.Length), 0));
+                    var reader = ReaderFactory(bodyStream.ToArray());
+                    return (T)serializer.Decode(new ReceivedMqttPacket(header.Flags, reader, 0));
                 }
             }
         }

@@ -12,13 +12,25 @@ namespace MQTTnet.Formatter
         private IMqttPacketFormatter _formatter;
 
         public MqttPacketFormatterAdapter()
+            : this(new MqttPacketWriter())
+        {
+        }
+               
+        public MqttPacketFormatterAdapter(MqttProtocolVersion protocolVersion)
+            : this(protocolVersion, new MqttPacketWriter())
         {
         }
 
-        public MqttPacketFormatterAdapter(MqttProtocolVersion protocolVersion)
+        public MqttPacketFormatterAdapter(MqttProtocolVersion protocolVersion, IMqttPacketWriter writer)
+            : this(writer)
         {
             UseProtocolVersion(protocolVersion);
         }
+
+        public MqttPacketFormatterAdapter(IMqttPacketWriter writer)
+        {
+            Writer = writer;
+        }        
 
         public MqttProtocolVersion? ProtocolVersion { get; private set; }
 
@@ -39,6 +51,8 @@ namespace MQTTnet.Formatter
                 return _formatter;
             }
         }
+
+        public IMqttPacketWriter Writer { get; }
 
         public ArraySegment<byte> Encode(MqttBasePacket packet)
         {
@@ -79,20 +93,20 @@ namespace MQTTnet.Formatter
             {
                 case MqttProtocolVersion.V500:
                     {
-                        _formatter = new MqttV500PacketFormatter();
+                        _formatter = new MqttV500PacketFormatter(Writer);
                         break;
                     }
 
                 case MqttProtocolVersion.V311:
                     {
-                        _formatter = new MqttV311PacketFormatter();
+                        _formatter = new MqttV311PacketFormatter(Writer);
                         break;
                     }
 
                 case MqttProtocolVersion.V310:
                     {
 
-                        _formatter = new MqttV310PacketFormatter();
+                        _formatter = new MqttV310PacketFormatter(Writer);
                         break;
                     }
                     

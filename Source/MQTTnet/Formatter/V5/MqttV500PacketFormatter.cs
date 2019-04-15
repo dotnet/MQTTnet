@@ -6,8 +6,18 @@ namespace MQTTnet.Formatter.V5
 {
     public class MqttV500PacketFormatter : IMqttPacketFormatter
     {
-        private readonly MqttV500PacketEncoder _encoder = new MqttV500PacketEncoder();
+        private readonly MqttV500PacketEncoder _encoder;
         private readonly MqttV500PacketDecoder _decoder = new MqttV500PacketDecoder();
+
+        public MqttV500PacketFormatter()
+        {
+            _encoder = new MqttV500PacketEncoder();
+        }
+
+        public MqttV500PacketFormatter(IMqttPacketWriter writer)
+        {
+            _encoder = new MqttV500PacketEncoder(writer);
+        }
 
         public IMqttDataConverter DataConverter { get; } = new MqttV500DataConverter();
         

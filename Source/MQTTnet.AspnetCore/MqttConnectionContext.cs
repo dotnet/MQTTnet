@@ -23,9 +23,14 @@ namespace MQTTnet.AspNetCore
                 _input = Connection.Transport.Input;
                 _output = Connection.Transport.Output;
             }
+
+
+            _reader = new SpanBasedMqttPacketBodyReader();
         }
+
         private PipeReader _input;
         private PipeWriter _output;
+        private readonly SpanBasedMqttPacketBodyReader _reader;
 
         public string Endpoint => Connection.ConnectionId;
         public bool IsSecureConnection => false; // TODO: Fix detection (WS vs. WSS).
@@ -88,7 +93,7 @@ namespace MQTTnet.AspNetCore
                     {
                         if (!buffer.IsEmpty)
                         {
-                            if (PacketFormatterAdapter.TryDecode(buffer, out var packet, out consumed, out observed))
+                            if (PacketFormatterAdapter.TryDecode(_reader, buffer, out var packet, out consumed, out observed))
                             {
                                 return packet;
                             }

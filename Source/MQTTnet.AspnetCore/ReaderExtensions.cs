@@ -42,7 +42,7 @@ namespace MQTTnet.AspNetCore
 
             var receivedMqttPacket = new ReceivedMqttPacket(fixedheader, reader, buffer.Length + 2);
 
-            if (!formatter.ProtocolVersion.HasValue)
+            if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
             {
                 formatter.DetectProtocolVersion(receivedMqttPacket);
             }

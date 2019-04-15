@@ -232,6 +232,32 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public void SerializeV500_MqttPublishPacket()
+        {
+            var prop = new MqttPublishPacketProperties();
+
+            prop.ResponseTopic = "/Response";
+
+            prop.UserProperties.Add(new MqttUserProperty("Foo", "Bar"));
+
+            var p = new MqttPublishPacket
+            {
+                PacketIdentifier = 123,
+                Dup = true,
+                Retain = true,
+                Payload = Encoding.ASCII.GetBytes("HELLO"),
+                QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
+                Topic = "A/B/C",
+                Properties = prop
+            };
+
+            var deserialized = Roundtrip(p, MqttProtocolVersion.V500);
+
+            Assert.AreEqual(prop.ResponseTopic, deserialized.Properties.ResponseTopic);
+            Assert.IsTrue(deserialized.Properties.UserProperties.Any(x => x.Name == "Foo"));
+        }
+
+        [TestMethod]
         public void DeserializeV311_MqttPublishPacket()
         {
             var p = new MqttPublishPacket
@@ -542,19 +568,7 @@ namespace MQTTnet.Tests
         {
             var writer = WriterFactory();
 
-            IMqttPacketFormatter serializer;
-            if (protocolVersion == MqttProtocolVersion.V311)
-            {
-                serializer = new MqttV311PacketFormatter(writer);
-            }
-            else if (protocolVersion == MqttProtocolVersion.V310)
-            {
-                serializer = new MqttV310PacketFormatter(writer);
-            }
-            else
-            {
-                throw new NotSupportedException();
-            }
+            var serializer = MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, writer);
 
             var buffer1 = serializer.Encode(packet);
 
@@ -580,20 +594,8 @@ namespace MQTTnet.Tests
         {
             var writer = WriterFactory();
 
-            IMqttPacketFormatter serializer;
-            if (protocolVersion == MqttProtocolVersion.V311)
-            {
-                serializer = new MqttV311PacketFormatter(writer);
-            }
-            else if (protocolVersion == MqttProtocolVersion.V310)
-            {
-                serializer = new MqttV310PacketFormatter(writer);
-            }
-            else
-            {
-                throw new NotSupportedException();
-            }
-
+            var serializer = MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, writer);
+            
             var buffer1 = serializer.Encode(packet);
 
             using (var headerStream = new MemoryStream(Join(buffer1)))

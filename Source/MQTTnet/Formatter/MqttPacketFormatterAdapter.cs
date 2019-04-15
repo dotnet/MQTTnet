@@ -89,28 +89,30 @@ namespace MQTTnet.Formatter
             }
 
             ProtocolVersion = protocolVersion;
+            _formatter = GetMqttPacketFormatter(protocolVersion, Writer);
+        }
 
+        public static IMqttPacketFormatter GetMqttPacketFormatter(MqttProtocolVersion protocolVersion, IMqttPacketWriter writer)
+        {
+            if (protocolVersion == MqttProtocolVersion.Unknown)
+            {
+                throw new InvalidOperationException("MQTT protocol version is invalid.");
+            }
+            
             switch (protocolVersion)
             {
                 case MqttProtocolVersion.V500:
                     {
-                        _formatter = new MqttV500PacketFormatter(Writer);
-                        break;
+                        return new MqttV500PacketFormatter(writer);
                     }
-
                 case MqttProtocolVersion.V311:
                     {
-                        _formatter = new MqttV311PacketFormatter(Writer);
-                        break;
+                        return new MqttV311PacketFormatter(writer);
                     }
-
                 case MqttProtocolVersion.V310:
                     {
-
-                        _formatter = new MqttV310PacketFormatter(Writer);
-                        break;
+                        return new MqttV310PacketFormatter(writer);
                     }
-                    
                 default:
                     {
                         throw new NotSupportedException();

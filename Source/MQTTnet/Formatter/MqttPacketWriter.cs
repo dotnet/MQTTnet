@@ -154,6 +154,7 @@ namespace MQTTnet.Formatter
                 }
 
                 Write(writer._buffer, 0, writer.Length);
+                return;
             }
 
             throw new InvalidOperationException($"{nameof(propertyWriter)} must be of type {typeof(MqttPacketWriter).Name}");

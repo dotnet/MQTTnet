@@ -60,12 +60,11 @@ namespace MQTTnet.AspNetCore
 
         public void Write(IMqttPacketWriter propertyWriter)
         {
-            if (propertyWriter is SpanBasedMqttPacketWriter writer)
-            {
-                GrowIfNeeded(1);
-            }
+            if (propertyWriter == null) throw new ArgumentNullException(nameof(propertyWriter));
 
-            throw new InvalidOperationException($"{nameof(propertyWriter)} must be of type {typeof(SpanBasedMqttPacketWriter).Name}");
+            GrowIfNeeded(propertyWriter.Length);
+            Write(propertyWriter.GetBuffer(), 0, propertyWriter.Length);
+            Commit(propertyWriter.Length);
         }
 
         public void Write(byte[] payload, int start, int length)

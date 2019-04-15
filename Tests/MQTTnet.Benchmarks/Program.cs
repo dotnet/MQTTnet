@@ -1,5 +1,6 @@
 ﻿using System;
 using BenchmarkDotNet.Running;
+using MQTTnet.Benchmarks.Configurations;
 using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Benchmarks
@@ -43,7 +44,7 @@ namespace MQTTnet.Benchmarks
                     BenchmarkRunner.Run<TcpPipesBenchmark>();
                     break;
                 case '8':
-                    BenchmarkRunner.Run<MessageProcessingMqttConnectionContextBenchmark>(new AllowNonOptimized());
+                    BenchmarkRunner.Run<MessageProcessingMqttConnectionContextBenchmark>(new RuntimeCompareConfig()/*new AllowNonOptimized()*/);
                     break;
             }
 

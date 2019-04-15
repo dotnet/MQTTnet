@@ -63,7 +63,7 @@ namespace MQTTnet.Formatter.V5
             Write(MqttPropertyId.AuthenticationMethod, value);
         }
 
-        public void WriteToPacket(MqttPacketWriter packetWriter)
+        public void WriteToPacket(IMqttPacketWriter packetWriter)
         {
             if (packetWriter == null) throw new ArgumentNullException(nameof(packetWriter));
 

@@ -11,7 +11,7 @@ namespace MQTTnet.Formatter
     /// same as for the original MemoryStream in .net. Also this implementation allows accessing the internal
     /// buffer for all platforms and .net framework versions (which is not available at the regular MemoryStream).
     /// </summary>
-    public class MqttPacketWriter
+    public class MqttPacketWriter : IMqttPacketWriter
     {
         private static readonly ArraySegment<byte> ZeroVariableLengthIntegerArray = new ArraySegment<byte>(new byte[1], 0, 1);
         private static readonly ArraySegment<byte> ZeroTwoByteIntegerArray = new ArraySegment<byte>(new byte[2], 0, 2);
@@ -31,6 +31,19 @@ namespace MQTTnet.Formatter
             var fixedHeader = (int)packetType << 4;
             fixedHeader |= flags;
             return (byte)fixedHeader;
+        }
+
+        public static int GetLengthOfVariableInteger(uint value)
+        {
+            var result = 0;
+            var x = value;
+            do
+            {
+                x = x / 128;
+                result++;
+            } while (x > 0);
+
+            return result;
         }
 
         public static ArraySegment<byte> EncodeVariableLengthInteger(uint value)
@@ -129,16 +142,21 @@ namespace MQTTnet.Formatter
             IncreasePosition(count);
         }
 
-        public void Write(MqttPacketWriter propertyWriter)
+        public void Write(IMqttPacketWriter propertyWriter)
         {
             if (propertyWriter == null) throw new ArgumentNullException(nameof(propertyWriter));
 
-            if (propertyWriter.Length == 0)
+            if (propertyWriter is MqttPacketWriter writer)
             {
-                return;
+                if (writer.Length == 0)
+                {
+                    return;
+                }
+
+                Write(writer._buffer, 0, writer.Length);
             }
 
-            Write(propertyWriter._buffer, 0, propertyWriter.Length);
+            throw new InvalidOperationException($"{nameof(propertyWriter)} must be of type {typeof(MqttPacketWriter).Name}");
         }
 
         public void Reset(int length)

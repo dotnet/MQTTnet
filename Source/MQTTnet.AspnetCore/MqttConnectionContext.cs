@@ -123,14 +123,19 @@ namespace MQTTnet.AspNetCore
 
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            var buffer = PacketFormatterAdapter.Encode(packet);
-            var msg = buffer.AsMemory();
-            var output = _output;
+            var formatter = PacketFormatterAdapter;
+           
 
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                await output.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+                var buffer = formatter.Encode(packet);
+                var msg = buffer.AsMemory();
+                var output = _output;
+                msg.CopyTo(output.GetMemory(msg.Length));
+                PacketFormatterAdapter.FreeBuffer();
+                output.Advance(msg.Length);
+                await output.FlushAsync().ConfigureAwait(false);
             }
             finally
             {

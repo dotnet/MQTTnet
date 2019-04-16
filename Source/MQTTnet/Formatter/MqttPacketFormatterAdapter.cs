@@ -12,13 +12,25 @@ namespace MQTTnet.Formatter
         private IMqttPacketFormatter _formatter;
 
         public MqttPacketFormatterAdapter()
+            : this(new MqttPacketWriter())
+        {
+        }
+               
+        public MqttPacketFormatterAdapter(MqttProtocolVersion protocolVersion)
+            : this(protocolVersion, new MqttPacketWriter())
         {
         }
 
-        public MqttPacketFormatterAdapter(MqttProtocolVersion protocolVersion)
+        public MqttPacketFormatterAdapter(MqttProtocolVersion protocolVersion, IMqttPacketWriter writer)
+            : this(writer)
         {
             UseProtocolVersion(protocolVersion);
         }
+
+        public MqttPacketFormatterAdapter(IMqttPacketWriter writer)
+        {
+            Writer = writer;
+        }        
 
         public MqttProtocolVersion ProtocolVersion { get; private set; } = MqttProtocolVersion.Unknown;
 
@@ -31,6 +43,8 @@ namespace MQTTnet.Formatter
                 return _formatter.DataConverter;
             }
         }
+                
+        public IMqttPacketWriter Writer { get; }
 
         public ArraySegment<byte> Encode(MqttBasePacket packet)
         {
@@ -75,28 +89,30 @@ namespace MQTTnet.Formatter
             }
 
             ProtocolVersion = protocolVersion;
+            _formatter = GetMqttPacketFormatter(protocolVersion, Writer);
+        }
 
+        public static IMqttPacketFormatter GetMqttPacketFormatter(MqttProtocolVersion protocolVersion, IMqttPacketWriter writer)
+        {
+            if (protocolVersion == MqttProtocolVersion.Unknown)
+            {
+                throw new InvalidOperationException("MQTT protocol version is invalid.");
+            }
+            
             switch (protocolVersion)
             {
                 case MqttProtocolVersion.V500:
                     {
-                        _formatter = new MqttV500PacketFormatter();
-                        break;
+                        return new MqttV500PacketFormatter(writer);
                     }
-
                 case MqttProtocolVersion.V311:
                     {
-                        _formatter = new MqttV311PacketFormatter();
-                        break;
+                        return new MqttV311PacketFormatter(writer);
                     }
-
                 case MqttProtocolVersion.V310:
                     {
-
-                        _formatter = new MqttV310PacketFormatter();
-                        break;
+                        return new MqttV310PacketFormatter(writer);
                     }
-                    
                 default:
                     {
                         throw new NotSupportedException();

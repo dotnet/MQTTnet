@@ -43,8 +43,10 @@ namespace MQTTnet.AspNetCore
             var isSecureConnection = clientCertificate != null;
             clientCertificate?.Dispose();
 
+            var writer = new SpanBasedMqttPacketWriter();
+            var formatter = new MqttPacketFormatterAdapter(writer);
             var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection);
-            var channelAdapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(), _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
+            var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
 
             var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(channelAdapter);
             ClientAcceptedHandler?.Invoke(eventArgs);

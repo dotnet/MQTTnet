@@ -9,11 +9,11 @@ namespace MQTTnet.Formatter.V5
 {
     public class MqttV500PropertiesReader
     {
-        private readonly MqttPacketBodyReader _body;
+        private readonly IMqttPacketBodyReader _body;
         private readonly uint _length;
         private readonly ulong _targetOffset;
 
-        public MqttV500PropertiesReader(MqttPacketBodyReader body)
+        public MqttV500PropertiesReader(IMqttPacketBodyReader body)
         {
             _body = body ?? throw new ArgumentNullException(nameof(body));
 
@@ -75,7 +75,7 @@ namespace MQTTnet.Formatter.V5
 
         public byte[] ReadAuthenticationData()
         {
-            return _body.ReadWithLengthPrefix().ToArray();
+            return _body.ReadWithLengthPrefix();
         }
 
         public bool? ReadRetainAvailable()
@@ -165,7 +165,7 @@ namespace MQTTnet.Formatter.V5
 
         public byte[] ReadCorrelationData()
         {
-            return _body.ReadWithLengthPrefix().ToArray();
+            return _body.ReadWithLengthPrefix();
         }
 
         public string ReadContentType()

@@ -2,7 +2,6 @@
 using System.Linq;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -11,8 +10,20 @@ namespace MQTTnet.Formatter.V3
     public class MqttV310PacketFormatter : IMqttPacketFormatter
     {
         private const int FixedHeaderSize = 1;
+        
+        private readonly IMqttPacketWriter _packetWriter;
 
-        private readonly MqttPacketWriter _packetWriter = new MqttPacketWriter();
+        public MqttV310PacketFormatter()
+            : this(new MqttPacketWriter())
+        {
+
+        }
+
+        public MqttV310PacketFormatter(IMqttPacketWriter packetWriter)
+        {
+            _packetWriter = packetWriter;
+        }
+
 
         public IMqttDataConverter DataConverter { get; } = new MqttV310DataConverter();
 
@@ -27,17 +38,18 @@ namespace MQTTnet.Formatter.V3
             var fixedHeader = EncodePacket(packet, _packetWriter);
             var remainingLength = (uint)(_packetWriter.Length - 5);
 
-            var remainingLengthBuffer = MqttPacketWriter.EncodeVariableLengthInteger(remainingLength);
+            var remainingLengthSize = MqttPacketWriter.GetLengthOfVariableInteger(remainingLength);
 
-            var headerSize = FixedHeaderSize + remainingLengthBuffer.Count;
+            var headerSize = FixedHeaderSize + remainingLengthSize;
             var headerOffset = 5 - headerSize;
 
             // Position cursor on correct offset on beginning of array (has leading 0x0)
             _packetWriter.Seek(headerOffset);
             _packetWriter.Write(fixedHeader);
-            _packetWriter.Write(remainingLengthBuffer.Array, remainingLengthBuffer.Offset, remainingLengthBuffer.Count);
+            _packetWriter.WriteVariableLengthInteger(remainingLength);
 
             var buffer = _packetWriter.GetBuffer();
+
             return new ArraySegment<byte>(buffer, headerOffset, _packetWriter.Length - headerOffset);
         }
 
@@ -77,7 +89,7 @@ namespace MQTTnet.Formatter.V3
             _packetWriter.FreeBuffer();
         }
 
-        private byte EncodePacket(MqttBasePacket packet, MqttPacketWriter packetWriter)
+        private byte EncodePacket(MqttBasePacket packet, IMqttPacketWriter packetWriter)
         {
             switch (packet)
             {
@@ -100,7 +112,7 @@ namespace MQTTnet.Formatter.V3
             }
         }
 
-        private static MqttBasePacket DecodeUnsubAckPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeUnsubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -110,7 +122,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubCompPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubCompPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -120,7 +132,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubRelPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubRelPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -130,7 +142,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubRecPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubRecPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -140,7 +152,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodePubAckPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodePubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -150,7 +162,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        private static MqttBasePacket DecodeUnsubscribePacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeUnsubscribePacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -167,7 +179,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubscribePacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeSubscribePacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -223,7 +235,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private MqttBasePacket DecodeConnectPacket(MqttPacketBodyReader body)
+        private MqttBasePacket DecodeConnectPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -264,7 +276,7 @@ namespace MQTTnet.Formatter.V3
                 packet.WillMessage = new MqttApplicationMessage
                 {
                     Topic = body.ReadStringWithLengthPrefix(),
-                    Payload = body.ReadWithLengthPrefix().ToArray(),
+                    Payload = body.ReadWithLengthPrefix(),
                     QualityOfServiceLevel = (MqttQualityOfServiceLevel)willQoS,
                     Retain = willRetain
                 };
@@ -284,7 +296,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubAckPacket(MqttPacketBodyReader body)
+        private static MqttBasePacket DecodeSubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -301,7 +313,7 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        protected virtual MqttBasePacket DecodeConnAckPacket(MqttPacketBodyReader body)
+        protected virtual MqttBasePacket DecodeConnAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -332,7 +344,7 @@ namespace MQTTnet.Formatter.V3
             }
         }
 
-        protected virtual byte EncodeConnectPacket(MqttConnectPacket packet, MqttPacketWriter packetWriter)
+        protected virtual byte EncodeConnectPacket(MqttConnectPacket packet, IMqttPacketWriter packetWriter)
         {
             ValidateConnectPacket(packet);
 
@@ -394,7 +406,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Connect);
         }
 
-        protected virtual byte EncodeConnAckPacket(MqttConnAckPacket packet, MqttPacketWriter packetWriter)
+        protected virtual byte EncodeConnAckPacket(MqttConnAckPacket packet, IMqttPacketWriter packetWriter)
         {
             packetWriter.Write(0); // Reserved.
             packetWriter.Write((byte)packet.ReturnCode.Value);
@@ -402,7 +414,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }
 
-        private static byte EncodePubRelPacket(MqttPubRelPacket packet, MqttPacketWriter packetWriter)
+        private static byte EncodePubRelPacket(MqttPubRelPacket packet, IMqttPacketWriter packetWriter)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -414,7 +426,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRel, 0x02);
         }
 
-        private static byte EncodePublishPacket(MqttPublishPacket packet, MqttPacketWriter packetWriter)
+        private static byte EncodePublishPacket(MqttPublishPacket packet, IMqttPacketWriter packetWriter)
         {
             ValidatePublishPacket(packet);
 
@@ -459,7 +471,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Publish, fixedHeader);
         }
 
-        private static byte EncodePubAckPacket(MqttPubAckPacket packet, MqttPacketWriter packetWriter)
+        private static byte EncodePubAckPacket(MqttPubAckPacket packet, IMqttPacketWriter packetWriter)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -471,7 +483,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubAck);
         }
 
-        private static byte EncodePubRecPacket(MqttPubRecPacket packet, MqttPacketWriter packetWriter)
+        private static byte EncodePubRecPacket(MqttPubRecPacket packet, IMqttPacketWriter packetWriter)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -483,7 +495,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRec);
         }
 
-        private static byte EncodePubCompPacket(MqttPubCompPacket packet, MqttPacketWriter packetWriter)
+        private static byte EncodePubCompPacket(MqttPubCompPacket packet, IMqttPacketWriter packetWriter)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -495,7 +507,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubComp);
         }
 
-        private static byte EncodeSubscribePacket(MqttSubscribePacket packet, MqttPacketWriter packetWriter)
+        private static byte EncodeSubscribePacket(MqttSubscribePacket packet, IMqttPacketWriter packetWriter)
         {
             if (!packet.TopicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
 
@@ -518,7 +530,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Subscribe, 0x02);
         }
 
-        private static byte EncodeSubAckPacket(MqttSubAckPacket packet, MqttPacketWriter packetWriter)
+        private static byte EncodeSubAckPacket(MqttSubAckPacket packet, IMqttPacketWriter packetWriter)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -538,7 +550,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.SubAck);
         }
 
-        private static byte EncodeUnsubscribePacket(MqttUnsubscribePacket packet, MqttPacketWriter packetWriter)
+        private static byte EncodeUnsubscribePacket(MqttUnsubscribePacket packet, IMqttPacketWriter packetWriter)
         {
             if (!packet.TopicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.10.3-2].");
 
@@ -560,7 +572,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Unsubscibe, 0x02);
         }
 
-        private static byte EncodeUnsubAckPacket(MqttUnsubAckPacket packet, MqttPacketWriter packetWriter)
+        private static byte EncodeUnsubAckPacket(MqttUnsubAckPacket packet, IMqttPacketWriter packetWriter)
         {
             if (!packet.PacketIdentifier.HasValue)
             {
@@ -577,7 +589,7 @@ namespace MQTTnet.Formatter.V3
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        protected static void ThrowIfBodyIsEmpty(MqttPacketBodyReader body)
+        protected static void ThrowIfBodyIsEmpty(IMqttPacketBodyReader body)
         {
             if (body == null || body.Length == 0)
             {

@@ -6,7 +6,17 @@ namespace MQTTnet.Formatter.V3
 {
     public class MqttV311PacketFormatter : MqttV310PacketFormatter
     {
-        protected override byte EncodeConnectPacket(MqttConnectPacket packet, MqttPacketWriter packetWriter)
+        public MqttV311PacketFormatter()
+            : base()
+        {
+        }
+
+        public MqttV311PacketFormatter(IMqttPacketWriter packetWriter)
+            : base(packetWriter)
+        {
+        }
+
+        protected override byte EncodeConnectPacket(MqttConnectPacket packet, IMqttPacketWriter packetWriter)
         {
             ValidateConnectPacket(packet);
 
@@ -68,7 +78,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Connect);
         }
 
-        protected override byte EncodeConnAckPacket(MqttConnAckPacket packet, MqttPacketWriter packetWriter)
+        protected override byte EncodeConnAckPacket(MqttConnAckPacket packet, IMqttPacketWriter packetWriter)
         {
             byte connectAcknowledgeFlags = 0x0;
             if (packet.IsSessionPresent)
@@ -82,7 +92,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }
 
-        protected override MqttBasePacket DecodeConnAckPacket(MqttPacketBodyReader body)
+        protected override MqttBasePacket DecodeConnAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 

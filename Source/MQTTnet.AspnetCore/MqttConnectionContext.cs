@@ -17,7 +17,20 @@ namespace MQTTnet.AspNetCore
         {
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
+
+            if (Connection.Transport != null)
+            {
+                _input = Connection.Transport.Input;
+                _output = Connection.Transport.Output;
+            }
+
+
+            _reader = new SpanBasedMqttPacketBodyReader();
         }
+
+        private PipeReader _input;
+        private PipeWriter _output;
+        private readonly SpanBasedMqttPacketBodyReader _reader;
 
         public string Endpoint => Connection.ConnectionId;
         public bool IsSecureConnection => false; // TODO: Fix detection (WS vs. WSS).
@@ -33,20 +46,21 @@ namespace MQTTnet.AspNetCore
         
         private readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
 
-        public Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             if (Connection is TcpConnection tcp && !tcp.IsConnected)
             {
-                return tcp.StartAsync();
+                await tcp.StartAsync().ConfigureAwait(false);
             }
 
-            return Task.CompletedTask;
+            _input = Connection.Transport.Input;
+            _output = Connection.Transport.Output;
         }
 
         public Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            Connection.Transport.Input.Complete();
-            Connection.Transport.Output.Complete();
+            _input?.Complete();
+            _output?.Complete();
 
             return Task.CompletedTask;
         }
@@ -79,7 +93,7 @@ namespace MQTTnet.AspNetCore
                     {
                         if (!buffer.IsEmpty)
                         {
-                            if (PacketFormatterAdapter.TryDecode(buffer, out var packet, out consumed, out observed))
+                            if (PacketFormatterAdapter.TryDecode(_reader, buffer, out var packet, out consumed, out observed))
                             {
                                 return packet;
                             }
@@ -114,13 +128,19 @@ namespace MQTTnet.AspNetCore
 
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            var buffer = PacketFormatterAdapter.Encode(packet).AsMemory();
-            var output = Connection.Transport.Output;
+            var formatter = PacketFormatterAdapter;
+           
 
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                await output.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+                var buffer = formatter.Encode(packet);
+                var msg = buffer.AsMemory();
+                var output = _output;
+                msg.CopyTo(output.GetMemory(msg.Length));
+                PacketFormatterAdapter.FreeBuffer();
+                output.Advance(msg.Length);
+                await output.FlushAsync().ConfigureAwait(false);
             }
             finally
             {

@@ -10,7 +10,8 @@ namespace MQTTnet.AspNetCore
     public static class ReaderExtensions
     {
         public static bool TryDecode(this MqttPacketFormatterAdapter formatter, 
-            SpanBasedMqttPacketBodyReader reader, 
+            SpanBasedMqttPacketBodyReader reader,
+            ReceivedMqttPacket receivedMqttPacket,
             in ReadOnlySequence<byte> input, 
             out MqttBasePacket packet, 
             out SequencePosition consumed, 
@@ -45,7 +46,7 @@ namespace MQTTnet.AspNetCore
             var buffer = bodySlice.GetMemory();
             reader.SetBuffer(buffer);
 
-            var receivedMqttPacket = new ReceivedMqttPacket(fixedheader, reader, buffer.Length + 2);
+            receivedMqttPacket.FixedHeader = fixedheader;
 
             if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
             {

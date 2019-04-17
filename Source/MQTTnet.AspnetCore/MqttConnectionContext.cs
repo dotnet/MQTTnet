@@ -26,11 +26,13 @@ namespace MQTTnet.AspNetCore
             }
             
             _reader = new SpanBasedMqttPacketBodyReader();
+            _receivedMqttPacket = new ReceivedMqttPacket(0, _reader, 0);
         }
 
         private PipeReader _input;
         private PipeWriter _output;
         private readonly SpanBasedMqttPacketBodyReader _reader;
+        private readonly ReceivedMqttPacket _receivedMqttPacket;
 
         public string Endpoint
         {
@@ -108,7 +110,7 @@ namespace MQTTnet.AspNetCore
                     {
                         if (!buffer.IsEmpty)
                         {
-                            if (PacketFormatterAdapter.TryDecode(_reader, buffer, out var packet, out consumed, out observed, out var received))
+                            if (PacketFormatterAdapter.TryDecode(_reader, _receivedMqttPacket, buffer, out var packet, out consumed, out observed, out var received))
                             {
                                 BytesReceived += received;
                                 return packet;

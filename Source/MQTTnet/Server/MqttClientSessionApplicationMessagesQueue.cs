@@ -37,15 +37,9 @@ namespace MQTTnet.Server
             _messageQueue.Clear();
         }
 
-        public async Task<MqttQueuedApplicationMessage> TakeAsync(CancellationToken cancellationToken)
+        public Task<MqttQueuedApplicationMessage> TakeAsync(CancellationToken cancellationToken)
         {
-            var dequeueResult = await _messageQueue.TryDequeueAsync(cancellationToken).ConfigureAwait(false);
-            if (!dequeueResult.IsSuccess)
-            {
-                return null;
-            }
-
-            return dequeueResult.Item;
+            return _messageQueue.DequeueAsync(cancellationToken);
         }
 
         public void Enqueue(MqttQueuedApplicationMessage queuedApplicationMessage)
@@ -63,7 +57,7 @@ namespace MQTTnet.Server
 
                     if (_options.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
                     {
-                        _messageQueue.TryDequeue();
+                        _messageQueue.TryDequeue(out _);
                     }
                 }
 

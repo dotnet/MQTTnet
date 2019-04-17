@@ -19,7 +19,10 @@ namespace MQTTnet.Internal
             _semaphore.Release();
         }
 
-        public async Task<AsyncQueueDequeueResult<TItem>> TryDequeueAsync(CancellationToken cancellationToken)
+        /// <summary>
+        /// try to dequeue an item until successfull or cancelled
+        /// </summary>
+        public async Task<TItem> DequeueAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -29,21 +32,19 @@ namespace MQTTnet.Internal
 
                 if (_queue.TryDequeue(out var item))
                 {
-                    return new AsyncQueueDequeueResult<TItem>(true, item);
+                    return item;
                 }
             }
 
-            return new AsyncQueueDequeueResult<TItem>(false, default(TItem));
+            return default(TItem);
         }
 
-        public AsyncQueueDequeueResult<TItem> TryDequeue()
+        /// <summary>
+        /// try to dequeue an item once
+        /// </summary>
+        public bool TryDequeue(out TItem item)
         {
-            if (_queue.TryDequeue(out var item))
-            {
-                return new AsyncQueueDequeueResult<TItem>(true, item);
-            }
-
-            return new AsyncQueueDequeueResult<TItem>(false, default(TItem));
+            return _queue.TryDequeue(out item);
         }
 
         public void Clear()

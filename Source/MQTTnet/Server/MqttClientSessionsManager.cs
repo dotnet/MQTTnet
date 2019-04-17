@@ -175,8 +175,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                var dequeueResult = await _messageQueue.TryDequeueAsync(cancellationToken).ConfigureAwait(false);
-                var queuedApplicationMessage = dequeueResult.Item;
+                var queuedApplicationMessage = await _messageQueue.DequeueAsync(cancellationToken).ConfigureAwait(false);
 
                 var sender = queuedApplicationMessage.Sender;
                 var applicationMessage = queuedApplicationMessage.ApplicationMessage;

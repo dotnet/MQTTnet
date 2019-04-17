@@ -16,9 +16,9 @@ namespace MQTTnet.Tests
             queue.Enqueue("2");
             queue.Enqueue("3");
 
-            Assert.AreEqual("1", (await queue.TryDequeueAsync(CancellationToken.None)).Item);
-            Assert.AreEqual("2", (await queue.TryDequeueAsync(CancellationToken.None)).Item);
-            Assert.AreEqual("3", (await queue.TryDequeueAsync(CancellationToken.None)).Item);
+            Assert.AreEqual("1", (await queue.DequeueAsync(CancellationToken.None)));
+            Assert.AreEqual("2", (await queue.DequeueAsync(CancellationToken.None)));
+            Assert.AreEqual("3", (await queue.DequeueAsync(CancellationToken.None)));
         }
 
         [TestMethod]
@@ -47,7 +47,7 @@ namespace MQTTnet.Tests
             {
                 while (sum < 6)
                 {
-                    sum += (await queue.TryDequeueAsync(CancellationToken.None)).Item;
+                    sum += (await queue.DequeueAsync(CancellationToken.None));
                 }
             });
             
@@ -72,9 +72,13 @@ namespace MQTTnet.Tests
             queue.Enqueue("2");
             queue.Enqueue("3");
 
-            Assert.AreEqual("1", queue.TryDequeue().Item);
-            Assert.AreEqual("2", queue.TryDequeue().Item);
-            Assert.AreEqual("3", queue.TryDequeue().Item);
+            var value = "not this";
+            queue.TryDequeue(out value);
+            Assert.AreEqual("1", value);
+            queue.TryDequeue(out value);
+            Assert.AreEqual("2", value);
+            queue.TryDequeue(out value);
+            Assert.AreEqual("3", value);
         }
 
         [TestMethod]
@@ -91,7 +95,9 @@ namespace MQTTnet.Tests
             queue.Enqueue("4");
 
             Assert.AreEqual(1, queue.Count);
-            Assert.AreEqual("4", queue.TryDequeue().Item);
+            var value = "not this";
+            queue.TryDequeue(out value);
+            Assert.AreEqual("4", value);
         }
     }
 }

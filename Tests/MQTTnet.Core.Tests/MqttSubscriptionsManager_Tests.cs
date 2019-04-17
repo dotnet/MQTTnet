@@ -19,8 +19,8 @@ namespace MQTTnet.Tests
             sm.SubscribeAsync(sp).GetAwaiter().GetResult();
 
             var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce);
-            Assert.IsTrue(result.IsSubscribed);
-            Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
+            Assert.IsTrue(result.HasValue);
+            Assert.AreEqual(result.Value, MqttQualityOfServiceLevel.AtMostOnce);
         }
 
         [TestMethod]
@@ -34,8 +34,8 @@ namespace MQTTnet.Tests
             sm.SubscribeAsync(sp).GetAwaiter().GetResult();
 
             var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce);
-            Assert.IsTrue(result.IsSubscribed);
-            Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
+            Assert.IsTrue(result.HasValue);
+            Assert.AreEqual(result.Value, MqttQualityOfServiceLevel.AtMostOnce);
         }
 
         [TestMethod]
@@ -50,8 +50,8 @@ namespace MQTTnet.Tests
             sm.SubscribeAsync(sp).GetAwaiter().GetResult();
 
             var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce);
-            Assert.IsTrue(result.IsSubscribed);
-            Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtLeastOnce);
+            Assert.IsTrue(result.HasValue);
+            Assert.AreEqual(result.Value, MqttQualityOfServiceLevel.AtLeastOnce);
         }
 
         [TestMethod]
@@ -64,7 +64,7 @@ namespace MQTTnet.Tests
 
             sm.SubscribeAsync(sp).GetAwaiter().GetResult();
 
-            Assert.IsFalse(sm.CheckSubscriptions("A/B/X", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
+            Assert.IsFalse(sm.CheckSubscriptions("A/B/X", MqttQualityOfServiceLevel.AtMostOnce).HasValue);
         }
 
         [TestMethod]
@@ -77,13 +77,13 @@ namespace MQTTnet.Tests
 
             sm.SubscribeAsync(sp).GetAwaiter().GetResult();
 
-            Assert.IsTrue(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
+            Assert.IsTrue(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).HasValue);
 
             var up = new MqttUnsubscribePacket();
             up.TopicFilters.Add("A/B/C");
             sm.UnsubscribeAsync(up);
 
-            Assert.IsFalse(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
+            Assert.IsFalse(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).HasValue);
         }
     }
 }

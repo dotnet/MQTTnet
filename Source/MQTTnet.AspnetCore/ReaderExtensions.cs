@@ -9,13 +9,20 @@ namespace MQTTnet.AspNetCore
 {
     public static class ReaderExtensions
     {
-        public static bool TryDecode(this MqttPacketFormatterAdapter formatter, SpanBasedMqttPacketBodyReader reader, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)
+        public static bool TryDecode(this MqttPacketFormatterAdapter formatter, 
+            SpanBasedMqttPacketBodyReader reader, 
+            in ReadOnlySequence<byte> input, 
+            out MqttBasePacket packet, 
+            out SequencePosition consumed, 
+            out SequencePosition observed,
+            out int bytesRead)
         {
             if (formatter == null) throw new ArgumentNullException(nameof(formatter));
 
             packet = null;
             consumed = input.Start;
             observed = input.End;
+            bytesRead = 0;
             var copy = input;
 
             if (copy.Length < 2)
@@ -24,7 +31,7 @@ namespace MQTTnet.AspNetCore
             }
 
             var fixedheader = copy.First.Span[0];
-            if (!TryReadBodyLength(ref copy, out var bodyLength))
+            if (!TryReadBodyLength(ref copy, out int headerLength, out var bodyLength))
             {
                 return false;
             }
@@ -48,6 +55,7 @@ namespace MQTTnet.AspNetCore
             packet = formatter.Decode(receivedMqttPacket);
             consumed = bodySlice.End;
             observed = bodySlice.End;
+            bytesRead = headerLength + bodyLength;
             return true;
         }
 
@@ -62,15 +70,16 @@ namespace MQTTnet.AspNetCore
             return input.ToArray();
         }
 
-        private static bool TryReadBodyLength(ref ReadOnlySequence<byte> input, out int result)
+        private static bool TryReadBodyLength(ref ReadOnlySequence<byte> input, out int headerLength, out int bodyLength)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
             var multiplier = 1;
             var value = 0;
             byte encodedByte;
             var index = 1;
-            result = 0;
-
+            headerLength = 0;
+            bodyLength = 0;
+            
             var temp = input.Slice(0, Math.Min(5, input.Length)).GetMemory();
 
             do
@@ -93,7 +102,8 @@ namespace MQTTnet.AspNetCore
 
             input = input.Slice(index);
 
-            result = value;
+            headerLength = index;
+            bodyLength = value;
             return true;
         }
     }

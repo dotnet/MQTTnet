@@ -330,15 +330,8 @@ namespace MQTTnet.Server
             var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
             _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
 
-            // TODO: Create ACK packet.
-            
-            var response = new MqttPubAckPacket
-            {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = MqttPubAckReasonCode.Success
-            };
-
-            return SendAsync(response);
+            var pubAckPacket = _dataConverter.CreatePubAckPacket(publishPacket);
+            return SendAsync(pubAckPacket);
         }
 
         private Task HandleIncomingPublishPacketWithQoS2Async(MqttPublishPacket publishPacket)

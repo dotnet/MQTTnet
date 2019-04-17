@@ -46,6 +46,15 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
+        public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket)
+        {
+            return new MqttPubAckPacket
+            {
+                PacketIdentifier = publishPacket.PacketIdentifier,
+                ReasonCode = MqttPubAckReasonCode.Success
+            };
+        }
+
         public MqttApplicationMessage CreateApplicationMessage(MqttPublishPacket publishPacket)
         {
             return new MqttApplicationMessage
@@ -180,12 +189,10 @@ namespace MQTTnet.Formatter.V5
 
         public MqttClientPublishResult CreatePublishResult(MqttPubAckPacket pubAckPacket)
         {
-            var result = new MqttClientPublishResult();
-
-            if (pubAckPacket?.ReasonCode != null)
+            var result = new MqttClientPublishResult
             {
-                result.ReasonCode = (MqttClientPublishReasonCode)pubAckPacket.ReasonCode;
-            }
+                ReasonCode = (MqttClientPublishReasonCode)pubAckPacket.ReasonCode
+            };
 
             return result;
         }

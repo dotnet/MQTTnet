@@ -33,6 +33,15 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
+        public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket)
+        {
+            return new MqttPubAckPacket
+            {
+                PacketIdentifier = publishPacket.PacketIdentifier,
+                ReasonCode = MqttPubAckReasonCode.Success
+            };
+        }
+
         public MqttApplicationMessage CreateApplicationMessage(MqttPublishPacket publishPacket)
         {
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));

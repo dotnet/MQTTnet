@@ -19,7 +19,6 @@ namespace MQTTnet.Formatter
         public static int InitialBufferSize = 128;
         public static int MaxBufferSize = 4096;
 
-        // TODO: Consider using the ArrayPool here together with FreeBuffer.
         private byte[] _buffer = new byte[InitialBufferSize];
 
         private int _offset;

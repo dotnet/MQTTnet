@@ -46,21 +46,5 @@ namespace MQTTnet.Server.Mqtt
 
             return Task.CompletedTask;
         }
-
-        // TODO: Create dump(object) method in wrapper (creates JSON and prints it).
-        public class PythonMqttApplicationMessageInterceptorContext
-        {
-            public bool accept_connection;
-
-            public bool accept_publish;
-
-            public string client_id;
-
-            public string topic;
-
-            public int qos;
-
-            public bool retain;
-        }
     }
 }

@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Http.Connections.Features;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using System;
 using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Formatter;
 
 namespace MQTTnet.AspNetCore
 {
@@ -32,14 +33,28 @@ namespace MQTTnet.AspNetCore
         private PipeWriter _output;
         private readonly SpanBasedMqttPacketBodyReader _reader;
 
-        public string Endpoint => Connection.ConnectionId;
-        public bool IsSecureConnection => false; // TODO: Fix detection (WS vs. WSS).
+        public string Endpoint 
+        {
+            get {
+                var connection = Http?.HttpContext?.Connection;
+                if (connection == null)
+                {
+                    return Connection.ConnectionId;
+                }
+
+                return $"{connection.RemoteIpAddress}:{connection.RemotePort}";
+            }
+        }
+
+        public bool IsSecureConnection => Http?.HttpContext?.Request?.IsHttps ?? false;
+
+        private IHttpContextFeature Http => Connection.Features.Get<IHttpContextFeature>();
 
         public ConnectionContext Connection { get; }
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
-        public long BytesSent { get; } // TODO: Fix calculation.
-        public long BytesReceived { get; } // TODO: Fix calculation.
+        public long BytesSent { get; set; } 
+        public long BytesReceived { get; set; }
 
         public Action ReadingPacketStartedCallback { get; set; }
         public Action ReadingPacketCompletedCallback { get; set; }
@@ -93,8 +108,9 @@ namespace MQTTnet.AspNetCore
                     {
                         if (!buffer.IsEmpty)
                         {
-                            if (PacketFormatterAdapter.TryDecode(_reader, buffer, out var packet, out consumed, out observed))
+                            if (PacketFormatterAdapter.TryDecode(_reader, buffer, out var packet, out consumed, out observed, out var received))
                             {
+                                BytesReceived += received;
                                 return packet;
                             }
                             else
@@ -138,6 +154,7 @@ namespace MQTTnet.AspNetCore
                 var msg = buffer.AsMemory();
                 var output = _output;
                 msg.CopyTo(output.GetMemory(msg.Length));
+                BytesSent += msg.Length;
                 PacketFormatterAdapter.FreeBuffer();
                 output.Advance(msg.Length);
                 await output.FlushAsync().ConfigureAwait(false);

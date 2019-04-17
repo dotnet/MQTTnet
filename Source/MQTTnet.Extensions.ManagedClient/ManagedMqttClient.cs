@@ -125,14 +125,14 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        public async Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
+        public async Task<MqttClientPublishReasonCode> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
             await PublishAsync(new ManagedMqttApplicationMessageBuilder().WithApplicationMessage(applicationMessage).Build()).ConfigureAwait(false);
-            return new MqttClientPublishResult();
+            return MqttClientPublishReasonCode.Success;
         }
 
         public async Task PublishAsync(ManagedMqttApplicationMessage applicationMessage)

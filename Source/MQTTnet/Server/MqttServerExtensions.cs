@@ -153,7 +153,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttServer server, MqttApplicationMessage applicationMessage)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttServer server, MqttApplicationMessage applicationMessage)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
@@ -172,7 +172,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttServer server, string topic)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttServer server, string topic)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -181,7 +181,7 @@ namespace MQTTnet.Server
                 .WithTopic(topic));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttServer server, string topic, string payload)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttServer server, string topic, string payload)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -191,7 +191,7 @@ namespace MQTTnet.Server
                 .WithPayload(payload));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttServer server, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttServer server, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -202,7 +202,7 @@ namespace MQTTnet.Server
                 .WithQualityOfServiceLevel(qualityOfServiceLevel));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttServer server, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttServer server, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -214,7 +214,7 @@ namespace MQTTnet.Server
                 .WithRetainFlag(retain));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttServer server, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttServer server, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
 
@@ -222,7 +222,7 @@ namespace MQTTnet.Server
             return server.PublishAsync(message, cancellationToken);
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttServer server, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttServer server, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
 

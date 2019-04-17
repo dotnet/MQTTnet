@@ -212,7 +212,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        public MqttClientPublishResult CreatePublishResult(MqttPubAckPacket pubAckPacket)
+        public MqttClientPublishReasonCode CreatePublishResult(MqttPubAckPacket pubAckPacket)
         {
             var result = new MqttClientPublishResult
             {
@@ -233,14 +233,11 @@ namespace MQTTnet.Formatter.V5
             return result;
         }
 
-        public MqttClientPublishResult CreatePublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
+        public MqttClientPublishReasonCode CreatePublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
         {
             if (pubRecPacket == null || pubCompPacket == null)
             {
-                return new MqttClientPublishResult
-                {
-                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError
-                };
+                return MqttClientPublishReasonCode.UnspecifiedError;
             }
 
             // The PUBCOMP is the last packet in QoS 2. So we use the results from that instead of PUBREC.
@@ -266,10 +263,10 @@ namespace MQTTnet.Formatter.V5
             if (pubRecPacket.ReasonCode.HasValue)
             {
                 // Both enums share the same values.
-                result.ReasonCode = (MqttClientPublishReasonCode)pubRecPacket.ReasonCode.Value;
+                return (MqttClientPublishReasonCode)pubRecPacket.ReasonCode.Value;
             }
 
-            return result;
+            return MqttClientPublishReasonCode.Success;
         }
     }
 }

@@ -149,7 +149,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, MqttApplicationMessage applicationMessage)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IManagedMqttClient client, MqttApplicationMessage applicationMessage)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
@@ -168,7 +168,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, string topic)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IManagedMqttClient client, string topic)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -177,7 +177,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 .WithTopic(topic));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, string topic, string payload)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IManagedMqttClient client, string topic, string payload)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -187,7 +187,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 .WithPayload(payload));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IManagedMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -198,7 +198,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 .WithQualityOfServiceLevel(qualityOfServiceLevel));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IManagedMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -210,7 +210,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 .WithRetainFlag(retain));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IManagedMqttClient client, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 
@@ -218,7 +218,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return client.PublishAsync(message, cancellationToken);
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IManagedMqttClient client, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 

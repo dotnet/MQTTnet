@@ -182,7 +182,7 @@ namespace MQTTnet.Client
             return _adapter.PacketFormatterAdapter.DataConverter.CreateClientUnsubscribeResult(unsubscribePacket, unsubAckPacket);
         }
 
-        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
+        public Task<MqttClientPublishReasonCode> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
@@ -576,21 +576,21 @@ namespace MQTTnet.Client
             }
         }
 
-        private async Task<MqttClientPublishResult> PublishAtMostOnce(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
+        private async Task<MqttClientPublishReasonCode> PublishAtMostOnce(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
             await SendAsync(publishPacket, cancellationToken).ConfigureAwait(false);
             return _adapter.PacketFormatterAdapter.DataConverter.CreatePublishResult(null);
         }
 
-        private async Task<MqttClientPublishResult> PublishAtLeastOnceAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
+        private async Task<MqttClientPublishReasonCode> PublishAtLeastOnceAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
             var response = await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
             return _adapter.PacketFormatterAdapter.DataConverter.CreatePublishResult(response);
         }
 
-        private async Task<MqttClientPublishResult> PublishExactlyOnceAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
+        private async Task<MqttClientPublishReasonCode> PublishExactlyOnceAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 

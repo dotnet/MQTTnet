@@ -204,7 +204,7 @@ namespace MQTTnet.Client
             return client.UnsubscribeAsync(options, CancellationToken.None);
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, MqttApplicationMessage applicationMessage)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttClient client, MqttApplicationMessage applicationMessage)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
@@ -223,7 +223,7 @@ namespace MQTTnet.Client
             }
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttClient client, string topic)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -233,18 +233,7 @@ namespace MQTTnet.Client
                 .Build());
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, IEnumerable<byte> payload)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-
-            return client.PublishAsync(new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(payload)
-                .Build());
-        }
-
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, string payload)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttClient client, string topic, IEnumerable<byte> payload)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -255,7 +244,18 @@ namespace MQTTnet.Client
                 .Build());
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttClient client, string topic, string payload)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (topic == null) throw new ArgumentNullException(nameof(topic));
+
+            return client.PublishAsync(new MqttApplicationMessageBuilder()
+                .WithTopic(topic)
+                .WithPayload(payload)
+                .Build());
+        }
+
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -267,7 +267,7 @@ namespace MQTTnet.Client
                 .Build());
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -280,7 +280,7 @@ namespace MQTTnet.Client
                 .Build());
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, string payload, bool retain)
+        public static Task<MqttClientPublishReasonCode> PublishAsync(this IMqttClient client, string topic, string payload, bool retain)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));

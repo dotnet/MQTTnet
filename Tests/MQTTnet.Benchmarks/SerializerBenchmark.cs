@@ -84,12 +84,12 @@ namespace MQTTnet.Benchmarks
 
             public Task ConnectAsync(CancellationToken cancellationToken)
             {
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
 
             public Task DisconnectAsync(CancellationToken cancellationToken)
             {
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
 
             public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -102,7 +102,7 @@ namespace MQTTnet.Benchmarks
 
             public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
 
             public void Dispose()

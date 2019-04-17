@@ -12,6 +12,8 @@ namespace MQTTnet.Formatter
     {
         MqttPublishPacket CreatePublishPacket(MqttApplicationMessage applicationMessage);
 
+        MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket);
+
         MqttApplicationMessage CreateApplicationMessage(MqttPublishPacket publishPacket);
 
         MqttClientAuthenticateResult CreateClientConnectResult(MqttConnAckPacket connAckPacket);

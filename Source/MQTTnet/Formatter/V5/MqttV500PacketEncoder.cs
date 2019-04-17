@@ -285,7 +285,7 @@ namespace MQTTnet.Formatter.V5
 
             if (!packet.ReasonCode.HasValue)
             {
-                throw new MqttProtocolViolationException("PubAck packet must contain a connect reason.");
+                throw new MqttProtocolViolationException("PubAck packet must contain a reason code.");
             }
 
             packetWriter.Write(packet.PacketIdentifier.Value);

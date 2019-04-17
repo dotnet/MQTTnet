@@ -1,4 +1,6 @@
-﻿namespace MQTTnet.Protocol
+﻿using System;
+
+namespace MQTTnet.Protocol
 {
     public enum MqttQualityOfServiceLevel
     {

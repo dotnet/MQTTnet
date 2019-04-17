@@ -137,9 +137,9 @@ namespace MQTTnet.Server
             return Task.FromResult(0);
         }
 
-        public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel)
+        public MqttQualityOfServiceLevel? CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel)
         {
-            var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
+            MqttQualityOfServiceLevel? subscribedQosLevel = null;
 
             lock (_subscriptions)
             {
@@ -150,19 +150,23 @@ namespace MQTTnet.Server
                         continue;
                     }
 
-                    qosLevels.Add(subscription.Value);
+                    if (subscribedQosLevel.HasValue)
+                    {
+                        subscribedQosLevel = qosLevel |= subscription.Value;
+                    }
+                    else
+                    {
+                        subscribedQosLevel = subscription.Value;
+                    }
                 }
             }
 
-            if (qosLevels.Count == 0)
+            if (!subscribedQosLevel.HasValue)
             {
-                return new CheckSubscriptionsResult
-                {
-                    IsSubscribed = false
-                };
+                return null;
             }
 
-            return CreateSubscriptionResult(qosLevel, qosLevels);
+            return (MqttQualityOfServiceLevel)Math.Min((byte)subscribedQosLevel.Value, (byte)qosLevel);
         }
 
         private static MqttSubscribeReturnCode ConvertToSubscribeReturnCode(MqttQualityOfServiceLevel qualityOfServiceLevel)
@@ -196,29 +200,6 @@ namespace MQTTnet.Server
             }
 
             return context;
-        }
-
-        private static CheckSubscriptionsResult CreateSubscriptionResult(MqttQualityOfServiceLevel qosLevel, HashSet<MqttQualityOfServiceLevel> subscribedQoSLevels)
-        {
-            MqttQualityOfServiceLevel effectiveQoS;
-            if (subscribedQoSLevels.Contains(qosLevel))
-            {
-                effectiveQoS = qosLevel;
-            }
-            else if (subscribedQoSLevels.Count == 1)
-            {
-                effectiveQoS = subscribedQoSLevels.First();
-            }
-            else
-            {
-                effectiveQoS = subscribedQoSLevels.Max();
-            }
-
-            return new CheckSubscriptionsResult
-            {
-                IsSubscribed = true,
-                QualityOfServiceLevel = effectiveQoS
-            };
         }
     }
 }

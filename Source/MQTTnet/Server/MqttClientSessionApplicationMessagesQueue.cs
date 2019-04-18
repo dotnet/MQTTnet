@@ -37,7 +37,7 @@ namespace MQTTnet.Server
             _messageQueue.Clear();
         }
 
-        public Task<MqttQueuedApplicationMessage> TakeAsync(CancellationToken cancellationToken)
+        public ValueTask<MqttQueuedApplicationMessage> TakeAsync(CancellationToken cancellationToken)
         {
             return _messageQueue.DequeueAsync(cancellationToken);
         }

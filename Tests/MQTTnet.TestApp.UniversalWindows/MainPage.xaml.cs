@@ -212,7 +212,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             Task.Run(UpdateLogAsync);
         }
 
-        private async Task HandleReceivedApplicationMessage(MqttApplicationMessageReceivedEventArgs eventArgs)
+        private async ValueTask HandleReceivedApplicationMessage(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
             var item = $"Timestamp: {DateTime.Now:O} | Topic: {eventArgs.ApplicationMessage.Topic} | Payload: {eventArgs.ApplicationMessage.ConvertPayloadToString()} | QoS: {eventArgs.ApplicationMessage.QualityOfServiceLevel}";
 

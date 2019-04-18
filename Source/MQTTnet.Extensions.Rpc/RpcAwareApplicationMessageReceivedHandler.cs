@@ -18,7 +18,7 @@ namespace MQTTnet.Extensions.Rpc
 
         public IMqttApplicationMessageReceivedHandler OriginalHandler { get; }
 
-        public async Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
+        public async ValueTask HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
             if (OriginalHandler != null)
             {

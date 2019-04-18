@@ -5,7 +5,7 @@ namespace MQTTnet.Client.Receiving
 {
     public class MqttApplicationMessageReceivedHandlerDelegate : IMqttApplicationMessageReceivedHandler
     {
-        private readonly Func<MqttApplicationMessageReceivedEventArgs, Task> _handler;
+        private readonly Func<MqttApplicationMessageReceivedEventArgs, ValueTask> _handler;
 
         public MqttApplicationMessageReceivedHandlerDelegate(Action<MqttApplicationMessageReceivedEventArgs> handler)
         {
@@ -14,16 +14,16 @@ namespace MQTTnet.Client.Receiving
             _handler = context =>
             {
                 handler(context);
-                return Task.FromResult(0);
+                return new ValueTask();
             };
         }
 
-        public MqttApplicationMessageReceivedHandlerDelegate(Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
+        public MqttApplicationMessageReceivedHandlerDelegate(Func<MqttApplicationMessageReceivedEventArgs, ValueTask> handler)
         {
             _handler = handler ?? throw new ArgumentNullException(nameof(handler));
         }
-
-        public Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs context)
+        
+        public ValueTask HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs context)
         {
             return _handler(context);
         }

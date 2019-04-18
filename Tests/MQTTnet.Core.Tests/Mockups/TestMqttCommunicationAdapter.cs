@@ -49,11 +49,11 @@ namespace MQTTnet.Tests.Mockups
             return Task.FromResult(0);
         }
 
-        public Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async ValueTask<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfPartnerIsNull();
             
-            return Task.Run(() =>
+            return await Task.Run(() =>
             {
                 try
                 {

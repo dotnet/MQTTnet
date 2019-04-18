@@ -6,6 +6,6 @@ namespace MQTTnet
 {
     public interface IApplicationMessagePublisher
     {
-        Task<MqttClientPublishReasonCode> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken);
+        ValueTask<MqttClientPublishReasonCode> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken);
     }
 }

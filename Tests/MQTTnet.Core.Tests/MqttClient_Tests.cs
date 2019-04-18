@@ -112,7 +112,7 @@ namespace MQTTnet.Tests
 
                 var receivedValues = new List<int>();
 
-                async Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
+                async ValueTask Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
                     var value = int.Parse(eventArgs.ApplicationMessage.ConvertPayloadToString());
                     await Task.Delay(value);
@@ -150,7 +150,7 @@ namespace MQTTnet.Tests
                 var client1 = await testEnvironment.ConnectClientAsync();
                 await client1.SubscribeAsync("request/+");
 
-                async Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
+                async ValueTask Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
                     await client1.PublishAsync($"reply/{eventArgs.ApplicationMessage.Topic}");
                 }
@@ -272,7 +272,7 @@ namespace MQTTnet.Tests
 
                 var retries = 0;
 
-                async Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
+                async ValueTask Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
                     retries++;
 

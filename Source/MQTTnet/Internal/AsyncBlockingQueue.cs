@@ -22,7 +22,7 @@ namespace MQTTnet.Internal
         /// <summary>
         /// try to dequeue an item until successfull or cancelled
         /// </summary>
-        public async Task<TItem> DequeueAsync(CancellationToken cancellationToken)
+        public async ValueTask<TItem> DequeueAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {

@@ -59,12 +59,12 @@ namespace MQTTnet.Server
             return handler.HandleClientUnsubscribedTopicAsync(new MqttServerClientUnsubscribedTopicEventArgs(clientId, topicFilter));
         }
 
-        public Task HandleApplicationMessageReceivedAsync(string senderClientId, MqttApplicationMessage applicationMessage)
+        public ValueTask HandleApplicationMessageReceivedAsync(string senderClientId, MqttApplicationMessage applicationMessage)
         {
             var handler = ApplicationMessageReceivedHandler;
             if (handler == null)
             {
-                return Task.FromResult(0);
+                return new ValueTask();
             }
 
             return handler.HandleApplicationMessageReceivedAsync(new MqttApplicationMessageReceivedEventArgs(senderClientId, applicationMessage));

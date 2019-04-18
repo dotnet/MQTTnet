@@ -125,7 +125,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        public async Task<MqttClientPublishReasonCode> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
+        public async ValueTask<MqttClientPublishReasonCode> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 

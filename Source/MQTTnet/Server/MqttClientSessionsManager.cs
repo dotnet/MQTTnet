@@ -166,7 +166,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task TryProcessNextQueuedApplicationMessageAsync(CancellationToken cancellationToken)
+        private async ValueTask TryProcessNextQueuedApplicationMessageAsync(CancellationToken cancellationToken)
         {
             try
             {

@@ -195,7 +195,7 @@ namespace MQTTnet.Formatter.V3
             return new MqttDisconnectPacket();
         }
 
-        public MqttClientPublishReasonCode CreatePublishResult(MqttPubAckPacket pubAckPacket)
+        public MqttClientPublishResult CreatePublishResult(MqttPubAckPacket pubAckPacket)
         {
             return new MqttClientPublishResult
             {
@@ -204,11 +204,14 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        public MqttClientPublishReasonCode CreatePublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
+        public MqttClientPublishResult CreatePublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
         {
             if (pubRecPacket == null || pubCompPacket == null)
             {
-                return MqttClientPublishReasonCode.UnspecifiedError;
+                return new MqttClientPublishResult
+                {
+                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError
+                };
             }
 
             return new MqttClientPublishResult

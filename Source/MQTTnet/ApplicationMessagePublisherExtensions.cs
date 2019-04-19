@@ -9,7 +9,7 @@ namespace MQTTnet
 {
     public static class ApplicationMessagePublisherExtensions
     {
-        public static ValueTask<MqttClientPublishReasonCode> PublishAsync(this IApplicationMessagePublisher publisher, MqttApplicationMessage applicationMessage)
+        public static ValueTask<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, MqttApplicationMessage applicationMessage)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
@@ -28,7 +28,7 @@ namespace MQTTnet
             }
         }
 
-        public static ValueTask<MqttClientPublishReasonCode> PublishAsync(this IApplicationMessagePublisher publisher, string topic)
+        public static ValueTask<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -38,18 +38,7 @@ namespace MQTTnet
                 .Build());
         }
 
-        public static ValueTask<MqttClientPublishReasonCode> PublishAsync(this IApplicationMessagePublisher publisher, string topic, IEnumerable<byte> payload)
-        {
-            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-
-            return publisher.PublishAsync(new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(payload)
-                .Build());
-        }
-
-        public static ValueTask<MqttClientPublishReasonCode> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload)
+        public static ValueTask<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, IEnumerable<byte> payload)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -60,7 +49,18 @@ namespace MQTTnet
                 .Build());
         }
 
-        public static ValueTask<MqttClientPublishReasonCode> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static ValueTask<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload)
+        {
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
+            if (topic == null) throw new ArgumentNullException(nameof(topic));
+
+            return publisher.PublishAsync(new MqttApplicationMessageBuilder()
+                .WithTopic(topic)
+                .WithPayload(payload)
+                .Build());
+        }
+
+        public static ValueTask<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -72,7 +72,7 @@ namespace MQTTnet
                 .Build());
         }
 
-        public static ValueTask<MqttClientPublishReasonCode> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
+        public static ValueTask<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -85,7 +85,7 @@ namespace MQTTnet
                 .Build());
         }
 
-        public static ValueTask<MqttClientPublishReasonCode> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, bool retain)
+        public static ValueTask<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, bool retain)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -97,7 +97,7 @@ namespace MQTTnet
                 .Build());
         }
 
-        public static ValueTask<MqttClientPublishReasonCode> PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
+        public static ValueTask<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
 
@@ -105,7 +105,7 @@ namespace MQTTnet
             return publisher.PublishAsync(message, cancellationToken);
         }
 
-        public static ValueTask<MqttClientPublishReasonCode> PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
+        public static ValueTask<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
 

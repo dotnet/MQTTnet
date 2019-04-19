@@ -30,8 +30,8 @@ namespace MQTTnet.Formatter
 
         MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options);
 
-        MqttClientPublishReasonCode CreatePublishResult(MqttPubAckPacket pubAckPacket);
+        MqttClientPublishResult CreatePublishResult(MqttPubAckPacket pubAckPacket);
 
-        MqttClientPublishReasonCode CreatePublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket);
+        MqttClientPublishResult CreatePublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket);
     }
 }

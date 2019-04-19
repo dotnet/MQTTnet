@@ -98,7 +98,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.UnsubscribeAsync(clientId, topicFilters);
         }
 
-        public ValueTask<MqttClientPublishReasonCode> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
+        public ValueTask<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
@@ -108,7 +108,7 @@ namespace MQTTnet.Server
 
             _clientSessionsManager.DispatchApplicationMessage(applicationMessage, null);
 
-            return new ValueTask<MqttClientPublishReasonCode>(MqttClientPublishReasonCode.Success);
+            return new ValueTask<MqttClientPublishResult>(new MqttClientPublishResult());
         }
 
         public async Task StartAsync(IMqttServerOptions options)

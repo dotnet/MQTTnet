@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using System.Threading;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
@@ -14,7 +13,8 @@ namespace MQTTnet.Server
             {
                 PrintLogo();
 
-                CreateWebHostBuilder(args).Build().Run();
+                WebHost.CreateDefaultBuilder(args).UseStartup<Startup>().Build().Run();
+
                 return 0;
             }
             catch (Exception exception)
@@ -24,17 +24,12 @@ namespace MQTTnet.Server
             }
         }
 
-        private static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                  .UseKestrel()
-                  .UseStartup<Startup>();
-
         private static void PrintLogo()
         {
             Console.ResetColor();
             Console.ForegroundColor = ConsoleColor.White;
             Console.BackgroundColor = ConsoleColor.Red;
-            var logoText =
+            const string LogoText =
 @"|                                                                                      |
 |      __  __  ____ _______ _______         _      _____                               |
 |     |  \/  |/ __ \__   __|__   __|       | |    / ____|                              |
@@ -44,12 +39,8 @@ namespace MQTTnet.Server
 |     |_|  |_|\___\_\ |_|     |_|_| |_|\___|\__| |_____/ \___|_|    \_/ \___|_|        |
 |                                                                                      |
 |                                                                                      |";
-            foreach (var @char in logoText)
-            {
-                Console.Write(@char);
-                Thread.Sleep(1);
-            }
 
+            Console.WriteLine(LogoText);
             Console.ResetColor();
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.White;

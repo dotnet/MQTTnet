@@ -274,17 +274,9 @@ namespace MQTTnet.Server
             {
                 _connections.TryRemove(clientId, out _);
 
-                ////connection?.ReferenceCounter.Decrement();
-                ////if (connection?.ReferenceCounter.HasReferences == true)
-                ////{
-                ////    disconnectType = MqttClientDisconnectType.Takeover;
-                ////}
-                ////else
+                if (!_options.EnablePersistentSessions)
                 {
-                    if (!_options.EnablePersistentSessions)
-                    {
-                        await DeleteSessionAsync(clientId).ConfigureAwait(false);
-                    }
+                    await DeleteSessionAsync(clientId).ConfigureAwait(false);
                 }
 
                 await TryCleanupChannelAsync(channelAdapter).ConfigureAwait(false);

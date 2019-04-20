@@ -82,7 +82,9 @@ namespace MQTTnet.Implementations
 #else
                     var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
 #endif
-                    await HandleClientConnection(clientSocket).ConfigureAwait(false);
+#pragma warning disable 4014
+                    Task.Run(() => TryHandleClientConnectionAsync(clientSocket), cancellationToken);
+#pragma warning restore 4014
                 }
                 catch (Exception exception)
                 {
@@ -92,12 +94,17 @@ namespace MQTTnet.Implementations
             }
         }
 
-        private async Task HandleClientConnection(Socket clientSocket)
+        private async Task TryHandleClientConnectionAsync(Socket clientSocket)
         {
             Stream stream = null;
 
             try
             {
+                _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
+                    clientSocket.RemoteEndPoint,
+                    _socket.LocalEndPoint,
+                    _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
+
                 clientSocket.NoDelay = _options.NoDelay;
 
                 stream = new NetworkStream(clientSocket, true);
@@ -108,11 +115,6 @@ namespace MQTTnet.Implementations
                     await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, _tlsOptions.SslProtocol, false).ConfigureAwait(false);
                     stream = sslStream;
                 }
-
-                _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
-                    clientSocket.RemoteEndPoint,
-                    _socket.LocalEndPoint,
-                    _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
 
                 var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(stream), new MqttPacketFormatterAdapter(), _logger);
                 ClientAcceptedHandler?.Invoke(new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
@@ -138,7 +140,7 @@ namespace MQTTnet.Implementations
                 }
                 catch (Exception disposeException)
                 {
-                    throw new AggregateException(exception, disposeException);
+                    _logger.Error(disposeException, "Error while cleanup of broken connection.");
                 }
             }
         }

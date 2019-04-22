@@ -21,7 +21,7 @@ namespace MQTTnet.AspNetCore
             _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
         }
 
-        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler { get; set; }
+        public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
         public Task StartAsync(IMqttServerOptions options)
         {
@@ -43,17 +43,16 @@ namespace MQTTnet.AspNetCore
             var isSecureConnection = clientCertificate != null;
             clientCertificate?.Dispose();
 
-            var writer = new SpanBasedMqttPacketWriter();
-            var formatter = new MqttPacketFormatterAdapter(writer);
-            var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection);
-            var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter)));
-
-            var eventArgs = new MqttServerAdapterClientAcceptedEventArgs(channelAdapter);
-            ClientAcceptedHandler?.Invoke(eventArgs);
-
-            if (eventArgs.SessionTask != null)
+            var clientHandler = ClientHandler;
+            if (clientHandler != null)
             {
-                await eventArgs.SessionTask.ConfigureAwait(false);
+                var writer = new SpanBasedMqttPacketWriter();
+                var formatter = new MqttPacketFormatterAdapter(writer);
+                var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection);
+                using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter))))
+                {
+                    await clientHandler(channelAdapter).ConfigureAwait(false);
+                }   
             }
         }
 

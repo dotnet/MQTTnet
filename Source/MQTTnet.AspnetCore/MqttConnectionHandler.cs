@@ -10,7 +10,7 @@ namespace MQTTnet.AspNetCore
 {
     public class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
     {
-        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler { get; set; }
+        public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
         public override async Task OnConnectedAsync(ConnectionContext connection)
         {
@@ -25,10 +25,11 @@ namespace MQTTnet.AspNetCore
             var formatter = new MqttPacketFormatterAdapter(writer);
             using (var adapter = new MqttConnectionContext(formatter, connection))
             {
-                var args = new MqttServerAdapterClientAcceptedEventArgs(adapter);
-                ClientAcceptedHandler?.Invoke(args);
-
-                await args.SessionTask.ConfigureAwait(false);
+                var clientHandler = ClientHandler;
+                if (clientHandler != null)
+                {
+                    await clientHandler(adapter).ConfigureAwait(false);
+                }
             }
         }
 

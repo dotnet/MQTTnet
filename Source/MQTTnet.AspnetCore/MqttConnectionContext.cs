@@ -24,8 +24,7 @@ namespace MQTTnet.AspNetCore
                 _input = Connection.Transport.Input;
                 _output = Connection.Transport.Output;
             }
-
-
+            
             _reader = new SpanBasedMqttPacketBodyReader();
         }
 
@@ -33,9 +32,10 @@ namespace MQTTnet.AspNetCore
         private PipeWriter _output;
         private readonly SpanBasedMqttPacketBodyReader _reader;
 
-        public string Endpoint 
+        public string Endpoint
         {
-            get {
+            get
+            {
                 var connection = Http?.HttpContext?.Connection;
                 if (connection == null)
                 {
@@ -53,12 +53,12 @@ namespace MQTTnet.AspNetCore
         public ConnectionContext Connection { get; }
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
-        public long BytesSent { get; set; } 
+        public long BytesSent { get; set; }
         public long BytesReceived { get; set; }
 
         public Action ReadingPacketStartedCallback { get; set; }
         public Action ReadingPacketCompletedCallback { get; set; }
-        
+
         private readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
 
         public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
@@ -145,7 +145,7 @@ namespace MQTTnet.AspNetCore
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var formatter = PacketFormatterAdapter;
-           
+
 
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try

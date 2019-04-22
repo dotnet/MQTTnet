@@ -26,7 +26,7 @@ namespace MQTTnet.Implementations
             _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
         }
 
-        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler { get; set; }
+        public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
         public Task StartAsync(IMqttServerOptions options)
         {
@@ -89,7 +89,7 @@ namespace MQTTnet.Implementations
                     _cancellationTokenSource.Token,
                     _logger)
                 {
-                    ClientAcceptedHandler = OnClientAccepted
+                    ClientHandler = OnClientAcceptedAsync
                 };
 
                 listenerV4.Start();
@@ -105,7 +105,7 @@ namespace MQTTnet.Implementations
                     _cancellationTokenSource.Token,
                     _logger)
                 {
-                    ClientAcceptedHandler = OnClientAccepted
+                    ClientHandler = OnClientAcceptedAsync
                 };
 
                 listenerV6.Start();
@@ -113,9 +113,15 @@ namespace MQTTnet.Implementations
             }
         }
 
-        private void OnClientAccepted(MqttServerAdapterClientAcceptedEventArgs eventArgs)
+        private Task OnClientAcceptedAsync(IMqttChannelAdapter channelAdapter)
         {
-            ClientAcceptedHandler?.Invoke(eventArgs);
+            var clientHandler = ClientHandler;
+            if (clientHandler == null)
+            {
+                return Task.FromResult(0);
+            }
+
+            return clientHandler(channelAdapter);
         }
     }
 }

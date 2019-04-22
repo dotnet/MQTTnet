@@ -43,7 +43,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler { get; set; }
+        public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
         public void Start()
         {
@@ -97,11 +97,14 @@ namespace MQTTnet.Implementations
         private async Task TryHandleClientConnectionAsync(Socket clientSocket)
         {
             Stream stream = null;
+            EndPoint remoteEndPoint = null;
 
             try
             {
+                remoteEndPoint = clientSocket.RemoteEndPoint;
+
                 _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
-                    clientSocket.RemoteEndPoint,
+                    remoteEndPoint,
                     _socket.LocalEndPoint,
                     _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
 
@@ -116,8 +119,14 @@ namespace MQTTnet.Implementations
                     stream = sslStream;
                 }
 
-                var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(stream), new MqttPacketFormatterAdapter(), _logger);
-                ClientAcceptedHandler?.Invoke(new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
+                var clientHandler = ClientHandler;
+                if (clientHandler != null)
+                {
+                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(stream), new MqttPacketFormatterAdapter(), _logger))
+                    {
+                        await clientHandler(clientAdapter).ConfigureAwait(false);
+                    }
+                }
             }
             catch (Exception exception)
             {
@@ -127,20 +136,29 @@ namespace MQTTnet.Implementations
                     return;
                 }
 
-                if (exception is SocketException socketException && socketException.SocketErrorCode == SocketError.OperationAborted)
+                if (exception is SocketException socketException &&
+                    socketException.SocketErrorCode == SocketError.OperationAborted)
                 {
                     return;
                 }
 
+                _logger.Error(exception, "Error while handling client connection.");
+            }
+            finally
+            {
                 try
                 {
-                    // Dispose already allocated resources.
                     stream?.Dispose();
                     clientSocket?.Dispose();
+
+                    _logger.Verbose("Client '{0}' disconnected at TCP listener '{1}, {2}'.",
+                        remoteEndPoint,
+                        _socket.LocalEndPoint,
+                        _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
                 }
                 catch (Exception disposeException)
                 {
-                    _logger.Error(disposeException, "Error while cleanup of broken connection.");
+                    _logger.Error(disposeException, "Error while cleaning up client connection");
                 }
             }
         }

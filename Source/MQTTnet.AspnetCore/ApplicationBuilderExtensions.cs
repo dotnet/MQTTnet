@@ -28,7 +28,7 @@ namespace MQTTnet.AspNetCore
                 }
 
                 var adapter = app.ApplicationServices.GetRequiredService<MqttWebSocketServerAdapter>();
-                using (var webSocket = await context.WebSockets.AcceptWebSocketAsync(subProtocol))
+                using (var webSocket = await context.WebSockets.AcceptWebSocketAsync(subProtocol).ConfigureAwait(false))
                 {
                     await adapter.RunWebSocketConnectionAsync(webSocket, context);
                 }

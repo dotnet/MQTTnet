@@ -152,6 +152,7 @@ namespace MQTTnet.Server.Mqtt
             if (_settings.TcpEndPoint.Enabled)
             {
                 options.WithDefaultEndpoint();
+
                 if (_settings.TcpEndPoint.TryReadIPv4(out var address4))
                 {
                     options.WithDefaultEndpointBoundIPAddress(address4);

@@ -23,7 +23,7 @@ namespace MQTTnet.Implementations
             _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
         }
 
-        public Action<MqttServerAdapterClientAcceptedEventArgs> ClientAcceptedHandler { get; set; }
+        public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
         public async Task StartAsync(IMqttServerOptions options)
         {
@@ -39,7 +39,7 @@ namespace MQTTnet.Implementations
                 _listener.Control.NoDelay = options.DefaultEndpointOptions.NoDelay;
                 _listener.Control.KeepAlive = true;
                 _listener.Control.QualityOfService = SocketQualityOfService.LowLatency;
-                _listener.ConnectionReceived += AcceptDefaultEndpointConnectionsAsync;
+                _listener.ConnectionReceived += OnConnectionReceivedAsync;
                 
                 await _listener.BindServiceNameAsync(options.DefaultEndpointOptions.Port.ToString(), SocketProtectionLevel.PlainSocket);
             }
@@ -54,30 +54,51 @@ namespace MQTTnet.Implementations
         {
             if (_listener != null)
             {
-                _listener.ConnectionReceived -= AcceptDefaultEndpointConnectionsAsync;
+                _listener.ConnectionReceived -= OnConnectionReceivedAsync;
             }
-
-            _listener?.Dispose();
-            _listener = null;
 
             return Task.FromResult(0);
         }
 
         public void Dispose()
         {
-            StopAsync().GetAwaiter().GetResult();
+            _listener?.Dispose();
+            _listener = null;
         }
 
-        private void AcceptDefaultEndpointConnectionsAsync(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
+        private async void OnConnectionReceivedAsync(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
         {
             try
             {
-                var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, _options), new MqttPacketFormatterAdapter(), _logger);
-                ClientAcceptedHandler?.Invoke(new MqttServerAdapterClientAcceptedEventArgs(clientAdapter));
+                var clientHandler = ClientHandler;
+                if (clientHandler != null)
+                {
+                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, _options), new MqttPacketFormatterAdapter(), _logger))
+                    {
+                        await clientHandler(clientAdapter).ConfigureAwait(false);
+                    }
+                }
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Error while accepting connection at default endpoint.");
+                if (exception is ObjectDisposedException)
+                {
+                    // It can happen that the listener socket is accessed after the cancellation token is already set and the listener socket is disposed.
+                    return;
+                }
+
+                _logger.Error(exception, "Error while handling client connection.");
+            }
+            finally
+            {
+                try
+                {
+                    args.Socket.Dispose();
+                }
+                catch (Exception exception)
+                { 
+                    _logger.Error(exception, "Error while cleaning up client connection");
+                }
             }
         }
     }

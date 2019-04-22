@@ -57,9 +57,9 @@ namespace MQTTnet.Server
             }
         }
 
-        public Task HandleConnectionAsync(IMqttChannelAdapter clientAdapter)
+        public Task HandleClientAsync(IMqttChannelAdapter clientAdapter)
         {
-            return HandleConnectionAsync(clientAdapter, _cancellationToken);
+            return HandleClientAsync(clientAdapter, _cancellationToken);
         }
 
         public Task<IList<IMqttClientStatus>> GetClientStatusAsync()
@@ -221,7 +221,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task HandleConnectionAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
+        private async Task HandleClientAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
         {
             var disconnectType = MqttClientDisconnectType.NotClean;
             var clientId = string.Empty;
@@ -375,10 +375,6 @@ namespace MQTTnet.Server
             catch (Exception exception)
             {
                 _logger.Error(exception, "Error while disconnecting client channel.");
-            }
-            finally
-            {
-                channelAdapter.Dispose();
             }
         }
     }

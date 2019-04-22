@@ -45,6 +45,9 @@
         /// </summary>
         public RetainedApplicationMessagesModel RetainedApplicationMessages { get; set; } = new RetainedApplicationMessagesModel();
 
+        /// <summary>
+        /// Enables or disables the MQTTnet internal logging.
+        /// </summary>
         public bool EnableDebugLogging { get; set; } = false;
     }
 }

@@ -27,12 +27,12 @@ namespace MQTTnet.Server
         private readonly IMqttNetChildLogger _logger;
         private readonly IMqttServerOptions _serverOptions;
 
-        private Task<MqttClientDisconnectType> _packageReceiverTask;
         private readonly IMqttChannelAdapter _channelAdapter;
         private readonly IMqttDataConverter _dataConverter;
         private readonly string _endpoint;
         private readonly MqttConnectPacket _connectPacket;
 
+        private Task<MqttClientDisconnectType> _packageReceiverTask;
         private DateTime _lastPacketReceivedTimestamp;
         private DateTime _lastNonKeepAlivePacketReceivedTimestamp;
 
@@ -78,7 +78,7 @@ namespace MQTTnet.Server
             StopInternal();
 
             var task = _packageReceiverTask;
-            if (task != null && !task.IsCompleted)
+            if (task != null)
             {
                 await task.ConfigureAwait(false);
             }
@@ -103,13 +103,6 @@ namespace MQTTnet.Server
             status.BytesReceived = _channelAdapter.BytesReceived;
         }
         
-        //public void ClearPendingApplicationMessages()
-        //{
-        //    Session.ApplicationMessagesQueue.Clear();
-
-        //    //_applicationMessagesQueue.Clear();
-        //}
-
         public void Dispose()
         {
             _cancellationToken.Dispose();

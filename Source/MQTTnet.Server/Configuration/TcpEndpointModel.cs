@@ -60,13 +60,13 @@ namespace MQTTnet.Server.Configuration
         {
             if (IPv4 == "*")
             {
-                address = IPAddress.Parse("0.0.0.0");
+                address = IPAddress.Any;
                 return true;
             }
 
             if (IPv4 == "localhost")
             {
-                address = IPAddress.Parse("127.0.0.1");
+                address = IPAddress.Loopback;
                 return true;
             }
 
@@ -81,10 +81,8 @@ namespace MQTTnet.Server.Configuration
                 address = ip;
                 return true;
             }
-            else
-            {
-                throw new System.Exception($"Could not parse IPv4 address: {IPv4}");
-            }
+
+            throw new System.Exception($"Could not parse IPv4 address: {IPv4}");
         }
 
         /// <summary>
@@ -95,13 +93,13 @@ namespace MQTTnet.Server.Configuration
         {
             if (IPv6 == "*")
             {
-                address = IPAddress.Parse("::");
+                address = IPAddress.IPv6Any;
                 return true;
             }
 
             if (IPv6 == "localhost")
             {
-                address = IPAddress.Parse("::1");
+                address = IPAddress.IPv6Loopback;
                 return true;
             }
 
@@ -116,10 +114,8 @@ namespace MQTTnet.Server.Configuration
                 address = ip;
                 return true;
             }
-            else
-            {
-                throw new System.Exception($"Could not parse IPv6 address: {IPv6}");
-            }
+
+            throw new System.Exception($"Could not parse IPv6 address: {IPv6}");
         }
     }
 }

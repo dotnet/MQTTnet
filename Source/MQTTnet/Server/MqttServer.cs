@@ -127,7 +127,7 @@ namespace MQTTnet.Server
 
             foreach (var adapter in _adapters)
             {
-                adapter.ClientAcceptedHandler = OnClientAccepted;
+                adapter.ClientHandler = OnHandleClient;
                 await adapter.StartAsync(Options).ConfigureAwait(false);
             }
 
@@ -155,7 +155,7 @@ namespace MQTTnet.Server
 
                 foreach (var adapter in _adapters)
                 {
-                    adapter.ClientAcceptedHandler = null;
+                    adapter.ClientHandler = null;
                     await adapter.StopAsync().ConfigureAwait(false);
                 }
 
@@ -184,9 +184,9 @@ namespace MQTTnet.Server
             return _retainedMessagesManager?.ClearMessagesAsync();
         }
 
-        private void OnClientAccepted(MqttServerAdapterClientAcceptedEventArgs eventArgs)
+        private Task OnHandleClient(IMqttChannelAdapter channelAdapter)
         {
-            eventArgs.SessionTask = _clientSessionsManager.HandleConnectionAsync(eventArgs.ChannelAdapter);
+            return _clientSessionsManager.HandleClientAsync(channelAdapter);
         }
     }
 }

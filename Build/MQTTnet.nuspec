@@ -25,6 +25,7 @@
 * [Client] Fixed issues in QoS 2 handling which leads to message loss.
 * [Client] Replaced all events with proper async compatible handlers (BREAKING CHANGE!).
 * [Client] Added more configuration values to TCP endpoint options.
+* [Client] Added used PacketIdentifier to publish result.
 * [ManagedClient] Replaced all events with proper async compatible handlers (BREAKING CHANGE!).
 * [ManagedClient] The log ID is now propagated to the internal client (thanks to @vbBerni).
 * [ManagedClient] Added validation of topics before publishing.

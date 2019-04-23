@@ -199,6 +199,7 @@ namespace MQTTnet.Formatter.V3
         {
             return new MqttClientPublishResult
             {
+                PacketIdentifier = pubAckPacket?.PacketIdentifier,
                 ReasonCode = MqttClientPublishReasonCode.Success
             };
         }

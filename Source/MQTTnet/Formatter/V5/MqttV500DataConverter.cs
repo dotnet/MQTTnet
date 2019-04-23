@@ -189,21 +189,22 @@ namespace MQTTnet.Formatter.V5
 
         public MqttClientPublishResult CreatePublishResult(MqttPubAckPacket pubAckPacket)
         {
-            var reasonCode = MqttClientPublishReasonCode.Success;
-            if (pubAckPacket != null)
-            {
-                // QoS 0 has no response. So we treat it as a success always.
-                reasonCode = (MqttClientPublishReasonCode)pubAckPacket.ReasonCode;
-            }
-
             var result = new MqttClientPublishResult
             {
-                // Both enums share the same values.
-                ReasonCode = reasonCode,
+                ReasonCode = MqttClientPublishReasonCode.Success,
                 ReasonString = pubAckPacket?.Properties?.ReasonString,
                 UserProperties = pubAckPacket?.Properties?.UserProperties
             };
 
+            if (pubAckPacket != null)
+            {
+                // QoS 0 has no response. So we treat it as a success always.
+                // Both enums have the same values. So it can be easily converted.
+                 result.ReasonCode = (MqttClientPublishReasonCode)pubAckPacket.ReasonCode;
+
+                 result.PacketIdentifier = pubAckPacket.PacketIdentifier;
+            }
+            
             return result;
         }
 

@@ -6,8 +6,6 @@ namespace MQTTnet.Server.Status
     {
         string ClientId { get; set; }
 
-        bool IsConnected { get; }
-
         long PendingApplicationMessagesCount { get; set; }
 
         Task ClearPendingApplicationMessagesAsync();

@@ -77,7 +77,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.GetSessionStatusAsync();
         }
 
-        public Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync()
+        public Task<IList<MqttApplicationMessage>> GetRetainedApplicationMessagesAsync()
         {
             return _retainedMessagesManager.GetMessagesAsync();
         }
@@ -179,7 +179,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public Task ClearRetainedMessagesAsync()
+        public Task ClearRetainedApplicationMessagesAsync()
         {
             return _retainedMessagesManager?.ClearMessagesAsync();
         }

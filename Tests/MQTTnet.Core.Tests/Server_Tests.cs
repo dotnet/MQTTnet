@@ -437,7 +437,7 @@ namespace MQTTnet.Tests
 
                 await Task.Delay(1000);
 
-                var retainedMessages = await server.GetRetainedMessagesAsync();
+                var retainedMessages = await server.GetRetainedApplicationMessagesAsync();
 
                 Assert.AreEqual(ClientCount, retainedMessages.Count);
 
@@ -566,6 +566,27 @@ namespace MQTTnet.Tests
                 Assert.AreEqual(0, receivedMessagesCount);
             }
         }
+        
+        [TestMethod]
+        public async Task Intercept_Application_Message()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync(
+                    new MqttServerOptionsBuilder().WithApplicationMessageInterceptor(
+                        c => { c.ApplicationMessage = new MqttApplicationMessage {Topic = "new_topic" }; }));
+
+                string receivedTopic = null;
+                var c1 = await testEnvironment.ConnectClientAsync();
+                await c1.SubscribeAsync("#");
+                c1.UseApplicationMessageReceivedHandler(a => { receivedTopic = a.ApplicationMessage.Topic; });
+
+                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("original_topic").Build());
+
+                await Task.Delay(500);
+                Assert.AreEqual("new_topic", receivedTopic);
+            }
+        }
 
         [TestMethod]
         public async Task Persist_Retained_Message()
@@ -583,6 +604,34 @@ namespace MQTTnet.Tests
                 await Task.Delay(500);
 
                 Assert.AreEqual(1, serverStorage.Messages.Count);
+            }
+        }
+
+        [TestMethod]
+        public async Task Publish_After_Client_Connects()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var server = await testEnvironment.StartServerAsync();
+                server.UseClientConnectedHandler(async e =>
+                {
+                    await server.PublishAsync("/test/1", "true", MqttQualityOfServiceLevel.ExactlyOnce, false);
+                });
+
+                string receivedTopic = null;
+
+                var c1 = await testEnvironment.ConnectClientAsync();
+                c1.UseApplicationMessageReceivedHandler(e => { receivedTopic = e.ApplicationMessage.Topic; });
+                await c1.SubscribeAsync("#");
+
+                await testEnvironment.ConnectClientAsync();
+                await testEnvironment.ConnectClientAsync();
+                await testEnvironment.ConnectClientAsync();
+                await testEnvironment.ConnectClientAsync();
+
+                await Task.Delay(500);
+
+                Assert.AreEqual("/test/1", receivedTopic);
             }
         }
 

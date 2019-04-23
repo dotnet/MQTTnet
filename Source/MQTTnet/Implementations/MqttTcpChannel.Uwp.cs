@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Networking;
@@ -38,22 +39,13 @@ namespace MQTTnet.Implementations
             CreateStreams();
 
             IsSecureConnection = socket.Information.ProtectionLevel >= SocketProtectionLevel.Tls12;
+
+            Endpoint = _socket.Information.RemoteAddress + ":" + _socket.Information.RemotePort;
         }
 
         public static Func<MqttClientTcpOptions, IEnumerable<ChainValidationResult>> CustomIgnorableServerCertificateErrorsResolver { get; set; }
 
-        public string Endpoint
-        {
-            get
-            {
-                if (_socket?.Information != null)
-                {
-                    return _socket.Information.RemoteAddress + ":" + _socket.Information.RemotePort;
-                }
-
-                return null;
-            }
-        }
+        public string Endpoint { get; private set; }
 
         public bool IsSecureConnection { get; }
 
@@ -66,7 +58,7 @@ namespace MQTTnet.Implementations
                 _socket.Control.KeepAlive = true;
             }
 
-            if (!_options.TlsOptions.UseTls)
+            if (_options.TlsOptions?.UseTls != true)
             {
                 await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString());
             }
@@ -79,8 +71,20 @@ namespace MQTTnet.Implementations
                     _socket.Control.IgnorableServerCertificateErrors.Add(ignorableChainValidationResult);
                 }
 
-                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), SocketProtectionLevel.Tls12);
+                var socketProtectionLevel = SocketProtectionLevel.Tls12;
+                if (_options.TlsOptions.SslProtocol == SslProtocols.Tls11)
+                {
+                    socketProtectionLevel = SocketProtectionLevel.Tls11;
+                }
+                else if (_options.TlsOptions.SslProtocol == SslProtocols.Tls)
+                {
+                    socketProtectionLevel = SocketProtectionLevel.Tls10;
+                }
+
+                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), socketProtectionLevel);
             }
+
+            Endpoint = _socket.Information.RemoteAddress + ":" + _socket.Information.RemotePort;
 
             CreateStreams();
         }

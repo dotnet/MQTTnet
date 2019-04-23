@@ -97,11 +97,11 @@ namespace MQTTnet.Implementations
         private async Task TryHandleClientConnectionAsync(Socket clientSocket)
         {
             Stream stream = null;
-            EndPoint remoteEndPoint = null;
+            string remoteEndPoint = null;
 
             try
             {
-                remoteEndPoint = clientSocket.RemoteEndPoint;
+                remoteEndPoint = clientSocket.RemoteEndPoint.ToString();
 
                 _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
                     remoteEndPoint,
@@ -122,7 +122,7 @@ namespace MQTTnet.Implementations
                 var clientHandler = ClientHandler;
                 if (clientHandler != null)
                 {
-                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(stream), new MqttPacketFormatterAdapter(), _logger))
+                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(stream, remoteEndPoint), new MqttPacketFormatterAdapter(), _logger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }

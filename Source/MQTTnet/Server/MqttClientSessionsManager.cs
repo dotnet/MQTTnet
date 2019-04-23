@@ -186,7 +186,10 @@ namespace MQTTnet.Server
                 {
                     if (interceptorContext.CloseConnection)
                     {
-                        await queuedApplicationMessage.Sender.StopAsync().ConfigureAwait(false);
+                        if (sender != null)
+                        {
+                            await sender.StopAsync().ConfigureAwait(false);
+                        }
                     }
 
                     if (interceptorContext.ApplicationMessage == null || !interceptorContext.AcceptPublish)
@@ -207,7 +210,7 @@ namespace MQTTnet.Server
                 foreach (var clientSession in _sessions.Values)
                 {
                     clientSession.EnqueueApplicationMessage(
-                        queuedApplicationMessage.ApplicationMessage,
+                        applicationMessage,
                         sender?.ClientId,
                         false);
                 }

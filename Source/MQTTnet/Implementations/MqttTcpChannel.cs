@@ -28,11 +28,12 @@ namespace MQTTnet.Implementations
             IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
         }
 
-        public MqttTcpChannel(Stream stream)
+        public MqttTcpChannel(Stream stream, string endpoint)
         {
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
             IsSecureConnection = stream is SslStream;
+            Endpoint = endpoint;
         }
 
         public string Endpoint { get; private set; }

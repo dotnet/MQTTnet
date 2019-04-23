@@ -40,8 +40,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="4.0.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="4.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.0.0-rc2" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.0.0-rc2" />
   </ItemGroup>
 
   <ItemGroup>

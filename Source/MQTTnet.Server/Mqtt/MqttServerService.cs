@@ -10,10 +10,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore;
+using MQTTnet.Client.Publishing;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Configuration;
 using MQTTnet.Server.Scripting;
+using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server.Mqtt
 {
@@ -90,6 +92,33 @@ namespace MQTTnet.Server.Mqtt
         public Task RunWebSocketConnectionAsync(WebSocket webSocket, HttpContext httpContext)
         {
             return _webSocketServerAdapter.RunWebSocketConnectionAsync(webSocket, httpContext);
+        }
+
+        public Task<IList<IMqttClientStatus>> GetClientStatusAsync()
+        {
+            return _mqttServer.GetClientStatusAsync();
+        }
+
+        public Task<IList<IMqttSessionStatus>> GetSessionStatusAsync()
+        {
+            return _mqttServer.GetSessionStatusAsync();
+        }
+
+        public Task ClearRetainedApplicationMessagesAsync()
+        {
+            return _mqttServer.ClearRetainedApplicationMessagesAsync();
+        }
+
+        public Task<IList<MqttApplicationMessage>> GetRetainedApplicationMessagesAsync()
+        {
+            return _mqttServer.GetRetainedApplicationMessagesAsync();
+        }
+
+        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage)
+        {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
+            return _mqttServer.PublishAsync(applicationMessage);
         }
 
         private void Publish(PythonDictionary parameters)

@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
 using Microsoft.Scripting.Utils;
 using MQTTnet.Server.Configuration;
 using MQTTnet.Server.Logging;
 using MQTTnet.Server.Mqtt;
 using MQTTnet.Server.Scripting;
 using MQTTnet.Server.Scripting.DataSharing;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace MQTTnet.Server
 {
@@ -55,11 +57,28 @@ namespace MQTTnet.Server
             pythonScriptHostService.Configure();
 
             mqttServerService.Configure();
+
+            application.UseSwagger(o => o.RouteTemplate = "/api/{documentName}/swagger.json");
+
+            application.UseSwaggerUI(o =>
+            {
+                o.RoutePrefix = "api";
+                o.DocumentTitle = "MQTTnet.Server API";
+                o.SwaggerEndpoint("/api/v1/swagger.json", "MQTTnet.Server API v1");
+                o.DisplayRequestDuration();
+                o.DocExpansion(DocExpansion.List);
+                o.DefaultModelRendering(ModelRendering.Model);
+            });
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+                .AddJsonOptions(options =>
+                {
+                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                });
 
             services.AddSingleton(ReadSettings());
 
@@ -79,6 +98,28 @@ namespace MQTTnet.Server
             services.AddSingleton<MqttConnectionValidator>();
             services.AddSingleton<MqttSubscriptionInterceptor>();
             services.AddSingleton<MqttApplicationMessageInterceptor>();
+            
+            services.AddSwaggerGen(c =>
+            {
+                c.DescribeAllEnumsAsStrings();
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "MQTTnet.Server API",
+                    Version = "v1",
+                    Description = "The public API for the MQTT broker MQTTnet.Server.",
+                    License = new OpenApiLicense
+                    {
+                        Name = "MIT",
+                        Url = new Uri("https://github.com/chkr1011/MQTTnet/blob/master/README.md")
+                    },
+                    Contact = new OpenApiContact
+                    {
+                        Name = "MQTTnet.Server",
+                        Email = string.Empty,
+                        Url = new Uri("https://github.com/chkr1011/MQTTnet")
+                    },
+                });
+            });
         }
 
         private SettingsModel ReadSettings()

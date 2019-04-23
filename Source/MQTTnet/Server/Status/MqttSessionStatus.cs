@@ -17,8 +17,6 @@ namespace MQTTnet.Server.Status
         public string ClientId { get; set; }
 
         public long PendingApplicationMessagesCount { get; set; }
-
-        public bool IsConnected { get; set; }
     
         public DateTime CreatedTimestamp { get; set; }
 

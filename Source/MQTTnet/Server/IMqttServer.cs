@@ -19,8 +19,8 @@ namespace MQTTnet.Server
         Task<IList<IMqttClientStatus>> GetClientStatusAsync();
         Task<IList<IMqttSessionStatus>> GetSessionStatusAsync();
 
-        Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync();
-        Task ClearRetainedMessagesAsync();
+        Task<IList<MqttApplicationMessage>> GetRetainedApplicationMessagesAsync();
+        Task ClearRetainedApplicationMessagesAsync();
 
         Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters);
         Task UnsubscribeAsync(string clientId, ICollection<string> topicFilters);

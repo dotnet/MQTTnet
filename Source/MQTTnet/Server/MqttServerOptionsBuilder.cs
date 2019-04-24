@@ -147,6 +147,15 @@ namespace MQTTnet.Server
             return this;
         }
 
+        /// <summary>
+        /// Gets or sets the client ID which is used when publishing messages from the server directly.
+        /// </summary>
+        public MqttServerOptionsBuilder WithClientId(string value)
+        {
+            _options.ClientId = value;
+            return this;
+        }
+
         public IMqttServerOptions Build()
         {
             return _options;

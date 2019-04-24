@@ -325,7 +325,7 @@ namespace MQTTnet.Client
                 }
                 catch (MqttCommunicationTimedOutException)
                 {
-                    _logger.Warning(null, "Timeout while waiting for packet of type '{0}'.", typeof(TResponsePacket).Namespace);
+                    _logger.Warning(null, "Timeout while waiting for packet of type '{0}'.", typeof(TResponsePacket).Name);
                     throw;
                 }
             }

@@ -8,6 +8,8 @@ namespace MQTTnet.Server
 
         public MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsTcpEndpointOptions();
 
+        public string ClientId { get; set; }
+
         public bool EnablePersistentSessions { get; set; }
 
         public int MaxPendingMessagesPerClient { get; set; } = 250;

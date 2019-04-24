@@ -4,6 +4,8 @@ namespace MQTTnet.Server
 {
     public interface IMqttServerOptions
     {
+        string ClientId { get; set; }
+
         bool EnablePersistentSessions { get; }
 
         int MaxPendingMessagesPerClient { get; }
@@ -19,6 +21,6 @@ namespace MQTTnet.Server
         MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
         MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }
 
-        IMqttServerStorage Storage { get; }
+        IMqttServerStorage Storage { get; }        
     }
 }

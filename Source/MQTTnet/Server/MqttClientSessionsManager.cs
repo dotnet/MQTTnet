@@ -364,7 +364,13 @@ namespace MQTTnet.Server
                 return null;
             }
 
-            var interceptorContext = new MqttApplicationMessageInterceptorContext(sender?.ClientId, applicationMessage);
+            var senderClientId = sender?.ClientId;
+            if (sender == null)
+            {
+                senderClientId = _options.ClientId;
+            }
+
+            var interceptorContext = new MqttApplicationMessageInterceptorContext(senderClientId, applicationMessage);
             await interceptor.InterceptApplicationMessagePublishAsync(interceptorContext).ConfigureAwait(false);
             return interceptorContext;
         }

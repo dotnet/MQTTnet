@@ -119,12 +119,15 @@ namespace MQTTnet.TestApp.UniversalWindows
                 throw new InvalidOperationException();
             }
 
-            options.Credentials = new MqttClientCredentials
+            if (!string.IsNullOrEmpty(User.Text))
             {
-                Username = User.Text,
-                Password = Password.Text
-            };
-
+                options.Credentials = new MqttClientCredentials
+                {
+                    Username = User.Text,
+                    Password = Password.Text
+                };
+            }
+            
             options.CleanSession = CleanSession.IsChecked == true;
             options.KeepAlivePeriod = TimeSpan.FromSeconds(double.Parse(KeepAliveInterval.Text));
 

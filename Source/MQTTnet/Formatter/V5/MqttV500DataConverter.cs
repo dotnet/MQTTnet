@@ -223,6 +223,7 @@ namespace MQTTnet.Formatter.V5
             {
                 return new MqttClientPublishResult
                 {
+                    PacketIdentifier = pubCompPacket.PacketIdentifier,
                     ReasonCode = MqttClientPublishReasonCode.UnspecifiedError,
                     ReasonString = pubCompPacket.Properties?.ReasonString,
                     UserProperties = pubCompPacket.Properties?.UserProperties
@@ -231,6 +232,7 @@ namespace MQTTnet.Formatter.V5
 
             var result = new MqttClientPublishResult
             {
+                PacketIdentifier = pubCompPacket.PacketIdentifier,
                 ReasonCode = MqttClientPublishReasonCode.Success,
                 ReasonString = pubCompPacket.Properties?.ReasonString,
                 UserProperties = pubCompPacket.Properties?.UserProperties

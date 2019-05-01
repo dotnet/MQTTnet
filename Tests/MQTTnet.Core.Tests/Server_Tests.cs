@@ -540,7 +540,7 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public async Task Clear_Retained_Message()
+        public async Task Clear_Retained_Message_With_Empty_Payload()
         {
             using (var testEnvironment = new TestEnvironment())
             {
@@ -566,7 +566,35 @@ namespace MQTTnet.Tests
                 Assert.AreEqual(0, receivedMessagesCount);
             }
         }
-        
+
+        [TestMethod]
+        public async Task Clear_Retained_Message_With_Null_Payload()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServerAsync();
+
+                var c1 = await testEnvironment.ConnectClientAsync();
+
+                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
+                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload((byte[])null).WithRetainFlag().Build());
+
+                await c1.DisconnectAsync();
+
+                var c2 = await testEnvironment.ConnectClientAsync();
+
+                c2.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+
+                await Task.Delay(200);
+                await c2.SubscribeAsync(new TopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                await Task.Delay(500);
+
+                Assert.AreEqual(0, receivedMessagesCount);
+            }
+        }
+
         [TestMethod]
         public async Task Intercept_Application_Message()
         {

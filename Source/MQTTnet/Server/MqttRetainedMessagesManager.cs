@@ -61,8 +61,9 @@ namespace MQTTnet.Server
                 using (await _messagesLock.WaitAsync().ConfigureAwait(false))
                 {
                     var saveIsRequired = false;
+                    var hasPayload = applicationMessage.Payload?.Any() == true;
 
-                    if (applicationMessage.Payload?.Any() != true)
+                    if (!hasPayload)
                     {
                         saveIsRequired = _messages.Remove(applicationMessage.Topic);
                         _logger.Verbose("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);

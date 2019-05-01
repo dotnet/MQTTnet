@@ -11,7 +11,6 @@ using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Exceptions;
-using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -21,6 +20,34 @@ namespace MQTTnet.Tests
     [TestClass]
     public class Client_Tests
     {
+        [TestMethod]
+        public async Task PacketIdentifier_In_Publish_Result()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+                var client = await testEnvironment.ConnectClientAsync();
+
+                var result = await client.PublishAsync("a", "a", MqttQualityOfServiceLevel.AtMostOnce);
+                Assert.AreEqual(null, result.PacketIdentifier);
+
+                result = await client.PublishAsync("b", "b", MqttQualityOfServiceLevel.AtMostOnce);
+                Assert.AreEqual(null, result.PacketIdentifier);
+
+                result = await client.PublishAsync("a", "a", MqttQualityOfServiceLevel.AtLeastOnce);
+                Assert.AreEqual((ushort)1, result.PacketIdentifier);
+
+                result = await client.PublishAsync("b", "b", MqttQualityOfServiceLevel.AtLeastOnce);
+                Assert.AreEqual((ushort)2, result.PacketIdentifier);
+
+                result = await client.PublishAsync("a", "a", MqttQualityOfServiceLevel.ExactlyOnce);
+                Assert.AreEqual((ushort)3, result.PacketIdentifier);
+
+                result = await client.PublishAsync("b", "b", MqttQualityOfServiceLevel.ExactlyOnce);
+                Assert.AreEqual((ushort)4, result.PacketIdentifier);
+            }
+        }
+        
         [TestMethod]
         public async Task Invalid_Connect_Throws_Exception()
         {

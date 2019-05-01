@@ -15,11 +15,11 @@ namespace MQTTnet.Tests
         public async Task Dispose_Channel_While_Used()
         {
             var ct = new CancellationTokenSource();
+            var serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
-                var serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                serverSocket.Bind(new IPEndPoint(IPAddress.Any, 50000));
+                serverSocket.Bind(new IPEndPoint(IPAddress.Any, 50001));
                 serverSocket.Listen(0);
 
 #pragma warning disable 4014
@@ -35,7 +35,7 @@ namespace MQTTnet.Tests
                 }, ct.Token);
 
                 var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await clientSocket.ConnectAsync(IPAddress.Loopback, 50000);
+                await clientSocket.ConnectAsync(IPAddress.Loopback, 50001);
 
                 await Task.Delay(100, ct.Token);
 
@@ -68,6 +68,7 @@ namespace MQTTnet.Tests
             finally
             {
                 ct.Cancel(false);
+                serverSocket.Dispose();
             }
         }
     }

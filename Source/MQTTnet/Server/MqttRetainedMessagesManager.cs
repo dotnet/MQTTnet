@@ -61,7 +61,7 @@ namespace MQTTnet.Server
                 using (await _messagesLock.WaitAsync().ConfigureAwait(false))
                 {
                     var saveIsRequired = false;
-                    var hasPayload = applicationMessage.Payload?.Any() == true;
+                    var hasPayload = applicationMessage.Payload != null && applicationMessage.Payload.Length > 0;
 
                     if (!hasPayload)
                     {

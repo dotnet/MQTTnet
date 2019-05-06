@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
@@ -81,7 +83,7 @@ namespace MQTTnet.TestApp.NetCore
             {
                 Task.Run(PerformanceTest.RunQoS0Test);
             }
-            
+
             Thread.Sleep(Timeout.Infinite);
         }
     }
@@ -116,6 +118,24 @@ namespace MQTTnet.TestApp.NetCore
             }
 
             return Task.FromResult(retainedMessages);
+        }
+    }
+
+    public class WikiCode
+    {
+        public void Code()
+        {
+            //Validate certificate.
+            var options = new MqttClientOptionsBuilder()
+                .WithTls(new MqttClientOptionsBuilderTlsParameters
+                {
+                    CertificateValidationCallback = (X509Certificate x, X509Chain y, SslPolicyErrors z, IMqttClientOptions o) =>
+                        {
+                            // TODO: Check conditions of certificate by using above parameters.
+                            return true;
+                        }
+                })
+                .Build();
         }
     }
 }

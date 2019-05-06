@@ -20,12 +20,14 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 
 * Async support
 * TLS 1.2 support for client and server (but not UWP servers)
-* Extensible communication channels (i.e. In-Memory, TCP, TCP+TLS, WS)
+* Extensible communication channels (e.g. In-Memory, TCP, TCP+TLS, WS)
 * Lightweight (only the low level implementation of MQTT, no overhead)
 * Performance optimized (processing ~70.000 messages / second)*
+* Uniform API across all supported versions of the MQTT protocol
 * Interfaces included for mocking and testing
 * Access to internal trace messages
-* Unit tested (~100 tests)
+* Unit tested (~200 tests)
+* No external dependencies
 
 \* Tested on local machine (Intel i7 8700K) with MQTTnet client and server running in the same process using the TCP channel. The app for verification is part of this repository and stored in _/Tests/MQTTnet.TestApp.NetCore_.
 
@@ -48,6 +50,17 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * WebSockets supported (via ASP.NET Core 2.0, separate nuget)
 * A custom message interceptor can be added which allows transforming or extending every received application message
 * Validate subscriptions and deny subscribing of certain topics depending on requesting clients
+* Connect clients with different protocol versions at the same time.
+
+## MQTTnet Server
+
+_MQTTnet Server_ is a standalone cross platform MQTT server (like mosquitto) basing on this library. It has the following features.
+* Running portable (no installation required)
+* Runs und Windows, Linux, macOS, Raspberry Pi
+* Python scripting support for manipulating messages, validation of clients, building business logic etc.
+* Supports WebSocket and TCP (with and without TLS) connections
+* Provides a HTTP based API (including Swagger endpoint)
+* Extensive configuration parameters and customization supported
 
 ## Supported frameworks
 
@@ -62,7 +75,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 
 ## Supported MQTT versions
 
-* 5.0.0 (planned)
+* 5.0.0
 * 3.1.1
 * 3.1.0
 
@@ -93,9 +106,11 @@ This library is used in the following projects:
 
 If you use this library and want to see your project here please create a pull request.
 
-## MIT License
+## License
 
-Copyright (c) 2017-2018 Christian Kratky
+MIT License
+
+MQTTnet Copyright (c) 2016-2019 Christian Kratky
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using MQTTnet.Client;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -12,14 +13,14 @@ namespace MQTTnet.Extensions.ManagedClient
         int PendingApplicationMessagesCount { get; }
         IManagedMqttClientOptions Options { get; }
 
-        event EventHandler<MqttClientConnectedEventArgs> Connected;
-        event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
+        IMqttClientConnectedHandler ConnectedHandler { get; set; }
+        IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
 
-        event EventHandler<ApplicationMessageProcessedEventArgs> ApplicationMessageProcessed;
-        event EventHandler<ApplicationMessageSkippedEventArgs> ApplicationMessageSkipped;
+        IApplicationMessageProcessedHandler ApplicationMessageProcessedHandler { get; set; }
+        IApplicationMessageSkippedHandler ApplicationMessageSkippedHandler { get; set; }
 
-        event EventHandler<MqttManagedProcessFailedEventArgs> ConnectingFailed;
-        event EventHandler<MqttManagedProcessFailedEventArgs> SynchronizingSubscriptionsFailed;
+        IConnectingFailedHandler ConnectingFailedHandler { get; set; }
+        ISynchronizingSubscriptionsFailedHandler SynchronizingSubscriptionsFailedHandler { get; set; }
         
         Task StartAsync(IManagedMqttClientOptions options);
         Task StopAsync();

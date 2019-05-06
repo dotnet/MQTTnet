@@ -1,23 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using MQTTnet.Adapter;
-using MQTTnet.Packets;
+﻿using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
-    public interface IMqttClientSession : IDisposable
+    public interface IMqttClientSession
     {
         string ClientId { get; }
-        void FillStatus(MqttClientSessionStatus status);
 
-        void EnqueueApplicationMessage(MqttClientSession senderClientSession, MqttPublishPacket publishPacket);
-        void ClearPendingApplicationMessages();
-        
-        Task RunAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter adapter);
-        void Stop(MqttClientDisconnectType disconnectType);
-
-        Task SubscribeAsync(IList<TopicFilter> topicFilters);
-        Task UnsubscribeAsync(IList<string> topicFilters);
+        Task StopAsync();
     }
 }

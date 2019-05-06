@@ -74,8 +74,11 @@ namespace MQTTnet.Internal
             Task winner;
             if (timeout == Timeout.InfiniteTimeSpan)
             {
-                await tcs.Task.ConfigureAwait(false);
-                winner = tcs.Task;
+                using (cancellationToken.Register(() => { tcs.TrySetCanceled(); }))
+                {
+                    await tcs.Task.ConfigureAwait(false);
+                    winner = tcs.Task;
+                }               
             }
             else
             {
@@ -122,7 +125,7 @@ namespace MQTTnet.Internal
                 }
             }
 
-            toRelease?.SetResult(true);
+            toRelease?.TrySetResult(true);
         }
     }
 }

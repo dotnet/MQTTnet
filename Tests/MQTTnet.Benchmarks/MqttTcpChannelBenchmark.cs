@@ -1,11 +1,11 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQTTnet.Channel;
-using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client.Options;
 
 namespace MQTTnet.Benchmarks
 {
@@ -21,8 +21,16 @@ namespace MQTTnet.Benchmarks
         {
             var factory = new MqttFactory();
             var tcpServer = new MqttTcpServerAdapter(new MqttNetLogger().CreateChildLogger());
-            tcpServer.ClientAccepted += (sender, args) => _serverChannel = (IMqttChannel)args.Client.GetType().GetField("_channel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(args.Client);
+            tcpServer.ClientHandler += args =>
+            {
+                _serverChannel =
+                    (IMqttChannel)args.GetType().GetField("_channel",
+                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                        .GetValue(args);
 
+                return Task.CompletedTask;
+            };
+            
             _mqttServer = factory.CreateMqttServer(new[] { tcpServer }, new MqttNetLogger());
 
             var serverOptions = new MqttServerOptionsBuilder().Build();

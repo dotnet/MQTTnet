@@ -45,7 +45,7 @@ namespace MQTTnet
                 throw new MqttProtocolViolationException("Topic is not set.");
             }
 
-            return new TopicFilter(_topic, _qualityOfServiceLevel);
+            return new TopicFilter { Topic = _topic, QualityOfServiceLevel = _qualityOfServiceLevel };
         }
     }
 }

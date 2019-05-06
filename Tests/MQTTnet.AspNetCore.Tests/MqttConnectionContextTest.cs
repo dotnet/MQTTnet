@@ -3,11 +3,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.AspNetCore.Tests.Mockups;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.AspNetCore.Tests
 {
@@ -17,7 +17,7 @@ namespace MQTTnet.AspNetCore.Tests
         [TestMethod]
         public async Task TestReceivePacketAsyncThrowsWhenReaderCompleted()
         {
-            var serializer = new MqttPacketSerializer {};
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
@@ -25,13 +25,13 @@ namespace MQTTnet.AspNetCore.Tests
 
             pipe.Receive.Writer.Complete();
 
-            await Assert.ThrowsExceptionAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(TimeSpan.FromSeconds(1), CancellationToken.None));
+            await Assert.ThrowsExceptionAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None));
         }
         
         [TestMethod]
         public async Task TestParallelWrites()
         {
-            var serializer = new MqttPacketSerializer { };
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
@@ -41,7 +41,7 @@ namespace MQTTnet.AspNetCore.Tests
             {
                 for (int i = 0; i < 100; i++)
                 {
-                    await ctx.SendPacketAsync(new MqttPublishPacket(), CancellationToken.None).ConfigureAwait(false);
+                    await ctx.SendPacketAsync(new MqttPublishPacket(), TimeSpan.Zero, CancellationToken.None).ConfigureAwait(false);
                 }
             }));
 

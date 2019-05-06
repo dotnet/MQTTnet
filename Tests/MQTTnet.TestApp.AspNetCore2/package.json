@@ -2,9 +2,7 @@
   "version": "1.0.0",
   "name": "mqtt.test",
   "private": true,
-  "devDependencies": {
-  },
-
+  "devDependencies": {},
   "dependencies": {
     "mqtt": "2.15.1",
     "@types/node": "8.0.46",

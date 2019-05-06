@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using MQTTnet.Adapter;
-using MQTTnet.Serializer;
 using MQTTnet.Server;
 using System;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.AspNetCore
 {
     public class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
-    {        
-        public event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
+    {
+        public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
         public override async Task OnConnectedAsync(ConnectionContext connection)
         {
@@ -21,14 +21,15 @@ namespace MQTTnet.AspNetCore
                 transferFormatFeature.ActiveFormat = TransferFormat.Binary;
             }
 
-
-            var serializer = new MqttPacketSerializer();
-            using (var adapter = new MqttConnectionContext(serializer, connection))
+            var writer = new SpanBasedMqttPacketWriter();
+            var formatter = new MqttPacketFormatterAdapter(writer);
+            using (var adapter = new MqttConnectionContext(formatter, connection))
             {
-                var args = new MqttServerAdapterClientAcceptedEventArgs(adapter);
-                ClientAccepted?.Invoke(this, args);
-
-                await args.SessionTask;
+                var clientHandler = ClientHandler;
+                if (clientHandler != null)
+                {
+                    await clientHandler(adapter).ConfigureAwait(false);
+                }
             }
         }
 
@@ -41,7 +42,7 @@ namespace MQTTnet.AspNetCore
         {
             return Task.CompletedTask;
         }
-        
+
         public void Dispose()
         {
         }

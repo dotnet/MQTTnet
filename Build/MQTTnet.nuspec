@@ -5,15 +5,44 @@
     <version>0.0.0</version>
     <authors>Christian Kratky</authors>
     <owners>Christian Kratky</owners>
-    <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>
+    <license type="file">LICENSE</license>
     <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
-    <releaseNotes>* [Core] Fixed a memory leak when processing lots of messages (thanks to @tschanko)
+    <releaseNotes>
+* [Core] Added support for MQTTv5 packages.
+* [Core] Performance improvements.
+* [Core] Removed obsolete methods.
+* [Core] Fixed a memory leak when processing lots of messages (thanks to @tschanko)
+* [Core] Added more overloads for MQTT factory.
+* [Core] The client password is now hidden from the logs (replaced with **** if set).
+* [Core] Fixed a memory leak when using SSL connections (thanks to @biovoid). 
+* [Client] Added validation of topics before publishing.
+* [Client] Added new MQTTv5 features to options builder.
+* [Client] Added uniform API across all supported MQTT versions (BREAKING CHANGE!)
+* [Client] The client will now avoid sending an ACK if an exception has been thrown in message handler (thanks to @ramonsmits).
+* [Client] Fixed issues in QoS 2 handling which leads to message loss.
+* [Client] Replaced all events with proper async compatible handlers (BREAKING CHANGE!).
+* [Client] Added more configuration values to TCP endpoint options.
+* [Client] Added used PacketIdentifier to publish result.
+* [ManagedClient] Replaced all events with proper async compatible handlers (BREAKING CHANGE!).
+* [ManagedClient] The log ID is now propagated to the internal client (thanks to @vbBerni).
+* [ManagedClient] Added validation of topics before publishing.
+* [ManagedClient] The internal MQTT client is now closed properly (thanks to @vbBerni).
+* [Server] Added support for MQTTv5 clients. The server will still return _success_ for all cases at the moment even if more granular codes are available.
+* [Server] Fixed issues in QoS 2 handling which leads to message loss.
+* [Server] Replaced all events with proper async compatible handlers (BREAKING CHANGE!).
+* [Server] The used logger instance is now propagated to the WebSocket server adapter.
+* [Server] Added the flag "IsSecureConnection" which is set to true when the connection is encrypted.
 * [Server] Fixed wrong will message behavior when stopping server (thanks to @JohBa)
+* [Server] Added validation of topics before publishing.
+* [Server] Added more configuration values to TCP endpoint options.
+* [MQTTnet Server] Added as first Alpha version of standalone cross platform MQTT server.
+
+* [Note] Due to MQTTv5 a lot of new classes were introduced. This required adding new namespaces as well. Most classes are backward compatible but new namespaces must be added.
     </releaseNotes>
-    <copyright>Copyright Christian Kratky 2016-2018</copyright>
+    <copyright>Copyright Christian Kratky 2016-2019</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
       <group targetFramework="netstandard1.3">
@@ -29,7 +58,7 @@
         <dependency id="System.Net.WebSockets.Client" version="4.3.2" />
       </group>
       <group targetFramework="uap10.0">
-        <dependency id="Microsoft.NETCore.UniversalWindowsPlatform" version="6.1.9" />
+        <dependency id="Microsoft.NETCore.UniversalWindowsPlatform" version="6.2.8" />
       </group>
       <group targetFramework="net452">
       </group>
@@ -39,6 +68,9 @@
   </metadata>
 
   <files>
+    <!-- License -->
+    <file src="..\LICENSE" />
+
     <!-- .NET Standard 1.3 -->
     <file src="..\Source\MQTTnet\bin\Release\netstandard1.3\MQTTnet.*" target="lib\netstandard1.3\"/>
     

@@ -1,10 +1,20 @@
-﻿namespace MQTTnet.Packets
+﻿using MQTTnet.Protocol;
+
+namespace MQTTnet.Packets
 {
     public class MqttDisconnectPacket : MqttBasePacket
     {
+        #region Added in MQTTv5
+
+        public MqttDisconnectReasonCode? ReasonCode { get; set; }
+
+        public MqttDisconnectPacketProperties Properties { get; set; }
+
+        #endregion
+
         public override string ToString()
         {
-            return "Disconnect";
+            return string.Concat("Disconnect: [ReasonCode=", ReasonCode, "]");
         }
     }
 }

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using MQTTnet;
 using MQTTnet.AspNetCore;
 using MQTTnet.Server;
 
@@ -36,7 +35,7 @@ namespace MQTTnet.TestApp.AspNetCore2
             //app.UseMqttEndpoint();
             app.UseMqttServer(server =>
             {
-                server.Started += async (sender, args) =>
+                server.StartedHandler = new MqttServerStartedHandlerDelegate(async args =>
                 {
                     var msg = new MqttApplicationMessageBuilder()
                         .WithPayload("Mqtt is awesome")
@@ -58,7 +57,7 @@ namespace MQTTnet.TestApp.AspNetCore2
                             await Task.Delay(TimeSpan.FromSeconds(2));
                         }
                     }
-                };
+                });
             });
 
             app.Use((context, next) =>

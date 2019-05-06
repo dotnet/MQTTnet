@@ -3,14 +3,12 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
-using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
     public class MqttClientKeepAliveMonitor
     {
         private readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
-        private readonly Stopwatch _lastNonKeepAlivePacketReceivedTracker = new Stopwatch();
 
         private readonly IMqttClientSession _clientSession;
         private readonly IMqttNetChildLogger _logger;
@@ -25,10 +23,6 @@ namespace MQTTnet.Server
 
             _logger = logger.CreateChildLogger(nameof(MqttClientKeepAliveMonitor));
         }
-
-        public TimeSpan LastPacketReceived => _lastPacketReceivedTracker.Elapsed;
-
-        public TimeSpan LastNonKeepAlivePacketReceived => _lastNonKeepAlivePacketReceivedTracker.Elapsed;
 
         public void Start(int keepAlivePeriod, CancellationToken cancellationToken)
         {
@@ -50,20 +44,9 @@ namespace MQTTnet.Server
             _isPaused = false;
         }
 
-        public void Reset()
+        public void PacketReceived()
         {
             _lastPacketReceivedTracker.Restart();
-            _lastNonKeepAlivePacketReceivedTracker.Restart();
-        }
-
-        public void PacketReceived(MqttBasePacket packet)
-        {
-            _lastPacketReceivedTracker.Restart();
-
-            if (!(packet is MqttPingReqPacket))
-            {
-                _lastNonKeepAlivePacketReceivedTracker.Restart();
-            }
         }
 
         private async Task RunAsync(int keepAlivePeriod, CancellationToken cancellationToken)
@@ -71,7 +54,6 @@ namespace MQTTnet.Server
             try
             {
                 _lastPacketReceivedTracker.Restart();
-                _lastNonKeepAlivePacketReceivedTracker.Restart();
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -81,7 +63,7 @@ namespace MQTTnet.Server
                     if (!_isPaused && _lastPacketReceivedTracker.Elapsed.TotalSeconds >= keepAlivePeriod * 1.5D)
                     {
                         _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientSession.ClientId);
-                        _clientSession.Stop(MqttClientDisconnectType.NotClean);
+                        await _clientSession.StopAsync().ConfigureAwait(false);
 
                         return;
                     }

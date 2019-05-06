@@ -1,16 +1,16 @@
-﻿using MQTTnet.Exceptions;
-using MQTTnet.Protocol;
+﻿using MQTTnet.Client.Connecting;
+using MQTTnet.Exceptions;
 
 namespace MQTTnet.Adapter
 {
     public class MqttConnectingFailedException : MqttCommunicationException
     {
-        public MqttConnectingFailedException(MqttConnectReturnCode returnCode)
-            : base($"Connecting with MQTT server failed ({returnCode}).")
+        public MqttConnectingFailedException(MqttClientConnectResultCode resultCode)
+            : base($"Connecting with MQTT server failed ({resultCode.ToString()}).")
         {
-            ReturnCode = returnCode;
+            ResultCode = resultCode;
         }
 
-        public MqttConnectReturnCode ReturnCode { get; }
+        public MqttClientConnectResultCode ResultCode { get; }
     }
 }

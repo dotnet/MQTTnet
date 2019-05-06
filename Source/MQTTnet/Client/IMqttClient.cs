@@ -1,6 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
+using MQTTnet.Client.Options;
+using MQTTnet.Client.Subscribing;
+using MQTTnet.Client.Unsubscribing;
 
 namespace MQTTnet.Client
 {
@@ -9,13 +14,14 @@ namespace MQTTnet.Client
         bool IsConnected { get; }
         IMqttClientOptions Options { get; }
 
-        event EventHandler<MqttClientConnectedEventArgs> Connected;
-        event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
+        IMqttClientConnectedHandler ConnectedHandler { get; set; }
+        
+        IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
+        
+        Task<MqttClientAuthenticateResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken);
+        Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken);
 
-        Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options);
-        Task DisconnectAsync();
-
-        Task<IList<MqttSubscribeResult>> SubscribeAsync(IEnumerable<TopicFilter> topicFilters);
-        Task UnsubscribeAsync(IEnumerable<string> topics);
+        Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken);
+        Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken);
     }
 }

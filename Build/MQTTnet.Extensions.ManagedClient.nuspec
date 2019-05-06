@@ -5,20 +5,23 @@
     <version>0.0.0</version>
     <authors>Christian Kratky</authors>
     <owners>Christian Kratky</owners>
-    <licenseUrl>https://github.com/chkr1011/MQTTnet/blob/master/LICENSE</licenseUrl>
+    <license type="file">LICENSE</license>
     <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>This is an extension library which provides a managed MQTT client with additional features using MQTTnet.</description>
     <releaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</releaseNotes>
-    <copyright>Copyright Christian Kratky 2016-2018</copyright>
+    <copyright>Copyright Christian Kratky 2016-2019</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
-      <dependency id="MQTTnet" version="2.8.6" />
+      <dependency id="MQTTnet" version="$nugetVersion" />
     </dependencies>
   </metadata>
 
   <files>
+    <!-- License -->
+    <file src="..\LICENSE" />
+
     <!-- .NET Standard 1.3 -->
     <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard1.3\MQTTnet.Extensions.ManagedClient.*" target="lib\netstandard1.3\"/>
 

@@ -4,6 +4,8 @@ namespace MQTTnet.Server
 {
     public interface IMqttServerOptions
     {
+        string ClientId { get; set; }
+
         bool EnablePersistentSessions { get; }
 
         int MaxPendingMessagesPerClient { get; }
@@ -11,14 +13,14 @@ namespace MQTTnet.Server
 
         TimeSpan DefaultCommunicationTimeout { get; }
 
-        Action<MqttConnectionValidatorContext> ConnectionValidator { get; }
-        Action<MqttSubscriptionInterceptorContext> SubscriptionInterceptor { get; }
-        Action<MqttApplicationMessageInterceptorContext> ApplicationMessageInterceptor { get; }
-        Action<MqttClientMessageQueueInterceptorContext> ClientMessageQueueInterceptor { get; }
+        IMqttServerConnectionValidator ConnectionValidator { get; }
+        IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; }
+        IMqttServerApplicationMessageInterceptor ApplicationMessageInterceptor { get; }
+        IMqttServerClientMessageQueueInterceptor ClientMessageQueueInterceptor { get; }
 
         MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
         MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }
 
-        IMqttServerStorage Storage { get; }
+        IMqttServerStorage Storage { get; }        
     }
 }

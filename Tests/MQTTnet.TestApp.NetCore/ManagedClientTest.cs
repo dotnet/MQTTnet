@@ -3,7 +3,8 @@ using System.Threading.Tasks;
 using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using MQTTnet.Client;
+using MQTTnet.Client.Options;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
 
@@ -14,7 +15,7 @@ namespace MQTTnet.TestApp.NetCore
         public static async Task RunAsync()
         {
             var ms = new ClientRetainedMessageHandler();
-            
+
             var options = new ManagedMqttClientOptions
             {
                 ClientOptions = new MqttClientOptions
@@ -34,19 +35,19 @@ namespace MQTTnet.TestApp.NetCore
             try
             {
                 var managedClient = new MqttFactory().CreateManagedMqttClient();
-                managedClient.ApplicationMessageReceived += (s, e) =>
+                managedClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     Console.WriteLine(">> RECEIVED: " + e.ApplicationMessage.Topic);
-                };
+                });
 
                 await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("1"));
                 await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("2").WithAtLeastOnceQoS());
 
                 await managedClient.StartAsync(options);
 
-                await managedClient.SubscribeAsync(new TopicFilter("xyz", MqttQualityOfServiceLevel.AtMostOnce));
-                await managedClient.SubscribeAsync(new TopicFilter("abc", MqttQualityOfServiceLevel.AtMostOnce));
-                
+                await managedClient.SubscribeAsync(new TopicFilter { Topic = "xyz", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                await managedClient.SubscribeAsync(new TopicFilter { Topic = "abc", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+
                 await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("3"));
 
                 Console.WriteLine("Managed client started.");

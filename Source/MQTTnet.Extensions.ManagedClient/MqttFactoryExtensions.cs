@@ -1,24 +1,23 @@
 ﻿using System;
-using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
     public static class MqttFactoryExtensions
     {
-        public static IManagedMqttClient CreateManagedMqttClient(this IMqttClientFactory factory)
+        public static IManagedMqttClient CreateManagedMqttClient(this IMqttFactory factory)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
 
-            return new ManagedMqttClient(factory.CreateMqttClient(), new MqttNetLogger().CreateChildLogger());
+            return new ManagedMqttClient(factory.CreateMqttClient(), factory.DefaultLogger.CreateChildLogger());
         }
 
-        public static IManagedMqttClient CreateManagedMqttClient(this IMqttClientFactory factory, IMqttNetLogger logger)
+        public static IManagedMqttClient CreateManagedMqttClient(this IMqttFactory factory, IMqttNetLogger logger)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            return new ManagedMqttClient(factory.CreateMqttClient(), logger.CreateChildLogger());
+            return new ManagedMqttClient(factory.CreateMqttClient(logger), logger.CreateChildLogger());
         }
     }
 }

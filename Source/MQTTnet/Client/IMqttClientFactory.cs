@@ -1,4 +1,5 @@
-﻿using MQTTnet.Diagnostics;
+﻿using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Client
 {

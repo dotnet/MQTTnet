@@ -1,12 +1,26 @@
-﻿namespace MQTTnet.Packets
+﻿using System.Collections.Generic;
+using System.Linq;
+using MQTTnet.Protocol;
+
+namespace MQTTnet.Packets
 {
     public class MqttUnsubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
         public ushort? PacketIdentifier { get; set; }
 
+        #region Added in MQTTv5
+
+        public MqttUnsubAckPacketProperties Properties { get; set; }
+
+        public List<MqttUnsubscribeReasonCode> ReasonCodes { get; } = new List<MqttUnsubscribeReasonCode>();
+
+        #endregion
+
         public override string ToString()
         {
-            return "UnsubAck: [PacketIdentifier=" + PacketIdentifier + "]";
+            var reasonCodesText = string.Join(",", ReasonCodes.Select(f => f.ToString()));
+
+            return string.Concat("UnsubAck: [PacketIdentifier=", PacketIdentifier, "] [ReasonCodes=", reasonCodesText, "]");
         }
     }
 }

@@ -1,9 +1,9 @@
-﻿using System;
+﻿using MQTTnet.Client.Receiving;
 
 namespace MQTTnet
 {
     public interface IApplicationMessageReceiver
     {
-        event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
+        IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
     }
 }

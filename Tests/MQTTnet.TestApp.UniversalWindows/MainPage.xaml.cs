@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
@@ -595,7 +597,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     };
                 }
             }
-
+            
             // ----------------------------------
             {
                 var options = new MqttServerOptions();
@@ -712,6 +714,25 @@ namespace MQTTnet.TestApp.UniversalWindows
             {
                 // Create a new MQTT server.
                 var mqttServer = new MqttFactory().CreateMqttServer();
+            }
+
+            {
+                // Setup subscription interceptor.
+                var options = new MqttServerOptionsBuilder()
+                    .WithSubscriptionInterceptor(context =>
+                    {
+                        if (context.TopicFilter.Topic.StartsWith("admin/foo/bar") && context.ClientId != "theAdmin")
+                        {
+                            context.AcceptSubscription = false;
+                        }
+
+                        if (context.TopicFilter.Topic.StartsWith("the/secret/stuff") && context.ClientId != "Imperator")
+                        {
+                            context.AcceptSubscription = false;
+                            context.CloseConnection = true;
+                        }
+                    })
+                    .Build();
             }
 
             {

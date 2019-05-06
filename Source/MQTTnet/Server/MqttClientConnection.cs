@@ -138,7 +138,7 @@ namespace MQTTnet.Server
                     {
                         ReturnCode = MqttConnectReturnCode.ConnectionAccepted,
                         ReasonCode = MqttConnectReasonCode.Success,
-                        IsSessionPresent = Session.IsCleanSession
+                        IsSessionPresent = !Session.IsCleanSession
                     }).ConfigureAwait(false);
 
                 Session.IsCleanSession = false;

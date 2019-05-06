@@ -55,13 +55,27 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public async Task Use_Clean_Session()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+
+                var client = testEnvironment.CreateClient();
+                var connectResult = await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost", testEnvironment.ServerPort).WithCleanSession().Build());
+
+                Assert.IsFalse(connectResult.IsSessionPresent);
+            }
+        }
+
+        [TestMethod]
         public async Task Will_Message_Do_Not_Send()
         {
             using (var testEnvironment = new TestEnvironment())
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
+                await testEnvironment.StartServerAsync();
 
                 var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").WithAtMostOnceQoS().Build();
 

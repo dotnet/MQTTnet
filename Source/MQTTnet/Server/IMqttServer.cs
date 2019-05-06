@@ -1,31 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
     public interface IMqttServer : IApplicationMessageReceiver, IApplicationMessagePublisher
     {
-        event EventHandler Started;
-        event EventHandler Stopped;
+        IMqttServerStartedHandler StartedHandler { get; set; }
+        IMqttServerStoppedHandler StoppedHandler { get; set; }
 
-        event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
-        event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
-        event EventHandler<MqttClientSubscribedTopicEventArgs> ClientSubscribedTopic;
-        event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
+        IMqttServerClientConnectedHandler ClientConnectedHandler { get; set; }
+        IMqttServerClientDisconnectedHandler ClientDisconnectedHandler { get; set; }
+        IMqttServerClientSubscribedTopicHandler ClientSubscribedTopicHandler { get; set; }
+        IMqttServerClientUnsubscribedTopicHandler ClientUnsubscribedTopicHandler { get; set; }
         
         IMqttServerOptions Options { get; }
 
-        [Obsolete("This method is no longer async. Use the not async method.")]
-        Task<IList<IMqttClientSessionStatus>> GetClientSessionsStatusAsync();
+        Task<IList<IMqttClientStatus>> GetClientStatusAsync();
+        Task<IList<IMqttSessionStatus>> GetSessionStatusAsync();
 
-        IList<IMqttClientSessionStatus> GetClientSessionsStatus();
+        Task<IList<MqttApplicationMessage>> GetRetainedApplicationMessagesAsync();
+        Task ClearRetainedApplicationMessagesAsync();
 
-        IList<MqttApplicationMessage> GetRetainedMessages();
-        Task ClearRetainedMessagesAsync();
-
-        Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters);
-        Task UnsubscribeAsync(string clientId, IList<string> topicFilters);
+        Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters);
+        Task UnsubscribeAsync(string clientId, ICollection<string> topicFilters);
 
         Task StartAsync(IMqttServerOptions options);
         Task StopAsync();

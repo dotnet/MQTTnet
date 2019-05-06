@@ -1,12 +1,12 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
-using MQTTnet.Internal;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Channel;
+using MQTTnet.Formatter;
+using MQTTnet.Formatter.V3;
 
 namespace MQTTnet.Benchmarks
 {
@@ -17,18 +17,18 @@ namespace MQTTnet.Benchmarks
     {
         private MqttBasePacket _packet;
         private ArraySegment<byte> _serializedPacket;
-        private MqttPacketSerializer _serializer;
+        private IMqttPacketFormatter _serializer;
 
         [GlobalSetup]
         public void Setup()
         {
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic("A")
-                .Build();
+            _packet = new MqttPublishPacket
+            {
+                Topic = "A"
+            };
 
-            _packet = message.ToPublishPacket();
-            _serializer = new MqttPacketSerializer();
-            _serializedPacket = _serializer.Serialize(_packet);
+            _serializer = new MqttV311PacketFormatter();
+            _serializedPacket = _serializer.Encode(_packet);
         }
 
         [Benchmark]
@@ -36,7 +36,7 @@ namespace MQTTnet.Benchmarks
         {
             for (var i = 0; i < 10000; i++)
             {
-                _serializer.Serialize(_packet);
+                _serializer.Encode(_packet);
                 _serializer.FreeBuffer();
             }
         }
@@ -46,19 +46,19 @@ namespace MQTTnet.Benchmarks
         {
             var channel = new BenchmarkMqttChannel(_serializedPacket);
             var fixedHeader = new byte[2];
-            var singleByteBuffer = new byte[1];
+            var reader = new MqttPacketReader(channel);
 
             for (var i = 0; i < 10000; i++)
             {
                 channel.Reset();
 
-                var header = MqttPacketReader.ReadFixedHeaderAsync(channel, fixedHeader, singleByteBuffer, CancellationToken.None).GetAwaiter().GetResult();
+                var header = reader.ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult().FixedHeader;
 
                 var receivedPacket = new ReceivedMqttPacket(
                     header.Flags,
-                    new MqttPacketBodyReader(_serializedPacket.Array, _serializedPacket.Count - header.RemainingLength, _serializedPacket.Array.Length));
+                    new MqttPacketBodyReader(_serializedPacket.Array, (ulong)(_serializedPacket.Count - header.RemainingLength), (ulong)_serializedPacket.Array.Length), 0);
 
-                _serializer.Deserialize(receivedPacket);
+                _serializer.Decode(receivedPacket);
             }
         }
 
@@ -73,7 +73,9 @@ namespace MQTTnet.Benchmarks
                 _position = _buffer.Offset;
             }
 
-            public string Endpoint { get; }
+            public string Endpoint { get; } = string.Empty;
+
+            public bool IsSecureConnection { get; } = false;
 
             public void Reset()
             {
@@ -82,12 +84,12 @@ namespace MQTTnet.Benchmarks
 
             public Task ConnectAsync(CancellationToken cancellationToken)
             {
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
 
-            public Task DisconnectAsync()
+            public Task DisconnectAsync(CancellationToken cancellationToken)
             {
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
 
             public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -100,7 +102,7 @@ namespace MQTTnet.Benchmarks
 
             public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
 
             public void Dispose()

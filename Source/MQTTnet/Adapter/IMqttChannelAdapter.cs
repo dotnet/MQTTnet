@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 
 namespace MQTTnet.Adapter
 {
@@ -10,17 +10,23 @@ namespace MQTTnet.Adapter
     {
         string Endpoint { get; }
 
-        IMqttPacketSerializer PacketSerializer { get; }
+        bool IsSecureConnection { get; }
 
-        event EventHandler ReadingPacketStarted;
+        MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
-        event EventHandler ReadingPacketCompleted;
+        long BytesSent { get; }
+
+        long BytesReceived { get; }
+
+        Action ReadingPacketStartedCallback { get; set; }
+
+        Action ReadingPacketCompletedCallback { get; set; }
 
         Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken);
 
         Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken);
 
-        Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken);
+        Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken);
 
         Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken);
     }

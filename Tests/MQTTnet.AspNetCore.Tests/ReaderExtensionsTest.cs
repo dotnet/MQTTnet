@@ -1,8 +1,8 @@
+#if NETCOREAPP
 using System.Buffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.AspNetCore;
+using MQTTnet.Formatter;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 
 namespace MQTTnet.AspNetCore.Tests
 {
@@ -12,9 +12,9 @@ namespace MQTTnet.AspNetCore.Tests
         [TestMethod]
         public void TestTryDeserialize()
         {
-            var serializer = new MqttPacketSerializer();
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
 
-            var buffer = serializer.Serialize(new MqttPublishPacket() {Topic = "a", Payload = new byte[5]});
+            var buffer = serializer.Encode(new MqttPublishPacket() {Topic = "a", Payload = new byte[5]});
 
             var sequence = new ReadOnlySequence<byte>(buffer.Array, buffer.Offset, buffer.Count);
 
@@ -23,23 +23,27 @@ namespace MQTTnet.AspNetCore.Tests
             var consumed = part.Start;
             var observed = part.Start;
             var result = false;
+            var read = 0;
+
+            var reader = new SpanBasedMqttPacketBodyReader();
 
             part = sequence.Slice(sequence.Start, 0); // empty message should fail
-            result = serializer.TryDeserialize(part, out packet, out consumed, out observed);
+            result = serializer.TryDecode(reader, part, out packet, out consumed, out observed, out read);
             Assert.IsFalse(result);
 
 
             part = sequence.Slice(sequence.Start, 1); // partial fixed header should fail
-            result = serializer.TryDeserialize(part, out packet, out consumed, out observed);
+            result = serializer.TryDecode(reader, part, out packet, out consumed, out observed, out read);
             Assert.IsFalse(result);
 
             part = sequence.Slice(sequence.Start, 4); // partial body should fail
-            result = serializer.TryDeserialize(part, out packet, out consumed, out observed);
+            result = serializer.TryDecode(reader, part, out packet, out consumed, out observed, out read);
             Assert.IsFalse(result);
 
             part = sequence; // complete msg should work
-            result = serializer.TryDeserialize(part, out packet, out consumed, out observed);
+            result = serializer.TryDecode(reader, part, out packet, out consumed, out observed, out read);
             Assert.IsTrue(result);
         }
     }
 }
+#endif

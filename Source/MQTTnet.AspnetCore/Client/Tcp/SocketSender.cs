@@ -5,6 +5,10 @@ using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Net.Sockets;
 
+#if NETCOREAPP2_1
+using System.Runtime.InteropServices;
+#endif
+
 namespace MQTTnet.AspNetCore.Client.Tcp
 {
     public class SocketSender

@@ -1,0 +1,160 @@
+﻿using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading.Tasks;
+using MQTTnet.Client.Options;
+using MQTTnet.Tests.Mockups;
+using MQTTnet.Client;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
+
+namespace MQTTnet.Tests
+{
+    [TestClass]
+    public class Server_Status_Tests
+    {
+        [TestMethod]
+        public async Task Show_Client_And_Session_Statistics()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var server = await testEnvironment.StartServerAsync();
+
+                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client1"));
+                var c2 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client2"));
+
+                await Task.Delay(500);
+
+                var clientStatus = await server.GetClientStatusAsync();
+                var sessionStatus = await server.GetSessionStatusAsync();
+
+                Assert.AreEqual(2, clientStatus.Count);
+                Assert.AreEqual(2, sessionStatus.Count);
+
+                Assert.IsTrue(clientStatus.Any(s => s.ClientId == "client1"));
+                Assert.IsTrue(clientStatus.Any(s => s.ClientId == "client2"));
+
+                await c1.DisconnectAsync();
+                await c2.DisconnectAsync();
+
+                await Task.Delay(500);
+
+                clientStatus = await server.GetClientStatusAsync();
+                sessionStatus = await server.GetSessionStatusAsync();
+
+                Assert.AreEqual(0, clientStatus.Count);
+                Assert.AreEqual(0, sessionStatus.Count);
+            }
+        }
+
+        [TestMethod]
+        public async Task Disconnect_Client()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var server = await testEnvironment.StartServerAsync();
+
+                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client1"));
+                
+                await Task.Delay(500);
+
+                var clientStatus = await server.GetClientStatusAsync();
+                
+                Assert.AreEqual(1, clientStatus.Count);
+                
+                Assert.IsTrue(clientStatus.Any(s => s.ClientId == "client1"));
+
+                await clientStatus.First().DisconnectAsync();
+
+                await Task.Delay(500);
+
+                Assert.IsFalse(c1.IsConnected);
+
+                clientStatus = await server.GetClientStatusAsync();
+
+                Assert.AreEqual(0, clientStatus.Count);
+            }
+        }
+
+        [TestMethod]
+        public async Task Keep_Persistent_Session()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithPersistentSessions());
+
+                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client1"));
+                var c2 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client2"));
+
+                await c1.DisconnectAsync();
+
+                await Task.Delay(500);
+
+                var clientStatus = await server.GetClientStatusAsync();
+                var sessionStatus = await server.GetSessionStatusAsync();
+
+                Assert.AreEqual(1, clientStatus.Count);
+                Assert.AreEqual(2, sessionStatus.Count);
+
+                await c2.DisconnectAsync();
+
+                await Task.Delay(500);
+
+                clientStatus = await server.GetClientStatusAsync();
+                sessionStatus = await server.GetSessionStatusAsync();
+
+                Assert.AreEqual(0, clientStatus.Count);
+                Assert.AreEqual(2, sessionStatus.Count);
+            }
+        }
+
+        [TestMethod]
+        public async Task Track_Sent_Application_Messages()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithPersistentSessions());
+
+                var c1 = await testEnvironment.ConnectClientAsync();
+
+                for (var i = 1; i < 25; i++)
+                {
+                    await c1.PublishAsync("a");
+                    await Task.Delay(50);
+
+                    var clientStatus = await server.GetClientStatusAsync();
+                    Assert.AreEqual(i, clientStatus.First().SentApplicationMessagesCount);
+                    Assert.AreEqual(0, clientStatus.First().ReceivedApplicationMessagesCount);
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task Track_Sent_Packets()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithPersistentSessions());
+
+                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithNoKeepAlive());
+
+                for (var i = 1; i < 25; i++)
+                {
+                    // At most once will send one packet to the client and the server will reply
+                    // with an additional ACK packet.
+                    await c1.PublishAsync("a", string.Empty, MqttQualityOfServiceLevel.AtLeastOnce);
+                    await Task.Delay(50);
+
+                    var clientStatus = await server.GetClientStatusAsync();
+
+                    Assert.AreEqual(i, clientStatus.First().SentApplicationMessagesCount, "SAMC invalid!");
+
+                    // + 1 because CONNECT is also counted.
+                    Assert.AreEqual(i + 1, clientStatus.First().SentPacketsCount, "SPC invalid!");
+
+                    // +1 because ConnACK package is already counted.
+                    Assert.AreEqual(i + 1, clientStatus.First().ReceivedPacketsCount, "RPC invalid!");
+                }
+            }
+        }
+    }
+}

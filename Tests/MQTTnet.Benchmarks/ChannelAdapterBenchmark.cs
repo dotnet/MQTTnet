@@ -3,10 +3,10 @@ using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 using System;
 using System.IO;
 using System.Threading;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.Benchmarks
 {
@@ -21,13 +21,14 @@ namespace MQTTnet.Benchmarks
         [GlobalSetup]
         public void Setup()
         {
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic("A")
-                .Build();
+            _packet = new MqttPublishPacket
+            {
+                Topic = "A"
+            };
 
-            _packet = message.ToPublishPacket();
-            var serializer = new MqttPacketSerializer();
-            var serializedPacket = Join(serializer.Serialize(_packet));
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
+            
+            var serializedPacket = Join(serializer.Encode(_packet));
 
             _iterations = 10000;
 
@@ -65,7 +66,7 @@ namespace MQTTnet.Benchmarks
 
             for (var i = 0; i < 10000; i++)
             {
-                _channelAdapter.SendPacketAsync(_packet, CancellationToken.None).GetAwaiter().GetResult();
+                _channelAdapter.SendPacketAsync(_packet, TimeSpan.Zero, CancellationToken.None).GetAwaiter().GetResult();
             }
 
             _stream.Position = 0;

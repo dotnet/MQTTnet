@@ -4,8 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
+using MQTTnet.Client.Publishing;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
-using MQTTnet.Internal;
+using MQTTnet.Protocol;
+using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
@@ -26,42 +29,60 @@ namespace MQTTnet.Server
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttServer));
-
-            _eventDispatcher.ClientConnected += (s, e) => ClientConnected?.Invoke(s, e);
-            _eventDispatcher.ClientDisconnected += (s, e) => ClientDisconnected?.Invoke(s, e);
-            _eventDispatcher.ClientSubscribedTopic += (s, e) => ClientSubscribedTopic?.Invoke(s, e);
-            _eventDispatcher.ClientUnsubscribedTopic += (s, e) => ClientUnsubscribedTopic?.Invoke(s, e);
-            _eventDispatcher.ApplicationMessageReceived += (s, e) => ApplicationMessageReceived?.Invoke(s, e);
         }
 
-        public event EventHandler Started;
-        public event EventHandler Stopped;
+        public IMqttServerStartedHandler StartedHandler { get; set; }
 
-        public event EventHandler<MqttClientConnectedEventArgs> ClientConnected;
-        public event EventHandler<MqttClientDisconnectedEventArgs> ClientDisconnected;
-        public event EventHandler<MqttClientSubscribedTopicEventArgs> ClientSubscribedTopic;
-        public event EventHandler<MqttClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopic;
+        public IMqttServerStoppedHandler StoppedHandler { get; set; }
 
-        public event EventHandler<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceived;
+        public IMqttServerClientConnectedHandler ClientConnectedHandler
+        {
+            get => _eventDispatcher.ClientConnectedHandler;
+            set => _eventDispatcher.ClientConnectedHandler = value;
+        }
+
+        public IMqttServerClientDisconnectedHandler ClientDisconnectedHandler
+        {
+            get => _eventDispatcher.ClientDisconnectedHandler;
+            set => _eventDispatcher.ClientDisconnectedHandler = value;
+        }
+        
+        public IMqttServerClientSubscribedTopicHandler ClientSubscribedTopicHandler
+        {
+            get => _eventDispatcher.ClientSubscribedTopicHandler;
+            set => _eventDispatcher.ClientSubscribedTopicHandler = value;
+        }
+
+        public IMqttServerClientUnsubscribedTopicHandler ClientUnsubscribedTopicHandler
+        {
+            get => _eventDispatcher.ClientUnsubscribedTopicHandler;
+            set => _eventDispatcher.ClientUnsubscribedTopicHandler = value;
+        }
+        
+        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
+        {
+            get => _eventDispatcher.ApplicationMessageReceivedHandler;
+            set => _eventDispatcher.ApplicationMessageReceivedHandler = value;
+        }
 
         public IMqttServerOptions Options { get; private set; }
 
-        public Task<IList<IMqttClientSessionStatus>> GetClientSessionsStatusAsync()
+        public Task<IList<IMqttClientStatus>> GetClientStatusAsync()
         {
-            return Task.FromResult(_clientSessionsManager.GetClientStatus());
+            return _clientSessionsManager.GetClientStatusAsync();
         }
 
-        public IList<IMqttClientSessionStatus> GetClientSessionsStatus()
+        public Task<IList<IMqttSessionStatus>> GetSessionStatusAsync()
         {
-            return _clientSessionsManager.GetClientStatus();
+            return _clientSessionsManager.GetSessionStatusAsync();
         }
 
-        public IList<MqttApplicationMessage> GetRetainedMessages()
+        public Task<IList<MqttApplicationMessage>> GetRetainedApplicationMessagesAsync()
         {
-            return _retainedMessagesManager.GetMessages();
+            return _retainedMessagesManager.GetMessagesAsync();
         }
 
-        public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
+        public Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
@@ -69,7 +90,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.SubscribeAsync(clientId, topicFilters);
         }
 
-        public Task UnsubscribeAsync(string clientId, IList<string> topicFilters)
+        public Task UnsubscribeAsync(string clientId, ICollection<string> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
@@ -77,15 +98,17 @@ namespace MQTTnet.Server
             return _clientSessionsManager.UnsubscribeAsync(clientId, topicFilters);
         }
 
-        public Task PublishAsync(MqttApplicationMessage applicationMessage)
+        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
+            MqttTopicValidator.ThrowIfInvalid(applicationMessage.Topic);
+
             if (_cancellationTokenSource == null) throw new InvalidOperationException("The server is not started.");
 
-            _clientSessionsManager.EnqueueApplicationMessage(null, applicationMessage.ToPublishPacket());
+            _clientSessionsManager.DispatchApplicationMessage(applicationMessage, null);
 
-            return Task.FromResult(0);
+            return Task.FromResult(new MqttClientPublishResult());
         }
 
         public async Task StartAsync(IMqttServerOptions options)
@@ -104,12 +127,17 @@ namespace MQTTnet.Server
 
             foreach (var adapter in _adapters)
             {
-                adapter.ClientAccepted += OnClientAccepted;
+                adapter.ClientHandler = OnHandleClient;
                 await adapter.StartAsync(Options).ConfigureAwait(false);
             }
 
             _logger.Info("Started.");
-            Started?.Invoke(this, EventArgs.Empty);
+
+            var startedHandler = StartedHandler;
+            if (startedHandler != null)
+            {
+                await startedHandler.HandleServerStartedAsync(EventArgs.Empty).ConfigureAwait(false);
+            }
         }
 
         public async Task StopAsync()
@@ -121,18 +149,17 @@ namespace MQTTnet.Server
                     return;
                 }
                 
-                _clientSessionsManager.Stop();
+                await _clientSessionsManager.StopAsync().ConfigureAwait(false);
                 
                 _cancellationTokenSource.Cancel(false);
 
                 foreach (var adapter in _adapters)
                 {
-                    adapter.ClientAccepted -= OnClientAccepted;
+                    adapter.ClientHandler = null;
                     await adapter.StopAsync().ConfigureAwait(false);
                 }
 
                 _logger.Info("Stopped.");
-                Stopped?.Invoke(this, EventArgs.Empty);
             }
             finally
             {
@@ -144,16 +171,22 @@ namespace MQTTnet.Server
                 _clientSessionsManager?.Dispose();
                 _clientSessionsManager = null;
             }
+
+            var stoppedHandler = StoppedHandler;
+            if (stoppedHandler != null)
+            {
+                await stoppedHandler.HandleServerStoppedAsync(EventArgs.Empty).ConfigureAwait(false);
+            }
         }
 
-        public Task ClearRetainedMessagesAsync()
+        public Task ClearRetainedApplicationMessagesAsync()
         {
             return _retainedMessagesManager?.ClearMessagesAsync();
         }
 
-        private void OnClientAccepted(object sender, MqttServerAdapterClientAcceptedEventArgs eventArgs)
+        private Task OnHandleClient(IMqttChannelAdapter channelAdapter)
         {
-            eventArgs.SessionTask = _clientSessionsManager.StartSession(eventArgs.Client);
+            return _clientSessionsManager.HandleClientAsync(channelAdapter);
         }
     }
 }

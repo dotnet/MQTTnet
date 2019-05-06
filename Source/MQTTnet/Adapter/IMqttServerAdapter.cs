@@ -6,7 +6,7 @@ namespace MQTTnet.Adapter
 {
     public interface IMqttServerAdapter : IDisposable
     {
-        event EventHandler<MqttServerAdapterClientAcceptedEventArgs> ClientAccepted;
+        Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
         Task StartAsync(IMqttServerOptions options);
         Task StopAsync();

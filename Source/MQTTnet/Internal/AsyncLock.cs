@@ -15,14 +15,23 @@ namespace MQTTnet.Internal
             _releaser = Task.FromResult((IDisposable)new Releaser(this));
         }
 
-        public Task<IDisposable> LockAsync(CancellationToken cancellationToken)
+        public Task<IDisposable> WaitAsync()
         {
-            var wait = _semaphore.WaitAsync(cancellationToken);
-            return wait.IsCompleted ?
-                        _releaser :
-                        wait.ContinueWith((_, state) => (IDisposable)state,
-                            _releaser.Result, cancellationToken,
-                            TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            return WaitAsync(CancellationToken.None);
+        }
+
+        public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
+        {
+            var task = _semaphore.WaitAsync(cancellationToken);
+            if (task.IsCompleted)
+            {
+                return _releaser;
+            }
+
+            return task.ContinueWith(
+                (_, state) => (IDisposable)state, 
+                _releaser.Result, 
+                cancellationToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
         public void Dispose()

@@ -2,26 +2,36 @@
 using System.Buffers;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Packets;
-using MQTTnet.Serializer;
 
 namespace MQTTnet.AspNetCore
 {
     public static class ReaderExtensions
     {
-        public static bool TryDeserialize(this IMqttPacketSerializer serializer, in ReadOnlySequence<byte> input, out MqttBasePacket packet, out SequencePosition consumed, out SequencePosition observed)
+        public static bool TryDecode(this MqttPacketFormatterAdapter formatter, 
+            SpanBasedMqttPacketBodyReader reader, 
+            in ReadOnlySequence<byte> input, 
+            out MqttBasePacket packet, 
+            out SequencePosition consumed, 
+            out SequencePosition observed,
+            out int bytesRead)
         {
+            if (formatter == null) throw new ArgumentNullException(nameof(formatter));
+
             packet = null;
             consumed = input.Start;
             observed = input.End;
+            bytesRead = 0;
             var copy = input;
+
             if (copy.Length < 2)
             {
                 return false;
             }
 
             var fixedheader = copy.First.Span[0];
-            if (!TryReadBodyLength(ref copy, out var bodyLength))
+            if (!TryReadBodyLength(ref copy, out int headerLength, out var bodyLength))
             {
                 return false;
             }
@@ -32,34 +42,45 @@ namespace MQTTnet.AspNetCore
             }
 
             var bodySlice = copy.Slice(0, bodyLength);
-            var buffer = bodySlice.GetArray();
-            packet = serializer.Deserialize(new ReceivedMqttPacket(fixedheader, new MqttPacketBodyReader(buffer, 0, buffer.Length)));
+            var buffer = bodySlice.GetMemory();
+            reader.SetBuffer(buffer);
+
+            var receivedMqttPacket = new ReceivedMqttPacket(fixedheader, reader, buffer.Length + 2);
+
+            if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
+            {
+                formatter.DetectProtocolVersion(receivedMqttPacket);
+            }
+
+            packet = formatter.Decode(receivedMqttPacket);
             consumed = bodySlice.End;
             observed = bodySlice.End;
+            bytesRead = headerLength + bodyLength;
             return true;
         }
 
-        private static byte[] GetArray(this in ReadOnlySequence<byte> input)
+        private static ReadOnlyMemory<byte> GetMemory(this in ReadOnlySequence<byte> input)
         {
             if (input.IsSingleSegment)
             {
-                return input.First.Span.ToArray();
+                return input.First;
             }
 
             // Should be rare
             return input.ToArray();
         }
 
-        private static bool TryReadBodyLength(ref ReadOnlySequence<byte> input, out int result)
+        private static bool TryReadBodyLength(ref ReadOnlySequence<byte> input, out int headerLength, out int bodyLength)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
             var multiplier = 1;
             var value = 0;
             byte encodedByte;
             var index = 1;
-            result = 0;
-
-            var temp = input.Slice(0, Math.Min(5, input.Length)).GetArray();
+            headerLength = 0;
+            bodyLength = 0;
+            
+            var temp = input.Slice(0, Math.Min(5, input.Length)).GetMemory();
 
             do
             {
@@ -67,13 +88,13 @@ namespace MQTTnet.AspNetCore
                 {
                     return false;
                 }
-                encodedByte = temp[index];
+                encodedByte = temp.Span[index];
                 index++;
 
                 value += (byte)(encodedByte & 127) * multiplier;
                 if (multiplier > 128 * 128 * 128)
                 {
-                    throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", temp.AsSpan(1, index).ToArray())}).");
+                    throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", temp.Slice(1, index).ToArray())}).");
                 }
 
                 multiplier *= 128;
@@ -81,7 +102,8 @@ namespace MQTTnet.AspNetCore
 
             input = input.Slice(index);
 
-            result = value;
+            headerLength = index;
+            bodyLength = value;
             return true;
         }
     }

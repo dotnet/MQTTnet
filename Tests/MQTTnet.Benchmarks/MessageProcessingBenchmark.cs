@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQTTnet.Client;
+using MQTTnet.Client.Options;
 using MQTTnet.Server;
 
 namespace MQTTnet.Benchmarks

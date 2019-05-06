@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
@@ -23,7 +24,7 @@ namespace MQTTnet.TestApp.NetCore
             {
                 var options = new MqttServerOptions
                 {
-                    ConnectionValidator = p =>
+                    ConnectionValidator = new MqttServerConnectionValidatorDelegate(p =>
                     {
                         if (p.ClientId == "SpecialClient")
                         {
@@ -32,11 +33,11 @@ namespace MQTTnet.TestApp.NetCore
                                 p.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
                             }
                         }
-                    },
+                    }),
 
                     Storage = new RetainedMessageHandler(),
 
-                    ApplicationMessageInterceptor = context =>
+                    ApplicationMessageInterceptor = new MqttServerApplicationMessageInterceptorDelegate(context =>
                     {
                         if (MqttTopicFilterComparer.IsMatch(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#"))
                         {
@@ -50,8 +51,9 @@ namespace MQTTnet.TestApp.NetCore
                             context.AcceptPublish = false;
                             context.CloseConnection = true;
                         }
-                    },
-                    SubscriptionInterceptor = context =>
+                    }),
+
+                    SubscriptionInterceptor = new MqttServerSubscriptionInterceptorDelegate(context =>
                     {
                         if (context.TopicFilter.Topic.StartsWith("admin/foo/bar") && context.ClientId != "theAdmin")
                         {
@@ -63,7 +65,7 @@ namespace MQTTnet.TestApp.NetCore
                             context.AcceptSubscription = false;
                             context.CloseConnection = true;
                         }
-                    }
+                    })
                 };
 
                 // Extend the timestamp for all messages from clients.
@@ -77,12 +79,12 @@ namespace MQTTnet.TestApp.NetCore
 
                 var mqttServer = new MqttFactory().CreateMqttServer();
 
-                mqttServer.ApplicationMessageReceived += (s, e) =>
+                mqttServer.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     MqttNetConsoleLogger.PrintToConsole(
                         $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0])}'",
                         ConsoleColor.Magenta);
-                };
+                });
 
                 //options.ApplicationMessageInterceptor = c =>
                 //{
@@ -106,10 +108,10 @@ namespace MQTTnet.TestApp.NetCore
                 //    }
                 //};
 
-                mqttServer.ClientDisconnected += (s, e) =>
+                mqttServer.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(e =>
                 {
                     Console.Write("Client disconnected event fired.");
-                };
+                });
 
                 await mqttServer.StartAsync(options);
 

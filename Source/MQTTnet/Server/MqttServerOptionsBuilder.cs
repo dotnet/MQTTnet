@@ -75,6 +75,12 @@ namespace MQTTnet.Server
             return this;
         }
 
+        public MqttServerOptionsBuilder WithEncryptedEndpointBoundIPV6Address(IPAddress value)
+        {
+            _options.TlsEndpointOptions.BoundInterNetworkV6Address = value;
+            return this;
+        }
+
         public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value)
         {
             _options.TlsEndpointOptions.Certificate = value;
@@ -99,27 +105,54 @@ namespace MQTTnet.Server
             return this;
         }
 
-        public MqttServerOptionsBuilder WithConnectionValidator(Action<MqttConnectionValidatorContext> value)
+        public MqttServerOptionsBuilder WithConnectionValidator(IMqttServerConnectionValidator value)
         {
             _options.ConnectionValidator = value;
             return this;
         }
 
-        public MqttServerOptionsBuilder WithApplicationMessageInterceptor(Action<MqttApplicationMessageInterceptorContext> value)
+        public MqttServerOptionsBuilder WithConnectionValidator(Action<MqttConnectionValidatorContext> value)
+        {
+            _options.ConnectionValidator = new MqttServerConnectionValidatorDelegate(value);
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithApplicationMessageInterceptor(IMqttServerApplicationMessageInterceptor value)
         {
             _options.ApplicationMessageInterceptor = value;
             return this;
         }
 
-        public MqttServerOptionsBuilder WithSubscriptionInterceptor(Action<MqttSubscriptionInterceptorContext> value)
+        public MqttServerOptionsBuilder WithApplicationMessageInterceptor(Action<MqttApplicationMessageInterceptorContext> value)
+        {
+            _options.ApplicationMessageInterceptor = new MqttServerApplicationMessageInterceptorDelegate(value);
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithSubscriptionInterceptor(IMqttServerSubscriptionInterceptor value)
         {
             _options.SubscriptionInterceptor = value;
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithSubscriptionInterceptor(Action<MqttSubscriptionInterceptorContext> value)
+        {
+            _options.SubscriptionInterceptor = new MqttServerSubscriptionInterceptorDelegate(value);
             return this;
         }
 
         public MqttServerOptionsBuilder WithPersistentSessions()
         {
             _options.EnablePersistentSessions = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Gets or sets the client ID which is used when publishing messages from the server directly.
+        /// </summary>
+        public MqttServerOptionsBuilder WithClientId(string value)
+        {
+            _options.ClientId = value;
             return this;
         }
 

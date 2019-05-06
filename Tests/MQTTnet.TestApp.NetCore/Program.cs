@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 using Newtonsoft.Json;
@@ -24,6 +27,9 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("7 = Client flow test");
             Console.WriteLine("8 = Start performance test (client only)");
             Console.WriteLine("9 = Start server (no trace)");
+            Console.WriteLine("a = Start QoS 2 benchmark");
+            Console.WriteLine("b = Start QoS 1 benchmark");
+            Console.WriteLine("c = Start QoS 0 benchmark");
 
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.KeyChar == '1')
@@ -65,60 +71,20 @@ namespace MQTTnet.TestApp.NetCore
                 ServerTest.RunEmptyServer();
                 return;
             }
+            else if (pressedKey.KeyChar == 'a')
+            {
+                Task.Run(PerformanceTest.RunQoS2Test);
+            }
+            else if (pressedKey.KeyChar == 'b')
+            {
+                Task.Run(PerformanceTest.RunQoS1Test);
+            }
+            else if (pressedKey.KeyChar == 'c')
+            {
+                Task.Run(PerformanceTest.RunQoS0Test);
+            }
 
             Thread.Sleep(Timeout.Infinite);
-        }
-
-        // This code is used at the Wiki on GitHub!
-        // ReSharper disable once UnusedMember.Local
-        private static async void WikiCode()
-        {
-            {
-                var client = new MqttFactory().CreateMqttClient();
-
-                var options = new MqttClientOptionsBuilder()
-                    .WithClientId("Client1")
-                    .WithTcpServer("broker.hivemq.com")
-                    .WithCredentials("bud", "%spencer%")
-                    .WithTls()
-                    .Build();
-
-                await client.ConnectAsync(options);
-
-                var message = new MqttApplicationMessageBuilder()
-                    .WithTopic("MyTopic")
-                    .WithPayload("Hello World")
-                    .WithExactlyOnceQoS()
-                    .WithRetainFlag()
-                    .Build();
-
-                await client.PublishAsync(message);
-            }
-
-            {
-                var factory = new MqttFactory();
-                var client = factory.CreateMqttClient();
-            }
-
-            {
-                // Write all trace messages to the console window.
-                MqttNetGlobalLogger.LogMessagePublished += (s, e) =>
-                {
-                    var trace = $">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}";
-                    if (e.TraceMessage.Exception != null)
-                    {
-                        trace += Environment.NewLine + e.TraceMessage.Exception.ToString();
-                    }
-
-                    Console.WriteLine(trace);
-                };
-            }
-
-            {
-                // Use a custom log ID for the logger.
-                var factory = new MqttFactory();
-                var mqttClient = factory.CreateMqttClient(new MqttNetLogger("MyCustomId"));
-            }
         }
     }
 
@@ -152,6 +118,24 @@ namespace MQTTnet.TestApp.NetCore
             }
 
             return Task.FromResult(retainedMessages);
+        }
+    }
+
+    public class WikiCode
+    {
+        public void Code()
+        {
+            //Validate certificate.
+            var options = new MqttClientOptionsBuilder()
+                .WithTls(new MqttClientOptionsBuilderTlsParameters
+                {
+                    CertificateValidationCallback = (X509Certificate x, X509Chain y, SslPolicyErrors z, IMqttClientOptions o) =>
+                        {
+                            // TODO: Check conditions of certificate by using above parameters.
+                            return true;
+                        }
+                })
+                .Build();
         }
     }
 }

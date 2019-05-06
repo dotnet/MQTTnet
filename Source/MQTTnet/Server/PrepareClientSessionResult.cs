@@ -4,6 +4,6 @@
     {
         public bool IsExistingSession { get; set; }
 
-        public MqttClientSession Session { get; set; }
+        public MqttClientConnection Session { get; set; }
     }
 }

@@ -7,7 +7,10 @@ namespace MQTTnet.Formatter.V5
 {
     public class MqttV500PropertiesWriter
     {
+        // TODO: Consider lazy init on first write to avoid useless allocations.
         private readonly MqttPacketWriter _packetWriter = new MqttPacketWriter();
+
+        public int Length => _packetWriter.Length;
 
         public void WriteUserProperties(List<MqttUserProperty> userProperties)
         {

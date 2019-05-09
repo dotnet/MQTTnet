@@ -61,6 +61,8 @@ namespace MQTTnet.Client
 
             ThrowIfConnected("It is not allowed to connect with a server after the connection is established.");
 
+            MqttClientAuthenticateResult authenticateResult = null;
+
             try
             {
                 Options = options;
@@ -81,7 +83,7 @@ namespace MQTTnet.Client
 
                 _packetReceiverTask = Task.Run(() => TryReceivePacketsAsync(backgroundCancellationToken), backgroundCancellationToken);
 
-                var authenticateResult = await AuthenticateAsync(adapter, options.WillMessage, cancellationToken).ConfigureAwait(false);
+                authenticateResult = await AuthenticateAsync(adapter, options.WillMessage, cancellationToken).ConfigureAwait(false);
 
                 _sendTracker.Restart();
 
@@ -108,7 +110,7 @@ namespace MQTTnet.Client
 
                 if (!DisconnectIsPending())
                 {
-                    await DisconnectInternalAsync(null, exception).ConfigureAwait(false);
+                    await DisconnectInternalAsync(null, exception, authenticateResult).ConfigureAwait(false);
                 }
 
                 throw;
@@ -131,7 +133,7 @@ namespace MQTTnet.Client
             {
                 if (!DisconnectIsPending())
                 {
-                    await DisconnectInternalAsync(null, null).ConfigureAwait(false);
+                    await DisconnectInternalAsync(null, null, null).ConfigureAwait(false);
                 }
             }
         }
@@ -232,7 +234,7 @@ namespace MQTTnet.Client
             if (IsConnected) throw new MqttProtocolViolationException(message);
         }
 
-        private async Task DisconnectInternalAsync(Task sender, Exception exception)
+        private async Task DisconnectInternalAsync(Task sender, Exception exception, MqttClientAuthenticateResult authenticateResult)
         {
             var clientWasConnected = IsConnected;
 
@@ -267,7 +269,7 @@ namespace MQTTnet.Client
                 var disconnectedHandler = DisconnectedHandler;
                 if (disconnectedHandler != null)
                 {
-                    await disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception)).ConfigureAwait(false);
+                    await disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult)).ConfigureAwait(false);
                 }
             }
         }
@@ -376,7 +378,7 @@ namespace MQTTnet.Client
 
                 if (!DisconnectIsPending())
                 {
-                    await DisconnectInternalAsync(_keepAlivePacketsSenderTask, exception).ConfigureAwait(false);
+                    await DisconnectInternalAsync(_keepAlivePacketsSenderTask, exception, null).ConfigureAwait(false);
                 }
             }
             finally
@@ -404,7 +406,7 @@ namespace MQTTnet.Client
                     {
                         if (!DisconnectIsPending())
                         {
-                            await DisconnectInternalAsync(_packetReceiverTask, null).ConfigureAwait(false);
+                            await DisconnectInternalAsync(_packetReceiverTask, null, null).ConfigureAwait(false);
                         }
 
                         return;
@@ -436,7 +438,7 @@ namespace MQTTnet.Client
 
                 if (!DisconnectIsPending())
                 {
-                    await DisconnectInternalAsync(_packetReceiverTask, exception).ConfigureAwait(false);
+                    await DisconnectInternalAsync(_packetReceiverTask, exception, null).ConfigureAwait(false);
                 }
             }
             finally
@@ -497,7 +499,7 @@ namespace MQTTnet.Client
 
                 if (!DisconnectIsPending())
                 {
-                    await DisconnectInternalAsync(_packetReceiverTask, exception).ConfigureAwait(false);
+                    await DisconnectInternalAsync(_packetReceiverTask, exception, null).ConfigureAwait(false);
                 }
             }
         }

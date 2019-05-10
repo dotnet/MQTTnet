@@ -136,6 +136,16 @@ namespace MQTTnet.Client.Options
             return this;
         }
 
+        public MqttClientOptionsBuilder WithTcpServer(Action<MqttClientTcpOptions> optionsBuilder)
+        {
+            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
+
+            _tcpOptions = new MqttClientTcpOptions();
+            optionsBuilder.Invoke(_tcpOptions);
+
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithProxy(string address, string username = null, string password = null, string domain = null, bool bypassOnLocal = false, string[] bypassList = null)
         {
             _proxyOptions = new MqttClientWebSocketProxyOptions
@@ -151,6 +161,15 @@ namespace MQTTnet.Client.Options
             return this;
         }
 
+        public MqttClientOptionsBuilder WithProxy(Action<MqttClientWebSocketProxyOptions> optionsBuilder)
+        {
+            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
+
+            _proxyOptions = new MqttClientWebSocketProxyOptions();
+            optionsBuilder(_proxyOptions);
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithWebSocketServer(string uri, MqttClientOptionsBuilderWebSocketParameters parameters = null)
         {
             _webSocketOptions = new MqttClientWebSocketOptions
@@ -163,15 +182,34 @@ namespace MQTTnet.Client.Options
             return this;
         }
 
+        public MqttClientOptionsBuilder WithWebSocketServer(Action<MqttClientWebSocketOptions> optionsBuilder)
+        {
+            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
+
+            _webSocketOptions = new MqttClientWebSocketOptions();
+            optionsBuilder.Invoke(_webSocketOptions);
+
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithTls(MqttClientOptionsBuilderTlsParameters parameters)
         {
-            _tlsParameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
+            _tlsParameters = parameters;
             return this;
         }
 
         public MqttClientOptionsBuilder WithTls()
         {
             return WithTls(new MqttClientOptionsBuilderTlsParameters { UseTls = true });
+        }
+
+        public MqttClientOptionsBuilder WithTls(Action<MqttClientOptionsBuilderTlsParameters> optionsBuilder)
+        {
+            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
+
+            _tlsParameters = new MqttClientOptionsBuilderTlsParameters();
+            optionsBuilder(_tlsParameters);
+            return this;
         }
 
         public IMqttClientOptions Build()

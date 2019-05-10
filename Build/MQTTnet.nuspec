@@ -14,6 +14,7 @@
 * [Core] Fixed missing properties from PUBLISH packet in _MqttApplicationMessage_ (thanks to @pcbing).
 * [Core] Fixed wrong encoding of PUBREL and PUBCOMP packets for MQTTv5 (thanks to @perphilipp).
 * [Client] Added the authentication result to the disconnected handler (only set when connecting failed).
+* [Client] Added new overloads for _MqttClientOptionsBuilder_.
 * [Server] Fixed a bug which returns wrong flag for existing session in CONNACK packet (thanks to @avengerstark).
 * [nuget] .NET Framework builds are now using 4.5.2 or 4.6.1 builds instead of netstandard 2.0.
     </releaseNotes>

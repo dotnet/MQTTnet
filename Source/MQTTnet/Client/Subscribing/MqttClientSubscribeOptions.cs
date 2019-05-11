@@ -7,6 +7,8 @@ namespace MQTTnet.Client.Subscribing
     {
         public List<TopicFilter> TopicFilters { get; set; } = new List<TopicFilter>();
 
+        public uint? SubscriptionIdentifier { get; set; }
+
         public List<MqttUserProperty> UserProperties { get; set; } = new List<MqttUserProperty>();
     }
 }

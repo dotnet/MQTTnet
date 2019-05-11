@@ -10,12 +10,47 @@ using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.MQTTv5
 {
     [TestClass]
     public class Client_Tests
     {
+        [TestMethod]
+        public async Task Connect_With_New_Mqtt_Features()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+
+                // This test can be also executed against "broker.hivemq.com" to validate package format.
+                var client = await testEnvironment.ConnectClientAsync(
+                    new MqttClientOptionsBuilder()
+                        //.WithTcpServer("broker.hivemq.com")
+                        .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
+                        .WithProtocolVersion(MqttProtocolVersion.V500)
+                        .WithTopicAliasMaximum(20)
+                        .WithReceiveMaximum(20)
+                        .WithWillMessage(new MqttApplicationMessageBuilder().WithTopic("abc").Build())
+                        .WithWillDelayInterval(20)
+                        .Build());
+
+                await client.SubscribeAsync("a");
+
+                await client.PublishAsync(new MqttApplicationMessageBuilder()
+                    .WithTopic("a")
+                    .WithPayload("x")
+                    .WithUserProperty("a", "1")
+                    .WithUserProperty("b", "2")
+                    .WithPayloadFormatIndicator(MqttPayloadFormatIndicator.CharacterData)
+                    .WithAtLeastOnceQoS()
+                    .Build());
+
+                await Task.Delay(500);
+            }
+        }
+
         [TestMethod]
         public async Task Connect()
         {
@@ -63,7 +98,16 @@ namespace MQTTnet.Tests.MQTTv5
                 await server.StartAsync(new MqttServerOptions());
 
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
-                var result = await client.SubscribeAsync("a", MqttQualityOfServiceLevel.AtLeastOnce);
+
+                var result = await client.SubscribeAsync(new MqttClientSubscribeOptions()
+                {
+                    SubscriptionIdentifier = 1,
+                    TopicFilters = new List<TopicFilter>
+                    {
+                        new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}
+                    }
+                });
+
                 await client.DisconnectAsync();
 
                 Assert.AreEqual(1, result.Items.Count);

@@ -19,16 +19,12 @@ namespace MQTTnet.Formatter.V5
                 return;
             }
 
-            var propertyWriter = new MqttPacketWriter();
             foreach (var property in userProperties)
             {
-                propertyWriter.WriteWithLengthPrefix(property.Name);
-                propertyWriter.WriteWithLengthPrefix(property.Value);
+                _packetWriter.Write((byte)MqttPropertyId.UserProperty);
+                _packetWriter.WriteWithLengthPrefix(property.Name);
+                _packetWriter.WriteWithLengthPrefix(property.Value);
             }
-
-            _packetWriter.Write((byte)MqttPropertyId.UserProperty);
-            _packetWriter.WriteVariableLengthInteger((uint)propertyWriter.Length);
-            _packetWriter.Write(propertyWriter);
         }
 
         public void WriteCorrelationData(byte[] value)
@@ -66,7 +62,7 @@ namespace MQTTnet.Formatter.V5
             Write(MqttPropertyId.AuthenticationMethod, value);
         }
 
-        public void WriteToPacket(IMqttPacketWriter packetWriter)
+        public void WriteTo(IMqttPacketWriter packetWriter)
         {
             if (packetWriter == null) throw new ArgumentNullException(nameof(packetWriter));
 
@@ -121,7 +117,7 @@ namespace MQTTnet.Formatter.V5
 
         public void WriteReceiveMaximum(ushort? value)
         {
-            Write(MqttPropertyId.RequestResponseInformation, value);
+            Write(MqttPropertyId.ReceiveMaximum, value);
         }
 
         public void WriteMaximumPacketSize(uint? value)
@@ -136,7 +132,7 @@ namespace MQTTnet.Formatter.V5
 
         public void WriteAssignedClientIdentifier(string value)
         {
-            Write(MqttPropertyId.AssignedClientIdentifer, value);
+            Write(MqttPropertyId.AssignedClientIdentifier, value);
         }
 
         public void WriteTopicAliasMaximum(ushort? value)
@@ -178,6 +174,17 @@ namespace MQTTnet.Formatter.V5
 
             _packetWriter.Write((byte)id);
             _packetWriter.Write(value.Value ? (byte)0x1 : (byte)0x0);
+        }
+
+        private void Write(MqttPropertyId id, byte? value)
+        {
+            if (!value.HasValue)
+            {
+                return;
+            }
+
+            _packetWriter.Write((byte)id);
+            _packetWriter.Write(value.Value);
         }
 
         private void Write(MqttPropertyId id, ushort? value)

@@ -158,6 +158,7 @@ namespace MQTTnet.Formatter.V5
             };
 
             packet.TopicFilters.AddRange(options.TopicFilters);
+            packet.Properties.SubscriptionIdentifier = options.SubscriptionIdentifier;
             packet.Properties.UserProperties.AddRange(options.UserProperties);
 
             return packet;

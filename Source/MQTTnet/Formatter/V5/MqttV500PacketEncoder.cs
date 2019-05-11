@@ -127,24 +127,38 @@ namespace MQTTnet.Formatter.V5
             var propertiesWriter = new MqttV500PropertiesWriter();
             if (packet.Properties != null)
             {
-                propertiesWriter.WriteWillDelayInterval(packet.Properties.WillDelayInterval);
                 propertiesWriter.WriteSessionExpiryInterval(packet.Properties.SessionExpiryInterval);
                 propertiesWriter.WriteAuthenticationMethod(packet.Properties.AuthenticationMethod);
                 propertiesWriter.WriteAuthenticationData(packet.Properties.AuthenticationData);
                 propertiesWriter.WriteRequestProblemInformation(packet.Properties.RequestProblemInformation);
                 propertiesWriter.WriteRequestResponseInformation(packet.Properties.RequestResponseInformation);
                 propertiesWriter.WriteReceiveMaximum(packet.Properties.ReceiveMaximum);
-                propertiesWriter.WriteTopicAlias(packet.Properties.TopicAliasMaximum);
+                propertiesWriter.WriteTopicAliasMaximum(packet.Properties.TopicAliasMaximum);
                 propertiesWriter.WriteMaximumPacketSize(packet.Properties.MaximumPacketSize);
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            propertiesWriter.WriteToPacket(packetWriter);
+            propertiesWriter.WriteTo(packetWriter);
 
             packetWriter.WriteWithLengthPrefix(packet.ClientId);
-
+            
             if (packet.WillMessage != null)
             {
+                var willPropertiesWriter = new MqttV500PropertiesWriter();
+                willPropertiesWriter.WritePayloadFormatIndicator(packet.WillMessage.PayloadFormatIndicator);
+                willPropertiesWriter.WriteMessageExpiryInterval(packet.WillMessage.MessageExpiryInterval);
+                willPropertiesWriter.WriteTopicAlias(packet.WillMessage.TopicAlias);
+                willPropertiesWriter.WriteResponseTopic(packet.WillMessage.ResponseTopic);
+                willPropertiesWriter.WriteCorrelationData(packet.WillMessage.CorrelationData);
+                willPropertiesWriter.WriteSubscriptionIdentifier(packet.WillMessage.SubscriptionIdentifier);
+                willPropertiesWriter.WriteContentType(packet.WillMessage.ContentType);
+                willPropertiesWriter.WriteUserProperties(packet.WillMessage.UserProperties);
+                
+                // This is a special case!
+                willPropertiesWriter.WriteWillDelayInterval(packet.Properties?.WillDelayInterval);
+
+                willPropertiesWriter.WriteTo(packetWriter);
+
                 packetWriter.WriteWithLengthPrefix(packet.WillMessage.Topic);
                 packetWriter.WriteWithLengthPrefix(packet.WillMessage.Payload);
             }
@@ -202,7 +216,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            propertiesWriter.WriteToPacket(packetWriter);
+            propertiesWriter.WriteTo(packetWriter);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }
@@ -249,7 +263,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            propertiesWriter.WriteToPacket(packetWriter);
+            propertiesWriter.WriteTo(packetWriter);
 
             if (packet.Payload?.Length > 0)
             {
@@ -300,7 +314,7 @@ namespace MQTTnet.Formatter.V5
             if (packetWriter.Length > 0 || packet.ReasonCode.Value != MqttPubAckReasonCode.Success)
             {
                 packetWriter.Write((byte)packet.ReasonCode.Value);
-                propertiesWriter.WriteToPacket(packetWriter);
+                propertiesWriter.WriteTo(packetWriter);
             }
             
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubAck);
@@ -328,7 +342,7 @@ namespace MQTTnet.Formatter.V5
             if (packetWriter.Length > 0 || packet.ReasonCode.Value != MqttPubRecReasonCode.Success)
             {
                 packetWriter.Write((byte)packet.ReasonCode.Value);
-                propertiesWriter.WriteToPacket(packetWriter);
+                propertiesWriter.WriteTo(packetWriter);
             }
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRec);
@@ -355,7 +369,7 @@ namespace MQTTnet.Formatter.V5
             if (propertiesWriter.Length > 0 || packet.ReasonCode.Value != MqttPubRelReasonCode.Success)
             {
                 packetWriter.Write((byte)packet.ReasonCode.Value);
-                propertiesWriter.WriteToPacket(packetWriter);
+                propertiesWriter.WriteTo(packetWriter);
             }
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRel, 0x02);
@@ -382,7 +396,7 @@ namespace MQTTnet.Formatter.V5
             if (propertiesWriter.Length > 0 || packet.ReasonCode.Value != MqttPubCompReasonCode.Success)
             {
                 packetWriter.Write((byte)packet.ReasonCode.Value);
-                propertiesWriter.WriteToPacket(packetWriter);
+                propertiesWriter.WriteTo(packetWriter);
             }
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubComp);
@@ -403,7 +417,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            propertiesWriter.WriteToPacket(packetWriter);
+            propertiesWriter.WriteTo(packetWriter);
 
             if (packet.TopicFilters?.Count > 0)
             {
@@ -450,7 +464,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            propertiesWriter.WriteToPacket(packetWriter);
+            propertiesWriter.WriteTo(packetWriter);
 
             foreach (var reasonCode in packet.ReasonCodes)
             {
@@ -474,7 +488,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            propertiesWriter.WriteToPacket(packetWriter);
+            propertiesWriter.WriteTo(packetWriter);
 
             foreach (var topicFilter in packet.TopicFilters)
             {
@@ -499,7 +513,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            propertiesWriter.WriteToPacket(packetWriter);
+            propertiesWriter.WriteTo(packetWriter);
 
             foreach (var reasonCode in packet.ReasonCodes)
             {
@@ -527,7 +541,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            propertiesWriter.WriteToPacket(packetWriter);
+            propertiesWriter.WriteTo(packetWriter);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Disconnect);
         }
@@ -555,7 +569,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            propertiesWriter.WriteToPacket(packetWriter);
+            propertiesWriter.WriteTo(packetWriter);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Auth);
         }

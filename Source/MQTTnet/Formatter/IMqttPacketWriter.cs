@@ -8,7 +8,6 @@
         void Write(byte returnCode);
         void WriteWithLengthPrefix(byte[] payload);
         void Write(ushort keepAlivePeriod);
-
         void Write(IMqttPacketWriter propertyWriter);
         void WriteVariableLengthInteger(uint length);
         void Write(byte[] payload, int v, int length);

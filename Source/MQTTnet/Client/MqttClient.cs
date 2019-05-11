@@ -469,6 +469,9 @@ namespace MQTTnet.Client
                 }
                 else if (packet is MqttDisconnectPacket)
                 {
+                    // Also dispatch disconnect to waiting threads to generate a proper exception.
+                    _packetDispatcher.Dispatch(packet);
+
                     await DisconnectAsync(null, cancellationToken).ConfigureAwait(false);
                 }
                 else

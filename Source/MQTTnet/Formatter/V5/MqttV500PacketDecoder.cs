@@ -91,10 +91,6 @@ namespace MQTTnet.Formatter.V5
                 {
                     packet.Properties.AuthenticationMethod = propertiesReader.ReadAuthenticationMethod();
                 }
-                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.WillDelayInterval)
-                {
-                    packet.Properties.WillDelayInterval = propertiesReader.ReadWillDelayInterval();
-                }
                 else if (propertiesReader.CurrentPropertyId == MqttPropertyId.AuthenticationData)
                 {
                     packet.Properties.AuthenticationData = propertiesReader.ReadAuthenticationData();
@@ -125,7 +121,7 @@ namespace MQTTnet.Formatter.V5
                 }
                 else
                 {
-                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttConnAckPacket));
+                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttConnectPacket));
                 }
             }
 
@@ -133,6 +129,53 @@ namespace MQTTnet.Formatter.V5
 
             if (packet.WillMessage != null)
             {
+                var willPropertiesReader = new MqttV500PropertiesReader(body);
+
+                while (willPropertiesReader.MoveNext())
+                {
+                    if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.PayloadFormatIndicator)
+                    {
+                        packet.WillMessage.PayloadFormatIndicator = propertiesReader.ReadPayloadFormatIndicator();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.MessageExpiryInterval)
+                    {
+                        packet.WillMessage.MessageExpiryInterval = propertiesReader.ReadMessageExpiryInterval();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.TopicAlias)
+                    {
+                        packet.WillMessage.TopicAlias = propertiesReader.ReadTopicAlias();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.ResponseTopic)
+                    {
+                        packet.WillMessage.ResponseTopic = propertiesReader.ReadResponseTopic();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.CorrelationData)
+                    {
+                        packet.WillMessage.CorrelationData = propertiesReader.ReadCorrelationData();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.SubscriptionIdentifier)
+                    {
+                        packet.WillMessage.SubscriptionIdentifier = propertiesReader.ReadSubscriptionIdentifier();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.ContentType)
+                    {
+                        packet.WillMessage.ContentType = propertiesReader.ReadContentType();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.WillDelayInterval)
+                    {
+                        // This is a special case!
+                        packet.Properties.WillDelayInterval = propertiesReader.ReadWillDelayInterval();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.UserProperty)
+                    {
+                        propertiesReader.FillUserProperties(packet.Properties.UserProperties);
+                    }
+                    else
+                    {
+                        propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttPublishPacket));
+                    }
+                }
+
                 packet.WillMessage.Topic = body.ReadStringWithLengthPrefix();
                 packet.WillMessage.Payload = body.ReadWithLengthPrefix();
             }
@@ -186,7 +229,7 @@ namespace MQTTnet.Formatter.V5
                 {
                     packet.Properties.ReceiveMaximum = propertiesReader.ReadReceiveMaximum();
                 }
-                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.AssignedClientIdentifer)
+                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.AssignedClientIdentifier)
                 {
                     packet.Properties.AssignedClientIdentifier = propertiesReader.ReadAssignedClientIdentifier();
                 }

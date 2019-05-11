@@ -63,6 +63,13 @@ namespace MQTTnet.Formatter.V5
                 Payload = publishPacket.Payload,
                 QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
                 Retain = publishPacket.Retain,
+                ResponseTopic = publishPacket.Properties?.ResponseTopic,
+                ContentType = publishPacket.Properties?.ContentType,
+                CorrelationData = publishPacket.Properties?.CorrelationData,
+                MessageExpiryInterval = publishPacket.Properties?.MessageExpiryInterval,
+                SubscriptionIdentifier = publishPacket.Properties?.SubscriptionIdentifier,
+                TopicAlias = publishPacket.Properties?.TopicAlias,
+                PayloadFormatIndicator = publishPacket.Properties?.PayloadFormatIndicator,
                 UserProperties = publishPacket.Properties?.UserProperties ?? new List<MqttUserProperty>()
             };
         }

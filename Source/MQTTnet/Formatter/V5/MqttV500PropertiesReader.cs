@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -47,20 +46,10 @@ namespace MQTTnet.Formatter.V5
         {
             if (userProperties == null) throw new ArgumentNullException(nameof(userProperties));
 
-            var userPropertiesLength = _body.ReadVariableLengthInteger();
-            if (userPropertiesLength == 0)
-            {
-                return;
-            }
+            var name = _body.ReadStringWithLengthPrefix();
+            var value = _body.ReadStringWithLengthPrefix();
 
-            var targetPosition = _body.Offset + userPropertiesLength;
-            while (_body.Offset < targetPosition)
-            {
-                var name = _body.ReadStringWithLengthPrefix();
-                var value = _body.ReadStringWithLengthPrefix();
-
-                userProperties.Add(new MqttUserProperty(name, value));
-            }
+            userProperties.Add(new MqttUserProperty(name, value));
         }
 
         public string ReadReasonString()

@@ -23,6 +23,16 @@ namespace MQTTnet.PacketDispatcher
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
+            if (packet is MqttDisconnectPacket disconnectPacket)
+            {
+                foreach (var packetAwaiter in _packetAwaiters)
+                {
+                    packetAwaiter.Value.Fail(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));
+                }
+
+                return;
+            }
+
             ushort identifier = 0;
             if (packet is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier.HasValue)
             {

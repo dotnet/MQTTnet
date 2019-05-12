@@ -150,7 +150,7 @@ namespace MQTTnet.Formatter.V5
                 willPropertiesWriter.WriteTopicAlias(packet.WillMessage.TopicAlias);
                 willPropertiesWriter.WriteResponseTopic(packet.WillMessage.ResponseTopic);
                 willPropertiesWriter.WriteCorrelationData(packet.WillMessage.CorrelationData);
-                willPropertiesWriter.WriteSubscriptionIdentifier(packet.WillMessage.SubscriptionIdentifier);
+                willPropertiesWriter.WriteSubscriptionIdentifiers(packet.WillMessage.SubscriptionIdentifiers);
                 willPropertiesWriter.WriteContentType(packet.WillMessage.ContentType);
                 willPropertiesWriter.WriteUserProperties(packet.WillMessage.UserProperties);
                 
@@ -258,7 +258,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteTopicAlias(packet.Properties.TopicAlias);
                 propertiesWriter.WriteResponseTopic(packet.Properties.ResponseTopic);
                 propertiesWriter.WriteCorrelationData(packet.Properties.CorrelationData);
-                propertiesWriter.WriteSubscriptionIdentifier(packet.Properties.SubscriptionIdentifier);
+                propertiesWriter.WriteSubscriptionIdentifiers(packet.Properties.SubscriptionIdentifiers);
                 propertiesWriter.WriteContentType(packet.Properties.ContentType);
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }

@@ -42,7 +42,7 @@ namespace MQTTnet.Formatter.V5
             return true;
         }
 
-        public void FillUserProperties(List<MqttUserProperty> userProperties)
+        public void AddUserPropertyTo(List<MqttUserProperty> userProperties)
         {
             if (userProperties == null) throw new ArgumentNullException(nameof(userProperties));
 
@@ -67,17 +67,17 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadWithLengthPrefix();
         }
 
-        public bool? ReadRetainAvailable()
+        public bool ReadRetainAvailable()
         {
             return _body.ReadBoolean();
         }
 
-        public uint? ReadSessionExpiryInterval()
+        public uint ReadSessionExpiryInterval()
         {
             return _body.ReadFourByteInteger();
         }
 
-        public ushort? ReadReceiveMaximum()
+        public ushort ReadReceiveMaximum()
         {
             return _body.ReadTwoByteInteger();
         }
@@ -92,17 +92,17 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadStringWithLengthPrefix();
         }
 
-        public ushort? ReadTopicAliasMaximum()
+        public ushort ReadTopicAliasMaximum()
         {
             return _body.ReadTwoByteInteger();
         }
 
-        public uint? ReadMaximumPacketSize()
+        public uint ReadMaximumPacketSize()
         {
             return _body.ReadFourByteInteger();
         }
 
-        public ushort? ReadServerKeepAlive()
+        public ushort ReadServerKeepAlive()
         {
             return _body.ReadTwoByteInteger();
         }
@@ -112,22 +112,22 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadStringWithLengthPrefix();
         }
 
-        public bool? ReadSharedSubscriptionAvailable()
+        public bool ReadSharedSubscriptionAvailable()
         {
             return _body.ReadBoolean();
         }
 
-        public bool? ReadSubscriptionIdentifiersAvailable()
+        public bool ReadSubscriptionIdentifiersAvailable()
         {
             return _body.ReadBoolean();
         }
 
-        public bool? ReadWildcardSubscriptionAvailable()
+        public bool ReadWildcardSubscriptionAvailable()
         {
             return _body.ReadBoolean();
         }
 
-        public uint? ReadSubscriptionIdentifier()
+        public uint ReadSubscriptionIdentifier()
         {
             return _body.ReadVariableLengthInteger();
         }
@@ -137,12 +137,12 @@ namespace MQTTnet.Formatter.V5
             return (MqttPayloadFormatIndicator)_body.ReadByte();
         }
 
-        public uint? ReadMessageExpiryInterval()
+        public uint ReadMessageExpiryInterval()
         {
             return _body.ReadFourByteInteger();
         }
 
-        public ushort? ReadTopicAlias()
+        public ushort ReadTopicAlias()
         {
             return _body.ReadTwoByteInteger();
         }
@@ -162,17 +162,17 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadStringWithLengthPrefix();
         }
 
-        public uint? ReadWillDelayInterval()
+        public uint ReadWillDelayInterval()
         {
             return _body.ReadFourByteInteger();
         }
 
-        public bool? RequestResponseInformation()
+        public bool RequestResponseInformation()
         {
             return _body.ReadBoolean();
         }
 
-        public bool? RequestProblemInformation()
+        public bool RequestProblemInformation()
         {
             return _body.ReadBoolean();
         }

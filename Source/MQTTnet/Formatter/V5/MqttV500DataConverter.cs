@@ -33,13 +33,14 @@ namespace MQTTnet.Formatter.V5
                     MessageExpiryInterval = applicationMessage.MessageExpiryInterval,
                     PayloadFormatIndicator = applicationMessage.PayloadFormatIndicator,
                     ResponseTopic = applicationMessage.ResponseTopic,
-                    SubscriptionIdentifier = applicationMessage.SubscriptionIdentifier,
+                    SubscriptionIdentifiers = applicationMessage.SubscriptionIdentifiers,
                     TopicAlias = applicationMessage.TopicAlias
                 }
             };
 
             if (applicationMessage.UserProperties != null)
             {
+                packet.Properties.UserProperties = new List<MqttUserProperty>();
                 packet.Properties.UserProperties.AddRange(applicationMessage.UserProperties);
             }
 
@@ -67,7 +68,7 @@ namespace MQTTnet.Formatter.V5
                 ContentType = publishPacket.Properties?.ContentType,
                 CorrelationData = publishPacket.Properties?.CorrelationData,
                 MessageExpiryInterval = publishPacket.Properties?.MessageExpiryInterval,
-                SubscriptionIdentifier = publishPacket.Properties?.SubscriptionIdentifier,
+                SubscriptionIdentifiers = publishPacket.Properties?.SubscriptionIdentifiers,
                 TopicAlias = publishPacket.Properties?.TopicAlias,
                 PayloadFormatIndicator = publishPacket.Properties?.PayloadFormatIndicator,
                 UserProperties = publishPacket.Properties?.UserProperties ?? new List<MqttUserProperty>()

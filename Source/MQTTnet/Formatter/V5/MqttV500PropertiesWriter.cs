@@ -80,6 +80,19 @@ namespace MQTTnet.Formatter.V5
             WriteAsVariableLengthInteger(MqttPropertyId.SubscriptionIdentifier, value);
         }
 
+        public void WriteSubscriptionIdentifiers(IEnumerable<uint> value)
+        {
+            if (value == null)
+            {
+                return;
+            }
+
+            foreach (var subscriptionIdentifier in value)
+            {
+                WriteAsVariableLengthInteger(MqttPropertyId.SubscriptionIdentifier, subscriptionIdentifier);
+            }
+        }
+
         public void WriteTopicAlias(ushort? value)
         {
             Write(MqttPropertyId.TopicAlias, value);

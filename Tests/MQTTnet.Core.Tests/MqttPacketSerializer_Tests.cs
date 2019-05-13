@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -234,7 +235,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void SerializeV500_MqttPublishPacket()
         {
-            var prop = new MqttPublishPacketProperties();
+            var prop = new MqttPublishPacketProperties {UserProperties = new List<MqttUserProperty>()};
 
             prop.ResponseTopic = "/Response";
 

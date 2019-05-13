@@ -9,7 +9,7 @@
         CorrelationData = 9,
         SubscriptionIdentifier = 11,
         SessionExpiryInterval = 17,
-        AssignedClientIdentifer = 18,
+        AssignedClientIdentifier = 18,
         ServerKeepAlive = 19,
         AuthenticationMethod = 21,
         AuthenticationData = 22,

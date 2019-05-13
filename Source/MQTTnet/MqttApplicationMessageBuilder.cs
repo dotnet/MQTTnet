@@ -18,7 +18,7 @@ namespace MQTTnet
         private string _responseTopic;
         private byte[] _correlationData;
         private ushort? _topicAlias;
-        private uint? _subscriptionIdentifier;
+        private List<uint> _subscriptionIdentifiers;
         private uint? _messageExpiryInterval;
         private MqttPayloadFormatIndicator? _payloadFormatIndicator;
         private List<MqttUserProperty> _userProperties;
@@ -43,7 +43,7 @@ namespace MQTTnet
             {
                 _payload = payload.ToArray();
             }
-            
+
             return this;
         }
 
@@ -176,7 +176,12 @@ namespace MQTTnet
         /// </summary>
         public MqttApplicationMessageBuilder WithSubscriptionIdentifier(uint subscriptionIdentifier)
         {
-            _subscriptionIdentifier = subscriptionIdentifier;
+            if (_subscriptionIdentifiers == null)
+            {
+                _subscriptionIdentifiers = new List<uint>();
+            }
+
+            _subscriptionIdentifiers.Add(subscriptionIdentifier);
             return this;
         }
 
@@ -215,16 +220,12 @@ namespace MQTTnet
                 ResponseTopic = _responseTopic,
                 CorrelationData = _correlationData,
                 TopicAlias = _topicAlias,
-                SubscriptionIdentifier = _subscriptionIdentifier,
+                SubscriptionIdentifiers = _subscriptionIdentifiers,
                 MessageExpiryInterval = _messageExpiryInterval,
-                PayloadFormatIndicator = _payloadFormatIndicator
+                PayloadFormatIndicator = _payloadFormatIndicator,
+                UserProperties = _userProperties
             };
 
-            if (_userProperties?.Any() == true)
-            {
-                applicationMessage.UserProperties = _userProperties;
-            }
-            
             return applicationMessage;
         }
     }

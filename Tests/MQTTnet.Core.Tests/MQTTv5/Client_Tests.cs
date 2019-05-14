@@ -36,7 +36,10 @@ namespace MQTTnet.Tests.MQTTv5
                         .WithWillDelayInterval(20)
                         .Build());
 
+                MqttApplicationMessage receivedMessage = null;
+
                 await client.SubscribeAsync("a");
+                client.UseApplicationMessageReceivedHandler(context => { receivedMessage = context.ApplicationMessage; });
 
                 await client.PublishAsync(new MqttApplicationMessageBuilder()
                     .WithTopic("a")
@@ -48,6 +51,10 @@ namespace MQTTnet.Tests.MQTTv5
                     .Build());
 
                 await Task.Delay(500);
+
+                Assert.IsNotNull(receivedMessage);
+
+                Assert.AreEqual(2, receivedMessage.UserProperties.Count);
             }
         }
 

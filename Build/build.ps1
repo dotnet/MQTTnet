@@ -38,9 +38,9 @@ Write-Host
 
 # Build MQTTnet.Server
 Remove-Item ..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2 -Recurse -Force -ErrorAction SilentlyContinue
-&$msbuild ..\Source\MQTTnet.Server\MQTTnet.Server.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp2.2" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"
+&$msbuild ..\Source\MQTTnet.Server\MQTTnet.Server.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp2.2" /p:publishprofile=FolderProfile /p:deployonbuild=true /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"
 
-$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2"
+$source = "..\Source\MQTTnet.Server\bin\publish"
 $destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Portable-v$nugetVersion.zip"
 If(Test-path $destination) {Remove-item $destination}
  Add-Type -assembly "system.io.compression.filesystem"

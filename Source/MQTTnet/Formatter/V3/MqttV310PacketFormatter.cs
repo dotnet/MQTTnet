@@ -10,7 +10,11 @@ namespace MQTTnet.Formatter.V3
     public class MqttV310PacketFormatter : IMqttPacketFormatter
     {
         private const int FixedHeaderSize = 1;
-        
+
+        private static readonly MqttPingReqPacket PingReqPacket = new MqttPingReqPacket();
+        private static readonly MqttPingRespPacket PingRespPacket = new MqttPingRespPacket();
+        private static readonly MqttDisconnectPacket DisconnectPacket = new MqttDisconnectPacket();
+
         private readonly IMqttPacketWriter _packetWriter;
 
         public MqttV310PacketFormatter()
@@ -67,14 +71,14 @@ namespace MQTTnet.Formatter.V3
             {
                 case MqttControlPacketType.Connect: return DecodeConnectPacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.ConnAck: return DecodeConnAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Disconnect: return new MqttDisconnectPacket();
+                case MqttControlPacketType.Disconnect: return DisconnectPacket;
                 case MqttControlPacketType.Publish: return DecodePublishPacket(receivedMqttPacket);
                 case MqttControlPacketType.PubAck: return DecodePubAckPacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.PubRec: return DecodePubRecPacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.PubRel: return DecodePubRelPacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.PubComp: return DecodePubCompPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PingReq: return new MqttPingReqPacket();
-                case MqttControlPacketType.PingResp: return new MqttPingRespPacket();
+                case MqttControlPacketType.PingReq: return PingReqPacket;
+                case MqttControlPacketType.PingResp: return PingRespPacket;
                 case MqttControlPacketType.Subscribe: return DecodeSubscribePacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.SubAck: return DecodeSubAckPacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.Unsubscibe: return DecodeUnsubscribePacket(receivedMqttPacket.Body);
@@ -229,7 +233,7 @@ namespace MQTTnet.Formatter.V3
 
             if (!receivedMqttPacket.Body.EndOfStream)
             {
-                packet.Payload = receivedMqttPacket.Body.ReadRemainingData().ToArray();
+                packet.Payload = receivedMqttPacket.Body.ReadRemainingData();
             }
 
             return packet;

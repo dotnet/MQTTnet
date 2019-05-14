@@ -8,7 +8,7 @@ namespace MQTTnet.Packets
     {
         public ushort? PacketIdentifier { get; set; }
 
-        public List<MqttSubscribeReturnCode> ReturnCodes { get; } = new List<MqttSubscribeReturnCode>();
+        public List<MqttSubscribeReturnCode> ReturnCodes { get; set; } = new List<MqttSubscribeReturnCode>();
 
         #region Added in MQTTv5.0.0
 

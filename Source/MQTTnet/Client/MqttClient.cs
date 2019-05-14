@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
+using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
@@ -136,6 +137,23 @@ namespace MQTTnet.Client
                     await DisconnectInternalAsync(null, null, null).ConfigureAwait(false);
                 }
             }
+        }
+
+        public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
+            return SendAsync(new MqttAuthPacket
+            {
+                Properties = new MqttAuthPacketProperties
+                {
+                    // This must always be equal to the value from the CONNECT packet. So we use it here to ensure that.
+                    AuthenticationMethod = Options.AuthenticationMethod, 
+                    AuthenticationData = data.AuthenticationData,
+                    ReasonString = data.ReasonString,
+                    UserProperties = data.UserProperties
+                }
+            }, cancellationToken);
         }
 
         public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken)
@@ -473,6 +491,14 @@ namespace MQTTnet.Client
                     _packetDispatcher.Dispatch(packet);
 
                     await DisconnectAsync(null, cancellationToken).ConfigureAwait(false);
+                }
+                else if (packet is MqttAuthPacket authPacket)
+                {
+                    var extendedAuthenticationExchangeHandler = Options.ExtendedAuthenticationExchangeHandler;
+                    if (extendedAuthenticationExchangeHandler != null)
+                    {
+                        await extendedAuthenticationExchangeHandler.HandleRequestAsync(new MqttExtendedAuthenticationExchangeContext(authPacket, this)).ConfigureAwait(false);
+                    }
                 }
                 else
                 {

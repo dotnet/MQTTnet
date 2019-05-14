@@ -10,6 +10,6 @@ namespace MQTTnet.Packets
 
         public string ReasonString { get; set; }
 
-        public List<MqttUserProperty> UserProperties { get; } = new List<MqttUserProperty>();
+        public List<MqttUserProperty> UserProperties { get; set; }
     }
 }

@@ -12,7 +12,7 @@ namespace MQTTnet.Packets
 
         public MqttUnsubAckPacketProperties Properties { get; set; }
 
-        public List<MqttUnsubscribeReasonCode> ReasonCodes { get; } = new List<MqttUnsubscribeReasonCode>();
+        public List<MqttUnsubscribeReasonCode> ReasonCodes { get; set; } = new List<MqttUnsubscribeReasonCode>();
 
         #endregion
 

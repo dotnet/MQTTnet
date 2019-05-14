@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Client.Options
@@ -122,6 +123,12 @@ namespace MQTTnet.Client.Options
                 Password = password
             };
 
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedAuthenticationExchangeHandler handler)
+        {
+            _options.ExtendedAuthenticationExchangeHandler = handler;
             return this;
         }
 

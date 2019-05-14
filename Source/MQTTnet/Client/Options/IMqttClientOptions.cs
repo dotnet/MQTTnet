@@ -1,4 +1,5 @@
 ﻿using System;
+using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Client.Options
@@ -8,6 +9,7 @@ namespace MQTTnet.Client.Options
         string ClientId { get; }
         bool CleanSession { get; }
         IMqttClientCredentials Credentials { get; }
+        IMqttExtendedAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; }
         MqttProtocolVersion ProtocolVersion { get; }
         IMqttClientChannelOptions ChannelOptions { get; }
         

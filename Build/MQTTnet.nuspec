@@ -12,6 +12,7 @@
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker).</description>
     <releaseNotes>
 * [Core] Fixed issues in MQTTv5 message encoding and decoding.
+* [Core] Added extension method to allow usage of _WebSocket4Net_ in clients to fix issues with AWS and Xamarin.
 * [Client] Added support for extended authentication exchange.
 * [Client] Exposed MQTTv5 CONNACK values to client.
 * [Client] Added _MqttClientSubscribeOptionsBuilder_.

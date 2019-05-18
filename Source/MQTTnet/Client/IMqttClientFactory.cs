@@ -5,6 +5,8 @@ namespace MQTTnet.Client
 {
     public interface IMqttClientFactory
     {
+        IMqttFactory UseClientAdapterFactory(IMqttClientAdapterFactory clientAdapterFactory);
+
         IMqttClient CreateMqttClient();
 
         IMqttClient CreateMqttClient(IMqttNetLogger logger);

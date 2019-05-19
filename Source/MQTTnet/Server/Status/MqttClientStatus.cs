@@ -21,6 +21,8 @@ namespace MQTTnet.Server.Status
 
         public DateTime LastPacketReceivedTimestamp { get; set; }
 
+        public DateTime ConnectedTimestamp { get; set; }
+
         public DateTime LastNonKeepAlivePacketReceivedTimestamp { get; set; }
 
         public long ReceivedApplicationMessagesCount { get; set; }

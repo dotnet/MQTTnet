@@ -31,11 +31,12 @@ namespace MQTTnet.Server
         private readonly IMqttDataConverter _dataConverter;
         private readonly string _endpoint;
         private readonly MqttConnectPacket _connectPacket;
+        private readonly DateTime _connectedTimestamp;
 
         private Task<MqttClientDisconnectType> _packageReceiverTask;
         private DateTime _lastPacketReceivedTimestamp;
         private DateTime _lastNonKeepAlivePacketReceivedTimestamp;
-
+        
         private long _receivedPacketsCount;
         private long _sentPacketsCount = 1; // Start with 1 because the CONNECT packet is not counted anywhere.
         private long _receivedApplicationMessagesCount;
@@ -65,7 +66,8 @@ namespace MQTTnet.Server
 
             _keepAliveMonitor = new MqttClientKeepAliveMonitor(this, _logger);
 
-            _lastPacketReceivedTimestamp = DateTime.UtcNow;
+            _connectedTimestamp = DateTime.UtcNow;
+            _lastPacketReceivedTimestamp = _connectedTimestamp;
             _lastNonKeepAlivePacketReceivedTimestamp = _lastPacketReceivedTimestamp;
         }
 
@@ -96,6 +98,7 @@ namespace MQTTnet.Server
             status.ReceivedPacketsCount = Interlocked.Read(ref _receivedPacketsCount);
             status.SentPacketsCount = Interlocked.Read(ref _sentPacketsCount);
 
+            status.ConnectedTimestamp = _connectedTimestamp;
             status.LastPacketReceivedTimestamp = _lastPacketReceivedTimestamp;
             status.LastNonKeepAlivePacketReceivedTimestamp = _lastNonKeepAlivePacketReceivedTimestamp;
 

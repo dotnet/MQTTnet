@@ -74,7 +74,7 @@ namespace MQTTnet.Server
             return server;
         }
 
-        public static IMqttServer UseApplicationMessageReceivedHandler(this IMqttServer server, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
+        public static IMqttServer UseApplicationMessageReceivedHandler(this IMqttServer server, Func<MqttApplicationMessageReceivedEventArgs, ValueTask> handler)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
 

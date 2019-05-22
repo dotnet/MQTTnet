@@ -538,8 +538,11 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                     //...
                 }
-                
-                client.UseApplicationMessageReceivedHandler(Handler);
+
+                Action<MqttApplicationMessageReceivedEventArgs> handler = Handler;
+
+
+                client.UseApplicationMessageReceivedHandler(handler);
 
                 // Subscribe after connect
 

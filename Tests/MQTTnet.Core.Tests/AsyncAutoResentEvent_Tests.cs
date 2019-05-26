@@ -24,7 +24,9 @@ namespace MQTTnet.Tests
             
             var waitOnePassed = false;
 
+#pragma warning disable 4014
             Task.Run(async () =>
+#pragma warning restore 4014
             {
                 await @lock.WaitOneAsync(TimeSpan.FromSeconds(2));
                 waitOnePassed = true;

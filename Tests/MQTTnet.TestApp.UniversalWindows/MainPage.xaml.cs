@@ -734,6 +734,22 @@ namespace MQTTnet.TestApp.UniversalWindows
             }
 
             {
+                // Setup application message interceptor.
+                var options = new MqttServerOptionsBuilder()
+                    .WithApplicationMessageInterceptor(context =>
+                    {
+                        if (context.ApplicationMessage.Topic == "my/custom/topic")
+                        {
+                            context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes("The server injected payload.");
+                        }
+
+                        // It is also possible to read the payload and extend it. For example by adding a timestamp in a JSON document.
+                        // This is useful when the IoT device has no own clock and the creation time of the message might be important.
+                    })
+                    .Build();
+            }
+
+            {
                 // Setup subscription interceptor.
                 var options = new MqttServerOptionsBuilder()
                     .WithSubscriptionInterceptor(context =>

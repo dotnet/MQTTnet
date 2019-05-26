@@ -293,7 +293,7 @@ namespace MQTTnet.Formatter.V3
 
             if (passwordFlag)
             {
-                packet.Password = body.ReadStringWithLengthPrefix();
+                packet.Password = body.ReadWithLengthPrefix();
             }
 
             ValidateConnectPacket(packet);

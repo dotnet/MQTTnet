@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 using IronPython.Runtime;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,12 @@ namespace MQTTnet.Server.Mqtt
         {
             try
             {
+                string passwordString = null;
+                if (context.Password != null)
+                {
+                    passwordString = Encoding.UTF8.GetString(context.Password);
+                }
+
                 var pythonContext = new PythonDictionary
                 {
                     { "client_id", context.ClientId },
@@ -29,6 +36,7 @@ namespace MQTTnet.Server.Mqtt
                     { "is_secure_connection", context.IsSecureConnection },
                     { "username", context.Username },
                     { "password", context.Password },
+                    { "password_string", passwordString },
                     { "result", PythonConvert.Pythonfy(context.ReturnCode) }
                 };
 

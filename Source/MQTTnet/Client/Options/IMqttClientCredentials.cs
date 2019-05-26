@@ -2,7 +2,7 @@
 {
     public interface IMqttClientCredentials
     {
-        string Password { get; }
         string Username { get; }
+        byte[] Password { get; }
     }
 }

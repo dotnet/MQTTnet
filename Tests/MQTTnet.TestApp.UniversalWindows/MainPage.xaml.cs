@@ -138,7 +138,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 options.Credentials = new MqttClientCredentials
                 {
                     Username = User.Text,
-                    Password = Password.Text
+                    Password = Encoding.UTF8.GetBytes(Password.Text)
                 };
             }
             
@@ -539,7 +539,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     //...
                 }
                 
-                client.UseApplicationMessageReceivedHandler(Handler);
+                client.UseApplicationMessageReceivedHandler(e => Handler(e));
 
                 // Subscribe after connect
 
@@ -601,7 +601,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                         Credentials = new MqttClientCredentials
                         {
                             Username = "bud",
-                            Password = "%spencer%"
+                            Password = Encoding.UTF8.GetBytes("%spencer%")
                         },
                         ChannelOptions = new MqttClientTcpOptions
                         {
@@ -633,7 +633,9 @@ namespace MQTTnet.TestApp.UniversalWindows
                         return;
                     }
 
-                    if (c.Password != "mySecretPassword")
+                    var password = Encoding.UTF8.GetString(c.Password);
+
+                    if (password != "mySecretPassword")
                     {
                         c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
                         return;
@@ -717,7 +719,8 @@ namespace MQTTnet.TestApp.UniversalWindows
                             return;
                         }
 
-                        if (c.Password != "mySecretPassword")
+                        var password = Encoding.UTF8.GetString(c.Password);
+                        if (password != "mySecretPassword")
                         {
                             c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
                             return;

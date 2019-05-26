@@ -1,10 +1,11 @@
-﻿using MQTTnet.Protocol;
+﻿using System.Text;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
     public class MqttConnectionValidatorContext
     {
-        public MqttConnectionValidatorContext(string clientId, string username, string password, MqttApplicationMessage willMessage, string endpoint, bool isSecureConnection)
+        public MqttConnectionValidatorContext(string clientId, string username, byte[] password, MqttApplicationMessage willMessage, string endpoint, bool isSecureConnection)
         {
             ClientId = clientId;
             Username = username;
@@ -18,7 +19,7 @@ namespace MQTTnet.Server
 
         public string Username { get; }
 
-        public string Password { get; }
+        public byte[] Password { get; }
 
         public MqttApplicationMessage WillMessage { get; }
 

@@ -29,7 +29,7 @@ def on_validate_client_connection(context):
         context["result"] = "connection_refused_not_authorized"
         return
 
-    if context["password"] != "secret":
+    if context["password_string"] != "secret":
         context["result"] = "connection_refused_not_authorized"
 
     print(context)

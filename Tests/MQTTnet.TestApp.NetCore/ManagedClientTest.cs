@@ -62,7 +62,7 @@ namespace MQTTnet.TestApp.NetCore
 
         public class RandomPassword : IMqttClientCredentials
         {
-            public string Password => Guid.NewGuid().ToString();
+            public byte[] Password => Guid.NewGuid().ToByteArray();
 
             public string Username => "the_static_user";
         }

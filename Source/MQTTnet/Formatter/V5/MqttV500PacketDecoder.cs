@@ -208,7 +208,7 @@ namespace MQTTnet.Formatter.V5
 
             if (passwordFlag)
             {
-                packet.Password = body.ReadStringWithLengthPrefix();
+                packet.Password = body.ReadWithLengthPrefix();
             }
 
             return packet;

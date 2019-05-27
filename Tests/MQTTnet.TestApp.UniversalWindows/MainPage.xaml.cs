@@ -633,9 +633,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                         return;
                     }
 
-                    var password = Encoding.UTF8.GetString(c.Password);
-
-                    if (password != "mySecretPassword")
+                    if (c.Password != "mySecretPassword")
                     {
                         c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
                         return;
@@ -719,8 +717,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                             return;
                         }
 
-                        var password = Encoding.UTF8.GetString(c.Password);
-                        if (password != "mySecretPassword")
+                        if (c.Password != "mySecretPassword")
                         {
                             c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
                             return;

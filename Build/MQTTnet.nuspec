@@ -13,6 +13,7 @@
     <releaseNotes>
 * [Core] Fixed issues in MQTTv5 message encoding and decoding.
 * [Core] Added extension method to allow usage of _WebSocket4Net_ in clients to fix issues with AWS and Xamarin.
+* [Core] Fixed usage of wrong data type for passwords (string -> byte[]).
 * [Client] Added support for extended authentication exchange.
 * [Client] Exposed MQTTv5 CONNACK values to client.
 * [Client] Added _MqttClientSubscribeOptionsBuilder_.

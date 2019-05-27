@@ -28,8 +28,7 @@ namespace MQTTnet.TestApp.NetCore
                     {
                         if (p.ClientId == "SpecialClient")
                         {
-                            var password = Encoding.UTF8.GetString(p.Password);
-                            if (p.Username != "USER" || password != "PASS")
+                            if (p.Username != "USER" || p.Password != "PASS")
                             {
                                 p.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
                             }

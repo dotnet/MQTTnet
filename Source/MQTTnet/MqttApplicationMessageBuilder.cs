@@ -29,6 +29,12 @@ namespace MQTTnet
             return this;
         }
 
+        public MqttApplicationMessageBuilder WithPayload(byte[] payload)
+        {
+            _payload = payload;
+            return this;
+        }
+
         public MqttApplicationMessageBuilder WithPayload(IEnumerable<byte> payload)
         {
             if (payload == null)

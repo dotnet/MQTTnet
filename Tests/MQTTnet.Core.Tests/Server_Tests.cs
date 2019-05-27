@@ -12,6 +12,7 @@ using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
+using MQTTnet.Client.Subscribing;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -171,6 +172,39 @@ namespace MQTTnet.Tests
                 await Task.Delay(500);
 
                 Assert.AreEqual(1, receivedMessagesCount);
+            }
+        }
+
+        [TestMethod]
+        public async Task Subscribe_Multiple_In_Single_Request()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServerAsync();
+
+                var c1 = await testEnvironment.ConnectClientAsync();
+                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
+                    .WithTopicFilter("a")
+                    .WithTopicFilter("b")
+                    .WithTopicFilter("c")
+                    .Build());
+
+                var c2 = await testEnvironment.ConnectClientAsync();
+
+                await c2.PublishAsync("a");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 1);
+
+                await c2.PublishAsync("b");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 2);
+
+                await c2.PublishAsync("c");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 3);
             }
         }
 

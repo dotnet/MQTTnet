@@ -209,6 +209,45 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public async Task Subscribe_Multiple_In_Multiple_Request()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServerAsync();
+
+                var c1 = await testEnvironment.ConnectClientAsync();
+                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
+                    .WithTopicFilter("a")
+                    .Build());
+
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
+                    .WithTopicFilter("b")
+                    .Build());
+
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
+                    .WithTopicFilter("c")
+                    .Build());
+
+                var c2 = await testEnvironment.ConnectClientAsync();
+
+                await c2.PublishAsync("a");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 1);
+
+                await c2.PublishAsync("b");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 2);
+
+                await c2.PublishAsync("c");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 3);
+            }
+        }
+
+        [TestMethod]
         public async Task Publish_From_Server()
         {
             using (var testEnvironment = new TestEnvironment())

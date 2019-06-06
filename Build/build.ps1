@@ -43,16 +43,40 @@ Write-Host
 &$msbuild ..\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netstandard2.0" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"
 &$msbuild ..\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="uap10.0" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"
 
+####################################################################
 
-# Build MQTTnet.Server
-Remove-Item ..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2 -Recurse -Force -ErrorAction SilentlyContinue
-&$msbuild ..\Source\MQTTnet.Server\MQTTnet.Server.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp2.2" /p:publishprofile=FolderProfile /p:deployonbuild=true /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"
+# Build MQTTnet.Server Portable
+&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release
 
-$source = "..\Source\MQTTnet.Server\bin\publish"
+$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2\publish"
 $destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Portable-v$nugetVersion.zip"
 If(Test-path $destination) {Remove-item $destination}
  Add-Type -assembly "system.io.compression.filesystem"
 [io.compression.zipfile]::CreateFromDirectory($source, $destination) 
+
+####################################################################
+
+# Build MQTTnet.Server Linux-x64
+&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release --self-contained --runtime linux-x64
+
+$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2\linux-x64\publish"
+$destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Linux-x64-v$nugetVersion.zip"
+If(Test-path $destination) {Remove-item $destination}
+ Add-Type -assembly "system.io.compression.filesystem"
+[io.compression.zipfile]::CreateFromDirectory($source, $destination) 
+
+####################################################################
+
+# Build MQTTnet.Server Windows-x64
+&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release --self-contained --runtime win-x64
+
+$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2\win-x64\publish"
+$destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Windows-x64-v$nugetVersion.zip"
+If(Test-path $destination) {Remove-item $destination}
+ Add-Type -assembly "system.io.compression.filesystem"
+[io.compression.zipfile]::CreateFromDirectory($source, $destination) 
+
+####################################################################
 
 # Create NuGet packages.
 Remove-Item .\NuGet -Force -Recurse -ErrorAction SilentlyContinue

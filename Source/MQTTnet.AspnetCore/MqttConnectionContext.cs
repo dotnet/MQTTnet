@@ -145,6 +145,12 @@ namespace MQTTnet.AspNetCore
             return null;
         }
 
+        public void ResetStatistics()
+        {
+            BytesReceived = 0;
+            BytesSent = 0;
+        }
+
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var formatter = PacketFormatterAdapter;

@@ -14,7 +14,7 @@ using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientConnection : IMqttClientSession, IDisposable
+    public class MqttClientConnection : IDisposable
     {
         private readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
@@ -64,7 +64,7 @@ namespace MQTTnet.Server
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttClientConnection));
 
-            _keepAliveMonitor = new MqttClientKeepAliveMonitor(this, _logger);
+            _keepAliveMonitor = new MqttClientKeepAliveMonitor(_connectPacket.ClientId, StopAsync, _logger);
 
             _connectedTimestamp = DateTime.UtcNow;
             _lastPacketReceivedTimestamp = _connectedTimestamp;
@@ -84,6 +84,11 @@ namespace MQTTnet.Server
             {
                 await task.ConfigureAwait(false);
             }
+        }
+
+        public void ResetStatistics()
+        {
+            _channelAdapter.ResetStatistics();
         }
 
         public void FillStatus(MqttClientStatus status)

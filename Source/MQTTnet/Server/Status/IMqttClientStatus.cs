@@ -29,7 +29,9 @@ namespace MQTTnet.Server.Status
         long BytesSent { get; }
 
         long BytesReceived { get; }
-
+        
         Task DisconnectAsync();
+
+        void ResetStatistics();
     }
 }

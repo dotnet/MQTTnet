@@ -69,6 +69,10 @@ namespace MQTTnet.Tests.Mockups
             }, cancellationToken);
         }
 
+        public void ResetStatistics()
+        {
+        }
+
         private void EnqueuePacketInternal(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));

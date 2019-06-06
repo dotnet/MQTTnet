@@ -43,5 +43,10 @@ namespace MQTTnet.Server.Status
         {
             return _connection.StopAsync();
         }
+
+        public void ResetStatistics()
+        {
+            _connection.ResetStatistics();
+        }
     }
 }

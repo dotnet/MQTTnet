@@ -14,9 +14,14 @@
 * [Core] Fixed issues in MQTTv5 message encoding and decoding.
 * [Core] Added extension method to allow usage of _WebSocket4Net_ in clients to fix issues with AWS and Xamarin.
 * [Core] Fixed usage of wrong data type for passwords (string -> byte[]).
+* [Core] Fixed an _ObjectDisposedException_ when sending data using a WebSocket channel.
 * [Client] Added support for extended authentication exchange.
 * [Client] Exposed MQTTv5 CONNACK values to client.
 * [Client] Added _MqttClientSubscribeOptionsBuilder_.
+* [Client] The disconnected handler is now executed in a new task to prevent deadlocks when reconnecting etc. (thanks to @lizziebeans).
+* [Client] Converted option _DualMode_ into nullable boolean to preserve original value and avoid exceptions in IPv4 only networks (thanks to @lavaflo).
+* [Server] Exposed _ClientCertificateRequired_ and _CheckCertificateRevocation_ at TLS options.
+* [Server] Exposed client certificate at client connection validator.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2019</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

@@ -13,6 +13,7 @@ using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -287,7 +288,9 @@ namespace MQTTnet.Client
                 var disconnectedHandler = DisconnectedHandler;
                 if (disconnectedHandler != null)
                 {
-                    await disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult)).ConfigureAwait(false);
+                    // This handler must be executed in a new thread because otherwise a dead lock may happen
+                    // when trying to reconnect in that handler etc.
+                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult))).Forget(_logger);
                 }
             }
         }

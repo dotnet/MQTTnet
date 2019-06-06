@@ -136,7 +136,7 @@ namespace MQTTnet.Server
                 await connection.StopAsync().ConfigureAwait(false);
             }
 
-            if (_sessions.TryRemove(clientId, out var session))
+            if (_sessions.TryRemove(clientId, out _))
             {
             }
 
@@ -296,7 +296,8 @@ namespace MQTTnet.Server
                 connectPacket.Password,
                 connectPacket.WillMessage,
                 clientAdapter.Endpoint,
-                clientAdapter.IsSecureConnection);
+                clientAdapter.IsSecureConnection,
+                clientAdapter.ClientCertificate);
 
             var connectionValidator = _options.ConnectionValidator;
 

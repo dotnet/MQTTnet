@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
@@ -11,7 +12,8 @@ namespace MQTTnet.Server
             byte[] password, 
             MqttApplicationMessage willMessage, 
             string endpoint, 
-            bool isSecureConnection)
+            bool isSecureConnection,
+            X509Certificate2 clientCertificate)
         {
             ClientId = clientId;
             Username = username;
@@ -19,6 +21,7 @@ namespace MQTTnet.Server
             WillMessage = willMessage;
             Endpoint = endpoint;
             IsSecureConnection = isSecureConnection;
+            ClientCertificate = clientCertificate;
         }
 
         public string ClientId { get; }
@@ -34,6 +37,8 @@ namespace MQTTnet.Server
         public string Endpoint { get; }
 
         public bool IsSecureConnection { get; }
+
+        public X509Certificate2 ClientCertificate { get; }
 
         public MqttConnectReturnCode ReturnCode { get; set; } = MqttConnectReturnCode.ConnectionAccepted;
     }

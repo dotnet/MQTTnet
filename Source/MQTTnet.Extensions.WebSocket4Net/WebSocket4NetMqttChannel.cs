@@ -35,6 +35,8 @@ namespace MQTTnet.Extensions.WebSocket4Net
 
         public bool IsSecureConnection { get; private set; }
 
+        public X509Certificate2 ClientCertificate { get; }
+
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             var uri = _webSocketOptions.Uri;

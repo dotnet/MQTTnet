@@ -28,17 +28,21 @@ namespace MQTTnet.Implementations
             IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
         }
 
-        public MqttTcpChannel(Stream stream, string endpoint)
+        public MqttTcpChannel(Stream stream, string endpoint, X509Certificate2 clientCertificate)
         {
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
-            IsSecureConnection = stream is SslStream;
             Endpoint = endpoint;
+
+            IsSecureConnection = stream is SslStream;
+            ClientCertificate = clientCertificate;
         }
 
         public string Endpoint { get; private set; }
 
         public bool IsSecureConnection { get; }
+
+        public X509Certificate2 ClientCertificate { get; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
@@ -55,9 +59,16 @@ namespace MQTTnet.Implementations
 
             socket.ReceiveBufferSize = _options.BufferSize;
             socket.SendBufferSize = _options.BufferSize;
-            socket.DualMode = _options.DualMode;
             socket.NoDelay = _options.NoDelay;
 
+            if (_options.DualMode.HasValue)
+            {
+                // It is important to avoid setting the flag if no specific value is set by the user
+                // because on IPv4 only networks the setter will always throw an exception. Regardless
+                // of the actual value.
+                socket.DualMode = _options.DualMode.Value;
+            }
+            
             // Workaround for: workaround for https://github.com/dotnet/corefx/issues/24430
             using (cancellationToken.Register(() => socket.Dispose()))
             {

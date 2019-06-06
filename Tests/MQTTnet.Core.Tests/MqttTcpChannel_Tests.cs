@@ -39,7 +39,7 @@ namespace MQTTnet.Tests
 
                 await Task.Delay(100, ct.Token);
 
-                var tcpChannel = new MqttTcpChannel(new NetworkStream(clientSocket, true), "test");
+                var tcpChannel = new MqttTcpChannel(new NetworkStream(clientSocket, true), "test", null);
 
                 var buffer = new byte[1];
                 await tcpChannel.ReadAsync(buffer, 0, 1, ct.Token);

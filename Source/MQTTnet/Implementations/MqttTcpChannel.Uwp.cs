@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Networking;
@@ -31,7 +32,7 @@ namespace MQTTnet.Implementations
             _bufferSize = _options.BufferSize;
         }
 
-        public MqttTcpChannel(StreamSocket socket, IMqttServerOptions serverOptions)
+        public MqttTcpChannel(StreamSocket socket, X509Certificate2 clientCertificate, IMqttServerOptions serverOptions)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _bufferSize = serverOptions.DefaultEndpointOptions.BufferSize;
@@ -39,6 +40,7 @@ namespace MQTTnet.Implementations
             CreateStreams();
 
             IsSecureConnection = socket.Information.ProtectionLevel >= SocketProtectionLevel.Tls12;
+            ClientCertificate = clientCertificate;
 
             Endpoint = _socket.Information.RemoteAddress + ":" + _socket.Information.RemotePort;
         }
@@ -48,6 +50,8 @@ namespace MQTTnet.Implementations
         public string Endpoint { get; private set; }
 
         public bool IsSecureConnection { get; }
+
+        public X509Certificate2 ClientCertificate { get; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {

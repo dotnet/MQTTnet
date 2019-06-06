@@ -7,6 +7,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using System;
 using System.IO.Pipelines;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,6 +48,8 @@ namespace MQTTnet.AspNetCore
         }
 
         public bool IsSecureConnection => Http?.HttpContext?.Request?.IsHttps ?? false;
+
+        public X509Certificate2 ClientCertificate => Http?.HttpContext?.Connection?.ClientCertificate;
 
         private IHttpContextFeature Http => Connection.Features.Get<IHttpContextFeature>();
 

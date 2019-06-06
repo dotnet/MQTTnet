@@ -52,7 +52,7 @@ namespace MQTTnet.Server
 
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine($@"
-Version:    {Assembly.GetExecutingAssembly().GetName().Version}
+Version:    {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion}
 License:    MIT (read LICENSE file)
 Sponsoring: https://opencollective.com/mqttnet
 Support:    https://github.com/chkr1011/MQTTnet/issues

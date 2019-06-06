@@ -21,6 +21,40 @@ namespace MQTTnet.Tests
     public class Client_Tests
     {
         [TestMethod]
+        public async Task Send_Reply_In_Message_Handler_For_Same_Client()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+                var client = await testEnvironment.ConnectClientAsync();
+                
+                await client.SubscribeAsync("#");
+                
+                var replyReceived = false;
+
+                client.UseApplicationMessageReceivedHandler(c =>
+                {
+                    if (c.ApplicationMessage.Topic == "request")
+                    {
+#pragma warning disable 4014
+                        Task.Run(() => client.PublishAsync("reply", null, MqttQualityOfServiceLevel.AtLeastOnce));
+#pragma warning restore 4014
+                    }
+                    else
+                    {
+                        replyReceived = true;
+                    }
+                });
+
+                await client.PublishAsync("request", null, MqttQualityOfServiceLevel.AtLeastOnce);
+
+                SpinWait.SpinUntil(() => replyReceived, TimeSpan.FromSeconds(10));
+
+                Assert.IsTrue(replyReceived);
+            }
+        }
+
+        [TestMethod]
         public async Task Send_Reply_In_Message_Handler()
         {
             using (var testEnvironment = new TestEnvironment())

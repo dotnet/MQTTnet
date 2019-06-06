@@ -21,6 +21,61 @@ namespace MQTTnet.Tests
     public class Client_Tests
     {
         [TestMethod]
+        public async Task Send_Reply_In_Message_Handler()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+                var client1 = await testEnvironment.ConnectClientAsync();
+                var client2 = await testEnvironment.ConnectClientAsync();
+
+                await client1.SubscribeAsync("#");
+                await client2.SubscribeAsync("#");
+
+                var replyReceived = false;
+
+                client1.UseApplicationMessageReceivedHandler(async c =>
+                {
+                    if (c.ApplicationMessage.Topic == "reply")
+                    {
+                        replyReceived = true;
+                    }
+                });
+
+                client2.UseApplicationMessageReceivedHandler(async c =>{ await client2.PublishAsync("reply", null, MqttQualityOfServiceLevel.AtLeastOnce); });
+
+                await client1.PublishAsync("request", null, MqttQualityOfServiceLevel.AtLeastOnce);
+
+                SpinWait.SpinUntil(() => replyReceived, TimeSpan.FromSeconds(10));
+
+                Assert.IsTrue(replyReceived);
+            }
+        }
+
+        [TestMethod]
+        public async Task Reconnect()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var server = await testEnvironment.StartServerAsync();
+                var client = await testEnvironment.ConnectClientAsync();
+
+                await Task.Delay(500);
+                Assert.IsTrue(client.IsConnected);
+
+                await server.StopAsync();
+                await Task.Delay(500);
+                Assert.IsFalse(client.IsConnected);
+
+                await server.StartAsync(new MqttServerOptionsBuilder().WithDefaultEndpointPort(testEnvironment.ServerPort).Build());
+                await Task.Delay(500);
+
+                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
+                Assert.IsTrue(client.IsConnected);
+            }
+        }
+
+        [TestMethod]
         public async Task PacketIdentifier_In_Publish_Result()
         {
             using (var testEnvironment = new TestEnvironment())
@@ -88,6 +143,8 @@ namespace MQTTnet.Tests
                 catch
                 {
                 }
+
+                await Task.Delay(500);
 
                 Assert.IsNotNull(ex);
                 Assert.IsInstanceOfType(ex, typeof(MqttCommunicationException));

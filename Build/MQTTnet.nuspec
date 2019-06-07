@@ -22,6 +22,7 @@
 * [Client] Converted option _DualMode_ into nullable boolean to preserve original value and avoid exceptions in IPv4 only networks (thanks to @lavaflo).
 * [Server] Exposed _ClientCertificateRequired_ and _CheckCertificateRevocation_ at TLS options.
 * [Server] Exposed client certificate at client connection validator.
+* [Server] The subscription interceptor now supports altering the entire topic filter.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2019</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

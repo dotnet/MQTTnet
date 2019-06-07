@@ -12,7 +12,7 @@ namespace MQTTnet.Server
 
         public string ClientId { get; }
 
-        public TopicFilter TopicFilter { get; }
+        public TopicFilter TopicFilter { get; set; }
         
         public bool AcceptSubscription { get; set; } = true;
 

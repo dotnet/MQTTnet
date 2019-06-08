@@ -1,9 +1,9 @@
 ﻿namespace MQTTnet.Server.Configuration
 {
     /// <summary>
-    /// Main Settings Model
+    /// MQTT settings Model
     /// </summary>
-    public class SettingsModel
+    public class MqttSettingsModel
     {
         /// <summary>
         /// Set default connection timeout in seconds

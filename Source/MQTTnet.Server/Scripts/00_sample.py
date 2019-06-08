@@ -7,9 +7,17 @@ def initialize():
     It will be executed only one time.
     """
 
-    print("Hello World from Sample script.")
+    print("Hello World from sample script.")
    
 
+def destroy():
+    """
+    This function is invoked when the script is unloaded due to a script file update etc.
+    """
+
+    print("Bye from sample script.")
+
+    
 def on_validate_client_connection(context):
     """
     This function is invoked whenever a client wants to connect. It can be used to validate the connection.

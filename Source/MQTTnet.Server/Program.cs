@@ -2,6 +2,7 @@
 using System.Reflection;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using MQTTnet.Server.Web;
 
 namespace MQTTnet.Server
 {

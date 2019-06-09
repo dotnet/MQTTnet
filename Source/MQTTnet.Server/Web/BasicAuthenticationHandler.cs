@@ -18,7 +18,12 @@ namespace MQTTnet.Server.Web
     {
         private readonly ILogger<AuthenticationHandler> _logger;
 
-        public AuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory loggerFactory, UrlEncoder encoder, ISystemClock clock, ILogger<AuthenticationHandler> logger)
+        public AuthenticationHandler(
+            IOptionsMonitor<AuthenticationSchemeOptions> options,
+            ILoggerFactory loggerFactory,
+            UrlEncoder encoder,
+            ISystemClock clock,
+            ILogger<AuthenticationHandler> logger)
             : base(options, loggerFactory, encoder, clock)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -26,11 +31,9 @@ namespace MQTTnet.Server.Web
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            await Task.CompletedTask;
-            
             if (!Request.Headers.ContainsKey(HeaderNames.Authorization))
             {
-                return AuthenticateResult.Fail("Missing Authorization Header");
+                return AuthenticateResult.NoResult();
             }
 
             try
@@ -82,6 +85,10 @@ namespace MQTTnet.Server.Web
                 _logger.LogWarning("Error while authenticating user.", exception);
 
                 return AuthenticateResult.Fail(exception);
+            }
+            finally
+            {
+                await Task.CompletedTask;
             }
         }
 

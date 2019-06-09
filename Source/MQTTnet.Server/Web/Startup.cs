@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +17,7 @@ using MQTTnet.Server.Logging;
 using MQTTnet.Server.Mqtt;
 using MQTTnet.Server.Scripting;
 using MQTTnet.Server.Scripting.DataSharing;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace MQTTnet.Server.Web
@@ -115,17 +118,22 @@ namespace MQTTnet.Server.Web
             services.AddSwaggerGen(c =>
             {
                 c.DescribeAllEnumsAsStrings();
-                c.AddSecurityDefinition("Basic", new OpenApiSecurityScheme
+                
+                var securityScheme = new OpenApiSecurityScheme
                 {
                     Scheme = "Basic",
                     Name = HeaderNames.Authorization,
                     Type = SecuritySchemeType.Http,
                     In = ParameterLocation.Header
-                });
+                };
+
+                c.AddSecurityDefinition("Swagger", securityScheme);
+
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
-                    [new OpenApiSecurityScheme { Name = "Basic" }] = new List<string>()
+                    [securityScheme] = new List<string>()
                 });
+
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "MQTTnet.Server API",
@@ -145,7 +153,9 @@ namespace MQTTnet.Server.Web
                 });
             });
 
-            services.AddAuthentication("Basic").AddScheme<AuthenticationSchemeOptions, AuthenticationHandler>("Basic", null);
+            services.AddAuthentication("Basic")
+                .AddScheme<AuthenticationSchemeOptions, AuthenticationHandler>("Basic", null)
+                .AddCookie();
         }
 
         private void ReadMqttSettings(IServiceCollection services)
@@ -200,7 +210,7 @@ namespace MQTTnet.Server.Web
                     }
                     else
                     {
-                        context.Response.StatusCode = 400;
+                        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     }
                 }
                 else

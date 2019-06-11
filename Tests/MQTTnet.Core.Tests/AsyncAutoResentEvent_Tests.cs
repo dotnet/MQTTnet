@@ -123,7 +123,7 @@ namespace MQTTnet.Tests
                 waitTask.GetAwaiter().GetResult();
                 Assert.IsTrue(false, "Task was expected to transition to a canceled state.");
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
             }
 

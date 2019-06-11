@@ -68,7 +68,7 @@ namespace MQTTnet.Tests
 
                 var replyReceived = false;
 
-                client1.UseApplicationMessageReceivedHandler(async c =>
+                client1.UseApplicationMessageReceivedHandler(c =>
                 {
                     if (c.ApplicationMessage.Topic == "reply")
                     {

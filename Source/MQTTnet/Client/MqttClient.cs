@@ -362,6 +362,7 @@ namespace MQTTnet.Client
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
+                    // Values described here: [MQTT-3.1.2-24].
                     var keepAliveSendInterval = TimeSpan.FromSeconds(Options.KeepAlivePeriod.TotalSeconds * 0.75);
                     if (Options.KeepAliveSendInterval.HasValue)
                     {

@@ -30,7 +30,7 @@ namespace MQTTnet.Server.Mqtt
         private readonly MqttClientDisconnectedHandler _mqttClientDisconnectedHandler;
         private readonly MqttClientSubscribedTopicHandler _mqttClientSubscribedTopicHandler;
         private readonly MqttClientUnsubscribedTopicHandler _mqttClientUnsubscribedTopicHandler;
-        private readonly MqttConnectionValidator _mqttConnectionValidator;
+        private readonly MqttServerConnectionValidator _mqttConnectionValidator;
         private readonly IMqttServer _mqttServer;
         private readonly MqttSubscriptionInterceptor _mqttSubscriptionInterceptor;
         private readonly PythonScriptHostService _pythonScriptHostService;
@@ -43,7 +43,7 @@ namespace MQTTnet.Server.Mqtt
             MqttClientDisconnectedHandler mqttClientDisconnectedHandler,
             MqttClientSubscribedTopicHandler mqttClientSubscribedTopicHandler,
             MqttClientUnsubscribedTopicHandler mqttClientUnsubscribedTopicHandler,
-            MqttConnectionValidator mqttConnectionValidator,
+            MqttServerConnectionValidator mqttConnectionValidator,
             MqttSubscriptionInterceptor mqttSubscriptionInterceptor,
             MqttApplicationMessageInterceptor mqttApplicationMessageInterceptor,
             MqttServerStorage mqttServerStorage,

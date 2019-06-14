@@ -25,20 +25,45 @@ def on_validate_client_connection(context):
     
     print(context)
 
+    # Access some custom data here which was inserted upon connect and may use it for validation.
     mqtt_net_server.write_shared_data(context["client_id"], {"custom_value_1": 1, "custom_value_2": True})
 
     return
+    
+    # Supported results:
+    # * success
+    # * unspecified_error
+    # * malformed_packet
+    # * protocol_error
+    # * implementation_specific_error
+    # * unsupported_protocol_version
+    # * client_identifier_not_valid
+    # * bad_user_name_or_password
+    # * not_authorized
+    # * server_unavailable
+    # * server_busy
+    # * banned
+    # * bad_authentication_method
+    # * topic_name_invalid
+    # * packet_too_large
+    # * quota_exceeded
+    # * payload_format_invalid
+    # * retain_not_supported
+    # * qos_not_supported
+    # * use_another_server
+    # * server_moved
+    # * connection_rate_exceeded
 
     if context["client_id"] != "test_client":
-        context["result"] = "connection_refused_not_authorized"
+        context["result"] = "bad_user_name_or_password"
         return
 
     if context["username"] != "bud spencer":
-        context["result"] = "connection_refused_not_authorized"
+        context["result"] = "bad_user_name_or_password"
         return
 
     if context["password_string"] != "secret":
-        context["result"] = "connection_refused_not_authorized"
+        context["result"] = "bad_user_name_or_password"
 
     print(context)
 

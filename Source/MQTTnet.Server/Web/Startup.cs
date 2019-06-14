@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +16,6 @@ using MQTTnet.Server.Logging;
 using MQTTnet.Server.Mqtt;
 using MQTTnet.Server.Scripting;
 using MQTTnet.Server.Scripting.DataSharing;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace MQTTnet.Server.Web
@@ -111,7 +109,7 @@ namespace MQTTnet.Server.Web
             services.AddSingleton<MqttClientDisconnectedHandler>();
             services.AddSingleton<MqttClientSubscribedTopicHandler>();
             services.AddSingleton<MqttClientUnsubscribedTopicHandler>();
-            services.AddSingleton<MqttConnectionValidator>();
+            services.AddSingleton<MqttServerConnectionValidator>();
             services.AddSingleton<MqttSubscriptionInterceptor>();
             services.AddSingleton<MqttApplicationMessageInterceptor>();
 

@@ -1,11 +1,13 @@
 #if WINDOWS_UWP
-using System;
-using System.Threading.Tasks;
 using Windows.Networking.Sockets;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Server;
+using System;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Implementations
 {
@@ -73,7 +75,21 @@ namespace MQTTnet.Implementations
                 var clientHandler = ClientHandler;
                 if (clientHandler != null)
                 {
-                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, _options), new MqttPacketFormatterAdapter(), _logger))
+                    X509Certificate2 clientCertificate = null;
+
+                    if (args.Socket.Control.ClientCertificate != null)
+                    {
+                        try
+                        {
+                            clientCertificate = new X509Certificate2(args.Socket.Control.ClientCertificate.GetCertificateBlob().ToArray());
+                        }
+                        catch (Exception exception)
+                        {
+                            _logger.Warning(exception, "Unable to convert UWP certificate to X509Certificate2.");
+                        }
+                    }
+                    
+                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, clientCertificate, _options), new MqttPacketFormatterAdapter(), _logger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }

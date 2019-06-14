@@ -6,7 +6,7 @@
 
         public string Username { get; set; }
 
-        public string Password { get; set; }
+        public byte[] Password { get; set; }
 
         public ushort KeepAlivePeriod { get; set; }
 
@@ -23,13 +23,14 @@
 
         public override string ToString()
         {
-            var password = Password;
-            if (!string.IsNullOrEmpty(password))
+            var passwordText = string.Empty;
+
+            if (Password != null)
             {
-                password = "****";
+                passwordText = "****";
             }
 
-            return string.Concat("Connect: [ClientId=", ClientId, "] [Username=", Username, "] [Password=", password, "] [KeepAlivePeriod=", KeepAlivePeriod, "] [CleanSession=", CleanSession, "]");
+            return string.Concat("Connect: [ClientId=", ClientId, "] [Username=", Username, "] [Password=", passwordText, "] [KeepAlivePeriod=", KeepAlivePeriod, "] [CleanSession=", CleanSession, "]");
         }
     }
 }

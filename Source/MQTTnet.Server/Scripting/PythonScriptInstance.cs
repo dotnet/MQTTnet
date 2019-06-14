@@ -8,14 +8,17 @@ namespace MQTTnet.Server.Scripting
     {
         private readonly ScriptScope _scriptScope;
 
-        public PythonScriptInstance(string name, ScriptScope scriptScope)
+        public PythonScriptInstance(string uid, string path, ScriptScope scriptScope)
         {
-            _scriptScope = scriptScope;
+            Uid = uid;
+            Path = path;
 
-            Name = name;
+            _scriptScope = scriptScope;
         }
 
-        public string Name { get; }
+        public string Uid { get; }
+
+        public string Path { get; }
 
         public bool InvokeOptionalFunction(string name, params object[] parameters)
         {

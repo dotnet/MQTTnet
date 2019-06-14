@@ -14,7 +14,7 @@ namespace MQTTnet.Server
 {
     public class MqttServer : IMqttServer
     {
-        private readonly MqttServerEventDispatcher _eventDispatcher = new MqttServerEventDispatcher();
+        private readonly MqttServerEventDispatcher _eventDispatcher;
         private readonly ICollection<IMqttServerAdapter> _adapters;
         private readonly IMqttNetChildLogger _logger;
 
@@ -29,6 +29,8 @@ namespace MQTTnet.Server
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttServer));
+
+            _eventDispatcher = new MqttServerEventDispatcher(logger.CreateChildLogger(nameof(MqttServerEventDispatcher)));
         }
 
         public IMqttServerStartedHandler StartedHandler { get; set; }

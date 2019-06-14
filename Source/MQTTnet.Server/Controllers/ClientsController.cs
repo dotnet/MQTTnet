@@ -4,12 +4,14 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MQTTnet.Server.Mqtt;
 using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server.Controllers
 {
+    [Authorize]
     [ApiController]
     public class ClientsController : ControllerBase
     {
@@ -55,6 +57,22 @@ namespace MQTTnet.Server.Controllers
             }
 
             await client.DisconnectAsync();
+            return StatusCode((int)HttpStatusCode.NoContent);
+        }
+
+        [Route("api/v1/clients/{clientId}/statistics")]
+        [HttpDelete]
+        public async Task<ActionResult> DeleteClientStatistics(string clientId)
+        {
+            clientId = HttpUtility.UrlDecode(clientId);
+
+            var client = (await _mqttServerService.GetClientStatusAsync()).FirstOrDefault(c => c.ClientId == clientId);
+            if (client == null)
+            {
+                return new StatusCodeResult((int)HttpStatusCode.NotFound);
+            }
+
+            client.ResetStatistics();
             return StatusCode((int)HttpStatusCode.NoContent);
         }
     }

@@ -10,6 +10,9 @@ using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server;
+
+using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
 
 namespace MQTTnet.Formatter.V5
 {
@@ -82,7 +85,23 @@ namespace MQTTnet.Formatter.V5
             return new MqttClientAuthenticateResult
             {
                 IsSessionPresent = connAckPacket.IsSessionPresent,
-                ResultCode = (MqttClientConnectResultCode)connAckPacket.ReasonCode.Value
+                ResultCode = (MqttClientConnectResultCode)connAckPacket.ReasonCode.Value,
+                WildcardSubscriptionAvailable = connAckPacket.Properties?.WildcardSubscriptionAvailable,
+                RetainAvailable = connAckPacket.Properties?.RetainAvailable,
+                AssignedClientIdentifier = connAckPacket.Properties?.AssignedClientIdentifier,
+                AuthenticationMethod = connAckPacket.Properties?.AuthenticationMethod,
+                AuthenticationData = connAckPacket.Properties?.AuthenticationData,
+                MaximumPacketSize = connAckPacket.Properties?.MaximumPacketSize,
+                ReasonString = connAckPacket.Properties?.ReasonString,
+                ReceiveMaximum = connAckPacket.Properties?.ReceiveMaximum,
+                ResponseInformation = connAckPacket.Properties?.ResponseInformation,
+                TopicAliasMaximum = connAckPacket.Properties?.TopicAliasMaximum,
+                ServerReference = connAckPacket.Properties?.ServerReference,
+                ServerKeepAlive = connAckPacket.Properties?.ServerKeepAlive,
+                SessionExpiryInterval = connAckPacket.Properties?.SessionExpiryInterval,
+                SubscriptionIdentifiersAvailable = connAckPacket.Properties?.SubscriptionIdentifiersAvailable,
+                SharedSubscriptionAvailable = connAckPacket.Properties?.SharedSubscriptionAvailable,
+                UserProperties = connAckPacket.Properties?.UserProperties
             };
         }
 
@@ -109,6 +128,22 @@ namespace MQTTnet.Formatter.V5
                     RequestResponseInformation = options.RequestResponseInformation,
                     SessionExpiryInterval = options.SessionExpiryInterval,
                     TopicAliasMaximum = options.TopicAliasMaximum
+                }
+            };
+        }
+
+        public MqttConnAckPacket CreateConnAckPacket(MqttConnectionValidatorContext connectionValidatorContext)
+        {
+            return new MqttConnAckPacket
+            {
+                ReasonCode = connectionValidatorContext.ReasonCode,
+                Properties = new MqttConnAckPacketProperties
+                {
+                    UserProperties = connectionValidatorContext.UserProperties,
+                    AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
+                    AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
+                    AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,
+                    ReasonString = connectionValidatorContext.ReasonString
                 }
             };
         }
@@ -160,7 +195,7 @@ namespace MQTTnet.Formatter.V5
 
             packet.TopicFilters.AddRange(options.TopicFilters);
             packet.Properties.SubscriptionIdentifier = options.SubscriptionIdentifier;
-            packet.Properties.UserProperties.AddRange(options.UserProperties);
+            packet.Properties.UserProperties = options.UserProperties;
 
             return packet;
         }
@@ -175,7 +210,7 @@ namespace MQTTnet.Formatter.V5
             };
 
             packet.TopicFilters.AddRange(options.TopicFilters);
-            packet.Properties.UserProperties.AddRange(options.UserProperties);
+            packet.Properties.UserProperties = options.UserProperties;
 
             return packet;
         }

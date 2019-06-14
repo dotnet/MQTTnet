@@ -112,17 +112,27 @@ namespace MQTTnet.Implementations
 
                 stream = new NetworkStream(clientSocket, true);
 
+                X509Certificate2 clientCertificate = null;
+
                 if (_tlsCertificate != null)
                 {
                     var sslStream = new SslStream(stream, false);
-                    await sslStream.AuthenticateAsServerAsync(_tlsCertificate, false, _tlsOptions.SslProtocol, false).ConfigureAwait(false);
+
+                    await sslStream.AuthenticateAsServerAsync(
+                        _tlsCertificate, 
+                        _tlsOptions.ClientCertificateRequired, 
+                        _tlsOptions.SslProtocol, 
+                        _tlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
+
                     stream = sslStream;
+
+                    clientCertificate = sslStream.RemoteCertificate as X509Certificate2;
                 }
 
                 var clientHandler = ClientHandler;
                 if (clientHandler != null)
                 {
-                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(stream, remoteEndPoint), new MqttPacketFormatterAdapter(), _logger))
+                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(stream, remoteEndPoint, clientCertificate), new MqttPacketFormatterAdapter(), _logger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }

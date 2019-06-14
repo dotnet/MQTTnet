@@ -12,6 +12,7 @@ using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
+using MQTTnet.Client.Subscribing;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -121,6 +122,45 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public async Task Intercept_Subscription()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithSubscriptionInterceptor(
+                    c =>
+                    {
+                        // Set the topic to "a" regards what the client wants to subscribe.
+                        c.TopicFilter.Topic = "a";
+                    }));
+
+                var topicAReceived = false;
+                var topicBReceived = false;
+
+                var client = await testEnvironment.ConnectClientAsync();
+                client.UseApplicationMessageReceivedHandler(c =>
+                {
+                    if (c.ApplicationMessage.Topic == "a")
+                    {
+                        topicAReceived = true;
+                    }
+                    else if (c.ApplicationMessage.Topic == "b")
+                    {
+                        topicBReceived = true;
+                    }
+                });
+
+                await client.SubscribeAsync("b");
+
+                await client.PublishAsync("a");
+
+                await Task.Delay(500);
+
+                Assert.IsTrue(topicAReceived);
+                Assert.IsFalse(topicBReceived);
+            }
+        }
+
+        [TestMethod]
         public async Task Subscribe_Unsubscribe()
         {
             using (var testEnvironment = new TestEnvironment())
@@ -155,7 +195,7 @@ namespace MQTTnet.Tests
                 Assert.AreEqual(1, receivedMessagesCount);
 
                 var unsubscribeEventCalled = false;
-                server.ClientUnsubscribedTopicHandler = new MqttServerClientUnsubscribedTopicHandlerDelegate(e => 
+                server.ClientUnsubscribedTopicHandler = new MqttServerClientUnsubscribedTopicHandlerDelegate(e =>
                 {
                     unsubscribeEventCalled = e.TopicFilter == "a" && e.ClientId == "c1";
                 });
@@ -171,6 +211,78 @@ namespace MQTTnet.Tests
                 await Task.Delay(500);
 
                 Assert.AreEqual(1, receivedMessagesCount);
+            }
+        }
+
+        [TestMethod]
+        public async Task Subscribe_Multiple_In_Single_Request()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServerAsync();
+
+                var c1 = await testEnvironment.ConnectClientAsync();
+                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
+                    .WithTopicFilter("a")
+                    .WithTopicFilter("b")
+                    .WithTopicFilter("c")
+                    .Build());
+
+                var c2 = await testEnvironment.ConnectClientAsync();
+
+                await c2.PublishAsync("a");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 1);
+
+                await c2.PublishAsync("b");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 2);
+
+                await c2.PublishAsync("c");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 3);
+            }
+        }
+
+        [TestMethod]
+        public async Task Subscribe_Multiple_In_Multiple_Request()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServerAsync();
+
+                var c1 = await testEnvironment.ConnectClientAsync();
+                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
+                    .WithTopicFilter("a")
+                    .Build());
+
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
+                    .WithTopicFilter("b")
+                    .Build());
+
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
+                    .WithTopicFilter("c")
+                    .Build());
+
+                var c2 = await testEnvironment.ConnectClientAsync();
+
+                await c2.PublishAsync("a");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 1);
+
+                await c2.PublishAsync("b");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 2);
+
+                await c2.PublishAsync("c");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 3);
             }
         }
 
@@ -303,7 +415,7 @@ namespace MQTTnet.Tests
             using (var testEnvironment = new TestEnvironment())
             {
                 var server = await testEnvironment.StartServerAsync();
-                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(e  => server.SubscribeAsync(e.ClientId, "topic1"));
+                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(e => server.SubscribeAsync(e.ClientId, "topic1"));
 
                 var client = await testEnvironment.ConnectClientAsync();
                 var receivedMessages = new List<MqttApplicationMessage>();
@@ -616,7 +728,7 @@ namespace MQTTnet.Tests
             {
                 await testEnvironment.StartServerAsync(
                     new MqttServerOptionsBuilder().WithApplicationMessageInterceptor(
-                        c => { c.ApplicationMessage = new MqttApplicationMessage {Topic = "new_topic" }; }));
+                        c => { c.ApplicationMessage = new MqttApplicationMessage { Topic = "new_topic" }; }));
 
                 string receivedTopic = null;
                 var c1 = await testEnvironment.ConnectClientAsync();
@@ -793,7 +905,7 @@ namespace MQTTnet.Tests
 
                 var events = new List<string>();
 
-                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(_ => 
+                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(_ =>
                 {
                     lock (events)
                     {
@@ -977,7 +1089,7 @@ namespace MQTTnet.Tests
                 var client2 = await testEnvironment.ConnectClientAsync();
 
                 var buffer = new StringBuilder();
-                
+
                 client2.UseApplicationMessageReceivedHandler(c =>
                 {
                     lock (buffer)
@@ -1009,7 +1121,7 @@ namespace MQTTnet.Tests
 
                 var clientStatus = await server.GetClientStatusAsync();
                 Assert.AreEqual(0, clientStatus.Count);
-                
+
                 var client2 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("b"));
                 await client2.PublishAsync("x", "1");
                 await client2.PublishAsync("x", "2");

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
+using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
@@ -12,6 +13,7 @@ using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -136,6 +138,23 @@ namespace MQTTnet.Client
                     await DisconnectInternalAsync(null, null, null).ConfigureAwait(false);
                 }
             }
+        }
+
+        public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
+            return SendAsync(new MqttAuthPacket
+            {
+                Properties = new MqttAuthPacketProperties
+                {
+                    // This must always be equal to the value from the CONNECT packet. So we use it here to ensure that.
+                    AuthenticationMethod = Options.AuthenticationMethod, 
+                    AuthenticationData = data.AuthenticationData,
+                    ReasonString = data.ReasonString,
+                    UserProperties = data.UserProperties
+                }
+            }, cancellationToken);
         }
 
         public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken)
@@ -269,7 +288,9 @@ namespace MQTTnet.Client
                 var disconnectedHandler = DisconnectedHandler;
                 if (disconnectedHandler != null)
                 {
-                    await disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult)).ConfigureAwait(false);
+                    // This handler must be executed in a new thread because otherwise a dead lock may happen
+                    // when trying to reconnect in that handler etc.
+                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult))).Forget(_logger);
                 }
             }
         }
@@ -341,6 +362,7 @@ namespace MQTTnet.Client
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
+                    // Values described here: [MQTT-3.1.2-24].
                     var keepAliveSendInterval = TimeSpan.FromSeconds(Options.KeepAlivePeriod.TotalSeconds * 0.75);
                     if (Options.KeepAliveSendInterval.HasValue)
                     {
@@ -473,6 +495,14 @@ namespace MQTTnet.Client
                     _packetDispatcher.Dispatch(packet);
 
                     await DisconnectAsync(null, cancellationToken).ConfigureAwait(false);
+                }
+                else if (packet is MqttAuthPacket authPacket)
+                {
+                    var extendedAuthenticationExchangeHandler = Options.ExtendedAuthenticationExchangeHandler;
+                    if (extendedAuthenticationExchangeHandler != null)
+                    {
+                        await extendedAuthenticationExchangeHandler.HandleRequestAsync(new MqttExtendedAuthenticationExchangeContext(authPacket, this)).ConfigureAwait(false);
+                    }
                 }
                 else
                 {

@@ -10,17 +10,18 @@ namespace MQTTnet.Server
     {
         private readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
 
-        private readonly IMqttClientSession _clientSession;
+        private readonly string _clientId;
+        private readonly Func<Task> _keepAliveElapsedCallback;
         private readonly IMqttNetChildLogger _logger;
 
         private bool _isPaused;
 
-        public MqttClientKeepAliveMonitor(IMqttClientSession clientSession, IMqttNetChildLogger logger)
+        public MqttClientKeepAliveMonitor(string clientId, Func<Task> keepAliveElapsedCallback, IMqttNetChildLogger logger)
         {
+            _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            _keepAliveElapsedCallback = keepAliveElapsedCallback ?? throw new ArgumentNullException(nameof(keepAliveElapsedCallback));
+            
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-
-            _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));
-
             _logger = logger.CreateChildLogger(nameof(MqttClientKeepAliveMonitor));
         }
 
@@ -62,8 +63,8 @@ namespace MQTTnet.Server
                     // If the client sends 1 sec. the server will allow up to 1.5 seconds.
                     if (!_isPaused && _lastPacketReceivedTracker.Elapsed.TotalSeconds >= keepAlivePeriod * 1.5D)
                     {
-                        _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientSession.ClientId);
-                        await _clientSession.StopAsync().ConfigureAwait(false);
+                        _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", _clientId);
+                        await _keepAliveElapsedCallback().ConfigureAwait(false);
 
                         return;
                     }
@@ -80,11 +81,11 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", _clientSession.ClientId);
+                _logger.Error(exception, "Client '{0}': Unhandled exception while checking keep alive timeouts.", _clientId);
             }
             finally
             {
-                _logger.Verbose("Client '{0}': Stopped checking keep alive timeout.", _clientSession.ClientId);
+                _logger.Verbose("Client '{0}': Stopped checking keep alive timeout.", _clientId);
             }
         }
     }

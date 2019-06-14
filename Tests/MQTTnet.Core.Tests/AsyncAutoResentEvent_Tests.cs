@@ -24,7 +24,9 @@ namespace MQTTnet.Tests
             
             var waitOnePassed = false;
 
+#pragma warning disable 4014
             Task.Run(async () =>
+#pragma warning restore 4014
             {
                 await @lock.WaitOneAsync(TimeSpan.FromSeconds(2));
                 waitOnePassed = true;
@@ -121,7 +123,7 @@ namespace MQTTnet.Tests
                 waitTask.GetAwaiter().GetResult();
                 Assert.IsTrue(false, "Task was expected to transition to a canceled state.");
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
             }
 

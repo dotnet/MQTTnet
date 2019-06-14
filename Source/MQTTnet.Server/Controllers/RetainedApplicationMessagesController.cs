@@ -4,11 +4,13 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MQTTnet.Server.Mqtt;
 
 namespace MQTTnet.Server.Controllers
 {
+    [Authorize]
     [ApiController]
     public class RetainedApplicationMessagesController : ControllerBase
     {

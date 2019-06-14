@@ -135,6 +135,10 @@
       <Project>{c444e9c8-95fa-430e-9126-274129de16cd}</Project>
       <Name>MQTTnet.Extensions.Rpc</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj">
+      <Project>{2BD01D53-4CA5-4142-BE8D-313876395E3E}</Project>
+      <Name>MQTTnet.Extensions.WebSocket4Net</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj">
       <Project>{3587e506-55a2-4eb3-99c7-dc01e42d25d2}</Project>
       <Name>MQTTnet</Name>

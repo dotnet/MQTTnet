@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,6 +9,7 @@ namespace MQTTnet.Channel
     {
         string Endpoint { get; }
         bool IsSecureConnection { get; }
+        X509Certificate2 ClientCertificate { get; }
 
         Task ConnectAsync(CancellationToken cancellationToken);
         Task DisconnectAsync(CancellationToken cancellationToken);

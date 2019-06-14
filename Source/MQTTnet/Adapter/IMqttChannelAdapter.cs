@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Formatter;
@@ -11,6 +12,8 @@ namespace MQTTnet.Adapter
         string Endpoint { get; }
 
         bool IsSecureConnection { get; }
+
+        X509Certificate2 ClientCertificate { get; }
 
         MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
@@ -29,5 +32,7 @@ namespace MQTTnet.Adapter
         Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken);
 
         Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken);
+
+        void ResetStatistics();
     }
 }

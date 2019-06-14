@@ -1,6 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQTTnet.Packets;
 using System;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -76,6 +77,8 @@ namespace MQTTnet.Benchmarks
             public string Endpoint { get; } = string.Empty;
 
             public bool IsSecureConnection { get; } = false;
+
+            public X509Certificate2 ClientCertificate { get; }
 
             public void Reset()
             {

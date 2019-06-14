@@ -90,6 +90,9 @@ If(Test-path $destination) {Remove-item $destination}
 ####################################################################
 
 # Create NuGet packages.
+
+Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "nuget.exe"
+
 Remove-Item .\NuGet -Force -Recurse -ErrorAction SilentlyContinue
 
 Copy-Item MQTTnet.AspNetCore.nuspec -Destination MQTTnet.AspNetCore.nuspec.old -Force
@@ -113,3 +116,5 @@ Move-Item MQTTnet.AspNetCore.nuspec.old -Destination MQTTnet.AspNetCore.nuspec -
 Move-Item MQTTnet.Extensions.Rpc.nuspec.old -Destination MQTTnet.Extensions.Rpc.nuspec -Force
 Move-Item MQTTnet.Extensions.ManagedClient.nuspec.old -Destination MQTTnet.Extensions.ManagedClient.nuspec -Force
 Move-Item MQTTnet.Extensions.WebSocket4Net.nuspec.old -Destination MQTTnet.Extensions.WebSocket4Net.nuspec -Force
+
+Remove-Item "nuget.exe" -Force -Recurse -ErrorAction SilentlyContinue

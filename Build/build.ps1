@@ -67,6 +67,17 @@ If(Test-path $destination) {Remove-item $destination}
 
 ####################################################################
 
+# Build MQTTnet.Server Linux-ARM
+&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime linux-arm 
+
+$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2\linux-ARM\publish"
+$destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Linux-ARM-v$nugetVersion.zip"
+If(Test-path $destination) {Remove-item $destination}
+ Add-Type -assembly "system.io.compression.filesystem"
+[io.compression.zipfile]::CreateFromDirectory($source, $destination) 
+
+####################################################################
+
 # Build MQTTnet.Server Windows-x64
 &dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime win-x64
 

@@ -23,7 +23,7 @@ namespace MQTTnet.Tests
             var p = new MqttConnectPacket
             {
                 ClientId = "XYZ",
-                Password = "PASS",
+                Password = Encoding.UTF8.GetBytes("PASS"),
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true
@@ -38,7 +38,7 @@ namespace MQTTnet.Tests
             var p = new MqttConnectPacket
             {
                 ClientId = "XYZ",
-                Password = "PASS",
+                Password = Encoding.UTF8.GetBytes("PASS"),
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true
@@ -53,7 +53,7 @@ namespace MQTTnet.Tests
             var p = new MqttConnectPacket
             {
                 ClientId = "XYZ",
-                Password = "PASS",
+                Password = Encoding.UTF8.GetBytes("PASS"),
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true,
@@ -75,7 +75,7 @@ namespace MQTTnet.Tests
             var p = new MqttConnectPacket
             {
                 ClientId = "XYZ",
-                Password = "PASS",
+                Password = Encoding.UTF8.GetBytes("PASS"),
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true
@@ -90,7 +90,7 @@ namespace MQTTnet.Tests
             var p = new MqttConnectPacket
             {
                 ClientId = "XYZ",
-                Password = "PASS",
+                Password = Encoding.UTF8.GetBytes("PASS"),
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true,

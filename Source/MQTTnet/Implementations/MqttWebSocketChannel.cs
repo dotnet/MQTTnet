@@ -11,9 +11,9 @@ namespace MQTTnet.Implementations
 {
     public class MqttWebSocketChannel : IMqttChannel
     {
-        private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private readonly MqttClientWebSocketOptions _options;
 
+        private SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private WebSocket _webSocket;
 
         public MqttWebSocketChannel(MqttClientWebSocketOptions options)
@@ -21,17 +21,20 @@ namespace MQTTnet.Implementations
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public MqttWebSocketChannel(WebSocket webSocket, string endpoint, bool isSecureConnection)
+        public MqttWebSocketChannel(WebSocket webSocket, string endpoint, bool isSecureConnection, X509Certificate2 clientCertificate)
         {
             _webSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
 
             Endpoint = endpoint;
             IsSecureConnection = isSecureConnection;
+            ClientCertificate = clientCertificate;
         }
 
         public string Endpoint { get; }
 
         public bool IsSecureConnection { get; private set; }
+
+        public X509Certificate2 ClientCertificate { get; private set; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
@@ -114,9 +117,14 @@ namespace MQTTnet.Implementations
 
         public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            // This lock is required because the client will throw an exception if _SendAsync_ is 
+            // The lock is required because the client will throw an exception if _SendAsync_ is 
             // called from multiple threads at the same time. But this issue only happens with several
             // framework versions.
+            if (_sendLock == null)
+            {
+                return;
+            }
+
             await _sendLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
@@ -124,13 +132,14 @@ namespace MQTTnet.Implementations
             }
             finally
             {
-                _sendLock.Release();
+                _sendLock?.Release();
             }
         }
 
         public void Dispose()
         {
             _sendLock?.Dispose();
+            _sendLock = null;
 
             try
             {

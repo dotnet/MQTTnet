@@ -7,12 +7,12 @@ using MQTTnet.Server.Scripting;
 
 namespace MQTTnet.Server.Mqtt
 {
-    public class MqttConnectionValidator : IMqttServerConnectionValidator
+    public class MqttServerConnectionValidator : IMqttServerConnectionValidator
     {
         private readonly PythonScriptHostService _pythonScriptHostService;
         private readonly ILogger _logger;
 
-        public MqttConnectionValidator(PythonScriptHostService pythonScriptHostService, ILogger<MqttConnectionValidator> logger)
+        public MqttServerConnectionValidator(PythonScriptHostService pythonScriptHostService, ILogger<MqttServerConnectionValidator> logger)
         {
             _pythonScriptHostService = pythonScriptHostService ?? throw new ArgumentNullException(nameof(pythonScriptHostService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -24,17 +24,22 @@ namespace MQTTnet.Server.Mqtt
             {
                 var pythonContext = new PythonDictionary
                 {
-                    { "client_id", context.ClientId },
                     { "endpoint", context.Endpoint },
                     { "is_secure_connection", context.IsSecureConnection },
+                    { "client_id", context.ClientId },
                     { "username", context.Username },
                     { "password", context.Password },
-                    { "result", PythonConvert.Pythonfy(context.ReturnCode) }
+                    { "raw_password", new Bytes(context.RawPassword) },
+                    { "clean_session", context.CleanSession},
+                    { "authentication_method", context.AuthenticationMethod},
+                    { "authentication_data", new Bytes(context.AuthenticationData)},
+
+                    { "result", PythonConvert.Pythonfy(context.ReasonCode) }
                 };
 
                 _pythonScriptHostService.InvokeOptionalFunction("on_validate_client_connection", pythonContext);
 
-                context.ReturnCode = PythonConvert.ParseEnum<MqttConnectReturnCode>((string)pythonContext["result"]);
+                context.ReasonCode = PythonConvert.ParseEnum<MqttConnectReasonCode>((string)pythonContext["result"]);
             }
             catch (Exception exception)
             {

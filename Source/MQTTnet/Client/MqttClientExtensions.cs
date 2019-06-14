@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
+using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
@@ -170,21 +171,36 @@ namespace MQTTnet.Client
 
         public static Task<MqttClientAuthenticateResult> ConnectAsync(this IMqttClient client, IMqttClientOptions options)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             return client.ConnectAsync(options, CancellationToken.None);
         }
 
         public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectOptions options)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             return client.DisconnectAsync(options, CancellationToken.None);
+        }
+
+        public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            return client.SendExtendedAuthenticationExchangeDataAsync(data, CancellationToken.None);
         }
 
         public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, MqttClientSubscribeOptions options)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             return client.SubscribeAsync(options, CancellationToken.None);
         }
 
         public static Task<MqttClientUnsubscribeResult> UnsubscribeAsync(this IMqttClient client, MqttClientUnsubscribeOptions options)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
             return client.UnsubscribeAsync(options, CancellationToken.None);
         }
 

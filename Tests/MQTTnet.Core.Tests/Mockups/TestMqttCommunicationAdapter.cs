@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -17,6 +18,8 @@ namespace MQTTnet.Tests.Mockups
         public string Endpoint { get; } = string.Empty;
 
         public bool IsSecureConnection { get; } = false;
+
+        public X509Certificate2 ClientCertificate { get; }
 
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; } = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
 
@@ -64,6 +67,10 @@ namespace MQTTnet.Tests.Mockups
                     return null;
                 }
             }, cancellationToken);
+        }
+
+        public void ResetStatistics()
+        {
         }
 
         private void EnqueuePacketInternal(MqttBasePacket packet)

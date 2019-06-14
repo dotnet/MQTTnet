@@ -12,7 +12,7 @@ namespace MQTTnet.Server.Mqtt
     {
         private readonly MqttFactory _mqttFactory;
 
-        public CustomMqttFactory(SettingsModel settings, ILogger<MqttServer> logger)
+        public CustomMqttFactory(MqttSettingsModel settings, ILogger<MqttServer> logger)
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
             if (logger == null) throw new ArgumentNullException(nameof(logger));

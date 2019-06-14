@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.28729.10
+VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Tests", "Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj", "{A7FF0C91-25DE-4BA6-B39E-F54E8DADF1CC}"
 EndProject
@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{67C28AC1
 		Build\MQTTnet.AspNetCore.nuspec = Build\MQTTnet.AspNetCore.nuspec
 		Build\MQTTnet.Extensions.ManagedClient.nuspec = Build\MQTTnet.Extensions.ManagedClient.nuspec
 		Build\MQTTnet.Extensions.Rpc.nuspec = Build\MQTTnet.Extensions.Rpc.nuspec
+		Build\MQTTnet.Extensions.WebSocket4Net.nuspec = Build\MQTTnet.Extensions.WebSocket4Net.nuspec
 		Build\MQTTnet.NETStandard.nuspec = Build\MQTTnet.NETStandard.nuspec
 		Build\MQTTnet.nuspec = Build\MQTTnet.nuspec
 		Build\upload.ps1 = Build\upload.ps1
@@ -49,6 +50,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.AspNetCore.Tests", "Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj", "{61B62223-F5D0-48E4-BBD6-2CBA9353CB5E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Server", "Source\MQTTnet.Server\MQTTnet.Server.csproj", "{5699FB8C-838C-4AB0-80A5-9CA809F9B65B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.WebSocket4Net", "Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj", "{2BD01D53-4CA5-4142-BE8D-313876395E3E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -245,6 +248,22 @@ Global
 		{5699FB8C-838C-4AB0-80A5-9CA809F9B65B}.Release|x64.Build.0 = Release|Any CPU
 		{5699FB8C-838C-4AB0-80A5-9CA809F9B65B}.Release|x86.ActiveCfg = Release|Any CPU
 		{5699FB8C-838C-4AB0-80A5-9CA809F9B65B}.Release|x86.Build.0 = Release|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Debug|ARM.Build.0 = Debug|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Debug|x64.Build.0 = Debug|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Debug|x86.Build.0 = Debug|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Release|ARM.ActiveCfg = Release|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Release|ARM.Build.0 = Release|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Release|x64.ActiveCfg = Release|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Release|x64.Build.0 = Release|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Release|x86.ActiveCfg = Release|Any CPU
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -261,6 +280,7 @@ Global
 		{C400533A-8EBA-4F0B-BF4D-295C3708604B} = {12816BCC-AF9E-44A9-9AE5-C246AF2A0587}
 		{61B62223-F5D0-48E4-BBD6-2CBA9353CB5E} = {9248C2E1-B9D6-40BF-81EC-86004D7765B4}
 		{5699FB8C-838C-4AB0-80A5-9CA809F9B65B} = {32A630A7-2598-41D7-B625-204CD906F5FB}
+		{2BD01D53-4CA5-4142-BE8D-313876395E3E} = {12816BCC-AF9E-44A9-9AE5-C246AF2A0587}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07536672-5CBC-4BE3-ACE0-708A431A7894}

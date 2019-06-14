@@ -23,34 +23,34 @@ namespace MQTTnet.Server.Mqtt
     {
         private readonly ILogger<MqttServerService> _logger;
 
-        private readonly SettingsModel _settings;
+        private readonly MqttSettingsModel _settings;
         private readonly MqttApplicationMessageInterceptor _mqttApplicationMessageInterceptor;
         private readonly MqttServerStorage _mqttServerStorage;
         private readonly MqttClientConnectedHandler _mqttClientConnectedHandler;
         private readonly MqttClientDisconnectedHandler _mqttClientDisconnectedHandler;
         private readonly MqttClientSubscribedTopicHandler _mqttClientSubscribedTopicHandler;
         private readonly MqttClientUnsubscribedTopicHandler _mqttClientUnsubscribedTopicHandler;
-        private readonly MqttConnectionValidator _mqttConnectionValidator;
+        private readonly MqttServerConnectionValidator _mqttConnectionValidator;
         private readonly IMqttServer _mqttServer;
         private readonly MqttSubscriptionInterceptor _mqttSubscriptionInterceptor;
         private readonly PythonScriptHostService _pythonScriptHostService;
         private readonly MqttWebSocketServerAdapter _webSocketServerAdapter;
 
         public MqttServerService(
-            SettingsModel settings,
+            MqttSettingsModel mqttSettings,
             CustomMqttFactory mqttFactory,
             MqttClientConnectedHandler mqttClientConnectedHandler,
             MqttClientDisconnectedHandler mqttClientDisconnectedHandler,
             MqttClientSubscribedTopicHandler mqttClientSubscribedTopicHandler,
             MqttClientUnsubscribedTopicHandler mqttClientUnsubscribedTopicHandler,
-            MqttConnectionValidator mqttConnectionValidator,
+            MqttServerConnectionValidator mqttConnectionValidator,
             MqttSubscriptionInterceptor mqttSubscriptionInterceptor,
             MqttApplicationMessageInterceptor mqttApplicationMessageInterceptor,
             MqttServerStorage mqttServerStorage,
             PythonScriptHostService pythonScriptHostService,            
             ILogger<MqttServerService> logger)
         {
-            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _settings = mqttSettings ?? throw new ArgumentNullException(nameof(mqttSettings));
             _mqttClientConnectedHandler = mqttClientConnectedHandler ?? throw new ArgumentNullException(nameof(mqttClientConnectedHandler));
             _mqttClientDisconnectedHandler = mqttClientDisconnectedHandler ?? throw new ArgumentNullException(nameof(mqttClientDisconnectedHandler));
             _mqttClientSubscribedTopicHandler = mqttClientSubscribedTopicHandler ?? throw new ArgumentNullException(nameof(mqttClientSubscribedTopicHandler));

@@ -6,6 +6,6 @@
 
         public int WriteInterval { get; set; } = 10;
 
-        public string Filename { get; set; } = "RetainedApplicationMessages.json";
+        public string Path { get; set; }
     }
 }

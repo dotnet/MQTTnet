@@ -2,6 +2,7 @@
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests
 {
@@ -11,7 +12,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void MqttSubscriptionsManager_SubscribeSingleSuccess()
         {
-            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(), new MqttServerOptions());
+            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
@@ -26,7 +27,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void MqttSubscriptionsManager_SubscribeDifferentQoSSuccess()
         {
-            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(), new MqttServerOptions());
+            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
@@ -41,7 +42,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void MqttSubscriptionsManager_SubscribeTwoTimesSuccess()
         {
-            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(), new MqttServerOptions());
+            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter { Topic = "#", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
@@ -57,7 +58,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void MqttSubscriptionsManager_SubscribeSingleNoSuccess()
         {
-            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(), new MqttServerOptions());
+            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
@@ -70,7 +71,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void MqttSubscriptionsManager_SubscribeAndUnsubscribeSingle()
         {
-            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(), new MqttServerOptions());
+            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());

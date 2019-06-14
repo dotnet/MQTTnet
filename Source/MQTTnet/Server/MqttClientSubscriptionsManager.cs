@@ -35,18 +35,21 @@ namespace MQTTnet.Server
                 CloseConnection = false
             };
 
-            foreach (var topicFilter in subscribePacket.TopicFilters)
+            foreach (var originalTopicFilter in subscribePacket.TopicFilters)
             {
-                var interceptorContext = await InterceptSubscribeAsync(topicFilter).ConfigureAwait(false);
-                if (!interceptorContext.AcceptSubscription)
+                var interceptorContext = await InterceptSubscribeAsync(originalTopicFilter).ConfigureAwait(false);
+
+                var finalTopicFilter = interceptorContext.TopicFilter;
+
+                if (finalTopicFilter == null || string.IsNullOrEmpty(finalTopicFilter.Topic) || !interceptorContext.AcceptSubscription)
                 {
                     result.ResponsePacket.ReturnCodes.Add(MqttSubscribeReturnCode.Failure);
                     result.ResponsePacket.ReasonCodes.Add(MqttSubscribeReasonCode.UnspecifiedError);
                 }
                 else
                 {
-                    result.ResponsePacket.ReturnCodes.Add(ConvertToSubscribeReturnCode(topicFilter.QualityOfServiceLevel));
-                    result.ResponsePacket.ReasonCodes.Add(ConvertToSubscribeReasonCode(topicFilter.QualityOfServiceLevel));
+                    result.ResponsePacket.ReturnCodes.Add(ConvertToSubscribeReturnCode(finalTopicFilter.QualityOfServiceLevel));
+                    result.ResponsePacket.ReasonCodes.Add(ConvertToSubscribeReasonCode(finalTopicFilter.QualityOfServiceLevel));
                 }
 
                 if (interceptorContext.CloseConnection)
@@ -54,14 +57,14 @@ namespace MQTTnet.Server
                     result.CloseConnection = true;
                 }
 
-                if (interceptorContext.AcceptSubscription)
+                if (interceptorContext.AcceptSubscription && !string.IsNullOrEmpty(finalTopicFilter?.Topic))
                 {
                     lock (_subscriptions)
                     {
-                        _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                        _subscriptions[finalTopicFilter.Topic] = finalTopicFilter.QualityOfServiceLevel;
                     }
 
-                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientId, topicFilter).ConfigureAwait(false);
+                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientId, finalTopicFilter).ConfigureAwait(false);
                 }
             }
 

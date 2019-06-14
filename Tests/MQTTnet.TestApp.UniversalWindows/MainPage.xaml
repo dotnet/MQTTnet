@@ -63,6 +63,7 @@
                         <StackPanel Grid.Column="1" Grid.Row="6" Orientation="Horizontal">
                             <RadioButton x:Name="UseTcp" IsChecked="True" GroupName="transport">TCP</RadioButton>
                             <RadioButton x:Name="UseWs" GroupName="transport">WS</RadioButton>
+                            <RadioButton x:Name="UseWs4Net" GroupName="transport">WS (WebSocket4Net)</RadioButton>
                             <CheckBox x:Name="UseTls">Use TLS</CheckBox>
                         </StackPanel>
 

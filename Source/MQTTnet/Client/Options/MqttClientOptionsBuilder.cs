@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
+using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Client.Options
@@ -116,12 +118,30 @@ namespace MQTTnet.Client.Options
 
         public MqttClientOptionsBuilder WithCredentials(string username, string password = null)
         {
+            byte[] passwordBuffer = null;
+
+            if (password != null)
+            {
+                passwordBuffer = Encoding.UTF8.GetBytes(password);
+            }
+
+            return WithCredentials(username, passwordBuffer);
+        }
+
+        public MqttClientOptionsBuilder WithCredentials(string username, byte[] password = null)
+        {
             _options.Credentials = new MqttClientCredentials
             {
                 Username = username,
                 Password = password
             };
 
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedAuthenticationExchangeHandler handler)
+        {
+            _options.ExtendedAuthenticationExchangeHandler = handler;
             return this;
         }
 
@@ -136,6 +156,7 @@ namespace MQTTnet.Client.Options
             return this;
         }
 
+        // TODO: Consider creating _MqttClientTcpOptionsBuilder_ as overload.
         public MqttClientOptionsBuilder WithTcpServer(Action<MqttClientTcpOptions> optionsBuilder)
         {
             if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));

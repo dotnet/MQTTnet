@@ -40,19 +40,26 @@ namespace MQTTnet.AspNetCore
             var endpoint = $"{httpContext.Connection.RemoteIpAddress}:{httpContext.Connection.RemotePort}";
             
             var clientCertificate = await httpContext.Connection.GetClientCertificateAsync().ConfigureAwait(false);
-            var isSecureConnection = clientCertificate != null;
-            clientCertificate?.Dispose();
-
-            var clientHandler = ClientHandler;
-            if (clientHandler != null)
+            try
             {
-                var writer = new SpanBasedMqttPacketWriter();
-                var formatter = new MqttPacketFormatterAdapter(writer);
-                var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection);
-                using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter))))
+                var isSecureConnection = clientCertificate != null;
+
+                var clientHandler = ClientHandler;
+                if (clientHandler != null)
                 {
-                    await clientHandler(channelAdapter).ConfigureAwait(false);
-                }   
+                    var writer = new SpanBasedMqttPacketWriter();
+                    var formatter = new MqttPacketFormatterAdapter(writer);
+                    var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection, clientCertificate);
+
+                    using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter))))
+                    {
+                        await clientHandler(channelAdapter).ConfigureAwait(false);
+                    }
+                }
+            }
+            finally
+            {
+                clientCertificate?.Dispose();
             }
         }
 

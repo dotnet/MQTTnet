@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
@@ -23,6 +21,7 @@ using MQTTnet.Server;
 using MQTTnet.Server.Status;
 using MqttClientConnectedEventArgs = MQTTnet.Client.Connecting.MqttClientConnectedEventArgs;
 using MqttClientDisconnectedEventArgs = MQTTnet.Client.Disconnecting.MqttClientDisconnectedEventArgs;
+using MQTTnet.Extensions.WebSocket4Net;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
@@ -83,6 +82,8 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void Connect(object sender, RoutedEventArgs e)
         {
+            var mqttFactory = new MqttFactory();
+
             var tlsOptions = new MqttClientTlsOptions
             {
                 UseTls = UseTls.IsChecked == true,
@@ -116,6 +117,17 @@ namespace MQTTnet.TestApp.UniversalWindows
                 };
             }
 
+            if (UseWs4Net.IsChecked == true)
+            {
+                options.ChannelOptions = new MqttClientWebSocketOptions
+                {
+                    Uri = Server.Text,
+                    TlsOptions = tlsOptions
+                };
+
+                mqttFactory.UseWebSocket4Net();
+            }
+
             if (options.ChannelOptions == null)
             {
                 throw new InvalidOperationException();
@@ -126,7 +138,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 options.Credentials = new MqttClientCredentials
                 {
                     Username = User.Text,
-                    Password = Password.Text
+                    Password = Encoding.UTF8.GetBytes(Password.Text)
                 };
             }
             
@@ -156,11 +168,9 @@ namespace MQTTnet.TestApp.UniversalWindows
                     _mqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected(x));
                 }
 
-                var factory = new MqttFactory();
-
                 if (UseManagedClient.IsChecked == true)
                 {
-                    _managedMqttClient = factory.CreateManagedMqttClient();
+                    _managedMqttClient = mqttFactory.CreateManagedMqttClient();
                     _managedMqttClient.UseApplicationMessageReceivedHandler(HandleReceivedApplicationMessage);
                     _managedMqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected(x));
                     _managedMqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected(x));
@@ -172,7 +182,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 }
                 else
                 {
-                    _mqttClient = factory.CreateMqttClient();
+                    _mqttClient = mqttFactory.CreateMqttClient();
                     _mqttClient.UseApplicationMessageReceivedHandler(HandleReceivedApplicationMessage);
                     _mqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected(x));
                     _mqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected(x));
@@ -204,7 +214,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async Task HandleReceivedApplicationMessage(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
-            var item = $"Timestamp: {DateTime.Now:O} | Topic: {eventArgs.ApplicationMessage.Topic} | Payload: {Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload)} | QoS: {eventArgs.ApplicationMessage.QualityOfServiceLevel}";
+            var item = $"Timestamp: {DateTime.Now:O} | Topic: {eventArgs.ApplicationMessage.Topic} | Payload: {eventArgs.ApplicationMessage.ConvertPayloadToString()} | QoS: {eventArgs.ApplicationMessage.QualityOfServiceLevel}";
 
             await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
             {
@@ -524,6 +534,13 @@ namespace MQTTnet.TestApp.UniversalWindows
                     Console.WriteLine();
                 });
 
+                void Handler(MqttApplicationMessageReceivedEventArgs args)
+                {
+                    //...
+                }
+                
+                client.UseApplicationMessageReceivedHandler(e => Handler(e));
+
                 // Subscribe after connect
 
                 client.UseConnectedHandler(async e =>
@@ -584,7 +601,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                         Credentials = new MqttClientCredentials
                         {
                             Username = "bud",
-                            Password = "%spencer%"
+                            Password = Encoding.UTF8.GetBytes("%spencer%")
                         },
                         ChannelOptions = new MqttClientTcpOptions
                         {
@@ -714,6 +731,22 @@ namespace MQTTnet.TestApp.UniversalWindows
             {
                 // Create a new MQTT server.
                 var mqttServer = new MqttFactory().CreateMqttServer();
+            }
+
+            {
+                // Setup application message interceptor.
+                var options = new MqttServerOptionsBuilder()
+                    .WithApplicationMessageInterceptor(context =>
+                    {
+                        if (context.ApplicationMessage.Topic == "my/custom/topic")
+                        {
+                            context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes("The server injected payload.");
+                        }
+
+                        // It is also possible to read the payload and extend it. For example by adding a timestamp in a JSON document.
+                        // This is useful when the IoT device has no own clock and the creation time of the message might be important.
+                    })
+                    .Build();
             }
 
             {

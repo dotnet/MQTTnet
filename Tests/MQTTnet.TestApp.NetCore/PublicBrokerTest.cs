@@ -1,10 +1,13 @@
 ﻿using MQTTnet.Client;
 using System;
 using System.IO;
+using System.Net;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
+using MQTTnet.Extensions.WebSocket4Net;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
@@ -77,6 +80,7 @@ namespace MQTTnet.TestApp.NetCore
             {
                 Write("Testing '" + name + "'... ", ConsoleColor.Gray);
                 var factory = new MqttFactory();
+                //factory.UseWebSocket4Net();
                 var client = factory.CreateMqttClient();
                 var topic = Guid.NewGuid().ToString();
 

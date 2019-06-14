@@ -4,9 +4,12 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
+using MQTTnet.Server.Configuration;
 
 namespace MQTTnet.Server.Scripting
 {
@@ -14,26 +17,27 @@ namespace MQTTnet.Server.Scripting
     {
         private readonly IDictionary<string, object> _proxyObjects = new ExpandoObject();
         private readonly List<PythonScriptInstance> _scriptInstances = new List<PythonScriptInstance>();
+        private readonly string _scriptsPath;
+        private readonly ScriptingSettingsModel _scriptingSettings;
         private readonly ILogger<PythonScriptHostService> _logger;
         private readonly ScriptEngine _scriptEngine;
         
-        public PythonScriptHostService(PythonIOStream pythonIOStream, ILogger<PythonScriptHostService> logger)
+        public PythonScriptHostService(ScriptingSettingsModel scriptingSettings, PythonIOStream pythonIOStream, ILogger<PythonScriptHostService> logger)
         {
+            _scriptingSettings = scriptingSettings ?? throw new ArgumentNullException(nameof(scriptingSettings));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             _scriptEngine = IronPython.Hosting.Python.CreateEngine();
             _scriptEngine.Runtime.IO.SetOutput(pythonIOStream, Encoding.UTF8);
+
+            _scriptsPath = PathHelper.ExpandPath(scriptingSettings.ScriptsPath);
         }
 
         public void Configure()
         {
             AddSearchPaths(_scriptEngine);
 
-            var scriptsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Scripts");
-            foreach (var filename in Directory.GetFiles(scriptsDirectory, "*.py", SearchOption.AllDirectories).OrderBy(file => file))
-            {
-                TryInitializeScript(filename);
-            }
+            TryInitializeScriptsAsync().GetAwaiter().GetResult();
         }
 
         public void RegisterProxyObject(string name, object @object)
@@ -58,35 +62,109 @@ namespace MQTTnet.Server.Scripting
                     }
                     catch (Exception exception)
                     {
-                        _logger.LogError(exception, $"Error while invoking function '{name}' at script '{pythonScriptInstance.Name}'.");
+                        _logger.LogError(exception, $"Error while invoking function '{name}' at script '{pythonScriptInstance.Uid}'.");
                     }
                 }
             }
         }
 
-        private void TryInitializeScript(string filename)
+        public List<string> GetScriptUids()
         {
-            try
+            lock (_scriptInstances)
             {
-                var scriptName = new FileInfo(filename).Name;
-
-                _logger.LogTrace($"Initializing Python script '{scriptName}'...");
-                var code = File.ReadAllText(filename);
-
-                var scriptInstance = CreateScriptInstance(scriptName, code);
-                scriptInstance.InvokeOptionalFunction("initialize");
-
-                _scriptInstances.Add(scriptInstance);
-
-                _logger.LogInformation($"Initialized script '{scriptName}'.");
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, $"Error while initializing script '{new FileInfo(filename).Name}'.");
+                return _scriptInstances.Select(si => si.Uid).ToList();
             }
         }
 
-        private PythonScriptInstance CreateScriptInstance(string name, string code)
+        public Task<string> ReadScriptAsync(string uid, CancellationToken cancellationToken)
+        {
+            if (uid == null) throw new ArgumentNullException(nameof(uid));
+
+            string path;
+
+            lock (_scriptInstances)
+            {
+                path = _scriptInstances.FirstOrDefault(si => si.Uid == uid)?.Path;
+            }
+
+            if (path == null || !File.Exists(path))
+            {
+                return null;
+            }
+
+            return File.ReadAllTextAsync(path, Encoding.UTF8, cancellationToken);
+        }
+
+        public async Task WriteScriptAsync(string uid, string code, CancellationToken cancellationToken)
+        {
+            var path = Path.Combine(_scriptsPath, uid + ".py");
+
+            await File.WriteAllTextAsync(path, code, Encoding.UTF8, cancellationToken).ConfigureAwait(false);
+            await TryInitializeScriptsAsync().ConfigureAwait(false);
+        }
+
+        public async Task DeleteScriptAsync(string uid)
+        {
+            var path = Path.Combine(_scriptsPath, uid + ".py");
+
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                await TryInitializeScriptsAsync().ConfigureAwait(false);
+            }
+        }
+
+        public async Task TryInitializeScriptsAsync()
+        {
+            lock (_scriptInstances)
+            {
+                foreach (var scriptInstance in _scriptInstances)
+                {
+                    try
+                    {
+                        scriptInstance.InvokeOptionalFunction("destroy");
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogWarning(exception, $"Error while unloading script '{scriptInstance.Uid}'.");
+                    }
+                }
+
+                _scriptInstances.Clear();
+            }
+
+            foreach (var path in Directory.GetFiles(_scriptsPath, "*.py", SearchOption.AllDirectories).OrderBy(file => file))
+            {
+                await TryInitializeScriptAsync(path).ConfigureAwait(false);
+            }
+        }
+
+        private async Task TryInitializeScriptAsync(string path)
+        {
+            var uid = new FileInfo(path).Name.Replace(".py", string.Empty, StringComparison.OrdinalIgnoreCase);
+
+            try
+            {
+                _logger.LogTrace($"Initializing Python script '{uid}'...");
+                var code = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+
+                var scriptInstance = CreateScriptInstance(uid, path, code);
+                scriptInstance.InvokeOptionalFunction("initialize");
+
+                lock (_scriptInstances)
+                {
+                    _scriptInstances.Add(scriptInstance);
+                }
+                
+                _logger.LogInformation($"Initialized script '{uid}'.");
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, $"Error while initializing script '{uid}'.");
+            }
+        }
+
+        private PythonScriptInstance CreateScriptInstance(string uid, string path, string code)
         {
             var scriptScope = _scriptEngine.CreateScope();
 
@@ -96,31 +174,26 @@ namespace MQTTnet.Server.Scripting
             scriptScope.SetVariable("mqtt_net_server", _proxyObjects);
             compiledCode.Execute(scriptScope);
             
-            return new PythonScriptInstance(name, scriptScope);
+            return new PythonScriptInstance(uid, path, scriptScope);
         }
 
         private void AddSearchPaths(ScriptEngine scriptEngine)
         {
-            var paths = new List<string>
+            if (_scriptingSettings.IncludePaths?.Any() != true)
             {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Lib"),
-                "/usr/lib/python2.7",
-                @"C:\Python27\Lib"
-            };
-            
-            AddSearchPaths(scriptEngine, paths);
-        }
+                return;
+            }
 
-        private void AddSearchPaths(ScriptEngine scriptEngine, IEnumerable<string> paths)
-        {
             var searchPaths = scriptEngine.GetSearchPaths();
 
-            foreach (var path in paths)
+            foreach (var path in _scriptingSettings.IncludePaths)
             {
-                if (Directory.Exists(path))
+                var effectivePath = PathHelper.ExpandPath(path);
+
+                if (Directory.Exists(effectivePath))
                 {
-                    searchPaths.Add(path);
-                    _logger.LogInformation($"Added Python lib path: {path}");
+                    searchPaths.Add(effectivePath);
+                    _logger.LogInformation($"Added Python lib path: {effectivePath}");
                 }
             }
 

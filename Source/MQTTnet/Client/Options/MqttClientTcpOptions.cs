@@ -10,7 +10,7 @@ namespace MQTTnet.Client.Options
 
         public int BufferSize { get; set; } = 65536;
 
-        public bool DualMode { get; set; } = true;
+        public bool? DualMode { get; set; }
 
         public bool NoDelay { get; set; } = true;
 

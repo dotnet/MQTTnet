@@ -10,6 +10,9 @@ using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server;
+
+using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
 
 namespace MQTTnet.Formatter.V5
 {
@@ -125,6 +128,22 @@ namespace MQTTnet.Formatter.V5
                     RequestResponseInformation = options.RequestResponseInformation,
                     SessionExpiryInterval = options.SessionExpiryInterval,
                     TopicAliasMaximum = options.TopicAliasMaximum
+                }
+            };
+        }
+
+        public MqttConnAckPacket CreateConnAckPacket(MqttConnectionValidatorContext connectionValidatorContext)
+        {
+            return new MqttConnAckPacket
+            {
+                ReasonCode = connectionValidatorContext.ReasonCode,
+                Properties = new MqttConnAckPacketProperties
+                {
+                    UserProperties = connectionValidatorContext.UserProperties,
+                    AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
+                    AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
+                    AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,
+                    ReasonString = connectionValidatorContext.ReasonString
                 }
             };
         }

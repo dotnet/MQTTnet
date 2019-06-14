@@ -17,7 +17,7 @@ namespace MQTTnet.Server.Scripting
     {
         private readonly IDictionary<string, object> _proxyObjects = new ExpandoObject();
         private readonly List<PythonScriptInstance> _scriptInstances = new List<PythonScriptInstance>();
-        private readonly string _scriptsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Scripts");
+        private readonly string _scriptsPath;
         private readonly ScriptingSettingsModel _scriptingSettings;
         private readonly ILogger<PythonScriptHostService> _logger;
         private readonly ScriptEngine _scriptEngine;
@@ -29,6 +29,8 @@ namespace MQTTnet.Server.Scripting
 
             _scriptEngine = IronPython.Hosting.Python.CreateEngine();
             _scriptEngine.Runtime.IO.SetOutput(pythonIOStream, Encoding.UTF8);
+
+            _scriptsPath = PathHelper.ExpandPath(scriptingSettings.ScriptsPath);
         }
 
         public void Configure()
@@ -186,13 +188,7 @@ namespace MQTTnet.Server.Scripting
 
             foreach (var path in _scriptingSettings.IncludePaths)
             {
-                var effectivePath = path;
-
-                var uri = new Uri(effectivePath, UriKind.RelativeOrAbsolute);
-                if (!uri.IsAbsoluteUri)
-                {
-                    effectivePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, effectivePath);
-                }
+                var effectivePath = PathHelper.ExpandPath(path);
 
                 if (Directory.Exists(effectivePath))
                 {

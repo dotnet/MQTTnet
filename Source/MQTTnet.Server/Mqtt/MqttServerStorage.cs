@@ -35,7 +35,7 @@ namespace MQTTnet.Server.Mqtt
                 return;
             }
 
-            _path = ExpandPath();
+            _path = PathHelper.ExpandPath(_mqttSettings.RetainedApplicationMessages.Path);
 
             // The retained application messages are stored in a separate thread.
             // This is mandatory because writing them to a slow storage (like RaspberryPi SD card) 
@@ -114,19 +114,6 @@ namespace MQTTnet.Server.Mqtt
                 _logger.LogWarning(exception, "Error while loading persisted retained application messages.");
                 return null;
             }
-        }
-
-        private string ExpandPath()
-        {
-            var path = _mqttSettings.RetainedApplicationMessages.Path;
-
-            var uri = new Uri(path, UriKind.RelativeOrAbsolute);
-            if (!uri.IsAbsoluteUri)
-            {
-                path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
-            }
-
-            return path;
         }
     }
 }

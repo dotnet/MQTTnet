@@ -9,6 +9,8 @@ using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server;
+using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
 
 namespace MQTTnet.Formatter.V3
 {
@@ -121,6 +123,16 @@ namespace MQTTnet.Formatter.V3
                 CleanSession = options.CleanSession,
                 KeepAlivePeriod = (ushort)options.KeepAlivePeriod.TotalSeconds,
                 WillMessage = willApplicationMessage
+            };
+        }
+
+        public MqttConnAckPacket CreateConnAckPacket(MqttConnectionValidatorContext connectionValidatorContext)
+        {
+            if (connectionValidatorContext == null) throw new ArgumentNullException(nameof(connectionValidatorContext));
+
+            return new MqttConnAckPacket
+            {
+                ReturnCode = new MqttConnectReasonCodeConverter().ToConnectReturnCode(connectionValidatorContext.ReasonCode)
             };
         }
 

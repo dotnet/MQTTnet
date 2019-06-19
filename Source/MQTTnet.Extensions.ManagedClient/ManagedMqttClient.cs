@@ -408,6 +408,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     {
                         _messageQueue.RemoveFirst(i => i.Id.Equals(message.Id));
                     }
+                    _storageManager?.RemoveAsync(message).GetAwaiter().GetResult();
                 }
             }
             catch (Exception exception)

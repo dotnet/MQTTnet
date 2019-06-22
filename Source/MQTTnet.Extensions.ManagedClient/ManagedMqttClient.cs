@@ -387,7 +387,10 @@ namespace MQTTnet.Extensions.ManagedClient
                     //removed it, in which case we don't want to do anything.
                     _messageQueue.RemoveFirst(i => i.Id.Equals(message.Id));
                 }
-                _storageManager?.RemoveAsync(message).GetAwaiter().GetResult();
+                if (_storageManager != null)
+                {
+                    _storageManager.RemoveAsync(message).GetAwaiter().GetResult();
+                }
             }
             catch (MqttCommunicationException exception)
             {
@@ -408,7 +411,10 @@ namespace MQTTnet.Extensions.ManagedClient
                     {
                         _messageQueue.RemoveFirst(i => i.Id.Equals(message.Id));
                     }
-                    _storageManager?.RemoveAsync(message).GetAwaiter().GetResult();
+                    if (_storageManager != null)
+                    {
+                        _storageManager.RemoveAsync(message).GetAwaiter().GetResult();
+                    }
                 }
             }
             catch (Exception exception)

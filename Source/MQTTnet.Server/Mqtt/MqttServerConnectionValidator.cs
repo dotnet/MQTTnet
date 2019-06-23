@@ -29,10 +29,10 @@ namespace MQTTnet.Server.Mqtt
                     { "client_id", context.ClientId },
                     { "username", context.Username },
                     { "password", context.Password },
-                    { "raw_password", new Bytes(context.RawPassword) },
+                    { "raw_password", new Bytes(context.RawPassword ?? new byte[0]) },
                     { "clean_session", context.CleanSession},
                     { "authentication_method", context.AuthenticationMethod},
-                    { "authentication_data", new Bytes(context.AuthenticationData)},
+                    { "authentication_data", new Bytes(context.AuthenticationData ?? new byte[0]) },
 
                     { "result", PythonConvert.Pythonfy(context.ReasonCode) }
                 };
@@ -44,6 +44,8 @@ namespace MQTTnet.Server.Mqtt
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Error while validating client connection.");
+
+                context.ReasonCode = MqttConnectReasonCode.UnspecifiedError;
             }
 
             return Task.CompletedTask;

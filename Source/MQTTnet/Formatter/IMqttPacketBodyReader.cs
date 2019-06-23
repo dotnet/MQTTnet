@@ -4,9 +4,9 @@ namespace MQTTnet.Formatter
 {
     public interface IMqttPacketBodyReader
     {
-        ulong Length { get; }
+        int Length { get; }
 
-        ulong Offset { get; }
+        int Offset { get; }
 
         bool EndOfStream { get; }
 
@@ -26,6 +26,6 @@ namespace MQTTnet.Formatter
 
         bool ReadBoolean();
 
-        void Seek(ulong position);
+        void Seek(int position);
     }
 }

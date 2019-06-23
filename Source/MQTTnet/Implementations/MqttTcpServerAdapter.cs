@@ -28,6 +28,8 @@ namespace MQTTnet.Implementations
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
+        public bool TreatSocketOpeningErrorAsWarning { get; set; }
+
         public Task StartAsync(IMqttServerOptions options)
         {
             if (_cancellationTokenSource != null) throw new InvalidOperationException("Server is already started.");
@@ -36,7 +38,7 @@ namespace MQTTnet.Implementations
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
-                RegisterListeners(options.DefaultEndpointOptions, null);
+                RegisterListeners(options.DefaultEndpointOptions, null, _cancellationTokenSource.Token);
             }
 
             if (options.TlsEndpointOptions.IsEnabled)
@@ -52,7 +54,7 @@ namespace MQTTnet.Implementations
                     throw new InvalidOperationException("The certificate for TLS encryption must contain the private key.");
                 }
 
-                RegisterListeners(options.TlsEndpointOptions, tlsCertificate);
+                RegisterListeners(options.TlsEndpointOptions, tlsCertificate, _cancellationTokenSource.Token);
             }
 
             return Task.FromResult(0);
@@ -78,7 +80,7 @@ namespace MQTTnet.Implementations
             _listeners.Clear();
         }
 
-        private void RegisterListeners(MqttServerTcpEndpointBaseOptions options, X509Certificate2 tlsCertificate)
+        private void RegisterListeners(MqttServerTcpEndpointBaseOptions options, X509Certificate2 tlsCertificate, CancellationToken cancellationToken)
         {
             if (!options.BoundInterNetworkAddress.Equals(IPAddress.None))
             {
@@ -86,14 +88,15 @@ namespace MQTTnet.Implementations
                     AddressFamily.InterNetwork,
                     options,
                     tlsCertificate,
-                    _cancellationTokenSource.Token,
                     _logger)
                 {
                     ClientHandler = OnClientAcceptedAsync
                 };
 
-                listenerV4.Start();
-                _listeners.Add(listenerV4);
+                if (listenerV4.Start(TreatSocketOpeningErrorAsWarning, cancellationToken))
+                {
+                    _listeners.Add(listenerV4);
+                }
             }
 
             if (!options.BoundInterNetworkV6Address.Equals(IPAddress.None))
@@ -102,14 +105,15 @@ namespace MQTTnet.Implementations
                     AddressFamily.InterNetworkV6,
                     options,
                     tlsCertificate,
-                    _cancellationTokenSource.Token,
                     _logger)
                 {
                     ClientHandler = OnClientAcceptedAsync
                 };
 
-                listenerV6.Start();
-                _listeners.Add(listenerV6);
+                if (listenerV6.Start(TreatSocketOpeningErrorAsWarning, cancellationToken))
+                {
+                    _listeners.Add(listenerV6);
+                }
             }
         }
 

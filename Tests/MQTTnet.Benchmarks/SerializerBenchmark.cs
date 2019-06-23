@@ -57,7 +57,7 @@ namespace MQTTnet.Benchmarks
 
                 var receivedPacket = new ReceivedMqttPacket(
                     header.Flags,
-                    new MqttPacketBodyReader(_serializedPacket.Array, (ulong)(_serializedPacket.Count - header.RemainingLength), (ulong)_serializedPacket.Array.Length), 0);
+                    new MqttPacketBodyReader(_serializedPacket.Array, _serializedPacket.Count - header.RemainingLength, _serializedPacket.Array.Length), 0);
 
                 _serializer.Decode(receivedPacket);
             }

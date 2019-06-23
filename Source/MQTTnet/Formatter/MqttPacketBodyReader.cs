@@ -9,52 +9,42 @@ namespace MQTTnet.Formatter
     public class MqttPacketBodyReader : IMqttPacketBodyReader
     {
         private readonly byte[] _buffer;
-        private readonly ulong _initialOffset;
-        private readonly ulong _length;
+        private readonly int _initialOffset;
+        private readonly int _length;
+
+        private int _offset;
 
         public MqttPacketBodyReader(byte[] buffer, int offset, int length)
-         : this(buffer, (ulong)offset, (ulong)length)
-        {
-        }
-
-        public MqttPacketBodyReader(byte[] buffer, ulong offset, ulong length)
         {
             _buffer = buffer;
             _initialOffset = offset;
-            Offset = offset;
+            _offset = offset;
             _length = length;
         }
 
-        public ulong Offset { get; private set; }
+        public int Offset => _offset;
 
-        public ulong Length => _length - Offset;
+        public int Length => _length - _offset;
 
-        public bool EndOfStream => Offset == _length;
+        public bool EndOfStream => _offset == _length;
 
-        public void Seek(ulong position)
+        public void Seek(int position)
         {
-            Offset = _initialOffset + position;
-        }
-
-        public ArraySegment<byte> Read(uint length)
-        {
-            ValidateReceiveBuffer(length);
-
-            var buffer = new ArraySegment<byte>(_buffer, (int)Offset, (int)length);
-            Offset += length;
-            return buffer;
+            _offset = _initialOffset + position;
         }
 
         public byte ReadByte()
         {
             ValidateReceiveBuffer(1);
-            return _buffer[Offset++];
-        }
 
+            return _buffer[_offset++];
+        }
+        
         public bool ReadBoolean()
         {
             ValidateReceiveBuffer(1);
-            var buffer = _buffer[Offset++];
+
+            var buffer = _buffer[_offset++];
 
             if (buffer == 0)
             {
@@ -71,15 +61,19 @@ namespace MQTTnet.Formatter
 
         public byte[] ReadRemainingData()
         {
-            return new ArraySegment<byte>(_buffer, (int)Offset, (int)(_length - Offset)).ToArray();
+            var bufferLength = _length - _offset;
+            var buffer = new byte[bufferLength];
+            Array.Copy(_buffer, _offset, buffer, 0, bufferLength);
+
+            return buffer;
         }
 
         public ushort ReadTwoByteInteger()
         {
             ValidateReceiveBuffer(2);
 
-            var msb = _buffer[Offset++];
-            var lsb = _buffer[Offset++];
+            var msb = _buffer[_offset++];
+            var lsb = _buffer[_offset++];
             
             return (ushort)(msb << 8 | lsb);
         }
@@ -88,29 +82,12 @@ namespace MQTTnet.Formatter
         {
             ValidateReceiveBuffer(4);
 
-            var byte0 = _buffer[Offset++];
-            var byte1 = _buffer[Offset++];
-            var byte2 = _buffer[Offset++];
-            var byte3 = _buffer[Offset++];
+            var byte0 = _buffer[_offset++];
+            var byte1 = _buffer[_offset++];
+            var byte2 = _buffer[_offset++];
+            var byte3 = _buffer[_offset++];
 
             return (uint)(byte0 << 24 | byte1 << 16 | byte2 << 8 | byte3);
-        }
-
-        public byte[] ReadWithLengthPrefix()
-        {
-            return ReadSegmentWithLengthPrefix().ToArray();
-        }
-
-        private ArraySegment<byte> ReadSegmentWithLengthPrefix()
-        {
-            var length = ReadTwoByteInteger();
-
-            ValidateReceiveBuffer(length);
-
-            var result = new ArraySegment<byte>(_buffer, (int)Offset, length);
-            Offset += length;
-
-            return result;
         }
 
         public uint ReadVariableLengthInteger()
@@ -134,13 +111,30 @@ namespace MQTTnet.Formatter
 
             return value;
         }
+        
+        public byte[] ReadWithLengthPrefix()
+        {
+            return ReadSegmentWithLengthPrefix().ToArray();
+        }
+
+        private ArraySegment<byte> ReadSegmentWithLengthPrefix()
+        {
+            var length = ReadTwoByteInteger();
+
+            ValidateReceiveBuffer(length);
+
+            var result = new ArraySegment<byte>(_buffer, _offset, length);
+            _offset += length;
+
+            return result;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ValidateReceiveBuffer(uint length)
+        private void ValidateReceiveBuffer(int length)
         {
-            if (_length < Offset + length)
+            if (_length < _offset + length)
             {
-                throw new ArgumentOutOfRangeException(nameof(_buffer), $"Expected at least {Offset + length} bytes but there are only {_length} bytes");
+                throw new ArgumentOutOfRangeException(nameof(_buffer), $"Expected at least {_offset + length} bytes but there are only {_length} bytes");
             }
         }
 

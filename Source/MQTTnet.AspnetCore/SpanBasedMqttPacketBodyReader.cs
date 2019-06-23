@@ -9,6 +9,7 @@ namespace MQTTnet.AspNetCore
     public class SpanBasedMqttPacketBodyReader : IMqttPacketBodyReader
     {
         private ReadOnlyMemory<byte> _buffer;
+
         private int _offset;
         
         public void SetBuffer(ReadOnlyMemory<byte> buffer)
@@ -17,11 +18,11 @@ namespace MQTTnet.AspNetCore
             _offset = 0;
         }
 
-        public ulong Length => (ulong)_buffer.Length;
+        public int Length => _buffer.Length;
 
         public bool EndOfStream => _buffer.Length.Equals(_offset);
         
-        public ulong Offset => (ulong)_offset;
+        public int Offset => _offset;
 
         public byte ReadByte()
         {
@@ -116,9 +117,9 @@ namespace MQTTnet.AspNetCore
             throw new MqttProtocolViolationException("Boolean values can be 0 or 1 only.");
         }
 
-        public void Seek(ulong position)
+        public void Seek(int position)
         {
-            _offset = (int)position;
+            _offset = position;
         }
     }
 }

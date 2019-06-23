@@ -22,10 +22,7 @@ namespace MQTTnet.Formatter
             _length = length;
         }
 
-        public int Offset
-        {
-            get => _offset;
-        }
+        public int Offset => _offset;
 
         public int Length => _length - _offset;
 
@@ -36,22 +33,13 @@ namespace MQTTnet.Formatter
             _offset = _initialOffset + position;
         }
 
-        public ArraySegment<byte> Read(int length)
-        {
-            ValidateReceiveBuffer(length);
-
-            var buffer = new ArraySegment<byte>(_buffer, (int)_offset, (int)length);
-            _offset += length;
-            return buffer;
-        }
-
         public byte ReadByte()
         {
             ValidateReceiveBuffer(1);
 
             return _buffer[_offset++];
         }
-
+        
         public bool ReadBoolean()
         {
             ValidateReceiveBuffer(1);
@@ -73,7 +61,11 @@ namespace MQTTnet.Formatter
 
         public byte[] ReadRemainingData()
         {
-            return new ArraySegment<byte>(_buffer, (int)_offset, (int)(_length - _offset)).ToArray();
+            var bufferLength = _length - _offset;
+            var buffer = new byte[bufferLength];
+            Array.Copy(_buffer, _offset, buffer, 0, bufferLength);
+
+            return buffer;
         }
 
         public ushort ReadTwoByteInteger()
@@ -131,7 +123,7 @@ namespace MQTTnet.Formatter
 
             ValidateReceiveBuffer(length);
 
-            var result = new ArraySegment<byte>(_buffer, (int)_offset, length);
+            var result = new ArraySegment<byte>(_buffer, _offset, length);
             _offset += length;
 
             return result;

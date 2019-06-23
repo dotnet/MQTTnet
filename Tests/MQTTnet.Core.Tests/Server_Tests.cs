@@ -23,6 +23,27 @@ namespace MQTTnet.Tests
     public class Server_Tests
     {
         [TestMethod]
+        public async Task Use_Empty_Client_ID()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+
+                var client = testEnvironment.CreateClient();
+
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost", testEnvironment.ServerPort)
+                    .WithClientId(string.Empty)
+                    .Build();
+
+                var connectResult = await client.ConnectAsync(clientOptions);
+
+                Assert.IsFalse(connectResult.IsSessionPresent);
+                Assert.IsTrue(client.IsConnected);
+            }
+        }
+
+        [TestMethod]
         public async Task Publish_At_Most_Once_0x00()
         {
             await TestPublishAsync(

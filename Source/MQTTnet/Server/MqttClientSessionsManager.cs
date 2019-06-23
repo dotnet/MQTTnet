@@ -47,7 +47,7 @@ namespace MQTTnet.Server
 
         public void Start()
         {
-            Task.Run(() => TryProcessQueuedApplicationMessagesAsync(_cancellationToken), _cancellationToken);
+            Task.Run(() => TryProcessQueuedApplicationMessagesAsync(_cancellationToken), _cancellationToken).Forget(_logger);
         }
 
         public async Task StopAsync()

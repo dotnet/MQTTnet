@@ -9,8 +9,8 @@ namespace MQTTnet.Formatter.V5
     public class MqttV500PropertiesReader
     {
         private readonly IMqttPacketBodyReader _body;
-        private readonly uint _length;
-        private readonly ulong _targetOffset;
+        private readonly int _length;
+        private readonly int _targetOffset;
 
         public MqttV500PropertiesReader(IMqttPacketBodyReader body)
         {
@@ -18,7 +18,7 @@ namespace MQTTnet.Formatter.V5
 
             if (!body.EndOfStream)
             {
-                _length = body.ReadVariableLengthInteger();
+                _length = (int)body.ReadVariableLengthInteger();
             }
 
             _targetOffset = body.Offset + _length;

@@ -66,7 +66,10 @@ namespace MQTTnet.Server.Mqtt
 
             var adapters = new List<IMqttServerAdapter>
             {
-                new MqttTcpServerAdapter(mqttFactory.Logger.CreateChildLogger()),
+                new MqttTcpServerAdapter(mqttFactory.Logger.CreateChildLogger())
+                {
+                    TreatSocketOpeningErrorAsWarning = true // Opening other ports than for HTTP is not allows in Azure App Services.
+                },
                 _webSocketServerAdapter
             };
 

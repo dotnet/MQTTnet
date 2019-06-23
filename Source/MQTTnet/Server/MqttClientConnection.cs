@@ -7,6 +7,7 @@ using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
+using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -134,9 +135,7 @@ namespace MQTTnet.Server
 
                 Session.WillMessage = _connectPacket.WillMessage;
 
-#pragma warning disable 4014
-                Task.Run(() => SendPendingPacketsAsync(_cancellationToken.Token), _cancellationToken.Token);
-#pragma warning restore 4014
+                Task.Run(() => SendPendingPacketsAsync(_cancellationToken.Token), _cancellationToken.Token).Forget(_logger);
 
                 // TODO: Change to single thread in SessionManager. Or use SessionManager and stats from KeepAliveMonitor.
                 _keepAliveMonitor.Start(_connectPacket.KeepAlivePeriod, _cancellationToken.Token);

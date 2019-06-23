@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
+using MQTTnet.Internal;
 using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
@@ -17,24 +18,23 @@ namespace MQTTnet.Implementations
     public class MqttTcpServerListener : IDisposable
     {
         private readonly IMqttNetChildLogger _logger;
-        private readonly CancellationToken _cancellationToken;
         private readonly AddressFamily _addressFamily;
         private readonly MqttServerTcpEndpointBaseOptions _options;
         private readonly MqttServerTlsTcpEndpointOptions _tlsOptions;
         private readonly X509Certificate2 _tlsCertificate;
+
         private Socket _socket;
+        private IPEndPoint _localEndPoint;
 
         public MqttTcpServerListener(
             AddressFamily addressFamily,
             MqttServerTcpEndpointBaseOptions options,
             X509Certificate2 tlsCertificate,
-            CancellationToken cancellationToken,
             IMqttNetChildLogger logger)
         {
             _addressFamily = addressFamily;
             _options = options;
             _tlsCertificate = tlsCertificate;
-            _cancellationToken = cancellationToken;
             _logger = logger.CreateChildLogger(nameof(MqttTcpServerListener));
 
             if (_options is MqttServerTlsTcpEndpointOptions tlsOptions)
@@ -45,21 +45,38 @@ namespace MQTTnet.Implementations
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
-        public void Start()
+        public bool Start(bool treatErrorsAsWarning, CancellationToken cancellationToken)
         {
-            var boundIp = _options.BoundInterNetworkAddress;
-            if (_addressFamily == AddressFamily.InterNetworkV6)
+            try
             {
-                boundIp = _options.BoundInterNetworkV6Address;
+                var boundIp = _options.BoundInterNetworkAddress;
+                if (_addressFamily == AddressFamily.InterNetworkV6)
+                {
+                    boundIp = _options.BoundInterNetworkV6Address;
+                }
+
+                _localEndPoint = new IPEndPoint(boundIp, _options.Port);
+
+                _logger.Info($"Starting TCP listener for {_localEndPoint} TLS={_tlsCertificate != null}.");
+
+                _socket = new Socket(_addressFamily, SocketType.Stream, ProtocolType.Tcp);
+                _socket.Bind(_localEndPoint);
+                _socket.Listen(_options.ConnectionBacklog);
+
+                Task.Run(() => AcceptClientConnectionsAsync(cancellationToken), cancellationToken).Forget(_logger);
+
+                return true;
             }
+            catch (Exception exception)
+            {
+                if (!treatErrorsAsWarning)
+                {
+                    throw;
+                }
 
-            _socket = new Socket(_addressFamily, SocketType.Stream, ProtocolType.Tcp);
-            _socket.Bind(new IPEndPoint(boundIp, _options.Port));
-
-            _logger.Info($"Starting TCP listener for {_socket.LocalEndPoint} TLS={_tlsCertificate != null}.");
-
-            _socket.Listen(_options.ConnectionBacklog);
-            Task.Run(() => AcceptClientConnectionsAsync(_cancellationToken), _cancellationToken);
+                _logger.Warning(exception,"Error while creating listener socket for local end point '{0}'.", _localEndPoint);
+                return false;
+            }
         }
 
         public void Dispose()
@@ -82,13 +99,29 @@ namespace MQTTnet.Implementations
 #else
                     var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
 #endif
-#pragma warning disable 4014
-                    Task.Run(() => TryHandleClientConnectionAsync(clientSocket), cancellationToken);
-#pragma warning restore 4014
+
+                    if (clientSocket == null)
+                    {
+                        continue;
+                    }
+
+                    Task.Run(() => TryHandleClientConnectionAsync(clientSocket), cancellationToken).Forget(_logger);
+                }
+                catch (OperationCanceledException)
+                {  
                 }
                 catch (Exception exception)
                 {
-                    _logger.Error(exception, $"Error while accepting connection at TCP listener {_socket.LocalEndPoint} TLS={_tlsCertificate != null}.");
+                    if (exception is SocketException socketException)
+                    {
+                        if (socketException.SocketErrorCode == SocketError.ConnectionAborted ||
+                            socketException.SocketErrorCode == SocketError.OperationAborted)
+                        {
+                            continue;
+                        }
+                    }
+                   
+                    _logger.Error(exception, $"Error while accepting connection at TCP listener {_localEndPoint} TLS={_tlsCertificate != null}.");
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -105,7 +138,7 @@ namespace MQTTnet.Implementations
 
                 _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
                     remoteEndPoint,
-                    _socket.LocalEndPoint,
+                    _localEndPoint,
                     _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
 
                 clientSocket.NoDelay = _options.NoDelay;
@@ -163,7 +196,7 @@ namespace MQTTnet.Implementations
 
                     _logger.Verbose("Client '{0}' disconnected at TCP listener '{1}, {2}'.",
                         remoteEndPoint,
-                        _socket.LocalEndPoint,
+                        _localEndPoint,
                         _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
                 }
                 catch (Exception disposeException)

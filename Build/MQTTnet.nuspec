@@ -15,6 +15,7 @@
 * [Core] Added extension method to allow usage of _WebSocket4Net_ in clients to fix issues with AWS and Xamarin.
 * [Core] Fixed usage of wrong data type for passwords (string -> byte[]).
 * [Core] Fixed an _ObjectDisposedException_ when sending data using a WebSocket channel.
+* [Core] Performance optimizations.
 * [Client] Added support for extended authentication exchange.
 * [Client] Exposed MQTTv5 CONNACK values to client.
 * [Client] Added _MqttClientSubscribeOptionsBuilder_.

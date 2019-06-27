@@ -47,8 +47,6 @@ namespace MQTTnet.Server
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("The official MQTT server implementation of MQTTnet");
             Console.WriteLine("Copyright (c) 2017-2019 The MQTTnet Team");
-
-            Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine(@"https://github.com/chkr1011/MQTTnet");
 
             Console.ForegroundColor = ConsoleColor.White;

@@ -1,17 +1,19 @@
-﻿using System;
+﻿using MQTTnet.Packets;
+using System;
 
 namespace MQTTnet.Server
 {
     public class MqttSubscriptionInterceptorContext
     {
-        public MqttSubscriptionInterceptorContext(string clientId, TopicFilter topicFilter)
+        public MqttSubscriptionInterceptorContext(MqttConnectPacket connectPacket, TopicFilter topicFilter)
         {
-            ClientId = clientId;
+            ClientId = connectPacket.ClientId;
+            ConnectPacket = connectPacket;
             TopicFilter = topicFilter ?? throw new ArgumentNullException(nameof(topicFilter));
         }
 
         public string ClientId { get; }
-
+        public MqttConnectPacket ConnectPacket { get; }
         public TopicFilter TopicFilter { get; set; }
         
         public bool AcceptSubscription { get; set; } = true;

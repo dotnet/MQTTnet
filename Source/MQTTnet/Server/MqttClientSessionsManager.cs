@@ -345,7 +345,7 @@ namespace MQTTnet.Server
 
                 if (session == null)
                 {
-                    session = new MqttClientSession(connectPacket.ClientId, _eventDispatcher, _options, _logger);
+                    session = new MqttClientSession(connectPacket, _eventDispatcher, _options, _logger);
                     _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);
                 }
 
@@ -376,7 +376,7 @@ namespace MQTTnet.Server
                 senderClientId = _options.ClientId;
             }
 
-            var interceptorContext = new MqttApplicationMessageInterceptorContext(senderClientId, applicationMessage);
+            var interceptorContext = new MqttApplicationMessageInterceptorContext(senderClientId, sender?.ConnectPacket, applicationMessage);
             await interceptor.InterceptApplicationMessagePublishAsync(interceptorContext).ConfigureAwait(false);
             return interceptorContext;
         }

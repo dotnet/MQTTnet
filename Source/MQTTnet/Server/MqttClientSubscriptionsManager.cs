@@ -12,11 +12,11 @@ namespace MQTTnet.Server
         private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         private readonly IMqttServerOptions _options;
         private readonly MqttServerEventDispatcher _eventDispatcher;
-        private readonly string _clientId;
+        private readonly MqttConnectPacket _connectPacket;
 
-        public MqttClientSubscriptionsManager(string clientId, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions options)
+        public MqttClientSubscriptionsManager(MqttConnectPacket connectPacket, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions options)
         {
-            _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
         }
@@ -64,7 +64,7 @@ namespace MQTTnet.Server
                         _subscriptions[finalTopicFilter.Topic] = finalTopicFilter.QualityOfServiceLevel;
                     }
 
-                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientId, finalTopicFilter).ConfigureAwait(false);
+                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_connectPacket.ClientId, finalTopicFilter).ConfigureAwait(false);
                 }
             }
 
@@ -88,7 +88,7 @@ namespace MQTTnet.Server
                         _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
                     }
 
-                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientId, topicFilter).ConfigureAwait(false);
+                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_connectPacket.ClientId, topicFilter).ConfigureAwait(false);
                 }
             }
         }
@@ -119,7 +119,7 @@ namespace MQTTnet.Server
 
             foreach (var topicFilter in unsubscribePacket.TopicFilters)
             {
-                await _eventDispatcher.HandleClientUnsubscribedTopicAsync(_clientId, topicFilter).ConfigureAwait(false);
+                await _eventDispatcher.HandleClientUnsubscribedTopicAsync(_connectPacket.ClientId, topicFilter).ConfigureAwait(false);
             }
             
             return unsubAckPacket;
@@ -192,7 +192,7 @@ namespace MQTTnet.Server
 
         private async Task<MqttSubscriptionInterceptorContext> InterceptSubscribeAsync(TopicFilter topicFilter)
         {
-            var context = new MqttSubscriptionInterceptorContext(_clientId, topicFilter);
+            var context = new MqttSubscriptionInterceptorContext(_connectPacket, topicFilter);
             if (_options.SubscriptionInterceptor != null)
             {
                 await _options.SubscriptionInterceptor.InterceptSubscriptionAsync(context).ConfigureAwait(false);

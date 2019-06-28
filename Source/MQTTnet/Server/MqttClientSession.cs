@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
+using MQTTnet.Packets;
 using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
@@ -12,11 +13,16 @@ namespace MQTTnet.Server
 
         private readonly DateTime _createdTimestamp = DateTime.UtcNow;
 
-        public MqttClientSession(string clientId, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttNetChildLogger logger)
+        public MqttClientSession(MqttConnectPacket connectPacket, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttNetChildLogger logger)
         {
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            if (connectPacket == null)
+            {
+                throw new ArgumentNullException(nameof(connectPacket));
+            }
 
-            SubscriptionsManager = new MqttClientSubscriptionsManager(clientId, eventDispatcher, serverOptions);
+            ClientId = connectPacket.ClientId;
+
+            SubscriptionsManager = new MqttClientSubscriptionsManager(connectPacket, eventDispatcher, serverOptions);
             ApplicationMessagesQueue = new MqttClientSessionApplicationMessagesQueue(serverOptions);
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));

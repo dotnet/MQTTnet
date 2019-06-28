@@ -60,8 +60,17 @@ namespace MQTTnet.Implementations
                 _logger.Info($"Starting TCP listener for {_localEndPoint} TLS={_tlsCertificate != null}.");
 
                 _socket = new Socket(_addressFamily, SocketType.Stream, ProtocolType.Tcp);
-                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.NoDelay, true);
+
+                if (_options.ReuseAddress)
+                {
+                    _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                }
+                
+                if (_options.NoDelay)
+                {
+                    _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.NoDelay, true);
+                }
+                
                 _socket.Bind(_localEndPoint);
                 _socket.Listen(_options.ConnectionBacklog);
 

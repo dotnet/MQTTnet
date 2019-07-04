@@ -12,7 +12,7 @@ namespace MQTTnet.Server.Controllers
 {
     [Authorize]
     [ApiController]
-    public class RetainedApplicationMessagesController : ControllerBase
+    public class RetainedApplicationMessagesController : Controller
     {
         private readonly MqttServerService _mqttServerService;
 

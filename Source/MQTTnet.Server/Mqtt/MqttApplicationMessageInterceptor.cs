@@ -24,12 +24,18 @@ namespace MQTTnet.Server.Mqtt
             {
                 var pythonContext = new PythonDictionary
                 {
+                    { "client_id", context.ClientId },
+                    { "retain", context.ApplicationMessage.Retain },
+                    { "username", context.Username },
+                    { "password", context.Password },
+                    { "raw_password", new Bytes(context.RawPassword ?? new byte[0]) },
+                    { "clean_session", context.CleanSession},
+                    { "authentication_method", context.AuthenticationMethod},
+                    { "authentication_data", new Bytes(context.AuthenticationData ?? new byte[0]) },
                     { "accept_publish", context.AcceptPublish },
                     { "close_connection", context.CloseConnection },
-                    { "client_id", context.ClientId },
                     { "topic", context.ApplicationMessage.Topic },
-                    { "qos", (int)context.ApplicationMessage.QualityOfServiceLevel },
-                    { "retain", context.ApplicationMessage.Retain }
+                    { "qos", (int)context.ApplicationMessage.QualityOfServiceLevel }
                 };
                 
                 _pythonScriptHostService.InvokeOptionalFunction("on_intercept_application_message", pythonContext);

@@ -12,11 +12,12 @@ namespace MQTTnet.Server
 
         private readonly DateTime _createdTimestamp = DateTime.UtcNow;
 
-        public MqttClientSession(string clientId, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttNetChildLogger logger)
+        public MqttClientSession(string clientId, IDictionary<object, object> items, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttNetChildLogger logger)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            Items = items ?? throw new ArgumentNullException(nameof(items));
 
-            SubscriptionsManager = new MqttClientSubscriptionsManager(clientId, eventDispatcher, serverOptions);
+            SubscriptionsManager = new MqttClientSubscriptionsManager(this, eventDispatcher, serverOptions);
             ApplicationMessagesQueue = new MqttClientSessionApplicationMessagesQueue(serverOptions);
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -33,6 +34,11 @@ namespace MQTTnet.Server
 
         public MqttClientSessionApplicationMessagesQueue ApplicationMessagesQueue { get; }
 
+        /// <summary>
+        /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
+        /// </summary>
+        public IDictionary<object, object> Items { get; }
+
         public void EnqueueApplicationMessage(MqttApplicationMessage applicationMessage, string senderClientId, bool isRetainedApplicationMessage)
         {
             var checkSubscriptionsResult = SubscriptionsManager.CheckSubscriptions(applicationMessage.Topic, applicationMessage.QualityOfServiceLevel);
@@ -48,7 +54,7 @@ namespace MQTTnet.Server
 
         public async Task SubscribeAsync(ICollection<TopicFilter> topicFilters, MqttRetainedMessagesManager retainedMessagesManager)
         {
-            await SubscriptionsManager.SubscribeAsync(topicFilters).ConfigureAwait(false);
+            await SubscriptionsManager.SubscribeAsync(topicFilters, null).ConfigureAwait(false);
 
             var matchingRetainedMessages = await retainedMessagesManager.GetSubscribedMessagesAsync(topicFilters).ConfigureAwait(false);
             foreach (var matchingRetainedMessage in matchingRetainedMessages)

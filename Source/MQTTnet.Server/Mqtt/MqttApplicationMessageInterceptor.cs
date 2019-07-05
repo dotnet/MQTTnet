@@ -22,16 +22,13 @@ namespace MQTTnet.Server.Mqtt
         {
             try
             {
+                var sessionItems = (PythonDictionary)context.SessionItems[MqttServerConnectionValidator.WrappedSessionItemsKey];
+
                 var pythonContext = new PythonDictionary
                 {
                     { "client_id", context.ClientId },
+                    { "session_items", sessionItems },
                     { "retain", context.ApplicationMessage.Retain },
-                    { "username", context.Username },
-                    { "password", context.Password },
-                    { "raw_password", new Bytes(context.RawPassword ?? new byte[0]) },
-                    { "clean_session", context.CleanSession},
-                    { "authentication_method", context.AuthenticationMethod},
-                    { "authentication_data", new Bytes(context.AuthenticationData ?? new byte[0]) },
                     { "accept_publish", context.AcceptPublish },
                     { "close_connection", context.CloseConnection },
                     { "topic", context.ApplicationMessage.Topic },

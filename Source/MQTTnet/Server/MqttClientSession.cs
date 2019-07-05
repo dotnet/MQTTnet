@@ -54,7 +54,7 @@ namespace MQTTnet.Server
 
         public async Task SubscribeAsync(ICollection<TopicFilter> topicFilters, MqttRetainedMessagesManager retainedMessagesManager)
         {
-            await SubscriptionsManager.SubscribeAsync(topicFilters, null).ConfigureAwait(false);
+            await SubscriptionsManager.SubscribeAsync(topicFilters).ConfigureAwait(false);
 
             var matchingRetainedMessages = await retainedMessagesManager.GetSubscribedMessagesAsync(topicFilters).ConfigureAwait(false);
             foreach (var matchingRetainedMessage in matchingRetainedMessages)

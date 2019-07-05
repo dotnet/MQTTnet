@@ -290,7 +290,7 @@ namespace MQTTnet.Server
 
         private async Task<MqttConnectionValidatorContext> ValidateConnectionAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter)
         {
-            var context = new MqttConnectionValidatorContext(connectPacket, channelAdapter);
+            var context = new MqttConnectionValidatorContext(connectPacket, channelAdapter, new ConcurrentDictionary<object, object>());
 
             var connectionValidator = _options.ConnectionValidator;
 
@@ -372,23 +372,20 @@ namespace MQTTnet.Server
 
             string senderClientId;
             IDictionary<object, object> sessionItems;
-            MqttConnectPacket connectPacket;
 
             var messageIsFromServer = senderConnection == null;
             if (messageIsFromServer)
             {
                 senderClientId = _options.ClientId;
                 sessionItems = _serverSessionItems;
-                connectPacket = null;
             }
             else
             {
                 senderClientId = senderConnection.ClientId;
                 sessionItems = senderConnection.Session.Items;
-                connectPacket = senderConnection.ConnectPacket;
             }
 
-            var interceptorContext = new MqttApplicationMessageInterceptorContext(senderClientId, sessionItems, connectPacket, applicationMessage);
+            var interceptorContext = new MqttApplicationMessageInterceptorContext(senderClientId, sessionItems, applicationMessage);
             await interceptor.InterceptApplicationMessagePublishAsync(interceptorContext).ConfigureAwait(false);
             return interceptorContext;
         }

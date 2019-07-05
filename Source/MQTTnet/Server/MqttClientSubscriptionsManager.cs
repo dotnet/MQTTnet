@@ -40,7 +40,7 @@ namespace MQTTnet.Server
 
             foreach (var originalTopicFilter in subscribePacket.TopicFilters)
             {
-                var interceptorContext = await InterceptSubscribeAsync(originalTopicFilter, connectPacket).ConfigureAwait(false);
+                var interceptorContext = await InterceptSubscribeAsync(originalTopicFilter).ConfigureAwait(false);
 
                 var finalTopicFilter = interceptorContext.TopicFilter;
 
@@ -74,13 +74,13 @@ namespace MQTTnet.Server
             return result;
         }
 
-        public async Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters, MqttConnectPacket connectPacket)
+        public async Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
             foreach (var topicFilter in topicFilters)
             {
-                var interceptorContext = await InterceptSubscribeAsync(topicFilter, connectPacket).ConfigureAwait(false);
+                var interceptorContext = await InterceptSubscribeAsync(topicFilter).ConfigureAwait(false);
                 if (!interceptorContext.AcceptSubscription)
                 {
                    continue;
@@ -195,9 +195,9 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task<MqttSubscriptionInterceptorContext> InterceptSubscribeAsync(TopicFilter topicFilter, MqttConnectPacket connectPacket)
+        private async Task<MqttSubscriptionInterceptorContext> InterceptSubscribeAsync(TopicFilter topicFilter)
         {
-            var context = new MqttSubscriptionInterceptorContext(_clientSession.ClientId, topicFilter, connectPacket, _clientSession.Items);
+            var context = new MqttSubscriptionInterceptorContext(_clientSession.ClientId, topicFilter, _clientSession.Items);
             if (_serverOptions.SubscriptionInterceptor != null)
             {
                 await _serverOptions.SubscriptionInterceptor.InterceptSubscriptionAsync(context).ConfigureAwait(false);

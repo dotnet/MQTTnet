@@ -1,7 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MQTTnet.Protocol;
 using MQTTnet.Server.Mqtt;
 
 namespace MQTTnet.Server.Controllers
@@ -27,14 +29,23 @@ namespace MQTTnet.Server.Controllers
 
         [Route("api/v1/messages/{*topic}")]
         [HttpPost]
-        public Task<ActionResult> PostMessage(string topic, string payload)
+        public async Task<ActionResult> PostMessage(string topic, int qosLevel = 0)
         {
+            byte[] payload;
+
+            using (var memoryStream = new MemoryStream())
+            {
+                await HttpContext.Request.Body.CopyToAsync(memoryStream);
+                payload = memoryStream.ToArray();
+            }
+
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
                 .WithPayload(payload)
+                .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qosLevel)
                 .Build();
 
-            return PostMessage(message);
+            return await PostMessage(message);
         }
     }
 }

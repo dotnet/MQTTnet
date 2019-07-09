@@ -47,5 +47,21 @@ namespace MQTTnet.AspNetCore.Tests
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
         }
+
+
+        [TestMethod]
+        public async Task TestLargePacket()
+        {
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
+            var pipe = new DuplexPipeMockup();
+            var connection = new DefaultConnectionContext();
+            connection.Transport = pipe;
+            var ctx = new MqttConnectionContext(serializer, connection);
+
+            await ctx.SendPacketAsync(new MqttPublishPacket() { Payload = new byte[20_000] }, TimeSpan.Zero, CancellationToken.None).ConfigureAwait(false);
+
+            var readResult = await pipe.Send.Reader.ReadAsync();
+            Assert.IsTrue(readResult.Buffer.Length > 20000);
+        }
     }
 }

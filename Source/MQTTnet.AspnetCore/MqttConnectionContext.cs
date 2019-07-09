@@ -162,11 +162,12 @@ namespace MQTTnet.AspNetCore
                 var buffer = formatter.Encode(packet);
                 var msg = buffer.AsMemory();
                 var output = _output;
-                msg.CopyTo(output.GetMemory(msg.Length));
-                BytesSent += msg.Length;
+                var result = await output.WriteAsync(msg, cancellationToken).ConfigureAwait(false);
+                if (result.IsCompleted)
+                {
+                    BytesSent += msg.Length;
+                }
                 PacketFormatterAdapter.FreeBuffer();
-                output.Advance(msg.Length);
-                await output.FlushAsync().ConfigureAwait(false);
             }
             finally
             {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Net.Security;
 using System.Security.Authentication;
 
 namespace MQTTnet.Server
@@ -98,7 +99,15 @@ namespace MQTTnet.Server
             _options.TlsEndpointOptions.IsEnabled = false;
             return this;
         }
-        
+
+#if !WINDOWS_UWP
+        public MqttServerOptionsBuilder WithRemoteCertificateValidationCallback(RemoteCertificateValidationCallback value)
+        {
+            _options.TlsEndpointOptions.RemoteCertificateValidationCallback = value;
+            return this;
+        }
+#endif
+
         public MqttServerOptionsBuilder WithStorage(IMqttServerStorage value)
         {
             _options.Storage = value;

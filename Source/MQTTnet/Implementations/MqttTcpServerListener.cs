@@ -160,7 +160,7 @@ namespace MQTTnet.Implementations
 
                 if (_tlsCertificate != null)
                 {
-                    var sslStream = new SslStream(stream, false);
+                    var sslStream = new SslStream(stream, false, _tlsOptions.RemoteCertificateValidationCallback);
 
                     await sslStream.AuthenticateAsServerAsync(
                         _tlsCertificate, 

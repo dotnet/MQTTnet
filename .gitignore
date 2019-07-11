@@ -292,3 +292,5 @@ __pycache__/
 *.map
 
 /Tests/MQTTnet.TestApp.NetCore/RetainedMessages.json
+
+Build/NuGet/

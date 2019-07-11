@@ -14,6 +14,7 @@
 * [Server] Added items dictionary to client session in order to share data across interceptors as along as the session exists.
 * [Server] Exposed CONNECT packet properties in Application Message and Subscription interceptor.
 * [Server] Fixed: Sending Large packets with AspnetCore based connection throws System.ArgumentException.
+* [Server] Fixed wrong usage of socket option _NoDelay_.
 * [MQTTnet.Server] Added REST API for publishing basic messages.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2019</copyright>

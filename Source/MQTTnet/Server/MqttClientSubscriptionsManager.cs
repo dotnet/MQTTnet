@@ -9,7 +9,7 @@ namespace MQTTnet.Server
 {
     public class MqttClientSubscriptionsManager
     {
-        private readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
+        private readonly Dictionary<string, TopicFilter> _subscriptions = new Dictionary<string, TopicFilter>();
         private readonly MqttClientSession _clientSession;
         private readonly IMqttServerOptions _serverOptions;
         private readonly MqttServerEventDispatcher _eventDispatcher;
@@ -64,7 +64,7 @@ namespace MQTTnet.Server
                 {
                     lock (_subscriptions)
                     {
-                        _subscriptions[finalTopicFilter.Topic] = finalTopicFilter.QualityOfServiceLevel;
+                        _subscriptions[finalTopicFilter.Topic] = finalTopicFilter;
                     }
 
                     await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
@@ -90,7 +90,7 @@ namespace MQTTnet.Server
                 {
                     lock (_subscriptions)
                     {
-                        _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                        _subscriptions[topicFilter.Topic] = topicFilter;
                     }
 
                     await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
@@ -158,7 +158,7 @@ namespace MQTTnet.Server
                         continue;
                     }
 
-                    qosLevels.Add(subscription.Value);
+                    qosLevels.Add(subscription.Value.QualityOfServiceLevel);
                 }
             }
 

@@ -229,7 +229,7 @@ namespace MQTTnet.Server
                 }
                 else
                 {
-                    _logger.Error(exception, "Client '{0}': Unhandled exception while receiving client packets.", ClientId);
+                    _logger.Error(exception, "Client '{0}': Error while receiving client packets.", ClientId);
                 }
 
                 StopInternal();

@@ -376,7 +376,7 @@ namespace MQTTnet.Server
                 senderClientId = _options.ClientId;
             }
 
-            var interceptorContext = new MqttApplicationMessageInterceptorContext(senderClientId, applicationMessage);
+            var interceptorContext = new MqttApplicationMessageInterceptorContext(senderClientId, sender, applicationMessage);
             await interceptor.InterceptApplicationMessagePublishAsync(interceptorContext).ConfigureAwait(false);
             return interceptorContext;
         }

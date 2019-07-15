@@ -171,6 +171,11 @@ namespace MQTTnet.Implementations
                     stream = sslStream;
 
                     clientCertificate = sslStream.RemoteCertificate as X509Certificate2;
+
+                    if (clientCertificate == null && sslStream.RemoteCertificate != null)
+                    {
+                        clientCertificate = new X509Certificate2(sslStream.RemoteCertificate.Export(X509ContentType.Cert));
+                    }
                 }
 
                 var clientHandler = ClientHandler;

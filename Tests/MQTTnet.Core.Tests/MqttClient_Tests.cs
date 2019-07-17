@@ -159,6 +159,25 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public async Task Fire_Disconnected_Event_On_Server_Shutdown()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var server = await testEnvironment.StartServerAsync();
+                var client = await testEnvironment.ConnectClientAsync();
+
+                var handlerFired = false;
+                client.UseDisconnectedHandler(e => handlerFired = true);
+
+                await server.StopAsync();
+
+                await Task.Delay(4000);
+
+                Assert.IsTrue(handlerFired);
+            }
+        }
+
+        [TestMethod]
         public async Task Disconnect_Event_Contains_Exception()
         {
             var factory = new MqttFactory();

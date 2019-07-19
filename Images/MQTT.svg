@@ -15,7 +15,7 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-   sodipodi:docname="MQQTsvg.svg">
+   sodipodi:docname="MQTT.svg">
   <defs
      id="defs2">
     <filter
@@ -56,15 +56,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.24748737"
-     inkscape:cx="-2276.7582"
+     inkscape:cx="955.72999"
      inkscape:cy="368.8465"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="3840"
-     inkscape:window-height="2066"
-     inkscape:window-x="2989"
-     inkscape:window-y="-11"
+     inkscape:window-width="3000"
+     inkscape:window-height="1875"
+     inkscape:window-x="-13"
+     inkscape:window-y="-13"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata5">
@@ -91,8 +91,8 @@
        height="512"
        width="512"
        id="rect3791"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17" />
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333" />
     <rect
        id="rect3713"
        width="512"
@@ -102,8 +102,8 @@
        style="fill:#aa0000;stroke-width:0.26458332"
        rx="50"
        ry="50"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17" />
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333" />
     <rect
        style="fill:#ce0000;fill-opacity:0.60591131;stroke-width:0.28100395"
        id="rect3806"
@@ -111,8 +111,8 @@
        height="9.0714283"
        x="270.81995"
        y="554.02386"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17" />
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333" />
     <path
        inkscape:connector-curvature="0"
        id="path4638"
@@ -120,16 +120,16 @@
        style="fill:#ce0000;fill-opacity:0.60591131;stroke-width:0.59952348"
        inkscape:transform-center-x="-28.818481"
        inkscape:transform-center-y="146.97441"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17" />
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333" />
     <path
        style="fill:#d40000;stroke-width:1.76103246"
        d="m 2138.1582,1411.377 a 995.76488,866.17897 0 0 0 -842.3984,854.3418 995.76488,866.17897 0 0 0 0.2988,5.0097 h 653.123 c 104.693,0 188.9766,-84.2836 188.9766,-188.9765 z"
        transform="scale(0.26458333)"
        id="path3715-5-8"
        inkscape:connector-curvature="0"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17" />
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333" />
     <ellipse
        style="fill:#d40000;stroke-width:0.06901014"
        id="path3715-5"
@@ -137,29 +137,29 @@
        cy="170.58017"
        rx="39.021355"
        ry="33.94323"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17" />
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333" />
     <path
        style="fill:#ce0000;fill-opacity:0.60591131;stroke-width:2.26591563"
        d="M 464.66602,532.89453 542.01562,669.92969 1595.373,1648.873 a 995.76487,866.17896 0 0 1 14.0293,-12.6835 995.76487,866.17896 0 0 1 23.6231,-17.4727 z"
        id="rect3806-2"
        inkscape:connector-curvature="0"
        transform="scale(0.26458333)"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17" />
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="102.34985"
        y="320.75201"
        id="text3774"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17"><tspan
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333"><tspan
          sodipodi:role="line"
          id="tspan3772"
          x="102.34985"
          y="320.75201"
-         style="font-size:141.1111145px;fill:#ffffff;stroke-width:0.26458332">MQQT</tspan></text>
+         style="font-size:141.1111145px;fill:#ffffff;stroke-width:0.26458332">MQTT</tspan></text>
     <ellipse
        ry="33.94323"
        rx="39.021355"
@@ -167,8 +167,8 @@
        cx="124.47787"
        id="ellipse3768"
        style="fill:#d40000;stroke-width:0.06901014"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17" />
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333" />
     <ellipse
        style="fill:#d40000;stroke-width:0.06901014"
        id="ellipse3770"
@@ -176,16 +176,16 @@
        cy="556.91571"
        rx="39.021355"
        ry="33.94323"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17" />
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333" />
     <text
        id="text3778"
        y="474.73837"
        x="194.57605"
        style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"
-       inkscape:export-xdpi="21.17"
-       inkscape:export-ydpi="21.17"><tspan
+       inkscape:export-xdpi="2.6458333"
+       inkscape:export-ydpi="2.6458333"><tspan
          style="font-size:141.1111145px;fill:#ffffff;stroke-width:0.26458332"
          y="474.73837"
          x="194.57605"
@@ -232,7 +232,7 @@
          y="329.30466"
          x="-623.5542"
          id="tspan4654"
-         sodipodi:role="line">MQQT</tspan></text>
+         sodipodi:role="line">MQTT</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"

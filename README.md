@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/chkr1011/MQTTnet/blob/master/Images/icon_det_256.png?raw=true" width="128">
+<img src="https://github.com/chkr1011/MQTTnet/blob/master/Images/icon_det_256.png?raw=true" width="196">
 <br/>
 <br/>
 </p>

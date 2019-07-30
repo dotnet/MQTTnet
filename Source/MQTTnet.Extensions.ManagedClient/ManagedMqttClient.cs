@@ -364,7 +364,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Unhandled exception while publishing queued application messages.");
+                _logger.Error(exception, "Error while publishing queued application messages.");
             }
             finally
             {
@@ -424,7 +424,7 @@ namespace MQTTnet.Extensions.ManagedClient
             catch (Exception exception)
             {
                 transmitException = exception;
-                _logger.Error(exception, $"Unhandled exception while publishing application message ({message.Id}).");
+                _logger.Error(exception, $"Error while publishing application message ({message.Id}).");
             }
             finally
             {

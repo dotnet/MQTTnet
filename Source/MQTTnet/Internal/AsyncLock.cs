@@ -23,7 +23,7 @@ namespace MQTTnet.Internal
         public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
         {
             var task = _semaphore.WaitAsync(cancellationToken);
-            if (task.IsCompleted)
+            if (task.Status == TaskStatus.RanToCompletion)
             {
                 return _releaser;
             }

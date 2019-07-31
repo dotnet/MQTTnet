@@ -95,13 +95,15 @@ namespace MQTTnet.Server
             return this;
         }
 
+#if !WINDOWS_UWP
         public MqttServerOptionsBuilder WithClientCertificate(RemoteCertificateValidationCallback validationCallback = null, bool checkCertificateRevocation = false)
         {
             _options.TlsEndpointOptions.ClientCertificateRequired = true;
             _options.TlsEndpointOptions.CheckCertificateRevocation = checkCertificateRevocation;
-            _options.TlsEndpointOptions.CertificateValidationCallback = validationCallback;
+            _options.TlsEndpointOptions.RemoteCertificateValidationCallback = validationCallback;
             return this;
         }
+#endif
 
         public MqttServerOptionsBuilder WithoutEncryptedEndpoint()
         {

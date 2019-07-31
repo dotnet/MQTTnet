@@ -82,15 +82,24 @@ namespace MQTTnet.Server
             return this;
         }
 
-        public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value)
+        public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value, IMqttServerCredentials password = null)
         {
             _options.TlsEndpointOptions.Certificate = value;
+            _options.TlsEndpointOptions.Password = password;
             return this;
         }
 
         public MqttServerOptionsBuilder WithEncryptionSslProtocol(SslProtocols value)
         {
             _options.TlsEndpointOptions.SslProtocol = value;
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithClientCertificate(RemoteCertificateValidationCallback validationCallback = null, bool checkCertificateRevocation = false)
+        {
+            _options.TlsEndpointOptions.ClientCertificateRequired = true;
+            _options.TlsEndpointOptions.CheckCertificateRevocation = checkCertificateRevocation;
+            _options.TlsEndpointOptions.CertificateValidationCallback = validationCallback;
             return this;
         }
 
@@ -107,7 +116,7 @@ namespace MQTTnet.Server
             return this;
         }
 #endif
-
+        
         public MqttServerOptionsBuilder WithStorage(IMqttServerStorage value)
         {
             _options.Storage = value;

@@ -12,6 +12,8 @@ namespace MQTTnet.Server
 
         public byte[] Certificate { get; set; }
 
+        public IMqttServerCredentials Password { get; set; }
+
         public bool ClientCertificateRequired { get; set; }
 
         public bool CheckCertificateRevocation { get; set; }

@@ -25,6 +25,8 @@
     <TargetFrameworkIdentifier>.NETCore</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
     <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
+    <Win7Support Condition="'$(TargetFramework)'=='netstandard2.0' OR '$(TargetFramework)'=='net452' OR '$(TargetFramework)'=='net461' ">true</Win7Support>
+    <DefineConstants Condition=" '$(Win7Support)' == 'true' ">$(DefineConstants);WIN_7_FIX</DefineConstants>
     <DefaultLanguage>en</DefaultLanguage>
     <LanguageTargets>$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets</LanguageTargets>
   </PropertyGroup>
@@ -45,6 +47,7 @@
     <PackageReference Include="System.Net.Security" Version="4.3.2" />
     <PackageReference Include="System.Net.WebSockets" Version="4.3.0" />
     <PackageReference Include="System.Net.WebSockets.Client" Version="4.3.2" />
+    <PackageReference Include="matthid-System.Net.WebSockets.Client.Managed" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard1.3'">
@@ -58,9 +61,11 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net452'">
+    <PackageReference Include="matthid-System.Net.WebSockets.Client.Managed" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net461'">
+    <PackageReference Include="matthid-System.Net.WebSockets.Client.Managed" Version="1.0.1" />
   </ItemGroup>
   
 </Project>

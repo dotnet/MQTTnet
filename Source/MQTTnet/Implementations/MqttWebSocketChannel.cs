@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Client.Options;
 
+#if WIN_7_FIX
+using ClientWebSocket = System.Net.WebSockets.Managed.ClientWebSocket;
+#endif
+
 namespace MQTTnet.Implementations
 {
     public class MqttWebSocketChannel : IMqttChannel

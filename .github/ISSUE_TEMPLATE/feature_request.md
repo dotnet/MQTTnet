@@ -12,11 +12,12 @@ Is your feature request related to a problem? Please describe.
 A clear and concise description of what the problem is. Example. I'm am trying to do [...] but [...]
 
 ### Which project is your feature request related to?
-- [x] Client
-- [ ] ManagedClient
-- [ ] MQTTnet.Server standalone
-- [ ] Server
-- [ ] Generic
+<!-- Remove the items which don't apply from the following list -->
+- Client
+- ManagedClient
+- MQTTnet.Server standalone
+- Server
+- Generic
 
 ### Describe the solution you'd like
 A clear and concise description of what you want to happen.

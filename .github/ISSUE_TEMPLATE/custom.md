@@ -10,7 +10,7 @@ assignees: ''
 ### Describe your question
 A clear and concise description of what you want to know.
 
-### Which project is your feature request related to?
+### Which project is your question related to?
 <!-- Remove the items which don't apply from the following list -->
 - Client
 - ManagedClient

@@ -36,9 +36,11 @@ Add any other context about the problem here.
 Include debugging or logging information here:
 
 ```batch
+\\ Put your logging output here.
 ```
 ### Code example
  Please provide full code examples below where possible to make it easier for the developers to check your issues.
  
 ```csharp
+\\ Put your code here.
 ```

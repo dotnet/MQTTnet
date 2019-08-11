@@ -22,14 +22,17 @@ namespace MQTTnet.Server.Mqtt
         {
             try
             {
+                var sessionItems = (PythonDictionary)context.SessionItems[MqttServerConnectionValidator.WrappedSessionItemsKey];
+
                 var pythonContext = new PythonDictionary
                 {
+                    { "client_id", context.ClientId },
+                    { "session_items", sessionItems },
+                    { "retain", context.ApplicationMessage.Retain },
                     { "accept_publish", context.AcceptPublish },
                     { "close_connection", context.CloseConnection },
-                    { "client_id", context.ClientId },
                     { "topic", context.ApplicationMessage.Topic },
-                    { "qos", (int)context.ApplicationMessage.QualityOfServiceLevel },
-                    { "retain", context.ApplicationMessage.Retain }
+                    { "qos", (int)context.ApplicationMessage.QualityOfServiceLevel }
                 };
                 
                 _pythonScriptHostService.InvokeOptionalFunction("on_intercept_application_message", pythonContext);

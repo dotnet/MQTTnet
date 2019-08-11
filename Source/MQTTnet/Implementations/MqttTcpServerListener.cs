@@ -61,6 +61,8 @@ namespace MQTTnet.Implementations
 
                 _socket = new Socket(_addressFamily, SocketType.Stream, ProtocolType.Tcp);
 
+                // Usage of socket options is described here: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.setsocketoption?view=netcore-2.2
+
                 if (_options.ReuseAddress)
                 {
                     _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
@@ -68,7 +70,7 @@ namespace MQTTnet.Implementations
                 
                 if (_options.NoDelay)
                 {
-                    _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.NoDelay, true);
+                    _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
                 }
                 
                 _socket.Bind(_localEndPoint);
@@ -160,7 +162,7 @@ namespace MQTTnet.Implementations
 
                 if (_tlsCertificate != null)
                 {
-                    var sslStream = new SslStream(stream, false);
+                    var sslStream = new SslStream(stream, false, _tlsOptions.RemoteCertificateValidationCallback);
 
                     await sslStream.AuthenticateAsServerAsync(
                         _tlsCertificate, 
@@ -171,6 +173,11 @@ namespace MQTTnet.Implementations
                     stream = sslStream;
 
                     clientCertificate = sslStream.RemoteCertificate as X509Certificate2;
+
+                    if (clientCertificate == null && sslStream.RemoteCertificate != null)
+                    {
+                        clientCertificate = new X509Certificate2(sslStream.RemoteCertificate.Export(X509ContentType.Cert));
+                    }
                 }
 
                 var clientHandler = ClientHandler;

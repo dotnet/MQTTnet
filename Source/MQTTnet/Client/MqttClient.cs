@@ -257,12 +257,12 @@ namespace MQTTnet.Client
         {
             var clientWasConnected = IsConnected;
 
-            InitiateDisconnect();
-
-            IsConnected = false;
+            TryInitiateDisconnect();
 
             try
             {
+                IsConnected = false;
+
                 if (_adapter != null)
                 {
                     _logger.Verbose("Disconnecting [Timeout={0}]", Options.CommunicationTimeout);
@@ -295,7 +295,7 @@ namespace MQTTnet.Client
             }
         }
 
-        private void InitiateDisconnect()
+        private void TryInitiateDisconnect()
         {
             lock (_disconnectLock)
             {

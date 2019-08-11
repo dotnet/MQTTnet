@@ -14,45 +14,14 @@ namespace MQTTnet.Server
         private readonly MqttConnectPacket _connectPacket;
         private readonly IMqttChannelAdapter _clientAdapter;
 
-        public MqttConnectionValidatorContext(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
+        public MqttConnectionValidatorContext(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter, IDictionary<object, object> sessionItems)
         {
-            _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
+            _connectPacket = connectPacket;
             _clientAdapter = clientAdapter ?? throw new ArgumentNullException(nameof(clientAdapter));
+            SessionItems = sessionItems;
         }
 
         public string ClientId => _connectPacket.ClientId;
-
-        public string Username => _connectPacket.Username;
-
-        public byte[] RawPassword => _connectPacket.Password;
-
-        public string Password => Encoding.UTF8.GetString(RawPassword ?? new byte[0]);
-
-        public MqttApplicationMessage WillMessage => _connectPacket.WillMessage;
-
-        public bool CleanSession => _connectPacket.CleanSession;
-
-        public ushort KeepAlivePeriod => _connectPacket.KeepAlivePeriod;
-
-        public List<MqttUserProperty> UserProperties => _connectPacket.Properties?.UserProperties;
-
-        public byte[] AuthenticationData => _connectPacket.Properties?.AuthenticationData;
-
-        public string AuthenticationMethod => _connectPacket.Properties?.AuthenticationMethod;
-
-        public uint? MaximumPacketSize => _connectPacket.Properties?.MaximumPacketSize;
-
-        public ushort? ReceiveMaximum => _connectPacket.Properties?.ReceiveMaximum;
-
-        public ushort? TopicAliasMaximum => _connectPacket.Properties?.TopicAliasMaximum;
-
-        public bool? RequestProblemInformation => _connectPacket.Properties?.RequestProblemInformation;
-
-        public bool? RequestResponseInformation => _connectPacket.Properties?.RequestResponseInformation;
-
-        public uint? SessionExpiryInterval => _connectPacket.Properties?.SessionExpiryInterval;
-
-        public uint? WillDelayInterval => _connectPacket.Properties?.WillDelayInterval;
 
         public string Endpoint => _clientAdapter.Endpoint;
 
@@ -61,6 +30,43 @@ namespace MQTTnet.Server
         public X509Certificate2 ClientCertificate => _clientAdapter.ClientCertificate;
 
         public MqttProtocolVersion ProtocolVersion => _clientAdapter.PacketFormatterAdapter.ProtocolVersion;
+
+        public string Username => _connectPacket?.Username;
+
+        public byte[] RawPassword => _connectPacket?.Password;
+
+        public string Password => Encoding.UTF8.GetString(RawPassword ?? new byte[0]);
+
+        public MqttApplicationMessage WillMessage => _connectPacket?.WillMessage;
+
+        public bool? CleanSession => _connectPacket?.CleanSession;
+
+        public ushort? KeepAlivePeriod => _connectPacket?.KeepAlivePeriod;
+
+        public List<MqttUserProperty> UserProperties => _connectPacket?.Properties?.UserProperties;
+
+        public byte[] AuthenticationData => _connectPacket?.Properties?.AuthenticationData;
+
+        public string AuthenticationMethod => _connectPacket?.Properties?.AuthenticationMethod;
+
+        public uint? MaximumPacketSize => _connectPacket?.Properties?.MaximumPacketSize;
+
+        public ushort? ReceiveMaximum => _connectPacket?.Properties?.ReceiveMaximum;
+
+        public ushort? TopicAliasMaximum => _connectPacket?.Properties?.TopicAliasMaximum;
+
+        public bool? RequestProblemInformation => _connectPacket?.Properties?.RequestProblemInformation;
+
+        public bool? RequestResponseInformation => _connectPacket?.Properties?.RequestResponseInformation;
+
+        public uint? SessionExpiryInterval => _connectPacket?.Properties?.SessionExpiryInterval;
+
+        public uint? WillDelayInterval => _connectPacket?.Properties?.WillDelayInterval;
+
+        /// <summary>
+        /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
+        /// </summary>
+        public IDictionary<object, object> SessionItems { get; }
 
         /// <summary>
         /// This is used for MQTTv3 only.

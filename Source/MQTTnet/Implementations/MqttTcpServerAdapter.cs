@@ -48,7 +48,7 @@ namespace MQTTnet.Implementations
                     throw new ArgumentException("TLS certificate is not set.");
                 }
 
-                var tlsCertificate = new X509Certificate2(options.TlsEndpointOptions.Certificate);
+                var tlsCertificate = new X509Certificate2(options.TlsEndpointOptions.Certificate, options.TlsEndpointOptions.CertificateCredentials.Password);
                 if (!tlsCertificate.HasPrivateKey)
                 {
                     throw new InvalidOperationException("The certificate for TLS encryption must contain the private key.");

@@ -9,6 +9,8 @@ namespace MQTTnet.Server.Mqtt
 {
     public class MqttServerConnectionValidator : IMqttServerConnectionValidator
     {
+        public const string WrappedSessionItemsKey = "WRAPPED_ITEMS";
+
         private readonly PythonScriptHostService _pythonScriptHostService;
         private readonly ILogger _logger;
 
@@ -22,6 +24,8 @@ namespace MQTTnet.Server.Mqtt
         {
             try
             {
+                var sessionItems = new PythonDictionary();
+
                 var pythonContext = new PythonDictionary
                 {
                     { "endpoint", context.Endpoint },
@@ -33,6 +37,7 @@ namespace MQTTnet.Server.Mqtt
                     { "clean_session", context.CleanSession},
                     { "authentication_method", context.AuthenticationMethod},
                     { "authentication_data", new Bytes(context.AuthenticationData ?? new byte[0]) },
+                    { "session_items", sessionItems },
 
                     { "result", PythonConvert.Pythonfy(context.ReasonCode) }
                 };
@@ -40,6 +45,8 @@ namespace MQTTnet.Server.Mqtt
                 _pythonScriptHostService.InvokeOptionalFunction("on_validate_client_connection", pythonContext);
 
                 context.ReasonCode = PythonConvert.ParseEnum<MqttConnectReasonCode>((string)pythonContext["result"]);
+
+                context.SessionItems[WrappedSessionItemsKey] = sessionItems;
             }
             catch (Exception exception)
             {

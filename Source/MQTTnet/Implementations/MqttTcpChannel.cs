@@ -1,4 +1,3 @@
-#if !WINDOWS_UWP
 using System;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -72,7 +71,7 @@ namespace MQTTnet.Implementations
             // Workaround for: workaround for https://github.com/dotnet/corefx/issues/24430
             using (cancellationToken.Register(() => socket.Dispose()))
             {
-#if NET452 || NET461
+#if NET452
                 await Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
 #else
                 await socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
@@ -221,4 +220,3 @@ namespace MQTTnet.Implementations
         }
     }
 }
-#endif

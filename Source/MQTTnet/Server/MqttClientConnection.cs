@@ -31,7 +31,6 @@ namespace MQTTnet.Server
         private readonly IMqttChannelAdapter _channelAdapter;
         private readonly IMqttDataConverter _dataConverter;
         private readonly string _endpoint;
-        private readonly MqttConnectPacket _connectPacket;
         private readonly DateTime _connectedTimestamp;
 
         private Task<MqttClientDisconnectType> _packageReceiverTask;
@@ -60,22 +59,24 @@ namespace MQTTnet.Server
             _channelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
             _dataConverter = _channelAdapter.PacketFormatterAdapter.DataConverter;
             _endpoint = _channelAdapter.Endpoint;
-            _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
+            ConnectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttClientConnection));
 
-            _keepAliveMonitor = new MqttClientKeepAliveMonitor(_connectPacket.ClientId, StopAsync, _logger);
+            _keepAliveMonitor = new MqttClientKeepAliveMonitor(ConnectPacket.ClientId, StopAsync, _logger);
 
             _connectedTimestamp = DateTime.UtcNow;
             _lastPacketReceivedTimestamp = _connectedTimestamp;
             _lastNonKeepAlivePacketReceivedTimestamp = _lastPacketReceivedTimestamp;
         }
 
-        public string ClientId => _connectPacket.ClientId;
+        public MqttConnectPacket ConnectPacket { get; }
+
+        public string ClientId => ConnectPacket.ClientId;
 
         public MqttClientSession Session { get; }
-
+        
         public async Task StopAsync()
         {
             StopInternal();
@@ -133,12 +134,12 @@ namespace MQTTnet.Server
                 _channelAdapter.ReadingPacketStartedCallback = OnAdapterReadingPacketStarted;
                 _channelAdapter.ReadingPacketCompletedCallback = OnAdapterReadingPacketCompleted;
 
-                Session.WillMessage = _connectPacket.WillMessage;
+                Session.WillMessage = ConnectPacket.WillMessage;
 
                 Task.Run(() => SendPendingPacketsAsync(_cancellationToken.Token), _cancellationToken.Token).Forget(_logger);
 
                 // TODO: Change to single thread in SessionManager. Or use SessionManager and stats from KeepAliveMonitor.
-                _keepAliveMonitor.Start(_connectPacket.KeepAlivePeriod, _cancellationToken.Token);
+                _keepAliveMonitor.Start(ConnectPacket.KeepAlivePeriod, _cancellationToken.Token);
 
                 await SendAsync(
                     new MqttConnAckPacket
@@ -228,7 +229,7 @@ namespace MQTTnet.Server
                 }
                 else
                 {
-                    _logger.Error(exception, "Client '{0}': Unhandled exception while receiving client packets.", ClientId);
+                    _logger.Error(exception, "Client '{0}': Error while receiving client packets.", ClientId);
                 }
 
                 StopInternal();
@@ -271,7 +272,7 @@ namespace MQTTnet.Server
         private async Task HandleIncomingSubscribePacketAsync(MqttSubscribePacket subscribePacket)
         {
             // TODO: Let the channel adapter create the packet.
-            var subscribeResult = await Session.SubscriptionsManager.SubscribeAsync(subscribePacket).ConfigureAwait(false);
+            var subscribeResult = await Session.SubscriptionsManager.SubscribeAsync(subscribePacket, ConnectPacket).ConfigureAwait(false);
 
             await SendAsync(subscribeResult.ResponsePacket).ConfigureAwait(false);
 

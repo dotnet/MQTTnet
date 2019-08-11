@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -10,14 +12,17 @@ namespace MQTTnet.Tests
     public class MqttSubscriptionsManager_Tests
     {
         [TestMethod]
-        public void MqttSubscriptionsManager_SubscribeSingleSuccess()
+        public async Task MqttSubscriptionsManager_SubscribeSingleSuccess()
         {
-            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
+            var s = new MqttClientSession("", new ConcurrentDictionary<object, object>(),
+                new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions(), new TestLogger());
+
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
 
-            sm.SubscribeAsync(sp).GetAwaiter().GetResult();
+            await sm.SubscribeAsync(sp, new MqttConnectPacket());
 
             var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce);
             Assert.IsTrue(result.IsSubscribed);
@@ -25,14 +30,17 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public void MqttSubscriptionsManager_SubscribeDifferentQoSSuccess()
+        public async Task MqttSubscriptionsManager_SubscribeDifferentQoSSuccess()
         {
-            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
+            var s = new MqttClientSession("", new ConcurrentDictionary<object, object>(),
+                new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions(), new TestLogger());
+
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
 
-            sm.SubscribeAsync(sp).GetAwaiter().GetResult();
+            await sm.SubscribeAsync(sp, new MqttConnectPacket());
 
             var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce);
             Assert.IsTrue(result.IsSubscribed);
@@ -40,15 +48,18 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public void MqttSubscriptionsManager_SubscribeTwoTimesSuccess()
+        public async Task MqttSubscriptionsManager_SubscribeTwoTimesSuccess()
         {
-            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
+            var s = new MqttClientSession("", new ConcurrentDictionary<object, object>(),
+                new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions(), new TestLogger());
+
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilter { Topic = "#", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
             sp.TopicFilters.Add(new TopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
-            sm.SubscribeAsync(sp).GetAwaiter().GetResult();
+            await sm.SubscribeAsync(sp, new MqttConnectPacket());
 
             var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce);
             Assert.IsTrue(result.IsSubscribed);
@@ -56,33 +67,39 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public void MqttSubscriptionsManager_SubscribeSingleNoSuccess()
+        public async Task MqttSubscriptionsManager_SubscribeSingleNoSuccess()
         {
-            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
+            var s = new MqttClientSession("", new ConcurrentDictionary<object, object>(),
+                new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions(), new TestLogger());
+
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
 
-            sm.SubscribeAsync(sp).GetAwaiter().GetResult();
+            await sm.SubscribeAsync(sp, new MqttConnectPacket());
 
             Assert.IsFalse(sm.CheckSubscriptions("A/B/X", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
         }
 
         [TestMethod]
-        public void MqttSubscriptionsManager_SubscribeAndUnsubscribeSingle()
+        public async Task MqttSubscriptionsManager_SubscribeAndUnsubscribeSingle()
         {
-            var sm = new MqttClientSubscriptionsManager("", new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
+            var s = new MqttClientSession("", new ConcurrentDictionary<object, object>(),
+                new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions(), new TestLogger());
+
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
 
-            sm.SubscribeAsync(sp).GetAwaiter().GetResult();
+            await sm.SubscribeAsync(sp, new MqttConnectPacket());
 
             Assert.IsTrue(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
 
             var up = new MqttUnsubscribePacket();
             up.TopicFilters.Add("A/B/C");
-            sm.UnsubscribeAsync(up);
+            await sm.UnsubscribeAsync(up);
 
             Assert.IsFalse(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
         }

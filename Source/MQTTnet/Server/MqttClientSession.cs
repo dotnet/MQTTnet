@@ -12,11 +12,12 @@ namespace MQTTnet.Server
 
         private readonly DateTime _createdTimestamp = DateTime.UtcNow;
 
-        public MqttClientSession(string clientId, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttNetChildLogger logger)
+        public MqttClientSession(string clientId, IDictionary<object, object> items, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttNetChildLogger logger)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            Items = items ?? throw new ArgumentNullException(nameof(items));
 
-            SubscriptionsManager = new MqttClientSubscriptionsManager(clientId, eventDispatcher, serverOptions);
+            SubscriptionsManager = new MqttClientSubscriptionsManager(this, eventDispatcher, serverOptions);
             ApplicationMessagesQueue = new MqttClientSessionApplicationMessagesQueue(serverOptions);
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -32,6 +33,11 @@ namespace MQTTnet.Server
         public MqttClientSubscriptionsManager SubscriptionsManager { get; }
 
         public MqttClientSessionApplicationMessagesQueue ApplicationMessagesQueue { get; }
+
+        /// <summary>
+        /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
+        /// </summary>
+        public IDictionary<object, object> Items { get; }
 
         public void EnqueueApplicationMessage(MqttApplicationMessage applicationMessage, string senderClientId, bool isRetainedApplicationMessage)
         {

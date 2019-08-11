@@ -13,7 +13,7 @@ namespace MQTTnet.Server.Controllers
 {
     [Authorize]
     [ApiController]
-    public class ClientsController : ControllerBase
+    public class ClientsController : Controller
     {
         private readonly MqttServerService _mqttServerService;
 

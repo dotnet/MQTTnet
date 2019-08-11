@@ -17,8 +17,10 @@ namespace MQTTnet.Server
         public bool ClientCertificateRequired { get; set; }
 
         public bool CheckCertificateRevocation { get; set; }
-        public RemoteCertificateValidationCallback RemoteCertificateValidationCallback { get; set; }
 
+#if !WINDOWS_UWP
+        public RemoteCertificateValidationCallback RemoteCertificateValidationCallback { get; set; }
+#endif
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
     }
 }

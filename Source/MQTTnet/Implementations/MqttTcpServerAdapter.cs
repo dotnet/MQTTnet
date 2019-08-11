@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !WINDOWS_UWP
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -128,3 +129,4 @@ namespace MQTTnet.Implementations
         }
     }
 }
+#endif

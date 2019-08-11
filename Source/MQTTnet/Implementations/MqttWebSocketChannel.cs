@@ -161,8 +161,10 @@ namespace MQTTnet.Implementations
                 return null;
             }
 
-#if NETSTANDARD1_3
-            throw new NotSupportedException("Proxies are not supported in netstandard1.3.");
+#if WINDOWS_UWP
+            throw new NotSupportedException("Proxies are not supported in UWP.");
+#elif NETSTANDARD1_3
+            throw new NotSupportedException("Proxies are not supported in netstandard 1.3.");
 #else
             var proxyUri = new Uri(_options.ProxyOptions.Address);
 

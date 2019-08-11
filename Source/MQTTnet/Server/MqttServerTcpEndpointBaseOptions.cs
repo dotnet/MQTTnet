@@ -12,6 +12,10 @@ namespace MQTTnet.Server
 
         public bool NoDelay { get; set; } = true;
 
+#if WINDOWS_UWP
+        public int BufferSize { get; set; } = 4096;
+#endif
+
         public IPAddress BoundInterNetworkAddress { get; set; } = IPAddress.Any;
 
         public IPAddress BoundInterNetworkV6Address { get; set; } = IPAddress.IPv6Any;

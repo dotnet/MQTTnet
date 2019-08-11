@@ -653,7 +653,18 @@ namespace MQTTnet.TestApp.UniversalWindows
             }
 
             // ----------------------------------
-            
+
+            // For UWP apps:
+            MqttTcpChannel.CustomIgnorableServerCertificateErrorsResolver = o =>
+            {
+                if (o.Server == "server_with_revoked_cert")
+                {
+                    return new[] { ChainValidationResult.Revoked };
+                }
+
+                return new ChainValidationResult[0];
+            };
+
             {
                 // Start a MQTT server.
                 var mqttServer = new MqttFactory().CreateMqttServer();

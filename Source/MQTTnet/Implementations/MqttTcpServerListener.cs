@@ -1,5 +1,4 @@
-﻿#if !WINDOWS_UWP
-using System;
+﻿using System;
 using System.IO;
 using System.Net;
 using System.Net.Security;
@@ -96,7 +95,7 @@ namespace MQTTnet.Implementations
         {
             _socket?.Dispose();
 
-#if NETSTANDARD1_3 || NETSTANDARD2_0 || NET461 || NET472
+#if NETSTANDARD1_3 || NETSTANDARD2_0
             _tlsCertificate?.Dispose();
 #endif
         }
@@ -107,7 +106,7 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
-#if NET452 || NET461
+#if NET452
                     var clientSocket = await Task.Factory.FromAsync(_socket.BeginAccept, _socket.EndAccept, null).ConfigureAwait(false);
 #else
                     var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
@@ -225,4 +224,3 @@ namespace MQTTnet.Implementations
         }
     }
 }
-#endif

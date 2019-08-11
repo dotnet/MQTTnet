@@ -18,6 +18,8 @@
     <copyright>Copyright Christian Kratky 2016-2019</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
+      <group targetFramework="net452">
+      </group>
       <group targetFramework="netstandard1.3">
         <dependency id="NETStandard.Library" version="1.3.0" />
         <dependency id="System.Net.Security" version="4.3.2" />

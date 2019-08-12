@@ -9,9 +9,9 @@ namespace MQTTnet.Server.Configuration
     public class TcpEndPointModel
     {
         /// <summary>
-        /// Path to Certificate
+        /// Certificate settings.
         /// </summary>
-        public string CertificatePath { get; set; }
+        public CertificateSettingsModel Certificate { get; set; }
 
         /// <summary>
         /// Enabled / Disable
@@ -32,25 +32,6 @@ namespace MQTTnet.Server.Configuration
         /// Listen Port
         /// </summary>
         public int Port { get; set; } = 1883;
-
-        /// <summary>
-        /// Read Certificate file
-        /// </summary>
-        /// <returns></returns>
-        public byte[] ReadCertificate()
-        {
-            if (string.IsNullOrEmpty(CertificatePath) || string.IsNullOrWhiteSpace(CertificatePath))
-            {
-                throw new FileNotFoundException("No path set");
-            }
-
-            if (!File.Exists(CertificatePath))
-            {
-                throw new FileNotFoundException($"Could not find Certificate in path: {CertificatePath}");
-            }
-
-            return File.ReadAllBytes(CertificatePath);
-        }
 
         /// <summary>
         /// Read IPv4

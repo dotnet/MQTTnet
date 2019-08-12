@@ -139,6 +139,13 @@ namespace MQTTnet.Client.Options
             return this;
         }
 
+        public MqttClientOptionsBuilder WithCredentials(IMqttClientCredentials credentials)
+        {
+            _options.Credentials = credentials;
+
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedAuthenticationExchangeHandler handler)
         {
             _options.ExtendedAuthenticationExchangeHandler = handler;

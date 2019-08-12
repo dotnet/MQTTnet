@@ -19,6 +19,7 @@
 * [Server] Fixed: Sending Large packets with AspnetCore based connection throws System.ArgumentException.
 * [Server] Fixed wrong usage of socket option _NoDelay_.
 * [Server] Added remote certificate validation callback (thanks to @rudacs).
+* [Server] Add support for certificate passwords (thanks to @cslutgen).
 * [MQTTnet.Server] Added REST API for publishing basic messages.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2019</copyright>

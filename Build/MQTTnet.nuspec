@@ -13,6 +13,8 @@
     <releaseNotes>
 * [Core] Converted all pending methods to use async/await.
 * [Client] Fixed an issue when checking for revoked SSL certificates (thanks to @cslutgen).
+* [RpcClient] Added support for custom topic generation strategies.
+* [Server] Refactoring of server certificate password classes (BREAKING CHANGE!).
 * [Server] Fixed an issue with empty server certificate passwords (thanks to @SeppPenner).
 * [MQTTnet.Server] Added support for certificate passwords (BREAKING CHANGE IN CONFIG!)
     </releaseNotes>

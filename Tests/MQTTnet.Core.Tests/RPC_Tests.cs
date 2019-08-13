@@ -10,6 +10,8 @@ using MQTTnet.Extensions.Rpc;
 using MQTTnet.Protocol;
 using MQTTnet.Client.Options;
 using MQTTnet.Formatter;
+using MQTTnet.Extensions.Rpc.Options;
+using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
 
 namespace MQTTnet.Tests
 {
@@ -62,7 +64,22 @@ namespace MQTTnet.Tests
                 
                 var requestSender = await testEnvironment.ConnectClientAsync();
 
-                var rpcClient = new MqttRpcClient(requestSender);
+                var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build());
+                await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(MqttCommunicationTimedOutException))]
+        public async Task Execute_With_Custom_Topic_Names()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+
+                var requestSender = await testEnvironment.ConnectClientAsync();
+
+                var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().WithTopicGenerationStrategy(new TestTopicStrategy()) .Build());
                 await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
             }
         }
@@ -82,10 +99,22 @@ namespace MQTTnet.Tests
 
                 var requestSender = await testEnvironment.ConnectClientAsync();
 
-                var rpcClient = new MqttRpcClient(requestSender);
+                var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build());
                 var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), "ping", "", qosLevel);
 
                 Assert.AreEqual("pong", Encoding.UTF8.GetString(response));
+            }
+        }
+
+        private class TestTopicStrategy : IMqttRpcClientTopicGenerationStrategy
+        {
+            public MqttRpcTopicPair CreateRpcTopics(TopicGenerationContext context)
+            {
+                return new MqttRpcTopicPair
+                {
+                    RequestTopic = "a",
+                    ResponseTopic = "b"
+                };
             }
         }
     }

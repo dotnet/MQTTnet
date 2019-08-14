@@ -328,16 +328,15 @@ namespace MQTTnet.Formatter.V5
             {
                 ThrowReasonCodeNotSetException();
             }
-
-            packetWriter.Write(packet.PacketIdentifier.Value);
-            packetWriter.Write((byte)packet.ReasonCode.Value);
-
+           
             var propertiesWriter = new MqttV500PropertiesWriter();
             if (packet.Properties != null)
             {
                 propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
+
+            packetWriter.Write(packet.PacketIdentifier.Value);
 
             if (packetWriter.Length > 0 || packet.ReasonCode.Value != MqttPubRecReasonCode.Success)
             {

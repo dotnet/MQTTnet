@@ -5,15 +5,25 @@
         int Length { get; }
 
         void WriteWithLengthPrefix(string value);
-        void Write(byte returnCode);
-        void WriteWithLengthPrefix(byte[] payload);
-        void Write(ushort keepAlivePeriod);
-        void Write(IMqttPacketWriter propertyWriter);
-        void WriteVariableLengthInteger(uint length);
-        void Write(byte[] payload, int v, int length);
-        void Reset(int v);
-        void Seek(int v);
+
+        void Write(byte value);
+
+        void WriteWithLengthPrefix(byte[] value);
+
+        void Write(ushort value);
+
+        void Write(IMqttPacketWriter value);
+
+        void WriteVariableLengthInteger(uint value);
+
+        void Write(byte[] value, int offset, int length);
+
+        void Reset(int length);
+
+        void Seek(int offset);
+
         void FreeBuffer();
+
         byte[] GetBuffer();
     }
 }

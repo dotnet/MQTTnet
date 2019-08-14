@@ -12,12 +12,13 @@
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
 * [Core] Converted all pending methods to use async/await.
+* [Core] Fixed an issue when serializing a PubRec (QoS 2) packet for MQTTv5.
 * [Client] Fixed an issue when checking for revoked SSL certificates (thanks to @cslutgen).
 * [RpcClient] Added support for custom topic generation strategies.
 * [Server] Refactoring of server certificate password classes (BREAKING CHANGE!).
 * [Server] Fixed an issue with empty server certificate passwords (thanks to @SeppPenner).
 * [MQTTnet.Server] Added support for certificate passwords (BREAKING CHANGE IN CONFIG!)
-* [MQTTnet.AspNetCore] fixed an issue with mqtt V5 package serialization (#743)
+* [MQTTnet.AspNetCore] Fixed an issue with MQTTv5 package serialization (#743, thanks to @JanEggers, @pcbing).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2019</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

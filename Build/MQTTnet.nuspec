@@ -17,6 +17,7 @@
 * [Server] Refactoring of server certificate password classes (BREAKING CHANGE!).
 * [Server] Fixed an issue with empty server certificate passwords (thanks to @SeppPenner).
 * [MQTTnet.Server] Added support for certificate passwords (BREAKING CHANGE IN CONFIG!)
+* [MQTTnet.AspNetCore] fixed an issue with mqtt V5 package serialization (#743)
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2019</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

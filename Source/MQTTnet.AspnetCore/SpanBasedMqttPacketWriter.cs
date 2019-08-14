@@ -64,7 +64,6 @@ namespace MQTTnet.AspNetCore
 
             GrowIfNeeded(propertyWriter.Length);
             Write(propertyWriter.GetBuffer(), 0, propertyWriter.Length);
-            Commit(propertyWriter.Length);
         }
 
         public void Write(byte[] payload, int start, int length)

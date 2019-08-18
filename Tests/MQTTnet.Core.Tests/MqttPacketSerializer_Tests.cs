@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Formatter.V3;
+using MQTTnet.Formatter.V5;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -256,6 +257,26 @@ namespace MQTTnet.Tests
 
             Assert.AreEqual(prop.ResponseTopic, deserialized.Properties.ResponseTopic);
             Assert.IsTrue(deserialized.Properties.UserProperties.Any(x => x.Name == "Foo"));
+        }
+
+
+        [TestMethod]
+        public void SerializeV500_MqttPublishPacket_CorrelationData()
+        {
+            var data = "123456789";
+            var req = new MqttApplicationMessageBuilder()
+                      .WithTopic("Foo")
+                      .WithResponseTopic($"_")
+                      .WithCorrelationData(Guid.NewGuid().ToByteArray())
+                      .WithPayload(data)
+                      .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                      .Build();
+
+            var p = new MqttV500DataConverter().CreatePublishPacket(req);
+
+            var deserialized = Roundtrip(p, MqttProtocolVersion.V500);
+
+            Assert.IsTrue(p.Payload.SequenceEqual(deserialized.Payload));
         }
 
         [TestMethod]

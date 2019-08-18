@@ -41,14 +41,24 @@ namespace MQTTnet.Implementations
                 RegisterListeners(options.DefaultEndpointOptions, null, _cancellationTokenSource.Token);
             }
 
-            if (options.TlsEndpointOptions.IsEnabled)
+            if (options.TlsEndpointOptions?.IsEnabled == true)
             {
                 if (options.TlsEndpointOptions.Certificate == null)
                 {
                     throw new ArgumentException("TLS certificate is not set.");
                 }
 
-                var tlsCertificate = new X509Certificate2(options.TlsEndpointOptions.Certificate, options.TlsEndpointOptions.CertificateCredentials.Password);
+                X509Certificate2 tlsCertificate;
+                if (string.IsNullOrEmpty(options.TlsEndpointOptions.CertificateCredentials?.Password))
+                {
+                    // Use a different overload when no password is specified. Otherwise the constructor will fail.
+                    tlsCertificate = new X509Certificate2(options.TlsEndpointOptions.Certificate);
+                }
+                else
+                {
+                    tlsCertificate = new X509Certificate2(options.TlsEndpointOptions.Certificate, options.TlsEndpointOptions.CertificateCredentials.Password);
+                }
+                
                 if (!tlsCertificate.HasPrivateKey)
                 {
                     throw new InvalidOperationException("The certificate for TLS encryption must contain the private key.");

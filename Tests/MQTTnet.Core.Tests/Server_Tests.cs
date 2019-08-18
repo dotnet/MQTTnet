@@ -1063,7 +1063,9 @@ namespace MQTTnet.Tests
                 // forever. This is security related.
                 var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 await client.ConnectAsync("localhost", testEnvironment.ServerPort);
-                await client.SendAsync(Encoding.UTF8.GetBytes("Garbage"), SocketFlags.None);
+                                
+                var buffer = Encoding.UTF8.GetBytes("Garbage");
+                client.Send(buffer, buffer.Length, SocketFlags.None);
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
 

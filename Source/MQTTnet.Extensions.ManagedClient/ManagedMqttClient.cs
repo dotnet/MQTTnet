@@ -252,6 +252,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 _maintainConnectionTask = null;
             }
 
+            _messageQueueLock.Dispose();
             _mqttClient.Dispose();
         }
 

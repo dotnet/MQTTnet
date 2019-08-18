@@ -86,7 +86,7 @@ namespace MQTTnet.Implementations
                 var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                 _stream = sslStream;
 
-                await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, _options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);                
+                await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, !_options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);                
             }
             else
             {

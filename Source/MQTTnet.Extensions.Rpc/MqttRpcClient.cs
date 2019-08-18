@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
+using MQTTnet.Extensions.Rpc.Options;
+using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Extensions.Rpc
@@ -13,11 +15,18 @@ namespace MQTTnet.Extensions.Rpc
     {
         private readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
         private readonly IMqttClient _mqttClient;
+        private readonly IMqttRpcClientOptions _options;
         private readonly RpcAwareApplicationMessageReceivedHandler _applicationMessageReceivedHandler;
 
-        public MqttRpcClient(IMqttClient mqttClient)
+        [Obsolete("Use MqttRpcClient(IMqttClient mqttClient, IMqttRpcClientOptions options).")]
+        public MqttRpcClient(IMqttClient mqttClient) : this(mqttClient, new MqttRpcClientOptions())
+        {
+        }
+
+        public MqttRpcClient(IMqttClient mqttClient, IMqttRpcClientOptions options)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
 
             _applicationMessageReceivedHandler = new RpcAwareApplicationMessageReceivedHandler(
                 mqttClient.ApplicationMessageReceivedHandler,
@@ -55,8 +64,26 @@ namespace MQTTnet.Extensions.Rpc
                 throw new InvalidOperationException("The application message received handler was modified.");
             }
 
-            var requestTopic = $"MQTTnet.RPC/{Guid.NewGuid():N}/{methodName}";
-            var responseTopic = requestTopic + "/response";
+            var topicNames = _options.TopicGenerationStrategy.CreateRpcTopics(new TopicGenerationContext
+            {
+                MethodName = methodName,
+                QualityOfServiceLevel = qualityOfServiceLevel,
+                MqttClient = _mqttClient,
+                Options = _options
+            });
+
+            var requestTopic = topicNames.RequestTopic;
+            var responseTopic = topicNames.ResponseTopic;
+
+            if (string.IsNullOrWhiteSpace(requestTopic))
+            {
+                throw new MqttProtocolViolationException("RPC request topic is empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(responseTopic))
+            {
+                throw new MqttProtocolViolationException("RPC response topic is empty.");
+            }
 
             var requestMessage = new MqttApplicationMessageBuilder()
                 .WithTopic(requestTopic)

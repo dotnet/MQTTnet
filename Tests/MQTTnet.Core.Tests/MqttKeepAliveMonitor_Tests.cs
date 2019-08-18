@@ -14,7 +14,7 @@ namespace MQTTnet.Tests
     public class MqttKeepAliveMonitor_Tests
     {
         [TestMethod]
-        public void KeepAlive_Timeout()
+        public async Task KeepAlive_Timeout()
         {
             var counter = 0;
 
@@ -31,13 +31,13 @@ namespace MQTTnet.Tests
 
             Assert.AreEqual(0, counter);
 
-            Thread.Sleep(2000); // Internally the keep alive timeout is multiplied with 1.5 as per protocol specification.
+            await Task.Delay(2000); // Internally the keep alive timeout is multiplied with 1.5 as per protocol specification.
 
             Assert.AreEqual(1, counter);
         }
 
         [TestMethod]
-        public void KeepAlive_NoTimeout()
+        public async Task KeepAlive_NoTimeout()
         {
             var counter = 0;
 
@@ -55,15 +55,15 @@ namespace MQTTnet.Tests
             Assert.AreEqual(0, counter);
 
             // Simulate traffic.
-            Thread.Sleep(1000); // Internally the keep alive timeout is multiplied with 1.5 as per protocol specification.
+            await Task.Delay(1000); // Internally the keep alive timeout is multiplied with 1.5 as per protocol specification.
             monitor.PacketReceived();
-            Thread.Sleep(1000);
+            await Task.Delay(1000);
             monitor.PacketReceived();
-            Thread.Sleep(1000);
+            await Task.Delay(1000);
 
             Assert.AreEqual(0, counter);
 
-            Thread.Sleep(2000);
+            await Task.Delay(2000);
 
             Assert.AreEqual(1, counter);
         }

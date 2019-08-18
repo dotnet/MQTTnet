@@ -82,7 +82,7 @@ namespace MQTTnet.Server
             return this;
         }
 
-        public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value, IMqttServerCredentials credentials = null)
+        public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value, IMqttServerCertificateCredentials credentials = null)
         {
             _options.TlsEndpointOptions.Certificate = value;
             _options.TlsEndpointOptions.CertificateCredentials = credentials;

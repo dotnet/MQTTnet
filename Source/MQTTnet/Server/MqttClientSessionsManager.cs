@@ -240,9 +240,9 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                clientId = connectPacket.ClientId;
-
                 var connectionValidatorContext = await ValidateConnectionAsync(connectPacket, channelAdapter).ConfigureAwait(false);
+
+                clientId = connectPacket.ClientId;
 
                 if (connectionValidatorContext.ReasonCode != MqttConnectReasonCode.Success)
                 {
@@ -258,7 +258,7 @@ namespace MQTTnet.Server
 
                 await _eventDispatcher.HandleClientConnectedAsync(clientId).ConfigureAwait(false);
                 
-                disconnectType = await connection.RunAsync().ConfigureAwait(false);
+                disconnectType = await connection.RunAsync(connectionValidatorContext).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {

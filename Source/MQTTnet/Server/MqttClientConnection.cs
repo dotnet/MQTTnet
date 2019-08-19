@@ -118,13 +118,13 @@ namespace MQTTnet.Server
             _cancellationToken.Dispose();
         }
 
-        public Task<MqttClientDisconnectType> RunAsync()
+        public Task<MqttClientDisconnectType> RunAsync(MqttConnectionValidatorContext connectionValidatorContext)
         {
-            _packageReceiverTask = RunInternalAsync();
+            _packageReceiverTask = RunInternalAsync(connectionValidatorContext);
             return _packageReceiverTask;
         }
 
-        private async Task<MqttClientDisconnectType> RunInternalAsync()
+        private async Task<MqttClientDisconnectType> RunInternalAsync(MqttConnectionValidatorContext connectionValidatorContext)
         {
             var disconnectType = MqttClientDisconnectType.NotClean;
             try
@@ -142,12 +142,8 @@ namespace MQTTnet.Server
                 _keepAliveMonitor.Start(ConnectPacket.KeepAlivePeriod, _cancellationToken.Token);
 
                 await SendAsync(
-                    new MqttConnAckPacket
-                    {
-                        ReturnCode = MqttConnectReturnCode.ConnectionAccepted,
-                        ReasonCode = MqttConnectReasonCode.Success,
-                        IsSessionPresent = !Session.IsCleanSession
-                    }).ConfigureAwait(false);
+                    _channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext)
+                    ).ConfigureAwait(false);
 
                 Session.IsCleanSession = false;
 

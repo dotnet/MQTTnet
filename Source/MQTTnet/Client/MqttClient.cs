@@ -149,7 +149,7 @@ namespace MQTTnet.Client
                 Properties = new MqttAuthPacketProperties
                 {
                     // This must always be equal to the value from the CONNECT packet. So we use it here to ensure that.
-                    AuthenticationMethod = Options.AuthenticationMethod, 
+                    AuthenticationMethod = Options.AuthenticationMethod,
                     AuthenticationData = data.AuthenticationData,
                     ReasonString = data.ReasonString,
                     UserProperties = data.UserProperties
@@ -567,7 +567,7 @@ namespace MQTTnet.Client
                         };
 
                         await SendAsync(pubRecPacket, cancellationToken).ConfigureAwait(false);
-                    }                    
+                    }
                 }
                 else
                 {
@@ -629,11 +629,6 @@ namespace MQTTnet.Client
         private static async Task WaitForTaskAsync(Task task, Task sender)
         {
             if (task == sender || task == null)
-            {
-                return;
-            }
-
-            if (task.IsCanceled || task.IsCompleted || task.IsFaulted)
             {
                 return;
             }

@@ -269,8 +269,10 @@ namespace MQTTnet.Client
                     await _adapter.DisconnectAsync(Options.CommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
                 }
 
-                await WaitForTaskAsync(_packetReceiverTask, sender).ConfigureAwait(false);
-                await WaitForTaskAsync(_keepAlivePacketsSenderTask, sender).ConfigureAwait(false);
+                var receiverTask =  WaitForTaskAsync(_packetReceiverTask, sender);
+                var keepAliveTask = WaitForTaskAsync(_keepAlivePacketsSenderTask, sender);
+                
+                await Task.WhenAll(receiverTask, keepAliveTask).ConfigureAwait(false);
 
                 _logger.Verbose("Disconnected from adapter.");
             }

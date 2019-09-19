@@ -646,7 +646,7 @@ namespace MQTTnet.Client
 
                 // By accessing the Exception property the exception is considered handled and will
                 // not result in an unhandled task exception later by the finalizer
-                _logger.Warning(task.Exception, "Exception when waiting for background task.");
+                _logger.Warning(task.Exception, "Error while waiting for background task.");
                 return;
             }
 

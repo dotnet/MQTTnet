@@ -32,7 +32,7 @@ namespace MQTTnet.Internal
             }
         }
 
-        public TItem Dequeue(CancellationToken cancellationToken = default)
+        public TItem Dequeue(CancellationToken cancellationToken = default(CancellationToken))
         {
             while (true)
             {
@@ -56,7 +56,7 @@ namespace MQTTnet.Internal
             }
         }
         
-        public TItem PeekAndWait(CancellationToken cancellationToken = default)
+        public TItem PeekAndWait(CancellationToken cancellationToken = default(CancellationToken))
         {
             while (true)
             {

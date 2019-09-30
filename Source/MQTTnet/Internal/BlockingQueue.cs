@@ -8,7 +8,7 @@ namespace MQTTnet.Internal
     {
         private readonly object _syncRoot = new object();
         private readonly LinkedList<TItem> _items = new LinkedList<TItem>();
-        private readonly ManualResetEvent _gate = new ManualResetEvent(false);
+        private readonly ManualResetEventSlim _gate = new ManualResetEventSlim(false);
 
         public int Count
         {
@@ -32,7 +32,7 @@ namespace MQTTnet.Internal
             }
         }
 
-        public TItem Dequeue()
+        public TItem Dequeue(CancellationToken cancellationToken = default)
         {
             while (true)
             {
@@ -52,11 +52,11 @@ namespace MQTTnet.Internal
                     }
                 }
 
-                _gate.WaitOne();
+                _gate.Wait(cancellationToken);
             }
         }
         
-        public TItem PeekAndWait()
+        public TItem PeekAndWait(CancellationToken cancellationToken = default)
         {
             while (true)
             {
@@ -73,7 +73,7 @@ namespace MQTTnet.Internal
                     }
                 }
 
-                _gate.WaitOne();
+                _gate.Wait(cancellationToken);
             }
         }
 

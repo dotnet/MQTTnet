@@ -353,5 +353,52 @@ namespace MQTTnet.Tests.MQTTv5
                 await server.StopAsync();
             }
         }
+
+        [TestMethod]
+        public async Task Publish_And_Receive_New_Properties()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+
+                var receiver = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
+                await receiver.SubscribeAsync("#");
+
+                MqttApplicationMessage receivedMessage = null;
+                receiver.UseApplicationMessageReceivedHandler(c =>
+                {
+                    receivedMessage = c.ApplicationMessage;
+                });
+
+                var sender = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
+
+                var applicationMessage = new MqttApplicationMessageBuilder()
+                    .WithTopic("Hello")
+                    .WithPayload("World")
+                    .WithAtMostOnceQoS()
+                    .WithUserProperty("x", "1")
+                    .WithUserProperty("y", "2")
+                    .WithResponseTopic("response")
+                    .WithContentType("text")
+                    .WithMessageExpiryInterval(50)
+                    .WithCorrelationData(new byte[12])
+                    .WithTopicAlias(2)
+                    .Build();
+
+                await sender.PublishAsync(applicationMessage);
+
+                await Task.Delay(500);
+
+                Assert.IsNotNull(receivedMessage);
+                Assert.AreEqual(applicationMessage.Topic, receivedMessage.Topic);
+                Assert.AreEqual(applicationMessage.TopicAlias, receivedMessage.TopicAlias);
+                Assert.AreEqual(applicationMessage.ContentType, receivedMessage.ContentType);
+                Assert.AreEqual(applicationMessage.ResponseTopic, receivedMessage.ResponseTopic);
+                Assert.AreEqual(applicationMessage.MessageExpiryInterval, receivedMessage.MessageExpiryInterval);
+                CollectionAssert.AreEqual(applicationMessage.CorrelationData, receivedMessage.CorrelationData);
+                CollectionAssert.AreEqual(applicationMessage.Payload, receivedMessage.Payload);
+                CollectionAssert.AreEqual(applicationMessage.UserProperties, receivedMessage.UserProperties);
+            }
+        }
     }
 }

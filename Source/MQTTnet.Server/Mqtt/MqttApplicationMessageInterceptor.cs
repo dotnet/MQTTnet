@@ -22,7 +22,8 @@ namespace MQTTnet.Server.Mqtt
         {
             try
             {
-                var sessionItems = (PythonDictionary)context.SessionItems[MqttServerConnectionValidator.WrappedSessionItemsKey];
+                // This might be not set when a message was published by the server instead of a client.
+                context.SessionItems.TryGetValue(MqttServerConnectionValidator.WrappedSessionItemsKey, out var sessionItems);
 
                 var pythonContext = new PythonDictionary
                 {

@@ -2,7 +2,7 @@
 name: Custom issue template
 about: Do you have a question related to the project? Use this template.
 title: ''
-labels: ''
+labels: 'question'
 assignees: ''
 
 ---

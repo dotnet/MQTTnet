@@ -349,7 +349,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     // of the messages, the DropOldestQueuedMessage strategy would
                     // be unable to know which message is actually the oldest and would
                     // instead drop the first item in the queue.
-                    var message = _messageQueue.PeekAndWait();
+                    var message = _messageQueue.PeekAndWait(cancellationToken);
                     if (message == null)
                     {
                         continue;

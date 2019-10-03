@@ -258,27 +258,33 @@ namespace MQTTnet.Client
             var clientWasConnected = IsConnected;
 
             TryInitiateDisconnect();
+            IsConnected = false;
 
             try
             {
-                IsConnected = false;
-
                 if (_adapter != null)
                 {
                     _logger.Verbose("Disconnecting [Timeout={0}]", Options.CommunicationTimeout);
                     await _adapter.DisconnectAsync(Options.CommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
                 }
 
-                var receiverTask =  WaitForTaskAsync(_packetReceiverTask, sender);
-                var keepAliveTask = WaitForTaskAsync(_keepAlivePacketsSenderTask, sender);
-
-                await Task.WhenAll(receiverTask, keepAliveTask).ConfigureAwait(false);
-
                 _logger.Verbose("Disconnected from adapter.");
             }
             catch (Exception adapterException)
             {
                 _logger.Warning(adapterException, "Error while disconnecting from adapter.");
+            }
+
+            try
+            {
+                var receiverTask = WaitForTaskAsync(_packetReceiverTask, sender);
+                var keepAliveTask = WaitForTaskAsync(_keepAlivePacketsSenderTask, sender);
+
+                await Task.WhenAll(receiverTask, keepAliveTask).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                _logger.Warning(e, "Error while waiting for tasks.");
             }
             finally
             {
@@ -346,11 +352,24 @@ namespace MQTTnet.Client
                 try
                 {
                     await _adapter.SendPacketAsync(requestPacket, Options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    _logger.Warning(e, "Error when sending packet of type '{0}'.", typeof(TResponsePacket).Name);
+                    packetAwaiter.Cancel();
+                }
+
+                try
+                {
                     return await packetAwaiter.WaitOneAsync(Options.CommunicationTimeout).ConfigureAwait(false);
                 }
-                catch (MqttCommunicationTimedOutException)
+                catch (Exception exception)
                 {
-                    _logger.Warning(null, "Timeout while waiting for packet of type '{0}'.", typeof(TResponsePacket).Name);
+                    if (exception is MqttCommunicationTimedOutException)
+                    {
+                        _logger.Warning(null, "Timeout while waiting for packet of type '{0}'.", typeof(TResponsePacket).Name);
+                    }
+
                     throw;
                 }
             }

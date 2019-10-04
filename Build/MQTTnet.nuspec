@@ -11,6 +11,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
+* [Client] Improve connection stability (thanks to @jltjohanlindqvist).
+* [ManagedClient] Fixed a memory leak (thanks to @zawodskoj).
 * [Server] Added support for assigned client IDs (MQTTv5 only) (thanks to @bcrosnier).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2019</copyright>

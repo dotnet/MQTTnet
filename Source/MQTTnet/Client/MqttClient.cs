@@ -284,7 +284,7 @@ namespace MQTTnet.Client
             }
             catch (Exception e)
             {
-                _logger.Warning(e, "Error while waiting for tasks.");
+                _logger.Warning(e, "Error while waiting for internal tasks.");
             }
             finally
             {
@@ -412,11 +412,11 @@ namespace MQTTnet.Client
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning(exception, "MQTT communication exception while sending/receiving keep alive packets.");
+                    _logger.Warning(exception, "Communication error while sending/receiving keep alive packets.");
                 }
                 else
                 {
-                    _logger.Error(exception, "Unhandled exception while sending/receiving keep alive packets.");
+                    _logger.Error(exception, "Error exception while sending/receiving keep alive packets.");
                 }
 
                 if (!DisconnectIsPending())
@@ -470,11 +470,11 @@ namespace MQTTnet.Client
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning(exception, "MQTT communication exception while receiving packets.");
+                    _logger.Warning(exception, "Communication error while receiving packets.");
                 }
                 else
                 {
-                    _logger.Error(exception, "Unhandled exception while receiving packets.");
+                    _logger.Error(exception, "Error while receiving packets.");
                 }
 
                 _packetDispatcher.Dispatch(exception);
@@ -542,11 +542,11 @@ namespace MQTTnet.Client
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning(exception, "MQTT communication exception while receiving packets.");
+                    _logger.Warning(exception, "Communication error while receiving packets.");
                 }
                 else
                 {
-                    _logger.Error(exception, "Unhandled exception while receiving packets.");
+                    _logger.Error(exception, "Error while receiving packets.");
                 }
 
                 _packetDispatcher.Dispatch(exception);
@@ -597,7 +597,7 @@ namespace MQTTnet.Client
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Unhandled exception while handling application message.");
+                _logger.Error(exception, "Error while handling application message.");
             }
         }
 

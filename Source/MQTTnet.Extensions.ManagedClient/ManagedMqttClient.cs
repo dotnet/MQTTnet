@@ -279,7 +279,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Unhandled exception while maintaining connection.");
+                _logger.Error(exception, "Error exception while maintaining connection.");
             }
             finally
             {
@@ -328,11 +328,11 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             catch (MqttCommunicationException exception)
             {
-                _logger.Warning(exception, "Communication exception while maintaining connection.");
+                _logger.Warning(exception, "Communication error while maintaining connection.");
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Unhandled exception while maintaining connection.");
+                _logger.Error(exception, "Error exception while maintaining connection.");
             }
         }
 

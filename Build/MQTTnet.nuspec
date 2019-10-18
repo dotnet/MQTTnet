@@ -13,6 +13,7 @@
     <releaseNotes>
 * [Client] Improve connection stability (thanks to @jltjohanlindqvist).
 * [ManagedClient] Fixed a memory leak (thanks to @zawodskoj).
+* [ManagedClient] Improved internal subscription management (#569, thanks to @cstichlberger).
 * [Server] Added support for assigned client IDs (MQTTv5 only) (thanks to @bcrosnier).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2019</copyright>

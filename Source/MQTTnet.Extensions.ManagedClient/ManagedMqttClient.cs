@@ -475,7 +475,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     continue;
                 }
 
-                _logger.Info("Publishing subscriptions");
+                _logger.Verbose($"Publishing subscriptions ({subscriptions.Count} subscriptions and {unsubscriptions.Count} unsubscriptions)");
 
                 foreach (var unsubscription in unsubscriptions)
                 {

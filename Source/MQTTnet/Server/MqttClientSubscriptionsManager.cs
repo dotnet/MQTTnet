@@ -153,7 +153,7 @@ namespace MQTTnet.Server
 
         public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel)
         {
-            TestLogger.WriteLine("check");
+            TestLogger.WriteLine("check subs");
             var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
 
             lock (_subscriptions)
@@ -164,7 +164,7 @@ namespace MQTTnet.Server
                     {
                         continue;
                     }
-
+                    TestLogger.WriteLine("is match");
                     qosLevels.Add(subscription.Value.QualityOfServiceLevel);
                 }
             }

@@ -12,6 +12,7 @@ using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
+using static MQTTnet.Server.MqttClientSessionsManager;
 
 namespace MQTTnet.Server
 {
@@ -51,6 +52,7 @@ namespace MQTTnet.Server
             MqttRetainedMessagesManager retainedMessagesManager,
             IMqttNetChildLogger logger)
         {
+            TestLogger.WriteLine($"MqttClientConnection init");
             Session = session ?? throw new ArgumentNullException(nameof(session));
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
@@ -79,6 +81,7 @@ namespace MQTTnet.Server
         
         public async Task StopAsync()
         {
+            TestLogger.WriteLine($"MqttClientConnection stop");
             StopInternal();
 
             var task = _packageReceiverTask;
@@ -153,12 +156,14 @@ namespace MQTTnet.Server
 
                 while (!_cancellationToken.IsCancellationRequested)
                 {
+                    TestLogger.WriteLine($"MqttClientConnection while");
                     var packet = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationToken.Token).ConfigureAwait(false);
                     if (packet == null)
                     {
                         // The client has closed the connection gracefully.
                         break;
                     }
+                    TestLogger.WriteLine($"MqttClientConnection pack");
 
                     Interlocked.Increment(ref _sentPacketsCount);
                     _lastPacketReceivedTimestamp = DateTime.UtcNow;
@@ -257,11 +262,13 @@ namespace MQTTnet.Server
 
         private void StopInternal()
         {
+            TestLogger.WriteLine($"MqttClientConnection stop int");
             _cancellationToken.Cancel(false);
         }
 
         private async Task EnqueueSubscribedRetainedMessagesAsync(ICollection<TopicFilter> topicFilters)
         {
+            TestLogger.WriteLine($"MqttClientConnection retainedmessages");
             var retainedMessages = await _retainedMessagesManager.GetSubscribedMessagesAsync(topicFilters).ConfigureAwait(false);
             foreach (var applicationMessage in retainedMessages)
             {
@@ -271,6 +278,7 @@ namespace MQTTnet.Server
 
         private async Task HandleIncomingSubscribePacketAsync(MqttSubscribePacket subscribePacket)
         {
+            TestLogger.WriteLine($"MqttClientConnection subpacket");
             // TODO: Let the channel adapter create the packet.
             var subscribeResult = await Session.SubscriptionsManager.SubscribeAsync(subscribePacket, ConnectPacket).ConfigureAwait(false);
 
@@ -294,6 +302,7 @@ namespace MQTTnet.Server
 
         private Task HandleIncomingPublishPacketAsync(MqttPublishPacket publishPacket)
         {
+            TestLogger.WriteLine($"MqttClientConnection pub");
             Interlocked.Increment(ref _sentApplicationMessagesCount);
 
             switch (publishPacket.QualityOfServiceLevel)
@@ -351,6 +360,7 @@ namespace MQTTnet.Server
 
         private async Task SendPendingPacketsAsync(CancellationToken cancellationToken)
         {
+            TestLogger.WriteLine($"MqttClientConnection send");
             MqttQueuedApplicationMessage queuedApplicationMessage = null;
             MqttPublishPacket publishPacket = null;
 
@@ -466,6 +476,7 @@ namespace MQTTnet.Server
 
         private async Task SendAsync(MqttBasePacket packet)
         {
+            TestLogger.WriteLine($"MqttClientConnection send");
             await _channelAdapter.SendPacketAsync(packet, _serverOptions.DefaultCommunicationTimeout, _cancellationToken.Token).ConfigureAwait(false);
 
             Interlocked.Increment(ref _receivedPacketsCount);

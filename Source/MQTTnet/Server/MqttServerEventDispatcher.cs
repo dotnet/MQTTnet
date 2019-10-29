@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using static MQTTnet.Server.MqttClientSessionsManager;
 
 namespace MQTTnet.Server
 {
@@ -55,6 +56,7 @@ namespace MQTTnet.Server
 
         public Task HandleClientSubscribedTopicAsync(string clientId, TopicFilter topicFilter)
         {
+            TestLogger.WriteLine("handle sub");
             var handler = ClientSubscribedTopicHandler;
             if (handler == null)
             {

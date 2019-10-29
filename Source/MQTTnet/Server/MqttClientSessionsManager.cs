@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -29,6 +30,27 @@ namespace MQTTnet.Server
         private readonly IMqttServerOptions _options;
         private readonly IMqttNetChildLogger _logger;
 
+        public static class TestLogger
+        {
+            public static void WriteLine(string message)
+            {
+                var path = @"c:\temp\test1.txt";
+                FileStream logFile;
+                if (!System.IO.File.Exists(path))
+                    logFile = System.IO.File.Create(path);
+                else
+                    logFile = System.IO.File.Open(path, FileMode.Append);
+
+                using (var writer = new System.IO.StreamWriter(logFile))
+                {
+                    writer.WriteLine($"{DateTime.Now} - {message}"); 
+                }
+
+                logFile.Dispose();
+            }
+        }
+
+
         public MqttClientSessionsManager(
             IMqttServerOptions options,
             MqttRetainedMessagesManager retainedMessagesManager,
@@ -36,6 +58,7 @@ namespace MQTTnet.Server
             MqttServerEventDispatcher eventDispatcher,
             IMqttNetChildLogger logger)
         {
+            TestLogger.WriteLine("Newly new");
             _cancellationToken = cancellationToken;
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -48,11 +71,13 @@ namespace MQTTnet.Server
 
         public void Start()
         {
+            TestLogger.WriteLine("Start");
             Task.Run(() => TryProcessQueuedApplicationMessagesAsync(_cancellationToken), _cancellationToken).Forget(_logger);
         }
 
         public async Task StopAsync()
         {
+            TestLogger.WriteLine("Stop");
             foreach (var connection in _connections.Values)
             {
                 await connection.StopAsync().ConfigureAwait(false);
@@ -66,6 +91,7 @@ namespace MQTTnet.Server
 
         public Task<IList<IMqttClientStatus>> GetClientStatusAsync()
         {
+            TestLogger.WriteLine("Status");
             var result = new List<IMqttClientStatus>();
 
             foreach (var connection in _connections.Values)
@@ -85,6 +111,7 @@ namespace MQTTnet.Server
 
         public Task<IList<IMqttSessionStatus>> GetSessionStatusAsync()
         {
+            TestLogger.WriteLine("Session");
             var result = new List<IMqttSessionStatus>();
 
             foreach (var session in _sessions.Values)
@@ -100,6 +127,7 @@ namespace MQTTnet.Server
 
         public void DispatchApplicationMessage(MqttApplicationMessage applicationMessage, MqttClientConnection sender)
         {
+            TestLogger.WriteLine("Message");
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
             _messageQueue.Enqueue(new MqttEnqueuedApplicationMessage(applicationMessage, sender));
@@ -107,6 +135,7 @@ namespace MQTTnet.Server
 
         public Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters)
         {
+            TestLogger.WriteLine("sub");
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
@@ -120,6 +149,7 @@ namespace MQTTnet.Server
 
         public Task UnsubscribeAsync(string clientId, IEnumerable<string> topicFilters)
         {
+            TestLogger.WriteLine("unsub");
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
@@ -133,6 +163,7 @@ namespace MQTTnet.Server
 
         public async Task DeleteSessionAsync(string clientId)
         {
+            TestLogger.WriteLine("Delete");
             if (_connections.TryGetValue(clientId, out var connection))
             {
                 await connection.StopAsync().ConfigureAwait(false);
@@ -147,11 +178,13 @@ namespace MQTTnet.Server
 
         public void Dispose()
         {
+            TestLogger.WriteLine("byebye");
             _messageQueue?.Dispose();
         }
 
         private async Task TryProcessQueuedApplicationMessagesAsync(CancellationToken cancellationToken)
         {
+            TestLogger.WriteLine("queue");
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -170,6 +203,7 @@ namespace MQTTnet.Server
 
         private async Task TryProcessNextQueuedApplicationMessageAsync(CancellationToken cancellationToken)
         {
+            TestLogger.WriteLine("process message");
             try
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -178,6 +212,7 @@ namespace MQTTnet.Server
                 }
 
                 var dequeueResult = await _messageQueue.TryDequeueAsync(cancellationToken).ConfigureAwait(false);
+                TestLogger.WriteLine("dequeued");
                 var queuedApplicationMessage = dequeueResult.Item;
 
                 var sender = queuedApplicationMessage.Sender;
@@ -209,6 +244,7 @@ namespace MQTTnet.Server
                     await _retainedMessagesManager.HandleMessageAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
                 }
 
+                TestLogger.WriteLine($"sessions: {_sessions.Count}");
                 foreach (var clientSession in _sessions.Values)
                 {
                     clientSession.EnqueueApplicationMessage(
@@ -219,17 +255,22 @@ namespace MQTTnet.Server
             }
             catch (OperationCanceledException)
             {
+                TestLogger.WriteLine($"no queue");
             }
             catch (Exception exception)
             {
+                TestLogger.WriteLine($"no queue {exception}");
                 _logger.Error(exception, "Unhandled exception while processing next queued application message.");
             }
         }
 
         private async Task HandleClientAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
         {
+            TestLogger.WriteLine($"handle");
             var disconnectType = MqttClientDisconnectType.NotClean;
             string clientId = null;
+
+            var ok = true;
 
             try
             {
@@ -241,11 +282,14 @@ namespace MQTTnet.Server
                 }
 
                 clientId = connectPacket.ClientId;
+                TestLogger.WriteLine($"validating {clientId}");
 
                 var connectionValidatorContext = await ValidateConnectionAsync(connectPacket, channelAdapter).ConfigureAwait(false);
 
                 if (connectionValidatorContext.ReasonCode != MqttConnectReasonCode.Success)
                 {
+                    TestLogger.WriteLine($"{clientId} not good");
+                    ok = false;
                     // Send failure response here without preparing a session. The result for a successful connect
                     // will be sent from the session itself.
                     var connAckPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext);
@@ -254,42 +298,53 @@ namespace MQTTnet.Server
                     return;
                 }
 
+                TestLogger.WriteLine($"{clientId} good");
+
                 var connection = await CreateConnectionAsync(connectPacket, connectionValidatorContext, channelAdapter).ConfigureAwait(false);
 
                 await _eventDispatcher.HandleClientConnectedAsync(clientId).ConfigureAwait(false);
                 
                 disconnectType = await connection.RunAsync().ConfigureAwait(false);
+
+                TestLogger.WriteLine($"{clientId} all good");
             }
             catch (OperationCanceledException)
             {
+                TestLogger.WriteLine($"no");
             }
             catch (Exception exception)
             {
+                TestLogger.WriteLine($"no {exception}");
                 _logger.Error(exception, exception.Message);
             }
             finally
             {
-                if (clientId != null)
-                {
-                    _connections.TryRemove(clientId, out _);
-
-                    if (!_options.EnablePersistentSessions)
+                if (ok)
+                { 
+                    TestLogger.WriteLine($"finally {clientId}");
+                    if (clientId != null)
                     {
-                        await DeleteSessionAsync(clientId).ConfigureAwait(false);
+                        _connections.TryRemove(clientId, out _);
+
+                        if (!_options.EnablePersistentSessions)
+                        {
+                            await DeleteSessionAsync(clientId).ConfigureAwait(false);
+                        }
                     }
-                }
 
-                await TryCleanupChannelAsync(channelAdapter).ConfigureAwait(false);
+                    await TryCleanupChannelAsync(channelAdapter).ConfigureAwait(false);
 
-                if (clientId != null)
-                {
-                    await _eventDispatcher.TryHandleClientDisconnectedAsync(clientId, disconnectType).ConfigureAwait(false);
+                    if (clientId != null)
+                    {
+                        await _eventDispatcher.TryHandleClientDisconnectedAsync(clientId, disconnectType).ConfigureAwait(false);
+                    }
                 }
             }
         }
 
         private async Task<MqttConnectionValidatorContext> ValidateConnectionAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter)
         {
+            TestLogger.WriteLine("validate");
             var context = new MqttConnectionValidatorContext(connectPacket, channelAdapter, new ConcurrentDictionary<object, object>());
 
             var connectionValidator = _options.ConnectionValidator;
@@ -318,6 +373,7 @@ namespace MQTTnet.Server
 
         private async Task<MqttClientConnection> CreateConnectionAsync(MqttConnectPacket connectPacket, MqttConnectionValidatorContext connectionValidatorContext, IMqttChannelAdapter channelAdapter)
         {
+            TestLogger.WriteLine("create");
             await _createConnectionGate.WaitAsync(_cancellationToken).ConfigureAwait(false);
             try
             {
@@ -364,6 +420,7 @@ namespace MQTTnet.Server
 
         private async Task<MqttApplicationMessageInterceptorContext> InterceptApplicationMessageAsync(MqttClientConnection senderConnection, MqttApplicationMessage applicationMessage)
         {
+            TestLogger.WriteLine("intercept");
             var interceptor = _options.ApplicationMessageInterceptor;
             if (interceptor == null)
             {
@@ -392,6 +449,7 @@ namespace MQTTnet.Server
 
         private async Task TryCleanupChannelAsync(IMqttChannelAdapter channelAdapter)
         {
+            TestLogger.WriteLine("clean");
             try
             {
                 await channelAdapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);

@@ -917,6 +917,109 @@ namespace MQTTnet.Tests
             }
         }
 
+
+        private Dictionary<string, bool> _connected;
+        private void ConnectionValidationHandler(MqttConnectionValidatorContext eventArgs)
+        {
+            if (_connected.ContainsKey(eventArgs.ClientId))
+            {
+                eventArgs.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                return;
+            }
+            _connected[eventArgs.ClientId] = true;
+            eventArgs.ReasonCode = MqttConnectReasonCode.Success;
+            return;
+        }
+
+        [TestMethod]
+        public async Task Same_Client_Id_Refuse_Connection()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                _connected = new Dictionary<string, bool>();
+                var options = new MqttServerOptionsBuilder();
+                options.WithConnectionValidator(e => ConnectionValidationHandler(e));
+                var server = await testEnvironment.StartServerAsync(options);
+
+                var events = new List<string>();
+
+                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(_ =>
+                {
+                    lock (events)
+                    {
+                        events.Add("c");
+                    }
+                });
+
+                server.ClientDisconnectedHandler = new MqttServerClientDisconnectedHandlerDelegate(_ =>
+                {
+                    lock (events)
+                    {
+                        events.Add("d");
+                    }
+                });
+
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithClientId("same_id");
+
+                // c
+                var c1 = await testEnvironment.ConnectClientAsync(clientOptions);
+
+                c1.UseDisconnectedHandler(_ =>
+                {
+                    lock (events)
+                    {
+                        events.Add("x");
+                    }
+                });
+
+
+                c1.UseApplicationMessageReceivedHandler(_ =>
+                {
+                    lock (events)
+                    {
+                        events.Add("r");
+                    }
+
+                });
+
+                c1.SubscribeAsync("topic").Wait();
+
+                await Task.Delay(500);
+
+                c1.PublishAsync("topic").Wait();
+
+                await Task.Delay(500);
+
+
+                var flow = string.Join(string.Empty, events);
+                Assert.AreEqual("cr", flow);
+
+                try
+                {
+                    await testEnvironment.ConnectClientAsync(clientOptions);
+                    Assert.Fail("same id connection is expected to fail");
+                }
+                catch
+                {
+                    //same id connection is expected to fail
+                }
+
+                await Task.Delay(500);
+
+                flow = string.Join(string.Empty, events);
+                Assert.AreEqual("cr", flow);
+
+                c1.PublishAsync("topic").Wait();
+
+                await Task.Delay(500);
+
+                flow = string.Join(string.Empty, events);
+                Assert.AreEqual("crr", flow);
+
+            }
+        }
+
         [TestMethod]
         public async Task Same_Client_Id_Connect_Disconnect_Event_Order()
         {
@@ -956,17 +1059,40 @@ namespace MQTTnet.Tests
                 // dc
                 var c2 = await testEnvironment.ConnectClientAsync(clientOptions);
 
+                c2.UseApplicationMessageReceivedHandler(_ =>
+                {
+                    lock (events)
+                    {
+                        events.Add("r");
+                    }
+
+                });
+                c2.SubscribeAsync("topic").Wait();
+
                 await Task.Delay(500);
 
                 flow = string.Join(string.Empty, events);
                 Assert.AreEqual("cdc", flow);
 
+                // r
+                c2.PublishAsync("topic").Wait();
+
+                await Task.Delay(500);
+
+                flow = string.Join(string.Empty, events);
+                Assert.AreEqual("cdcr", flow);
+
+
                 // nothing
+
+                Assert.AreEqual(false, c1.IsConnected);
                 await c1.DisconnectAsync();
+                Assert.AreEqual (false, c1.IsConnected);
 
                 await Task.Delay(500);
 
                 // d
+                Assert.AreEqual(true, c2.IsConnected);
                 await c2.DisconnectAsync();
 
                 await Task.Delay(500);
@@ -974,7 +1100,7 @@ namespace MQTTnet.Tests
                 await server.StopAsync();
 
                 flow = string.Join(string.Empty, events);
-                Assert.AreEqual("cdcd", flow);
+                Assert.AreEqual("cdcrd", flow);
             }
         }
 

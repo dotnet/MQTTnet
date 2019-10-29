@@ -12,7 +12,6 @@ using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
-using static MQTTnet.Server.MqttClientSessionsManager;
 
 namespace MQTTnet.Server
 {

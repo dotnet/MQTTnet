@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using static MQTTnet.Server.MqttClientSessionsManager;
 
 namespace MQTTnet.Server
 {
@@ -158,6 +157,7 @@ namespace MQTTnet.Server
                     {
                         continue;
                     }
+
                     qosLevels.Add(subscription.Value.QualityOfServiceLevel);
                 }
             }

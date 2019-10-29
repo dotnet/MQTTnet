@@ -17,7 +17,6 @@ namespace MQTTnet.Server
 
         public MqttClientSubscriptionsManager(MqttClientSession clientSession, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions)
         {
-            TestLogger.WriteLine("sub manager");
             _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));
 
             // TODO: Consider removing the server options here and build a new class "ISubscriptionInterceptor" and just pass it. The instance is generated in the root server class upon start.
@@ -27,7 +26,6 @@ namespace MQTTnet.Server
 
         public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttSubscribePacket subscribePacket, MqttConnectPacket connectPacket)
         {
-            TestLogger.WriteLine("sub1");
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
             if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
 
@@ -79,7 +77,6 @@ namespace MQTTnet.Server
 
         public async Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
         {
-            TestLogger.WriteLine("sub2");
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
             foreach (var topicFilter in topicFilters)
@@ -104,7 +101,6 @@ namespace MQTTnet.Server
 
         public async Task<MqttUnsubAckPacket> UnsubscribeAsync(MqttUnsubscribePacket unsubscribePacket)
         {
-            TestLogger.WriteLine("unsub1");
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
 
             var unsubAckPacket = new MqttUnsubAckPacket
@@ -137,7 +133,6 @@ namespace MQTTnet.Server
 
         public Task UnsubscribeAsync(IEnumerable<string> topicFilters)
         {
-            TestLogger.WriteLine("unsub2");
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
             lock (_subscriptions)
@@ -153,7 +148,6 @@ namespace MQTTnet.Server
 
         public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel)
         {
-            TestLogger.WriteLine("check subs");
             var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
 
             lock (_subscriptions)
@@ -164,7 +158,6 @@ namespace MQTTnet.Server
                     {
                         continue;
                     }
-                    TestLogger.WriteLine("is match");
                     qosLevels.Add(subscription.Value.QualityOfServiceLevel);
                 }
             }

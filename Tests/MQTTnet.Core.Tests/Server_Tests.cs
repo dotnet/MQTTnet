@@ -936,14 +936,14 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment())
             {
+                testEnvironment.IgnoreClientLogErrors = true;
+
                 _connected = new Dictionary<string, bool>();
                 var options = new MqttServerOptionsBuilder();
                 options.WithConnectionValidator(e => ConnectionValidationHandler(e));
                 var server = await testEnvironment.StartServerAsync(options);
 
                 var events = new List<string>();
-
-                var connected = true;
 
                 server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(_ =>
                 {
@@ -972,15 +972,6 @@ namespace MQTTnet.Tests
                     lock (events)
                     {
                         events.Add("x");
-                        connected = false;
-                    }
-                });
-
-                c1.UseConnectedHandler(_ => 
-                {
-                    lock (events)
-                    {
-                        connected = true;
                     }
                 });
 
@@ -1002,7 +993,6 @@ namespace MQTTnet.Tests
 
                 await Task.Delay(500);
 
-
                 var flow = string.Join(string.Empty, events);
                 Assert.AreEqual("cr", flow);
 
@@ -1018,16 +1008,6 @@ namespace MQTTnet.Tests
 
                 await Task.Delay(500);
 
-                /*if (!connected)
-                {
-                    c1.ReconnectAsync().Wait();
-                }
-
-                if (!c1.IsConnected)
-                {
-                    c1.ReconnectAsync().Wait();
-                }*/
-
                 flow = string.Join(string.Empty, events);
                 Assert.AreEqual("cr", flow);
 
@@ -1037,7 +1017,6 @@ namespace MQTTnet.Tests
 
                 flow = string.Join(string.Empty, events);
                 Assert.AreEqual("crr", flow);
-
             }
         }
 

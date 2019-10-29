@@ -943,6 +943,8 @@ namespace MQTTnet.Tests
 
                 var events = new List<string>();
 
+                var connected = true;
+
                 server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(_ =>
                 {
                     lock (events)
@@ -970,6 +972,15 @@ namespace MQTTnet.Tests
                     lock (events)
                     {
                         events.Add("x");
+                        connected = false;
+                    }
+                });
+
+                c1.UseConnectedHandler(_ => 
+                {
+                    lock (events)
+                    {
+                        connected = true;
                     }
                 });
 
@@ -1006,6 +1017,16 @@ namespace MQTTnet.Tests
                 }
 
                 await Task.Delay(500);
+
+                /*if (!connected)
+                {
+                    c1.ReconnectAsync().Wait();
+                }
+
+                if (!c1.IsConnected)
+                {
+                    c1.ReconnectAsync().Wait();
+                }*/
 
                 flow = string.Join(string.Empty, events);
                 Assert.AreEqual("cr", flow);

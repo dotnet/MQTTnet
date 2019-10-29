@@ -32,21 +32,26 @@ namespace MQTTnet.Server
 
         public static class TestLogger
         {
+            private static object _lock = new object();
             public static void WriteLine(string message)
             {
-                var path = @"c:\temp\test1.txt";
-                FileStream logFile;
-                if (!System.IO.File.Exists(path))
-                    logFile = System.IO.File.Create(path);
-                else
-                    logFile = System.IO.File.Open(path, FileMode.Append);
-
-                using (var writer = new System.IO.StreamWriter(logFile))
+                lock (_lock)
                 {
-                    writer.WriteLine($"{DateTime.Now} - {message}"); 
+                    var path = @"c:\temp\test1.txt";
+                    FileStream logFile;
+                    if (!System.IO.File.Exists(path))
+                        logFile = System.IO.File.Create(path);
+                    else
+                        logFile = System.IO.File.Open(path, FileMode.Append);
+
+                    using (var writer = new System.IO.StreamWriter(logFile))
+                    {
+                        writer.WriteLine($"{DateTime.Now} - {message}");
+                    }
+
+                    logFile.Dispose();
                 }
 
-                logFile.Dispose();
             }
         }
 
@@ -203,7 +208,7 @@ namespace MQTTnet.Server
 
         private async Task TryProcessNextQueuedApplicationMessageAsync(CancellationToken cancellationToken)
         {
-            TestLogger.WriteLine("process message");
+            TestLogger.WriteLine("pm process message");
             try
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -212,7 +217,7 @@ namespace MQTTnet.Server
                 }
 
                 var dequeueResult = await _messageQueue.TryDequeueAsync(cancellationToken).ConfigureAwait(false);
-                TestLogger.WriteLine("dequeued");
+                TestLogger.WriteLine("pm dequeued");
                 var queuedApplicationMessage = dequeueResult.Item;
 
                 var sender = queuedApplicationMessage.Sender;
@@ -244,7 +249,7 @@ namespace MQTTnet.Server
                     await _retainedMessagesManager.HandleMessageAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
                 }
 
-                TestLogger.WriteLine($"sessions: {_sessions.Count}");
+                TestLogger.WriteLine($"pm sessions: {_sessions.Count}");
                 foreach (var clientSession in _sessions.Values)
                 {
                     clientSession.EnqueueApplicationMessage(
@@ -255,11 +260,11 @@ namespace MQTTnet.Server
             }
             catch (OperationCanceledException)
             {
-                TestLogger.WriteLine($"no queue");
+                TestLogger.WriteLine($"pm no queue");
             }
             catch (Exception exception)
             {
-                TestLogger.WriteLine($"no queue {exception}");
+                TestLogger.WriteLine($"pm no queue {exception}");
                 _logger.Error(exception, "Unhandled exception while processing next queued application message.");
             }
         }
@@ -373,7 +378,7 @@ namespace MQTTnet.Server
 
         private async Task<MqttClientConnection> CreateConnectionAsync(MqttConnectPacket connectPacket, MqttConnectionValidatorContext connectionValidatorContext, IMqttChannelAdapter channelAdapter)
         {
-            TestLogger.WriteLine("create");
+            TestLogger.WriteLine("cc create");
             await _createConnectionGate.WaitAsync(_cancellationToken).ConfigureAwait(false);
             try
             {
@@ -402,6 +407,7 @@ namespace MQTTnet.Server
                 if (session == null)
                 {
                     session = new MqttClientSession(connectPacket.ClientId, connectionValidatorContext.SessionItems, _eventDispatcher, _options, _logger);
+                    TestLogger.WriteLine("cc created");
                     _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);
                 }
 
@@ -409,6 +415,8 @@ namespace MQTTnet.Server
 
                 _connections[connection.ClientId] = connection;
                 _sessions[session.ClientId] = session;
+                TestLogger.WriteLine($"cc connections {_connections.Count}");
+                TestLogger.WriteLine($"cc sessions {_sessions.Count}");
 
                 return connection;
             }

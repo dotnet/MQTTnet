@@ -56,7 +56,6 @@ namespace MQTTnet.Server
 
         public Task HandleClientSubscribedTopicAsync(string clientId, TopicFilter topicFilter)
         {
-            TestLogger.WriteLine("handle sub");
             var handler = ClientSubscribedTopicHandler;
             if (handler == null)
             {

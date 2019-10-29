@@ -114,7 +114,7 @@ namespace MQTTnet.Tests.Mockups
             {
                 if (!IgnoreServerLogErrors && _serverErrors.Count > 0)
                 {
-                    //throw new Exception($"Server had {_serverErrors.Count} errors (${string.Join(Environment.NewLine, _serverErrors)}).");
+                    throw new Exception($"Server had {_serverErrors.Count} errors (${string.Join(Environment.NewLine, _serverErrors)}).");
                 }
             }
 
@@ -122,7 +122,7 @@ namespace MQTTnet.Tests.Mockups
             {
                 if (!IgnoreClientLogErrors && _clientErrors.Count > 0)
                 {
-                    //throw new Exception($"Client(s) had {_clientErrors.Count} errors (${string.Join(Environment.NewLine, _clientErrors)}).");
+                    throw new Exception($"Client(s) had {_clientErrors.Count} errors (${string.Join(Environment.NewLine, _clientErrors)}).");
                 }
             }
         }

@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
-using static MQTTnet.Server.MqttClientSessionsManager;
 
 namespace MQTTnet.Server
 {

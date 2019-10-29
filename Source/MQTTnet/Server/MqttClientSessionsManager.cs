@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -231,8 +230,7 @@ namespace MQTTnet.Server
         {
             var disconnectType = MqttClientDisconnectType.NotClean;
             string clientId = null;
-
-            var ok = true;
+            var clientWasConnected = true;
 
             try
             {
@@ -249,7 +247,7 @@ namespace MQTTnet.Server
 
                 if (connectionValidatorContext.ReasonCode != MqttConnectReasonCode.Success)
                 {
-                    ok = false;
+                    clientWasConnected = false;
                     // Send failure response here without preparing a session. The result for a successful connect
                     // will be sent from the session itself.
                     var connAckPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext);
@@ -263,7 +261,6 @@ namespace MQTTnet.Server
                 await _eventDispatcher.HandleClientConnectedAsync(clientId).ConfigureAwait(false);
                 
                 disconnectType = await connection.RunAsync().ConfigureAwait(false);
-
             }
             catch (OperationCanceledException)
             {
@@ -274,7 +271,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                if (ok)
+                if (clientWasConnected)
                 { 
                     if (clientId != null)
                     {

@@ -146,6 +146,7 @@ namespace MQTTnet.Client
 
             return SendAsync(new MqttAuthPacket
             {
+                ReasonCode = data.ReasonCode,
                 Properties = new MqttAuthPacketProperties
                 {
                     // This must always be equal to the value from the CONNECT packet. So we use it here to ensure that.

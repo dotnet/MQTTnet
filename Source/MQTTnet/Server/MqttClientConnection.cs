@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
+using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
@@ -135,351 +138,376 @@ namespace MQTTnet.Server
                 _channelAdapter.ReadingPacketCompletedCallback = OnAdapterReadingPacketCompleted;
 
                 Session.WillMessage = ConnectPacket.WillMessage;
-
+	
                 Task.Run(() => SendPendingPacketsAsync(_cancellationToken.Token), _cancellationToken.Token).Forget(_logger);
 
                 // TODO: Change to single thread in SessionManager. Or use SessionManager and stats from KeepAliveMonitor.
                 _keepAliveMonitor.Start(ConnectPacket.KeepAlivePeriod, _cancellationToken.Token);
 
-                await SendAsync(
+	            var authPacket = _serverOptions.ExtendedAuthenticationExchangeHandler?.CreateAuthPacket();
+				if (authPacket != null)
+				{
+					await SendAsync(authPacket).ConfigureAwait(false);
+				}
+				else
+				{
+					await SendAsync(
                     _channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext)
                     ).ConfigureAwait(false);
+				}
 
-                Session.IsCleanSession = false;
+				Session.IsCleanSession = false;
 
-                while (!_cancellationToken.IsCancellationRequested)
-                {
-                    var packet = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationToken.Token).ConfigureAwait(false);
-                    if (packet == null)
-                    {
-                        // The client has closed the connection gracefully.
-                        break;
-                    }
+				while (!_cancellationToken.IsCancellationRequested)
+				{
+					var packet = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationToken.Token).ConfigureAwait(false);
+					if (packet == null)
+					{
+						// The client has closed the connection gracefully.
+						break;
+					}
 
-                    Interlocked.Increment(ref _sentPacketsCount);
-                    _lastPacketReceivedTimestamp = DateTime.UtcNow;
+					Interlocked.Increment(ref _sentPacketsCount);
+					_lastPacketReceivedTimestamp = DateTime.UtcNow;
 
-                    if (!(packet is MqttPingReqPacket || packet is MqttPingRespPacket))
-                    {
-                        _lastNonKeepAlivePacketReceivedTimestamp = _lastPacketReceivedTimestamp;
-                    }
+					if (packet is MqttAuthPacket extendedAuthPacket)
+					{
+						if (_serverOptions.ExtendedAuthenticationExchangeHandler != null)
+						{
+							while (extendedAuthPacket?.ReasonCode == MqttAuthenticateReasonCode.ContinueAuthentication)
+							{
+								var package = _serverOptions.ExtendedAuthenticationExchangeHandler.HandleClientPackage(extendedAuthPacket);
+								if (!(package is MqttConnAckPacket))
+								{
+									await SendAsync(packet).ConfigureAwait(false);
+									extendedAuthPacket = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationToken.Token).ConfigureAwait(false) as MqttAuthPacket;
+								}
+							}
+						}
+					}
 
-                    _keepAliveMonitor.PacketReceived();
+					if (!(packet is MqttPingReqPacket || packet is MqttPingRespPacket))
+					{
+						_lastNonKeepAlivePacketReceivedTimestamp = _lastPacketReceivedTimestamp;
+					}
 
-                    if (packet is MqttPublishPacket publishPacket)
-                    {
-                        await HandleIncomingPublishPacketAsync(publishPacket).ConfigureAwait(false);
-                        continue;
-                    }
+					_keepAliveMonitor.PacketReceived();
 
-                    if (packet is MqttPubRelPacket pubRelPacket)
-                    {
-                        var pubCompPacket = new MqttPubCompPacket
-                        {
-                            PacketIdentifier = pubRelPacket.PacketIdentifier,
-                            ReasonCode = MqttPubCompReasonCode.Success
-                        };
 
-                        await SendAsync(pubCompPacket).ConfigureAwait(false);
-                        continue;
-                    }
+					if (packet is MqttPublishPacket publishPacket)
+					{
+						await HandleIncomingPublishPacketAsync(publishPacket).ConfigureAwait(false);
+						continue;
+					}
 
-                    if (packet is MqttSubscribePacket subscribePacket)
-                    {
-                        await HandleIncomingSubscribePacketAsync(subscribePacket).ConfigureAwait(false);
-                        continue;
-                    }
+					if (packet is MqttPubRelPacket pubRelPacket)
+					{
+						var pubCompPacket = new MqttPubCompPacket
+						{
+							PacketIdentifier = pubRelPacket.PacketIdentifier,
+							ReasonCode = MqttPubCompReasonCode.Success
+						};
 
-                    if (packet is MqttUnsubscribePacket unsubscribePacket)
-                    {
-                        await HandleIncomingUnsubscribePacketAsync(unsubscribePacket).ConfigureAwait(false);
-                        continue;
-                    }
+						await SendAsync(pubCompPacket).ConfigureAwait(false);
+						continue;
+					}
 
-                    if (packet is MqttPingReqPacket)
-                    {
-                        await SendAsync(new MqttPingRespPacket()).ConfigureAwait(false);
-                        continue;
-                    }
+					if (packet is MqttSubscribePacket subscribePacket)
+					{
+						await HandleIncomingSubscribePacketAsync(subscribePacket).ConfigureAwait(false);
+						continue;
+					}
 
-                    if (packet is MqttDisconnectPacket)
-                    {
-                        Session.WillMessage = null;
-                        disconnectType = MqttClientDisconnectType.Clean;
+					if (packet is MqttUnsubscribePacket unsubscribePacket)
+					{
+						await HandleIncomingUnsubscribePacketAsync(unsubscribePacket).ConfigureAwait(false);
+						continue;
+					}
 
-                        StopInternal();
-                        break;
-                    }
+					if (packet is MqttPingReqPacket)
+					{
+						await SendAsync(new MqttPingRespPacket()).ConfigureAwait(false);
+						continue;
+					}
 
-                    _packetDispatcher.Dispatch(packet);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception exception)
-            {
-                if (exception is MqttCommunicationException)
-                {
-                    _logger.Warning(exception, "Client '{0}': Communication exception while receiving client packets.", ClientId);
-                }
-                else
-                {
-                    _logger.Error(exception, "Client '{0}': Error while receiving client packets.", ClientId);
-                }
+					if (packet is MqttDisconnectPacket)
+					{
+						Session.WillMessage = null;
+						disconnectType = MqttClientDisconnectType.Clean;
 
-                StopInternal();
-            }
-            finally
-            {
-                if (Session.WillMessage != null)
-                {
-                    _sessionsManager.DispatchApplicationMessage(Session.WillMessage, this);
-                    Session.WillMessage = null;
-                }
+						StopInternal();
+						break;
+					}
 
-                _packetDispatcher.Reset();
+					_packetDispatcher.Dispatch(packet);
+				}
+			}
+			catch (OperationCanceledException)
+			{
+			}
+			catch (Exception exception)
+			{
+				if (exception is MqttCommunicationException)
+				{
+					_logger.Warning(exception, "Client '{0}': Communication exception while receiving client packets.", ClientId);
+				}
+				else
+				{
+					_logger.Error(exception, "Client '{0}': Error while receiving client packets.", ClientId);
+				}
 
-                _channelAdapter.ReadingPacketStartedCallback = null;
-                _channelAdapter.ReadingPacketCompletedCallback = null;
+				StopInternal();
+			}
+			finally
+			{
+				if (Session.WillMessage != null)
+				{
+					_sessionsManager.DispatchApplicationMessage(Session.WillMessage, this);
+					Session.WillMessage = null;
+				}
 
-                _logger.Info("Client '{0}': Session stopped.", ClientId);
+				_packetDispatcher.Reset();
 
-                _packageReceiverTask = null;
-            }
+				_channelAdapter.ReadingPacketStartedCallback = null;
+				_channelAdapter.ReadingPacketCompletedCallback = null;
 
-            return disconnectType;
-        }
+				_logger.Info("Client '{0}': Session stopped.", ClientId);
 
-        private void StopInternal()
-        {
-            _cancellationToken.Cancel(false);
-        }
+				_packageReceiverTask = null;
+			}
 
-        private async Task EnqueueSubscribedRetainedMessagesAsync(ICollection<TopicFilter> topicFilters)
-        {
-            var retainedMessages = await _retainedMessagesManager.GetSubscribedMessagesAsync(topicFilters).ConfigureAwait(false);
-            foreach (var applicationMessage in retainedMessages)
-            {
-                Session.EnqueueApplicationMessage(applicationMessage, ClientId, true);
-            }
-        }
+			return disconnectType;
+		}
 
-        private async Task HandleIncomingSubscribePacketAsync(MqttSubscribePacket subscribePacket)
-        {
-            // TODO: Let the channel adapter create the packet.
-            var subscribeResult = await Session.SubscriptionsManager.SubscribeAsync(subscribePacket, ConnectPacket).ConfigureAwait(false);
+		private void StopInternal()
+		{
+			_cancellationToken.Cancel(false);
+		}
 
-            await SendAsync(subscribeResult.ResponsePacket).ConfigureAwait(false);
+		private async Task EnqueueSubscribedRetainedMessagesAsync(ICollection<TopicFilter> topicFilters)
+		{
+			var retainedMessages = await _retainedMessagesManager.GetSubscribedMessagesAsync(topicFilters).ConfigureAwait(false);
+			foreach (var applicationMessage in retainedMessages)
+			{
+				Session.EnqueueApplicationMessage(applicationMessage, ClientId, true);
+			}
+		}
 
-            if (subscribeResult.CloseConnection)
-            {
-                StopInternal();
-                return;
-            }
+		private async Task HandleIncomingSubscribePacketAsync(MqttSubscribePacket subscribePacket)
+		{
+			// TODO: Let the channel adapter create the packet.
+			var subscribeResult = await Session.SubscriptionsManager.SubscribeAsync(subscribePacket, ConnectPacket).ConfigureAwait(false);
 
-            await EnqueueSubscribedRetainedMessagesAsync(subscribePacket.TopicFilters).ConfigureAwait(false);
-        }
+			await SendAsync(subscribeResult.ResponsePacket).ConfigureAwait(false);
 
-        private async Task HandleIncomingUnsubscribePacketAsync(MqttUnsubscribePacket unsubscribePacket)
-        {
-            // TODO: Let the channel adapter create the packet.
-            var unsubscribeResult = await Session.SubscriptionsManager.UnsubscribeAsync(unsubscribePacket).ConfigureAwait(false);
-            await SendAsync(unsubscribeResult).ConfigureAwait(false);
-        }
+			if (subscribeResult.CloseConnection)
+			{
+				StopInternal();
+				return;
+			}
 
-        private Task HandleIncomingPublishPacketAsync(MqttPublishPacket publishPacket)
-        {
-            Interlocked.Increment(ref _sentApplicationMessagesCount);
+			await EnqueueSubscribedRetainedMessagesAsync(subscribePacket.TopicFilters).ConfigureAwait(false);
+		}
 
-            switch (publishPacket.QualityOfServiceLevel)
-            {
-                case MqttQualityOfServiceLevel.AtMostOnce:
-                    {
-                        return HandleIncomingPublishPacketWithQoS0Async(publishPacket);
-                    }
-                case MqttQualityOfServiceLevel.AtLeastOnce:
-                    {
-                        return HandleIncomingPublishPacketWithQoS1Async(publishPacket);
-                    }
-                case MqttQualityOfServiceLevel.ExactlyOnce:
-                    {
-                        return HandleIncomingPublishPacketWithQoS2Async(publishPacket);
-                    }
-                default:
-                    {
-                        throw new MqttCommunicationException("Received a not supported QoS level.");
-                    }
-            }
-        }
+		private async Task HandleIncomingUnsubscribePacketAsync(MqttUnsubscribePacket unsubscribePacket)
+		{
+			// TODO: Let the channel adapter create the packet.
+			var unsubscribeResult = await Session.SubscriptionsManager.UnsubscribeAsync(unsubscribePacket).ConfigureAwait(false);
+			await SendAsync(unsubscribeResult).ConfigureAwait(false);
+		}
 
-        private Task HandleIncomingPublishPacketWithQoS0Async(MqttPublishPacket publishPacket)
-        {
-            var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
+		private Task HandleIncomingPublishPacketAsync(MqttPublishPacket publishPacket)
+		{
+			Interlocked.Increment(ref _sentApplicationMessagesCount);
 
-            _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
+			switch (publishPacket.QualityOfServiceLevel)
+			{
+				case MqttQualityOfServiceLevel.AtMostOnce:
+					{
+						return HandleIncomingPublishPacketWithQoS0Async(publishPacket);
+					}
+				case MqttQualityOfServiceLevel.AtLeastOnce:
+					{
+						return HandleIncomingPublishPacketWithQoS1Async(publishPacket);
+					}
+				case MqttQualityOfServiceLevel.ExactlyOnce:
+					{
+						return HandleIncomingPublishPacketWithQoS2Async(publishPacket);
+					}
+				default:
+					{
+						throw new MqttCommunicationException("Received a not supported QoS level.");
+					}
+			}
+		}
 
-            return Task.FromResult(0);
-        }
+		private Task HandleIncomingPublishPacketWithQoS0Async(MqttPublishPacket publishPacket)
+		{
+			var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
 
-        private Task HandleIncomingPublishPacketWithQoS1Async(MqttPublishPacket publishPacket)
-        {
-            var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
-            _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
+			_sessionsManager.DispatchApplicationMessage(applicationMessage, this);
 
-            var pubAckPacket = _dataConverter.CreatePubAckPacket(publishPacket);
-            return SendAsync(pubAckPacket);
-        }
+			return Task.FromResult(0);
+		}
 
-        private Task HandleIncomingPublishPacketWithQoS2Async(MqttPublishPacket publishPacket)
-        {
-            var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
-            _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
+		private Task HandleIncomingPublishPacketWithQoS1Async(MqttPublishPacket publishPacket)
+		{
+			var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
+			_sessionsManager.DispatchApplicationMessage(applicationMessage, this);
 
-            var pubRecPacket = new MqttPubRecPacket
-            {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = MqttPubRecReasonCode.Success
-            };
+			var pubAckPacket = _dataConverter.CreatePubAckPacket(publishPacket);
+			return SendAsync(pubAckPacket);
+		}
 
-            return SendAsync(pubRecPacket);
-        }
+		private Task HandleIncomingPublishPacketWithQoS2Async(MqttPublishPacket publishPacket)
+		{
+			var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
+			_sessionsManager.DispatchApplicationMessage(applicationMessage, this);
 
-        private async Task SendPendingPacketsAsync(CancellationToken cancellationToken)
-        {
-            MqttQueuedApplicationMessage queuedApplicationMessage = null;
-            MqttPublishPacket publishPacket = null;
+			var pubRecPacket = new MqttPubRecPacket
+			{
+				PacketIdentifier = publishPacket.PacketIdentifier,
+				ReasonCode = MqttPubRecReasonCode.Success
+			};
 
-            try
-            {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    queuedApplicationMessage = await Session.ApplicationMessagesQueue.TakeAsync(cancellationToken).ConfigureAwait(false);
-                    if (queuedApplicationMessage == null)
-                    {
-                        return;
-                    }
+			return SendAsync(pubRecPacket);
+		}
 
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
+		private async Task SendPendingPacketsAsync(CancellationToken cancellationToken)
+		{
+			MqttQueuedApplicationMessage queuedApplicationMessage = null;
+			MqttPublishPacket publishPacket = null;
 
-                    publishPacket = _dataConverter.CreatePublishPacket(queuedApplicationMessage.ApplicationMessage);
-                    publishPacket.QualityOfServiceLevel = queuedApplicationMessage.QualityOfServiceLevel;
+			try
+			{
+				while (!cancellationToken.IsCancellationRequested)
+				{
+					queuedApplicationMessage = await Session.ApplicationMessagesQueue.TakeAsync(cancellationToken).ConfigureAwait(false);
+					if (queuedApplicationMessage == null)
+					{
+						return;
+					}
 
-                    // Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
-                    publishPacket.Retain = queuedApplicationMessage.IsRetainedMessage;
+					if (cancellationToken.IsCancellationRequested)
+					{
+						return;
+					}
 
-                    if (publishPacket.QualityOfServiceLevel > 0)
-                    {
-                        publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
-                    }
+					publishPacket = _dataConverter.CreatePublishPacket(queuedApplicationMessage.ApplicationMessage);
+					publishPacket.QualityOfServiceLevel = queuedApplicationMessage.QualityOfServiceLevel;
 
-                    if (_serverOptions.ClientMessageQueueInterceptor != null)
-                    {
-                        var context = new MqttClientMessageQueueInterceptorContext(
-                            queuedApplicationMessage.SenderClientId,
-                            ClientId,
-                            queuedApplicationMessage.ApplicationMessage);
+					// Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
+					publishPacket.Retain = queuedApplicationMessage.IsRetainedMessage;
 
-                        if (_serverOptions.ClientMessageQueueInterceptor != null)
-                        {
-                            await _serverOptions.ClientMessageQueueInterceptor.InterceptClientMessageQueueEnqueueAsync(context).ConfigureAwait(false);
-                        }
+					if (publishPacket.QualityOfServiceLevel > 0)
+					{
+						publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
+					}
 
-                        if (!context.AcceptEnqueue || context.ApplicationMessage == null)
-                        {
-                            return;
-                        }
+					if (_serverOptions.ClientMessageQueueInterceptor != null)
+					{
+						var context = new MqttClientMessageQueueInterceptorContext(
+							queuedApplicationMessage.SenderClientId,
+							ClientId,
+							queuedApplicationMessage.ApplicationMessage);
 
-                        publishPacket.Topic = context.ApplicationMessage.Topic;
-                        publishPacket.Payload = context.ApplicationMessage.Payload;
-                        publishPacket.QualityOfServiceLevel = context.ApplicationMessage.QualityOfServiceLevel;
-                    }
+						if (_serverOptions.ClientMessageQueueInterceptor != null)
+						{
+							await _serverOptions.ClientMessageQueueInterceptor.InterceptClientMessageQueueEnqueueAsync(context).ConfigureAwait(false);
+						}
 
-                    if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
-                    {
-                        await SendAsync(publishPacket).ConfigureAwait(false);
-                    }
-                    else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
-                    {
-                        var awaiter = _packetDispatcher.AddPacketAwaiter<MqttPubAckPacket>(publishPacket.PacketIdentifier);
-                        await SendAsync(publishPacket).ConfigureAwait(false);
-                        await awaiter.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
-                    }
-                    else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
-                    {
-                        using (var awaiter1 = _packetDispatcher.AddPacketAwaiter<MqttPubRecPacket>(publishPacket.PacketIdentifier))
-                        using (var awaiter2 = _packetDispatcher.AddPacketAwaiter<MqttPubCompPacket>(publishPacket.PacketIdentifier))
-                        {
-                            await SendAsync(publishPacket).ConfigureAwait(false);
-                            await awaiter1.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
+						if (!context.AcceptEnqueue || context.ApplicationMessage == null)
+						{
+							return;
+						}
 
-                            await SendAsync(new MqttPubRelPacket { PacketIdentifier = publishPacket.PacketIdentifier }).ConfigureAwait(false);
-                            await awaiter2.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
-                        }
-                    }
+						publishPacket.Topic = context.ApplicationMessage.Topic;
+						publishPacket.Payload = context.ApplicationMessage.Payload;
+						publishPacket.QualityOfServiceLevel = context.ApplicationMessage.QualityOfServiceLevel;
+					}
 
-                    _logger.Verbose("Queued application message sent (ClientId: {0}).", ClientId);
+					if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
+					{
+						await SendAsync(publishPacket).ConfigureAwait(false);
+					}
+					else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
+					{
+						var awaiter = _packetDispatcher.AddPacketAwaiter<MqttPubAckPacket>(publishPacket.PacketIdentifier);
+						await SendAsync(publishPacket).ConfigureAwait(false);
+						await awaiter.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
+					}
+					else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
+					{
+						using (var awaiter1 = _packetDispatcher.AddPacketAwaiter<MqttPubRecPacket>(publishPacket.PacketIdentifier))
+						using (var awaiter2 = _packetDispatcher.AddPacketAwaiter<MqttPubCompPacket>(publishPacket.PacketIdentifier))
+						{
+							await SendAsync(publishPacket).ConfigureAwait(false);
+							await awaiter1.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
 
-                    // TODO:
-                    //Interlocked.Increment(ref _sentPacketsCount);
-                }
-            }
-            catch (Exception exception)
-            {
-                if (exception is MqttCommunicationTimedOutException)
-                {
-                    _logger.Warning(exception, "Sending publish packet failed: Timeout (ClientId: {0}).", ClientId);
-                }
-                else if (exception is MqttCommunicationException)
-                {
-                    _logger.Warning(exception, "Sending publish packet failed: Communication exception (ClientId: {0}).", ClientId);
-                }
-                else if (exception is OperationCanceledException && _cancellationToken.Token.IsCancellationRequested)
-                {
-                    // The cancellation was triggered externally.
-                }
-                else
-                {
-                    _logger.Error(exception, "Sending publish packet failed (ClientId: {0}).", ClientId);
-                }
+							await SendAsync(new MqttPubRelPacket { PacketIdentifier = publishPacket.PacketIdentifier }).ConfigureAwait(false);
+							await awaiter2.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
+						}
+					}
 
-                if (publishPacket?.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
-                {
-                    queuedApplicationMessage.IsDuplicate = true;
+					_logger.Verbose("Queued application message sent (ClientId: {0}).", ClientId);
 
-                    Session.ApplicationMessagesQueue.Enqueue(queuedApplicationMessage);
-                }
+					// TODO:
+					//Interlocked.Increment(ref _sentPacketsCount);
+				}
+			}
+			catch (Exception exception)
+			{
+				if (exception is MqttCommunicationTimedOutException)
+				{
+					_logger.Warning(exception, "Sending publish packet failed: Timeout (ClientId: {0}).", ClientId);
+				}
+				else if (exception is MqttCommunicationException)
+				{
+					_logger.Warning(exception, "Sending publish packet failed: Communication exception (ClientId: {0}).", ClientId);
+				}
+				else if (exception is OperationCanceledException && _cancellationToken.Token.IsCancellationRequested)
+				{
+					// The cancellation was triggered externally.
+				}
+				else
+				{
+					_logger.Error(exception, "Sending publish packet failed (ClientId: {0}).", ClientId);
+				}
 
-                if (!_cancellationToken.Token.IsCancellationRequested)
-                {
-                    await StopAsync().ConfigureAwait(false);
-                }
-            }
-        }
+				if (publishPacket?.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
+				{
+					queuedApplicationMessage.IsDuplicate = true;
 
-        private async Task SendAsync(MqttBasePacket packet)
-        {
-            await _channelAdapter.SendPacketAsync(packet, _serverOptions.DefaultCommunicationTimeout, _cancellationToken.Token).ConfigureAwait(false);
+					Session.ApplicationMessagesQueue.Enqueue(queuedApplicationMessage);
+				}
 
-            Interlocked.Increment(ref _receivedPacketsCount);
+				if (!_cancellationToken.Token.IsCancellationRequested)
+				{
+					await StopAsync().ConfigureAwait(false);
+				}
+			}
+		}
 
-            if (packet is MqttPublishPacket)
-            {
-                Interlocked.Increment(ref _receivedApplicationMessagesCount);
-            }
-        }
+		private async Task SendAsync(MqttBasePacket packet)
+		{
+			await _channelAdapter.SendPacketAsync(packet, _serverOptions.DefaultCommunicationTimeout, _cancellationToken.Token).ConfigureAwait(false);
 
-        private void OnAdapterReadingPacketCompleted()
-        {
-            _keepAliveMonitor?.Resume();
-        }
+			Interlocked.Increment(ref _receivedPacketsCount);
 
-        private void OnAdapterReadingPacketStarted()
-        {
-            _keepAliveMonitor?.Pause();
-        }
-    }
+			if (packet is MqttPublishPacket)
+			{
+				Interlocked.Increment(ref _receivedApplicationMessagesCount);
+			}
+		}
+
+		private void OnAdapterReadingPacketCompleted()
+		{
+			_keepAliveMonitor?.Resume();
+		}
+
+		private void OnAdapterReadingPacketStarted()
+		{
+			_keepAliveMonitor?.Pause();
+		}
+	}
 }

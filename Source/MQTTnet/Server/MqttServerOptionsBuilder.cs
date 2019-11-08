@@ -2,6 +2,8 @@
 using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
+using MQTTnet.Client.ExtendedAuthenticationExchange;
+using MQTTnet.Server.ExtendedAuthenticationExchange;
 
 namespace MQTTnet.Server
 {
@@ -93,6 +95,12 @@ namespace MQTTnet.Server
         {
             _options.TlsEndpointOptions.SslProtocol = value;
             return this;
+        }
+
+        public MqttServerOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedServerAuthenticationExchangeHandler handler)
+        {
+	        _options.ExtendedAuthenticationExchangeHandler = handler;
+	        return this;
         }
 
 #if !WINDOWS_UWP

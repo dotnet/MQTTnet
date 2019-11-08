@@ -1,29 +1,37 @@
 ﻿using System;
+using MQTTnet.Server.ExtendedAuthenticationExchange;
 
 namespace MQTTnet.Server
 {
-    public interface IMqttServerOptions
-    {
-        string ClientId { get; set; }
+	public interface IMqttServerOptions
+	{
+		string ClientId { get; set; }
 
-        bool EnablePersistentSessions { get; }
+		bool EnablePersistentSessions { get; }
 
-        int MaxPendingMessagesPerClient { get; }
-        MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; }
+		IMqttExtendedServerAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
 
-        TimeSpan DefaultCommunicationTimeout { get; }
+		int MaxPendingMessagesPerClient { get; }
 
-        IMqttServerConnectionValidator ConnectionValidator { get; }
-        IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; }
+		MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; }
+
+		TimeSpan DefaultCommunicationTimeout { get; }
+
+		IMqttServerConnectionValidator ConnectionValidator { get; }
+
+		IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; }
+
         IMqttServerUnsubscriptionInterceptor UnsubscriptionInterceptor { get; }
-        IMqttServerApplicationMessageInterceptor ApplicationMessageInterceptor { get; }
-        IMqttServerClientMessageQueueInterceptor ClientMessageQueueInterceptor { get; }
 
-        MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
-        MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }
+		IMqttServerApplicationMessageInterceptor ApplicationMessageInterceptor { get; }
 
-        IMqttServerStorage Storage { get; }
+		IMqttServerClientMessageQueueInterceptor ClientMessageQueueInterceptor { get; }
 
+		MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
+
+		MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }
+
+		IMqttServerStorage Storage { get; }
         IMqttRetainedMessagesManager RetainedMessagesManager { get; }
-    }
+	}
 }

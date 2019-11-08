@@ -177,9 +177,14 @@ namespace MQTTnet.Server
 							while (extendedAuthPacket?.ReasonCode == MqttAuthenticateReasonCode.ContinueAuthentication)
 							{
 								var package = _serverOptions.ExtendedAuthenticationExchangeHandler.HandleClientPackage(extendedAuthPacket);
-								if (!(package is MqttConnAckPacket))
-								{
-									await SendAsync(packet).ConfigureAwait(false);
+								
+								if (package is MqttConnAckPacket)  {
+									await SendAsync(package).ConfigureAwait(false);
+									extendedAuthPacket = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationToken.Token).ConfigureAwait(false) as MqttAuthPacket;
+								}
+
+								if (package is MqttAuthPacket) {
+									await SendAsync(package).ConfigureAwait(false);
 									extendedAuthPacket = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationToken.Token).ConfigureAwait(false) as MqttAuthPacket;
 								}
 							}

@@ -230,6 +230,7 @@ namespace MQTTnet.Server
         {
             var disconnectType = MqttClientDisconnectType.NotClean;
             string clientId = null;
+            var clientWasConnected = true;
 
             try
             {
@@ -246,6 +247,7 @@ namespace MQTTnet.Server
 
                 if (connectionValidatorContext.ReasonCode != MqttConnectReasonCode.Success)
                 {
+                    clientWasConnected = false;
                     // Send failure response here without preparing a session. The result for a successful connect
                     // will be sent from the session itself.
                     var connAckPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext);
@@ -269,21 +271,24 @@ namespace MQTTnet.Server
             }
             finally
             {
-                if (clientId != null)
-                {
-                    _connections.TryRemove(clientId, out _);
-
-                    if (!_options.EnablePersistentSessions)
+                if (clientWasConnected)
+                { 
+                    if (clientId != null)
                     {
-                        await DeleteSessionAsync(clientId).ConfigureAwait(false);
+                        _connections.TryRemove(clientId, out _);
+
+                        if (!_options.EnablePersistentSessions)
+                        {
+                            await DeleteSessionAsync(clientId).ConfigureAwait(false);
+                        }
                     }
-                }
 
-                await TryCleanupChannelAsync(channelAdapter).ConfigureAwait(false);
+                    await TryCleanupChannelAsync(channelAdapter).ConfigureAwait(false);
 
-                if (clientId != null)
-                {
-                    await _eventDispatcher.TryHandleClientDisconnectedAsync(clientId, disconnectType).ConfigureAwait(false);
+                    if (clientId != null)
+                    {
+                        await _eventDispatcher.TryHandleClientDisconnectedAsync(clientId, disconnectType).ConfigureAwait(false);
+                    }
                 }
             }
         }

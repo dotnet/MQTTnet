@@ -16,6 +16,8 @@
 * [ManagedClient] Improved internal subscription management (#569, thanks to @cstichlberger).
 * [ManagedClient] Refactored log messages (thanks to @cstichlberger).
 * [Server] Added support for assigned client IDs (MQTTv5 only) (thanks to @bcrosnier).
+* [Server] Added interceptor for unsubscriptions.
+* [MQTTnet.Server] Added interceptor for unsubscriptions.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2019</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

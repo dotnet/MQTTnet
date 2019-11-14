@@ -6,6 +6,7 @@ using MQTTnet.Tests.Mockups;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using System.Threading;
 
 namespace MQTTnet.Tests
 {
@@ -55,10 +56,10 @@ namespace MQTTnet.Tests
 
                 var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client1"));
                 
-                await Task.Delay(500);
+                await Task.Delay(1000);
 
                 var clientStatus = await server.GetClientStatusAsync();
-                
+
                 Assert.AreEqual(1, clientStatus.Count);
                 
                 Assert.IsTrue(clientStatus.Any(s => s.ClientId == "client1"));

@@ -15,6 +15,7 @@ namespace MQTTnet.Server
 
         IMqttServerConnectionValidator ConnectionValidator { get; }
         IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; }
+        IMqttServerUnsubscriptionInterceptor UnsubscriptionInterceptor { get; }
         IMqttServerApplicationMessageInterceptor ApplicationMessageInterceptor { get; }
         IMqttServerClientMessageQueueInterceptor ClientMessageQueueInterceptor { get; }
 

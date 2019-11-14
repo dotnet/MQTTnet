@@ -155,6 +155,12 @@ namespace MQTTnet.Server
             return this;
         }
 
+        public MqttServerOptionsBuilder WithUnsubscriptionInterceptor(IMqttServerUnsubscriptionInterceptor value)
+        {
+            _options.UnsubscriptionInterceptor = value;
+            return this;
+        }
+
         public MqttServerOptionsBuilder WithSubscriptionInterceptor(Action<MqttSubscriptionInterceptorContext> value)
         {
             _options.SubscriptionInterceptor = new MqttServerSubscriptionInterceptorDelegate(value);

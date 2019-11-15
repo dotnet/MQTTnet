@@ -44,13 +44,17 @@ namespace MQTTnet.Implementations
 
             if (options.TlsEndpointOptions?.IsEnabled == true)
             {
-                if (options.TlsEndpointOptions.Certificate == null)
+                if (options.TlsEndpointOptions.Certificate == null && options.TlsEndpointOptions.X509Certificate == null)
                 {
                     throw new ArgumentException("TLS certificate is not set.");
                 }
 
                 X509Certificate2 tlsCertificate;
-                if (string.IsNullOrEmpty(options.TlsEndpointOptions.CertificateCredentials?.Password))
+                if (options.TlsEndpointOptions.X509Certificate != null)
+                {
+                    tlsCertificate = options.TlsEndpointOptions.X509Certificate;
+                }
+                else if (string.IsNullOrEmpty(options.TlsEndpointOptions.CertificateCredentials?.Password))
                 {
                     // Use a different overload when no password is specified. Otherwise the constructor will fail.
                     tlsCertificate = new X509Certificate2(options.TlsEndpointOptions.Certificate);

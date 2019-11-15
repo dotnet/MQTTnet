@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MQTTnet.Server
 {
@@ -57,7 +58,7 @@ namespace MQTTnet.Server
             _options.DefaultEndpointOptions.IsEnabled = false;
             return this;
         }
-        
+
         public MqttServerOptionsBuilder WithEncryptedEndpoint()
         {
             _options.TlsEndpointOptions.IsEnabled = true;
@@ -86,6 +87,12 @@ namespace MQTTnet.Server
         {
             _options.TlsEndpointOptions.Certificate = value;
             _options.TlsEndpointOptions.CertificateCredentials = credentials;
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithEncryptionCertificate(X509Certificate2 certificate)
+        {
+            _options.TlsEndpointOptions.X509Certificate = certificate;
             return this;
         }
 
@@ -118,7 +125,7 @@ namespace MQTTnet.Server
             return this;
         }
 #endif
-        
+
         public MqttServerOptionsBuilder WithStorage(IMqttServerStorage value)
         {
             _options.Storage = value;

@@ -132,7 +132,7 @@ namespace MQTTnet.Implementations
                 throw new NotSupportedException("Only one client certificate is supported for UWP.");
             }
 
-            return new Certificate(options.TlsOptions.Certificates.First().AsBuffer());
+            return new Certificate(options.TlsOptions.Certificates.First().GetRawCertData());
         }
 
         private IEnumerable<ChainValidationResult> ResolveIgnorableServerCertificateErrors()

@@ -214,7 +214,7 @@ namespace MQTTnet.Implementations
 
             foreach (var certificate in _options.TlsOptions.Certificates)
             {
-                certificates.Add(new X509Certificate2(certificate));
+                certificates.Add(certificate);
             }
 
             return certificates;

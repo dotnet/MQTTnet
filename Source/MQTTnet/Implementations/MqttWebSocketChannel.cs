@@ -84,7 +84,7 @@ namespace MQTTnet.Implementations
                 clientWebSocket.Options.ClientCertificates = new X509CertificateCollection();
                 foreach (var certificate in _options.TlsOptions.Certificates)
                 {
-                    clientWebSocket.Options.ClientCertificates.Add(certificate);
+                    clientWebSocket.Options.ClientCertificates.Add(new X509Certificate(certificate));
                 }
             }
 

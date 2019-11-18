@@ -18,7 +18,12 @@ namespace MQTTnet.Client.Options
 
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
 
+#if WINDOWS_UWP
+        public IEnumerable<IEnumerable<byte>> Certificates { get; set; }
+#else
         public IEnumerable<X509Certificate> Certificates { get; set; }
+#endif
+        
 
         public bool AllowUntrustedCertificates { get; set; }
 

@@ -84,7 +84,12 @@ namespace MQTTnet.Implementations
                 clientWebSocket.Options.ClientCertificates = new X509CertificateCollection();
                 foreach (var certificate in _options.TlsOptions.Certificates)
                 {
+#if WINDOWS_UWP
+                    clientWebSocket.Options.ClientCertificates.Add(new X509Certificate(certificate));
+#else
                     clientWebSocket.Options.ClientCertificates.Add(certificate);
+#endif
+                    
                 }
             }
 

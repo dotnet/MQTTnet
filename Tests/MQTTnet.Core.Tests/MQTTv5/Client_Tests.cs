@@ -21,6 +21,62 @@ using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.MQTTv5
 {
+	public class NizkpServerExtendedAuthHandler : IMqttExtendedServerAuthenticationExchangeHandler
+	{
+		private byte[] _publicKey;
+		private byte[] _sessionPublicKey;
+
+		public MqttAuthPacket CreateAuthPacket(MqttConnectPacket connectPacket)
+		{
+			var authenticationData = connectPacket.Properties.AuthenticationData;
+			authenticationData.
+			return new MqttAuthPacket
+			{
+				ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
+				Properties = new MqttAuthPacketProperties
+				{
+					AuthenticationMethod = "NIZKP",
+					AuthenticationData = Encoding.UTF8.GetBytes("nonce")
+				}
+			};
+		}
+
+		public MqttBasePacket HandleClientPackage(MqttAuthPacket authPacketUpdate)
+		{
+			if (authPacketUpdate.Properties.AuthenticationMethod == "NIZKP")
+			{
+				var secret = Encoding.UTF8.GetString(authPacketUpdate.Properties.AuthenticationData);
+				if (secret == "nonce2_12345")
+				{
+					return new MqttConnAckPacket
+					{
+						ReturnCode = MqttConnectReturnCode.ConnectionAccepted,
+						ReasonCode = MqttConnectReasonCode.Success,
+						Properties = new MqttConnAckPacketProperties
+						{
+							AuthenticationMethod = "NIZKP"
+						},
+						// IsSessionPresent = !Session.IsCleanSession
+					};
+				}
+				else
+				{
+					return new MqttAuthPacket
+					{
+						ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
+						Properties = new MqttAuthPacketProperties
+						{
+							AuthenticationMethod = "NIZKP",
+							AuthenticationData = Encoding.UTF8.GetBytes("nonce2")
+						}
+					};
+				}
+			}
+
+			return null;
+		}
+	}
+
 	[TestClass]
 	public class Client_Tests
 	{
@@ -50,7 +106,7 @@ namespace MQTTnet.Tests.MQTTv5
 				.WithCommunicationTimeout(new TimeSpan(0, 10, 0))
 				.WithKeepAlivePeriod(new TimeSpan(0, 10, 0))
 				.WithProtocolVersion(MqttProtocolVersion.V500)
-				.WithAuthentication(NizkpClientExtendedAuthHandler.AuthenticationMethod, Encoding.UTF8.GetBytes(string.Empty))
+				.WithAuthentication(NizkpClientExtendedAuthHandler.AuthenticationMethod, Encoding.UTF8.GetBytes("blabla"))
 				.WithClientId(Guid.NewGuid().ToString().Replace("-", string.Empty))
 				.WithExtendedAuthenticationExchangeHandler(new NizkpClientExtendedAuthHandler())
 				.Build();
@@ -449,7 +505,8 @@ namespace MQTTnet.Tests.MQTTv5
         }
 	}
 
-	public class NizkpClientExtendedAuthHandler : IMqttExtendedAuthenticationExchangeHandler {
+	public class NizkpClientExtendedAuthHandler : IMqttExtendedAuthenticationExchangeHandler
+	{
 		public static string AuthenticationMethod = "NIZKP";
 		public Task HandleRequestAsync(MqttExtendedAuthenticationExchangeContext context)
 		{
@@ -461,16 +518,17 @@ namespace MQTTnet.Tests.MQTTv5
 			var nonce = context.AuthenticationData;
 			var nonceString = Encoding.UTF8.GetString(nonce);
 
-			if (nonceString == "nonce2") {
+			if (nonceString == "nonce2")
+			{
 				return context.Client.SendExtendedAuthenticationExchangeDataAsync(new MqttExtendedAuthenticationExchangeData
 				{
 					AuthenticationData = Encoding.UTF8.GetBytes("nonce2_12345"),
 					ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication
 				});
 			}
-			
-			
-			
+
+
+
 			return context.Client.SendExtendedAuthenticationExchangeDataAsync(new MqttExtendedAuthenticationExchangeData
 			{
 				AuthenticationData = Encoding.UTF8.GetBytes("nonce12345"),
@@ -484,53 +542,4 @@ namespace MQTTnet.Tests.MQTTv5
 		}
 	}
 
-	public class NizkpServerExtendedAuthHandler : IMqttExtendedServerAuthenticationExchangeHandler
-	{
-		public MqttAuthPacket CreateAuthPacket()
-		{
-			return new MqttAuthPacket
-			{
-				ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
-				Properties = new MqttAuthPacketProperties
-				{
-					AuthenticationMethod = "NIZKP",
-					AuthenticationData = Encoding.UTF8.GetBytes("nonce")
-				}
-			};
-		}
-
-		public MqttBasePacket HandleClientPackage(MqttAuthPacket authPacketUpdate)
-		{
-			if (authPacketUpdate.Properties.AuthenticationMethod == "NIZKP")
-			{
-				var secret = Encoding.UTF8.GetString(authPacketUpdate.Properties.AuthenticationData);
-				if (secret == "nonce2_12345")
-				{
-					return new MqttConnAckPacket
-					{
-						ReturnCode = MqttConnectReturnCode.ConnectionAccepted,
-						ReasonCode = MqttConnectReasonCode.Success,
-						Properties = new MqttConnAckPacketProperties
-						{
-							AuthenticationMethod = "NIZKP"
-						},
-						// IsSessionPresent = !Session.IsCleanSession
-					};
-				}
-				else {
-					return new MqttAuthPacket
-					{
-						ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
-						Properties = new MqttAuthPacketProperties
-						{
-							AuthenticationMethod = "NIZKP",
-							AuthenticationData = Encoding.UTF8.GetBytes("nonce2")
-						}
-					};
-				}
-			}
-
-			return null;
-		}
-	}
 }

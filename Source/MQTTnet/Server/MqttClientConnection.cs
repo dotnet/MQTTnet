@@ -144,7 +144,7 @@ namespace MQTTnet.Server
                 // TODO: Change to single thread in SessionManager. Or use SessionManager and stats from KeepAliveMonitor.
                 _keepAliveMonitor.Start(ConnectPacket.KeepAlivePeriod, _cancellationToken.Token);
 
-	            var authPacket = _serverOptions.ExtendedAuthenticationExchangeHandler?.CreateAuthPacket();
+	            var authPacket = _serverOptions.ExtendedAuthenticationExchangeHandler?.CreateAuthPacket(ConnectPacket);
 				if (authPacket != null)
 				{
 					await SendAsync(authPacket).ConfigureAwait(false);

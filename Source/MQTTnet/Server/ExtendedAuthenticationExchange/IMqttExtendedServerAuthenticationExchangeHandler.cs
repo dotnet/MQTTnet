@@ -6,6 +6,6 @@ namespace MQTTnet.Server.ExtendedAuthenticationExchange
 	{
 		MqttBasePacket HandleClientPackage(MqttAuthPacket authPacketUpdate);
 
-		MqttAuthPacket CreateAuthPacket();
+		MqttAuthPacket CreateAuthPacket(MqttConnectPacket connectPacketProperties);
 	}
 }

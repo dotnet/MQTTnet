@@ -5,5 +5,6 @@ namespace MQTTnet.Client.ExtendedAuthenticationExchange
     public interface IMqttExtendedAuthenticationExchangeHandler
     {
         Task HandleRequestAsync(MqttExtendedAuthenticationExchangeContext context);
+        string DeriveClientId();
     }
 }

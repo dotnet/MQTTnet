@@ -90,11 +90,13 @@ namespace MQTTnet.Server
             return this;
         }
 
+#if !WINDOWS_UWP
         public MqttServerOptionsBuilder WithEncryptionCertificate(X509Certificate2 certificate)
         {
             _options.TlsEndpointOptions.X509Certificate = certificate;
             return this;
         }
+#endif
 
         public MqttServerOptionsBuilder WithEncryptionSslProtocol(SslProtocols value)
         {

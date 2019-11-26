@@ -13,7 +13,9 @@ namespace MQTTnet.Server
 
         public byte[] Certificate { get; set; }
 
+#if !WINDOWS_UWP
         public X509Certificate2 X509Certificate { get; set; }
+#endif
 
         public IMqttServerCertificateCredentials CertificateCredentials { get; set; }
 

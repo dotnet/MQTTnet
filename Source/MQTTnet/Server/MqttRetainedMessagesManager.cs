@@ -58,33 +58,42 @@ namespace MQTTnet.Server
 
             try
             {
-                using (await _messagesLock.WaitAsync().ConfigureAwait(false))
-                {
-                    var saveIsRequired = false;
-                    var hasPayload = applicationMessage.Payload != null && applicationMessage.Payload.Length > 0;
+                var saveIsRequired = false;
 
-                    if (!hasPayload)
+                if (_options.Storage is IMqttExtendedServerStorage extendedStorage)
+                {
+                    saveIsRequired = await extendedStorage.HandleMessageAsync(clientId, applicationMessage).ConfigureAwait(false);
+                }
+                else
+                {
+                    using (await _messagesLock.WaitAsync().ConfigureAwait(false))
                     {
-                        saveIsRequired = _messages.Remove(applicationMessage.Topic);
-                        _logger.Verbose("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
-                    }
-                    else
-                    {
-                        if (!_messages.TryGetValue(applicationMessage.Topic, out var existingMessage))
+
+                        var hasPayload = applicationMessage.Payload != null && applicationMessage.Payload.Length > 0;
+
+                        if (!hasPayload)
                         {
-                            _messages[applicationMessage.Topic] = applicationMessage;
-                            saveIsRequired = true;
+                            saveIsRequired = _messages.Remove(applicationMessage.Topic);
+                            _logger.Verbose("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                         }
                         else
                         {
-                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? _emptyArray))
+                            if (!_messages.TryGetValue(applicationMessage.Topic, out var existingMessage))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage;
                                 saveIsRequired = true;
                             }
-                        }
+                            else
+                            {
+                                if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? _emptyArray))
+                                {
+                                    _messages[applicationMessage.Topic] = applicationMessage;
+                                    saveIsRequired = true;
+                                }
+                            }
 
-                        _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                            _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                        }
                     }
 
                     if (saveIsRequired)
@@ -107,6 +116,11 @@ namespace MQTTnet.Server
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
+            if (_options.Storage is IMqttExtendedServerStorage extendedStorage)
+            {
+                return await extendedStorage.GetSubscribedMessagesAsync(topicFilters).ConfigureAwait(false);
+            }
+
             var matchingRetainedMessages = new List<MqttApplicationMessage>();
 
             List<MqttApplicationMessage> retainedMessages;
@@ -128,12 +142,17 @@ namespace MQTTnet.Server
                     break;
                 }
             }
-            
+
             return matchingRetainedMessages;
         }
 
         public async Task<IList<MqttApplicationMessage>> GetMessagesAsync()
         {
+            if (_options.Storage is IMqttExtendedServerStorage extendedStorage)
+            {
+                return await extendedStorage.GetMessagesAsync().ConfigureAwait(false);
+            }
+
             using (await _messagesLock.WaitAsync().ConfigureAwait(false))
             {
                 return _messages.Values.ToList();
@@ -142,6 +161,11 @@ namespace MQTTnet.Server
 
         public async Task ClearMessagesAsync()
         {
+            if (_options.Storage is IMqttExtendedServerStorage extendedStorage)
+            {
+                await extendedStorage.ClearMessagesAsync().ConfigureAwait(false);
+            }
+
             using (await _messagesLock.WaitAsync().ConfigureAwait(false))
             {
                 _messages.Clear();

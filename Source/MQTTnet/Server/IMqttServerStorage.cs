@@ -9,4 +9,15 @@ namespace MQTTnet.Server
 
         Task<IList<MqttApplicationMessage>> LoadRetainedMessagesAsync();
     }
+
+    public interface IMqttExtendedServerStorage : IMqttServerStorage
+    {
+        Task<bool> HandleMessageAsync(string clientId, MqttApplicationMessage applicationMessage);
+
+        Task<IList<MqttApplicationMessage>> GetMessagesAsync();
+
+        Task<List<MqttApplicationMessage>> GetSubscribedMessagesAsync(ICollection<TopicFilter> topicFilters);
+
+        Task ClearMessagesAsync();
+    }
 }

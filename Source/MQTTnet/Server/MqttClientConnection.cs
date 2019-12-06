@@ -176,7 +176,7 @@ namespace MQTTnet.Server
 						{
 							while (extendedAuthPacket?.ReasonCode == MqttAuthenticateReasonCode.ContinueAuthentication)
 							{
-								var package = _serverOptions.ExtendedAuthenticationExchangeHandler.HandleClientPackage(extendedAuthPacket);
+								var package = _serverOptions.ExtendedAuthenticationExchangeHandler.HandleClientPackage(extendedAuthPacket, Session.Items);
 								
 								if (package is MqttConnAckPacket)  {
 									await SendAsync(package).ConfigureAwait(false);

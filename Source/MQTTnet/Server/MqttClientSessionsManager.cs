@@ -377,7 +377,7 @@ namespace MQTTnet.Server
 
             string senderClientId;
             IDictionary<object, object> sessionItems;
-
+            
             var messageIsFromServer = senderConnection == null;
             if (messageIsFromServer)
             {

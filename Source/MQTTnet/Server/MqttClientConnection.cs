@@ -170,26 +170,19 @@ namespace MQTTnet.Server
 					Interlocked.Increment(ref _sentPacketsCount);
 					_lastPacketReceivedTimestamp = DateTime.UtcNow;
 
-					if (packet is MqttAuthPacket extendedAuthPacket)
+					if (packet is MqttAuthPacket authPacket2)
 					{
-						if (_serverOptions.ExtendedAuthenticationExchangeHandler != null)
+						if (_serverOptions.ExtendedAuthenticationExchangeHandler == null)
 						{
-							while (extendedAuthPacket?.ReasonCode == MqttAuthenticateReasonCode.ContinueAuthentication)
-							{
-								var package = _serverOptions.ExtendedAuthenticationExchangeHandler.HandleClientPackage(extendedAuthPacket, Session.Items);
-								
-								if (package is MqttConnAckPacket)  {
-									await SendAsync(package).ConfigureAwait(false);
-									extendedAuthPacket = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationToken.Token).ConfigureAwait(false) as MqttAuthPacket;
-								}
-
-								if (package is MqttAuthPacket) {
-									await SendAsync(package).ConfigureAwait(false);
-									extendedAuthPacket = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationToken.Token).ConfigureAwait(false) as MqttAuthPacket;
-								}
-							}
+							continue;
 						}
+
+						var responsePacket = _serverOptions.ExtendedAuthenticationExchangeHandler.HandleClientPackage(authPacket2, Session.Items);
+						await SendAsync(responsePacket).ConfigureAwait(false);
+						continue;
 					}
+
+
 
 					if (!(packet is MqttPingReqPacket || packet is MqttPingRespPacket))
 					{

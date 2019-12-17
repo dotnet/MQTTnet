@@ -19,7 +19,7 @@ namespace MQTTnet.Server
         private readonly IMqttNetChildLogger _logger;
 
         private MqttClientSessionsManager _clientSessionsManager;
-        private MqttRetainedMessagesManager _retainedMessagesManager;
+        private IMqttRetainedMessagesManager _retainedMessagesManager;
         private CancellationTokenSource _cancellationTokenSource;
 
         public MqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetChildLogger logger)
@@ -48,7 +48,7 @@ namespace MQTTnet.Server
             get => _eventDispatcher.ClientDisconnectedHandler;
             set => _eventDispatcher.ClientDisconnectedHandler = value;
         }
-        
+
         public IMqttServerClientSubscribedTopicHandler ClientSubscribedTopicHandler
         {
             get => _eventDispatcher.ClientSubscribedTopicHandler;
@@ -60,7 +60,7 @@ namespace MQTTnet.Server
             get => _eventDispatcher.ClientUnsubscribedTopicHandler;
             set => _eventDispatcher.ClientUnsubscribedTopicHandler = value;
         }
-        
+
         public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
         {
             get => _eventDispatcher.ApplicationMessageReceivedHandler;
@@ -121,7 +121,8 @@ namespace MQTTnet.Server
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _retainedMessagesManager = new MqttRetainedMessagesManager(Options, _logger);
+            _retainedMessagesManager = Options.RetainedMessagesManager ?? new MqttRetainedMessagesManager();
+            await _retainedMessagesManager.Start(Options, _logger);
             await _retainedMessagesManager.LoadMessagesAsync().ConfigureAwait(false);
 
             _clientSessionsManager = new MqttClientSessionsManager(Options, _retainedMessagesManager, _cancellationTokenSource.Token, _eventDispatcher, _logger);
@@ -150,9 +151,9 @@ namespace MQTTnet.Server
                 {
                     return;
                 }
-                
+
                 await _clientSessionsManager.StopAsync().ConfigureAwait(false);
-                
+
                 _cancellationTokenSource.Cancel(false);
 
                 foreach (var adapter in _adapters)

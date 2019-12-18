@@ -30,6 +30,6 @@ namespace MQTTnet.Server
 
         public IMqttServerStorage Storage { get; set; }
 
-        public IMqttRetainedMessagesManager RetainedMessagesManager { get; set; }
+        public IMqttRetainedMessagesManager RetainedMessagesManager { get; set; } = new MqttRetainedMessagesManager();
     }
 }

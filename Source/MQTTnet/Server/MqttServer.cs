@@ -7,6 +7,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
 
@@ -117,11 +118,13 @@ namespace MQTTnet.Server
         {
             Options = options ?? throw new ArgumentNullException(nameof(options));
 
+            if (Options.RetainedMessagesManager == null) throw new MqttConfigurationException("options.RetainedMessagesManager should not be null.");
+
             if (_cancellationTokenSource != null) throw new InvalidOperationException("The server is already started.");
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _retainedMessagesManager = Options.RetainedMessagesManager ?? new MqttRetainedMessagesManager();
+            _retainedMessagesManager = Options.RetainedMessagesManager;
             await _retainedMessagesManager.Start(Options, _logger);
             await _retainedMessagesManager.LoadMessagesAsync().ConfigureAwait(false);
 

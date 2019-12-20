@@ -89,7 +89,10 @@ namespace MQTTnet.Server
             {
                 if (level == topicSegments.Length - 1)
                 {
-                    result.Add(items.SingleLevelWildcard.TopicFilter.QualityOfServiceLevel);
+                    if (items.SingleLevelWildcard.TopicFilter != null)
+                    {
+                        result.Add(items.SingleLevelWildcard.TopicFilter.QualityOfServiceLevel);
+                    }
                     return;
                 }
                 GetQosLevels(topicSegments, level + 1, items.SingleLevelWildcard.Children, result);
@@ -100,7 +103,10 @@ namespace MQTTnet.Server
             {
                 if (level == topicSegments.Length - 1)
                 {
-                    result.Add(node.TopicFilter.QualityOfServiceLevel);
+                    if (node.TopicFilter != null)
+                    {
+                        result.Add(node.TopicFilter.QualityOfServiceLevel);
+                    }
                     return;
                 }
 

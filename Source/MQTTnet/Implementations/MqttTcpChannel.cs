@@ -72,11 +72,7 @@ namespace MQTTnet.Implementations
             // Workaround for: workaround for https://github.com/dotnet/corefx/issues/24430
             using (cancellationToken.Register(() => socket.Dispose()))
             {
-#if NET452 || NET461
-                await Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
-#else
-                await socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
-#endif
+                await PlatformAbstractionLayer.ConnectAsync(socket, _options.Server, _options.GetPort()).ConfigureAwait(false);
             }
 
             var networkStream = new NetworkStream(socket, true);
@@ -117,6 +113,10 @@ namespace MQTTnet.Implementations
                     return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
             }
+            catch (ObjectDisposedException)
+            {
+                return 0;
+            }
             catch (IOException exception)
             {
                 if (exception.InnerException is SocketException socketException)
@@ -142,6 +142,10 @@ namespace MQTTnet.Implementations
 
                     await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
+            }
+            catch (ObjectDisposedException)
+            {
+                return;
             }
             catch (IOException exception)
             {

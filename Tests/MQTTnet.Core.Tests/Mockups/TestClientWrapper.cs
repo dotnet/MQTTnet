@@ -39,7 +39,7 @@ namespace MQTTnet.Tests.Mockups
                 case MqttClientOptionsBuilder builder:
                     {
                         var existingClientId = builder.Build().ClientId;
-                        if (!existingClientId.StartsWith(TestContext.TestName))
+                        if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
                         {
                             builder.WithClientId(TestContext.TestName + existingClientId);
                         }
@@ -48,7 +48,7 @@ namespace MQTTnet.Tests.Mockups
                 case MqttClientOptions op:
                     {
                         var existingClientId = op.ClientId;
-                        if (!existingClientId.StartsWith(TestContext.TestName))
+                        if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
                         {
                             op.ClientId = TestContext.TestName + existingClientId;
                         }

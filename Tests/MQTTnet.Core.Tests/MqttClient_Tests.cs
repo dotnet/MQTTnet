@@ -238,6 +238,36 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public async Task ConnectTimeout_Throws_Exception()
+        {
+            var factory = new MqttFactory();
+            using (var client = factory.CreateMqttClient())
+            {
+                bool disconnectHandlerCalled = false;
+                try
+                {
+                    client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(args =>
+                    {
+                        disconnectHandlerCalled = true;
+                    });
+
+                    await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build());
+
+                    Assert.Fail("Must fail!");
+                }
+                catch (Exception exception)
+                {
+                    Assert.IsNotNull(exception);
+                    Assert.IsInstanceOfType(exception, typeof(MqttCommunicationException));
+                    //Assert.IsInstanceOfType(exception.InnerException, typeof(SocketException));
+                }
+
+                await Task.Delay(100); // disconnected handler is called async
+                Assert.IsTrue(disconnectHandlerCalled);
+            }
+        }
+
+        [TestMethod]
         public async Task Fire_Disconnected_Event_On_Server_Shutdown()
         {
             using (var testEnvironment = new TestEnvironment(TestContext))

@@ -13,6 +13,7 @@ using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Client.Subscribing;
+using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -1140,7 +1141,7 @@ namespace MQTTnet.Tests
                 await testEnvironment.ConnectClientAsync();
             }
         }
-
+        
         [TestMethod]
         public async Task Close_Idle_Connection()
         {
@@ -1149,14 +1150,14 @@ namespace MQTTnet.Tests
                 await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
 
                 var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await client.ConnectAsync("localhost", testEnvironment.ServerPort);
+                await PlatformAbstractionLayer.ConnectAsync(client, "localhost", testEnvironment.ServerPort);
 
                 // Don't send anything. The server should close the connection.
                 await Task.Delay(TimeSpan.FromSeconds(3));
 
                 try
                 {
-                    var receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
+                    var receivedBytes = await PlatformAbstractionLayer.ReceiveAsync(client, new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
                     if (receivedBytes == 0)
                     {
                         return;
@@ -1180,7 +1181,7 @@ namespace MQTTnet.Tests
                 // Send an invalid packet and ensure that the server will close the connection and stay in a waiting state
                 // forever. This is security related.
                 var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await client.ConnectAsync("localhost", testEnvironment.ServerPort);
+                await PlatformAbstractionLayer.ConnectAsync(client, "localhost", testEnvironment.ServerPort);
                                 
                 var buffer = Encoding.UTF8.GetBytes("Garbage");
                 client.Send(buffer, buffer.Length, SocketFlags.None);
@@ -1189,7 +1190,7 @@ namespace MQTTnet.Tests
 
                 try
                 {
-                    var receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
+                    var receivedBytes = await PlatformAbstractionLayer.ReceiveAsync(client, new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
                     if (receivedBytes == 0)
                     {
                         return;

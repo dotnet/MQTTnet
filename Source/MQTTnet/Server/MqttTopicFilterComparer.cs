@@ -4,9 +4,9 @@ namespace MQTTnet.Server
 {
     public static class MqttTopicFilterComparer
     {
-        private const char LevelSeparator = '/';
-        private const char MultiLevelWildcard = '#';
-        private const char SingleLevelWildcard = '+';
+        public const char LevelSeparator = '/';
+        public const char MultiLevelWildcard = '#';
+        public const char SingleLevelWildcard = '+';
 
         public static bool IsMatch(string topic, string filter)
         {

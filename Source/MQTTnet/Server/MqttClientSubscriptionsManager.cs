@@ -10,6 +10,7 @@ namespace MQTTnet.Server
     public class MqttClientSubscriptionsManager
     {
         private readonly Dictionary<string, TopicFilter> _subscriptions = new Dictionary<string, TopicFilter>();
+        private MqttSubscriptionIndex _subscriptionIndex = new MqttSubscriptionIndex();
         private readonly MqttClientSession _clientSession;
         private readonly IMqttServerOptions _serverOptions;
         private readonly MqttServerEventDispatcher _eventDispatcher;
@@ -65,6 +66,7 @@ namespace MQTTnet.Server
                     lock (_subscriptions)
                     {
                         _subscriptions[finalTopicFilter.Topic] = finalTopicFilter;
+                        MqttSubscriptionIndex.Subscribe(finalTopicFilter, _subscriptionIndex);
                     }
 
                     await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
@@ -91,6 +93,7 @@ namespace MQTTnet.Server
                     lock (_subscriptions)
                     {
                         _subscriptions[topicFilter.Topic] = topicFilter;
+                        MqttSubscriptionIndex.Subscribe(topicFilter, _subscriptionIndex);
                     }
 
                     await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
@@ -120,6 +123,12 @@ namespace MQTTnet.Server
                 {
                     if (_subscriptions.Remove(topicFilter))
                     {
+                        _subscriptionIndex = new MqttSubscriptionIndex();
+                        foreach (var subscription in _subscriptions.Values)
+                        {
+                            MqttSubscriptionIndex.Subscribe(subscription, _subscriptionIndex);
+                        }
+
                         unsubAckPacket.ReasonCodes.Add(MqttUnsubscribeReasonCode.Success);
                     }
                     else
@@ -152,25 +161,23 @@ namespace MQTTnet.Server
                 lock (_subscriptions)
                 {
                     _subscriptions.Remove(topicFilter);
-                }
+                   
+                    _subscriptionIndex = new MqttSubscriptionIndex();
+                    foreach (var subscription in _subscriptions.Values)
+                    {
+                        MqttSubscriptionIndex.Subscribe(subscription, _subscriptionIndex);
+                    }
+                }    
             }
         }
 
         public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel)
         {
-            var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
+            HashSet<MqttQualityOfServiceLevel> qosLevels;
 
             lock (_subscriptions)
             {
-                foreach (var subscription in _subscriptions)
-                {
-                    if (!MqttTopicFilterComparer.IsMatch(topic, subscription.Key))
-                    {
-                        continue;
-                    }
-
-                    qosLevels.Add(subscription.Value.QualityOfServiceLevel);
-                }
+                qosLevels = _subscriptionIndex.GetQosLevels(topic);                
             }
 
             if (qosLevels.Count == 0)

@@ -13,10 +13,12 @@ namespace MQTTnet.Tests
     [TestClass]
     public class Server_Status_Tests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public async Task Show_Client_And_Session_Statistics()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var server = await testEnvironment.StartServerAsync();
 
@@ -31,8 +33,8 @@ namespace MQTTnet.Tests
                 Assert.AreEqual(2, clientStatus.Count);
                 Assert.AreEqual(2, sessionStatus.Count);
 
-                Assert.IsTrue(clientStatus.Any(s => s.ClientId == "client1"));
-                Assert.IsTrue(clientStatus.Any(s => s.ClientId == "client2"));
+                Assert.IsTrue(clientStatus.Any(s => s.ClientId == c1.Options.ClientId));
+                Assert.IsTrue(clientStatus.Any(s => s.ClientId == c2.Options.ClientId));
 
                 await c1.DisconnectAsync();
                 await c2.DisconnectAsync();
@@ -50,7 +52,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Disconnect_Client()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var server = await testEnvironment.StartServerAsync();
 
@@ -62,7 +64,7 @@ namespace MQTTnet.Tests
 
                 Assert.AreEqual(1, clientStatus.Count);
                 
-                Assert.IsTrue(clientStatus.Any(s => s.ClientId == "client1"));
+                Assert.IsTrue(clientStatus.Any(s => s.ClientId == c1.Options.ClientId));
 
                 await clientStatus.First().DisconnectAsync();
 
@@ -79,7 +81,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Keep_Persistent_Session()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithPersistentSessions());
 
@@ -111,7 +113,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Track_Sent_Application_Messages()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithPersistentSessions());
 
@@ -132,7 +134,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Track_Sent_Packets()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithPersistentSessions());
 

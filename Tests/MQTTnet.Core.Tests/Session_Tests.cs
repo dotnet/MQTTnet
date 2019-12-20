@@ -11,10 +11,12 @@ namespace MQTTnet.Tests
     [TestClass]
     public class Session_Tests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public async Task Set_Session_Item()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var serverOptions = new MqttServerOptionsBuilder()
                     .WithConnectionValidator(delegate (MqttConnectionValidatorContext context)

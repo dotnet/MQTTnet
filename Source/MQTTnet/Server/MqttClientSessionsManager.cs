@@ -13,7 +13,7 @@ using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientSessionsManager : IDisposable
+    public class MqttClientSessionsManager : Disposable
     {
         private readonly AsyncQueue<MqttEnqueuedApplicationMessage> _messageQueue = new AsyncQueue<MqttEnqueuedApplicationMessage>();
 
@@ -145,9 +145,13 @@ namespace MQTTnet.Server
             _logger.Verbose("Session for client '{0}' deleted.", clientId);
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            _messageQueue?.Dispose();
+            if (disposing)
+            {
+                _messageQueue?.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         private async Task TryProcessQueuedApplicationMessagesAsync(CancellationToken cancellationToken)

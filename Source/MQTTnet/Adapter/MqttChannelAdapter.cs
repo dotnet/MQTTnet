@@ -14,7 +14,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Adapter
 {
-    public class MqttChannelAdapter : IMqttChannelAdapter
+    public class MqttChannelAdapter : Disposable, IMqttChannelAdapter
     {
         private const uint ErrorOperationAborted = 0x800703E3;
         private const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
@@ -26,9 +26,7 @@ namespace MQTTnet.Adapter
         private readonly MqttPacketReader _packetReader;
 
         private readonly byte[] _fixedHeaderBuffer = new byte[2];
-
-        private bool _isDisposed;
-
+        
         private long _bytesReceived;
         private long _bytesSent;
 
@@ -269,19 +267,13 @@ namespace MQTTnet.Adapter
             }
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            _isDisposed = true;
-
-            _channel?.Dispose();
-        }
-
-        private void ThrowIfDisposed()
-        {
-            if (_isDisposed)
+            if (disposing)
             {
-                throw new ObjectDisposedException(nameof(MqttChannelAdapter));
+                _channel?.Dispose();
             }
+            base.Dispose(disposing);
         }
 
         private static bool IsWrappedException(Exception exception)

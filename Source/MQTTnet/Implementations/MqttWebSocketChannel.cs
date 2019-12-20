@@ -6,10 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Client.Options;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttWebSocketChannel : IMqttChannel
+    public class MqttWebSocketChannel : Disposable, IMqttChannel
     {
         private readonly MqttClientWebSocketOptions _options;
 
@@ -141,22 +142,26 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            _sendLock?.Dispose();
-            _sendLock = null;
+            if (disposing)
+            {
+                _sendLock?.Dispose();
+                _sendLock = null;
 
-            try
-            {
-                _webSocket?.Dispose();
+                try
+                {
+                    _webSocket?.Dispose();
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+                finally
+                {
+                    _webSocket = null;
+                }
             }
-            catch (ObjectDisposedException)
-            {
-            }
-            finally
-            {
-                _webSocket = null;
-            }
+            base.Dispose(disposing);
         }
 
         private IWebProxy CreateProxy()

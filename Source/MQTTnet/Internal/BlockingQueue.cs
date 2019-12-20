@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace MQTTnet.Internal
 {
-    public class BlockingQueue<TItem> : IDisposable
+    public class BlockingQueue<TItem> : Disposable
     {
         private readonly object _syncRoot = new object();
         private readonly LinkedList<TItem> _items = new LinkedList<TItem>();
@@ -109,9 +109,13 @@ namespace MQTTnet.Internal
             }
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            _gate.Dispose();
+            if (disposing)
+            {
+                _gate.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

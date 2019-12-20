@@ -18,6 +18,8 @@ namespace MQTTnet.Tests
     [TestClass]
     public class ManagedMqttClient_Tests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public async Task Drop_New_Messages_On_Full_Queue()
         {
@@ -54,7 +56,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task ManagedClients_Will_Message_Send()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var receivedMessagesCount = 0;
 
@@ -88,7 +90,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Start_Stop()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var factory = new MqttFactory();
 
@@ -115,7 +117,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Storage_Queue_Drains()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 testEnvironment.IgnoreClientLogErrors = true;
                 testEnvironment.IgnoreServerLogErrors = true;
@@ -167,7 +169,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Subscriptions_And_Unsubscriptions_Are_Made_And_Reestablished_At_Reconnect()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var unmanagedClient = testEnvironment.CreateClient();
                 var managedClient = await CreateManagedClientAsync(testEnvironment, unmanagedClient);
@@ -232,7 +234,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Subscriptions_Subscribe_Only_New_Subscriptions()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var managedClient = await CreateManagedClientAsync(testEnvironment);
 
@@ -265,7 +267,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Subscriptions_Are_Published_Immediately()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 // Use a long connection check interval to verify that the subscriptions
                 // do not depend on the connection check interval anymore
@@ -289,7 +291,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Subscriptions_Are_Cleared_At_Logout()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var managedClient = await CreateManagedClientAsync(testEnvironment);
 

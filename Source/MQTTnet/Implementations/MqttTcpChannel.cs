@@ -10,10 +10,11 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using MQTTnet.Channel;
 using MQTTnet.Client.Options;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpChannel : IMqttChannel
+    public class MqttTcpChannel : Disposable, IMqttChannel
     {
         private readonly IMqttClientOptions _clientOptions;
         private readonly MqttClientTcpOptions _options;
@@ -94,7 +95,7 @@ namespace MQTTnet.Implementations
 
         public Task DisconnectAsync(CancellationToken cancellationToken)
         {
-            Dispose();
+            Cleanup();
             return Task.FromResult(0);
         }
 
@@ -158,7 +159,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public void Dispose()
+        private void Cleanup()
         {
             // When the stream is disposed it will also close the socket and this will also dispose it.
             // So there is no need to dispose the socket again.
@@ -175,6 +176,15 @@ namespace MQTTnet.Implementations
             }
 
             _stream = null;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Cleanup();
+            }
+            base.Dispose(disposing);
         }
 
         private bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)

@@ -16,7 +16,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public class ManagedMqttClient : IManagedMqttClient
+    public class ManagedMqttClient : Disposable, IManagedMqttClient
     {
         private readonly BlockingQueue<ManagedMqttApplicationMessage> _messageQueue = new BlockingQueue<ManagedMqttApplicationMessage>();
 
@@ -42,15 +42,15 @@ namespace MQTTnet.Extensions.ManagedClient
         private Task _maintainConnectionTask;
 
         private ManagedMqttClientStorageManager _storageManager;
-
-        private bool _disposed;
-
+        
         public ManagedMqttClient(IMqttClient mqttClient, IMqttNetChildLogger logger)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(ManagedMqttClient));
+
+            Options = new ManagedMqttClientOptions();
         }
 
         public bool IsConnected => _mqttClient.IsConnected;
@@ -242,36 +242,25 @@ namespace MQTTnet.Extensions.ManagedClient
             return Task.FromResult(0);
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            if (_disposed)
+            if (disposing)
             {
-                return;
+                StopPublishing();
+                StopMaintainingConnection();
+
+                if (_maintainConnectionTask != null)
+                {
+                    _maintainConnectionTask.GetAwaiter().GetResult();
+                    _maintainConnectionTask = null;
+                }
+
+                _messageQueue.Dispose();
+                _messageQueueLock.Dispose();
+                _mqttClient.Dispose();
+                _subscriptionsQueuedSignal.Dispose();
             }
-
-            _disposed = true;
-
-            StopPublishing();
-            StopMaintainingConnection();
-
-            if (_maintainConnectionTask != null)
-            {
-                Task.WaitAny(_maintainConnectionTask);
-                _maintainConnectionTask = null;
-            }
-
-            _messageQueue.Dispose();
-            _messageQueueLock.Dispose();
-            _mqttClient.Dispose();
-            _subscriptionsQueuedSignal.Dispose();
-        }
-
-        private void ThrowIfDisposed()
-        {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(nameof(ManagedMqttClient));
-            }
+            base.Dispose(disposing);
         }
 
         private async Task MaintainConnectionAsync(CancellationToken cancellationToken)
@@ -292,7 +281,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             finally
             {
-                if (!_disposed)
+                if (!IsDisposed)
                 {
                     try
                     {

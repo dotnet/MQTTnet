@@ -112,7 +112,7 @@ namespace MQTTnet.Implementations
                 await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken).ConfigureAwait(false);
             }
 
-            Dispose();
+            Cleanup();
         }
 
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -146,22 +146,27 @@ namespace MQTTnet.Implementations
         {
             if (disposing)
             {
-                _sendLock?.Dispose();
-                _sendLock = null;
-
-                try
-                {
-                    _webSocket?.Dispose();
-                }
-                catch (ObjectDisposedException)
-                {
-                }
-                finally
-                {
-                    _webSocket = null;
-                }
+                Cleanup();
             }
             base.Dispose(disposing);
+        }
+
+        private void Cleanup()
+        {
+            _sendLock?.Dispose();
+            _sendLock = null;
+
+            try
+            {
+                _webSocket?.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            finally
+            {
+                _webSocket = null;
+            }
         }
 
         private IWebProxy CreateProxy()

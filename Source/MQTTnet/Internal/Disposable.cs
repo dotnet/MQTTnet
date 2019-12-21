@@ -4,6 +4,8 @@ namespace MQTTnet.Internal
 {
     public class Disposable : IDisposable
     {
+        protected bool IsDisposed => _isDisposed;
+
         protected void ThrowIfDisposed()
         {
             if (_isDisposed)

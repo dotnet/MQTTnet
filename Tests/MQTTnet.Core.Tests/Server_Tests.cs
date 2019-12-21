@@ -895,7 +895,7 @@ namespace MQTTnet.Tests
         {
             var serverOptions = new MqttServerOptionsBuilder().WithConnectionValidator(context =>
             {
-                context.ReturnCode = MqttConnectReturnCode.ConnectionRefusedNotAuthorized;
+                context.ReasonCode = MqttConnectReasonCode.NotAuthorized;
             });
 
             using (var testEnvironment = new TestEnvironment(TestContext))

@@ -8,10 +8,11 @@ using MQTTnet.Adapter;
 using MQTTnet.Channel;
 using MQTTnet.Formatter;
 using MQTTnet.Formatter.V3;
+using BenchmarkDotNet.Jobs;
 
 namespace MQTTnet.Benchmarks
 {
-    [ClrJob]
+    [SimpleJob(RuntimeMoniker.Net461)]
     [RPlotExporter]
     [MemoryDiagnoser]
     public class SerializerBenchmark

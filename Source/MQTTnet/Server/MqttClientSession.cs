@@ -52,7 +52,7 @@ namespace MQTTnet.Server
             ApplicationMessagesQueue.Enqueue(applicationMessage, senderClientId, checkSubscriptionsResult.QualityOfServiceLevel, isRetainedApplicationMessage);
         }
 
-        public async Task SubscribeAsync(ICollection<TopicFilter> topicFilters, MqttRetainedMessagesManager retainedMessagesManager)
+        public async Task SubscribeAsync(ICollection<TopicFilter> topicFilters, IMqttRetainedMessagesManager retainedMessagesManager)
         {
             await SubscriptionsManager.SubscribeAsync(topicFilters).ConfigureAwait(false);
 

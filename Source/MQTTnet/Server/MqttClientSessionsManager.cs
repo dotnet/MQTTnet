@@ -25,13 +25,13 @@ namespace MQTTnet.Server
         private readonly CancellationToken _cancellationToken;
         private readonly MqttServerEventDispatcher _eventDispatcher;
 
-        private readonly MqttRetainedMessagesManager _retainedMessagesManager;
+        private readonly IMqttRetainedMessagesManager _retainedMessagesManager;
         private readonly IMqttServerOptions _options;
         private readonly IMqttNetChildLogger _logger;
 
         public MqttClientSessionsManager(
             IMqttServerOptions options,
-            MqttRetainedMessagesManager retainedMessagesManager,
+            IMqttRetainedMessagesManager retainedMessagesManager,
             CancellationToken cancellationToken,
             MqttServerEventDispatcher eventDispatcher,
             IMqttNetChildLogger logger)
@@ -72,7 +72,7 @@ namespace MQTTnet.Server
             {
                 var clientStatus = new MqttClientStatus(connection);
                 connection.FillStatus(clientStatus);
-                
+
                 var sessionStatus = new MqttSessionStatus(connection.Session, this);
                 connection.Session.FillStatus(sessionStatus);
                 clientStatus.Session = sessionStatus;
@@ -91,7 +91,7 @@ namespace MQTTnet.Server
             {
                 var sessionStatus = new MqttSessionStatus(session, this);
                 session.FillStatus(sessionStatus);
-    
+
                 result.Add(sessionStatus);
             }
 
@@ -259,7 +259,7 @@ namespace MQTTnet.Server
                 var connection = await CreateConnectionAsync(connectPacket, connectionValidatorContext, channelAdapter).ConfigureAwait(false);
 
                 await _eventDispatcher.HandleClientConnectedAsync(clientId).ConfigureAwait(false);
-                
+
                 disconnectType = await connection.RunAsync(connectionValidatorContext).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
@@ -272,7 +272,7 @@ namespace MQTTnet.Server
             finally
             {
                 if (clientWasConnected)
-                { 
+                {
                     if (clientId != null)
                     {
                         _connections.TryRemove(clientId, out _);
@@ -333,13 +333,13 @@ namespace MQTTnet.Server
                 {
                     await existingConnection.StopAsync().ConfigureAwait(false);
                 }
-                
+
                 if (isSessionPresent)
                 {
                     if (connectPacket.CleanSession)
                     {
                         session = null;
-                        
+
                         _logger.Verbose("Deleting existing session of client '{0}'.", connectPacket.ClientId);
                     }
                     else

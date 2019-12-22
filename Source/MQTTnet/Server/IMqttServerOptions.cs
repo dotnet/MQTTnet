@@ -22,8 +22,8 @@ namespace MQTTnet.Server
         MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
         MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }
 
-        IMqttServerStorage Storage { get; }       
-        
+        IMqttServerStorage Storage { get; }
 
+        IMqttRetainedMessagesManager RetainedMessagesManager { get; }
     }
 }

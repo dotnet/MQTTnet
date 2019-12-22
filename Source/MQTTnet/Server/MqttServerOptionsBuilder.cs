@@ -57,7 +57,7 @@ namespace MQTTnet.Server
             _options.DefaultEndpointOptions.IsEnabled = false;
             return this;
         }
-        
+
         public MqttServerOptionsBuilder WithEncryptedEndpoint()
         {
             _options.TlsEndpointOptions.IsEnabled = true;
@@ -118,10 +118,16 @@ namespace MQTTnet.Server
             return this;
         }
 #endif
-        
+
         public MqttServerOptionsBuilder WithStorage(IMqttServerStorage value)
         {
             _options.Storage = value;
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithRetainedMessagesManager(IMqttRetainedMessagesManager value)
+        {
+            _options.RetainedMessagesManager = value;
             return this;
         }
 

@@ -3,35 +3,36 @@ using MQTTnet.Server.ExtendedAuthenticationExchange;
 
 namespace MQTTnet.Server
 {
-	public interface IMqttServerOptions
-	{
-		string ClientId { get; set; }
+    public interface IMqttServerOptions
+    {
+        string ClientId { get; set; }
 
-		bool EnablePersistentSessions { get; }
+        bool EnablePersistentSessions { get; }
 
-		IMqttExtendedServerAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
+        IMqttExtendedServerAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
 
-		int MaxPendingMessagesPerClient { get; }
+        int MaxPendingMessagesPerClient { get; }
 
-		MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; }
+        MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; }
 
-		TimeSpan DefaultCommunicationTimeout { get; }
+        TimeSpan DefaultCommunicationTimeout { get; }
 
-		IMqttServerConnectionValidator ConnectionValidator { get; }
+        IMqttServerConnectionValidator ConnectionValidator { get; }
 
-		IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; }
+        IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; }
 
         IMqttServerUnsubscriptionInterceptor UnsubscriptionInterceptor { get; }
 
-		IMqttServerApplicationMessageInterceptor ApplicationMessageInterceptor { get; }
+        IMqttServerApplicationMessageInterceptor ApplicationMessageInterceptor { get; }
 
-		IMqttServerClientMessageQueueInterceptor ClientMessageQueueInterceptor { get; }
+        IMqttServerClientMessageQueueInterceptor ClientMessageQueueInterceptor { get; }
 
-		MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
+        MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
 
-		MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }
+        MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }
 
-		IMqttServerStorage Storage { get; }
+        IMqttServerStorage Storage { get; }
+
         IMqttRetainedMessagesManager RetainedMessagesManager { get; }
-	}
+    }
 }

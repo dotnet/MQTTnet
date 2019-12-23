@@ -43,6 +43,10 @@ namespace MQTTnet.Tests.MQTTv5.ExtendedAuth
 
         public MqttBasePacket CreateAuthPacket(MqttConnectPacket connectPacket)
         {
+            if (connectPacket.Properties.AuthenticationMethod != AuthMethod.InteractiveAuthName)
+            {
+                return null;
+            }
             return new MqttAuthPacket
             {
                 ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,

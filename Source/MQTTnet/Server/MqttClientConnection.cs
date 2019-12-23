@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
-using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
@@ -147,10 +144,6 @@ namespace MQTTnet.Server
 	            var authPacket = _serverOptions.ExtendedAuthenticationExchangeHandler?.CreateAuthPacket(ConnectPacket);
 				if (authPacket != null)
 				{
-					if (authPacket is MqttConnAckPacket connAckPacket)
-					{
-						connAckPacket.IsSessionPresent = !Session.IsCleanSession;
-					}
 					await SendAsync(authPacket).ConfigureAwait(false);
 				}
 				else
@@ -174,14 +167,18 @@ namespace MQTTnet.Server
 					Interlocked.Increment(ref _sentPacketsCount);
 					_lastPacketReceivedTimestamp = DateTime.UtcNow;
 
-					if (packet is MqttAuthPacket authPacket2)
+					if (packet is MqttAuthPacket clientAuthPacket)
 					{
 						if (_serverOptions.ExtendedAuthenticationExchangeHandler == null)
 						{
 							continue;
 						}
 
-						var responsePacket = _serverOptions.ExtendedAuthenticationExchangeHandler.HandleClientPackage(authPacket2, Session.Items);
+                        var responsePacket = _serverOptions.ExtendedAuthenticationExchangeHandler.HandleClientPackage(clientAuthPacket, Session.Items);
+                        if (authPacket is MqttConnAckPacket connAckPacket)
+                        {
+                            connAckPacket.IsSessionPresent = !Session.IsCleanSession;
+                        }
 						await SendAsync(responsePacket).ConfigureAwait(false);
 						continue;
 					}

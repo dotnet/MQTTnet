@@ -6,77 +6,19 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
-using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Formatter;
-using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using MQTTnet.Server.ExtendedAuthenticationExchange;
 using MQTTnet.Tests.Mockups;
+using MQTTnet.Tests.MQTTv5.ExtendedAuth;
 
 namespace MQTTnet.Tests.MQTTv5
 {
-	public class NizkpServerExtendedAuthHandler : IMqttExtendedServerAuthenticationExchangeHandler
-	{
-		private byte[] _publicKey;
-		private byte[] _sessionPublicKey;
-
-		public MqttAuthPacket CreateAuthPacket(MqttConnectPacket connectPacket)
-		{
-			var authenticationData = connectPacket.Properties.AuthenticationData;
-			authenticationData.
-			return new MqttAuthPacket
-			{
-				ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
-				Properties = new MqttAuthPacketProperties
-				{
-					AuthenticationMethod = "NIZKP",
-					AuthenticationData = Encoding.UTF8.GetBytes("nonce")
-				}
-			};
-		}
-
-		public MqttBasePacket HandleClientPackage(MqttAuthPacket authPacketUpdate)
-		{
-			if (authPacketUpdate.Properties.AuthenticationMethod == "NIZKP")
-			{
-				var secret = Encoding.UTF8.GetString(authPacketUpdate.Properties.AuthenticationData);
-				if (secret == "nonce2_12345")
-				{
-					return new MqttConnAckPacket
-					{
-						ReturnCode = MqttConnectReturnCode.ConnectionAccepted,
-						ReasonCode = MqttConnectReasonCode.Success,
-						Properties = new MqttConnAckPacketProperties
-						{
-							AuthenticationMethod = "NIZKP"
-						},
-						// IsSessionPresent = !Session.IsCleanSession
-					};
-				}
-				else
-				{
-					return new MqttAuthPacket
-					{
-						ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
-						Properties = new MqttAuthPacketProperties
-						{
-							AuthenticationMethod = "NIZKP",
-							AuthenticationData = Encoding.UTF8.GetBytes("nonce2")
-						}
-					};
-				}
-			}
-
-			return null;
-		}
-	}
-
 	[TestClass]
 	public class Client_Tests
 	{
@@ -87,15 +29,13 @@ namespace MQTTnet.Tests.MQTTv5
 				.WithDefaultEndpoint()
 				.WithDefaultEndpointPort(1883)
 				.WithDefaultCommunicationTimeout(new TimeSpan(0, 10, 0))
-				.WithExtendedAuthenticationExchangeHandler(new NizkpServerExtendedAuthHandler())
+				.WithExtendedAuthenticationExchangeHandler(new InteractiveServerExtendedAuthHandler())
 				.WithConnectionValidator(c =>
 				{
-					if (c.AuthenticationMethod != NizkpClientExtendedAuthHandler.AuthenticationMethod)
+					if (c.AuthenticationMethod != AuthMethod.InteractiveAuthName)
 					{
 						c.ReasonCode = MqttConnectReasonCode.BadAuthenticationMethod;
-						return;
 					}
-
 				}).Build();
 
 			var server = new MqttFactory().CreateMqttServer();
@@ -106,16 +46,16 @@ namespace MQTTnet.Tests.MQTTv5
 				.WithCommunicationTimeout(new TimeSpan(0, 10, 0))
 				.WithKeepAlivePeriod(new TimeSpan(0, 10, 0))
 				.WithProtocolVersion(MqttProtocolVersion.V500)
-				.WithAuthentication(NizkpClientExtendedAuthHandler.AuthenticationMethod, Encoding.UTF8.GetBytes("blabla"))
+				.WithAuthentication(AuthMethod.InteractiveAuthName, Encoding.UTF8.GetBytes("blabla"))
 				.WithClientId(Guid.NewGuid().ToString().Replace("-", string.Empty))
-				.WithExtendedAuthenticationExchangeHandler(new NizkpClientExtendedAuthHandler())
+				.WithExtendedAuthenticationExchangeHandler(new InteractiveClientExtendedAuthHandler())
 				.Build();
 
 			var client = new MqttFactory().CreateMqttClient();
-			MqttClientAuthenticateResult authResult = await client.ConnectAsync(clientOptions);
+			var authResult = await client.ConnectAsync(clientOptions);
 
 			Assert.AreEqual(MqttClientConnectResultCode.Success, authResult.ResultCode);
-			Assert.AreEqual("NIZKP", authResult.AuthenticationMethod);
+			Assert.AreEqual(AuthMethod.InteractiveAuthName, authResult.AuthenticationMethod);
 
 			await client.DisconnectAsync();
 		}
@@ -142,7 +82,8 @@ namespace MQTTnet.Tests.MQTTv5
 				MqttApplicationMessage receivedMessage = null;
 
 				await client.SubscribeAsync("a");
-				client.UseApplicationMessageReceivedHandler(context => { receivedMessage = context.ApplicationMessage; });
+				client.UseApplicationMessageReceivedHandler(
+					context => { receivedMessage = context.ApplicationMessage; });
 
 				await client.PublishAsync(new MqttApplicationMessageBuilder()
 					.WithTopic("a")
@@ -230,7 +171,8 @@ namespace MQTTnet.Tests.MQTTv5
 			try
 			{
 				await server.StartAsync(new MqttServerOptions());
-				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1")
+					.WithProtocolVersion(MqttProtocolVersion.V500).Build());
 			}
 			finally
 			{
@@ -248,7 +190,8 @@ namespace MQTTnet.Tests.MQTTv5
 			{
 				await server.StartAsync(new MqttServerOptions());
 
-				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1")
+					.WithProtocolVersion(MqttProtocolVersion.V500).Build());
 				await client.DisconnectAsync();
 			}
 			finally
@@ -267,14 +210,15 @@ namespace MQTTnet.Tests.MQTTv5
 			{
 				await server.StartAsync(new MqttServerOptions());
 
-				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1")
+					.WithProtocolVersion(MqttProtocolVersion.V500).Build());
 
-				var result = await client.SubscribeAsync(new MqttClientSubscribeOptions()
+				var result = await client.SubscribeAsync(new MqttClientSubscribeOptions
 				{
 					SubscriptionIdentifier = 1,
 					TopicFilters = new List<TopicFilter>
 					{
-						new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}
+						new TopicFilter {Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}
 					}
 				});
 
@@ -299,7 +243,8 @@ namespace MQTTnet.Tests.MQTTv5
 			{
 				await server.StartAsync(new MqttServerOptions());
 
-				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1")
+					.WithProtocolVersion(MqttProtocolVersion.V500).Build());
 				await client.SubscribeAsync("a");
 				var result = await client.UnsubscribeAsync("a");
 				await client.DisconnectAsync();
@@ -323,7 +268,8 @@ namespace MQTTnet.Tests.MQTTv5
 			{
 				await server.StartAsync(new MqttServerOptions());
 
-				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1")
+					.WithProtocolVersion(MqttProtocolVersion.V500).Build());
 				var result = await client.PublishAsync("a", "b");
 				await client.DisconnectAsync();
 
@@ -345,7 +291,8 @@ namespace MQTTnet.Tests.MQTTv5
 			{
 				await server.StartAsync(new MqttServerOptions());
 
-				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1")
+					.WithProtocolVersion(MqttProtocolVersion.V500).Build());
 				var result = await client.PublishAsync("a", "b", MqttQualityOfServiceLevel.AtLeastOnce);
 				await client.DisconnectAsync();
 
@@ -367,7 +314,8 @@ namespace MQTTnet.Tests.MQTTv5
 			{
 				await server.StartAsync(new MqttServerOptions());
 
-				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1")
+					.WithProtocolVersion(MqttProtocolVersion.V500).Build());
 				var result = await client.PublishAsync("a", "b", MqttQualityOfServiceLevel.ExactlyOnce);
 				await client.DisconnectAsync();
 
@@ -402,7 +350,8 @@ namespace MQTTnet.Tests.MQTTv5
 					.WithTopicAlias(2)
 					.Build();
 
-				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+				await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1")
+					.WithProtocolVersion(MqttProtocolVersion.V500).Build());
 				var result = await client.PublishAsync(applicationMessage);
 				await client.DisconnectAsync();
 
@@ -427,7 +376,8 @@ namespace MQTTnet.Tests.MQTTv5
 
 				var receivedMessages = new List<MqttApplicationMessageReceivedEventArgs>();
 
-				await client1.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithClientId("client1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+				await client1.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1")
+					.WithClientId("client1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
 				client1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
 				{
 					lock (receivedMessages)
@@ -438,7 +388,8 @@ namespace MQTTnet.Tests.MQTTv5
 
 				await client1.SubscribeAsync("a");
 
-				await client2.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithClientId("client2").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+				await client2.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1")
+					.WithClientId("client2").WithProtocolVersion(MqttProtocolVersion.V500).Build());
 				await client2.PublishAsync("a", "b");
 
 				await Task.Delay(500);
@@ -504,42 +455,4 @@ namespace MQTTnet.Tests.MQTTv5
             }
         }
 	}
-
-	public class NizkpClientExtendedAuthHandler : IMqttExtendedAuthenticationExchangeHandler
-	{
-		public static string AuthenticationMethod = "NIZKP";
-		public Task HandleRequestAsync(MqttExtendedAuthenticationExchangeContext context)
-		{
-			if (context.AuthenticationMethod != AuthenticationMethod)
-			{
-				return Task.CompletedTask;
-			}
-
-			var nonce = context.AuthenticationData;
-			var nonceString = Encoding.UTF8.GetString(nonce);
-
-			if (nonceString == "nonce2")
-			{
-				return context.Client.SendExtendedAuthenticationExchangeDataAsync(new MqttExtendedAuthenticationExchangeData
-				{
-					AuthenticationData = Encoding.UTF8.GetBytes("nonce2_12345"),
-					ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication
-				});
-			}
-
-
-
-			return context.Client.SendExtendedAuthenticationExchangeDataAsync(new MqttExtendedAuthenticationExchangeData
-			{
-				AuthenticationData = Encoding.UTF8.GetBytes("nonce12345"),
-				ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication
-			});
-		}
-
-		public MqttAuthPacket CreateAuthPacket()
-		{
-			throw new NotImplementedException();
-		}
-	}
-
 }

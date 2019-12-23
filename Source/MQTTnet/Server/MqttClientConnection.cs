@@ -147,6 +147,10 @@ namespace MQTTnet.Server
 	            var authPacket = _serverOptions.ExtendedAuthenticationExchangeHandler?.CreateAuthPacket(ConnectPacket);
 				if (authPacket != null)
 				{
+					if (authPacket is MqttConnAckPacket connAckPacket)
+					{
+						connAckPacket.IsSessionPresent = !Session.IsCleanSession;
+					}
 					await SendAsync(authPacket).ConfigureAwait(false);
 				}
 				else

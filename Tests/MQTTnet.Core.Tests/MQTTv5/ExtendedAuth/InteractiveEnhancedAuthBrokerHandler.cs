@@ -6,9 +6,9 @@ using MQTTnet.Server.ExtendedAuthenticationExchange;
 
 namespace MQTTnet.Tests.MQTTv5.ExtendedAuth
 {
-    public class InteractiveServerExtendedAuthHandler : IMqttExtendedServerAuthenticationExchangeHandler
+    public class InteractiveEnhancedAuthBrokerHandler : IMqttEnhancedAuthenticationBrokerHandler
     {
-        public MqttBasePacket HandleClientPackage(MqttAuthPacket authPacketUpdate,
+        public MqttBasePacket HandleAuth(MqttAuthPacket authPacketUpdate,
             IDictionary<object, object> sessionItems)
         {
             if (authPacketUpdate.Properties.AuthenticationMethod != AuthMethod.InteractiveAuthName)
@@ -41,7 +41,7 @@ namespace MQTTnet.Tests.MQTTv5.ExtendedAuth
             };
         }
 
-        public MqttBasePacket CreateAuthPacket(MqttConnectPacket connectPacket)
+        public MqttBasePacket StartChallenge(MqttConnectPacket connectPacket)
         {
             if (connectPacket.Properties.AuthenticationMethod != AuthMethod.InteractiveAuthName)
             {

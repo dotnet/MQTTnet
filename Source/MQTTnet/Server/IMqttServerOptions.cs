@@ -9,7 +9,7 @@ namespace MQTTnet.Server
 
         bool EnablePersistentSessions { get; }
 
-        IMqttExtendedServerAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
+        IMqttEnhancedAuthenticationBrokerHandler EnhancedAuthenticationBrokerHandler { get; set; }
 
         int MaxPendingMessagesPerClient { get; }
 

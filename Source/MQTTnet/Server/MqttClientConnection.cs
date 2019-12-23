@@ -135,147 +135,145 @@ namespace MQTTnet.Server
                 _channelAdapter.ReadingPacketCompletedCallback = OnAdapterReadingPacketCompleted;
 
                 Session.WillMessage = ConnectPacket.WillMessage;
-	
+
                 Task.Run(() => SendPendingPacketsAsync(_cancellationToken.Token), _cancellationToken.Token).Forget(_logger);
 
                 // TODO: Change to single thread in SessionManager. Or use SessionManager and stats from KeepAliveMonitor.
                 _keepAliveMonitor.Start(ConnectPacket.KeepAlivePeriod, _cancellationToken.Token);
 
-	            var authPacket = _serverOptions.ExtendedAuthenticationExchangeHandler?.CreateAuthPacket(ConnectPacket);
-				if (authPacket != null)
-				{
-					await SendAsync(authPacket).ConfigureAwait(false);
-				}
-				else
-				{
-					await SendAsync(
+                var authPacket = _serverOptions.EnhancedAuthenticationBrokerHandler?.StartChallenge(ConnectPacket);
+                if (authPacket != null)
+                {
+                    await SendAsync(authPacket).ConfigureAwait(false);
+                }
+                else
+                {
+                    await SendAsync(
                     _channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext)
                     ).ConfigureAwait(false);
-				}
+                }
 
-				Session.IsCleanSession = false;
+                Session.IsCleanSession = false;
 
-				while (!_cancellationToken.IsCancellationRequested)
-				{
-					var packet = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationToken.Token).ConfigureAwait(false);
-					if (packet == null)
-					{
-						// The client has closed the connection gracefully.
-						break;
-					}
+                while (!_cancellationToken.IsCancellationRequested)
+                {
+                    var packet = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationToken.Token).ConfigureAwait(false);
+                    if (packet == null)
+                    {
+                        // The client has closed the connection gracefully.
+                        break;
+                    }
 
-					Interlocked.Increment(ref _sentPacketsCount);
-					_lastPacketReceivedTimestamp = DateTime.UtcNow;
+                    Interlocked.Increment(ref _sentPacketsCount);
+                    _lastPacketReceivedTimestamp = DateTime.UtcNow;
 
-					if (packet is MqttAuthPacket clientAuthPacket)
-					{
-						if (_serverOptions.ExtendedAuthenticationExchangeHandler == null)
-						{
-							continue;
-						}
+                    if (packet is MqttAuthPacket clientAuthPacket)
+                    {
+                        if (_serverOptions.EnhancedAuthenticationBrokerHandler == null)
+                        {
+                            continue;
+                        }
 
-                        var responsePacket = _serverOptions.ExtendedAuthenticationExchangeHandler.HandleClientPackage(clientAuthPacket, Session.Items);
+                        var responsePacket = _serverOptions.EnhancedAuthenticationBrokerHandler.HandleAuth(clientAuthPacket, Session.Items);
                         if (authPacket is MqttConnAckPacket connAckPacket)
                         {
                             connAckPacket.IsSessionPresent = !Session.IsCleanSession;
                         }
-						await SendAsync(responsePacket).ConfigureAwait(false);
-						continue;
-					}
+                        await SendAsync(responsePacket).ConfigureAwait(false);
+                        continue;
+                    }
+
+                    if (!(packet is MqttPingReqPacket || packet is MqttPingRespPacket))
+                    {
+                        _lastNonKeepAlivePacketReceivedTimestamp = _lastPacketReceivedTimestamp;
+                    }
+
+                    _keepAliveMonitor.PacketReceived();
 
 
+                    if (packet is MqttPublishPacket publishPacket)
+                    {
+                        await HandleIncomingPublishPacketAsync(publishPacket).ConfigureAwait(false);
+                        continue;
+                    }
 
-					if (!(packet is MqttPingReqPacket || packet is MqttPingRespPacket))
-					{
-						_lastNonKeepAlivePacketReceivedTimestamp = _lastPacketReceivedTimestamp;
-					}
+                    if (packet is MqttPubRelPacket pubRelPacket)
+                    {
+                        var pubCompPacket = new MqttPubCompPacket
+                        {
+                            PacketIdentifier = pubRelPacket.PacketIdentifier,
+                            ReasonCode = MqttPubCompReasonCode.Success
+                        };
 
-					_keepAliveMonitor.PacketReceived();
+                        await SendAsync(pubCompPacket).ConfigureAwait(false);
+                        continue;
+                    }
 
+                    if (packet is MqttSubscribePacket subscribePacket)
+                    {
+                        await HandleIncomingSubscribePacketAsync(subscribePacket).ConfigureAwait(false);
+                        continue;
+                    }
 
-					if (packet is MqttPublishPacket publishPacket)
-					{
-						await HandleIncomingPublishPacketAsync(publishPacket).ConfigureAwait(false);
-						continue;
-					}
+                    if (packet is MqttUnsubscribePacket unsubscribePacket)
+                    {
+                        await HandleIncomingUnsubscribePacketAsync(unsubscribePacket).ConfigureAwait(false);
+                        continue;
+                    }
 
-					if (packet is MqttPubRelPacket pubRelPacket)
-					{
-						var pubCompPacket = new MqttPubCompPacket
-						{
-							PacketIdentifier = pubRelPacket.PacketIdentifier,
-							ReasonCode = MqttPubCompReasonCode.Success
-						};
+                    if (packet is MqttPingReqPacket)
+                    {
+                        await SendAsync(new MqttPingRespPacket()).ConfigureAwait(false);
+                        continue;
+                    }
 
-						await SendAsync(pubCompPacket).ConfigureAwait(false);
-						continue;
-					}
+                    if (packet is MqttDisconnectPacket)
+                    {
+                        Session.WillMessage = null;
+                        disconnectType = MqttClientDisconnectType.Clean;
 
-					if (packet is MqttSubscribePacket subscribePacket)
-					{
-						await HandleIncomingSubscribePacketAsync(subscribePacket).ConfigureAwait(false);
-						continue;
-					}
+                        StopInternal();
+                        break;
+                    }
 
-					if (packet is MqttUnsubscribePacket unsubscribePacket)
-					{
-						await HandleIncomingUnsubscribePacketAsync(unsubscribePacket).ConfigureAwait(false);
-						continue;
-					}
+                    _packetDispatcher.Dispatch(packet);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                if (exception is MqttCommunicationException)
+                {
+                    _logger.Warning(exception, "Client '{0}': Communication exception while receiving client packets.", ClientId);
+                }
+                else
+                {
+                    _logger.Error(exception, "Client '{0}': Error while receiving client packets.", ClientId);
+                }
 
-					if (packet is MqttPingReqPacket)
-					{
-						await SendAsync(new MqttPingRespPacket()).ConfigureAwait(false);
-						continue;
-					}
+                StopInternal();
+            }
+            finally
+            {
+                if (Session.WillMessage != null)
+                {
+                    _sessionsManager.DispatchApplicationMessage(Session.WillMessage, this);
+                    Session.WillMessage = null;
+                }
 
-					if (packet is MqttDisconnectPacket)
-					{
-						Session.WillMessage = null;
-						disconnectType = MqttClientDisconnectType.Clean;
+                _packetDispatcher.Reset();
 
-						StopInternal();
-						break;
-					}
+                _channelAdapter.ReadingPacketStartedCallback = null;
+                _channelAdapter.ReadingPacketCompletedCallback = null;
 
-					_packetDispatcher.Dispatch(packet);
-				}
-			}
-			catch (OperationCanceledException)
-			{
-			}
-			catch (Exception exception)
-			{
-				if (exception is MqttCommunicationException)
-				{
-					_logger.Warning(exception, "Client '{0}': Communication exception while receiving client packets.", ClientId);
-				}
-				else
-				{
-					_logger.Error(exception, "Client '{0}': Error while receiving client packets.", ClientId);
-				}
+                _logger.Info("Client '{0}': Session stopped.", ClientId);
 
-				StopInternal();
-			}
-			finally
-			{
-				if (Session.WillMessage != null)
-				{
-					_sessionsManager.DispatchApplicationMessage(Session.WillMessage, this);
-					Session.WillMessage = null;
-				}
+                _packageReceiverTask = null;
+            }
 
-				_packetDispatcher.Reset();
-
-				_channelAdapter.ReadingPacketStartedCallback = null;
-				_channelAdapter.ReadingPacketCompletedCallback = null;
-
-				_logger.Info("Client '{0}': Session stopped.", ClientId);
-
-				_packageReceiverTask = null;
-			}
-
-			return disconnectType;
+            return disconnectType;
 		}
 
 		private void StopInternal()

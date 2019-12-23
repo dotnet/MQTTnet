@@ -29,7 +29,7 @@ namespace MQTTnet.Tests.MQTTv5
 				.WithDefaultEndpoint()
 				.WithDefaultEndpointPort(1883)
 				.WithDefaultCommunicationTimeout(new TimeSpan(0, 10, 0))
-				.WithExtendedAuthenticationExchangeHandler(new InteractiveServerExtendedAuthHandler())
+				.WithEnhancedAuthenticationHandler(new InteractiveEnhancedAuthBrokerHandler())
 				.WithConnectionValidator(c =>
 				{
 					if (c.AuthenticationMethod != AuthMethod.InteractiveAuthName)

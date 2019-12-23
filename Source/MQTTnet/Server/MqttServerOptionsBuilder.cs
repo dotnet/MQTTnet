@@ -97,9 +97,9 @@ namespace MQTTnet.Server
             return this;
         }
 
-        public MqttServerOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedServerAuthenticationExchangeHandler handler)
+        public MqttServerOptionsBuilder WithEnhancedAuthenticationHandler(IMqttEnhancedAuthenticationBrokerHandler handler)
         {
-	        _options.ExtendedAuthenticationExchangeHandler = handler;
+	        _options.EnhancedAuthenticationBrokerHandler = handler;
 	        return this;
         }
 

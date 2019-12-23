@@ -5,7 +5,7 @@ namespace MQTTnet.Server
 {
     public class MqttServerOptions : IMqttServerOptions
     {
-        public IMqttExtendedServerAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
+        public IMqttEnhancedAuthenticationBrokerHandler EnhancedAuthenticationBrokerHandler { get; set; }
 
         public MqttServerTcpEndpointOptions DefaultEndpointOptions { get; } = new MqttServerTcpEndpointOptions();
 

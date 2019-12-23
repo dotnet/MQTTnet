@@ -91,10 +91,6 @@ namespace MQTTnet.Extensions.ManagedClient
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (options.ClientOptions == null) throw new ArgumentException("The client options are not set.", nameof(options));
 
-            if (!options.ClientOptions.CleanSession)
-            {
-                throw new NotSupportedException("The managed client does not support existing sessions.");
-            }
 
             if (!_maintainConnectionTask?.IsCompleted ?? false) throw new InvalidOperationException("The managed client is already started.");
 
@@ -333,6 +329,12 @@ namespace MQTTnet.Extensions.ManagedClient
                     return;
                 }
 
+                if (connectionState == ReconnectionResult.Recovered)
+                {
+                    StartPublishing();
+                    return;
+                }
+
                 if (connectionState == ReconnectionResult.StillConnected)
                 {
                     await PublishSubscriptionsAsync(Options.ConnectionCheckInterval, cancellationToken).ConfigureAwait(false);
@@ -544,8 +546,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
             try
             {
-                await _mqttClient.ConnectAsync(Options.ClientOptions).ConfigureAwait(false);
-                return ReconnectionResult.Reconnected;
+                var result = await _mqttClient.ConnectAsync(Options.ClientOptions).ConfigureAwait(false);
+                return result.IsSessionPresent ? ReconnectionResult.Recovered : ReconnectionResult.Reconnected;
             }
             catch (Exception exception)
             {

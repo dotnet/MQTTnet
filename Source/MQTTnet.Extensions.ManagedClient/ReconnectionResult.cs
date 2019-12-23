@@ -4,6 +4,7 @@
     {
         StillConnected,
         Reconnected,
+        Recovered,
         NotConnected
     }
 }

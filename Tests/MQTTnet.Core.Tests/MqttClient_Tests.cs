@@ -20,10 +20,12 @@ namespace MQTTnet.Tests
     [TestClass]
     public class Client_Tests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public async Task Send_Reply_In_Message_Handler_For_Same_Client()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
                 var client = await testEnvironment.ConnectClientAsync();
@@ -57,7 +59,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Send_Reply_In_Message_Handler()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
                 var client1 = await testEnvironment.ConnectClientAsync();
@@ -89,7 +91,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Reconnect()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var server = await testEnvironment.StartServerAsync();
                 var client = await testEnvironment.ConnectClientAsync();
@@ -112,7 +114,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Reconnect_While_Server_Offline()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
@@ -149,7 +151,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Reconnect_From_Disconnected_Event()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
@@ -189,7 +191,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task PacketIdentifier_In_Publish_Result()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
                 var client = await testEnvironment.ConnectClientAsync();
@@ -236,9 +238,39 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public async Task ConnectTimeout_Throws_Exception()
+        {
+            var factory = new MqttFactory();
+            using (var client = factory.CreateMqttClient())
+            {
+                bool disconnectHandlerCalled = false;
+                try
+                {
+                    client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(args =>
+                    {
+                        disconnectHandlerCalled = true;
+                    });
+
+                    await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build());
+
+                    Assert.Fail("Must fail!");
+                }
+                catch (Exception exception)
+                {
+                    Assert.IsNotNull(exception);
+                    Assert.IsInstanceOfType(exception, typeof(MqttCommunicationException));
+                    //Assert.IsInstanceOfType(exception.InnerException, typeof(SocketException));
+                }
+
+                await Task.Delay(100); // disconnected handler is called async
+                Assert.IsTrue(disconnectHandlerCalled);
+            }
+        }
+
+        [TestMethod]
         public async Task Fire_Disconnected_Event_On_Server_Shutdown()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var server = await testEnvironment.StartServerAsync();
                 var client = await testEnvironment.ConnectClientAsync();
@@ -290,7 +322,7 @@ namespace MQTTnet.Tests
             // is an issue).
             const int MessagesCount = 50;
 
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 
@@ -330,7 +362,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Send_Reply_For_Any_Received_Message()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 
@@ -374,7 +406,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Publish_With_Correct_Retain_Flag()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 
@@ -405,7 +437,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Subscribe_In_Callback_Events()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 
@@ -444,7 +476,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Message_Send_Retry()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 testEnvironment.IgnoreClientLogErrors = true;
                 testEnvironment.IgnoreServerLogErrors = true;
@@ -488,7 +520,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task NoConnectedHandler_Connect_DoesNotThrowException()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 
@@ -501,7 +533,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task NoDisconnectedHandler_Disconnect_DoesNotThrowException()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
                 var client = await testEnvironment.ConnectClientAsync();
@@ -516,7 +548,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Frequent_Connects()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 
@@ -560,7 +592,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task No_Payload()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 

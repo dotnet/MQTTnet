@@ -107,12 +107,7 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
-#if NET452 || NET461
-                    var clientSocket = await Task.Factory.FromAsync(_socket.BeginAccept, _socket.EndAccept, null).ConfigureAwait(false);
-#else
-                    var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
-#endif
-
+                    var clientSocket = await PlatformAbstractionLayer.AcceptAsync(_socket).ConfigureAwait(false);
                     if (clientSocket == null)
                     {
                         continue;

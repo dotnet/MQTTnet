@@ -2,11 +2,12 @@
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 
 namespace MQTTnet.PacketDispatcher
 {
-    public sealed class MqttPacketAwaiter<TPacket> : IMqttPacketAwaiter where TPacket : MqttBasePacket
+    public sealed class MqttPacketAwaiter<TPacket> : Disposable, IMqttPacketAwaiter where TPacket : MqttBasePacket
     {
         private readonly TaskCompletionSource<MqttBasePacket> _taskCompletionSource = new TaskCompletionSource<MqttBasePacket>();
         private readonly ushort? _packetIdentifier;
@@ -52,9 +53,13 @@ namespace MQTTnet.PacketDispatcher
             Task.Run(() => _taskCompletionSource.TrySetCanceled());
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            _owningPacketDispatcher.RemovePacketAwaiter<TPacket>(_packetIdentifier);
+            if (disposing)
+            {
+                _owningPacketDispatcher.RemovePacketAwaiter<TPacket>(_packetIdentifier);
+            }
+            base.Dispose(disposing);
         }
     }
 }

@@ -20,7 +20,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
 {
-    public class MqttClient : IMqttClient
+    public class MqttClient : Disposable, IMqttClient
     {
         private readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
@@ -63,6 +63,8 @@ namespace MQTTnet.Client
 
             ThrowIfConnected("It is not allowed to connect with a server after the connection is established.");
 
+            ThrowIfDisposed();
+
             MqttClientAuthenticateResult authenticateResult = null;
 
             try
@@ -79,13 +81,16 @@ namespace MQTTnet.Client
                 var adapter = _adapterFactory.CreateClientAdapter(options, _logger);
                 _adapter = adapter;
 
-                _logger.Verbose($"Trying to connect with server '{options.ChannelOptions}' (Timeout={options.CommunicationTimeout}).");
-                await _adapter.ConnectAsync(options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
-                _logger.Verbose("Connection with server established.");
+                using (var combined = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))
+                {
+                    _logger.Verbose($"Trying to connect with server '{options.ChannelOptions}' (Timeout={options.CommunicationTimeout}).");
+                    await _adapter.ConnectAsync(options.CommunicationTimeout, combined.Token).ConfigureAwait(false);
+                    _logger.Verbose("Connection with server established.");
 
-                _packetReceiverTask = Task.Run(() => TryReceivePacketsAsync(backgroundCancellationToken), backgroundCancellationToken);
+                    _packetReceiverTask = Task.Run(() => TryReceivePacketsAsync(backgroundCancellationToken), backgroundCancellationToken);
 
-                authenticateResult = await AuthenticateAsync(adapter, options.WillMessage, cancellationToken).ConfigureAwait(false);
+                    authenticateResult = await AuthenticateAsync(adapter, options.WillMessage, combined.Token).ConfigureAwait(false);
+                }
 
                 _sendTracker.Restart();
 
@@ -161,6 +166,7 @@ namespace MQTTnet.Client
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
+            ThrowIfDisposed();
             ThrowIfNotConnected();
 
             var subscribePacket = _adapter.PacketFormatterAdapter.DataConverter.CreateSubscribePacket(options);
@@ -174,6 +180,7 @@ namespace MQTTnet.Client
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
+            ThrowIfDisposed();
             ThrowIfNotConnected();
 
             var unsubscribePacket = _adapter.PacketFormatterAdapter.DataConverter.CreateUnsubscribePacket(options);
@@ -189,6 +196,7 @@ namespace MQTTnet.Client
 
             MqttTopicValidator.ThrowIfInvalid(applicationMessage.Topic);
 
+            ThrowIfDisposed();
             ThrowIfNotConnected();
 
             var publishPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(applicationMessage);
@@ -214,7 +222,7 @@ namespace MQTTnet.Client
             }
         }
 
-        public void Dispose()
+        private void Cleanup()
         {
             _backgroundCancellationTokenSource?.Cancel(false);
             _backgroundCancellationTokenSource?.Dispose();
@@ -222,6 +230,18 @@ namespace MQTTnet.Client
 
             _adapter?.Dispose();
             _adapter = null;
+        }
+
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Cleanup();
+
+                DisconnectedHandler = null;
+            }
+            base.Dispose(disposing);
         }
 
         private async Task<MqttClientAuthenticateResult> AuthenticateAsync(IMqttChannelAdapter channelAdapter, MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)
@@ -288,7 +308,7 @@ namespace MQTTnet.Client
             }
             finally
             {
-                Dispose();
+                Cleanup();
                 _cleanDisconnectInitiated = false;
 
                 _logger.Info("Disconnected.");

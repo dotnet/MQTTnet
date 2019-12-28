@@ -18,10 +18,12 @@ namespace MQTTnet.Tests.MQTTv5
     [TestClass]
     public class Client_Tests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public async Task Connect_With_New_Mqtt_Features()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 
@@ -61,7 +63,7 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Connect_With_AssignedClientId()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 string serverConnectedClientId = null;
                 string serverDisconnectedClientId = null;
@@ -357,7 +359,7 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Publish_And_Receive_New_Properties()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 

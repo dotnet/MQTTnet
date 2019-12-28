@@ -21,7 +21,11 @@ namespace MQTTnet.Server
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttRetainedMessagesManager));
             _options = options ?? throw new ArgumentNullException(nameof(options));
+#if NET452
+            return new Task(() => {});
+#else
             return Task.CompletedTask;
+#endif
         }
 
         public async Task LoadMessagesAsync()

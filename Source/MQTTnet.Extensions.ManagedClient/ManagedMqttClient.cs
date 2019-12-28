@@ -49,8 +49,6 @@ namespace MQTTnet.Extensions.ManagedClient
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(ManagedMqttClient));
-
-            Options = new ManagedMqttClientOptions();
         }
 
         public bool IsConnected => _mqttClient.IsConnected;
@@ -150,6 +148,7 @@ namespace MQTTnet.Extensions.ManagedClient
             ThrowIfDisposed();
 
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+            if (Options == null) throw new InvalidOperationException("call StartAsync before publishing messages");
 
             MqttTopicValidator.ThrowIfInvalid(applicationMessage.ApplicationMessage.Topic);
 

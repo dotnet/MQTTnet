@@ -171,7 +171,10 @@ namespace MQTTnet.Server
                     {
                         if (_serverOptions.EnhancedAuthenticationBrokerHandler == null)
                         {
-                            continue;
+                            Session.WillMessage = null;
+                            disconnectType = MqttClientDisconnectType.Clean;
+                            await StopAsync();
+                            break;
                         }
 
                         var responsePacket = _serverOptions.EnhancedAuthenticationBrokerHandler.HandleAuth(clientAuthPacket, Session.Items);

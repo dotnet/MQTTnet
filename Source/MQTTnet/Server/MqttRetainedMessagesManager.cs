@@ -22,7 +22,7 @@ namespace MQTTnet.Server
             _logger = logger.CreateChildLogger(nameof(MqttRetainedMessagesManager));
             _options = options ?? throw new ArgumentNullException(nameof(options));
 #if NET452
-            return new Task(() => {});
+            return Task.FromResult(0);
 #else
             return Task.CompletedTask;
 #endif

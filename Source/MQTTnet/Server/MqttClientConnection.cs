@@ -172,7 +172,7 @@ namespace MQTTnet.Server
                         if (_serverOptions.EnhancedAuthenticationBrokerHandler == null)
                         {
                             Session.WillMessage = null;
-                            disconnectType = MqttClientDisconnectType.Clean;
+                            disconnectType = MqttClientDisconnectType.NotClean;
                             await StopAsync();
                             break;
                         }

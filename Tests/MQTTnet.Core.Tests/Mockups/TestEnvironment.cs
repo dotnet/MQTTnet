@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
@@ -81,6 +82,14 @@ namespace MQTTnet.Tests.Mockups
             await Server.StartAsync(options.WithDefaultEndpointPort(ServerPort).Build());
 
             return Server;
+        }
+
+        public async Task<MqttClientAuthenticateResult> AuthenticateClientAsync(MqttClientOptionsBuilder options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            var client = CreateClient();
+            return await client.ConnectAsync(options.WithTcpServer("localhost", ServerPort).Build());
         }
 
         public Task<IMqttClient> ConnectClientAsync()

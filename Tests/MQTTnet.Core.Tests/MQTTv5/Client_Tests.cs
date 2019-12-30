@@ -25,39 +25,35 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Connect_With_Extended_Authentication()
         {
-            var serverOptions = new MqttServerOptionsBuilder()
-                .WithDefaultEndpoint()
-                .WithDefaultEndpointPort(1883)
-                .WithDefaultCommunicationTimeout(new TimeSpan(0, 10, 0))
-                .WithEnhancedAuthenticationHandler(new InteractiveEnhancedAuthBrokerHandler())
-                .WithConnectionValidator(c =>
-                {
-                    if (c.AuthenticationMethod != AuthMethod.InteractiveAuthName)
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var serverOptions = new MqttServerOptionsBuilder()
+                    .WithDefaultEndpoint()
+                    .WithDefaultCommunicationTimeout(new TimeSpan(0, 10, 0))
+                    .WithEnhancedAuthenticationHandler(new InteractiveEnhancedAuthBrokerHandler())
+                    .WithConnectionValidator(c =>
                     {
-                        c.ReasonCode = MqttConnectReasonCode.BadAuthenticationMethod;
-                    }
-                }).Build();
+                        if (c.AuthenticationMethod != AuthMethod.InteractiveAuthName)
+                        {
+                            c.ReasonCode = MqttConnectReasonCode.BadAuthenticationMethod;
+                        }
+                    });
 
-            var server = new MqttFactory().CreateMqttServer();
-            await server.StartAsync(serverOptions);
+                await testEnvironment.StartServerAsync(serverOptions);
 
-            var clientOptions = new MqttClientOptionsBuilder()
-                .WithTcpServer("127.0.0.1")
-                .WithCommunicationTimeout(new TimeSpan(0, 10, 0))
-                .WithKeepAlivePeriod(new TimeSpan(0, 10, 0))
-                .WithProtocolVersion(MqttProtocolVersion.V500)
-                .WithAuthentication(AuthMethod.InteractiveAuthName, Encoding.UTF8.GetBytes("blabla"))
-                .WithClientId(Guid.NewGuid().ToString().Replace("-", string.Empty))
-                .WithExtendedAuthenticationExchangeHandler(new InteractiveClientExtendedAuthHandler())
-                .Build();
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithCommunicationTimeout(new TimeSpan(0, 10, 0))
+                    .WithKeepAlivePeriod(new TimeSpan(0, 10, 0))
+                    .WithProtocolVersion(MqttProtocolVersion.V500)
+                    .WithAuthentication(AuthMethod.InteractiveAuthName, Encoding.UTF8.GetBytes("blabla"))
+                    .WithClientId(Guid.NewGuid().ToString().Replace("-", string.Empty))
+                    .WithExtendedAuthenticationExchangeHandler(new InteractiveClientExtendedAuthHandler());
 
-            var client = new MqttFactory().CreateMqttClient();
-            var authResult = await client.ConnectAsync(clientOptions);
+                var authResult = await testEnvironment.AuthenticateClientAsync(clientOptions);
 
-            Assert.AreEqual(MqttClientConnectResultCode.Success, authResult.ResultCode);
-            Assert.AreEqual(AuthMethod.InteractiveAuthName, authResult.AuthenticationMethod);
-
-            await client.DisconnectAsync();
+                Assert.AreEqual(MqttClientConnectResultCode.Success, authResult.ResultCode);
+                Assert.AreEqual(AuthMethod.InteractiveAuthName, authResult.AuthenticationMethod);
+            }
         }
 
         [TestMethod]

@@ -5,12 +5,13 @@ namespace MQTTnet.Adapter
 {
     public class MqttConnectingFailedException : MqttCommunicationException
     {
-        public MqttConnectingFailedException(MqttClientConnectResultCode resultCode)
+        public MqttConnectingFailedException(MqttClientAuthenticateResult resultCode)
             : base($"Connecting with MQTT server failed ({resultCode.ToString()}).")
         {
-            ResultCode = resultCode;
+            Result = resultCode;
         }
 
-        public MqttClientConnectResultCode ResultCode { get; }
+        public MqttClientAuthenticateResult Result { get; }
+        public MqttClientConnectResultCode ResultCode => Result.ResultCode;
     }
 }

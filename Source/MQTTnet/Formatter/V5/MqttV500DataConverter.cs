@@ -139,7 +139,7 @@ namespace MQTTnet.Formatter.V5
                 ReasonCode = connectionValidatorContext.ReasonCode,
                 Properties = new MqttConnAckPacketProperties
                 {
-                    UserProperties = connectionValidatorContext.UserProperties,
+                    UserProperties = connectionValidatorContext.ResponseUserProperties,
                     AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
                     AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
                     AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,

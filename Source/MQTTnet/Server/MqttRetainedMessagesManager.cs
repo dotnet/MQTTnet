@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
+using MQTTnet.Implementations;
 using MQTTnet.Internal;
 
 namespace MQTTnet.Server
@@ -21,7 +22,7 @@ namespace MQTTnet.Server
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttRetainedMessagesManager));
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            return Task.CompletedTask;
+            return PlatformAbstractionLayer.CompletedTask;
         }
 
         public async Task LoadMessagesAsync()

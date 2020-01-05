@@ -47,12 +47,12 @@ namespace MQTTnet.Server
                 if (finalTopicFilter == null || string.IsNullOrEmpty(finalTopicFilter.Topic) || !interceptorContext.AcceptSubscription)
                 {
                     result.ResponsePacket.ReturnCodes.Add(MqttSubscribeReturnCode.Failure);
-                    result.ResponsePacket.ReasonCodes.Add(MqttSubscribeReasonCode.UnspecifiedError);
+                    result.ResponsePacket.ReasonCodes.Add(interceptorContext.ResultCode);
                 }
                 else
                 {
                     result.ResponsePacket.ReturnCodes.Add(ConvertToSubscribeReturnCode(finalTopicFilter.QualityOfServiceLevel));
-                    result.ResponsePacket.ReasonCodes.Add(ConvertToSubscribeReasonCode(finalTopicFilter.QualityOfServiceLevel));
+                    result.ResponsePacket.ReasonCodes.Add(interceptorContext.ResultCode);
                 }
 
                 if (interceptorContext.CloseConnection)
@@ -192,17 +192,6 @@ namespace MQTTnet.Server
                 case MqttQualityOfServiceLevel.AtLeastOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS1;
                 case MqttQualityOfServiceLevel.ExactlyOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS2;
                 default: return MqttSubscribeReturnCode.Failure;
-            }
-        }
-
-        private static MqttSubscribeReasonCode ConvertToSubscribeReasonCode(MqttQualityOfServiceLevel qualityOfServiceLevel)
-        {
-            switch (qualityOfServiceLevel)
-            {
-                case MqttQualityOfServiceLevel.AtMostOnce: return MqttSubscribeReasonCode.GrantedQoS0;
-                case MqttQualityOfServiceLevel.AtLeastOnce: return MqttSubscribeReasonCode.GrantedQoS1;
-                case MqttQualityOfServiceLevel.ExactlyOnce: return MqttSubscribeReasonCode.GrantedQoS2;
-                default: return MqttSubscribeReasonCode.UnspecifiedError;
             }
         }
 

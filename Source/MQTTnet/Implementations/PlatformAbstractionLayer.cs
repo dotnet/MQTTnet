@@ -88,5 +88,17 @@ namespace MQTTnet.Implementations
 #endif
         }
 
+        public static Task CompletedTask
+        {
+            get 
+            {
+#if NET452 
+                return Task.FromResult(0);
+#else
+                return Task.CompletedTask;
+#endif
+            }
+        }
+
     }
 }

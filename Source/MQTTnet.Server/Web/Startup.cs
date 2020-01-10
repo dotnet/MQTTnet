@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +12,12 @@ using MQTTnet.Server.Logging;
 using MQTTnet.Server.Mqtt;
 using MQTTnet.Server.Scripting;
 using MQTTnet.Server.Scripting.DataSharing;
+using Newtonsoft.Json.Converters;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 
 namespace MQTTnet.Server.Web
 {
@@ -88,10 +89,10 @@ namespace MQTTnet.Server.Web
             services.AddCors();
 
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
-                .AddJsonOptions(options =>
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+                .AddNewtonsoftJson(o =>
                 {
-                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                    o.SerializerSettings.Converters.Add(new StringEnumConverter());
                 });
 
             ReadMqttSettings(services);
@@ -116,7 +117,7 @@ namespace MQTTnet.Server.Web
             services.AddSwaggerGen(c =>
             {
                 c.DescribeAllEnumsAsStrings();
-                
+
                 var securityScheme = new OpenApiSecurityScheme
                 {
                     Scheme = "Basic",

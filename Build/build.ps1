@@ -13,11 +13,11 @@ Write-Host "MSBuild path     = $msbuild"
 Write-Host
 
 # Build and execute tests
-&$msbuild ..\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp2.1" /verbosity:m
-&$msbuild ..\Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp2.1" /verbosity:m
+&$msbuild ..\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp3.1" /verbosity:m
+&$msbuild ..\Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp3.1" /verbosity:m
 
-vstest.console.exe ..\Tests\MQTTnet.Core.Tests\bin\Release\netcoreapp2.1\MQTTnet.Tests.dll
-vstest.console.exe ..\Tests\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp2.1\MQTTnet.AspNetCore.Tests.dll
+vstest.console.exe ..\Tests\MQTTnet.Core.Tests\bin\Release\netcoreapp3.1\MQTTnet.Tests.dll
+vstest.console.exe ..\Tests\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
 
 # Build the core library
 &$msbuild ..\Source\MQTTnet\MQTTnet.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="net452" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"
@@ -84,7 +84,7 @@ Remove-Item "nuget.exe" -Force -Recurse -ErrorAction SilentlyContinue
 # Build MQTTnet.Server Portable
 &dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion
 
-$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2\publish"
+$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp3.1\publish"
 $destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Portable-v$nugetVersion.zip"
 If(Test-path $destination) {Remove-item $destination}
  Add-Type -assembly "system.io.compression.filesystem"
@@ -95,7 +95,7 @@ If(Test-path $destination) {Remove-item $destination}
 # Build MQTTnet.Server Linux-x64
 &dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime linux-x64 
 
-$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2\linux-x64\publish"
+$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp3.1\linux-x64\publish"
 $destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Linux-x64-v$nugetVersion.zip"
 If(Test-path $destination) {Remove-item $destination}
  Add-Type -assembly "system.io.compression.filesystem"
@@ -106,7 +106,7 @@ If(Test-path $destination) {Remove-item $destination}
 # Build MQTTnet.Server Linux-ARM
 &dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime linux-arm 
 
-$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2\linux-ARM\publish"
+$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp3.1\linux-ARM\publish"
 $destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Linux-ARM-v$nugetVersion.zip"
 If(Test-path $destination) {Remove-item $destination}
  Add-Type -assembly "system.io.compression.filesystem"
@@ -117,7 +117,7 @@ If(Test-path $destination) {Remove-item $destination}
 # Build MQTTnet.Server Windows-x64
 &dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime win-x64
 
-$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp2.2\win-x64\publish"
+$source = "..\Source\MQTTnet.Server\bin\Release\netcoreapp3.1\win-x64\publish"
 $destination = "..\Source\MQTTnet.Server\bin\MQTTnet.Server-Windows-x64-v$nugetVersion.zip"
 If(Test-path $destination) {Remove-item $destination}
  Add-Type -assembly "system.io.compression.filesystem"

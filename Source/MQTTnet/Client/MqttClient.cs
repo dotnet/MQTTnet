@@ -255,7 +255,7 @@ namespace MQTTnet.Client
 
             if (result.ResultCode != MqttClientConnectResultCode.Success)
             {
-                throw new MqttConnectingFailedException(result.ResultCode);
+                throw new MqttConnectingFailedException(result);
             }
 
             _logger.Verbose("Authenticated MQTT connection with server established.");

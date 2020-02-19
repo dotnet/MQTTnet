@@ -26,6 +26,8 @@ namespace MQTTnet.Server
 
         public IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; set; }
 
+        public IMqttServerApplicationMessageInterceptor UndeliveredMessageInterceptor { get; }
+
         public IMqttServerStorage Storage { get; set; }
     }
 }

@@ -208,14 +208,19 @@ namespace MQTTnet.Server
                 {
                     await _retainedMessagesManager.HandleMessageAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
                 }
-
+                
+                applicationMessage.DeliveryCount = 0;
                 foreach (var clientSession in _sessions.Values)
                 {
                     clientSession.EnqueueApplicationMessage(
                         applicationMessage,
                         sender?.ClientId,
                         false);
+                    applicationMessage.DeliveryCount++;
                 }
+                
+                if (applicationMessage.DeliveryCount == 0)
+                    await _options.UndeliveredMessageInterceptor.InterceptApplicationMessagePublishAsync(interceptorContext);
             }
             catch (OperationCanceledException)
             {

@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>MQTTnet</id>
-    <version>0.0.0</version>
+    <version>3.0.10</version>
     <authors>Christian Kratky</authors>
     <owners>Christian Kratky</owners>
     <license type="file">LICENSE</license>

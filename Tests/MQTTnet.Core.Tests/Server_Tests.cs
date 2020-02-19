@@ -1191,5 +1191,33 @@ namespace MQTTnet.Tests
                 Assert.AreEqual(expectedReceivedMessagesCount, receivedMessagesCount);
             }
         }
+
+        [TestMethod]
+        public async Task Intercept_Undelivered()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                var undeliverd = string.Empty;
+                var svr = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithUndeliveredMessageInterceptor(
+                    context =>
+                    {
+                        undeliverd = context.ApplicationMessage.Topic;
+                    } ));
+                
+                var topicAReceived = false;
+                var topicBReceived = false;
+
+                var client = await testEnvironment.ConnectClientAsync();
+                
+                await client.SubscribeAsync("b");
+
+                await client.PublishAsync("a", null,MqttQualityOfServiceLevel.ExactlyOnce);
+
+                await Task.Delay(500);
+
+                Assert.AreEqual(undeliverd,"a");
+                
+            }
+        }
     }
 }

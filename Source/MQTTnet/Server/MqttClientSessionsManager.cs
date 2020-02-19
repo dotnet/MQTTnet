@@ -216,11 +216,12 @@ namespace MQTTnet.Server
                         applicationMessage,
                         sender?.ClientId,
                         false);
-                    applicationMessage.DeliveryCount++;
                 }
                 
                 if (applicationMessage.DeliveryCount == 0)
-                    await _options.UndeliveredMessageInterceptor.InterceptApplicationMessagePublishAsync(interceptorContext);
+                    await _options.UndeliveredMessageInterceptor?.InterceptApplicationMessagePublishAsync(
+                        new MqttApplicationMessageInterceptorContext(sender?.ClientId,sender?.Session?.Items,applicationMessage)
+                        );
             }
             catch (OperationCanceledException)
             {

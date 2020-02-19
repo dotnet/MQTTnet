@@ -17,7 +17,7 @@ namespace MQTTnet.Server
         IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; }
         IMqttServerApplicationMessageInterceptor ApplicationMessageInterceptor { get; }
         IMqttServerClientMessageQueueInterceptor ClientMessageQueueInterceptor { get; }
-        IMqttServerApplicationMessageInterceptor UndeliveredMessageInterceptor { get; }
+        IMqttServerApplicationMessageInterceptor UndeliveredMessageInterceptor { get; set; }
 
         MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
         MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }

@@ -256,7 +256,11 @@ namespace MQTTnet.Client.Options
                         UseTls = true,
                         SslProtocol = _tlsParameters.SslProtocol,
                         AllowUntrustedCertificates = _tlsParameters.AllowUntrustedCertificates,
+#if WINDOWS_UWP
                         Certificates = _tlsParameters.Certificates?.Select(c => c.ToArray()).ToList(),
+#else
+                        Certificates = _tlsParameters.Certificates?.ToList(),
+#endif
                         CertificateValidationCallback = _tlsParameters.CertificateValidationCallback,
                         IgnoreCertificateChainErrors = _tlsParameters.IgnoreCertificateChainErrors,
                         IgnoreCertificateRevocationErrors = _tlsParameters.IgnoreCertificateRevocationErrors

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientSessionApplicationMessagesQueue : IDisposable
+    public class MqttClientSessionApplicationMessagesQueue : Disposable
     {
         private readonly AsyncQueue<MqttQueuedApplicationMessage> _messageQueue = new AsyncQueue<MqttQueuedApplicationMessage>();
         
@@ -71,9 +71,14 @@ namespace MQTTnet.Server
             }
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            _messageQueue.Dispose();
+            if (disposing)
+            {
+                _messageQueue.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

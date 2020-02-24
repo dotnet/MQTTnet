@@ -7,6 +7,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
 
@@ -19,7 +20,7 @@ namespace MQTTnet.Server
         private readonly IMqttNetChildLogger _logger;
 
         private MqttClientSessionsManager _clientSessionsManager;
-        private MqttRetainedMessagesManager _retainedMessagesManager;
+        private IMqttRetainedMessagesManager _retainedMessagesManager;
         private CancellationTokenSource _cancellationTokenSource;
 
         public MqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetChildLogger logger)
@@ -48,7 +49,7 @@ namespace MQTTnet.Server
             get => _eventDispatcher.ClientDisconnectedHandler;
             set => _eventDispatcher.ClientDisconnectedHandler = value;
         }
-        
+
         public IMqttServerClientSubscribedTopicHandler ClientSubscribedTopicHandler
         {
             get => _eventDispatcher.ClientSubscribedTopicHandler;
@@ -60,7 +61,7 @@ namespace MQTTnet.Server
             get => _eventDispatcher.ClientUnsubscribedTopicHandler;
             set => _eventDispatcher.ClientUnsubscribedTopicHandler = value;
         }
-        
+
         public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
         {
             get => _eventDispatcher.ApplicationMessageReceivedHandler;
@@ -117,11 +118,14 @@ namespace MQTTnet.Server
         {
             Options = options ?? throw new ArgumentNullException(nameof(options));
 
+            if (Options.RetainedMessagesManager == null) throw new MqttConfigurationException("options.RetainedMessagesManager should not be null.");
+
             if (_cancellationTokenSource != null) throw new InvalidOperationException("The server is already started.");
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _retainedMessagesManager = new MqttRetainedMessagesManager(Options, _logger);
+            _retainedMessagesManager = Options.RetainedMessagesManager;
+            await _retainedMessagesManager.Start(Options, _logger);
             await _retainedMessagesManager.LoadMessagesAsync().ConfigureAwait(false);
 
             _clientSessionsManager = new MqttClientSessionsManager(Options, _retainedMessagesManager, _cancellationTokenSource.Token, _eventDispatcher, _logger);
@@ -150,9 +154,9 @@ namespace MQTTnet.Server
                 {
                     return;
                 }
-                
+
                 await _clientSessionsManager.StopAsync().ConfigureAwait(false);
-                
+
                 _cancellationTokenSource.Cancel(false);
 
                 foreach (var adapter in _adapters)

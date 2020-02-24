@@ -1,11 +1,12 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Server;
 
 namespace MQTTnet.Benchmarks
 {
-    [ClrJob]
+    [SimpleJob(RuntimeMoniker.Net461)]
     [RPlotExporter, RankColumn]
     [MemoryDiagnoser]
     public class MessageProcessingBenchmark

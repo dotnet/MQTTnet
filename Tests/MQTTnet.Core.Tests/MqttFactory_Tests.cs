@@ -18,7 +18,7 @@ namespace MQTTnet.Tests
             //This test compares
             //1. correct logID
             string logId = "logId";
-            bool invalidLogIdOccured = false;
+            string invalidLogId = null;
 
             //2. if the total log calls are the same for global and local
             int globalLogCount = 0;
@@ -31,7 +31,7 @@ namespace MQTTnet.Tests
             {
                 if (logId != e.TraceMessage.LogId)
                 {
-                    invalidLogIdOccured = true;
+                    invalidLogId = e.TraceMessage.LogId;
                 }
                 Interlocked.Increment(ref globalLogCount);
             });
@@ -42,7 +42,7 @@ namespace MQTTnet.Tests
             {
                 if (logId != e.TraceMessage.LogId)
                 {
-                    invalidLogIdOccured = true;
+                    invalidLogId = e.TraceMessage.LogId;
                 }
                 Interlocked.Increment(ref localLogCount);
             };
@@ -69,7 +69,7 @@ namespace MQTTnet.Tests
                 MqttNetGlobalLogger.LogMessagePublished -= globalLog;
             }
 
-            Assert.IsFalse(invalidLogIdOccured);
+            Assert.IsNull(invalidLogId);
             Assert.AreNotEqual(0, globalLogCount);
             Assert.AreEqual(globalLogCount, localLogCount);
         }

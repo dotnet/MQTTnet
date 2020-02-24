@@ -18,6 +18,8 @@ namespace MQTTnet.Tests
     [TestClass]
     public class RPC_Tests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public Task Execute_Success_With_QoS_0()
         {
@@ -58,7 +60,7 @@ namespace MQTTnet.Tests
         [ExpectedException(typeof(MqttCommunicationTimedOutException))]
         public async Task Execute_Timeout()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
                 
@@ -73,7 +75,7 @@ namespace MQTTnet.Tests
         [ExpectedException(typeof(MqttCommunicationTimedOutException))]
         public async Task Execute_With_Custom_Topic_Names()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 
@@ -86,7 +88,7 @@ namespace MQTTnet.Tests
 
         private async Task Execute_Success(MqttQualityOfServiceLevel qosLevel, MqttProtocolVersion protocolVersion)
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
                 var responseSender = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithProtocolVersion(protocolVersion));

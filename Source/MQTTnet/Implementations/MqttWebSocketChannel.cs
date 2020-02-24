@@ -6,10 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Client.Options;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttWebSocketChannel : IMqttChannel
+    public class MqttWebSocketChannel : Disposable, IMqttChannel
     {
         private readonly MqttClientWebSocketOptions _options;
 
@@ -84,7 +85,12 @@ namespace MQTTnet.Implementations
                 clientWebSocket.Options.ClientCertificates = new X509CertificateCollection();
                 foreach (var certificate in _options.TlsOptions.Certificates)
                 {
+#if WINDOWS_UWP
                     clientWebSocket.Options.ClientCertificates.Add(new X509Certificate(certificate));
+#else
+                    clientWebSocket.Options.ClientCertificates.Add(certificate);
+#endif
+                    
                 }
             }
 
@@ -106,7 +112,7 @@ namespace MQTTnet.Implementations
                 await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken).ConfigureAwait(false);
             }
 
-            Dispose();
+            Cleanup();
         }
 
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -136,7 +142,16 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Cleanup();
+            }
+            base.Dispose(disposing);
+        }
+
+        private void Cleanup()
         {
             _sendLock?.Dispose();
             _sendLock = null;

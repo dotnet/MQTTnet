@@ -28,14 +28,14 @@ namespace MQTTnet.Tests
                 {
                     while (!ct.IsCancellationRequested)
                     {
-                        var client = await serverSocket.AcceptAsync();
+                        var client = await PlatformAbstractionLayer.AcceptAsync(serverSocket);
                         var data = new byte[] { 128 };
-                        await client.SendAsync(new ArraySegment<byte>(data), SocketFlags.None);
+                        await PlatformAbstractionLayer.SendAsync(client, new ArraySegment<byte>(data), SocketFlags.None);
                     }
                 }, ct.Token);
 
                 var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await clientSocket.ConnectAsync(IPAddress.Loopback, 50001);
+                await PlatformAbstractionLayer.ConnectAsync(clientSocket, IPAddress.Loopback, 50001);
 
                 await Task.Delay(100, ct.Token);
 

@@ -1,10 +1,10 @@
 ﻿using System;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 using MQTTnet.Implementations;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MQTTnet.AspNetCore
 {

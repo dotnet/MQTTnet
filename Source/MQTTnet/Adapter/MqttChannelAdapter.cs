@@ -274,6 +274,7 @@ namespace MQTTnet.Adapter
             _isDisposed = true;
 
             _channel?.Dispose();
+            _writerSemaphore?.Dispose();
         }
 
         private void ThrowIfDisposed()

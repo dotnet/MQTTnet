@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +25,7 @@ namespace MQTTnet.Client
         private readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         private readonly Stopwatch _sendTracker = new Stopwatch();
+        private readonly Stopwatch _receiveTracker = new Stopwatch();
         private readonly object _disconnectLock = new object();
 
         private readonly IMqttClientAdapterFactory _adapterFactory;
@@ -93,6 +94,7 @@ namespace MQTTnet.Client
                 }
 
                 _sendTracker.Restart();
+                _receiveTracker.Restart();
 
                 if (Options.KeepAlivePeriod != TimeSpan.Zero)
                 {
@@ -255,7 +257,7 @@ namespace MQTTnet.Client
 
             if (result.ResultCode != MqttClientConnectResultCode.Success)
             {
-                throw new MqttConnectingFailedException(result.ResultCode);
+                throw new MqttConnectingFailedException(result);
             }
 
             _logger.Verbose("Authenticated MQTT connection with server established.");
@@ -381,7 +383,9 @@ namespace MQTTnet.Client
 
                 try
                 {
-                    return await packetAwaiter.WaitOneAsync(Options.CommunicationTimeout).ConfigureAwait(false);
+                    var response = await packetAwaiter.WaitOneAsync(Options.CommunicationTimeout).ConfigureAwait(false);
+                    _receiveTracker.Restart();
+                    return response;
                 }
                 catch (Exception exception)
                 {
@@ -410,14 +414,14 @@ namespace MQTTnet.Client
                         keepAliveSendInterval = Options.KeepAliveSendInterval.Value;
                     }
 
-                    var waitTime = keepAliveSendInterval - _sendTracker.Elapsed;
-                    if (waitTime <= TimeSpan.Zero)
+                    var waitTimeSend = keepAliveSendInterval - _sendTracker.Elapsed;
+                    var waitTimeReceive = keepAliveSendInterval - _receiveTracker.Elapsed;
+                    if (waitTimeSend <= TimeSpan.Zero || waitTimeReceive <= TimeSpan.Zero)
                     {
                         await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket(), cancellationToken).ConfigureAwait(false);
-                        waitTime = keepAliveSendInterval;
                     }
 
-                    await Task.Delay(waitTime, cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(keepAliveSendInterval, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
@@ -514,6 +518,8 @@ namespace MQTTnet.Client
         {
             try
             {
+                _receiveTracker.Restart();
+
                 if (packet is MqttPublishPacket publishPacket)
                 {
                     await TryProcessReceivedPublishPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);

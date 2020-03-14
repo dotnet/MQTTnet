@@ -21,11 +21,15 @@ namespace MQTTnet.Server
         public IMqttServerConnectionValidator ConnectionValidator { get; set; }
 
         public IMqttServerApplicationMessageInterceptor ApplicationMessageInterceptor { get; set; }
-        
+
         public IMqttServerClientMessageQueueInterceptor ClientMessageQueueInterceptor { get; set; }
 
         public IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; set; }
 
+        public IMqttServerUnsubscriptionInterceptor UnsubscriptionInterceptor { get; set; }
+
         public IMqttServerStorage Storage { get; set; }
+
+        public IMqttRetainedMessagesManager RetainedMessagesManager { get; set; } = new MqttRetainedMessagesManager();
     }
 }

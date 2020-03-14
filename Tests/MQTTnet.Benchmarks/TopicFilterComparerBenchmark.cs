@@ -1,10 +1,11 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using MQTTnet.Server;
 using System;
 
 namespace MQTTnet.Benchmarks
 {
-    [ClrJob]
+    [SimpleJob(RuntimeMoniker.Net461)]
     [RPlotExporter]
     [MemoryDiagnoser]
     public class TopicFilterComparerBenchmark

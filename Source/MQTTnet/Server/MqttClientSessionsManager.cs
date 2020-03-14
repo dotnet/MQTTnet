@@ -13,7 +13,7 @@ using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientSessionsManager : IDisposable
+    public class MqttClientSessionsManager : Disposable
     {
         private readonly AsyncQueue<MqttEnqueuedApplicationMessage> _messageQueue = new AsyncQueue<MqttEnqueuedApplicationMessage>();
 
@@ -25,13 +25,13 @@ namespace MQTTnet.Server
         private readonly CancellationToken _cancellationToken;
         private readonly MqttServerEventDispatcher _eventDispatcher;
 
-        private readonly MqttRetainedMessagesManager _retainedMessagesManager;
+        private readonly IMqttRetainedMessagesManager _retainedMessagesManager;
         private readonly IMqttServerOptions _options;
         private readonly IMqttNetChildLogger _logger;
 
         public MqttClientSessionsManager(
             IMqttServerOptions options,
-            MqttRetainedMessagesManager retainedMessagesManager,
+            IMqttRetainedMessagesManager retainedMessagesManager,
             CancellationToken cancellationToken,
             MqttServerEventDispatcher eventDispatcher,
             IMqttNetChildLogger logger)
@@ -72,7 +72,7 @@ namespace MQTTnet.Server
             {
                 var clientStatus = new MqttClientStatus(connection);
                 connection.FillStatus(clientStatus);
-                
+
                 var sessionStatus = new MqttSessionStatus(connection.Session, this);
                 connection.Session.FillStatus(sessionStatus);
                 clientStatus.Session = sessionStatus;
@@ -91,7 +91,7 @@ namespace MQTTnet.Server
             {
                 var sessionStatus = new MqttSessionStatus(session, this);
                 session.FillStatus(sessionStatus);
-    
+
                 result.Add(sessionStatus);
             }
 
@@ -145,9 +145,13 @@ namespace MQTTnet.Server
             _logger.Verbose("Session for client '{0}' deleted.", clientId);
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            _messageQueue?.Dispose();
+            if (disposing)
+            {
+                _messageQueue?.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         private async Task TryProcessQueuedApplicationMessagesAsync(CancellationToken cancellationToken)
@@ -230,6 +234,7 @@ namespace MQTTnet.Server
         {
             var disconnectType = MqttClientDisconnectType.NotClean;
             string clientId = null;
+            var clientWasConnected = true;
 
             try
             {
@@ -240,12 +245,13 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                clientId = connectPacket.ClientId;
-
                 var connectionValidatorContext = await ValidateConnectionAsync(connectPacket, channelAdapter).ConfigureAwait(false);
+
+                clientId = connectPacket.ClientId;
 
                 if (connectionValidatorContext.ReasonCode != MqttConnectReasonCode.Success)
                 {
+                    clientWasConnected = false;
                     // Send failure response here without preparing a session. The result for a successful connect
                     // will be sent from the session itself.
                     var connAckPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext);
@@ -257,8 +263,8 @@ namespace MQTTnet.Server
                 var connection = await CreateConnectionAsync(connectPacket, connectionValidatorContext, channelAdapter).ConfigureAwait(false);
 
                 await _eventDispatcher.HandleClientConnectedAsync(clientId).ConfigureAwait(false);
-                
-                disconnectType = await connection.RunAsync().ConfigureAwait(false);
+
+                disconnectType = await connection.RunAsync(connectionValidatorContext).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -269,21 +275,24 @@ namespace MQTTnet.Server
             }
             finally
             {
-                if (clientId != null)
+                if (clientWasConnected)
                 {
-                    _connections.TryRemove(clientId, out _);
-
-                    if (!_options.EnablePersistentSessions)
+                    if (clientId != null)
                     {
-                        await DeleteSessionAsync(clientId).ConfigureAwait(false);
+                        _connections.TryRemove(clientId, out _);
+
+                        if (!_options.EnablePersistentSessions)
+                        {
+                            await DeleteSessionAsync(clientId).ConfigureAwait(false);
+                        }
                     }
-                }
 
-                await TryCleanupChannelAsync(channelAdapter).ConfigureAwait(false);
+                    await TryCleanupChannelAsync(channelAdapter).ConfigureAwait(false);
 
-                if (clientId != null)
-                {
-                    await _eventDispatcher.TryHandleClientDisconnectedAsync(clientId, disconnectType).ConfigureAwait(false);
+                    if (clientId != null)
+                    {
+                        await _eventDispatcher.TryHandleClientDisconnectedAsync(clientId, disconnectType).ConfigureAwait(false);
+                    }
                 }
             }
         }
@@ -328,13 +337,13 @@ namespace MQTTnet.Server
                 {
                     await existingConnection.StopAsync().ConfigureAwait(false);
                 }
-                
+
                 if (isSessionPresent)
                 {
                     if (connectPacket.CleanSession)
                     {
                         session = null;
-                        
+
                         _logger.Verbose("Deleting existing session of client '{0}'.", connectPacket.ClientId);
                     }
                     else

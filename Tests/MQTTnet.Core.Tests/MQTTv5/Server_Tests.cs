@@ -11,10 +11,12 @@ namespace MQTTnet.Tests.MQTTv5
     [TestClass]
     public class Server_Tests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public async Task Will_Message_Send()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var receivedMessagesCount = 0;
 

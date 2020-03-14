@@ -11,10 +11,12 @@ namespace MQTTnet.Tests
     [TestClass]
     public class RoundtripTime_Tests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public async Task Round_Trip_Time()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
                 var receiverClient = await testEnvironment.ConnectClientAsync();

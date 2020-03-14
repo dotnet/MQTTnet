@@ -10,10 +10,11 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using MQTTnet.Channel;
 using MQTTnet.Client.Options;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpChannel : IMqttChannel
+    public class MqttTcpChannel : Disposable, IMqttChannel
     {
         private readonly IMqttClientOptions _clientOptions;
         private readonly MqttClientTcpOptions _options;
@@ -72,11 +73,7 @@ namespace MQTTnet.Implementations
             // Workaround for: workaround for https://github.com/dotnet/corefx/issues/24430
             using (cancellationToken.Register(() => socket.Dispose()))
             {
-#if NET452 || NET461
-                await Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, _options.Server, _options.GetPort(), null).ConfigureAwait(false);
-#else
-                await socket.ConnectAsync(_options.Server, _options.GetPort()).ConfigureAwait(false);
-#endif
+                await PlatformAbstractionLayer.ConnectAsync(socket, _options.Server, _options.GetPort()).ConfigureAwait(false);
             }
 
             var networkStream = new NetworkStream(socket, true);
@@ -98,7 +95,7 @@ namespace MQTTnet.Implementations
 
         public Task DisconnectAsync(CancellationToken cancellationToken)
         {
-            Dispose();
+            Cleanup();
             return Task.FromResult(0);
         }
 
@@ -116,6 +113,10 @@ namespace MQTTnet.Implementations
 
                     return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
+            }
+            catch (ObjectDisposedException)
+            {
+                return 0;
             }
             catch (IOException exception)
             {
@@ -143,6 +144,10 @@ namespace MQTTnet.Implementations
                     await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
             }
+            catch (ObjectDisposedException)
+            {
+                return;
+            }
             catch (IOException exception)
             {
                 if (exception.InnerException is SocketException socketException)
@@ -154,7 +159,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public void Dispose()
+        private void Cleanup()
         {
             // When the stream is disposed it will also close the socket and this will also dispose it.
             // So there is no need to dispose the socket again.
@@ -171,6 +176,15 @@ namespace MQTTnet.Implementations
             }
 
             _stream = null;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Cleanup();
+            }
+            base.Dispose(disposing);
         }
 
         private bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -214,7 +228,7 @@ namespace MQTTnet.Implementations
 
             foreach (var certificate in _options.TlsOptions.Certificates)
             {
-                certificates.Add(new X509Certificate2(certificate));
+                certificates.Add(certificate);
             }
 
             return certificates;

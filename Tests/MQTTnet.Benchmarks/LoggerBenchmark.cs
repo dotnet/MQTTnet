@@ -1,9 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Benchmarks
 {
-    [ClrJob]
+    [SimpleJob(RuntimeMoniker.Net461)]
     [RPlotExporter]
     [MemoryDiagnoser]
     public class LoggerBenchmark

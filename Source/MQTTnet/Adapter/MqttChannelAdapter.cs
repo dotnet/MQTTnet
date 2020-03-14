@@ -272,7 +272,9 @@ namespace MQTTnet.Adapter
             if (disposing)
             {
                 _channel?.Dispose();
+                _writerSemaphore?.Dispose();
             }
+            
             base.Dispose(disposing);
         }
 

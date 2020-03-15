@@ -1,90 +1,53 @@
 ﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
 using MQTTnet.Server;
 using System;
+using System.Collections.Generic;
+using MqttTopicFilterComparer = MQTTnet.Server.MqttTopicFilterComparer;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net461)]
-    [RPlotExporter]
     [MemoryDiagnoser]
     public class TopicFilterComparerBenchmark
     {
-        private static readonly char[] TopicLevelSeparator = { '/' };
+        private List<TopicFilter> subscriptions = new List<TopicFilter>();
+        private MqttSubscriptionIndex _subscriptionIndex = new MqttSubscriptionIndex();
 
         [GlobalSetup]
         public void Setup()
         {
+            for (int i = 0; i <= char.MaxValue; i++)
+            {
+                var c = Convert.ToChar(i);
+                if (char.IsLetter(c) && !char.IsUpper(c))
+                {
+                    subscriptions.Add(new TopicFilter() { Topic = new string(c, 1) });
+                }
+            }
+
+
+            subscriptions.RemoveRange(1000, subscriptions.Count - 1000);
+
+            foreach (var subscription in subscriptions)
+            {
+                MqttSubscriptionIndex.Subscribe(subscription, _subscriptionIndex);
+            }
+
+            Console.WriteLine($"{subscriptions.Count} subscriptions");
         }
 
         [Benchmark]
-        public void MqttTopicFilterComparer_10000_StringSplitMethod()
+        public void LinearSearch()
         {
-            for (var i = 0; i < 10000; i++)
+            foreach (var subscription in subscriptions)
             {
-                LegacyMethodByStringSplit("sport/tennis/player1", "sport/#");
-                LegacyMethodByStringSplit("sport/tennis/player1/ranking", "sport/#/ranking");
-                LegacyMethodByStringSplit("sport/tennis/player1/score/wimbledon", "sport/+/player1/#");
-                LegacyMethodByStringSplit("sport/tennis/player1", "sport/tennis/+");
-                LegacyMethodByStringSplit("/finance", "+/+");
-                LegacyMethodByStringSplit("/finance", "/+");
-                LegacyMethodByStringSplit("/finance", "+");
+                MqttTopicFilterComparer.IsMatch("z/z", subscription.Topic);
             }
         }
 
         [Benchmark]
-        public void MqttTopicFilterComparer_10000_LoopMethod()
+        public void IndexSearch()
         {
-            for (var i = 0; i < 10000; i++)
-            {
-                MqttTopicFilterComparer.IsMatch("sport/tennis/player1", "sport/#");
-                MqttTopicFilterComparer.IsMatch("sport/tennis/player1/ranking", "sport/#/ranking");
-                MqttTopicFilterComparer.IsMatch("sport/tennis/player1/score/wimbledon", "sport/+/player1/#");
-                MqttTopicFilterComparer.IsMatch("sport/tennis/player1", "sport/tennis/+");
-                MqttTopicFilterComparer.IsMatch("/finance", "+/+");
-                MqttTopicFilterComparer.IsMatch("/finance", "/+");
-                MqttTopicFilterComparer.IsMatch("/finance", "+");
-            }
-        }
-
-        private static bool LegacyMethodByStringSplit(string topic, string filter)
-        {
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-            if (filter == null) throw new ArgumentNullException(nameof(filter));
-
-            if (string.Equals(topic, filter, StringComparison.Ordinal))
-            {
-                return true;
-            }
-
-            var fragmentsTopic = topic.Split(TopicLevelSeparator, StringSplitOptions.None);
-            var fragmentsFilter = filter.Split(TopicLevelSeparator, StringSplitOptions.None);
-
-            // # > In either case it MUST be the last character specified in the Topic Filter [MQTT-4.7.1-2].
-            for (var i = 0; i < fragmentsFilter.Length; i++)
-            {
-                if (fragmentsFilter[i] == "+")
-                {
-                    continue;
-                }
-
-                if (fragmentsFilter[i] == "#")
-                {
-                    return true;
-                }
-
-                if (i >= fragmentsTopic.Length)
-                {
-                    return false;
-                }
-
-                if (!string.Equals(fragmentsFilter[i], fragmentsTopic[i], StringComparison.Ordinal))
-                {
-                    return false;
-                }
-            }
-
-            return fragmentsTopic.Length == fragmentsFilter.Length;
+            _subscriptionIndex.GetQosLevels("z/z");
         }
     }
 }

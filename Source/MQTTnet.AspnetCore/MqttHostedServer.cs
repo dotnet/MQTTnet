@@ -21,7 +21,8 @@ namespace MQTTnet.AspNetCore
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            return StartAsync(_options);
+            _ = StartAsync(_options);
+            return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

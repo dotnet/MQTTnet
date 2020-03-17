@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Client;
+﻿using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.Rpc.Options;
 using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
 using MQTTnet.Protocol;
+using System;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Extensions.Rpc
 {
-    public class MqttRpcClient : IDisposable
+    public sealed class MqttRpcClient : IDisposable
     {
         private readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
         private readonly IMqttClient _mqttClient;
@@ -101,7 +101,7 @@ namespace MQTTnet.Extensions.Rpc
 
                 await _mqttClient.SubscribeAsync(responseTopic, qualityOfServiceLevel).ConfigureAwait(false);
                 await _mqttClient.PublishAsync(requestMessage).ConfigureAwait(false);
-                
+
                 using (var timeoutCts = new CancellationTokenSource(timeout))
                 using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token))
                 {

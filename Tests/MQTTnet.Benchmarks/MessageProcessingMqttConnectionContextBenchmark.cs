@@ -26,11 +26,8 @@ namespace MQTTnet.Benchmarks
             _host = WebHost.CreateDefaultBuilder()
                    .UseKestrel(o => o.ListenAnyIP(1883, l => l.UseMqtt()))
                    .ConfigureServices(services => {
-                       var mqttServerOptions = new MqttServerOptionsBuilder()
-                            .WithoutDefaultEndpoint()
-                            .Build();
                         services
-                            .AddHostedMqttServer(mqttServerOptions)
+                            .AddHostedMqttServer(mqttServerOptions => mqttServerOptions.WithoutDefaultEndpoint())
                             .AddMqttConnectionHandler();
                    })
                    .Configure(app => {

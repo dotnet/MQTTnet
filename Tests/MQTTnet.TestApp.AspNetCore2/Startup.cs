@@ -1,10 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using MQTTnet.AspNetCore;
 using MQTTnet.Server;
 
@@ -16,29 +19,37 @@ namespace MQTTnet.TestApp.AspNetCore2
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var mqttServerOptions = new MqttServerOptionsBuilder()
-                .WithoutDefaultEndpoint()
-                .Build();
             services
-                .AddHostedMqttServer(mqttServerOptions)
+                .AddHostedMqttServer(mqttServer => mqttServer.WithoutDefaultEndpoint())
                 .AddMqttConnectionHandler()
                 .AddConnections();
         }
 
-        // In class _Startup_ of the ASP.NET Core 2.0 project.
+        // In class _Startup_ of the ASP.NET Core 3.1 project.
+#if NETCOREAPP3_1
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapMqtt("/mqtt");
+            });
+#else 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            app.UseConnections(c => c.MapConnectionHandler<MqttConnectionHandler>("/mqtt", options => {
-                options.WebSockets.SubProtocolSelector = MQTTnet.AspNetCore.ApplicationBuilderExtensions.SelectSubProtocol;
-            }));
+            app.UseConnections(c => c.MapMqtt("/mqtt"));
+#endif
 
-            //app.UseMqttEndpoint();
             app.UseMqttServer(server =>
             {
                 server.StartedHandler = new MqttServerStartedHandlerDelegate(async args =>
                 {
+                    var frameworkName = GetType().Assembly.GetCustomAttribute<TargetFrameworkAttribute>()?
+                        .FrameworkName;
+
                     var msg = new MqttApplicationMessageBuilder()
-                        .WithPayload("Mqtt is awesome")
+                        .WithPayload($"Mqtt hosted on {frameworkName} is awesome")
                         .WithTopic("message");
 
                     while (true)
@@ -46,7 +57,7 @@ namespace MQTTnet.TestApp.AspNetCore2
                         try
                         {
                             await server.PublishAsync(msg.Build());
-                            msg.WithPayload("Mqtt is still awesome at " + DateTime.Now);
+                            msg.WithPayload($"Mqtt hosted on {frameworkName} is still awesome at {DateTime.Now}");
                         }
                         catch (Exception e)
                         {

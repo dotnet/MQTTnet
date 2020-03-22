@@ -5,14 +5,12 @@ namespace MQTTnet.Server
 {
     public class MqttSubscriptionInterceptorContext
     {
-        private MqttSubscribeReasonCode _resultCode;
-
         public MqttSubscriptionInterceptorContext(string clientId, TopicFilter topicFilter, IDictionary<object, object> sessionItems)
         {
             ClientId = clientId;
             TopicFilter = topicFilter;
             SessionItems = sessionItems;
-            _resultCode = ConvertToSubscribeReasonCode(topicFilter.QualityOfServiceLevel);
+            ResultCode = ConvertToSubscribeReasonCode(topicFilter.QualityOfServiceLevel);
         }
 
         public string ClientId { get; }
@@ -26,25 +24,21 @@ namespace MQTTnet.Server
 
         public bool AcceptSubscription
         {
-            get => _resultCode < MqttSubscribeReasonCode.UnspecifiedError;
+            get => ResultCode < MqttSubscribeReasonCode.UnspecifiedError;
             /*  [Obsolete("Set error directly with ResultCode")] // Requires language 8.2 to have here. */
             set {
-                if (!value && _resultCode < MqttSubscribeReasonCode.UnspecifiedError)
+                if (!value && ResultCode < MqttSubscribeReasonCode.UnspecifiedError)
                 {
-                    _resultCode = MqttSubscribeReasonCode.UnspecifiedError;
+                    ResultCode = MqttSubscribeReasonCode.UnspecifiedError;
                 }
-                else if (value && _resultCode >= MqttSubscribeReasonCode.UnspecifiedError) 
+                else if (value && ResultCode >= MqttSubscribeReasonCode.UnspecifiedError) 
                 {
-                    _resultCode = MqttSubscribeReasonCode.GrantedQoS0;
+                    ResultCode = MqttSubscribeReasonCode.GrantedQoS0;
                 }
             }
         }
 
-        public MqttSubscribeReasonCode ResultCode
-        {
-            get => _resultCode;
-            set => _resultCode = value;
-        }
+        public MqttSubscribeReasonCode ResultCode { get; set; }
 
         public bool CloseConnection { get; set; }
 

@@ -5,7 +5,6 @@ namespace MQTTnet.Server
 {
     public class MqttSubscriptionInterceptorContext
     {
-        private bool _acceptSubscription = true;
         private MqttSubscribeReasonCode _resultCode;
 
         public MqttSubscriptionInterceptorContext(string clientId, TopicFilter topicFilter, IDictionary<object, object> sessionItems)
@@ -27,26 +26,24 @@ namespace MQTTnet.Server
 
         public bool AcceptSubscription
         {
-            get => _acceptSubscription;
+            get => _resultCode < MqttSubscribeReasonCode.UnspecifiedError;
+            /*  [Obsolete("Set error directly with ResultCode")] // Requires language 8.2 to have here. */
             set {
                 if (!value && _resultCode < MqttSubscribeReasonCode.UnspecifiedError)
                 {
                     _resultCode = MqttSubscribeReasonCode.UnspecifiedError;
                 }
-                _acceptSubscription = value;
+                else if (value && _resultCode >= MqttSubscribeReasonCode.UnspecifiedError) 
+                {
+                    _resultCode = MqttSubscribeReasonCode.GrantedQoS0;
+                }
             }
         }
 
         public MqttSubscribeReasonCode ResultCode
         {
             get => _resultCode;
-            set {
-                if (AcceptSubscription && value >= MqttSubscribeReasonCode.UnspecifiedError)
-                {
-                    AcceptSubscription = false;
-                }
-                _resultCode = value;
-            }
+            set => _resultCode = value;
         }
 
         public bool CloseConnection { get; set; }

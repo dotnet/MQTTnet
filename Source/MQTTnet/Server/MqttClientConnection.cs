@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Adapter;
+﻿using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
@@ -12,6 +8,10 @@ using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
@@ -437,9 +437,8 @@ namespace MQTTnet.Server
                 {
                     _logger.Warning(exception, "Sending publish packet failed: Communication exception (ClientId: {0}).", ClientId);
                 }
-                else if (exception is OperationCanceledException && _cancellationToken.Token.IsCancellationRequested)
+                else if (exception is OperationCanceledException)
                 {
-                    // The cancellation was triggered externally.
                 }
                 else
                 {

@@ -14,11 +14,13 @@
     <DefineConstants>RELEASE;NETSTANDARD2_0</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+    <PackageReference Include="System.IO.Pipelines" Version="4.7.1" />
   </ItemGroup>
     
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
+  <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1'">
     <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="2.1.3" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.1.1" />

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Options;
@@ -12,6 +7,11 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Tests
 {
@@ -109,6 +109,8 @@ namespace MQTTnet.Tests
                 await connected;
 
                 await managedClient.StopAsync();
+
+                await Task.Delay(500);
 
                 Assert.AreEqual(0, (await server.GetClientStatusAsync()).Count);
             }

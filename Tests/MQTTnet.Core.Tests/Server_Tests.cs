@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
@@ -17,6 +10,13 @@ using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Tests
 {
@@ -54,7 +54,7 @@ namespace MQTTnet.Tests
                 MqttQualityOfServiceLevel.AtMostOnce,
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtMostOnce,
-                1, 
+                1,
                 TestContext);
         }
 
@@ -1050,6 +1050,7 @@ namespace MQTTnet.Tests
                 Assert.AreEqual("c", flow);
 
                 // dc
+                // Connect client with same client ID. Should disconnect existing client.
                 var c2 = await testEnvironment.ConnectClientAsync(clientOptions);
 
                 c2.UseApplicationMessageReceivedHandler(_ =>
@@ -1058,8 +1059,8 @@ namespace MQTTnet.Tests
                     {
                         events.Add("r");
                     }
-
                 });
+
                 c2.SubscribeAsync("topic").Wait();
 
                 await Task.Delay(500);
@@ -1075,12 +1076,11 @@ namespace MQTTnet.Tests
                 flow = string.Join(string.Empty, events);
                 Assert.AreEqual("cdcr", flow);
 
-
                 // nothing
 
                 Assert.AreEqual(false, c1.IsConnected);
                 await c1.DisconnectAsync();
-                Assert.AreEqual (false, c1.IsConnected);
+                Assert.AreEqual(false, c1.IsConnected);
 
                 await Task.Delay(500);
 
@@ -1141,7 +1141,7 @@ namespace MQTTnet.Tests
                 await testEnvironment.ConnectClientAsync();
             }
         }
-        
+
         [TestMethod]
         public async Task Close_Idle_Connection()
         {
@@ -1182,7 +1182,7 @@ namespace MQTTnet.Tests
                 // forever. This is security related.
                 var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 await PlatformAbstractionLayer.ConnectAsync(client, "localhost", testEnvironment.ServerPort);
-                                
+
                 var buffer = Encoding.UTF8.GetBytes("Garbage");
                 client.Send(buffer, buffer.Length, SocketFlags.None);
 

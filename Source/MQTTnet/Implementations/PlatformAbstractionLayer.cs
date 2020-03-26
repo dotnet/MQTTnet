@@ -7,6 +7,7 @@ namespace MQTTnet.Implementations
 {
     public static class PlatformAbstractionLayer
     {
+        // TODO: Consider creating primitives like "MqttNetSocket" which will wrap all required methods and do the platform stuff.
         public static async Task<Socket> AcceptAsync(Socket socket)
         {
 #if NET452 || NET461
@@ -90,7 +91,7 @@ namespace MQTTnet.Implementations
 
         public static Task CompletedTask
         {
-            get 
+            get
             {
 #if NET452 
                 return Task.FromResult(0);

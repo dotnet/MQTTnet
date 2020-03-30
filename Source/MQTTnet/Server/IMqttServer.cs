@@ -27,5 +27,7 @@ namespace MQTTnet.Server
 
         Task StartAsync(IMqttServerOptions options);
         Task StopAsync();
+
+        bool IsStarted { get; }
     }
 }

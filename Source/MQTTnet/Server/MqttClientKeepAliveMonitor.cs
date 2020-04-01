@@ -1,9 +1,9 @@
-﻿using System;
+﻿using MQTTnet.Diagnostics;
+using MQTTnet.Internal;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
-using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
@@ -13,15 +13,15 @@ namespace MQTTnet.Server
 
         private readonly string _clientId;
         private readonly Func<Task> _keepAliveElapsedCallback;
-        private readonly IMqttNetChildLogger _logger;
+        private readonly IMqttNetLogger _logger;
 
         private bool _isPaused;
 
-        public MqttClientKeepAliveMonitor(string clientId, Func<Task> keepAliveElapsedCallback, IMqttNetChildLogger logger)
+        public MqttClientKeepAliveMonitor(string clientId, Func<Task> keepAliveElapsedCallback, IMqttNetLogger logger)
         {
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             _keepAliveElapsedCallback = keepAliveElapsedCallback ?? throw new ArgumentNullException(nameof(keepAliveElapsedCallback));
-            
+
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttClientKeepAliveMonitor));
         }
@@ -32,7 +32,7 @@ namespace MQTTnet.Server
             {
                 return;
             }
-            
+
             Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken).Forget(_logger);
         }
 

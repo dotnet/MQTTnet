@@ -17,13 +17,13 @@ namespace MQTTnet.Server
     {
         private readonly MqttServerEventDispatcher _eventDispatcher;
         private readonly ICollection<IMqttServerAdapter> _adapters;
-        private readonly IMqttNetChildLogger _logger;
+        private readonly IMqttNetLogger _logger;
 
         private MqttClientSessionsManager _clientSessionsManager;
         private IMqttRetainedMessagesManager _retainedMessagesManager;
         private CancellationTokenSource _cancellationTokenSource;
 
-        public MqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetChildLogger logger)
+        public MqttServer(IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
         {
             if (adapters == null) throw new ArgumentNullException(nameof(adapters));
             _adapters = adapters.ToList();

@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using MQTTnet.Adapter;
+﻿using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
+using MQTTnet.LowLevelClient;
 using MQTTnet.Server;
+using System;
+using System.Collections.Generic;
 
 namespace MQTTnet
 {
-    public class MqttFactory : IMqttFactory
+    public sealed class MqttFactory : IMqttFactory
     {
-        private IMqttClientAdapterFactory _clientAdapterFactory = new MqttClientAdapterFactory();
+        IMqttClientAdapterFactory _clientAdapterFactory = new MqttClientAdapterFactory();
 
-        public MqttFactory() : this(new MqttNetLogger())
+        public MqttFactory() : this(new MqttNetLogger(null, null))
         {
         }
 
@@ -27,6 +28,33 @@ namespace MQTTnet
         {
             _clientAdapterFactory = clientAdapterFactory ?? throw new ArgumentNullException(nameof(clientAdapterFactory));
             return this;
+        }
+
+        public ILowLevelMqttClient CreateLowLevelMqttClient()
+        {
+            return CreateLowLevelMqttClient(DefaultLogger);
+        }
+
+        public ILowLevelMqttClient CreateLowLevelMqttClient(IMqttNetLogger logger)
+        {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            return new LowLevelMqttClient(_clientAdapterFactory, logger);
+        }
+
+        public ILowLevelMqttClient CreateLowLevelMqttClient(IMqttClientAdapterFactory clientAdapterFactory)
+        {
+            if (clientAdapterFactory == null) throw new ArgumentNullException(nameof(clientAdapterFactory));
+
+            return new LowLevelMqttClient(_clientAdapterFactory, DefaultLogger);
+        }
+
+        public ILowLevelMqttClient CreateLowLevelMqttClient(IMqttNetLogger logger, IMqttClientAdapterFactory clientAdapterFactoryy)
+        {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (clientAdapterFactoryy == null) throw new ArgumentNullException(nameof(clientAdapterFactoryy));
+
+            return new LowLevelMqttClient(_clientAdapterFactory, logger);
         }
 
         public IMqttClient CreateMqttClient()
@@ -79,7 +107,7 @@ namespace MQTTnet
         public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> serverAdapters)
         {
             if (serverAdapters == null) throw new ArgumentNullException(nameof(serverAdapters));
-            
+
             return new MqttServer(serverAdapters, DefaultLogger.CreateChildLogger());
         }
     }

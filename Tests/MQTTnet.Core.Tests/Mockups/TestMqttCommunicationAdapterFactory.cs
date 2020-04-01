@@ -12,8 +12,8 @@ namespace MQTTnet.Tests.Mockups
         {
             _adapter = adapter;
         }
-        
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetChildLogger logger)
+
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
         {
             return _adapter;
         }

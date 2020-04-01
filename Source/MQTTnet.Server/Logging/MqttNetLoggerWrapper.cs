@@ -1,7 +1,7 @@
-﻿using System;
-using System.Threading;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using MQTTnet.Diagnostics;
+using System;
+using System.Threading;
 
 namespace MQTTnet.Server.Logging
 {
@@ -16,9 +16,9 @@ namespace MQTTnet.Server.Logging
 
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        public IMqttNetChildLogger CreateChildLogger(string source = null)
+        public IMqttNetLogger CreateChildLogger(string source = null)
         {
-            return new MqttNetChildLoggerWrapper(source, this);
+            return new MqttNetLogger(source);
         }
 
         public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
@@ -33,8 +33,13 @@ namespace MQTTnet.Server.Logging
                 logMessagePublishedEvent.Invoke(this, new MqttNetLogMessagePublishedEventArgs(logMessage));
             }
         }
-        
-        private static LogLevel ConvertLogLevel(MqttNetLogLevel logLevel)
+
+        public void Publish(MqttNetLogLevel logLevel, string message, object[] parameters, Exception exception)
+        {
+            Publish(logLevel, null, message, parameters, exception);
+        }
+
+        static LogLevel ConvertLogLevel(MqttNetLogLevel logLevel)
         {
             switch (logLevel)
             {

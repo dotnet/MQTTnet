@@ -10,7 +10,7 @@ namespace MQTTnet.Benchmarks
     public class LoggerBenchmark
     {
         private IMqttNetLogger _logger;
-        private IMqttNetChildLogger _childLogger;
+        private IMqttNetLogger _childLogger;
         private bool _useHandler;
 
         [GlobalSetup]

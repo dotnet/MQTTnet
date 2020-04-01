@@ -21,6 +21,7 @@
 * [Server] Added interceptor for unsubscriptions.
 * [MQTTnet.Server] Added interceptor for unsubscriptions.
 * [MQTTnet.AspNetCore] improved compatibility with AspNetCore 3.1
+* [LowLevelMqttClient] Added low level MQTT client in order to provide more flexibility when using the MQTT protocol. This client requires detailed knowledge about the MQTT protocol.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2019</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

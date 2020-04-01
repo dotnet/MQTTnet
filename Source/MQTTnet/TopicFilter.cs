@@ -2,6 +2,7 @@
 
 namespace MQTTnet
 {
+    // TODO: Consider renaming to "MqttTopicFilter"
     public class TopicFilter
     {
         public string Topic { get; set; }
@@ -26,16 +27,16 @@ namespace MQTTnet
         public override string ToString()
         {
             return string.Concat(
-                "TopicFilter: [Topic=", 
+                "TopicFilter: [Topic=",
                 Topic,
-                "] [QualityOfServiceLevel=", 
+                "] [QualityOfServiceLevel=",
                 QualityOfServiceLevel,
-                "] [NoLocal=", 
-                NoLocal, 
-                "] [RetainAsPublished=", 
-                RetainAsPublished, 
-                "] [RetainHandling=", 
-                RetainHandling, 
+                "] [NoLocal=",
+                NoLocal,
+                "] [RetainAsPublished=",
+                RetainAsPublished,
+                "] [RetainHandling=",
+                RetainHandling,
                 "]");
         }
     }

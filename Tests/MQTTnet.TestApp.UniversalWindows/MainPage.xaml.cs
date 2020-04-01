@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Security.Cryptography.Certificates;
-using Windows.UI.Core;
-using Windows.UI.Xaml;
-using MQTTnet.Client;
+﻿using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
@@ -14,14 +6,22 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Extensions.Rpc;
+using MQTTnet.Extensions.WebSocket4Net;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Server.Status;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using System.Text;
+using System.Threading.Tasks;
+using Windows.Security.Cryptography.Certificates;
+using Windows.UI.Core;
+using Windows.UI.Xaml;
 using MqttClientConnectedEventArgs = MQTTnet.Client.Connecting.MqttClientConnectedEventArgs;
 using MqttClientDisconnectedEventArgs = MQTTnet.Client.Disconnecting.MqttClientDisconnectedEventArgs;
-using MQTTnet.Extensions.WebSocket4Net;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
@@ -141,7 +141,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     Password = Encoding.UTF8.GetBytes(Password.Text)
                 };
             }
-            
+
             options.CleanSession = CleanSession.IsChecked == true;
             options.KeepAlivePeriod = TimeSpan.FromSeconds(double.Parse(KeepAliveInterval.Text));
 
@@ -198,16 +198,26 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private void OnDisconnected(MqttClientDisconnectedEventArgs e)
         {
-            _traceMessages.Enqueue(new MqttNetLogMessage("", DateTime.Now, -1,
-                "", MqttNetLogLevel.Info, "! DISCONNECTED EVENT FIRED", null));
+            _traceMessages.Enqueue(new MqttNetLogMessage
+            {
+                Timestamp = DateTime.UtcNow,
+                ThreadId = -1,
+                Level = MqttNetLogLevel.Info,
+                Message = "! DISCONNECTED EVENT FIRED",
+            });
 
             Task.Run(UpdateLogAsync);
         }
 
         private void OnConnected(MqttClientConnectedEventArgs e)
         {
-            _traceMessages.Enqueue(new MqttNetLogMessage("", DateTime.Now, -1,
-                "", MqttNetLogLevel.Info, "! CONNECTED EVENT FIRED", null));
+            _traceMessages.Enqueue(new MqttNetLogMessage
+            {
+                Timestamp = DateTime.UtcNow,
+                ThreadId = -1,
+                Level = MqttNetLogLevel.Info,
+                Message = "! CONNECTED EVENT FIRED",
+            });
 
             Task.Run(UpdateLogAsync);
         }
@@ -538,7 +548,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                     //...
                 }
-                
+
                 client.UseApplicationMessageReceivedHandler(e => Handler(e));
 
                 // Subscribe after connect
@@ -614,7 +624,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     };
                 }
             }
-            
+
             // ----------------------------------
             {
                 var options = new MqttServerOptions();

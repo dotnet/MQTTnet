@@ -1,9 +1,9 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Exceptions;
+﻿using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.PacketDispatcher
 {
@@ -12,7 +12,7 @@ namespace MQTTnet.PacketDispatcher
         private readonly TaskCompletionSource<MqttBasePacket> _taskCompletionSource;
         private readonly ushort? _packetIdentifier;
         private readonly MqttPacketDispatcher _owningPacketDispatcher;
-        
+
         public MqttPacketAwaiter(ushort? packetIdentifier, MqttPacketDispatcher owningPacketDispatcher)
         {
             _packetIdentifier = packetIdentifier;
@@ -87,6 +87,7 @@ namespace MQTTnet.PacketDispatcher
             {
                 _owningPacketDispatcher.RemovePacketAwaiter<TPacket>(_packetIdentifier);
             }
+
             base.Dispose(disposing);
         }
     }

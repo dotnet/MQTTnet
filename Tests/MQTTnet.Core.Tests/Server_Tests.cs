@@ -1050,6 +1050,7 @@ namespace MQTTnet.Tests
                 Assert.AreEqual("c", flow);
 
                 // dc
+                // Connect client with same client ID. Should disconnect existing client.
                 var c2 = await testEnvironment.ConnectClientAsync(clientOptionsBuilder);
 
                 c2.UseApplicationMessageReceivedHandler(_ =>
@@ -1074,7 +1075,6 @@ namespace MQTTnet.Tests
 
                 flow = string.Join(string.Empty, events);
                 Assert.AreEqual("cdcr", flow);
-
 
                 // nothing
 

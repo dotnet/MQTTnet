@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
@@ -14,6 +8,12 @@ using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Tests
 {
@@ -29,9 +29,9 @@ namespace MQTTnet.Tests
             {
                 await testEnvironment.StartServerAsync();
                 var client = await testEnvironment.ConnectClientAsync();
-                
+
                 await client.SubscribeAsync("#");
-                
+
                 var replyReceived = false;
 
                 client.UseApplicationMessageReceivedHandler(c =>
@@ -78,7 +78,7 @@ namespace MQTTnet.Tests
                     }
                 });
 
-                client2.UseApplicationMessageReceivedHandler(async c =>{ await client2.PublishAsync("reply", null, MqttQualityOfServiceLevel.AtLeastOnce); });
+                client2.UseApplicationMessageReceivedHandler(async c => { await client2.PublishAsync("reply", null, MqttQualityOfServiceLevel.AtLeastOnce); });
 
                 await client1.PublishAsync("request", null, MqttQualityOfServiceLevel.AtLeastOnce);
 
@@ -181,7 +181,7 @@ namespace MQTTnet.Tests
                 catch
                 {
                 }
-                
+
                 SpinWait.SpinUntil(() => tries >= maxTries, 10000);
 
                 Assert.AreEqual(maxTries, tries);
@@ -215,7 +215,7 @@ namespace MQTTnet.Tests
                 Assert.AreEqual((ushort)4, result.PacketIdentifier);
             }
         }
-        
+
         [TestMethod]
         public async Task Invalid_Connect_Throws_Exception()
         {
@@ -558,6 +558,8 @@ namespace MQTTnet.Tests
                     clients.Add(await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("a")));
                 }
 
+                await Task.Delay(500);
+
                 var clientStatus = await testEnvironment.Server.GetClientStatusAsync();
                 var sessionStatus = await testEnvironment.Server.GetSessionStatusAsync();
 
@@ -565,7 +567,7 @@ namespace MQTTnet.Tests
                 {
                     Assert.IsFalse(clients[i].IsConnected);
                 }
-                
+
                 Assert.IsTrue(clients[99].IsConnected);
 
                 Assert.AreEqual(1, clientStatus.Count);
@@ -583,7 +585,7 @@ namespace MQTTnet.Tests
                 var sendClient = await testEnvironment.ConnectClientAsync();
                 await sendClient.PublishAsync("x", "1");
 
-                await Task.Delay(100);
+                await Task.Delay(250);
 
                 Assert.AreEqual("1", receivedPayload);
             }

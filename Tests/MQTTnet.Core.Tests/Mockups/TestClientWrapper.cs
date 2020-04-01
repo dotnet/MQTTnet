@@ -29,37 +29,34 @@ namespace MQTTnet.Tests.Mockups
 
         public IMqttClientOptions Options => Implementation.Options;
 
-        public IMqttClientConnectedHandler ConnectedHandler { get => Implementation.ConnectedHandler; set => Implementation.ConnectedHandler = value; }
-        public IMqttClientDisconnectedHandler DisconnectedHandler { get => Implementation.DisconnectedHandler; set => Implementation.DisconnectedHandler = value; }
-        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get => Implementation.ApplicationMessageReceivedHandler; set => Implementation.ApplicationMessageReceivedHandler = value; }
+        public IMqttClientConnectedHandler ConnectedHandler
+        {
+            get => Implementation.ConnectedHandler;
+            set => Implementation.ConnectedHandler = value;
+        }
+
+        public IMqttClientDisconnectedHandler DisconnectedHandler
+        {
+            get => Implementation.DisconnectedHandler;
+            set => Implementation.DisconnectedHandler = value;
+        }
+
+        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
+        {
+            get => Implementation.ApplicationMessageReceivedHandler;
+            set => Implementation.ApplicationMessageReceivedHandler = value;
+        }
 
         public Task<MqttClientAuthenticateResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)
         {
             if (TestContext != null)
             {
-                switch (options)
+                var clientOptions = (MqttClientOptions)options;
+
+                var existingClientId = clientOptions.ClientId;
+                if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
                 {
-                    case MqttClientOptionsBuilder builder:
-                        {
-                            var existingClientId = builder.Build().ClientId;
-                            if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
-                            {
-                                builder.WithClientId(TestContext.TestName + existingClientId);
-                            }
-
-                            break;
-                        }
-
-                    case MqttClientOptions op:
-                        {
-                            var existingClientId = op.ClientId;
-                            if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
-                            {
-                                op.ClientId = TestContext.TestName + existingClientId;
-                            }
-
-                            break;
-                        }
+                    clientOptions.ClientId = TestContext.TestName + existingClientId;
                 }
             }
 

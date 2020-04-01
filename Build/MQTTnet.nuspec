@@ -11,6 +11,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
+* [All] Due to a merge issue not all changes are included in 3.0.8. All these changes are now included in this version.
 * [ManagedClient] Added builder class for MqttClientUnsubscribeOptions (thanks to @dominikviererbe).
 * [ManagedClient] Added support for persisted sessions (thansk to @PMExtra).
 * [Client] Improve connection stability (thanks to @jltjohanlindqvist).
@@ -23,7 +24,7 @@
 * [MQTTnet.AspNetCore] improved compatibility with AspNetCore 3.1
 * [LowLevelMqttClient] Added low level MQTT client in order to provide more flexibility when using the MQTT protocol. This client requires detailed knowledge about the MQTT protocol.
     </releaseNotes>
-    <copyright>Copyright Christian Kratky 2016-2019</copyright>
+    <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
     <dependencies>
       <group targetFramework="netstandard1.3">

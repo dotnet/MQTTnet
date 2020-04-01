@@ -46,5 +46,22 @@ namespace MQTTnet.Tests
 
             Assert.AreEqual(4, logMessagesCount);
         }
+
+        [TestMethod]
+        public void Set_Custom_Log_ID()
+        {
+            var logger = new MqttNetLogger(null, "logId");
+            var childLogger = logger.CreateChildLogger("Source1");
+
+            logger.LogMessagePublished += (s, e) =>
+            {
+                Assert.AreEqual("logId", e.LogMessage.LogId);
+            };
+
+            childLogger.Verbose("Verbose");
+            childLogger.Info("Info");
+            childLogger.Warning(null, "Warning");
+            childLogger.Error(null, "Error");
+        }
     }
 }

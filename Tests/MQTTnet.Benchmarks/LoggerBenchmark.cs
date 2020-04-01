@@ -16,7 +16,7 @@ namespace MQTTnet.Benchmarks
         [GlobalSetup]
         public void Setup()
         {
-            _logger = new MqttNetLogger("1");
+            _logger = new MqttNetLogger();
             _childLogger = _logger.CreateChildLogger("child");
 
             MqttNetGlobalLogger.LogMessagePublished += OnLogMessagePublished;

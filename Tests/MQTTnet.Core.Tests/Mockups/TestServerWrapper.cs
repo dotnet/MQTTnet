@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Server;
 using MQTTnet.Server.Status;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Tests.Mockups
 {
-    public class TestServerWrapper : IMqttServer
+    public sealed class TestServerWrapper : IMqttServer
     {
         public TestServerWrapper(IMqttServer implementation, TestContext testContext, TestEnvironment testEnvironment)
         {
@@ -60,22 +60,29 @@ namespace MQTTnet.Tests.Mockups
 
         public Task StartAsync(IMqttServerOptions options)
         {
-            switch (options)
+            if (TestContext != null)
             {
-                case MqttServerOptionsBuilder builder:
-                    if (builder.Build().ConnectionValidator == null)
-                    {
-                        builder.WithConnectionValidator(ConnectionValidator);
-                    }
-                    break;
-                case MqttServerOptions op:
-                    if (op.ConnectionValidator == null)
-                    {
-                        op.ConnectionValidator = new MqttServerConnectionValidatorDelegate(ConnectionValidator);
-                    }
-                    break;
-                default:
-                    break;
+                switch (options)
+                {
+                    case MqttServerOptionsBuilder builder:
+                        {
+                            if (builder.Build().ConnectionValidator == null)
+                            {
+                                builder.WithConnectionValidator(ConnectionValidator);
+                            }
+
+                            break;
+                        }
+                    case MqttServerOptions op:
+                        {
+                            if (op.ConnectionValidator == null)
+                            {
+                                op.ConnectionValidator = new MqttServerConnectionValidatorDelegate(ConnectionValidator);
+                            }
+
+                            break;
+                        }
+                }
             }
 
             return Implementation.StartAsync(options);

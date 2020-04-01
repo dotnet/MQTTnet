@@ -1,20 +1,20 @@
-﻿using System;
-using System.Net.WebSockets;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
+using System;
+using System.Net.WebSockets;
+using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore
 {
     public class MqttWebSocketServerAdapter : IMqttServerAdapter
     {
-        private readonly IMqttNetChildLogger _logger;
+        private readonly IMqttNetLogger _logger;
 
-        public MqttWebSocketServerAdapter(IMqttNetChildLogger logger)
+        public MqttWebSocketServerAdapter(IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
@@ -38,7 +38,7 @@ namespace MQTTnet.AspNetCore
             if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
 
             var endpoint = $"{httpContext.Connection.RemoteIpAddress}:{httpContext.Connection.RemotePort}";
-            
+
             var clientCertificate = await httpContext.Connection.GetClientCertificateAsync().ConfigureAwait(false);
             try
             {

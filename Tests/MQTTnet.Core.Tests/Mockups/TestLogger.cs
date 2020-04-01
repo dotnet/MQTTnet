@@ -1,20 +1,15 @@
-﻿using System;
-using MQTTnet.Diagnostics;
+﻿using MQTTnet.Diagnostics;
+using System;
 
 namespace MQTTnet.Tests.Mockups
 {
-    public class TestLogger : IMqttNetLogger, IMqttNetChildLogger
+    public class TestLogger : IMqttNetLogger
     {
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        IMqttNetChildLogger IMqttNetLogger.CreateChildLogger(string source)
+        public IMqttNetLogger CreateChildLogger(string source = null)
         {
-            return new MqttNetChildLogger(this, source);
-        }
-
-        IMqttNetChildLogger IMqttNetChildLogger.CreateChildLogger(string source)
-        {
-            return new MqttNetChildLogger(this, source);
+            return new TestLogger();
         }
 
         public void Verbose(string message, params object[] parameters)
@@ -35,6 +30,11 @@ namespace MQTTnet.Tests.Mockups
 
         public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
         {
+        }
+
+        public void Publish(MqttNetLogLevel logLevel, string message, object[] parameters, Exception exception)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
@@ -10,10 +8,12 @@ using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Tests.Mockups
 {
-    public class TestClientWrapper : IMqttClient
+    public sealed class TestClientWrapper : IMqttClient
     {
         public TestClientWrapper(IMqttClient implementation, TestContext testContext)
         {
@@ -22,6 +22,7 @@ namespace MQTTnet.Tests.Mockups
         }
 
         public IMqttClient Implementation { get; }
+
         public TestContext TestContext { get; }
 
         public bool IsConnected => Implementation.IsConnected;
@@ -34,28 +35,32 @@ namespace MQTTnet.Tests.Mockups
 
         public Task<MqttClientAuthenticateResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)
         {
-            switch (options)
+            if (TestContext != null)
             {
-                case MqttClientOptionsBuilder builder:
-                    {
-                        var existingClientId = builder.Build().ClientId;
-                        if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
+                switch (options)
+                {
+                    case MqttClientOptionsBuilder builder:
                         {
-                            builder.WithClientId(TestContext.TestName + existingClientId);
+                            var existingClientId = builder.Build().ClientId;
+                            if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
+                            {
+                                builder.WithClientId(TestContext.TestName + existingClientId);
+                            }
+
+                            break;
                         }
-                    }
-                    break;
-                case MqttClientOptions op:
-                    {
-                        var existingClientId = op.ClientId;
-                        if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
+
+                    case MqttClientOptions op:
                         {
-                            op.ClientId = TestContext.TestName + existingClientId;
+                            var existingClientId = op.ClientId;
+                            if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
+                            {
+                                op.ClientId = TestContext.TestName + existingClientId;
+                            }
+
+                            break;
                         }
-                    }
-                    break;
-                default:
-                    break;
+                }
             }
 
             return Implementation.ConnectAsync(options, cancellationToken);
@@ -81,7 +86,7 @@ namespace MQTTnet.Tests.Mockups
             return Implementation.SendExtendedAuthenticationExchangeDataAsync(data, cancellationToken);
         }
 
-        public Task<Client.Subscribing.MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken)
+        public Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken)
         {
             return Implementation.SubscribeAsync(options, cancellationToken);
         }

@@ -1,7 +1,3 @@
-using System;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
@@ -17,6 +13,10 @@ using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Client
 {
@@ -29,7 +29,7 @@ namespace MQTTnet.Client
         private readonly object _disconnectLock = new object();
 
         private readonly IMqttClientAdapterFactory _adapterFactory;
-        private readonly IMqttNetChildLogger _logger;
+        private readonly IMqttNetLogger _logger;
 
         private CancellationTokenSource _backgroundCancellationTokenSource;
         private Task _packetReceiverTask;

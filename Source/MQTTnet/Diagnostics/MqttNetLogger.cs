@@ -4,21 +4,27 @@ namespace MQTTnet.Diagnostics
 {
     public class MqttNetLogger : IMqttNetLogger
     {
-        private readonly string _logId;
+        readonly string _logId;
+        readonly string _source;
 
-        public MqttNetLogger(string logId = null)
+        public MqttNetLogger(string source, string logId = null)
         {
+            _source = source;
             _logId = logId;
+        }
+
+        public MqttNetLogger()
+        {
         }
 
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        public IMqttNetChildLogger CreateChildLogger(string source = null)
+        public IMqttNetLogger CreateChildLogger(string source = null)
         {
-            return new MqttNetChildLogger(this, source);
+            return new MqttNetLogger(source, _logId);
         }
 
-        public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
+        public void Publish(MqttNetLogLevel logLevel, string message, object[] parameters, Exception exception)
         {
             var hasLocalListeners = LogMessagePublished != null;
             var hasGlobalListeners = MqttNetGlobalLogger.HasListeners;
@@ -40,7 +46,7 @@ namespace MQTTnet.Diagnostics
                 }
             }
 
-            var traceMessage = new MqttNetLogMessage(_logId, DateTime.UtcNow, Environment.CurrentManagedThreadId, source, logLevel, message, exception);
+            var traceMessage = new MqttNetLogMessage(_logId, DateTime.UtcNow, Environment.CurrentManagedThreadId, _source, logLevel, message, exception);
 
             if (hasGlobalListeners)
             {

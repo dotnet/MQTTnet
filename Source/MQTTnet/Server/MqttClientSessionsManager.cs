@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Adapter;
+﻿using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
@@ -27,14 +27,14 @@ namespace MQTTnet.Server
 
         private readonly IMqttRetainedMessagesManager _retainedMessagesManager;
         private readonly IMqttServerOptions _options;
-        private readonly IMqttNetChildLogger _logger;
+        private readonly IMqttNetLogger _logger;
 
         public MqttClientSessionsManager(
             IMqttServerOptions options,
             IMqttRetainedMessagesManager retainedMessagesManager,
             CancellationToken cancellationToken,
             MqttServerEventDispatcher eventDispatcher,
-            IMqttNetChildLogger logger)
+            IMqttNetLogger logger)
         {
             _cancellationToken = cancellationToken;
 

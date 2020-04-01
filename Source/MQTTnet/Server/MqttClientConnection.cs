@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Adapter;
+﻿using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
@@ -12,6 +8,10 @@ using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
@@ -25,7 +25,7 @@ namespace MQTTnet.Server
         private readonly MqttClientKeepAliveMonitor _keepAliveMonitor;
         private readonly MqttClientSessionsManager _sessionsManager;
 
-        private readonly IMqttNetChildLogger _logger;
+        private readonly IMqttNetLogger _logger;
         private readonly IMqttServerOptions _serverOptions;
 
         private readonly IMqttChannelAdapter _channelAdapter;
@@ -49,7 +49,7 @@ namespace MQTTnet.Server
             IMqttServerOptions serverOptions,
             MqttClientSessionsManager sessionsManager,
             IMqttRetainedMessagesManager retainedMessagesManager,
-            IMqttNetChildLogger logger)
+            IMqttNetLogger logger)
         {
             Session = session ?? throw new ArgumentNullException(nameof(session));
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));

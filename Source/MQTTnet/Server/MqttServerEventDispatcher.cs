@@ -1,15 +1,15 @@
-﻿using System;
-using System.Threading.Tasks;
-using MQTTnet.Client.Receiving;
+﻿using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using System;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
     public class MqttServerEventDispatcher
     {
-        private readonly IMqttNetChildLogger _logger;
+        private readonly IMqttNetLogger _logger;
 
-        public MqttServerEventDispatcher(IMqttNetChildLogger logger)
+        public MqttServerEventDispatcher(IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }

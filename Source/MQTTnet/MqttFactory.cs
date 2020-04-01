@@ -13,7 +13,7 @@ namespace MQTTnet
     {
         IMqttClientAdapterFactory _clientAdapterFactory = new MqttClientAdapterFactory();
 
-        public MqttFactory() : this(new MqttNetLogger(null, null))
+        public MqttFactory() : this(new MqttNetLogger())
         {
         }
 

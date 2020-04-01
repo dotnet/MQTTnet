@@ -9,7 +9,7 @@ namespace MQTTnet.Diagnostics
 
         readonly MqttNetLogger _parentLogger;
 
-        public MqttNetLogger(string source, string logId = null)
+        public MqttNetLogger(string source, string logId)
         {
             _source = source;
             _logId = logId;
@@ -17,6 +17,11 @@ namespace MQTTnet.Diagnostics
 
         public MqttNetLogger()
         {
+        }
+
+        public MqttNetLogger(string logId)
+        {
+            _logId = logId;
         }
 
         MqttNetLogger(MqttNetLogger parentLogger, string logId, string source)

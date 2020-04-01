@@ -7,7 +7,7 @@ namespace MQTTnet.Server.Logging
 {
     public class MqttNetLoggerWrapper : IMqttNetLogger
     {
-        private readonly ILogger<MqttServer> _logger;
+        readonly ILogger<MqttServer> _logger;
 
         public MqttNetLoggerWrapper(ILogger<MqttServer> logger)
         {
@@ -16,7 +16,7 @@ namespace MQTTnet.Server.Logging
 
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        public IMqttNetLogger CreateChildLogger(string source = null)
+        public IMqttNetLogger CreateChildLogger(string source)
         {
             return new MqttNetLogger(source);
         }

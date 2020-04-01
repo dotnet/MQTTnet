@@ -19,13 +19,13 @@ namespace MQTTnet.Adapter
         const uint ErrorOperationAborted = 0x800703E3;
         const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
 
-        readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
-
         readonly IMqttNetLogger _logger;
         readonly IMqttChannel _channel;
         readonly MqttPacketReader _packetReader;
 
         readonly byte[] _fixedHeaderBuffer = new byte[2];
+
+        SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
 
         long _bytesReceived;
         long _bytesSent;
@@ -143,7 +143,7 @@ namespace MQTTnet.Adapter
             }
             finally
             {
-                _writerSemaphore.Release();
+                _writerSemaphore?.Release();
             }
         }
 
@@ -212,7 +212,9 @@ namespace MQTTnet.Adapter
             if (disposing)
             {
                 _channel?.Dispose();
+
                 _writerSemaphore?.Dispose();
+                _writerSemaphore = null;
             }
 
             base.Dispose(disposing);

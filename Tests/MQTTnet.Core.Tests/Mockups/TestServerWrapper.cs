@@ -22,16 +22,50 @@ namespace MQTTnet.Tests.Mockups
         public IMqttServer Implementation { get; }
         public TestContext TestContext { get; }
         public TestEnvironment TestEnvironment { get; }
-        public IMqttServerStartedHandler StartedHandler { get => Implementation.StartedHandler; set => Implementation.StartedHandler = value; }
-        public IMqttServerStoppedHandler StoppedHandler { get => Implementation.StoppedHandler; set => Implementation.StoppedHandler = value; }
-        public IMqttServerClientConnectedHandler ClientConnectedHandler { get => Implementation.ClientConnectedHandler; set => Implementation.ClientConnectedHandler = value; }
-        public IMqttServerClientDisconnectedHandler ClientDisconnectedHandler { get => Implementation.ClientDisconnectedHandler; set => Implementation.ClientDisconnectedHandler = value; }
-        public IMqttServerClientSubscribedTopicHandler ClientSubscribedTopicHandler { get => Implementation.ClientSubscribedTopicHandler; set => Implementation.ClientSubscribedTopicHandler = value; }
-        public IMqttServerClientUnsubscribedTopicHandler ClientUnsubscribedTopicHandler { get => Implementation.ClientUnsubscribedTopicHandler; set => Implementation.ClientUnsubscribedTopicHandler = value; }
+
+        public IMqttServerStartedHandler StartedHandler
+        {
+            get => Implementation.StartedHandler;
+            set => Implementation.StartedHandler = value;
+        }
+
+        public IMqttServerStoppedHandler StoppedHandler
+        {
+            get => Implementation.StoppedHandler;
+            set => Implementation.StoppedHandler = value;
+        }
+
+        public IMqttServerClientConnectedHandler ClientConnectedHandler
+        {
+            get => Implementation.ClientConnectedHandler;
+            set => Implementation.ClientConnectedHandler = value;
+        }
+
+        public IMqttServerClientDisconnectedHandler ClientDisconnectedHandler
+        {
+            get => Implementation.ClientDisconnectedHandler;
+            set => Implementation.ClientDisconnectedHandler = value;
+        }
+
+        public IMqttServerClientSubscribedTopicHandler ClientSubscribedTopicHandler
+        {
+            get => Implementation.ClientSubscribedTopicHandler;
+            set => Implementation.ClientSubscribedTopicHandler = value;
+        }
+
+        public IMqttServerClientUnsubscribedTopicHandler ClientUnsubscribedTopicHandler
+        {
+            get => Implementation.ClientUnsubscribedTopicHandler;
+            set => Implementation.ClientUnsubscribedTopicHandler = value;
+        }
 
         public IMqttServerOptions Options => Implementation.Options;
 
-        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get => Implementation.ApplicationMessageReceivedHandler; set => Implementation.ApplicationMessageReceivedHandler = value; }
+        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
+        {
+            get => Implementation.ApplicationMessageReceivedHandler;
+            set => Implementation.ApplicationMessageReceivedHandler = value;
+        }
 
         public Task ClearRetainedApplicationMessagesAsync()
         {
@@ -62,26 +96,11 @@ namespace MQTTnet.Tests.Mockups
         {
             if (TestContext != null)
             {
-                switch (options)
+                var serverOptions = (MqttServerOptions)options;
+
+                if (serverOptions.ConnectionValidator == null)
                 {
-                    case MqttServerOptionsBuilder builder:
-                        {
-                            if (builder.Build().ConnectionValidator == null)
-                            {
-                                builder.WithConnectionValidator(ConnectionValidator);
-                            }
-
-                            break;
-                        }
-                    case MqttServerOptions op:
-                        {
-                            if (op.ConnectionValidator == null)
-                            {
-                                op.ConnectionValidator = new MqttServerConnectionValidatorDelegate(ConnectionValidator);
-                            }
-
-                            break;
-                        }
+                    serverOptions.ConnectionValidator = new MqttServerConnectionValidatorDelegate(ConnectionValidator);
                 }
             }
 
@@ -92,7 +111,7 @@ namespace MQTTnet.Tests.Mockups
         {
             if (!ctx.ClientId.StartsWith(TestContext.TestName))
             {
-                TestEnvironment.TrackException(new InvalidOperationException($"invalid client connected '{ctx.ClientId}'"));
+                TestEnvironment.TrackException(new InvalidOperationException($"Invalid client ID used ({ctx.ClientId}). It must start with UnitTest name."));
                 ctx.ReasonCode = Protocol.MqttConnectReasonCode.ClientIdentifierNotValid;
             }
         }

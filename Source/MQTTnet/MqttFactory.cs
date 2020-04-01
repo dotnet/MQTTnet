@@ -93,7 +93,7 @@ namespace MQTTnet
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            return CreateMqttServer(new List<IMqttServerAdapter> { new MqttTcpServerAdapter(logger.CreateChildLogger()) }, logger);
+            return CreateMqttServer(new List<IMqttServerAdapter> { new MqttTcpServerAdapter(logger) }, logger);
         }
 
         public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> serverAdapters, IMqttNetLogger logger)
@@ -101,14 +101,14 @@ namespace MQTTnet
             if (serverAdapters == null) throw new ArgumentNullException(nameof(serverAdapters));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            return new MqttServer(serverAdapters, logger.CreateChildLogger());
+            return new MqttServer(serverAdapters, logger);
         }
 
         public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> serverAdapters)
         {
             if (serverAdapters == null) throw new ArgumentNullException(nameof(serverAdapters));
 
-            return new MqttServer(serverAdapters, DefaultLogger.CreateChildLogger());
+            return new MqttServer(serverAdapters, DefaultLogger);
         }
     }
 }

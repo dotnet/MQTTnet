@@ -437,9 +437,8 @@ namespace MQTTnet.Server
                 {
                     _logger.Warning(exception, "Sending publish packet failed: Communication exception (ClientId: {0}).", ClientId);
                 }
-                else if (exception is OperationCanceledException && _cancellationToken.Token.IsCancellationRequested)
+                else if (exception is OperationCanceledException)
                 {
-                    // The cancellation was triggered externally.
                 }
                 else
                 {

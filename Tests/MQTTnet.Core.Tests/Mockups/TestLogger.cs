@@ -7,7 +7,7 @@ namespace MQTTnet.Tests.Mockups
     {
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        public IMqttNetLogger CreateChildLogger(string source = null)
+        public IMqttNetLogger CreateChildLogger(string source)
         {
             return new TestLogger();
         }

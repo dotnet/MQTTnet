@@ -21,15 +21,24 @@ namespace MQTTnet.Server.Logging
             return new MqttNetLogger(source);
         }
 
-        public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
+        public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
         {
-            var convertedLogLevel = ConvertLogLevel(logLevel);
+            var convertedLogLevel = ConvertLogLevel(level);
             _logger.Log(convertedLogLevel, exception, message, parameters);
 
             var logMessagePublishedEvent = LogMessagePublished;
             if (logMessagePublishedEvent != null)
             {
-                var logMessage = new MqttNetLogMessage(null, DateTime.UtcNow, Thread.CurrentThread.ManagedThreadId, source, logLevel, message, exception);
+                var logMessage = new MqttNetLogMessage
+                {
+                    Timestamp = DateTime.UtcNow,
+                    ThreadId = Thread.CurrentThread.ManagedThreadId,
+                    Source = source,
+                    Level = level,
+                    Message = message,
+                    Exception = exception
+                };
+
                 logMessagePublishedEvent.Invoke(this, new MqttNetLogMessagePublishedEventArgs(logMessage));
             }
         }

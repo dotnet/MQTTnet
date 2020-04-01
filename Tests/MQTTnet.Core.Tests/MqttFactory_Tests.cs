@@ -15,35 +15,36 @@ namespace MQTTnet.Tests
         {
             var factory = new MqttFactory();
 
-            //This test compares
-            //1. correct logID
+            // This test compares
+            // 1. correct logID
             var logId = "logId";
-            string invalidLogId = null;
+            var hasInvalidLogId = false;
 
-            //2. if the total log calls are the same for global and local
-            var globalLogCount = 0;
+            // 2. if the total log calls are the same for global and local
+            //var globalLogCount = 0;
             var localLogCount = 0;
 
             var logger = new MqttNetLogger(logId);
 
-            //we have a theoretical bug here if a concurrent test is also logging
-            var globalLog = new EventHandler<MqttNetLogMessagePublishedEventArgs>((s, e) =>
-            {
-                if (logId != e.LogMessage.LogId)
-                {
-                    invalidLogId = e.LogMessage.LogId;
-                }
+            // TODO: This is commented out because it is affected by other tests.
+            //// we have a theoretical bug here if a concurrent test is also logging
+            //var globalLog = new EventHandler<MqttNetLogMessagePublishedEventArgs>((s, e) =>
+            //{
+            //    if (e.TraceMessage.LogId != logId)
+            //    {
+            //        invalidLogId = e.TraceMessage.LogId;
+            //    }
 
-                Interlocked.Increment(ref globalLogCount);
-            });
+            //    Interlocked.Increment(ref globalLogCount);
+            //});
 
-            MqttNetGlobalLogger.LogMessagePublished += globalLog;
+            //MqttNetGlobalLogger.LogMessagePublished += globalLog;
 
             logger.LogMessagePublished += (s, e) =>
             {
-                if (logId != e.LogMessage.LogId)
+                if (e.LogMessage.LogId != logId)
                 {
-                    invalidLogId = e.LogMessage.LogId;
+                    hasInvalidLogId = true;
                 }
 
                 Interlocked.Increment(ref localLogCount);
@@ -56,10 +57,10 @@ namespace MQTTnet.Tests
 
                 clientOptions.WithClientOptions(o => o.WithTcpServer("this_is_an_invalid_host").WithCommunicationTimeout(TimeSpan.FromSeconds(1)));
 
-                //try connect to get some log entries
+                // try connect to get some log entries
                 await managedClient.StartAsync(clientOptions.Build());
 
-                //wait at least connect timeout or we have some log messages
+                // wait at least connect timeout or we have some log messages
                 var tcs = new TaskCompletionSource<object>();
                 managedClient.ConnectingFailedHandler = new ConnectingFailedHandlerDelegate(e => tcs.TrySetResult(null));
                 await Task.WhenAny(Task.Delay(managedClient.Options.ClientOptions.CommunicationTimeout), tcs.Task);
@@ -68,12 +69,13 @@ namespace MQTTnet.Tests
             {
                 await managedClient.StopAsync();
 
-                MqttNetGlobalLogger.LogMessagePublished -= globalLog;
+                //MqttNetGlobalLogger.LogMessagePublished -= globalLog;
             }
 
-            Assert.IsNull(invalidLogId);
-            Assert.AreNotEqual(0, globalLogCount);
-            Assert.AreEqual(globalLogCount, localLogCount);
+            await Task.Delay(500);
+
+            Assert.IsFalse(hasInvalidLogId);
+            Assert.AreNotEqual(0, localLogCount);
         }
     }
 }

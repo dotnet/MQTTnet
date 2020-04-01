@@ -4,30 +4,19 @@ namespace MQTTnet.Diagnostics
 {
     public class MqttNetLogMessage
     {
-        public MqttNetLogMessage(string logId, DateTime timestamp, int threadId, string source, MqttNetLogLevel level, string message, Exception exception)
-        {
-            LogId = logId;
-            Timestamp = timestamp;
-            ThreadId = threadId;
-            Source = source;
-            Level = level;
-            Message = message;
-            Exception = exception;
-        }
+        public string LogId { get; set; }
 
-        public string LogId { get; }
+        public DateTime Timestamp { get; set; }
 
-        public DateTime Timestamp { get; }
+        public int ThreadId { get; set; }
 
-        public int ThreadId { get; }
+        public string Source { get; set; }
 
-        public string Source { get; }
+        public MqttNetLogLevel Level { get; set; }
 
-        public MqttNetLogLevel Level { get; }
+        public string Message { get; set; }
 
-        public string Message { get; }
-
-        public Exception Exception { get; }
+        public Exception Exception { get; set; }
 
         public override string ToString()
         {

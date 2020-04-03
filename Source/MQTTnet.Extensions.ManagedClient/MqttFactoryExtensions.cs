@@ -1,5 +1,5 @@
-﻿using System;
-using MQTTnet.Diagnostics;
+﻿using MQTTnet.Diagnostics;
+using System;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -9,7 +9,7 @@ namespace MQTTnet.Extensions.ManagedClient
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
 
-            return new ManagedMqttClient(factory.CreateMqttClient(), factory.DefaultLogger.CreateChildLogger());
+            return new ManagedMqttClient(factory.CreateMqttClient(), factory.DefaultLogger);
         }
 
         public static IManagedMqttClient CreateManagedMqttClient(this IMqttFactory factory, IMqttNetLogger logger)
@@ -17,7 +17,7 @@ namespace MQTTnet.Extensions.ManagedClient
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            return new ManagedMqttClient(factory.CreateMqttClient(logger), logger.CreateChildLogger());
+            return new ManagedMqttClient(factory.CreateMqttClient(logger), logger);
         }
     }
 }

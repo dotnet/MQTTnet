@@ -14,12 +14,12 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Adapter
 {
-    public class MqttChannelAdapter : Disposable, IMqttChannelAdapter
+    public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
     {
         const uint ErrorOperationAborted = 0x800703E3;
         const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
 
-        readonly IMqttNetChildLogger _logger;
+        readonly IMqttNetLogger _logger;
         readonly IMqttChannel _channel;
         readonly MqttPacketReader _packetReader;
 
@@ -30,7 +30,7 @@ namespace MQTTnet.Adapter
         long _bytesReceived;
         long _bytesSent;
 
-        public MqttChannelAdapter(IMqttChannel channel, MqttPacketFormatterAdapter packetFormatterAdapter, IMqttNetChildLogger logger)
+        public MqttChannelAdapter(IMqttChannel channel, MqttPacketFormatterAdapter packetFormatterAdapter, IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 

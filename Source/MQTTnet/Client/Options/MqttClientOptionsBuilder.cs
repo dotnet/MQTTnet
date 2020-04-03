@@ -1,19 +1,19 @@
-﻿using System;
+﻿using MQTTnet.Client.ExtendedAuthenticationExchange;
+using MQTTnet.Formatter;
+using System;
 using System.Linq;
 using System.Text;
-using MQTTnet.Client.ExtendedAuthenticationExchange;
-using MQTTnet.Formatter;
 
 namespace MQTTnet.Client.Options
 {
     public class MqttClientOptionsBuilder
     {
-        private readonly MqttClientOptions _options = new MqttClientOptions();
+        readonly MqttClientOptions _options = new MqttClientOptions();
 
-        private MqttClientTcpOptions _tcpOptions;
-        private MqttClientWebSocketOptions _webSocketOptions;
-        private MqttClientOptionsBuilderTlsParameters _tlsParameters;
-        private MqttClientWebSocketProxyOptions _proxyOptions;
+        MqttClientTcpOptions _tcpOptions;
+        MqttClientWebSocketOptions _webSocketOptions;
+        MqttClientOptionsBuilderTlsParameters _tlsParameters;
+        MqttClientWebSocketProxyOptions _proxyOptions;
 
         public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion value)
         {

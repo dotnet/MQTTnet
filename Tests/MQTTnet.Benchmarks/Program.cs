@@ -9,7 +9,7 @@ namespace MQTTnet.Benchmarks
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine($"MQTTnet - BenchmarkApp.{TargetFrameworkInfoProvider.TargetFramework}");
+            Console.WriteLine($"MQTTnet - BenchmarkApp.{TargetFrameworkProvider.TargetFramework}");
             Console.WriteLine("1 = MessageProcessingBenchmark");
             Console.WriteLine("2 = SerializerBenchmark");
             Console.WriteLine("3 = LoggerBenchmark");

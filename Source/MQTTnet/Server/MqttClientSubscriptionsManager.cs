@@ -1,9 +1,9 @@
-﻿using System;
+﻿using MQTTnet.Packets;
+using MQTTnet.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
@@ -67,7 +67,7 @@ namespace MQTTnet.Server
                         _subscriptions[finalTopicFilter.Topic] = finalTopicFilter;
                     }
 
-                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
+                    await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
                 }
             }
 
@@ -83,7 +83,7 @@ namespace MQTTnet.Server
                 var interceptorContext = await InterceptSubscribeAsync(topicFilter).ConfigureAwait(false);
                 if (!interceptorContext.AcceptSubscription)
                 {
-                   continue;
+                    continue;
                 }
 
                 if (interceptorContext.AcceptSubscription)
@@ -93,7 +93,7 @@ namespace MQTTnet.Server
                         _subscriptions[topicFilter.Topic] = topicFilter;
                     }
 
-                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
+                    await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
                 }
             }
         }
@@ -131,9 +131,9 @@ namespace MQTTnet.Server
 
             foreach (var topicFilter in unsubscribePacket.TopicFilters)
             {
-                await _eventDispatcher.HandleClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
+                await _eventDispatcher.SafeNotifyClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
             }
-            
+
             return unsubAckPacket;
         }
 
@@ -152,7 +152,7 @@ namespace MQTTnet.Server
                 lock (_subscriptions)
                 {
                     _subscriptions.Remove(topicFilter);
-                }    
+                }
             }
         }
 

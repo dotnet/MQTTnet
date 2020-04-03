@@ -1,18 +1,18 @@
-﻿using System;
+﻿using MQTTnet.Diagnostics;
+using MQTTnet.Server.Status;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
-using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
     public class MqttClientSession
     {
-        private readonly IMqttNetChildLogger _logger;
+        private readonly IMqttNetLogger _logger;
 
         private readonly DateTime _createdTimestamp = DateTime.UtcNow;
 
-        public MqttClientSession(string clientId, IDictionary<object, object> items, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttNetChildLogger logger)
+        public MqttClientSession(string clientId, IDictionary<object, object> items, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttNetLogger logger)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             Items = items ?? throw new ArgumentNullException(nameof(items));

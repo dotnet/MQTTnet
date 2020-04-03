@@ -46,15 +46,15 @@ namespace MQTTnet.Implementations
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
-            Socket socket;
+            CrossPlatformSocket socket;
 
             if (_options.AddressFamily == AddressFamily.Unspecified)
             {
-                socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                socket = new CrossPlatformSocket();
             }
             else
             {
-                socket = new Socket(_options.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                socket = new CrossPlatformSocket(_options.AddressFamily);
             }
 
             socket.ReceiveBufferSize = _options.BufferSize;
@@ -69,20 +69,24 @@ namespace MQTTnet.Implementations
                 socket.DualMode = _options.DualMode.Value;
             }
 
-            // Workaround for: workaround for https://github.com/dotnet/corefx/issues/24430
-            using (cancellationToken.Register(() => socket.Dispose()))
-            {
-                await PlatformAbstractionLayer.ConnectAsync(socket, _options.Server, _options.GetPort()).ConfigureAwait(false);
-            }
+            await socket.ConnectAsync(_options.Server, _options.GetPort(), cancellationToken).ConfigureAwait(false);
 
-            var networkStream = new NetworkStream(socket, true);
+            var networkStream = socket.GetStream();
 
             if (_options.TlsOptions.UseTls)
             {
                 var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
-                _stream = sslStream;
+                try
+                {
+                    await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, !_options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+                }
+                catch
+                {
+                    sslStream.Dispose();
+                    throw;
+                }
 
-                await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, !_options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+                _stream = sslStream;
             }
             else
             {
@@ -107,17 +111,14 @@ namespace MQTTnet.Implementations
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(Dispose))
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return 0;
-                    }
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (ObjectDisposedException)
             {
-                return 0;
+                return -1;
             }
             catch (IOException exception)
             {
@@ -139,10 +140,7 @@ namespace MQTTnet.Implementations
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(Dispose))
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }

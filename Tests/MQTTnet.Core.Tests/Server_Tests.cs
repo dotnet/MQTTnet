@@ -904,14 +904,13 @@ namespace MQTTnet.Tests
 
                 await testEnvironment.StartServerAsync(serverOptions);
 
-
                 var connectingFailedException = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(() => testEnvironment.ConnectClientAsync());
                 Assert.AreEqual(MqttClientConnectResultCode.NotAuthorized, connectingFailedException.ResultCode);
             }
         }
 
+        Dictionary<string, bool> _connected;
 
-        private Dictionary<string, bool> _connected;
         private void ConnectionValidationHandler(MqttConnectionValidatorContext eventArgs)
         {
             if (_connected.ContainsKey(eventArgs.ClientId))
@@ -919,6 +918,7 @@ namespace MQTTnet.Tests
                 eventArgs.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                 return;
             }
+
             _connected[eventArgs.ClientId] = true;
             eventArgs.ReasonCode = MqttConnectReasonCode.Success;
             return;
@@ -1016,7 +1016,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Same_Client_Id_Connect_Disconnect_Event_Order()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = new TestEnvironment())
             {
                 var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
 
@@ -1038,11 +1038,11 @@ namespace MQTTnet.Tests
                     }
                 });
 
-                var clientOptions = new MqttClientOptionsBuilder()
-                    .WithClientId("same_id");
+                var clientOptionsBuilder = new MqttClientOptionsBuilder()
+                    .WithClientId(Guid.NewGuid().ToString());
 
                 // c
-                var c1 = await testEnvironment.ConnectClientAsync(clientOptions);
+                var c1 = await testEnvironment.ConnectClientAsync(clientOptionsBuilder);
 
                 await Task.Delay(500);
 
@@ -1051,7 +1051,13 @@ namespace MQTTnet.Tests
 
                 // dc
                 // Connect client with same client ID. Should disconnect existing client.
-                var c2 = await testEnvironment.ConnectClientAsync(clientOptions);
+                var c2 = await testEnvironment.ConnectClientAsync(clientOptionsBuilder);
+
+                await Task.Delay(500);
+
+                flow = string.Join(string.Empty, events);
+
+                Assert.AreEqual("cdc", flow);
 
                 c2.UseApplicationMessageReceivedHandler(_ =>
                 {
@@ -1061,15 +1067,10 @@ namespace MQTTnet.Tests
                     }
                 });
 
-                c2.SubscribeAsync("topic").Wait();
-
-                await Task.Delay(500);
-
-                flow = string.Join(string.Empty, events);
-                Assert.AreEqual("cdc", flow);
+                await c2.SubscribeAsync("topic");
 
                 // r
-                c2.PublishAsync("topic").Wait();
+                await c2.PublishAsync("topic");
 
                 await Task.Delay(500);
 
@@ -1149,15 +1150,15 @@ namespace MQTTnet.Tests
             {
                 await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
 
-                var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await PlatformAbstractionLayer.ConnectAsync(client, "localhost", testEnvironment.ServerPort);
+                var client = new CrossPlatformSocket(AddressFamily.InterNetwork);
+                await client.ConnectAsync("localhost", testEnvironment.ServerPort, CancellationToken.None);
 
                 // Don't send anything. The server should close the connection.
                 await Task.Delay(TimeSpan.FromSeconds(3));
 
                 try
                 {
-                    var receivedBytes = await PlatformAbstractionLayer.ReceiveAsync(client, new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
+                    var receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
                     if (receivedBytes == 0)
                     {
                         return;
@@ -1180,17 +1181,17 @@ namespace MQTTnet.Tests
 
                 // Send an invalid packet and ensure that the server will close the connection and stay in a waiting state
                 // forever. This is security related.
-                var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await PlatformAbstractionLayer.ConnectAsync(client, "localhost", testEnvironment.ServerPort);
+                var client = new CrossPlatformSocket(AddressFamily.InterNetwork);
+                await client.ConnectAsync("localhost", testEnvironment.ServerPort, CancellationToken.None);
 
                 var buffer = Encoding.UTF8.GetBytes("Garbage");
-                client.Send(buffer, buffer.Length, SocketFlags.None);
+                await client.SendAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
 
                 try
                 {
-                    var receivedBytes = await PlatformAbstractionLayer.ReceiveAsync(client, new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
+                    var receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
                     if (receivedBytes == 0)
                     {
                         return;

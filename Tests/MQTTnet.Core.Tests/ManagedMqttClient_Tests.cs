@@ -69,7 +69,7 @@ namespace MQTTnet.Tests
                     .WithTcpServer("localhost", testEnvironment.ServerPort)
                     .WithWillMessage(willMessage);
                 var dyingClient = testEnvironment.CreateClient();
-                var dyingManagedClient = new ManagedMqttClient(dyingClient, testEnvironment.ClientLogger.CreateChildLogger());
+                var dyingManagedClient = new ManagedMqttClient(dyingClient, testEnvironment.ClientLogger);
                 await dyingManagedClient.StartAsync(new ManagedMqttClientOptionsBuilder()
                     .WithClientOptions(clientOptions)
                     .Build());
@@ -96,7 +96,7 @@ namespace MQTTnet.Tests
 
                 var server = await testEnvironment.StartServerAsync();
 
-                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger().CreateChildLogger());
+                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger());
                 var clientOptions = new MqttClientOptionsBuilder()
                     .WithTcpServer("localhost", testEnvironment.ServerPort);
 
@@ -128,7 +128,7 @@ namespace MQTTnet.Tests
 
                 var server = await testEnvironment.StartServerAsync();
 
-                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger().CreateChildLogger());
+                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger());
                 var clientOptions = new MqttClientOptionsBuilder()
                     .WithTcpServer("localhost", testEnvironment.ServerPort);
                 var storage = new ManagedMqttClientTestStorage();
@@ -351,7 +351,7 @@ namespace MQTTnet.Tests
             managedOptions.ConnectionCheckInterval = connectionCheckInterval ?? TimeSpan.FromSeconds(0.1);
 
             var managedClient =
-              new ManagedMqttClient(underlyingClient ?? testEnvironment.CreateClient(), new MqttNetLogger().CreateChildLogger());
+              new ManagedMqttClient(underlyingClient ?? testEnvironment.CreateClient(), new MqttNetLogger());
 
             var connected = GetConnectedTask(managedClient);
 

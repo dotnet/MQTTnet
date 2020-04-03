@@ -207,7 +207,7 @@ namespace MQTTnet.Server
                     applicationMessage = interceptorContext.ApplicationMessage;
                 }
 
-                await _eventDispatcher.HandleApplicationMessageReceivedAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
+                await _eventDispatcher.SafeNotifyApplicationMessageReceivedAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
 
                 if (applicationMessage.Retain)
                 {
@@ -237,7 +237,7 @@ namespace MQTTnet.Server
             string clientId = null;
             var clientWasConnected = true;
 
-            MqttConnectPacket connectPacket = null;
+            MqttConnectPacket connectPacket;
 
             try
             {
@@ -259,8 +259,6 @@ namespace MQTTnet.Server
 
                 var connectionValidatorContext = await ValidateConnectionAsync(connectPacket, channelAdapter).ConfigureAwait(false);
 
-                clientId = connectPacket.ClientId;
-
                 if (connectionValidatorContext.ReasonCode != MqttConnectReasonCode.Success)
                 {
                     clientWasConnected = false;
@@ -272,9 +270,10 @@ namespace MQTTnet.Server
                     return;
                 }
 
+                clientId = connectPacket.ClientId;
                 var connection = await CreateConnectionAsync(connectPacket, connectionValidatorContext, channelAdapter).ConfigureAwait(false);
 
-                await _eventDispatcher.HandleClientConnectedAsync(clientId).ConfigureAwait(false);
+                await _eventDispatcher.SafeNotifyClientConnectedAsync(clientId).ConfigureAwait(false);
 
                 disconnectType = await connection.RunAsync(connectionValidatorContext).ConfigureAwait(false);
             }
@@ -303,7 +302,7 @@ namespace MQTTnet.Server
 
                     if (clientId != null)
                     {
-                        await _eventDispatcher.TryHandleClientDisconnectedAsync(clientId, disconnectType).ConfigureAwait(false);
+                        await _eventDispatcher.SafeNotifyClientDisconnectedAsync(clientId, disconnectType).ConfigureAwait(false);
                     }
                 }
             }

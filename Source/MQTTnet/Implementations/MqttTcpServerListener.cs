@@ -23,7 +23,7 @@ namespace MQTTnet.Implementations
         readonly MqttServerTlsTcpEndpointOptions _tlsOptions;
         readonly X509Certificate2 _tlsCertificate;
 
-        private Socket _socket;
+        private CrossPlatformSocket _socket;
         private IPEndPoint _localEndPoint;
 
         public MqttTcpServerListener(
@@ -59,18 +59,18 @@ namespace MQTTnet.Implementations
 
                 _logger.Info($"Starting TCP listener for {_localEndPoint} TLS={_tlsCertificate != null}.");
 
-                _socket = new Socket(_addressFamily, SocketType.Stream, ProtocolType.Tcp);
+                _socket = new CrossPlatformSocket(_addressFamily);
 
                 // Usage of socket options is described here: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.setsocketoption?view=netcore-2.2
 
                 if (_options.ReuseAddress)
                 {
-                    _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    _socket.ReuseAddress = true;
                 }
 
                 if (_options.NoDelay)
                 {
-                    _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
+                    _socket.NoDelay = true;
                 }
 
                 _socket.Bind(_localEndPoint);
@@ -107,7 +107,7 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
-                    var clientSocket = await PlatformAbstractionLayer.AcceptAsync(_socket).ConfigureAwait(false);
+                    var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
                     if (clientSocket == null)
                     {
                         continue;
@@ -135,7 +135,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        async Task TryHandleClientConnectionAsync(Socket clientSocket)
+        async Task TryHandleClientConnectionAsync(CrossPlatformSocket clientSocket)
         {
             Stream stream = null;
             string remoteEndPoint = null;
@@ -151,7 +151,7 @@ namespace MQTTnet.Implementations
 
                 clientSocket.NoDelay = _options.NoDelay;
 
-                stream = new NetworkStream(clientSocket, true);
+                stream = clientSocket.GetStream();
 
                 X509Certificate2 clientCertificate = null;
 

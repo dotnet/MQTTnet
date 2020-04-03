@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientConnection : IDisposable
+    public sealed class MqttClientConnection : IDisposable
     {
         private readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         private readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
@@ -124,7 +124,7 @@ namespace MQTTnet.Server
             return _packageReceiverTask;
         }
 
-        private async Task<MqttClientDisconnectType> RunInternalAsync(MqttConnectionValidatorContext connectionValidatorContext)
+        async Task<MqttClientDisconnectType> RunInternalAsync(MqttConnectionValidatorContext connectionValidatorContext)
         {
             var disconnectType = MqttClientDisconnectType.NotClean;
             try
@@ -251,12 +251,12 @@ namespace MQTTnet.Server
             return disconnectType;
         }
 
-        private void StopInternal()
+        void StopInternal()
         {
             _cancellationToken.Cancel(false);
         }
 
-        private async Task EnqueueSubscribedRetainedMessagesAsync(ICollection<TopicFilter> topicFilters)
+        async Task EnqueueSubscribedRetainedMessagesAsync(ICollection<TopicFilter> topicFilters)
         {
             var retainedMessages = await _retainedMessagesManager.GetSubscribedMessagesAsync(topicFilters).ConfigureAwait(false);
             foreach (var applicationMessage in retainedMessages)
@@ -265,7 +265,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task HandleIncomingSubscribePacketAsync(MqttSubscribePacket subscribePacket)
+        async Task HandleIncomingSubscribePacketAsync(MqttSubscribePacket subscribePacket)
         {
             // TODO: Let the channel adapter create the packet.
             var subscribeResult = await Session.SubscriptionsManager.SubscribeAsync(subscribePacket, ConnectPacket).ConfigureAwait(false);
@@ -281,14 +281,14 @@ namespace MQTTnet.Server
             await EnqueueSubscribedRetainedMessagesAsync(subscribePacket.TopicFilters).ConfigureAwait(false);
         }
 
-        private async Task HandleIncomingUnsubscribePacketAsync(MqttUnsubscribePacket unsubscribePacket)
+        async Task HandleIncomingUnsubscribePacketAsync(MqttUnsubscribePacket unsubscribePacket)
         {
             // TODO: Let the channel adapter create the packet.
             var unsubscribeResult = await Session.SubscriptionsManager.UnsubscribeAsync(unsubscribePacket).ConfigureAwait(false);
             await SendAsync(unsubscribeResult).ConfigureAwait(false);
         }
 
-        private Task HandleIncomingPublishPacketAsync(MqttPublishPacket publishPacket)
+        Task HandleIncomingPublishPacketAsync(MqttPublishPacket publishPacket)
         {
             Interlocked.Increment(ref _sentApplicationMessagesCount);
 
@@ -313,7 +313,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private Task HandleIncomingPublishPacketWithQoS0Async(MqttPublishPacket publishPacket)
+        Task HandleIncomingPublishPacketWithQoS0Async(MqttPublishPacket publishPacket)
         {
             var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
 
@@ -322,7 +322,7 @@ namespace MQTTnet.Server
             return Task.FromResult(0);
         }
 
-        private Task HandleIncomingPublishPacketWithQoS1Async(MqttPublishPacket publishPacket)
+        Task HandleIncomingPublishPacketWithQoS1Async(MqttPublishPacket publishPacket)
         {
             var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
             _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
@@ -331,7 +331,7 @@ namespace MQTTnet.Server
             return SendAsync(pubAckPacket);
         }
 
-        private Task HandleIncomingPublishPacketWithQoS2Async(MqttPublishPacket publishPacket)
+        Task HandleIncomingPublishPacketWithQoS2Async(MqttPublishPacket publishPacket)
         {
             var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
             _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
@@ -345,7 +345,7 @@ namespace MQTTnet.Server
             return SendAsync(pubRecPacket);
         }
 
-        private async Task SendPendingPacketsAsync(CancellationToken cancellationToken)
+        async Task SendPendingPacketsAsync(CancellationToken cancellationToken)
         {
             MqttQueuedApplicationMessage queuedApplicationMessage = null;
             MqttPublishPacket publishPacket = null;
@@ -459,7 +459,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task SendAsync(MqttBasePacket packet)
+        async Task SendAsync(MqttBasePacket packet)
         {
             await _channelAdapter.SendPacketAsync(packet, _serverOptions.DefaultCommunicationTimeout, _cancellationToken.Token).ConfigureAwait(false);
 
@@ -471,12 +471,12 @@ namespace MQTTnet.Server
             }
         }
 
-        private void OnAdapterReadingPacketCompleted()
+        void OnAdapterReadingPacketCompleted()
         {
             _keepAliveMonitor?.Resume();
         }
 
-        private void OnAdapterReadingPacketStarted()
+        void OnAdapterReadingPacketStarted()
         {
             _keepAliveMonitor?.Pause();
         }

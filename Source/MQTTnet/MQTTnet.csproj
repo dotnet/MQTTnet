@@ -42,6 +42,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard1.3'">
+    <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <PackageReference Include="System.Net.Security" Version="4.3.2" />
     <PackageReference Include="System.Net.WebSockets" Version="4.3.0" />
     <PackageReference Include="System.Net.WebSockets.Client" Version="4.3.2" />

@@ -25,7 +25,7 @@ namespace MQTTnet.Extensions
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Cannot convert value({value}) of UserProperty({propertyName}) to {typeof(T).FullName}.", ex);
+                throw new InvalidOperationException($"Cannot convert value({value ?? "null"}) of UserProperty({propertyName}) to {typeof(T).FullName}.", ex);
             }
         }
     }

@@ -9,13 +9,13 @@ namespace MQTTnet.Server
 {
     public class MqttClientKeepAliveMonitor
     {
-        private readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
+        readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
 
-        private readonly string _clientId;
-        private readonly Func<Task> _keepAliveElapsedCallback;
-        private readonly IMqttNetLogger _logger;
+        readonly string _clientId;
+        readonly Func<Task> _keepAliveElapsedCallback;
+        readonly IMqttNetLogger _logger;
 
-        private bool _isPaused;
+        bool _isPaused;
 
         public MqttClientKeepAliveMonitor(string clientId, Func<Task> keepAliveElapsedCallback, IMqttNetLogger logger)
         {
@@ -51,7 +51,7 @@ namespace MQTTnet.Server
             _lastPacketReceivedTracker.Restart();
         }
 
-        private async Task RunAsync(int keepAlivePeriod, CancellationToken cancellationToken)
+        async Task RunAsync(int keepAlivePeriod, CancellationToken cancellationToken)
         {
             try
             {

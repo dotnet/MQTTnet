@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Linq;
 
 namespace MQTTnet.Extensions
@@ -17,9 +18,10 @@ namespace MQTTnet.Extensions
         {
             var value = GetUserProperty(message, propertyName, comparisonType);
 
+            var typeDescriptor = TypeDescriptor.GetConverter(typeof(T));
             try
             {
-                return (T) Convert.ChangeType(value, typeof(T));
+                return (T) typeDescriptor.ConvertFromString(value);
             }
             catch (Exception ex)
             {

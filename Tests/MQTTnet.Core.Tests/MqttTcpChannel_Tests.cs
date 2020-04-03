@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Implementations;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Implementations;
 
 namespace MQTTnet.Tests
 {
@@ -15,7 +15,7 @@ namespace MQTTnet.Tests
         public async Task Dispose_Channel_While_Used()
         {
             var ct = new CancellationTokenSource();
-            var serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var serverSocket = new CrossPlatformSocket(AddressFamily.InterNetwork);
 
             try
             {
@@ -28,18 +28,18 @@ namespace MQTTnet.Tests
                 {
                     while (!ct.IsCancellationRequested)
                     {
-                        var client = await PlatformAbstractionLayer.AcceptAsync(serverSocket);
+                        var client = await serverSocket.AcceptAsync();
                         var data = new byte[] { 128 };
-                        await PlatformAbstractionLayer.SendAsync(client, new ArraySegment<byte>(data), SocketFlags.None);
+                        await client.SendAsync(new ArraySegment<byte>(data), SocketFlags.None);
                     }
                 }, ct.Token);
 
-                var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await PlatformAbstractionLayer.ConnectAsync(clientSocket, IPAddress.Loopback, 50001);
+                var clientSocket = new CrossPlatformSocket(AddressFamily.InterNetwork);
+                await clientSocket.ConnectAsync("localhost", 50001, CancellationToken.None);
 
                 await Task.Delay(100, ct.Token);
 
-                var tcpChannel = new MqttTcpChannel(new NetworkStream(clientSocket, true), "test", null);
+                var tcpChannel = new MqttTcpChannel(clientSocket.GetStream(), "test", null);
 
                 var buffer = new byte[1];
                 await tcpChannel.ReadAsync(buffer, 0, 1, ct.Token);

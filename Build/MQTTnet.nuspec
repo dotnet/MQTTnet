@@ -22,6 +22,7 @@
 * [Server] Added interceptor for unsubscriptions.
 * [MQTTnet.Server] Added interceptor for unsubscriptions.
 * [MQTTnet.AspNetCore] improved compatibility with AspNetCore 3.1
+* [Core] Added MqttApplicationMessage.GetUserProperty() convenience method (thanks to @PMExtra).
 * [Client] Support WithConnectionUri to configure client (thanks to @PMExtra).
 * [Server] Removed exceptions when user properties are set with MQTT protocol version 3.1
     </releaseNotes>

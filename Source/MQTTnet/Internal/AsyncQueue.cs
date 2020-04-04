@@ -23,9 +23,15 @@ namespace MQTTnet.Internal
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+                catch (OperationCanceledException)
+                {
+                    return new AsyncQueueDequeueResult<TItem>(false, default(TItem));
+                }
 
                 if (_queue.TryDequeue(out var item))
                 {

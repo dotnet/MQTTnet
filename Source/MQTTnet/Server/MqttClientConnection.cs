@@ -23,6 +23,8 @@ namespace MQTTnet.Server
         readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
         readonly IMqttRetainedMessagesManager _retainedMessagesManager;
+        readonly Func<Task> _onStart;
+        readonly Func<MqttClientDisconnectType, Task> _onStop;
         readonly MqttClientKeepAliveMonitor _keepAliveMonitor;
         readonly MqttClientSessionsManager _sessionsManager;
 
@@ -34,7 +36,7 @@ namespace MQTTnet.Server
         readonly string _endpoint;
         readonly DateTime _connectedTimestamp;
 
-        Task<MqttClientDisconnectType> _packageReceiverTask;
+        volatile Task _packageReceiverTask;
         DateTime _lastPacketReceivedTimestamp;
         DateTime _lastNonKeepAlivePacketReceivedTimestamp;
 
@@ -43,7 +45,7 @@ namespace MQTTnet.Server
         long _receivedApplicationMessagesCount;
         long _sentApplicationMessagesCount;
 
-        bool _isTakeover;
+        volatile bool _isTakeover;
 
         public MqttClientConnection(
             MqttConnectPacket connectPacket,
@@ -52,12 +54,16 @@ namespace MQTTnet.Server
             IMqttServerOptions serverOptions,
             MqttClientSessionsManager sessionsManager,
             IMqttRetainedMessagesManager retainedMessagesManager,
+            Func<Task> onStart,
+            Func<MqttClientDisconnectType, Task> onStop,
             IMqttNetLogger logger)
         {
             Session = session ?? throw new ArgumentNullException(nameof(session));
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
+            _onStart = onStart ?? throw new ArgumentNullException(nameof(onStart));
+            _onStop = onStop ?? throw new ArgumentNullException(nameof(onStop));
 
             _channelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
             _dataConverter = _channelAdapter.PacketFormatterAdapter.DataConverter;
@@ -80,15 +86,13 @@ namespace MQTTnet.Server
 
         public MqttClientSession Session { get; }
 
-        public bool IsFinalized { get; set; }
-
         public Task StopAsync(bool isTakeover = false)
         {
             _isTakeover = isTakeover;
+            var task = _packageReceiverTask;
 
             StopInternal();
 
-            var task = _packageReceiverTask;
             if (task != null)
             {
                 return task;
@@ -127,17 +131,18 @@ namespace MQTTnet.Server
             _cancellationToken.Dispose();
         }
 
-        public Task<MqttClientDisconnectType> RunAsync(MqttConnectionValidatorContext connectionValidatorContext)
+        public Task RunAsync(MqttConnectionValidatorContext connectionValidatorContext)
         {
             _packageReceiverTask = RunInternalAsync(connectionValidatorContext);
             return _packageReceiverTask;
         }
 
-        async Task<MqttClientDisconnectType> RunInternalAsync(MqttConnectionValidatorContext connectionValidatorContext)
+        async Task RunInternalAsync(MqttConnectionValidatorContext connectionValidatorContext)
         {
             var disconnectType = MqttClientDisconnectType.NotClean;
             try
             {
+                await _onStart();
                 _logger.Info("Client '{0}': Session started.", ClientId);
 
                 _channelAdapter.ReadingPacketStartedCallback = OnAdapterReadingPacketStarted;
@@ -241,6 +246,11 @@ namespace MQTTnet.Server
             }
             finally
             {
+                if (_isTakeover)
+                {
+                    disconnectType = MqttClientDisconnectType.Takeover;
+                }
+                
                 if (Session.WillMessage != null)
                 {
                     _sessionsManager.DispatchApplicationMessage(Session.WillMessage, this);
@@ -255,14 +265,16 @@ namespace MQTTnet.Server
                 _logger.Info("Client '{0}': Connection stopped.", ClientId);
 
                 _packageReceiverTask = null;
-            }
 
-            if (_isTakeover)
-            {
-                return MqttClientDisconnectType.Takeover;
+                try
+                {
+                    await _onStop(disconnectType);
+                }
+                catch (Exception e)
+                {
+                    _logger.Error(e, "client '{0}': Error while cleaning up", ClientId);
+                }
             }
-
-            return disconnectType;
         }
 
         void StopInternal()

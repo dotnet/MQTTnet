@@ -34,7 +34,11 @@ namespace MQTTnet.Tests.Mockups
 
         public void Publish(MqttNetLogLevel logLevel, string message, object[] parameters, Exception exception)
         {
-            throw new NotImplementedException();
+            LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(new MqttNetLogMessage
+            {
+                Level = logLevel,
+                Message = message
+            }));
         }
     }
 }

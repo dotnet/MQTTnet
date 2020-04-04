@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,33 +35,27 @@ namespace MQTTnet.Server.Web
 
         public void Configure(
             IApplicationBuilder application,
-            IHostingEnvironment environment,
             MqttServerService mqttServerService,
             PythonScriptHostService pythonScriptHostService,
             DataSharingService dataSharingService,
             MqttSettingsModel mqttSettings)
         {
-            if (environment.IsDevelopment())
-            {
-                application.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                application.UseHsts();
-            }
-
+            application.UseHsts();
+            application.UseRouting();
             application.UseCors(x => x
                 .AllowAnyOrigin()
                 .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials());
+                .AllowAnyHeader());
 
             application.UseAuthentication();
+            application.UseAuthorization();
 
             application.UseStaticFiles();
 
-            application.UseHttpsRedirection();
-            application.UseMvc();
+            application.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
 
             ConfigureWebSocketEndpoint(application, mqttServerService, mqttSettings);
 
@@ -88,6 +81,9 @@ namespace MQTTnet.Server.Web
         {
             services.AddCors();
 
+
+            services.AddControllers();
+
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
                 .AddNewtonsoftJson(o =>
@@ -112,12 +108,11 @@ namespace MQTTnet.Server.Web
             services.AddSingleton<MqttClientUnsubscribedTopicHandler>();
             services.AddSingleton<MqttServerConnectionValidator>();
             services.AddSingleton<MqttSubscriptionInterceptor>();
+            services.AddSingleton<MqttUnsubscriptionInterceptor>();
             services.AddSingleton<MqttApplicationMessageInterceptor>();
 
             services.AddSwaggerGen(c =>
             {
-                c.DescribeAllEnumsAsStrings();
-
                 var securityScheme = new OpenApiSecurityScheme
                 {
                     Scheme = "Basic",

@@ -21,21 +21,21 @@ namespace MQTTnet.Server.Mqtt
 {
     public class MqttServerService
     {
-        private readonly ILogger<MqttServerService> _logger;
+        readonly ILogger<MqttServerService> _logger;
 
-        private readonly MqttSettingsModel _settings;
-        private readonly MqttApplicationMessageInterceptor _mqttApplicationMessageInterceptor;
-        private readonly MqttServerStorage _mqttServerStorage;
-        private readonly MqttClientConnectedHandler _mqttClientConnectedHandler;
-        private readonly MqttClientDisconnectedHandler _mqttClientDisconnectedHandler;
-        private readonly MqttClientSubscribedTopicHandler _mqttClientSubscribedTopicHandler;
-        private readonly MqttClientUnsubscribedTopicHandler _mqttClientUnsubscribedTopicHandler;
-        private readonly MqttServerConnectionValidator _mqttConnectionValidator;
-        private readonly IMqttServer _mqttServer;
-        private readonly MqttSubscriptionInterceptor _mqttSubscriptionInterceptor;
-        private readonly MqttUnsubscriptionInterceptor _mqttUnsubscriptionInterceptor;
-        private readonly PythonScriptHostService _pythonScriptHostService;
-        private readonly MqttWebSocketServerAdapter _webSocketServerAdapter;
+        readonly MqttSettingsModel _settings;
+        readonly MqttApplicationMessageInterceptor _mqttApplicationMessageInterceptor;
+        readonly MqttServerStorage _mqttServerStorage;
+        readonly MqttClientConnectedHandler _mqttClientConnectedHandler;
+        readonly MqttClientDisconnectedHandler _mqttClientDisconnectedHandler;
+        readonly MqttClientSubscribedTopicHandler _mqttClientSubscribedTopicHandler;
+        readonly MqttClientUnsubscribedTopicHandler _mqttClientUnsubscribedTopicHandler;
+        readonly MqttServerConnectionValidator _mqttConnectionValidator;
+        readonly IMqttServer _mqttServer;
+        readonly MqttSubscriptionInterceptor _mqttSubscriptionInterceptor;
+        readonly MqttUnsubscriptionInterceptor _mqttUnsubscriptionInterceptor;
+        readonly PythonScriptHostService _pythonScriptHostService;
+        readonly MqttWebSocketServerAdapter _webSocketServerAdapter;
 
         public MqttServerService(
             MqttSettingsModel mqttSettings,
@@ -127,7 +127,7 @@ namespace MQTTnet.Server.Mqtt
             return _mqttServer.PublishAsync(applicationMessage);
         }
 
-        private void Publish(PythonDictionary parameters)
+        void Publish(PythonDictionary parameters)
         {
             try
             {
@@ -173,7 +173,7 @@ namespace MQTTnet.Server.Mqtt
             }
         }
 
-        private IMqttServerOptions CreateMqttServerOptions()
+        IMqttServerOptions CreateMqttServerOptions()
         {
             var options = new MqttServerOptionsBuilder()
                 .WithMaxPendingMessagesPerClient(_settings.MaxPendingMessagesPerClient)

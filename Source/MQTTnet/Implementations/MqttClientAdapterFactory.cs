@@ -1,17 +1,17 @@
-﻿using System;
-using MQTTnet.Adapter;
+﻿using MQTTnet.Adapter;
 using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
+using System;
 
 namespace MQTTnet.Implementations
 {
     public class MqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetChildLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            
+
             switch (options.ChannelOptions)
             {
                 case MqttClientTcpOptions _:

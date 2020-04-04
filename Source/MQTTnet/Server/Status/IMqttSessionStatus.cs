@@ -1,12 +1,15 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Server.Status
 {
     public interface IMqttSessionStatus
     {
-        string ClientId { get; set; }
+        string ClientId { get; }
 
-        long PendingApplicationMessagesCount { get; set; }
+        long PendingApplicationMessagesCount { get; }
+
+        IDictionary<object, object> Items { get; }
 
         Task ClearPendingApplicationMessagesAsync();
 

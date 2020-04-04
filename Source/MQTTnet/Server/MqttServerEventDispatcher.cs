@@ -1,15 +1,15 @@
-﻿using System;
-using System.Threading.Tasks;
-using MQTTnet.Client.Receiving;
+﻿using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using System;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
     public class MqttServerEventDispatcher
     {
-        private readonly IMqttNetChildLogger _logger;
+        readonly IMqttNetLogger _logger;
 
-        public MqttServerEventDispatcher(IMqttNetChildLogger logger)
+        public MqttServerEventDispatcher(IMqttNetLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -24,18 +24,25 @@ namespace MQTTnet.Server
 
         public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
 
-        public Task HandleClientConnectedAsync(string clientId)
+        public async Task SafeNotifyClientConnectedAsync(string clientId)
         {
-            var handler = ClientConnectedHandler;
-            if (handler == null)
+            try
             {
-                return Task.FromResult(0);
-            }
+                var handler = ClientConnectedHandler;
+                if (handler == null)
+                {
+                    return;
+                }
 
-            return handler.HandleClientConnectedAsync(new MqttServerClientConnectedEventArgs(clientId));
+                await handler.HandleClientConnectedAsync(new MqttServerClientConnectedEventArgs(clientId)).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, "Error while handling custom 'ClientConnected' event.");
+            }
         }
 
-        public async Task TryHandleClientDisconnectedAsync(string clientId, MqttClientDisconnectType disconnectType)
+        public async Task SafeNotifyClientDisconnectedAsync(string clientId, MqttClientDisconnectType disconnectType)
         {
             try
             {
@@ -49,41 +56,62 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Error while handling 'ClientDisconnected' event.");
+                _logger.Error(exception, "Error while handling custom 'ClientDisconnected' event.");
             }
         }
 
-        public Task HandleClientSubscribedTopicAsync(string clientId, TopicFilter topicFilter)
+        public async Task SafeNotifyClientSubscribedTopicAsync(string clientId, TopicFilter topicFilter)
         {
-            var handler = ClientSubscribedTopicHandler;
-            if (handler == null)
+            try
             {
-                return Task.FromResult(0);
-            }
+                var handler = ClientSubscribedTopicHandler;
+                if (handler == null)
+                {
+                    return;
+                }
 
-            return handler.HandleClientSubscribedTopicAsync(new MqttServerClientSubscribedTopicEventArgs(clientId, topicFilter));
+                await handler.HandleClientSubscribedTopicAsync(new MqttServerClientSubscribedTopicEventArgs(clientId, topicFilter)).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, "Error while handling custom 'ClientSubscribedTopic' event.");
+            }
         }
 
-        public Task HandleClientUnsubscribedTopicAsync(string clientId, string topicFilter)
+        public async Task SafeNotifyClientUnsubscribedTopicAsync(string clientId, string topicFilter)
         {
-            var handler = ClientUnsubscribedTopicHandler;
-            if (handler == null)
+            try
             {
-                return Task.FromResult(0);
-            }
+                var handler = ClientUnsubscribedTopicHandler;
+                if (handler == null)
+                {
+                    return;
+                }
 
-            return handler.HandleClientUnsubscribedTopicAsync(new MqttServerClientUnsubscribedTopicEventArgs(clientId, topicFilter));
+                await handler.HandleClientUnsubscribedTopicAsync(new MqttServerClientUnsubscribedTopicEventArgs(clientId, topicFilter)).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, "Error while handling custom 'ClientUnsubscribedTopic' event.");
+            }
         }
 
-        public Task HandleApplicationMessageReceivedAsync(string senderClientId, MqttApplicationMessage applicationMessage)
+        public async Task SafeNotifyApplicationMessageReceivedAsync(string senderClientId, MqttApplicationMessage applicationMessage)
         {
-            var handler = ApplicationMessageReceivedHandler;
-            if (handler == null)
+            try
             {
-                return Task.FromResult(0);
-            }
+                var handler = ApplicationMessageReceivedHandler;
+                if (handler == null)
+                {
+                    return;
+                }
 
-            return handler.HandleApplicationMessageReceivedAsync(new MqttApplicationMessageReceivedEventArgs(senderClientId, applicationMessage));
+                await handler.HandleApplicationMessageReceivedAsync(new MqttApplicationMessageReceivedEventArgs(senderClientId, applicationMessage)).ConfigureAwait(false); ;
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, "Error while handling custom 'ApplicationMessageReceived' event.");
+            }
         }
     }
 }

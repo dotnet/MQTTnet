@@ -1,10 +1,10 @@
-﻿using System;
+﻿using MQTTnet.Diagnostics;
+using MQTTnet.Implementations;
+using MQTTnet.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
-using MQTTnet.Implementations;
-using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
@@ -14,10 +14,10 @@ namespace MQTTnet.Server
         private readonly AsyncLock _messagesLock = new AsyncLock();
         private readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>();
 
-        private IMqttNetChildLogger _logger;
+        private IMqttNetLogger _logger;
         private IMqttServerOptions _options;
 
-        public Task Start(IMqttServerOptions options, IMqttNetChildLogger logger)
+        public Task Start(IMqttServerOptions options, IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateChildLogger(nameof(MqttRetainedMessagesManager));

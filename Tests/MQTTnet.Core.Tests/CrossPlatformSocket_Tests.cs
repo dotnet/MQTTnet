@@ -58,7 +58,7 @@ namespace MQTTnet.Tests
         //}
 
         [TestMethod]
-        public async Task Set_Options()
+        public void Set_Options()
         {
             var crossPlatformSocket = new CrossPlatformSocket();
 

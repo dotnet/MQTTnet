@@ -23,6 +23,8 @@ namespace MQTTnet.Tests.Mockups
         public TestContext TestContext { get; }
         public TestEnvironment TestEnvironment { get; }
 
+        public bool IsStarted { get; }
+
         public IMqttServerStartedHandler StartedHandler
         {
             get => Implementation.StartedHandler;

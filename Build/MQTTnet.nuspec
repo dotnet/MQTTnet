@@ -25,6 +25,7 @@
 * [Server] Added support for assigned client IDs (MQTTv5 only) (thanks to @bcrosnier).
 * [Server] Added interceptor for unsubscriptions.
 * [Server] Removed exceptions when user properties are set with MQTT protocol version 3.1
+* [Server] Added custom session items to the client status.
 * [MQTTnet.AspNetCore] improved compatibility with AspNetCore 3.1
 * [MQTTnet.Server] Added interceptor for unsubscriptions.
     </releaseNotes>

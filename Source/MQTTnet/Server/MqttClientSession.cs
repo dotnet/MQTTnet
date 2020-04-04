@@ -8,9 +8,9 @@ namespace MQTTnet.Server
 {
     public class MqttClientSession
     {
-        private readonly IMqttNetLogger _logger;
+        readonly IMqttNetLogger _logger;
 
-        private readonly DateTime _createdTimestamp = DateTime.UtcNow;
+        readonly DateTime _createdTimestamp = DateTime.UtcNow;
 
         public MqttClientSession(string clientId, IDictionary<object, object> items, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttNetLogger logger)
         {
@@ -73,6 +73,7 @@ namespace MQTTnet.Server
             status.ClientId = ClientId;
             status.CreatedTimestamp = _createdTimestamp;
             status.PendingApplicationMessagesCount = ApplicationMessagesQueue.Count;
+            status.Items = Items;
         }
     }
 }

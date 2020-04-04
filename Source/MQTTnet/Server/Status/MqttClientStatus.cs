@@ -1,16 +1,16 @@
-﻿using System;
+﻿using MQTTnet.Formatter;
+using System;
 using System.Threading.Tasks;
-using MQTTnet.Formatter;
 
 namespace MQTTnet.Server.Status
 {
     public class MqttClientStatus : IMqttClientStatus
     {
-        private readonly MqttClientConnection _connection;
+        readonly MqttClientConnection _connection;
 
         public MqttClientStatus(MqttClientConnection connection)
         {
-            _connection = connection;
+            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
         public string ClientId { get; set; }

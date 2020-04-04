@@ -190,6 +190,8 @@ namespace MQTTnet.Server
             return _retainedMessagesManager?.ClearMessagesAsync();
         }
 
+        public bool IsStarted => _cancellationTokenSource != null;
+
         private Task OnHandleClient(IMqttChannelAdapter channelAdapter)
         {
             return _clientSessionsManager.HandleClientConnectionAsync(channelAdapter);

@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Diagnostics
 {
-    public static class TargetFrameworkInfoProvider
+    public static class TargetFrameworkProvider
     {
         public static string TargetFramework
         {

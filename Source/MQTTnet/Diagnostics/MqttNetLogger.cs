@@ -4,26 +4,51 @@ namespace MQTTnet.Diagnostics
 {
     public class MqttNetLogger : IMqttNetLogger
     {
-        private readonly string _logId;
+        readonly string _logId;
+        readonly string _source;
 
-        public MqttNetLogger(string logId = null)
+        readonly MqttNetLogger _parentLogger;
+
+        public MqttNetLogger(string source, string logId)
         {
+            _source = source;
+            _logId = logId;
+        }
+
+        public MqttNetLogger()
+        {
+        }
+
+        public MqttNetLogger(string logId)
+        {
+            _logId = logId;
+        }
+
+        MqttNetLogger(MqttNetLogger parentLogger, string logId, string source)
+        {
+            _parentLogger = parentLogger ?? throw new ArgumentNullException(nameof(parentLogger));
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+
             _logId = logId;
         }
 
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        public IMqttNetChildLogger CreateChildLogger(string source = null)
+        // TODO: Consider creating a LoggerFactory which will allow creating loggers. The logger factory will
+        // be the only place which has the published event.
+        public IMqttNetLogger CreateChildLogger(string source)
         {
-            return new MqttNetChildLogger(this, source);
+            if (source is null) throw new ArgumentNullException(nameof(source));
+
+            return new MqttNetLogger(this, _logId, source);
         }
 
-        public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
+        public void Publish(MqttNetLogLevel level, string message, object[] parameters, Exception exception)
         {
             var hasLocalListeners = LogMessagePublished != null;
             var hasGlobalListeners = MqttNetGlobalLogger.HasListeners;
 
-            if (!hasLocalListeners && !hasGlobalListeners)
+            if (!hasLocalListeners && !hasGlobalListeners && _parentLogger == null)
             {
                 return;
             }
@@ -40,17 +65,35 @@ namespace MQTTnet.Diagnostics
                 }
             }
 
-            var traceMessage = new MqttNetLogMessage(_logId, DateTime.UtcNow, Environment.CurrentManagedThreadId, source, logLevel, message, exception);
+            var logMessage = new MqttNetLogMessage
+            {
+                LogId = _logId,
+                Timestamp = DateTime.UtcNow,
+                Source = _source,
+                ThreadId = Environment.CurrentManagedThreadId,
+                Level = level,
+                Message = message,
+                Exception = exception
+            };
 
             if (hasGlobalListeners)
             {
-                MqttNetGlobalLogger.Publish(traceMessage);
+                MqttNetGlobalLogger.Publish(logMessage);
             }
 
             if (hasLocalListeners)
             {
-                LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(traceMessage));
+                LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(logMessage));
             }
+
+            _parentLogger?.Publish(logMessage);
+        }
+
+        void Publish(MqttNetLogMessage logMessage)
+        {
+            LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(logMessage));
+
+            _parentLogger?.Publish(logMessage);
         }
     }
 }

@@ -1,17 +1,16 @@
-﻿using System;
-using System.Net;
-using MQTTnet.Adapter;
+﻿using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
-using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
+using System;
+using System.Net;
 
 namespace MQTTnet.AspNetCore.Client
 {
     public class MqttClientConnectionContextFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetChildLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

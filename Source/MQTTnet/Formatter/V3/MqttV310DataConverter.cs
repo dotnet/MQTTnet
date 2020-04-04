@@ -20,11 +20,6 @@ namespace MQTTnet.Formatter.V3
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            if (applicationMessage.UserProperties?.Any() == true)
-            {
-                throw new MqttProtocolViolationException("User properties are not supported in MQTT version 3.");
-            }
-
             return new MqttPublishPacket
             {
                 Topic = applicationMessage.Topic,
@@ -171,11 +166,6 @@ namespace MQTTnet.Formatter.V3
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            if (options.UserProperties?.Any() == true)
-            {
-                throw new MqttProtocolViolationException("User properties are not supported in MQTT version 3.");
-            }
-
             var subscribePacket = new MqttSubscribePacket();
             subscribePacket.TopicFilters.AddRange(options.TopicFilters);
             
@@ -185,11 +175,6 @@ namespace MQTTnet.Formatter.V3
         public MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-
-            if (options.UserProperties?.Any() == true)
-            {
-                throw new MqttProtocolViolationException("User properties are not supported in MQTT version 3.");
-            }
 
             var unsubscribePacket = new MqttUnsubscribePacket();
             unsubscribePacket.TopicFilters.AddRange(options.TopicFilters);

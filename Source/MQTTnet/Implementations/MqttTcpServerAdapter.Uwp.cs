@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpServerAdapter : IMqttServerAdapter
+    public sealed class MqttTcpServerAdapter : IMqttServerAdapter
     {
-        private readonly IMqttNetChildLogger _logger;
+        readonly IMqttNetLogger _logger;
 
-        private IMqttServerOptions _options;
-        private StreamSocketListener _listener;
+        IMqttServerOptions _options;
+        StreamSocketListener _listener;
 
-        public MqttTcpServerAdapter(IMqttNetChildLogger logger)
+        public MqttTcpServerAdapter(IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
@@ -68,7 +68,7 @@ namespace MQTTnet.Implementations
             _listener = null;
         }
 
-        private async void OnConnectionReceivedAsync(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
+        async void OnConnectionReceivedAsync(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
         {
             try
             {

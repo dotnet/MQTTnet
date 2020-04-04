@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Client;
+﻿using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Publishing;
@@ -13,6 +8,11 @@ using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -33,7 +33,7 @@ namespace MQTTnet.Extensions.ManagedClient
         private readonly SemaphoreSlim _subscriptionsQueuedSignal = new SemaphoreSlim(0);
 
         private readonly IMqttClient _mqttClient;
-        private readonly IMqttNetChildLogger _logger;
+        private readonly IMqttNetLogger _logger;
 
         private readonly AsyncLock _messageQueueLock = new AsyncLock();
 
@@ -42,8 +42,8 @@ namespace MQTTnet.Extensions.ManagedClient
         private Task _maintainConnectionTask;
 
         private ManagedMqttClientStorageManager _storageManager;
-        
-        public ManagedMqttClient(IMqttClient mqttClient, IMqttNetChildLogger logger)
+
+        public ManagedMqttClient(IMqttClient mqttClient, IMqttNetLogger logger)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 

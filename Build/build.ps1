@@ -12,6 +12,10 @@ Write-Host "Nuget version    = $nugetVersion"
 Write-Host "MSBuild path     = $msbuild"
 Write-Host
 
+Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "nuget.exe"
+
+.\nuget.exe restore ..\MQTTnet.sln
+
 # Build and execute tests
 &$msbuild ..\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp3.1" /verbosity:m
 &$msbuild ..\Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp3.1" /verbosity:m
@@ -51,7 +55,6 @@ vstest.console.exe ..\Tests\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\M
 &$msbuild ..\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="uap10.0" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"
 
 # Create NuGet packages.
-Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "nuget.exe"
 
 Remove-Item .\NuGet -Force -Recurse -ErrorAction SilentlyContinue
 

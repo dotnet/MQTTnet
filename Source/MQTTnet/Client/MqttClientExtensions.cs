@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Client.Connecting;
+﻿using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Client.Options;
@@ -11,6 +7,10 @@ using MQTTnet.Client.Receiving;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Protocol;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Client
 {
@@ -128,7 +128,7 @@ namespace MQTTnet.Client
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 
-            return client.DisconnectAsync(null);
+            return client.DisconnectAsync(new MqttClientDisconnectOptions());
         }
 
         public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, params TopicFilter[] topicFilters)

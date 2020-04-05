@@ -26,7 +26,7 @@ namespace MQTTnet.Benchmarks
         {
             if (_useHandler)
             {
-                eventArgs.TraceMessage.ToString();
+                eventArgs.LogMessage.ToString();
             }
         }
 

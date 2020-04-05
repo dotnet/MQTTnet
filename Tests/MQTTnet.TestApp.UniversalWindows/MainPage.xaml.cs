@@ -6,6 +6,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Extensions.Rpc;
+using MQTTnet.Extensions.Rpc.Options;
 using MQTTnet.Extensions.WebSocket4Net;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
@@ -20,8 +21,6 @@ using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using MqttClientConnectedEventArgs = MQTTnet.Client.Connecting.MqttClientConnectedEventArgs;
-using MqttClientDisconnectedEventArgs = MQTTnet.Client.Disconnecting.MqttClientDisconnectedEventArgs;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
@@ -45,7 +44,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         private async void OnTraceMessagePublished(object sender, MqttNetLogMessagePublishedEventArgs e)
         {
-            _traceMessages.Enqueue(e.TraceMessage);
+            _traceMessages.Enqueue(e.LogMessage);
             await UpdateLogAsync();
         }
 
@@ -164,16 +163,16 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                     await _mqttClient.DisconnectAsync();
                     _mqttClient.UseApplicationMessageReceivedHandler(HandleReceivedApplicationMessage);
-                    _mqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected(x));
-                    _mqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected(x));
+                    _mqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected());
+                    _mqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected());
                 }
 
                 if (UseManagedClient.IsChecked == true)
                 {
                     _managedMqttClient = mqttFactory.CreateManagedMqttClient();
                     _managedMqttClient.UseApplicationMessageReceivedHandler(HandleReceivedApplicationMessage);
-                    _managedMqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected(x));
-                    _managedMqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected(x));
+                    _managedMqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected());
+                    _managedMqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected());
 
                     await _managedMqttClient.StartAsync(new ManagedMqttClientOptions
                     {
@@ -184,8 +183,8 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                     _mqttClient = mqttFactory.CreateMqttClient();
                     _mqttClient.UseApplicationMessageReceivedHandler(HandleReceivedApplicationMessage);
-                    _mqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected(x));
-                    _mqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected(x));
+                    _mqttClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(x => OnConnected());
+                    _mqttClient.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(x => OnDisconnected());
 
                     await _mqttClient.ConnectAsync(options);
                 }
@@ -196,7 +195,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             }
         }
 
-        private void OnDisconnected(MqttClientDisconnectedEventArgs e)
+        private void OnDisconnected()
         {
             _traceMessages.Enqueue(new MqttNetLogMessage
             {
@@ -209,7 +208,7 @@ namespace MQTTnet.TestApp.UniversalWindows
             Task.Run(UpdateLogAsync);
         }
 
-        private void OnConnected(MqttClientConnectedEventArgs e)
+        private void OnConnected()
         {
             _traceMessages.Enqueue(new MqttNetLogMessage
             {
@@ -250,7 +249,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     qos = MqttQualityOfServiceLevel.ExactlyOnce;
                 }
 
-                var payload = new byte[0];
+                var payload = Array.Empty<byte>();
                 if (PlainText.IsChecked == true)
                 {
                     payload = Encoding.UTF8.GetBytes(Payload.Text);
@@ -433,7 +432,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                 qos = MqttQualityOfServiceLevel.ExactlyOnce;
             }
 
-            var payload = new byte[0];
+            var payload = Array.Empty<byte>();
             if (RpcText.IsChecked == true)
             {
                 payload = Encoding.UTF8.GetBytes(RpcPayload.Text);
@@ -446,7 +445,7 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             try
             {
-                var rpcClient = new MqttRpcClient(_mqttClient);
+                var rpcClient = new MqttRpcClient(_mqttClient, new MqttRpcClientOptions());
                 var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), RpcMethod.Text, payload, qos);
 
                 RpcResponses.Items.Add(RpcMethod.Text + " >>> " + Encoding.UTF8.GetString(response));
@@ -491,7 +490,9 @@ namespace MQTTnet.TestApp.UniversalWindows
 
         #region Wiki Code
 
+#pragma warning disable IDE0051 // Remove unused private members
         private async Task WikiCode()
+#pragma warning restore IDE0051 // Remove unused private members
         {
             {
                 // Use a custom identifier for the trace messages.
@@ -627,30 +628,31 @@ namespace MQTTnet.TestApp.UniversalWindows
 
             // ----------------------------------
             {
-                var options = new MqttServerOptions();
-
-                options.ConnectionValidator = new MqttServerConnectionValidatorDelegate(c =>
+                var options = new MqttServerOptions
                 {
-                    if (c.ClientId.Length < 10)
+                    ConnectionValidator = new MqttServerConnectionValidatorDelegate(c =>
                     {
-                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
-                        return;
-                    }
+                        if (c.ClientId.Length < 10)
+                        {
+                            c.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
+                            return;
+                        }
 
-                    if (c.Username != "mySecretUser")
-                    {
-                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                        return;
-                    }
+                        if (c.Username != "mySecretUser")
+                        {
+                            c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                            return;
+                        }
 
-                    if (c.Password != "mySecretPassword")
-                    {
-                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
-                        return;
-                    }
+                        if (c.Password != "mySecretPassword")
+                        {
+                            c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                            return;
+                        }
 
-                    c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
-                });
+                        c.ReasonCode = MqttConnectReasonCode.Success;
+                    })
+                };
 
                 var factory = new MqttFactory();
                 var mqttServer = factory.CreateMqttServer();
@@ -672,7 +674,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     return new[] { ChainValidationResult.Revoked };
                 }
 
-                return new ChainValidationResult[0];
+                return Array.Empty<ChainValidationResult>();
             };
 
             {
@@ -698,11 +700,11 @@ namespace MQTTnet.TestApp.UniversalWindows
                 {
                     if (c.ClientId != "Highlander")
                     {
-                        c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                        c.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
                         return;
                     }
 
-                    c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
+                    c.ReasonCode = MqttConnectReasonCode.Success;
                 });
 
                 var mqttServer = new MqttFactory().CreateMqttServer();
@@ -717,23 +719,23 @@ namespace MQTTnet.TestApp.UniversalWindows
                     {
                         if (c.ClientId.Length < 10)
                         {
-                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
+                            c.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
                             return;
                         }
 
                         if (c.Username != "mySecretUser")
                         {
-                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                             return;
                         }
 
                         if (c.Password != "mySecretPassword")
                         {
-                            c.ReturnCode = MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword;
+                            c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                             return;
                         }
 
-                        c.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
+                        c.ReasonCode = MqttConnectReasonCode.Success;
                     })
                 };
             }
@@ -816,10 +818,10 @@ namespace MQTTnet.TestApp.UniversalWindows
                 // Write all trace messages to the console window.
                 MqttNetGlobalLogger.LogMessagePublished += (s, e) =>
                 {
-                    var trace = $">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}";
-                    if (e.TraceMessage.Exception != null)
+                    var trace = $">> [{e.LogMessage.Timestamp:O}] [{e.LogMessage.ThreadId}] [{e.LogMessage.Source}] [{e.LogMessage.Level}]: {e.LogMessage.Message}";
+                    if (e.LogMessage.Exception != null)
                     {
-                        trace += Environment.NewLine + e.TraceMessage.Exception.ToString();
+                        trace += Environment.NewLine + e.LogMessage.Exception.ToString();
                     }
 
                     Console.WriteLine(trace);

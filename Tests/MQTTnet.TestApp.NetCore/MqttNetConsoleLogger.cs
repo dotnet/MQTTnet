@@ -1,12 +1,12 @@
-﻿using System;
+﻿using MQTTnet.Diagnostics;
+using System;
 using System.Text;
-using MQTTnet.Diagnostics;
 
 namespace MQTTnet.TestApp.NetCore
 {
     public static class MqttNetConsoleLogger
     {
-        private static readonly object Lock = new object();
+        static readonly object _lock = new object();
 
         public static void ForwardToConsole()
         {
@@ -16,7 +16,7 @@ namespace MQTTnet.TestApp.NetCore
 
         public static void PrintToConsole(string message, ConsoleColor color)
         {
-            lock (Lock)
+            lock (_lock)
             {
                 var backupColor = Console.ForegroundColor;
                 Console.ForegroundColor = color;
@@ -25,17 +25,17 @@ namespace MQTTnet.TestApp.NetCore
             }
         }
 
-        private static void PrintToConsole(object sender, MqttNetLogMessagePublishedEventArgs e)
+        static void PrintToConsole(object sender, MqttNetLogMessagePublishedEventArgs e)
         {
             var output = new StringBuilder();
-            output.AppendLine($">> [{e.TraceMessage.Timestamp:O}] [{e.TraceMessage.ThreadId}] [{e.TraceMessage.Source}] [{e.TraceMessage.Level}]: {e.TraceMessage.Message}");
-            if (e.TraceMessage.Exception != null)
+            output.AppendLine($">> [{e.LogMessage.Timestamp:O}] [{e.LogMessage.ThreadId}] [{e.LogMessage.Source}] [{e.LogMessage.Level}]: {e.LogMessage.Message}");
+            if (e.LogMessage.Exception != null)
             {
-                output.AppendLine(e.TraceMessage.Exception.ToString());
+                output.AppendLine(e.LogMessage.Exception.ToString());
             }
 
             var color = ConsoleColor.Red;
-            switch (e.TraceMessage.Level)
+            switch (e.LogMessage.Level)
             {
                 case MqttNetLogLevel.Error:
                     color = ConsoleColor.Red;

@@ -152,7 +152,7 @@ namespace MQTTnet.Server.Web
                 .AddCookie();
         }
 
-        private void ReadMqttSettings(IServiceCollection services)
+        void ReadMqttSettings(IServiceCollection services)
         {
             var mqttSettings = new MqttSettingsModel();
             Configuration.Bind("MQTT", mqttSettings);
@@ -163,7 +163,7 @@ namespace MQTTnet.Server.Web
             services.AddSingleton(scriptingSettings);
         }
 
-        private static void ConfigureWebSocketEndpoint(
+        static void ConfigureWebSocketEndpoint(
             IApplicationBuilder application,
             MqttServerService mqttServerService,
             MqttSettingsModel mqttSettings)

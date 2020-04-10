@@ -118,7 +118,7 @@ namespace MQTTnet.Server
                 throw new InvalidOperationException($"Client session '{clientId}' is unknown.");
             }
 
-            return session.SubscribeAsync(topicFilters, _retainedMessagesManager);
+            return session.SubscribeAsync(topicFilters);
         }
 
         public Task UnsubscribeAsync(string clientId, IEnumerable<string> topicFilters)
@@ -280,7 +280,7 @@ namespace MQTTnet.Server
                     connectPacket,
                     connectionValidatorContext,
                     channelAdapter,
-                    async () => await _eventDispatcher.SafeNotifyClientConnectedAsync(clientId).ConfigureAwait(false), 
+                    async () => await _eventDispatcher.SafeNotifyClientConnectedAsync(clientId).ConfigureAwait(false),
                     async disconnectType => await CleanUpClient(clientId, channelAdapter, disconnectType)
                 ).ConfigureAwait(false);
 
@@ -371,7 +371,7 @@ namespace MQTTnet.Server
 
                 if (session == null)
                 {
-                    session = new MqttClientSession(connectPacket.ClientId, connectionValidatorContext.SessionItems, _eventDispatcher, _options, _logger);
+                    session = new MqttClientSession(connectPacket.ClientId, connectionValidatorContext.SessionItems, _eventDispatcher, _options, _retainedMessagesManager, _logger);
                     _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);
                 }
 

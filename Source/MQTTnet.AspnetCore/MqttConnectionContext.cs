@@ -38,10 +38,9 @@ namespace MQTTnet.AspNetCore
             get
             {
 #if NETCOREAPP3_1
-                var endpointFeature = Connection.Features.Get<Microsoft.AspNetCore.Connections.Features.IConnectionEndPointFeature>();
-                if (endpointFeature != null)
+                if (Connection?.RemoteEndPoint != null)
                 {
-                    return endpointFeature.RemoteEndPoint.ToString();
+                    return Connection.RemoteEndPoint.ToString();
                 }
 #endif
                 var connection = Http?.HttpContext?.Connection;

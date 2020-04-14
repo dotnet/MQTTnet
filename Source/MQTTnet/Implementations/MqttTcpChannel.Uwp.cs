@@ -64,8 +64,7 @@ namespace MQTTnet.Implementations
 
             if (_options.TlsOptions?.UseTls != true)
             {
-                var asyncAction = _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString());
-                await asyncAction;
+                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString()).AsTask().ConfigureAwait(false);
             }
             else
             {
@@ -86,8 +85,7 @@ namespace MQTTnet.Implementations
                     socketProtectionLevel = SocketProtectionLevel.Tls10;
                 }
 
-                var asyncAction = _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), socketProtectionLevel);
-                await asyncAction;
+                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString()).AsTask().ConfigureAwait(false);
             }
 
             Endpoint = _socket.Information.RemoteAddress + ":" + _socket.Information.RemotePort;

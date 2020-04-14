@@ -85,7 +85,7 @@ namespace MQTTnet.Implementations
                     socketProtectionLevel = SocketProtectionLevel.Tls10;
                 }
 
-                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString()).AsTask().ConfigureAwait(false);
+                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), socketProtectionLevel).AsTask().ConfigureAwait(false);
             }
 
             Endpoint = _socket.Information.RemoteAddress + ":" + _socket.Information.RemotePort;

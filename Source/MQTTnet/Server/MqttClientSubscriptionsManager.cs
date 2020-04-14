@@ -123,12 +123,7 @@ namespace MQTTnet.Server
                 {
                     if (_subscriptions.Remove(topicFilter))
                     {
-                        _subscriptionIndex = new MqttSubscriptionIndex();
-                        foreach (var subscription in _subscriptions.Values)
-                        {
-                            MqttSubscriptionIndex.Subscribe(subscription, _subscriptionIndex);
-                        }
-
+                        _subscriptionIndex = new MqttSubscriptionIndex(_subscriptions.Values);
                         unsubAckPacket.ReasonCodes.Add(MqttUnsubscribeReasonCode.Success);
                     }
                     else

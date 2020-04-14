@@ -3,10 +3,20 @@ using System.Collections.Generic;
 
 namespace MQTTnet.Server
 {
-    public class MqttSubscriptionIndex : Dictionary<string, MqttSubscriptionNode>
+    public class MqttSubscriptionIndex 
     {
+        private Dictionary<string, MqttSubscriptionNode> _store = new Dictionary<string, MqttSubscriptionNode>();
+
         public MqttSubscriptionIndex()
         {
+        }
+
+        public MqttSubscriptionIndex(IEnumerable<TopicFilter> subscriptions)
+        {
+            foreach (var subscription in subscriptions)
+            {
+                Subscribe(subscription, this);
+            }
         }
 
         public MqttSubscriptionNode SingleLevelWildcard { get; set; }
@@ -61,10 +71,10 @@ namespace MQTTnet.Server
             }
 
 
-            if (!items.TryGetValue(topicSegment, out var node))
+            if (!items._store.TryGetValue(topicSegment, out var node))
             {
                 node = new MqttSubscriptionNode(topicSegment);
-                items.Add(topicSegment, node);
+                items._store.Add(topicSegment, node);
             }
 
             return node;
@@ -99,7 +109,7 @@ namespace MQTTnet.Server
             }
             
             var segment = topicSegments[level];
-            if (items.TryGetValue(segment, out var node))
+            if (items._store.TryGetValue(segment, out var node))
             {
                 if (level == topicSegments.Length - 1)
                 {

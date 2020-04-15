@@ -2,7 +2,9 @@
 using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
+#if !WINDOWS_UWP
 using System.Security.Cryptography.X509Certificates;
+#endif
 
 namespace MQTTnet.Server
 {

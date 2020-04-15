@@ -48,6 +48,10 @@ namespace MQTTnet.Implementations
                 {
                     throw new ArgumentException("TLS certificate is not set.");
                 }
+                else if (options.TlsEndpointOptions.Certificate != null && options.TlsEndpointOptions.X509Certificate != null)
+                {
+                    throw new ArgumentException($"{nameof(MqttServerTlsTcpEndpointOptions.Certificate)} and {nameof(MqttServerTlsTcpEndpointOptions.X509Certificate)} cannot both be set");
+                }
 
                 X509Certificate2 tlsCertificate;
                 if (options.TlsEndpointOptions.X509Certificate != null)

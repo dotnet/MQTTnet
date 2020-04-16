@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <StartupObject></StartupObject>
+    <StartupObject>MQTTnet.Server.Program</StartupObject>
     <UserSecretsId>c564f0de-28b4-45bf-b726-4d665d705653</UserSecretsId>
   </PropertyGroup>
 

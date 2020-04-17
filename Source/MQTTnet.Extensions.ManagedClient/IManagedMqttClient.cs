@@ -1,8 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using MQTTnet.Client.Connecting;
+﻿using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -21,11 +22,12 @@ namespace MQTTnet.Extensions.ManagedClient
 
         IConnectingFailedHandler ConnectingFailedHandler { get; set; }
         ISynchronizingSubscriptionsFailedHandler SynchronizingSubscriptionsFailedHandler { get; set; }
-        
+
         Task StartAsync(IManagedMqttClientOptions options);
         Task StopAsync();
+        Task PingAsync(CancellationToken cancellationToken);
 
-        Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters);
+        Task SubscribeAsync(IEnumerable<MqttTopicFilter> topicFilters);
         Task UnsubscribeAsync(IEnumerable<string> topics);
 
         Task PublishAsync(ManagedMqttApplicationMessage applicationMessages);

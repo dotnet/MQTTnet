@@ -40,7 +40,8 @@ namespace MQTTnet.Client
 
         IMqttChannelAdapter _adapter;
         bool _cleanDisconnectInitiated;
-        long _disconnectGate;
+        long _isDisconnectPending;
+        bool _isConnected;
 
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
@@ -56,7 +57,13 @@ namespace MQTTnet.Client
 
         public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
 
-        public bool IsConnected { get; private set; }
+        public bool IsConnected
+        {
+            get
+            {
+                return _isConnected || Interlocked.Read(ref _isDisconnectPending) != 0;
+            }
+        }
 
         public IMqttClientOptions Options { get; private set; }
 
@@ -81,7 +88,7 @@ namespace MQTTnet.Client
                 _backgroundCancellationTokenSource = new CancellationTokenSource();
                 var backgroundCancellationToken = _backgroundCancellationTokenSource.Token;
 
-                _disconnectGate = 0;
+                _isDisconnectPending = 0;
                 var adapter = _adapterFactory.CreateClientAdapter(options, _logger);
                 _adapter = adapter;
 
@@ -107,7 +114,7 @@ namespace MQTTnet.Client
                     _keepAlivePacketsSenderTask = Task.Run(() => TrySendKeepAliveMessagesAsync(backgroundCancellationToken), backgroundCancellationToken);
                 }
 
-                IsConnected = true;
+                _isConnected = true;
 
                 _logger.Info("Connected.");
 
@@ -155,6 +162,11 @@ namespace MQTTnet.Client
                     await DisconnectInternalAsync(null, null, null).ConfigureAwait(false);
                 }
             }
+        }
+
+        public async Task PingAsync(CancellationToken cancellationToken)
+        {
+            await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket(), cancellationToken).ConfigureAwait(false);
         }
 
         public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken)
@@ -283,7 +295,7 @@ namespace MQTTnet.Client
 
         void ThrowIfNotConnected()
         {
-            if (!IsConnected || Interlocked.Read(ref _disconnectGate) == 1) throw new MqttCommunicationException("The client is not connected.");
+            if (!IsConnected || Interlocked.Read(ref _isDisconnectPending) == 1) throw new MqttCommunicationException("The client is not connected.");
         }
 
         void ThrowIfConnected(string message)
@@ -296,7 +308,7 @@ namespace MQTTnet.Client
             var clientWasConnected = IsConnected;
 
             TryInitiateDisconnect();
-            IsConnected = false;
+            _isConnected = false;
 
             try
             {
@@ -749,7 +761,7 @@ namespace MQTTnet.Client
 
         bool DisconnectIsPending()
         {
-            return Interlocked.CompareExchange(ref _disconnectGate, 1, 0) != 0;
+            return Interlocked.CompareExchange(ref _isDisconnectPending, 1, 0) != 0;
         }
     }
 }

@@ -73,6 +73,11 @@ namespace MQTTnet.Tests.Mockups
             Implementation.Dispose();
         }
 
+        public Task PingAsync(CancellationToken cancellationToken)
+        {
+            return Implementation.PingAsync(cancellationToken);
+        }
+
         public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             return Implementation.PublishAsync(applicationMessage, cancellationToken);

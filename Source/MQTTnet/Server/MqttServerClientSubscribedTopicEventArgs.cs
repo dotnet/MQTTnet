@@ -4,7 +4,7 @@ namespace MQTTnet.Server
 {
     public class MqttServerClientSubscribedTopicEventArgs : EventArgs
     {
-        public MqttServerClientSubscribedTopicEventArgs(string clientId, TopicFilter topicFilter)
+        public MqttServerClientSubscribedTopicEventArgs(string clientId, MqttTopicFilter topicFilter)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             TopicFilter = topicFilter ?? throw new ArgumentNullException(nameof(topicFilter));
@@ -12,6 +12,6 @@ namespace MQTTnet.Server
 
         public string ClientId { get; }
 
-        public TopicFilter TopicFilter { get; }
+        public MqttTopicFilter TopicFilter { get; }
     }
 }

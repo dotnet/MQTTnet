@@ -5,7 +5,7 @@ namespace MQTTnet.Client.Subscribing
 {
     public class MqttClientSubscribeOptions
     {
-        public List<TopicFilter> TopicFilters { get; set; } = new List<TopicFilter>();
+        public List<MqttTopicFilter> TopicFilters { get; set; } = new List<MqttTopicFilter>();
 
         public uint? SubscriptionIdentifier { get; set; }
 

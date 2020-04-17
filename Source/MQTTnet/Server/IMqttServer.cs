@@ -23,7 +23,7 @@ namespace MQTTnet.Server
         Task<IList<MqttApplicationMessage>> GetRetainedApplicationMessagesAsync();
         Task ClearRetainedApplicationMessagesAsync();
 
-        Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters);
+        Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters);
         Task UnsubscribeAsync(string clientId, ICollection<string> topicFilters);
 
         Task StartAsync(IMqttServerOptions options);

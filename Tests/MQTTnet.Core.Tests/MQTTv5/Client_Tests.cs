@@ -171,9 +171,9 @@ namespace MQTTnet.Tests.MQTTv5
                 var result = await client.SubscribeAsync(new MqttClientSubscribeOptions()
                 {
                     SubscriptionIdentifier = 1,
-                    TopicFilters = new List<TopicFilter>
+                    TopicFilters = new List<MqttTopicFilter>
                     {
-                        new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}
+                        new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}
                     }
                 });
 

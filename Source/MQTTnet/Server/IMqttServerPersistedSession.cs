@@ -9,7 +9,7 @@ namespace MQTTnet.Server
 
         IDictionary<object, object> Items { get; }
 
-        IList<TopicFilter> Subscriptions { get; }
+        IList<MqttTopicFilter> Subscriptions { get; }
 
         MqttApplicationMessage WillMessage { get; }
 

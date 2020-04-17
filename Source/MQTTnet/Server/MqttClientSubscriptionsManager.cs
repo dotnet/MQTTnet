@@ -9,7 +9,7 @@ namespace MQTTnet.Server
 {
     public class MqttClientSubscriptionsManager
     {
-        private readonly Dictionary<string, TopicFilter> _subscriptions = new Dictionary<string, TopicFilter>();
+        private readonly Dictionary<string, MqttTopicFilter> _subscriptions = new Dictionary<string, MqttTopicFilter>();
         private readonly MqttClientSession _clientSession;
         private readonly IMqttServerOptions _serverOptions;
         private readonly MqttServerEventDispatcher _eventDispatcher;
@@ -74,7 +74,7 @@ namespace MQTTnet.Server
             return result;
         }
 
-        public async Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
+        public async Task SubscribeAsync(IEnumerable<MqttTopicFilter> topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
@@ -206,7 +206,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task<MqttSubscriptionInterceptorContext> InterceptSubscribeAsync(TopicFilter topicFilter)
+        private async Task<MqttSubscriptionInterceptorContext> InterceptSubscribeAsync(MqttTopicFilter topicFilter)
         {
             var context = new MqttSubscriptionInterceptorContext(_clientSession.ClientId, topicFilter, _clientSession.Items);
             if (_serverOptions.SubscriptionInterceptor != null)

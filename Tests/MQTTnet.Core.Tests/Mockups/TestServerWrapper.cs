@@ -123,7 +123,7 @@ namespace MQTTnet.Tests.Mockups
             return Implementation.StopAsync();
         }
 
-        public Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters)
+        public Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
         {
             return Implementation.SubscribeAsync(clientId, topicFilters);
         }

@@ -53,7 +53,7 @@ namespace MQTTnet.Server
             ApplicationMessagesQueue.Enqueue(applicationMessage, senderClientId, checkSubscriptionsResult.QualityOfServiceLevel, isRetainedApplicationMessage);
         }
 
-        public async Task SubscribeAsync(ICollection<TopicFilter> topicFilters)
+        public async Task SubscribeAsync(ICollection<MqttTopicFilter> topicFilters)
         {
             if (topicFilters is null) throw new ArgumentNullException(nameof(topicFilters));
 

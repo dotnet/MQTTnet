@@ -19,7 +19,7 @@ namespace MQTTnet.Tests
             var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
-            sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
+            sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
 
             await sm.SubscribeAsync(sp, new MqttConnectPacket());
 
@@ -36,7 +36,7 @@ namespace MQTTnet.Tests
             var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
-            sp.TopicFilters.Add(new TopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+            sp.TopicFilters.Add(new MqttTopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
 
             await sm.SubscribeAsync(sp, new MqttConnectPacket());
 
@@ -53,8 +53,8 @@ namespace MQTTnet.Tests
             var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
-            sp.TopicFilters.Add(new TopicFilter { Topic = "#", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
-            sp.TopicFilters.Add(new TopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+            sp.TopicFilters.Add(new MqttTopicFilter { Topic = "#", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+            sp.TopicFilters.Add(new MqttTopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
             await sm.SubscribeAsync(sp, new MqttConnectPacket());
 
@@ -71,7 +71,7 @@ namespace MQTTnet.Tests
             var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
-            sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
+            sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
 
             await sm.SubscribeAsync(sp, new MqttConnectPacket());
 
@@ -86,7 +86,7 @@ namespace MQTTnet.Tests
             var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
 
             var sp = new MqttSubscribePacket();
-            sp.TopicFilters.Add(new TopicFilterBuilder().WithTopic("A/B/C").Build());
+            sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
 
             await sm.SubscribeAsync(sp, new MqttConnectPacket());
 

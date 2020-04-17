@@ -95,9 +95,9 @@ namespace MQTTnet.Tests
             await client.SendAsync(new MqttSubscribePacket
             {
                 PacketIdentifier = 1,
-                TopicFilters = new List<TopicFilter>
+                TopicFilters = new List<MqttTopicFilter>
                 {
-                    new TopicFilter
+                    new MqttTopicFilter
                     {
                         Topic = topic
                     }

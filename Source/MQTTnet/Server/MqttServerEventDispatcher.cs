@@ -60,7 +60,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public async Task SafeNotifyClientSubscribedTopicAsync(string clientId, TopicFilter topicFilter)
+        public async Task SafeNotifyClientSubscribedTopicAsync(string clientId, MqttTopicFilter topicFilter)
         {
             try
             {

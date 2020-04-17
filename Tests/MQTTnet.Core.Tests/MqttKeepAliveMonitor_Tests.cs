@@ -100,7 +100,7 @@ namespace MQTTnet.Tests
                 return Task.FromResult(0);
             }
 
-            public Task SubscribeAsync(IList<TopicFilter> topicFilters)
+            public Task SubscribeAsync(IList<MqttTopicFilter> topicFilters)
             {
                 throw new NotSupportedException();
             }

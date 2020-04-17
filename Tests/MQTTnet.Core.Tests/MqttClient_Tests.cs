@@ -650,7 +650,7 @@ namespace MQTTnet.Tests
 
                 await receiver.SubscribeAsync(new MqttClientSubscribeOptions
                 {
-                    TopicFilters = new List<TopicFilter> { new TopicFilter { Topic = "#" } }
+                    TopicFilters = new List<MqttTopicFilter> { new MqttTopicFilter { Topic = "#" } }
                 }, CancellationToken.None);
 
                 MqttApplicationMessage receivedMessage = null;

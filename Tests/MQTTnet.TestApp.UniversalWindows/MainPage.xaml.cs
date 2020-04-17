@@ -334,7 +334,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     qos = MqttQualityOfServiceLevel.ExactlyOnce;
                 }
 
-                var topicFilter = new TopicFilter { Topic = SubscribeTopic.Text, QualityOfServiceLevel = qos };
+                var topicFilter = new MqttTopicFilter { Topic = SubscribeTopic.Text, QualityOfServiceLevel = qos };
 
                 if (_mqttClient != null)
                 {
@@ -559,13 +559,13 @@ namespace MQTTnet.TestApp.UniversalWindows
                     Console.WriteLine("### CONNECTED WITH SERVER ###");
 
                     // Subscribe to a topic
-                    await client.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
+                    await client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("my/topic").Build());
 
                     Console.WriteLine("### SUBSCRIBED ###");
                 });
 
                 // Subscribe to a topic
-                await client.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
+                await client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("my/topic").Build());
 
                 // Unsubscribe from a topic
                 await client.UnsubscribeAsync("my/topic");
@@ -791,7 +791,7 @@ namespace MQTTnet.TestApp.UniversalWindows
                     .Build();
 
                 var mqttClient = new MqttFactory().CreateManagedMqttClient();
-                await mqttClient.SubscribeAsync(new TopicFilterBuilder().WithTopic("my/topic").Build());
+                await mqttClient.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("my/topic").Build());
                 await mqttClient.StartAsync(options);
             }
 

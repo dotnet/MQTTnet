@@ -108,7 +108,7 @@ namespace MQTTnet.Server
             _messageQueue.Enqueue(new MqttEnqueuedApplicationMessage(applicationMessage, sender));
         }
 
-        public Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters)
+        public Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));

@@ -1,9 +1,14 @@
 ﻿using MQTTnet.Protocol;
+using System;
 
 namespace MQTTnet
 {
-    // TODO: Consider renaming to "MqttTopicFilter"
-    public class TopicFilter
+    [Obsolete("Use MqttTopicFilter instead. It is just a renamed version to align with general namings in this lib.")]
+    public class TopicFilter : MqttTopicFilter
+    {
+    }
+
+    public class MqttTopicFilter
     {
         public string Topic { get; set; }
 

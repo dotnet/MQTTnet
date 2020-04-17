@@ -405,7 +405,7 @@ namespace MQTTnet.Formatter.V5
                 var retainAsPublished = (options & (1 << 3)) > 0;
                 var retainHandling = (MqttRetainHandling)((options >> 4) & 3);
 
-                packet.TopicFilters.Add(new TopicFilter
+                packet.TopicFilters.Add(new MqttTopicFilter
                 {
                     Topic = topic,
                     QualityOfServiceLevel = qos,

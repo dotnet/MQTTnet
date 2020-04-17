@@ -16,6 +16,6 @@ namespace MQTTnet.Server
 
         Task<IList<MqttApplicationMessage>> GetMessagesAsync();
 
-        Task<IList<MqttApplicationMessage>> GetSubscribedMessagesAsync(ICollection<TopicFilter> topicFilters);
+        Task<IList<MqttApplicationMessage>> GetSubscribedMessagesAsync(ICollection<MqttTopicFilter> topicFilters);
     }
 }

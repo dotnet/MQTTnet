@@ -7,7 +7,7 @@ namespace MQTTnet.Packets
     {
         public ushort? PacketIdentifier { get; set; }
 
-        public List<TopicFilter> TopicFilters { get; set; } = new List<TopicFilter>();
+        public List<MqttTopicFilter> TopicFilters { get; set; } = new List<MqttTopicFilter>();
 
         #region Added in MQTTv5
 

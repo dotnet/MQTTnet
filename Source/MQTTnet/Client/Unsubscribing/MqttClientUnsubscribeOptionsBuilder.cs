@@ -44,7 +44,7 @@ namespace MQTTnet.Client.Unsubscribing
             return this;
         }
 
-        public MqttClientUnsubscribeOptionsBuilder WithTopicFilter(TopicFilter topicFilter)
+        public MqttClientUnsubscribeOptionsBuilder WithTopicFilter(MqttTopicFilter topicFilter)
         {
             if (topicFilter is null) throw new ArgumentNullException(nameof(topicFilter));
 

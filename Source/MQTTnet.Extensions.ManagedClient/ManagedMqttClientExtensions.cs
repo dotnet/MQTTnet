@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Client.Connecting;
+﻿using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Protocol;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -108,7 +108,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return client;
         }
 
-        public static Task SubscribeAsync(this IManagedMqttClient client, params TopicFilter[] topicFilters)
+        public static Task SubscribeAsync(this IManagedMqttClient client, params MqttTopicFilter[] topicFilters)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 
@@ -120,7 +120,7 @@ namespace MQTTnet.Extensions.ManagedClient
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
+            return client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
         }
 
         public static Task SubscribeAsync(this IManagedMqttClient client, string topic)
@@ -128,7 +128,7 @@ namespace MQTTnet.Extensions.ManagedClient
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return client.SubscribeAsync(new TopicFilterBuilder().WithTopic(topic).Build());
+            return client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).Build());
         }
 
         public static Task UnsubscribeAsync(this IManagedMqttClient client, params string[] topicFilters)

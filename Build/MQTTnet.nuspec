@@ -12,26 +12,14 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
-* [All] Due to a merge issue not all changes are included in 3.0.8. All these changes are now included in this version.
-* [Core] Updated all nuget references.
-* [Core] Added MqttApplicationMessage.GetUserProperty() convenience method (thanks to @PMExtra).
-* [LowLevelMqttClient] Added low level MQTT client in order to provide more flexibility when using the MQTT protocol. This client requires detailed knowledge about the MQTT protocol.
-* [Client] Improve connection stability (thanks to @jltjohanlindqvist).
-* [Client] Support WithConnectionUri to configure client (thanks to @PMExtra).
-* [Client] Support PublishAsync with QoS 1 and QoS 2 from within an ApplicationMessageReceivedHandler (#648, #587, thanks to @PSanetra).
-* [Client] Fixed MqttCommunicationTimedOutExceptions, caused by a long running ApplicationMessageReceivedHandler, which blocked MQTT packets from being processed (#829, thanks to @PSanetra).
-* [ManagedClient] Added builder class for MqttClientUnsubscribeOptions (thanks to @dominikviererbe).
-* [ManagedClient] Added support for persisted sessions (thansk to @PMExtra).
-* [ManagedClient] Fixed a memory leak (thanks to @zawodskoj).
-* [ManagedClient] Improved internal subscription management (#569, thanks to @cstichlberger).
-* [ManagedClient] Refactored log messages (thanks to @cstichlberger).
-* [Server] Added support for assigned client IDs (MQTTv5 only) (thanks to @bcrosnier).
-* [Server] Added interceptor for unsubscriptions.
-* [Server] Removed exceptions when user properties are set with MQTT protocol version 3.1
-* [Server] Added custom session items to the client status.
-* [Server] Added option to check whether the server is already started properly or not.
+* [Core] Renamed some topic filter relevant classes (BREAKING CHANGE!).
+* [Core] Improved task management for UWP connections (thanks to @xgstation).
+* [LowLevelMqttClient] 
+* [Client] Added method to trigger PING/PONG manually (connection check etc.).
+* [ManagedClient] Added method to trigger PING/PONG manually (connection check etc.).
+* [Server] 
 * [MQTTnet.AspNetCore] improved compatibility with AspNetCore 3.1
-* [MQTTnet.Server] Added interceptor for unsubscriptions.
+* [MQTTnet.Server] 
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

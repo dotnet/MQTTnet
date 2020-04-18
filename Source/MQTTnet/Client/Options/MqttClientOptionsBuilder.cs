@@ -262,6 +262,7 @@ namespace MQTTnet.Client.Options
                         Certificates = _tlsParameters.Certificates?.ToList(),
 #endif
                         CertificateValidationCallback = _tlsParameters.CertificateValidationCallback,
+                        CertificateValidationHandler = _tlsParameters.CertificateValidationHandler,
                         IgnoreCertificateChainErrors = _tlsParameters.IgnoreCertificateChainErrors,
                         IgnoreCertificateRevocationErrors = _tlsParameters.IgnoreCertificateRevocationErrors
                     };

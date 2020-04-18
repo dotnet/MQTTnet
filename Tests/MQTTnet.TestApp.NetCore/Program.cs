@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Client;
-using MQTTnet.Client.Options;
+﻿using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Security;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -129,10 +127,15 @@ namespace MQTTnet.TestApp.NetCore
             var options = new MqttClientOptionsBuilder()
                 .WithTls(new MqttClientOptionsBuilderTlsParameters
                 {
-                    CertificateValidationCallback = (X509Certificate x, X509Chain y, SslPolicyErrors z, IMqttClientOptions o) =>
+                    CertificateValidationHandler = context =>
                         {
-                            // TODO: Check conditions of certificate by using above parameters.
-                            return true;
+                            // TODO: Check conditions of certificate by using above context.
+                            if (context.SslPolicyErrors == SslPolicyErrors.None)
+                            {
+                                return true;
+                            }
+
+                            return false;
                         }
                 })
                 .Build();

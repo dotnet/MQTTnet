@@ -24,6 +24,18 @@ namespace MQTTnet.Tests
         public TestContext TestContext { get; set; }
 
         [TestMethod]
+        public async Task Send_Manual_Ping()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                await testEnvironment.StartServerAsync();
+                var client = await testEnvironment.ConnectClientAsync();
+
+                await client.PingAsync(CancellationToken.None);
+            }
+        }
+
+        [TestMethod]
         public async Task Send_Reply_In_Message_Handler_For_Same_Client()
         {
             using (var testEnvironment = new TestEnvironment(TestContext))

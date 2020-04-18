@@ -4,11 +4,12 @@ using System.Threading;
 
 namespace MQTTnet.Internal
 {
-    public class BlockingQueue<TItem> : Disposable
+    public sealed class BlockingQueue<TItem> : IDisposable
     {
-        private readonly object _syncRoot = new object();
-        private readonly LinkedList<TItem> _items = new LinkedList<TItem>();
-        private readonly ManualResetEventSlim _gate = new ManualResetEventSlim(false);
+        readonly object _syncRoot = new object();
+        readonly LinkedList<TItem> _items = new LinkedList<TItem>();
+
+        ManualResetEventSlim _gate = new ManualResetEventSlim(false);
 
         public int Count
         {
@@ -28,13 +29,13 @@ namespace MQTTnet.Internal
             lock (_syncRoot)
             {
                 _items.AddLast(item);
-                _gate.Set();
+                _gate?.Set();
             }
         }
 
-        public TItem Dequeue(CancellationToken cancellationToken = default(CancellationToken))
+        public TItem Dequeue(CancellationToken cancellationToken = default)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 lock (_syncRoot)
                 {
@@ -48,17 +49,19 @@ namespace MQTTnet.Internal
 
                     if (_items.Count == 0)
                     {
-                        _gate.Reset();
+                        _gate?.Reset();
                     }
                 }
 
-                _gate.Wait(cancellationToken);
+                _gate?.Wait(cancellationToken);
             }
+
+            throw new OperationCanceledException();
         }
-        
-        public TItem PeekAndWait(CancellationToken cancellationToken = default(CancellationToken))
+
+        public TItem PeekAndWait(CancellationToken cancellationToken = default)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 lock (_syncRoot)
                 {
@@ -69,12 +72,14 @@ namespace MQTTnet.Internal
 
                     if (_items.Count == 0)
                     {
-                        _gate.Reset();
+                        _gate?.Reset();
                     }
                 }
 
-                _gate.Wait(cancellationToken);
+                _gate?.Wait(cancellationToken);
             }
+
+            throw new OperationCanceledException();
         }
 
         public void RemoveFirst(Predicate<TItem> match)
@@ -109,13 +114,10 @@ namespace MQTTnet.Internal
             }
         }
 
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (disposing)
-            {
-                _gate.Dispose();
-            }
-            base.Dispose(disposing);
+            _gate?.Dispose();
+            _gate = null;
         }
     }
 }

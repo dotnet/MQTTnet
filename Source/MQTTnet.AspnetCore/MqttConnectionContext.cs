@@ -25,7 +25,7 @@ namespace MQTTnet.AspNetCore
                 _input = Connection.Transport.Input;
                 _output = Connection.Transport.Output;
             }
-            
+
             _reader = new SpanBasedMqttPacketBodyReader();
         }
 
@@ -37,6 +37,12 @@ namespace MQTTnet.AspNetCore
         {
             get
             {
+#if NETCOREAPP3_1
+                if (Connection?.RemoteEndPoint != null)
+                {
+                    return Connection.RemoteEndPoint.ToString();
+                }
+#endif
                 var connection = Http?.HttpContext?.Connection;
                 if (connection == null)
                 {

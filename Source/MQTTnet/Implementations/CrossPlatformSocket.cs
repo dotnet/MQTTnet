@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -27,6 +28,7 @@ namespace MQTTnet.Implementations
         public CrossPlatformSocket(Socket socket)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            _networkStream = new NetworkStream(socket, true);
         }
 
         public bool NoDelay
@@ -196,7 +198,13 @@ namespace MQTTnet.Implementations
 
         public NetworkStream GetStream()
         {
-            return _networkStream;
+            var networkStream = _networkStream;
+            if (networkStream == null)
+            {
+                throw new IOException("The socket is not connected.");
+            }
+
+            return networkStream;
         }
 
         public void Dispose()

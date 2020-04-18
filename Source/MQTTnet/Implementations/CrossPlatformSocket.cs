@@ -153,9 +153,8 @@ namespace MQTTnet.Implementations
 #else
                     await _socket.ConnectAsync(host, port).ConfigureAwait(false);
 #endif
+                    _networkStream = new NetworkStream(_socket, true);
                 }
-
-                _networkStream = new NetworkStream(_socket, true);
             }
             catch (ObjectDisposedException)
             {

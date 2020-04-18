@@ -375,7 +375,7 @@ namespace MQTTnet.Tests
                     await c1.PublishAsync(message);
                 }
 
-                await Task.Delay(500);
+                await Task.Delay(3000);
 
                 Assert.AreEqual(2000, receivedMessagesCount);
             }

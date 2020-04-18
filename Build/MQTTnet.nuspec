@@ -14,12 +14,12 @@
     <releaseNotes>
 * [Core] Renamed some topic filter relevant classes (BREAKING CHANGE!).
 * [Core] Improved task management for UWP connections (thanks to @xgstation).
-* [LowLevelMqttClient] 
 * [Client] Added method to trigger PING/PONG manually (connection check etc.).
+* [Client] Added support for certificate validation callback when using Web Sockets (requires netstandard2.1+).
+* [Client] Fixed a memory leak when web socket based connections trying to reconnect with an offline server.
 * [ManagedClient] Added method to trigger PING/PONG manually (connection check etc.).
-* [Server] 
-* [MQTTnet.AspNetCore] improved compatibility with AspNetCore 3.1
-* [MQTTnet.Server] 
+* [MQTTnet.AspNetCore] improved compatibility with AspNetCore 3.1.
+* [MQTTnet.Server] Fixed wrong version output.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
@@ -31,6 +31,12 @@
         <dependency id="System.Net.WebSockets.Client" version="4.3.2" />      
       </group>
       <group targetFramework="netstandard2.0">
+        <dependency id="NETStandard.Library" version="2.0.0" />
+        <dependency id="System.Net.Security" version="4.3.2" />
+        <dependency id="System.Net.WebSockets" version="4.3.0" />
+        <dependency id="System.Net.WebSockets.Client" version="4.3.2" />
+      </group>
+      <group targetFramework="netstandard2.1">
         <dependency id="NETStandard.Library" version="2.0.0" />
         <dependency id="System.Net.Security" version="4.3.2" />
         <dependency id="System.Net.WebSockets" version="4.3.0" />
@@ -54,6 +60,9 @@
     
     <!-- .NET Standard 2.0 -->
     <file src="..\Source\MQTTnet\bin\Release\netstandard2.0\MQTTnet.*" target="lib\netstandard2.0\"/>
+
+    <!-- .NET Standard 2.1 -->
+    <file src="..\Source\MQTTnet\bin\Release\netstandard2.1\MQTTnet.*" target="lib\netstandard2.1\"/>
 
     <!-- Universal Windows -->
     <file src="..\Source\MQTTnet\bin\Release\uap10.0\MQTTnet.*" target="lib\uap10.0\"/>

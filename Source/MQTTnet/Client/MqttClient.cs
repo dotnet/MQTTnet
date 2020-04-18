@@ -61,7 +61,7 @@ namespace MQTTnet.Client
         {
             get
             {
-                return _isConnected || Interlocked.Read(ref _isDisconnectPending) != 0;
+                return _isConnected && Interlocked.Read(ref _isDisconnectPending) == 0;
             }
         }
 

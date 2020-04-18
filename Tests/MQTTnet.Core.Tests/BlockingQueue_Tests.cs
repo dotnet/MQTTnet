@@ -1,7 +1,8 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Internal;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Tests
 {
@@ -33,7 +34,7 @@ namespace MQTTnet.Tests
 
             Assert.AreEqual("a", queue.RemoveFirst());
             Assert.AreEqual("b", queue.RemoveFirst());
-            
+
             Assert.AreEqual(1, queue.Count);
 
             Assert.AreEqual("c", queue.Dequeue());
@@ -81,7 +82,7 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public void Wait_For_Times()
+        public void Wait_For_Items()
         {
             var number = 0;
 
@@ -103,6 +104,22 @@ namespace MQTTnet.Tests
                 queue.Dequeue();
                 Interlocked.Increment(ref number);
             }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(OperationCanceledException))]
+        public void Use_Disposed_Queue()
+        {
+            var queue = new BlockingQueue<int>();
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() =>
+            {
+                Thread.Sleep(1000);
+                queue.Dispose();
+            });
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
+            queue.Dequeue(new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token);
         }
     }
 }

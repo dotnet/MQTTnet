@@ -73,7 +73,7 @@ namespace MQTTnet.Implementations
 
             var networkStream = socket.GetStream();
 
-            if (_options.TlsOptions.UseTls)
+            if (_options.TlsOptions?.UseTls == true)
             {
                 var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                 try
@@ -181,9 +181,28 @@ namespace MQTTnet.Implementations
 
         bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            if (_options.TlsOptions.CertificateValidationCallback != null)
+            #region OBSOLETE
+
+            var certificateValidationCallback = _options?.TlsOptions?.CertificateValidationCallback;
+            if (certificateValidationCallback != null)
             {
-                return _options.TlsOptions.CertificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _clientOptions);
+                return certificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _clientOptions);
+            }
+
+            #endregion
+
+            var certificateValidationHandler = _options?.TlsOptions?.CertificateValidationHandler;
+            if (certificateValidationHandler != null)
+            {
+                var context = new MqttClientCertificateValidationCallbackContext
+                {
+                    Certificate = x509Certificate,
+                    Chain = chain,
+                    SslPolicyErrors = sslPolicyErrors,
+                    ClientOptions = _options
+                };
+
+                return certificateValidationHandler(context);
             }
 
             if (sslPolicyErrors == SslPolicyErrors.None)

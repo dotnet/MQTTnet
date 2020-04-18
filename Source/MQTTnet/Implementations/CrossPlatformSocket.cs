@@ -10,6 +10,8 @@ namespace MQTTnet.Implementations
     {
         readonly Socket _socket;
 
+        NetworkStream _networkStream;
+
         public CrossPlatformSocket(AddressFamily addressFamily)
         {
             _socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -137,6 +139,8 @@ namespace MQTTnet.Implementations
 
             try
             {
+                _networkStream?.Dispose();
+
                 // Workaround for: workaround for https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(() => _socket.Dispose()))
                 {
@@ -148,6 +152,8 @@ namespace MQTTnet.Implementations
                     await _socket.ConnectAsync(host, port).ConfigureAwait(false);
 #endif
                 }
+
+                _networkStream = new NetworkStream(_socket, true);
             }
             catch (ObjectDisposedException)
             {
@@ -190,11 +196,12 @@ namespace MQTTnet.Implementations
 
         public NetworkStream GetStream()
         {
-            return new NetworkStream(_socket, true);
+            return _networkStream;
         }
 
         public void Dispose()
         {
+            _networkStream?.Dispose();
             _socket?.Dispose();
         }
 

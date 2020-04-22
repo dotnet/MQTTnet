@@ -365,19 +365,19 @@ namespace MQTTnet.Tests
                     }
                 });
 
-                await c1.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
-                await c2.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+                await c1.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce }).ConfigureAwait(false);
+                await c2.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce }).ConfigureAwait(false);
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
 
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 500; i++)
                 {
-                    await c1.PublishAsync(message);
+                    await c1.PublishAsync(message).ConfigureAwait(false);
                 }
 
                 await Task.Delay(5000);
 
-                Assert.AreEqual(2000, receivedMessagesCount);
+                Assert.AreEqual(1000, receivedMessagesCount);
             }
         }
 

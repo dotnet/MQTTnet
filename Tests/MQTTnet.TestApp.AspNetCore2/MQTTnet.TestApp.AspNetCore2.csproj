@@ -9,10 +9,18 @@
     <Content Remove="wwwroot\app\app.ts" />
   </ItemGroup>
 
-  <ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1'">
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
-    <PackageReference Include="MQTTnet.AspNetCore" Version="0.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="3.1.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.3" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

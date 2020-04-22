@@ -15,8 +15,6 @@
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags>
     <dependencies>
-
-
       <group targetFramework="netstandard2.0">
         <dependency id="MQTTnet" version="$nugetVersion" />
         <dependency id="Microsoft.AspNetCore.Connections.Abstractions" version="3.1.3" />
@@ -24,6 +22,7 @@
         <dependency id="Microsoft.AspNetCore.WebSockets" version="2.2.1" />
         <dependency id="Microsoft.Extensions.Hosting.Abstractions" version="3.1.3" />
       </group>
+      
       <group targetFramework="netcoreapp3.1">
         <dependency id="MQTTnet" version="$nugetVersion" />
         <dependency id="System.IO.Pipelines" version="4.7.1" />
@@ -40,6 +39,7 @@
 
     <!-- .NET Standard 2.0 -->
     <file src="..\Source\MQTTnet.AspNetCore\bin\Release\netstandard2.0\MQTTnet.AspNetCore.*" target="lib\netstandard2.0\"/>
+    
     <!-- .NET Core App 3.1 -->
     <file src="..\Source\MQTTnet.AspNetCore\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.*" target="lib\netcoreapp3.1\"/>
   </files>

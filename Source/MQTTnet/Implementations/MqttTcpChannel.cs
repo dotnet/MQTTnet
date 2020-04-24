@@ -71,6 +71,8 @@ namespace MQTTnet.Implementations
 
             await socket.ConnectAsync(_options.Server, _options.GetPort(), cancellationToken).ConfigureAwait(false);
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             var networkStream = socket.GetStream();
 
             if (_options.TlsOptions?.UseTls == true)

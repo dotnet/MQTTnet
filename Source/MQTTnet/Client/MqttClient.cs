@@ -333,7 +333,7 @@ namespace MQTTnet.Client
 
                 await Task.WhenAll(receiverTask, publishPacketReceiverTask, keepAliveTask).ConfigureAwait(false);
 
-                _publishPacketReceiverQueue.Dispose();
+                _publishPacketReceiverQueue?.Dispose();
             }
             catch (Exception e)
             {

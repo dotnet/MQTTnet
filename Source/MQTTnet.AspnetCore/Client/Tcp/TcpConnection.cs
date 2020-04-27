@@ -43,7 +43,7 @@ namespace MQTTnet.AspNetCore.Client.Tcp
 #if NETCOREAPP3_1
         public override ValueTask DisposeAsync()
 #else
-        public new Task DisposeAsync()
+        public Task DisposeAsync()
 #endif
         {
             IsConnected = false;

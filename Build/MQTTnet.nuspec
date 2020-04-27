@@ -20,7 +20,7 @@
 * [Client] Fixed an issue when connecting to an invalid host (format).
 * [ManagedClient] Added method to trigger PING/PONG manually (connection check etc.).
 * [MQTTnet.AspNetCore] improved compatibility with AspNetCore 3.1.
-* [MQTTnet.AspNetCore] Fixed a packaging issue with the Nuget package.
+* [MQTTnet.AspNetCore] Fixed several packaging issues with the Nuget package.
 * [MQTTnet.Server] Fixed wrong version output.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>

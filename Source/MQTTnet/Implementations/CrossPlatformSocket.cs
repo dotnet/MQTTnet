@@ -143,7 +143,7 @@ namespace MQTTnet.Implementations
             {
                 _networkStream?.Dispose();
 
-                // Workaround for: workaround for https://github.com/dotnet/corefx/issues/24430
+                // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(() => _socket.Dispose()))
                 {
                     cancellationToken.ThrowIfCancellationRequested();

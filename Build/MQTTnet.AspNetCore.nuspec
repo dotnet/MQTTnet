@@ -8,8 +8,8 @@
     <license type="file">LICENSE</license>
     <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
-    <icon>images\Logo_128x128.png</icon>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <!-- <icon>images\Logo_128x128.png</icon> -->
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>This is a support library to integrate MQTTnet into AspNetCore.</description>
     <releaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>

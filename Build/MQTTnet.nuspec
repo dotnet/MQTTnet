@@ -8,8 +8,8 @@
     <license type="file">LICENSE</license>
     <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
-    <icon>images\Logo_128x128.png</icon>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <!-- <icon>images\Logo_128x128.png</icon> -->
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
 * [Core] Renamed some topic filter relevant classes (BREAKING CHANGE!).

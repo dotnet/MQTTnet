@@ -400,7 +400,7 @@ namespace MQTTnet.Client
                 identifier = packetWithIdentifier.PacketIdentifier.Value;
             }
 
-            using (var packetAwaiter = _packetDispatcher.AddPacketAwaiter<TResponsePacket>(identifier))
+            using (var packetAwaiter = _packetDispatcher.AddAwaiter<TResponsePacket>(identifier))
             {
                 try
                 {

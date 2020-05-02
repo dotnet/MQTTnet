@@ -3,7 +3,7 @@
   <metadata>
     <id>MQTTnet.Extensions.ManagedClient</id>
     <version>0.0.0</version>
-    <authors>Christian Kratky</authors>
+    <authors>The contributors of MQTTnet</authors>
     <owners>Christian Kratky</owners>
     <license type="file">LICENSE</license>
     <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>

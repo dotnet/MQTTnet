@@ -1,6 +1,8 @@
-﻿using System;
-using MQTTnet.Client.ExtendedAuthenticationExchange;
+﻿using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Formatter;
+using MQTTnet.Packets;
+using System;
+using System.Collections.Generic;
 
 namespace MQTTnet.Client.Options
 {
@@ -12,11 +14,11 @@ namespace MQTTnet.Client.Options
         IMqttExtendedAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; }
         MqttProtocolVersion ProtocolVersion { get; }
         IMqttClientChannelOptions ChannelOptions { get; }
-        
+
         TimeSpan CommunicationTimeout { get; }
         TimeSpan KeepAlivePeriod { get; }
         TimeSpan? KeepAliveSendInterval { get; }
-        
+
         MqttApplicationMessage WillMessage { get; }
         uint? WillDelayInterval { get; }
 
@@ -28,5 +30,6 @@ namespace MQTTnet.Client.Options
         bool? RequestResponseInformation { get; }
         uint? SessionExpiryInterval { get; }
         ushort? TopicAliasMaximum { get; }
+        List<MqttUserProperty> UserProperties { get; set; }
     }
 }

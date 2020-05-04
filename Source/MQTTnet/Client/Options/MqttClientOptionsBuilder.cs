@@ -1,6 +1,8 @@
 ﻿using MQTTnet.Client.ExtendedAuthenticationExchange;
 using MQTTnet.Formatter;
+using MQTTnet.Packets;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -113,6 +115,20 @@ namespace MQTTnet.Client.Options
         public MqttClientOptionsBuilder WithSessionExpiryInterval(uint? sessionExpiryInterval)
         {
             _options.SessionExpiryInterval = sessionExpiryInterval;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithUserProperty(string name, string value)
+        {
+            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
+            if (_options.UserProperties == null)
+            {
+                _options.UserProperties = new List<MqttUserProperty>();
+            }
+
+            _options.UserProperties.Add(new MqttUserProperty(name, value));
             return this;
         }
 

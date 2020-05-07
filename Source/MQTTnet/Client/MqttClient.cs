@@ -451,6 +451,11 @@ namespace MQTTnet.Client
                     {
                         await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket(), cancellationToken).ConfigureAwait(false);
                     }
+                    else
+                    {
+                        var m = waitTimeSend > waitTimeReceive ? waitTimeReceive : waitTimeSend;
+                        keepAliveSendInterval = TimeSpan.FromSeconds(m.TotalSeconds * 0.75);
+                    }
 
                     await Task.Delay(keepAliveSendInterval, cancellationToken).ConfigureAwait(false);
                 }

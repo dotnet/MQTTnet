@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace MQTTnet.Server.Logging
 {
-    public class MqttNetLoggerWrapper : IMqttNetLogger
+    public sealed class MqttNetLoggerWrapper : IMqttNetLogger
     {
         readonly ILogger<MqttServer> _logger;
 
@@ -16,9 +16,9 @@ namespace MQTTnet.Server.Logging
 
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        public IMqttNetLogger CreateChildLogger(string source)
+        public IMqttNetScopedLogger CreateScopedLogger(string source)
         {
-            return new MqttNetLogger(source);
+            return new MqttNetScopedLogger(this, source);
         }
 
         public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)

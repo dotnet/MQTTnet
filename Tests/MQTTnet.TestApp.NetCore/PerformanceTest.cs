@@ -54,12 +54,12 @@ namespace MQTTnet.TestApp.NetCore
             }
         }
 
-        public static void RunClientAndServer()
+        public static async Task RunClientAndServer()
         {
             try
             {
                 var mqttServer = new MqttFactory().CreateMqttServer();
-                mqttServer.StartAsync(new MqttServerOptions()).GetAwaiter().GetResult();
+                await mqttServer.StartAsync(new MqttServerOptions()).ConfigureAwait(false);
 
                 var options = new MqttClientOptions
                 {
@@ -67,11 +67,12 @@ namespace MQTTnet.TestApp.NetCore
                     {
                         Server = "127.0.0.1"
                     },
-                    CleanSession = true
+                    CleanSession = true,
+                    //KeepAlivePeriod = TimeSpan.FromSeconds(1)
                 };
 
                 var client = new MqttFactory().CreateMqttClient();
-                client.ConnectAsync(options).GetAwaiter().GetResult();
+                await client.ConnectAsync(options).ConfigureAwait(false);
 
                 var message = CreateMessage();
                 var stopwatch = new Stopwatch();
@@ -83,7 +84,7 @@ namespace MQTTnet.TestApp.NetCore
                     var sentMessagesCount = 0;
                     while (stopwatch.ElapsedMilliseconds < 1000)
                     {
-                        client.PublishAsync(message).GetAwaiter().GetResult();
+                        await client.PublishAsync(message, CancellationToken.None).ConfigureAwait(false);
                         sentMessagesCount++;
                     }
 

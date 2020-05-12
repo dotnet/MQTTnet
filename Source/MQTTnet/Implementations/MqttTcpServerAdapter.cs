@@ -16,15 +16,15 @@ namespace MQTTnet.Implementations
     public sealed class MqttTcpServerAdapter : Disposable, IMqttServerAdapter
     {
         readonly List<MqttTcpServerListener> _listeners = new List<MqttTcpServerListener>();
-        readonly IMqttNetLogger _logger;
+        readonly IMqttNetScopedLogger _logger;
+        readonly IMqttNetLogger _rootLogger;
 
         CancellationTokenSource _cancellationTokenSource;
 
         public MqttTcpServerAdapter(IMqttNetLogger logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
-
-            _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
+            _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger.CreateScopedLogger(nameof(MqttTcpServerAdapter));
         }
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
@@ -105,11 +105,7 @@ namespace MQTTnet.Implementations
         {
             if (!options.BoundInterNetworkAddress.Equals(IPAddress.None))
             {
-                var listenerV4 = new MqttTcpServerListener(
-                    AddressFamily.InterNetwork,
-                    options,
-                    tlsCertificate,
-                    _logger)
+                var listenerV4 = new MqttTcpServerListener(AddressFamily.InterNetwork, options, tlsCertificate, _rootLogger)
                 {
                     ClientHandler = OnClientAcceptedAsync
                 };
@@ -122,11 +118,7 @@ namespace MQTTnet.Implementations
 
             if (!options.BoundInterNetworkV6Address.Equals(IPAddress.None))
             {
-                var listenerV6 = new MqttTcpServerListener(
-                    AddressFamily.InterNetworkV6,
-                    options,
-                    tlsCertificate,
-                    _logger)
+                var listenerV6 = new MqttTcpServerListener(AddressFamily.InterNetworkV6, options, tlsCertificate, _rootLogger)
                 {
                     ClientHandler = OnClientAcceptedAsync
                 };

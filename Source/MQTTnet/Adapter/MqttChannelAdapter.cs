@@ -19,7 +19,7 @@ namespace MQTTnet.Adapter
         const uint ErrorOperationAborted = 0x800703E3;
         const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
 
-        readonly IMqttNetLogger _logger;
+        readonly IMqttNetScopedLogger _logger;
         readonly IMqttChannel _channel;
         readonly MqttPacketReader _packetReader;
 
@@ -39,7 +39,7 @@ namespace MQTTnet.Adapter
 
             _packetReader = new MqttPacketReader(_channel);
 
-            _logger = logger.CreateChildLogger(nameof(MqttChannelAdapter));
+            _logger = logger.CreateScopedLogger(nameof(MqttChannelAdapter));
         }
 
         public string Endpoint => _channel.Endpoint;
@@ -128,8 +128,6 @@ namespace MQTTnet.Adapter
 
                 Interlocked.Add(ref _bytesReceived, packetData.Count);
 
-                PacketFormatterAdapter.FreeBuffer();
-
                 _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Count, packet);
             }
             catch (Exception exception)
@@ -143,6 +141,7 @@ namespace MQTTnet.Adapter
             }
             finally
             {
+                PacketFormatterAdapter.FreeBuffer();
                 _writerSemaphore?.Release();
             }
         }

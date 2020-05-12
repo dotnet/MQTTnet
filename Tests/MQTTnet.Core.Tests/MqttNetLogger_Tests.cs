@@ -10,6 +10,7 @@ namespace MQTTnet.Tests
         public void Root_Log_Messages()
         {
             var logger = new MqttNetLogger();
+            var childLogger = logger.CreateScopedLogger("Source1");
 
             var logMessagesCount = 0;
 
@@ -18,10 +19,10 @@ namespace MQTTnet.Tests
                 logMessagesCount++;
             };
 
-            logger.Verbose("Verbose");
-            logger.Info("Info");
-            logger.Warning(null, "Warning");
-            logger.Error(null, "Error");
+            childLogger.Verbose("Verbose");
+            childLogger.Info("Info");
+            childLogger.Warning(null, "Warning");
+            childLogger.Error(null, "Error");
 
             Assert.AreEqual(4, logMessagesCount);
         }
@@ -30,7 +31,7 @@ namespace MQTTnet.Tests
         public void Bubbling_Log_Messages()
         {
             var logger = new MqttNetLogger();
-            var childLogger = logger.CreateChildLogger("Source1");
+            var childLogger = logger.CreateScopedLogger("Source1");
 
             var logMessagesCount = 0;
 
@@ -50,8 +51,8 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void Set_Custom_Log_ID()
         {
-            var logger = new MqttNetLogger(null, "logId");
-            var childLogger = logger.CreateChildLogger("Source1");
+            var logger = new MqttNetLogger("logId");
+            var childLogger = logger.CreateScopedLogger("Source1");
 
             logger.LogMessagePublished += (s, e) =>
             {

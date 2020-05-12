@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientKeepAliveMonitor
+    public sealed class MqttClientKeepAliveMonitor
     {
         readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
 
         readonly string _clientId;
         readonly Func<Task> _keepAliveElapsedCallback;
-        readonly IMqttNetLogger _logger;
+        readonly IMqttNetScopedLogger _logger;
 
         bool _isPaused;
 
@@ -23,7 +23,7 @@ namespace MQTTnet.Server
             _keepAliveElapsedCallback = keepAliveElapsedCallback ?? throw new ArgumentNullException(nameof(keepAliveElapsedCallback));
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateChildLogger(nameof(MqttClientKeepAliveMonitor));
+            _logger = logger.CreateScopedLogger(nameof(MqttClientKeepAliveMonitor));
         }
 
         public void Start(int keepAlivePeriod, CancellationToken cancellationToken)

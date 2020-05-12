@@ -5,13 +5,15 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
-    public class MqttServerEventDispatcher
+    public sealed class MqttServerEventDispatcher
     {
-        readonly IMqttNetLogger _logger;
+        readonly IMqttNetScopedLogger _logger;
 
         public MqttServerEventDispatcher(IMqttNetLogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (logger is null) throw new ArgumentNullException(nameof(logger));
+
+            _logger = logger.CreateScopedLogger(nameof(MqttServerEventDispatcher));
         }
 
         public IMqttServerClientConnectedHandler ClientConnectedHandler { get; set; }

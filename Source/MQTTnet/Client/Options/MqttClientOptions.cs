@@ -17,7 +17,6 @@ namespace MQTTnet.Client.Options
         public IMqttClientChannelOptions ChannelOptions { get; set; }
         public TimeSpan CommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
         public TimeSpan KeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(15);
-        public TimeSpan? KeepAliveSendInterval { get; set; }
 
         public MqttApplicationMessage WillMessage { get; set; }
         public uint? WillDelayInterval { get; set; }

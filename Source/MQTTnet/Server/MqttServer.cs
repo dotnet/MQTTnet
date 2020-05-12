@@ -17,7 +17,8 @@ namespace MQTTnet.Server
     {
         readonly MqttServerEventDispatcher _eventDispatcher;
         readonly ICollection<IMqttServerAdapter> _adapters;
-        readonly IMqttNetLogger _logger;
+        readonly IMqttNetLogger _rootLogger;
+        readonly IMqttNetScopedLogger _logger;
 
         MqttClientSessionsManager _clientSessionsManager;
         IMqttRetainedMessagesManager _retainedMessagesManager;
@@ -29,9 +30,10 @@ namespace MQTTnet.Server
             _adapters = adapters.ToList();
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateChildLogger(nameof(MqttServer));
+            _logger = logger.CreateScopedLogger(nameof(MqttServer));
+            _rootLogger = logger;
 
-            _eventDispatcher = new MqttServerEventDispatcher(logger.CreateChildLogger(nameof(MqttServerEventDispatcher)));
+            _eventDispatcher = new MqttServerEventDispatcher(logger);
         }
 
         public bool IsStarted => _cancellationTokenSource != null;
@@ -127,10 +129,10 @@ namespace MQTTnet.Server
             _cancellationTokenSource = new CancellationTokenSource();
 
             _retainedMessagesManager = Options.RetainedMessagesManager;
-            await _retainedMessagesManager.Start(Options, _logger);
+            await _retainedMessagesManager.Start(Options, _rootLogger);
             await _retainedMessagesManager.LoadMessagesAsync().ConfigureAwait(false);
 
-            _clientSessionsManager = new MqttClientSessionsManager(Options, _retainedMessagesManager, _cancellationTokenSource.Token, _eventDispatcher, _logger);
+            _clientSessionsManager = new MqttClientSessionsManager(Options, _retainedMessagesManager, _cancellationTokenSource.Token, _eventDispatcher, _rootLogger);
             _clientSessionsManager.Start();
 
             foreach (var adapter in _adapters)

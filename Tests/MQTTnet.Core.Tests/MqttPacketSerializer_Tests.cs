@@ -156,7 +156,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void Serialize_LargePacket()
         {
-            var serializer = new MqttV311PacketFormatter();
+            var serializer = new MqttV311PacketFormatter(new MqttPacketWriter());
 
             const int payloadLength = 80000;
 
@@ -560,11 +560,11 @@ namespace MQTTnet.Tests
             IMqttPacketFormatter serializer;
             if (protocolVersion == MqttProtocolVersion.V311)
             {
-                serializer = new MqttV311PacketFormatter();
+                serializer = new MqttV311PacketFormatter(new MqttPacketWriter());
             }
             else if (protocolVersion == MqttProtocolVersion.V310)
             {
-                serializer = new MqttV310PacketFormatter();
+                serializer = new MqttV310PacketFormatter(new MqttPacketWriter());
             }
             else
             {

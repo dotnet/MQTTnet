@@ -10,17 +10,19 @@ namespace MQTTnet.Server
 {
     public class MqttRetainedMessagesManager : IMqttRetainedMessagesManager
     {
-        private readonly byte[] _emptyArray = new byte[0];
-        private readonly AsyncLock _messagesLock = new AsyncLock();
-        private readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>();
+        readonly byte[] _emptyArray = new byte[0];
+        readonly AsyncLock _messagesLock = new AsyncLock();
+        readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>();
 
-        private IMqttNetLogger _logger;
-        private IMqttServerOptions _options;
+        IMqttNetScopedLogger _logger;
+        IMqttServerOptions _options;
 
+        // TODO: Get rid of the logger here!
         public Task Start(IMqttServerOptions options, IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateChildLogger(nameof(MqttRetainedMessagesManager));
+            _logger = logger.CreateScopedLogger(nameof(MqttRetainedMessagesManager));
+
             _options = options ?? throw new ArgumentNullException(nameof(options));
             return PlatformAbstractionLayer.CompletedTask;
         }

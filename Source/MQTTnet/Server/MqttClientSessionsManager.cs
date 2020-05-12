@@ -28,7 +28,8 @@ namespace MQTTnet.Server
 
         readonly IMqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttServerOptions _options;
-        readonly IMqttNetLogger _logger;
+        readonly IMqttNetScopedLogger _logger;
+        readonly IMqttNetLogger _rootLogger;
 
         public MqttClientSessionsManager(
             IMqttServerOptions options,
@@ -40,7 +41,8 @@ namespace MQTTnet.Server
             _cancellationToken = cancellationToken;
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateChildLogger(nameof(MqttClientSessionsManager));
+            _logger = logger.CreateScopedLogger(nameof(MqttClientSessionsManager));
+            _rootLogger = logger;
 
             _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -371,11 +373,11 @@ namespace MQTTnet.Server
 
                 if (session == null)
                 {
-                    session = new MqttClientSession(connectPacket.ClientId, connectionValidatorContext.SessionItems, _eventDispatcher, _options, _retainedMessagesManager, _logger);
+                    session = new MqttClientSession(connectPacket.ClientId, connectionValidatorContext.SessionItems, _eventDispatcher, _options, _retainedMessagesManager, _rootLogger);
                     _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);
                 }
 
-                var connection = new MqttClientConnection(connectPacket, channelAdapter, session, _options, this, _retainedMessagesManager, onStart, onStop, _logger);
+                var connection = new MqttClientConnection(connectPacket, channelAdapter, session, _options, this, _retainedMessagesManager, onStart, onStop, _rootLogger);
 
                 _connections[connection.ClientId] = connection;
                 _sessions[session.ClientId] = session;

@@ -33,7 +33,7 @@ namespace MQTTnet.Extensions.ManagedClient
         private readonly SemaphoreSlim _subscriptionsQueuedSignal = new SemaphoreSlim(0);
 
         private readonly IMqttClient _mqttClient;
-        private readonly IMqttNetLogger _logger;
+        private readonly IMqttNetScopedLogger _logger;
 
         private readonly AsyncLock _messageQueueLock = new AsyncLock();
 
@@ -48,7 +48,7 @@ namespace MQTTnet.Extensions.ManagedClient
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateChildLogger(nameof(ManagedMqttClient));
+            _logger = logger.CreateScopedLogger(nameof(ManagedMqttClient));
         }
 
         public bool IsConnected => _mqttClient.IsConnected;

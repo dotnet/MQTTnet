@@ -11,7 +11,7 @@ namespace MQTTnet
 {
     public sealed class MqttFactory : IMqttFactory
     {
-        IMqttClientAdapterFactory _clientAdapterFactory = new MqttClientAdapterFactory();
+        IMqttClientAdapterFactory _clientAdapterFactory;
 
         public MqttFactory() : this(new MqttNetLogger())
         {
@@ -20,6 +20,7 @@ namespace MQTTnet
         public MqttFactory(IMqttNetLogger logger)
         {
             DefaultLogger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _clientAdapterFactory = new MqttClientAdapterFactory(logger);
         }
 
         public IMqttNetLogger DefaultLogger { get; }

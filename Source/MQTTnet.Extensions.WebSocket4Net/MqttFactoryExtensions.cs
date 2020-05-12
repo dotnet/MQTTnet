@@ -8,7 +8,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
         {
             if (mqttFactory == null) throw new ArgumentNullException(nameof(mqttFactory));
 
-            return mqttFactory.UseClientAdapterFactory(new WebSocket4NetMqttClientAdapterFactory());
+            return mqttFactory.UseClientAdapterFactory(new WebSocket4NetMqttClientAdapterFactory(mqttFactory.DefaultLogger));
         }
     }
 }

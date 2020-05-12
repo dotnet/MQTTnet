@@ -9,21 +9,27 @@ namespace MQTTnet.Extensions.WebSocket4Net
 {
     public class WebSocket4NetMqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
+        readonly IMqttNetLogger _logger;
+
+        public WebSocket4NetMqttClientAdapterFactory(IMqttNetLogger logger)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             switch (options.ChannelOptions)
             {
                 case MqttClientTcpOptions _:
                     {
-                        return new MqttChannelAdapter(new MqttTcpChannel(options), new MqttPacketFormatterAdapter(options.ProtocolVersion), logger);
+                        return new MqttChannelAdapter(new MqttTcpChannel(options), new MqttPacketFormatterAdapter(options.ProtocolVersion), _logger);
                     }
 
                 case MqttClientWebSocketOptions webSocketOptions:
                     {
-                        return new MqttChannelAdapter(new WebSocket4NetMqttChannel(options, webSocketOptions), new MqttPacketFormatterAdapter(options.ProtocolVersion), logger);
+                        return new MqttChannelAdapter(new WebSocket4NetMqttChannel(options, webSocketOptions), new MqttPacketFormatterAdapter(options.ProtocolVersion), _logger);
                     }
 
                 default:

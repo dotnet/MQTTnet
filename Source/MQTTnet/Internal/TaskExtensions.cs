@@ -5,7 +5,7 @@ namespace MQTTnet.Internal
 {
     public static class TaskExtensions
     {
-        public static void Forget(this Task task, IMqttNetLogger logger)
+        public static void Forget(this Task task, IMqttNetScopedLogger logger)
         {
             task?.ContinueWith(t =>
                 {

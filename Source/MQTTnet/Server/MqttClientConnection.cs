@@ -28,7 +28,7 @@ namespace MQTTnet.Server
         readonly MqttClientKeepAliveMonitor _keepAliveMonitor;
         readonly MqttClientSessionsManager _sessionsManager;
 
-        readonly IMqttNetLogger _logger;
+        readonly IMqttNetScopedLogger _logger;
         readonly IMqttServerOptions _serverOptions;
 
         readonly IMqttChannelAdapter _channelAdapter;
@@ -71,9 +71,9 @@ namespace MQTTnet.Server
             ConnectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateChildLogger(nameof(MqttClientConnection));
+            _logger = logger.CreateScopedLogger(nameof(MqttClientConnection));
 
-            _keepAliveMonitor = new MqttClientKeepAliveMonitor(ConnectPacket.ClientId, () => StopAsync(), _logger);
+            _keepAliveMonitor = new MqttClientKeepAliveMonitor(ConnectPacket.ClientId, () => StopAsync(), logger);
 
             _connectedTimestamp = DateTime.UtcNow;
             _lastPacketReceivedTimestamp = _connectedTimestamp;

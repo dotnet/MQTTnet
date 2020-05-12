@@ -14,12 +14,14 @@
     <releaseNotes>
 * [Core] Renamed some topic filter relevant classes (BREAKING CHANGE!).
 * [Core] Improved task management for UWP connections (thanks to @xgstation).
+* [Core] Fixed broken logger which decreases overall performance.
 * [Client] Added method to trigger PING/PONG manually (connection check etc.).
 * [Client] Added support for certificate validation callback when using Web Sockets (requires netstandard2.1+).
 * [Client] Fixed a memory leak when web socket based connections trying to reconnect with an offline server.
 * [Client] Fixed a memory leak when TCP based connections trying to reconnect with an offline server.
 * [Client] Fixed an issue when connecting to an invalid host (format).
 * [Client] Added support for user properties in CONNECT packet.
+* [Client] Removed _KeepAliveSendInterval_ and improved keep alive handling (BREAKING CHANGE!).
 * [ManagedClient] Added method to trigger PING/PONG manually (connection check etc.).
 * [MQTTnet.AspNetCore] improved compatibility with AspNetCore 3.1.
 * [MQTTnet.AspNetCore] Fixed several packaging issues with the Nuget package.

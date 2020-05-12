@@ -11,14 +11,17 @@ namespace MQTTnet.Protocol
                 throw new MqttProtocolViolationException("Topic should not be empty.");
             }
 
-            if (topic.Contains("+"))
+            foreach(var @char in topic)
             {
-                throw new MqttProtocolViolationException("The character '+' is not allowed in topics.");
-            }
+                if (@char == '+')
+                {
+                    throw new MqttProtocolViolationException("The character '+' is not allowed in topics.");
+                }
 
-            if (topic.Contains("#"))
-            {
-                throw new MqttProtocolViolationException("The character '#' is not allowed in topics.");
+                if (@char == '#')
+                {
+                    throw new MqttProtocolViolationException("The character '#' is not allowed in topics.");
+                }
             }
         }
     }

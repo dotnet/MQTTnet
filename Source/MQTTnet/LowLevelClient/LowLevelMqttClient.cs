@@ -10,7 +10,7 @@ namespace MQTTnet.LowLevelClient
 {
     public sealed class LowLevelMqttClient : ILowLevelMqttClient
     {
-        readonly IMqttNetLogger _logger;
+        readonly IMqttNetScopedLogger _logger;
         readonly IMqttClientAdapterFactory _clientAdapterFactory;
 
         IMqttChannelAdapter _adapter;
@@ -22,7 +22,7 @@ namespace MQTTnet.LowLevelClient
             if (logger is null) throw new ArgumentNullException(nameof(logger));
 
             _clientAdapterFactory = clientAdapterFactory;
-            _logger = logger.CreateChildLogger(nameof(LowLevelMqttClient));
+            _logger = logger.CreateScopedLogger(nameof(LowLevelMqttClient));
         }
 
         bool IsConnected => _adapter != null;
@@ -36,7 +36,7 @@ namespace MQTTnet.LowLevelClient
                 throw new InvalidOperationException("Low level MQTT client is already connected. Disconnect first before connecting again.");
             }
 
-            var newAdapter = _clientAdapterFactory.CreateClientAdapter(options, _logger);
+            var newAdapter = _clientAdapterFactory.CreateClientAdapter(options);
 
             try
             {

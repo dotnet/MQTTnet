@@ -45,15 +45,15 @@ namespace MQTTnet.Client.Options
             return WithKeepAlivePeriod(TimeSpan.Zero);
         }
 
-        public MqttClientOptionsBuilder WithKeepAlivePeriod(TimeSpan value)
+        public MqttClientOptionsBuilder WithoutKeepAlivePeriod()
         {
-            _options.KeepAlivePeriod = value;
+            _options.KeepAlivePeriod = TimeSpan.Zero;
             return this;
         }
 
-        public MqttClientOptionsBuilder WithKeepAliveSendInterval(TimeSpan value)
+        public MqttClientOptionsBuilder WithKeepAlivePeriod(TimeSpan value)
         {
-            _options.KeepAliveSendInterval = value;
+            _options.KeepAlivePeriod = value;
             return this;
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter.V3;
@@ -9,12 +10,7 @@ namespace MQTTnet.Formatter
 {
     public class MqttPacketFormatterAdapter
     {
-        private IMqttPacketFormatter _formatter;
-
-        public MqttPacketFormatterAdapter()
-            : this(new MqttPacketWriter())
-        {
-        }
+        IMqttPacketFormatter _formatter;
                
         public MqttPacketFormatterAdapter(MqttProtocolVersion protocolVersion)
             : this(protocolVersion, new MqttPacketWriter())
@@ -120,7 +116,7 @@ namespace MQTTnet.Formatter
             }
         }
 
-        private MqttProtocolVersion ParseProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
+        MqttProtocolVersion ParseProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
         {
             if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
 
@@ -155,7 +151,8 @@ namespace MQTTnet.Formatter
             throw new MqttProtocolViolationException($"Protocol '{protocolName}' not supported.");
         }
 
-        private void ThrowIfFormatterNotSet()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void ThrowIfFormatterNotSet()
         {
             if (_formatter == null)
             {

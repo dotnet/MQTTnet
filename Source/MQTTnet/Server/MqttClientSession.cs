@@ -8,12 +8,18 @@ namespace MQTTnet.Server
 {
     public class MqttClientSession
     {
-        readonly IMqttNetLogger _logger;
+        readonly IMqttNetScopedLogger _logger;
 
         readonly DateTime _createdTimestamp = DateTime.UtcNow;
         readonly IMqttRetainedMessagesManager _retainedMessagesManager;
 
-        public MqttClientSession(string clientId, IDictionary<object, object> items, MqttServerEventDispatcher eventDispatcher, IMqttServerOptions serverOptions, IMqttRetainedMessagesManager retainedMessagesManager, IMqttNetLogger logger)
+        public MqttClientSession(
+            string clientId,
+            IDictionary<object, object> items,
+            MqttServerEventDispatcher eventDispatcher,
+            IMqttServerOptions serverOptions, 
+            IMqttRetainedMessagesManager retainedMessagesManager,
+            IMqttNetLogger logger)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             Items = items ?? throw new ArgumentNullException(nameof(items));
@@ -22,7 +28,7 @@ namespace MQTTnet.Server
             ApplicationMessagesQueue = new MqttClientSessionApplicationMessagesQueue(serverOptions);
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateChildLogger(nameof(MqttClientSession));
+            _logger = logger.CreateScopedLogger(nameof(MqttClientSession));
         }
 
         public string ClientId { get; }

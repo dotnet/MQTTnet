@@ -17,8 +17,6 @@ namespace MQTTnet.Client.Options
 
         TimeSpan CommunicationTimeout { get; }
         TimeSpan KeepAlivePeriod { get; }
-        TimeSpan? KeepAliveSendInterval { get; }
-
         MqttApplicationMessage WillMessage { get; }
         uint? WillDelayInterval { get; }
 

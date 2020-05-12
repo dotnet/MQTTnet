@@ -15,6 +15,8 @@ namespace MQTTnet.TestApp.NetCore
     {
         public static void Main()
         {
+            //MqttNetConsoleLogger.ForwardToConsole();
+
             Console.WriteLine($"MQTTnet - TestApp.{TargetFrameworkProvider.TargetFramework}");
             Console.WriteLine("1 = Start client");
             Console.WriteLine("2 = Start server");
@@ -40,8 +42,7 @@ namespace MQTTnet.TestApp.NetCore
             }
             else if (pressedKey.KeyChar == '3')
             {
-                PerformanceTest.RunClientAndServer();
-                return;
+                Task.Run(PerformanceTest.RunClientAndServer);
             }
             else if (pressedKey.KeyChar == '4')
             {

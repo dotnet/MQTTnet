@@ -9,15 +9,15 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class LoggerBenchmark
     {
-        private IMqttNetLogger _logger;
-        private IMqttNetLogger _childLogger;
-        private bool _useHandler;
+        IMqttNetLogger _logger;
+        IMqttNetScopedLogger _childLogger;
+        bool _useHandler;
 
         [GlobalSetup]
         public void Setup()
         {
             _logger = new MqttNetLogger();
-            _childLogger = _logger.CreateChildLogger("child");
+            _childLogger = _logger.CreateScopedLogger("child");
 
             MqttNetGlobalLogger.LogMessagePublished += OnLogMessagePublished;
         }

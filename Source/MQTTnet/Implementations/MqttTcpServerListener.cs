@@ -17,7 +17,8 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpServerListener : IDisposable
     {
-        readonly IMqttNetLogger _logger;
+        readonly IMqttNetScopedLogger _logger;
+        readonly IMqttNetLogger _rootLogger;
         readonly AddressFamily _addressFamily;
         readonly MqttServerTcpEndpointBaseOptions _options;
         readonly MqttServerTlsTcpEndpointOptions _tlsOptions;
@@ -35,7 +36,8 @@ namespace MQTTnet.Implementations
             _addressFamily = addressFamily;
             _options = options;
             _tlsCertificate = tlsCertificate;
-            _logger = logger.CreateChildLogger(nameof(MqttTcpServerListener));
+            _rootLogger = logger;
+            _logger = logger.CreateScopedLogger(nameof(MqttTcpServerListener));
 
             if (_options is MqttServerTlsTcpEndpointOptions tlsOptions)
             {
@@ -178,7 +180,7 @@ namespace MQTTnet.Implementations
                 var clientHandler = ClientHandler;
                 if (clientHandler != null)
                 {
-                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(stream, remoteEndPoint, clientCertificate), new MqttPacketFormatterAdapter(), _logger))
+                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(stream, remoteEndPoint, clientCertificate), new MqttPacketFormatterAdapter(new MqttPacketWriter()), _rootLogger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }

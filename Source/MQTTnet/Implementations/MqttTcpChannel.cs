@@ -115,13 +115,13 @@ namespace MQTTnet.Implementations
         {
             if (buffer is null) throw new ArgumentNullException(nameof(buffer));
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(Dispose))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -144,13 +144,13 @@ namespace MQTTnet.Implementations
         {
             if (buffer is null) throw new ArgumentNullException(nameof(buffer));
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(Dispose))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
             }

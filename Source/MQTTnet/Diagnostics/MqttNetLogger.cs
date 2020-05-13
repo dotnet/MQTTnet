@@ -5,8 +5,7 @@ namespace MQTTnet.Diagnostics
     public class MqttNetLogger : IMqttNetLogger
     {
         readonly string _logId;
-        readonly string _source;
-
+        
         public MqttNetLogger()
         {
         }
@@ -37,23 +36,20 @@ namespace MQTTnet.Diagnostics
                 return;
             }
 
-            if (parameters?.Length > 0)
+            try
             {
-                try
-                {
-                    message = string.Format(message, parameters);
-                }
-                catch
-                {
-                    message = "MESSAGE FORMAT INVALID: " + message;
-                }
+                message = string.Format(message ?? string.Empty, parameters);
+            }
+            catch (FormatException)
+            {
+                message = "MESSAGE FORMAT INVALID: " + message;
             }
 
             var logMessage = new MqttNetLogMessage
             {
                 LogId = _logId,
                 Timestamp = DateTime.UtcNow,
-                Source = _source,
+                Source = source,
                 ThreadId = Environment.CurrentManagedThreadId,
                 Level = level,
                 Message = message,

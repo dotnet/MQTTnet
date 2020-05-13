@@ -27,6 +27,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B3F60ECB-45BA-4C66-8903-8BB89CA67998}"
 	ProjectSection(SolutionItems) = preProject
 		.bettercodehub.yml = .bettercodehub.yml
+		.editorconfig = .editorconfig
 		appveyor.yml = appveyor.yml
 		LICENSE = LICENSE
 		README.md = README.md

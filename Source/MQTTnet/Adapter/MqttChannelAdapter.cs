@@ -16,8 +16,8 @@ namespace MQTTnet.Adapter
 {
     public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
     {
-        const uint ErrorOperationAborted = 0x800703E3;
-        const int ReadBufferSize = 4096;  // TODO: Move buffer size to config
+        const uint _errorOperationAborted = 0x800703E3;
+        const int _readBufferSize = 4096;  // TODO: Move buffer size to config
 
         readonly IMqttNetScopedLogger _logger;
         readonly IMqttChannel _channel;
@@ -245,7 +245,7 @@ namespace MQTTnet.Adapter
 
                 var body = new byte[fixedHeader.RemainingLength];
                 var bodyOffset = 0;
-                var chunkSize = Math.Min(ReadBufferSize, fixedHeader.RemainingLength);
+                var chunkSize = Math.Min(_readBufferSize, fixedHeader.RemainingLength);
 
                 do
                 {
@@ -304,7 +304,7 @@ namespace MQTTnet.Adapter
 
             if (exception is COMException comException)
             {
-                if ((uint)comException.HResult == ErrorOperationAborted)
+                if ((uint)comException.HResult == _errorOperationAborted)
                 {
                     throw new OperationCanceledException();
                 }

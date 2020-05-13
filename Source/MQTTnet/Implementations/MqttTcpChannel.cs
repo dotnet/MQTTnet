@@ -85,7 +85,12 @@ namespace MQTTnet.Implementations
                     }
                     catch
                     {
+#if NETSTANDARD2_1
+                        await sslStream.DisposeAsync().ConfigureAwait(false);
+#else
                         sslStream.Dispose();
+#endif
+
                         throw;
                     }
 
@@ -127,7 +132,8 @@ namespace MQTTnet.Implementations
             }
             catch (ObjectDisposedException)
             {
-                return -1;
+                // Indicate a graceful socket close.
+                return 0;
             }
             catch (IOException exception)
             {
@@ -190,15 +196,17 @@ namespace MQTTnet.Implementations
 
         bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            #region OBSOLETE
+#region OBSOLETE
 
+#pragma warning disable CS0618 // Type or member is obsolete
             var certificateValidationCallback = _options?.TlsOptions?.CertificateValidationCallback;
+#pragma warning restore CS0618 // Type or member is obsolete
             if (certificateValidationCallback != null)
             {
                 return certificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _clientOptions);
             }
 
-            #endregion
+#endregion
 
             var certificateValidationHandler = _options?.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)

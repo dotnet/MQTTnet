@@ -15,6 +15,7 @@
 * [Core] Renamed some topic filter relevant classes (BREAKING CHANGE!).
 * [Core] Improved task management for UWP connections (thanks to @xgstation).
 * [Core] Fixed broken logger which decreases overall performance.
+* [Core] Fixed issue in closed socket detection (fixes high CPU load issue).
 * [Client] Added method to trigger PING/PONG manually (connection check etc.).
 * [Client] Added support for certificate validation callback when using Web Sockets (requires netstandard2.1+).
 * [Client] Fixed a memory leak when web socket based connections trying to reconnect with an offline server.

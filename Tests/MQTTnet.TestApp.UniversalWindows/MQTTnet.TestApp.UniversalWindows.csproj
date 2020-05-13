@@ -105,6 +105,9 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <None Include="..\..\.editorconfig">
+      <Link>.editorconfig</Link>
+    </None>
     <None Include="MQTTnet.TestApp.UniversalWindows_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>

@@ -12,18 +12,14 @@ namespace MQTTnet.Tests.Mockups
             return new MqttNetScopedLogger(this, source);
         }
 
-        public void Publish(MqttNetLogLevel logLevel, string message, object[] parameters, Exception exception)
+        public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
         {
             LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(new MqttNetLogMessage
             {
                 Level = logLevel,
-                Message = message
+                Message = string.Format(message, parameters),
+                Exception = exception
             }));
-        }
-
-        public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -9,8 +9,8 @@ namespace MQTTnet.Benchmarks.Configurations
     {
         public RuntimeCompareConfig()
         {
-            Add(Job.Default.With(ClrRuntime.Net472));
-            Add(Job.Default.With(CoreRuntime.Core22).With(CsProjCoreToolchain.NetCoreApp22));
+            AddJob(Job.Default.WithRuntime(ClrRuntime.Net472));
+            AddJob(Job.Default.WithRuntime(CoreRuntime.Core22).WithToolchain(CsProjCoreToolchain.NetCoreApp22));
         }
 
     }

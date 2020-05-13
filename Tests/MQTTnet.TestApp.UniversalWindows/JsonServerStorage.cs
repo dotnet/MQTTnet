@@ -6,16 +6,16 @@ using Newtonsoft.Json;
 
 namespace MQTTnet.TestApp.UniversalWindows
 {
-    public class JsonServerStorage : IMqttServerStorage
+    public sealed class JsonServerStorage : IMqttServerStorage
     {
-        private readonly string _filename = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "Retained.json");
+        readonly string _filename = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "Retained.json");
 
-        public async Task SaveRetainedMessagesAsync(IList<MqttApplicationMessage> messages)
+        public Task SaveRetainedMessagesAsync(IList<MqttApplicationMessage> messages)
         {
-            await Task.CompletedTask;
-
             var json = JsonConvert.SerializeObject(messages);
             File.WriteAllText(_filename, json);
+
+            return Task.CompletedTask;
         }
 
         public async Task<IList<MqttApplicationMessage>> LoadRetainedMessagesAsync()

@@ -40,15 +40,15 @@ namespace MQTTnet.Client.Options
             return this;
         }
 
+        [Obsolete("This method is no longer supported. The client will send ping requests just before the keep alive interval is going to elapse. As per MQTT RFC the serve has to wait 1.5 times the interval so we don't need this anymore.")]
+        public MqttClientOptionsBuilder WithKeepAliveSendInterval(TimeSpan value)
+        {
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithNoKeepAlive()
         {
             return WithKeepAlivePeriod(TimeSpan.Zero);
-        }
-
-        public MqttClientOptionsBuilder WithoutKeepAlivePeriod()
-        {
-            _options.KeepAlivePeriod = TimeSpan.Zero;
-            return this;
         }
 
         public MqttClientOptionsBuilder WithKeepAlivePeriod(TimeSpan value)

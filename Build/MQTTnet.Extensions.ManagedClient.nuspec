@@ -8,7 +8,7 @@
     <license type="file">LICENSE</license>
     <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
-    <!-- <icon>images\Logo_128x128.png</icon> -->
+    <icon>images\Logo_128x128.png</icon>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>This is an extension library which provides a managed MQTT client with additional features using MQTTnet.</description>
     <releaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</releaseNotes>

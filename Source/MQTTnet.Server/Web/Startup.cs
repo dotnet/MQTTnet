@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Microsoft.Scripting.Utils;
+using MQTTnet.AspNetCore;
 using MQTTnet.Server.Configuration;
 using MQTTnet.Server.Logging;
 using MQTTnet.Server.Mqtt;
@@ -40,6 +41,9 @@ namespace MQTTnet.Server.Web
             DataSharingService dataSharingService,
             MqttSettingsModel mqttSettings)
         {
+            application.UseDefaultFiles();
+            application.UseStaticFiles();
+
             application.UseHsts();
             application.UseRouting();
             application.UseCors(x => x
@@ -49,9 +53,7 @@ namespace MQTTnet.Server.Web
 
             application.UseAuthentication();
             application.UseAuthorization();
-
-            application.UseStaticFiles();
-
+     
             application.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -80,7 +82,6 @@ namespace MQTTnet.Server.Web
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
-
 
             services.AddControllers();
 
@@ -197,7 +198,13 @@ namespace MQTTnet.Server.Web
                 {
                     if (context.WebSockets.IsWebSocketRequest)
                     {
-                        using (var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false))
+                        string subProtocol = null;
+                        if (context.Request.Headers.TryGetValue("Sec-WebSocket-Protocol", out var requestedSubProtocolValues))
+                        {
+                            subProtocol = MqttSubProtocolSelector.SelectSubProtocol(requestedSubProtocolValues);
+                        }
+
+                        using (var webSocket = await context.WebSockets.AcceptWebSocketAsync(subProtocol).ConfigureAwait(false))
                         {
                             await mqttServerService.RunWebSocketConnectionAsync(webSocket, context).ConfigureAwait(false);
                         }

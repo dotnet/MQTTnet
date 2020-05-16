@@ -25,7 +25,7 @@ namespace MQTTnet.Adapter
 
         readonly byte[] _fixedHeaderBuffer = new byte[2];
 
-        SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
+        readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
 
         long _bytesReceived;
         long _bytesSent;
@@ -111,6 +111,8 @@ namespace MQTTnet.Adapter
 
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
+            ThrowIfDisposed();
+
             await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
@@ -211,9 +213,7 @@ namespace MQTTnet.Adapter
             if (disposing)
             {
                 _channel?.Dispose();
-
                 _writerSemaphore?.Dispose();
-                _writerSemaphore = null;
             }
 
             base.Dispose(disposing);

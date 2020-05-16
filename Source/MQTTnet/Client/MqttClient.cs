@@ -446,7 +446,11 @@ namespace MQTTnet.Client
                         await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket(), cancellationToken).ConfigureAwait(false);
                     }
 
-                    await Task.Delay(keepAlivePeriod, cancellationToken).ConfigureAwait(false);
+                    // Wait a fixed time in all cases. Calculation of the remaining time is complicated
+                    // due to some edge cases and was buggy in the past. Now we wait half a second because the
+                    // min keep alive value is one second so that the server will wait 1.5 seconds for a PING
+                    // packet.
+                    await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

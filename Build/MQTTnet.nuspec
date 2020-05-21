@@ -12,9 +12,9 @@
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
-* [Client] Fixed issue in keep alive handling.
-* [MQTTnet.Server] Added support for delivering static files (HTML, JavaScript etc.).
-* [MQTTnet.Server] Fixed web socket protocol errors (when using paho JS etc.).
+* [RcpClient] Adjusted some namespaces (BREAKING CHANGE!)
+* [AspNetCore] Adjusted some namespaces (BREAKING CHANGE!)
+* [Server] Adjusted some namespaces (BREAKING CHANGE!)
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

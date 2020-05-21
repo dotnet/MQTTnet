@@ -10,6 +10,7 @@ using System.IO.Pipelines;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.AspNetCore.Extensions;
 
 namespace MQTTnet.AspNetCore
 {

@@ -130,7 +130,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        private Task OnClientAcceptedAsync(IMqttChannelAdapter channelAdapter)
+        Task OnClientAcceptedAsync(IMqttChannelAdapter channelAdapter)
         {
             var clientHandler = ClientHandler;
             if (clientHandler == null)

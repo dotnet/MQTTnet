@@ -1,7 +1,6 @@
-﻿using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
-using System;
+﻿using System;
 
-namespace MQTTnet.Extensions.Rpc.Options
+namespace MQTTnet.Extensions.Rpc.Options.TopicGeneration
 {
     public class DefaultMqttRpcClientTopicGenerationStrategy : IMqttRpcClientTopicGenerationStrategy
     {

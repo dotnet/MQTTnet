@@ -20,7 +20,7 @@ namespace MQTTnet.Implementations
 
         public CrossPlatformSocket()
         {
-            // Having this contructor is important because avoiding the address family as parameter
+            // Having this constructor is important because avoiding the address family as parameter
             // will make use of dual mode in the .net framework.
             _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
         }
@@ -33,75 +33,34 @@ namespace MQTTnet.Implementations
 
         public bool NoDelay
         {
-            get
-            {
-                return (int)_socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay) > 0;
-            }
-
-            set
-            {
-                _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, value ? 1 : 0);
-            }
+            get => (int)_socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay) > 0;
+            set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, value ? 1 : 0);
         }
 
         public bool DualMode
         {
-            get
-            {
-                return _socket.DualMode;
-            }
-
-            set
-            {
-                _socket.DualMode = value;
-            }
+            get => _socket.DualMode;
+            set => _socket.DualMode = value;
         }
 
         public int ReceiveBufferSize
         {
-            get
-            {
-                return _socket.ReceiveBufferSize;
-            }
-
-            set
-            {
-                _socket.ReceiveBufferSize = value;
-            }
+            get => _socket.ReceiveBufferSize;
+            set => _socket.ReceiveBufferSize = value;
         }
 
         public int SendBufferSize
         {
-            get
-            {
-                return _socket.SendBufferSize;
-            }
-
-            set
-            {
-                _socket.SendBufferSize = value;
-            }
+            get => _socket.SendBufferSize;
+            set => _socket.SendBufferSize = value;
         }
 
-        public EndPoint RemoteEndPoint
-        {
-            get
-            {
-                return _socket.RemoteEndPoint;
-            }
-        }
+        public EndPoint RemoteEndPoint => _socket.RemoteEndPoint;
 
         public bool ReuseAddress
         {
-            get
-            {
-                return (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
-            }
-
-            set
-            {
-                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, value ? 1 : 0);
-            }
+            get => (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
+            set => _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, value ? 1 : 0);
         }
 
         public async Task<CrossPlatformSocket> AcceptAsync()

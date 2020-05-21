@@ -275,6 +275,78 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public async Task Subscribe_Lots_In_Single_Request()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServerAsync();
+
+                var c1 = await testEnvironment.ConnectClientAsync();
+                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+
+                var optionsBuilder = new MqttClientSubscribeOptionsBuilder();
+                for (var i = 0; i < 1000; i++)
+                {
+                    optionsBuilder.WithTopicFilter(i.ToString(), MqttQualityOfServiceLevel.AtMostOnce);
+                }
+
+                await c1.SubscribeAsync(optionsBuilder.Build()).ConfigureAwait(false);
+
+                var c2 = await testEnvironment.ConnectClientAsync();
+
+                var messageBuilder = new MqttApplicationMessageBuilder();
+                for (var i = 0; i < 1000; i++)
+                {
+                    messageBuilder.WithTopic(i.ToString());
+
+                    await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
+                }
+
+                await Task.Delay(500).ConfigureAwait(false);
+
+                Assert.AreEqual(1000, receivedMessagesCount);
+            }
+        }
+
+        [TestMethod]
+        public async Task Subscribe_Lots_In_Multiple_Requests()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServerAsync();
+
+                var c1 = await testEnvironment.ConnectClientAsync();
+                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+
+                for (var i = 0; i < 1000; i++)
+                {
+                    var so = new MqttClientSubscribeOptionsBuilder()
+                        .WithTopicFilter(i.ToString(), MqttQualityOfServiceLevel.AtMostOnce).Build();
+
+                    await c1.SubscribeAsync(so).ConfigureAwait(false);
+                }
+                
+                var c2 = await testEnvironment.ConnectClientAsync();
+
+                var messageBuilder = new MqttApplicationMessageBuilder();
+                for (var i = 0; i < 1000; i++)
+                {
+                    messageBuilder.WithTopic(i.ToString());
+
+                    await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
+                }
+
+                await Task.Delay(500).ConfigureAwait(false);
+
+                Assert.AreEqual(1000, receivedMessagesCount);
+            }
+        }
+
+        [TestMethod]
         public async Task Subscribe_Multiple_In_Multiple_Request()
         {
             using (var testEnvironment = new TestEnvironment(TestContext))

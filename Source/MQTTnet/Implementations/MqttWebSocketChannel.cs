@@ -35,7 +35,7 @@ namespace MQTTnet.Implementations
 
         public bool IsSecureConnection { get; private set; }
 
-        public X509Certificate2 ClientCertificate { get; private set; }
+        public X509Certificate2 ClientCertificate { get; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {

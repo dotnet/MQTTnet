@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Connections;
-using System;
 
-namespace MQTTnet.AspNetCore
+#if NETCOREAPP3_1
+using System;
+#endif
+
+namespace MQTTnet.AspNetCore.Extensions
 {
     public static class ConnectionRouteBuilderExtensions
     {

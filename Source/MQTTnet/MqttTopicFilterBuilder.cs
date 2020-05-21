@@ -4,7 +4,7 @@ using System;
 
 namespace MQTTnet
 {
-    [Obsolete("Use MqttTopicFilter instead. It is just a renamed version to align with general namings in this lib.")]
+    [Obsolete("Use MqttTopicFilterBuilder instead. It is just a renamed version to align with general namings in this lib.")]
     public class TopicFilterBuilder : MqttTopicFilterBuilder
     {
     }

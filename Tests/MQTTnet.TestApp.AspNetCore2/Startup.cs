@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using MQTTnet.AspNetCore;
+using MQTTnet.AspNetCore.Extensions;
 using MQTTnet.Server;
 
 namespace MQTTnet.TestApp.AspNetCore2

@@ -5,7 +5,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
-namespace MQTTnet.AspNetCore
+namespace MQTTnet.AspNetCore.Extensions
 {
     public static class ReaderExtensions
     {

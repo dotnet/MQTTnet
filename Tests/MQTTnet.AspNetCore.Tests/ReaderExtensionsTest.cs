@@ -1,6 +1,7 @@
-#if NETCOREAPP
+#if NETCOREAPP3_1
 using System.Buffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.AspNetCore.Extensions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
@@ -30,7 +31,6 @@ namespace MQTTnet.AspNetCore.Tests
             part = sequence.Slice(sequence.Start, 0); // empty message should fail
             result = serializer.TryDecode(reader, part, out packet, out consumed, out observed, out read);
             Assert.IsFalse(result);
-
 
             part = sequence.Slice(sequence.Start, 1); // partial fixed header should fail
             result = serializer.TryDecode(reader, part, out packet, out consumed, out observed, out read);

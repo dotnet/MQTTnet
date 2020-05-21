@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
-using System;
 
-namespace MQTTnet.AspNetCore
+namespace MQTTnet.AspNetCore.Extensions
 {
     public static class ServiceCollectionExtensions
     {

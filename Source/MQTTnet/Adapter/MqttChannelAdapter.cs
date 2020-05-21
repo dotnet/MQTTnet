@@ -59,6 +59,7 @@ namespace MQTTnet.Adapter
         public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
+            cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
@@ -85,6 +86,7 @@ namespace MQTTnet.Adapter
         public async Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
+            cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
@@ -112,8 +114,17 @@ namespace MQTTnet.Adapter
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
+            cancellationToken.ThrowIfCancellationRequested();
 
-            await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (ObjectDisposedException)
+            {
+                throw new OperationCanceledException();
+            }
+
             try
             {
                 var packetData = PacketFormatterAdapter.Encode(packet);
@@ -144,13 +155,22 @@ namespace MQTTnet.Adapter
             finally
             {
                 PacketFormatterAdapter.FreeBuffer();
-                _writerSemaphore?.Release();
+
+                try
+                {
+                    _writerSemaphore.Release();
+                }
+                catch (ObjectDisposedException)
+                {
+                    throw new OperationCanceledException();
+                }
             }
         }
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
+            cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
@@ -189,6 +209,9 @@ namespace MQTTnet.Adapter
             catch (OperationCanceledException)
             {
             }
+            catch (ObjectDisposedException)
+            {
+            }
             catch (Exception exception)
             {
                 if (IsWrappedException(exception))
@@ -212,8 +235,8 @@ namespace MQTTnet.Adapter
         {
             if (disposing)
             {
-                _channel?.Dispose();
-                _writerSemaphore?.Dispose();
+                _channel.Dispose();
+                _writerSemaphore.Dispose();
             }
 
             base.Dispose(disposing);

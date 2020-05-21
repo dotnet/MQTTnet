@@ -24,8 +24,8 @@ namespace MQTTnet.Implementations
         readonly MqttServerTlsTcpEndpointOptions _tlsOptions;
         readonly X509Certificate2 _tlsCertificate;
 
-        private CrossPlatformSocket _socket;
-        private IPEndPoint _localEndPoint;
+        CrossPlatformSocket _socket;
+        IPEndPoint _localEndPoint;
 
         public MqttTcpServerListener(
             AddressFamily addressFamily,

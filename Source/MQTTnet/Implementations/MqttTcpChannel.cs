@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Implementations
 {
-    public sealed class MqttTcpChannel : IDisposable, IMqttChannel
+    public sealed class MqttTcpChannel : IMqttChannel
     {
         readonly IMqttClientOptions _clientOptions;
         readonly MqttClientTcpOptions _options;
@@ -162,7 +162,6 @@ namespace MQTTnet.Implementations
             }
             catch (ObjectDisposedException)
             {
-                return;
             }
             catch (IOException exception)
             {
@@ -205,7 +204,6 @@ namespace MQTTnet.Implementations
             {
                 return certificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _clientOptions);
             }
-
 #endregion
 
             var certificateValidationHandler = _options?.TlsOptions?.CertificateValidationHandler;
@@ -229,7 +227,7 @@ namespace MQTTnet.Implementations
 
             if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.OfflineRevocation))
             {
-                if (!_options.TlsOptions.IgnoreCertificateRevocationErrors)
+                if (_options?.TlsOptions?.IgnoreCertificateRevocationErrors != true)
                 {
                     return false;
                 }
@@ -237,13 +235,13 @@ namespace MQTTnet.Implementations
 
             if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.PartialChain))
             {
-                if (!_options.TlsOptions.IgnoreCertificateChainErrors)
+                if (_options?.TlsOptions?.IgnoreCertificateChainErrors != true)
                 {
                     return false;
                 }
             }
 
-            return _options.TlsOptions.AllowUntrustedCertificates;
+            return _options?.TlsOptions?.AllowUntrustedCertificates == true;
         }
 
         X509CertificateCollection LoadCertificates()

@@ -15,6 +15,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using System.Net;
+using MQTTnet.AspNetCore.Extensions;
 
 namespace MQTTnet.AspNetCore.Tests
 {

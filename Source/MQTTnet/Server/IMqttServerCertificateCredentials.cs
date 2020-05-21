@@ -1,4 +1,7 @@
-public interface IMqttServerCertificateCredentials
+namespace MQTTnet.Server
 {
-    string Password { get; }
+    public interface IMqttServerCertificateCredentials
+    {
+        string Password { get; }
+    }
 }

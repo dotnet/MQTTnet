@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 namespace MQTTnet.Internal
 {
     // From Stephen Toub (https://blogs.msdn.microsoft.com/pfxteam/2012/02/12/building-async-coordination-primitives-part-6-asynclock/)
-    public class AsyncLock : IDisposable
+    public sealed class AsyncLock : IDisposable
     {
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private readonly Task<IDisposable> _releaser;
+        readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        readonly Task<IDisposable> _releaser;
 
         public AsyncLock()
         {
@@ -39,9 +39,9 @@ namespace MQTTnet.Internal
             _semaphore?.Dispose();
         }
 
-        private class Releaser : IDisposable
+        class Releaser : IDisposable
         {
-            private readonly AsyncLock _toRelease;
+            readonly AsyncLock _toRelease;
 
             internal Releaser(AsyncLock toRelease)
             {

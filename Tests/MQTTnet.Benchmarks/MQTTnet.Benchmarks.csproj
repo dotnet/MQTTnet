@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
-    <PackageReference Include="System.IO.Pipelines" Version="4.7.1" />
+    <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
   </ItemGroup>
 

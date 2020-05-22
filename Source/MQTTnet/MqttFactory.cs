@@ -6,6 +6,7 @@ using MQTTnet.LowLevelClient;
 using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MQTTnet
 {
@@ -24,6 +25,13 @@ namespace MQTTnet
         }
 
         public IMqttNetLogger DefaultLogger { get; }
+
+        public IList<Func<IMqttFactory, IMqttServerAdapter>> DefaultServerAdapters { get; } = new List<Func<IMqttFactory, IMqttServerAdapter>>
+        {
+            factory => new MqttTcpServerAdapter(factory.DefaultLogger)
+        };
+
+        public IDictionary<object, object> Properties { get; } = new Dictionary<object, object>();
 
         public IMqttFactory UseClientAdapterFactory(IMqttClientAdapterFactory clientAdapterFactory)
         {
@@ -50,10 +58,10 @@ namespace MQTTnet
             return new LowLevelMqttClient(_clientAdapterFactory, DefaultLogger);
         }
 
-        public ILowLevelMqttClient CreateLowLevelMqttClient(IMqttNetLogger logger, IMqttClientAdapterFactory clientAdapterFactoryy)
+        public ILowLevelMqttClient CreateLowLevelMqttClient(IMqttNetLogger logger, IMqttClientAdapterFactory clientAdapterFactory)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            if (clientAdapterFactoryy == null) throw new ArgumentNullException(nameof(clientAdapterFactoryy));
+            if (clientAdapterFactory == null) throw new ArgumentNullException(nameof(clientAdapterFactory));
 
             return new LowLevelMqttClient(_clientAdapterFactory, logger);
         }
@@ -94,7 +102,8 @@ namespace MQTTnet
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            return CreateMqttServer(new List<IMqttServerAdapter> { new MqttTcpServerAdapter(logger) }, logger);
+            var serverAdapters = DefaultServerAdapters.Select(a => a.Invoke(this));
+            return CreateMqttServer(serverAdapters, logger);
         }
 
         public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> serverAdapters, IMqttNetLogger logger)

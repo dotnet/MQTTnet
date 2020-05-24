@@ -72,6 +72,7 @@ _MQTTnet Server_ is a standalone cross platform MQTT server (like mosquitto) bas
 * Universal Windows Platform (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU, Windows 10 IoT Core)
 * Xamarin.Android 7.5+
 * Xamarin.iOS 10.14+
+* Blazor.WebAssembly 3.2.0
 
 ## Supported MQTT versions
 

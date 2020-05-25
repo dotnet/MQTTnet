@@ -1,0 +1,27 @@
+﻿@page "/counter"
+@using MQTTnet.Client.Options
+@using System.Threading
+
+<h1>Counter</h1>
+
+<p>Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+    private int currentCount = 0;
+
+    private async Task IncrementCount()
+    {
+        var mqttFactory = new MqttFactory();
+        var client = mqttFactory.CreateMqttClient();
+
+        var options = new MqttClientOptionsBuilder()
+            .WithWebSocketServer("192.168.1.15:80/mqtt")
+            .Build();
+
+        await client.ConnectAsync(options, CancellationToken.None);
+        
+        currentCount++;
+    }
+}

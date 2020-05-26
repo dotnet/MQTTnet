@@ -1,33 +1,56 @@
-﻿using System.Net.Security;
+﻿using System;
 using System.Security.Authentication;
-#if !WINDOWS_UWP
-using System.Security.Cryptography.X509Certificates;
-#endif
+using MQTTnet.Certificates;
 
 namespace MQTTnet.Server
 {
     public class MqttServerTlsTcpEndpointOptions : MqttServerTcpEndpointBaseOptions
     {
+        ICertificateProvider _certificateProvider;
+
         public MqttServerTlsTcpEndpointOptions()
         {
             Port = 8883;
         }
 
+        [Obsolete("Please use CertificateProvider with 'BlobCertificateProvider' instead.")]
         public byte[] Certificate { get; set; }
 
-#if !WINDOWS_UWP
-        public X509Certificate2 X509Certificate { get; set; }
-#endif
-
+        [Obsolete("Please use CertificateProvider with 'BlobCertificateProvider' including password property instead.")]
         public IMqttServerCertificateCredentials CertificateCredentials { get; set; }
+
+#if !WINDOWS_UWP
+        public System.Net.Security.RemoteCertificateValidationCallback RemoteCertificateValidationCallback { get; set; }
+#endif
+        public ICertificateProvider CertificateProvider
+        {
+            get
+            {
+                // Backward compatibility only. Gets converted to auto property when
+                // obsolete properties are removed.
+                if (_certificateProvider != null)
+                {
+                    return _certificateProvider;
+                }
+
+                if (Certificate == null)
+                {
+                    return null;
+                }
+
+                return new BlobCertificateProvider(Certificate)
+                {
+                    Password = CertificateCredentials?.Password
+                };
+            }
+
+            set => _certificateProvider = value;
+        }
 
         public bool ClientCertificateRequired { get; set; }
 
         public bool CheckCertificateRevocation { get; set; }
 
-#if !WINDOWS_UWP
-        public RemoteCertificateValidationCallback RemoteCertificateValidationCallback { get; set; }
-#endif
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
     }
 }

@@ -13,7 +13,7 @@
     <description>This is a support library to integrate MQTTnet into AspNetCore.</description>
     <releaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
-    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags>
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags>
     <dependencies>
       <group targetFramework="netstandard2.0">
         <dependency id="MQTTnet" version="$nugetVersion" />

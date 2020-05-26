@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.Server
 {
@@ -76,23 +77,38 @@ namespace MQTTnet.Server
 
         public Task<IList<IMqttClientStatus>> GetClientStatusAsync()
         {
+            ThrowIfNotStarted();
+
             return _clientSessionsManager.GetClientStatusAsync();
         }
 
         public Task<IList<IMqttSessionStatus>> GetSessionStatusAsync()
         {
+            ThrowIfNotStarted();
+
             return _clientSessionsManager.GetSessionStatusAsync();
         }
 
         public Task<IList<MqttApplicationMessage>> GetRetainedApplicationMessagesAsync()
         {
+            ThrowIfNotStarted();
+
             return _retainedMessagesManager.GetMessagesAsync();
+        }
+
+        public Task ClearRetainedApplicationMessagesAsync()
+        {
+            ThrowIfNotStarted();
+
+            return _retainedMessagesManager?.ClearMessagesAsync() ?? PlatformAbstractionLayer.CompletedTask;
         }
 
         public Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
+
+            ThrowIfNotStarted();
 
             return _clientSessionsManager.SubscribeAsync(clientId, topicFilters);
         }
@@ -101,6 +117,8 @@ namespace MQTTnet.Server
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
+
+            ThrowIfNotStarted();
 
             return _clientSessionsManager.UnsubscribeAsync(clientId, topicFilters);
         }
@@ -111,7 +129,7 @@ namespace MQTTnet.Server
 
             MqttTopicValidator.ThrowIfInvalid(applicationMessage.Topic);
 
-            if (_cancellationTokenSource == null) throw new InvalidOperationException("The server is not started.");
+            ThrowIfNotStarted();
 
             _clientSessionsManager.DispatchApplicationMessage(applicationMessage, null);
 
@@ -120,16 +138,15 @@ namespace MQTTnet.Server
 
         public async Task StartAsync(IMqttServerOptions options)
         {
+            ThrowIfStarted();
+
             Options = options ?? throw new ArgumentNullException(nameof(options));
-
-            if (Options.RetainedMessagesManager == null) throw new MqttConfigurationException("options.RetainedMessagesManager should not be null.");
-
-            if (_cancellationTokenSource != null) throw new InvalidOperationException("The server is already started.");
-
+            
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _retainedMessagesManager = Options.RetainedMessagesManager;
-            await _retainedMessagesManager.Start(Options, _rootLogger);
+            _retainedMessagesManager = Options.RetainedMessagesManager ?? throw new MqttConfigurationException("options.RetainedMessagesManager should not be null.");
+
+            await _retainedMessagesManager.Start(Options, _rootLogger).ConfigureAwait(false);
             await _retainedMessagesManager.LoadMessagesAsync().ConfigureAwait(false);
 
             _clientSessionsManager = new MqttClientSessionsManager(Options, _retainedMessagesManager, _cancellationTokenSource.Token, _eventDispatcher, _rootLogger);
@@ -189,14 +206,25 @@ namespace MQTTnet.Server
             }
         }
 
-        public Task ClearRetainedApplicationMessagesAsync()
-        {
-            return _retainedMessagesManager?.ClearMessagesAsync();
-        }
-
         Task OnHandleClient(IMqttChannelAdapter channelAdapter)
         {
             return _clientSessionsManager.HandleClientConnectionAsync(channelAdapter);
+        }
+
+        void ThrowIfStarted()
+        {
+            if (_cancellationTokenSource != null)
+            {
+                throw new InvalidOperationException("The MQTT server is already started.");
+            }
+        }
+
+        void ThrowIfNotStarted()
+        {
+            if (_cancellationTokenSource == null)
+            {
+                throw new InvalidOperationException("The MQTT server is not started.");
+            }
         }
     }
 }

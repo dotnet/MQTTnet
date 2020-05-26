@@ -2,6 +2,9 @@
 using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
+#if !WINDOWS_UWP
+using System.Security.Cryptography.X509Certificates;
+#endif
 
 namespace MQTTnet.Server
 {
@@ -88,6 +91,14 @@ namespace MQTTnet.Server
             _options.TlsEndpointOptions.CertificateCredentials = credentials;
             return this;
         }
+
+#if !WINDOWS_UWP
+        public MqttServerOptionsBuilder WithEncryptionCertificate(X509Certificate2 certificate)
+        {
+            _options.TlsEndpointOptions.X509Certificate = certificate;
+            return this;
+        }
+#endif
 
         public MqttServerOptionsBuilder WithEncryptionSslProtocol(SslProtocols value)
         {

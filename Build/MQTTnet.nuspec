@@ -15,6 +15,7 @@
 * [RcpClient] Adjusted some namespaces (BREAKING CHANGE!)
 * [AspNetCore] Adjusted some namespaces (BREAKING CHANGE!)
 * [Server] Adjusted some namespaces (BREAKING CHANGE!)
+* [Server] Added state checks (throw if not started etc.) for most server APIs.
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 

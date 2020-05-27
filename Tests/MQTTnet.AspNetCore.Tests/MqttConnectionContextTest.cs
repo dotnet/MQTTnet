@@ -45,7 +45,7 @@ namespace MQTTnet.AspNetCore.Tests
             connection.Transport = pipe;
             var ctx = new MqttConnectionContext(serializer, connection);
 
-            var tasks = Enumerable.Range(1, 10).Select(_ => Task.Run(async () => 
+            var tasks = Enumerable.Range(1, 100).Select(_ => Task.Run(async () => 
             {
                 for (int i = 0; i < 100; i++)
                 {

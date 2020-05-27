@@ -163,18 +163,16 @@ namespace MQTTnet.AspNetCore
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var formatter = PacketFormatterAdapter;
-            var buffer = formatter.Encode(packet);
-            var msg = buffer.AsMemory();
-            var output = _output;
-
             using (await _writerLock.WaitAsync(cancellationToken).ConfigureAwait(false))
             {
+                var buffer = formatter.Encode(packet);
+                var msg = buffer.AsMemory();
+                var output = _output;
                 var result = await output.WriteAsync(msg, cancellationToken).ConfigureAwait(false);
                 if (result.IsCompleted)
                 {
                     BytesSent += msg.Length;
                 }
-
                 PacketFormatterAdapter.FreeBuffer();
             }
         }

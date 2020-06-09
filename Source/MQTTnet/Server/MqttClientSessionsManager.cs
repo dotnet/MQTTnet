@@ -224,12 +224,24 @@ namespace MQTTnet.Server
                     await _retainedMessagesManager.HandleMessageAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
                 }
 
+                applicationMessage.DeliveryCount = 0;
+
                 foreach (var clientSession in _sessions.Values)
                 {
                     clientSession.EnqueueApplicationMessage(
                         applicationMessage,
                         sender?.ClientId,
                         false);
+                }
+
+                if (applicationMessage.DeliveryCount == 0)
+                {
+                    if (_options.UndeliveredMessageInterceptor == null)
+                    {
+                        throw new OperationCanceledException(nameof(_options.UndeliveredMessageInterceptor));
+                    }
+
+                    await _options.UndeliveredMessageInterceptor.InterceptApplicationMessagePublishAsync(new MqttApplicationMessageInterceptorContext(sender?.ClientId, sender?.Session?.Items, applicationMessage));
                 }
             }
             catch (OperationCanceledException)

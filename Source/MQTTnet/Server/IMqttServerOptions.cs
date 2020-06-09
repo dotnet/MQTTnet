@@ -25,5 +25,7 @@ namespace MQTTnet.Server
         IMqttServerStorage Storage { get; }
 
         IMqttRetainedMessagesManager RetainedMessagesManager { get; }
+
+        IMqttServerApplicationMessageInterceptor UndeliveredMessageInterceptor { get; set; }
     }
 }

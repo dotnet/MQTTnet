@@ -11,17 +11,17 @@ namespace MQTTnet.Formatter
     /// same as for the original MemoryStream in .net. Also this implementation allows accessing the internal
     /// buffer for all platforms and .net framework versions (which is not available at the regular MemoryStream).
     /// </summary>
-    public class MqttPacketWriter : IMqttPacketWriter
+    public sealed class MqttPacketWriter : IMqttPacketWriter
     {
-        private static readonly ArraySegment<byte> ZeroVariableLengthIntegerArray = new ArraySegment<byte>(new byte[1], 0, 1);
-        private static readonly ArraySegment<byte> ZeroTwoByteIntegerArray = new ArraySegment<byte>(new byte[2], 0, 2);
+        static readonly ArraySegment<byte> ZeroVariableLengthIntegerArray = new ArraySegment<byte>(new byte[1], 0, 1);
+        static readonly ArraySegment<byte> ZeroTwoByteIntegerArray = new ArraySegment<byte>(new byte[2], 0, 2);
 
         public static int InitialBufferSize = 128;
         public static int MaxBufferSize = 4096;
 
-        private byte[] _buffer = new byte[InitialBufferSize];
+        byte[] _buffer = new byte[InitialBufferSize];
 
-        private int _offset;
+        int _offset;
 
         public int Length { get; private set; }
 
@@ -191,13 +191,13 @@ namespace MQTTnet.Formatter
             Array.Resize(ref _buffer, MaxBufferSize);
         }
 
-        private void Write(ArraySegment<byte> buffer)
+        void Write(ArraySegment<byte> buffer)
         {
             Write(buffer.Array, buffer.Offset, buffer.Count);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void EnsureAdditionalCapacity(int additionalCapacity)
+        void EnsureAdditionalCapacity(int additionalCapacity)
         {
             var freeSpace = _buffer.Length - _offset;
             if (freeSpace >= additionalCapacity)
@@ -209,7 +209,7 @@ namespace MQTTnet.Formatter
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void EnsureCapacity(int capacity)
+        void EnsureCapacity(int capacity)
         {
             var newBufferLength = _buffer.Length;
 
@@ -227,7 +227,7 @@ namespace MQTTnet.Formatter
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void IncreasePosition(int length)
+        void IncreasePosition(int length)
         {
             _offset += length;
 

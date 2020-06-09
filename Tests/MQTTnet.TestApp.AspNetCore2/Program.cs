@@ -1,19 +1,22 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using MQTTnet.AspNetCore;
+using System.Threading.Tasks;
+using MQTTnet.AspNetCore.Extensions;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {
     public static class Program
     {
-        public static void Main(string[] args)
+        public static Task Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            return BuildWebHost(args).RunAsync();
         }
 
         private static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseKestrel(o => {
+                .UseKestrel(o =>
+                {
                     o.ListenAnyIP(1883, l => l.UseMqtt());
                     o.ListenAnyIP(5000); // default http pipeline
                 })

@@ -40,13 +40,13 @@ namespace MQTTnet.TestApp.NetCore
                     Console.WriteLine(">> RECEIVED: " + e.ApplicationMessage.Topic);
                 });
 
-                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("1"));
-                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("2").WithAtLeastOnceQoS());
-
                 await managedClient.StartAsync(options);
 
-                await managedClient.SubscribeAsync(new TopicFilter { Topic = "xyz", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
-                await managedClient.SubscribeAsync(new TopicFilter { Topic = "abc", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("1"));
+                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("2").WithAtLeastOnceQoS());
+                
+                await managedClient.SubscribeAsync(new MqttTopicFilter { Topic = "xyz", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                await managedClient.SubscribeAsync(new MqttTopicFilter { Topic = "abc", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
 
                 await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("3"));
 

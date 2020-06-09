@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using MQTTnet.Client.Connecting;
+﻿using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
@@ -10,6 +8,8 @@ using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using System;
+using System.Linq;
 using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
 
 namespace MQTTnet.Formatter.V3
@@ -19,11 +19,6 @@ namespace MQTTnet.Formatter.V3
         public MqttPublishPacket CreatePublishPacket(MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
-
-            if (applicationMessage.UserProperties?.Any() == true)
-            {
-                throw new MqttProtocolViolationException("User properties are not supported in MQTT version 3.");
-            }
 
             return new MqttPublishPacket
             {
@@ -158,7 +153,7 @@ namespace MQTTnet.Formatter.V3
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
             if (unsubAckPacket == null) throw new ArgumentNullException(nameof(unsubAckPacket));
-            
+
             var result = new MqttClientUnsubscribeResult();
 
             result.Items.AddRange(unsubscribePacket.TopicFilters.Select((t, i) =>
@@ -171,25 +166,15 @@ namespace MQTTnet.Formatter.V3
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            if (options.UserProperties?.Any() == true)
-            {
-                throw new MqttProtocolViolationException("User properties are not supported in MQTT version 3.");
-            }
-
             var subscribePacket = new MqttSubscribePacket();
             subscribePacket.TopicFilters.AddRange(options.TopicFilters);
-            
+
             return subscribePacket;
         }
 
         public MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-
-            if (options.UserProperties?.Any() == true)
-            {
-                throw new MqttProtocolViolationException("User properties are not supported in MQTT version 3.");
-            }
 
             var unsubscribePacket = new MqttUnsubscribePacket();
             unsubscribePacket.TopicFilters.AddRange(options.TopicFilters);
@@ -199,9 +184,9 @@ namespace MQTTnet.Formatter.V3
 
         public MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options)
         {
-            if (options != null)
+            if (options.ReasonCode != MqttClientDisconnectReason.NormalDisconnection || options.ReasonString != null)
             {
-                throw new MqttProtocolViolationException("Reason codes for disconnect are only supported for MQTTv5.");
+                throw new MqttProtocolViolationException("Reason codes and reason string for disconnect are only supported for MQTTv5.");
             }
 
             return new MqttDisconnectPacket();

@@ -15,6 +15,7 @@ namespace MQTTnet.Server
 
         IMqttServerConnectionValidator ConnectionValidator { get; }
         IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; }
+        IMqttServerUnsubscriptionInterceptor UnsubscriptionInterceptor { get; }
         IMqttServerApplicationMessageInterceptor ApplicationMessageInterceptor { get; }
         IMqttServerClientMessageQueueInterceptor ClientMessageQueueInterceptor { get; }
         IMqttServerApplicationMessageInterceptor UndeliveredMessageInterceptor { get; set; }
@@ -22,8 +23,8 @@ namespace MQTTnet.Server
         MqttServerTcpEndpointOptions DefaultEndpointOptions { get; }
         MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; }
 
-        IMqttServerStorage Storage { get; }       
-        
+        IMqttServerStorage Storage { get; }
 
+        IMqttRetainedMessagesManager RetainedMessagesManager { get; }
     }
 }

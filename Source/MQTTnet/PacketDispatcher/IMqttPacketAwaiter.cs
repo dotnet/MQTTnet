@@ -1,5 +1,5 @@
-﻿using System;
-using MQTTnet.Packets;
+﻿using MQTTnet.Packets;
+using System;
 
 namespace MQTTnet.PacketDispatcher
 {

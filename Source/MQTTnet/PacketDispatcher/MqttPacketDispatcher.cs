@@ -1,22 +1,22 @@
-using System;
-using System.Collections.Concurrent;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
+using System;
+using System.Collections.Concurrent;
 
 namespace MQTTnet.PacketDispatcher
 {
-    public class MqttPacketDispatcher
+    public sealed class MqttPacketDispatcher
     {
-        private readonly ConcurrentDictionary<Tuple<ushort, Type>, IMqttPacketAwaiter> _packetAwaiters = new ConcurrentDictionary<Tuple<ushort, Type>, IMqttPacketAwaiter>();
+        readonly ConcurrentDictionary<Tuple<ushort, Type>, IMqttPacketAwaiter> _awaiters = new ConcurrentDictionary<Tuple<ushort, Type>, IMqttPacketAwaiter>();
 
         public void Dispatch(Exception exception)
         {
-            foreach (var awaiter in _packetAwaiters)
+            foreach (var awaiter in _awaiters)
             {
                 awaiter.Value.Fail(exception);
             }
 
-            _packetAwaiters.Clear();
+            _awaiters.Clear();
         }
 
         public void Dispatch(MqttBasePacket packet)
@@ -25,7 +25,7 @@ namespace MQTTnet.PacketDispatcher
 
             if (packet is MqttDisconnectPacket disconnectPacket)
             {
-                foreach (var packetAwaiter in _packetAwaiters)
+                foreach (var packetAwaiter in _awaiters)
                 {
                     packetAwaiter.Value.Fail(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));
                 }
@@ -42,7 +42,7 @@ namespace MQTTnet.PacketDispatcher
             var type = packet.GetType();
             var key = new Tuple<ushort, Type>(identifier, type);
 
-            if (_packetAwaiters.TryRemove(key, out var awaiter))
+            if (_awaiters.TryRemove(key, out var awaiter))
             {
                 awaiter.Complete(packet);
                 return;
@@ -53,15 +53,15 @@ namespace MQTTnet.PacketDispatcher
 
         public void Reset()
         {
-            foreach (var awaiter in _packetAwaiters)
+            foreach (var awaiter in _awaiters)
             {
-                 awaiter.Value.Cancel();
+                awaiter.Value.Cancel();
             }
 
-            _packetAwaiters.Clear();
+            _awaiters.Clear();
         }
 
-        public MqttPacketAwaiter<TResponsePacket> AddPacketAwaiter<TResponsePacket>(ushort? identifier) where TResponsePacket : MqttBasePacket
+        public MqttPacketAwaiter<TResponsePacket> AddAwaiter<TResponsePacket>(ushort? identifier) where TResponsePacket : MqttBasePacket
         {
             if (!identifier.HasValue)
             {
@@ -71,7 +71,7 @@ namespace MQTTnet.PacketDispatcher
             var awaiter = new MqttPacketAwaiter<TResponsePacket>(identifier, this);
 
             var key = new Tuple<ushort, Type>(identifier.Value, typeof(TResponsePacket));
-            if (!_packetAwaiters.TryAdd(key, awaiter))
+            if (!_awaiters.TryAdd(key, awaiter))
             {
                 throw new InvalidOperationException($"The packet dispatcher already has an awaiter for packet of type '{key.Item2.Name}' with identifier {key.Item1}.");
             }
@@ -79,7 +79,7 @@ namespace MQTTnet.PacketDispatcher
             return awaiter;
         }
 
-        public void RemovePacketAwaiter<TResponsePacket>(ushort? identifier) where TResponsePacket : MqttBasePacket
+        public void RemoveAwaiter<TResponsePacket>(ushort? identifier) where TResponsePacket : MqttBasePacket
         {
             if (!identifier.HasValue)
             {
@@ -87,7 +87,7 @@ namespace MQTTnet.PacketDispatcher
             }
 
             var key = new Tuple<ushort, Type>(identifier.Value, typeof(TResponsePacket));
-            _packetAwaiters.TryRemove(key, out _);
+            _awaiters.TryRemove(key, out _);
         }
     }
 }

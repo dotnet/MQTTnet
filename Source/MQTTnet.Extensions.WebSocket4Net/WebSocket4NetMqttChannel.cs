@@ -85,7 +85,12 @@ namespace MQTTnet.Extensions.WebSocket4Net
             {
                 foreach (var certificate in _webSocketOptions.TlsOptions.Certificates)
                 {
+#if WINDOWS_UWP
                     certificates.Add(new X509Certificate(certificate));
+#else
+                    certificates.Add(certificate);
+#endif
+                    
                 }
             }
 

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Security.Authentication;
-using System.Text;
-using System.Threading.Tasks;
-using IronPython.Runtime;
+﻿using IronPython.Runtime;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MQTTnet.Adapter;
@@ -16,25 +9,33 @@ using MQTTnet.Protocol;
 using MQTTnet.Server.Configuration;
 using MQTTnet.Server.Scripting;
 using MQTTnet.Server.Status;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.WebSockets;
+using System.Security.Authentication;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Server.Mqtt
 {
     public class MqttServerService
     {
-        private readonly ILogger<MqttServerService> _logger;
+        readonly ILogger<MqttServerService> _logger;
 
-        private readonly MqttSettingsModel _settings;
-        private readonly MqttApplicationMessageInterceptor _mqttApplicationMessageInterceptor;
-        private readonly MqttServerStorage _mqttServerStorage;
-        private readonly MqttClientConnectedHandler _mqttClientConnectedHandler;
-        private readonly MqttClientDisconnectedHandler _mqttClientDisconnectedHandler;
-        private readonly MqttClientSubscribedTopicHandler _mqttClientSubscribedTopicHandler;
-        private readonly MqttClientUnsubscribedTopicHandler _mqttClientUnsubscribedTopicHandler;
-        private readonly MqttServerConnectionValidator _mqttConnectionValidator;
-        private readonly IMqttServer _mqttServer;
-        private readonly MqttSubscriptionInterceptor _mqttSubscriptionInterceptor;
-        private readonly PythonScriptHostService _pythonScriptHostService;
-        private readonly MqttWebSocketServerAdapter _webSocketServerAdapter;
+        readonly MqttSettingsModel _settings;
+        readonly MqttApplicationMessageInterceptor _mqttApplicationMessageInterceptor;
+        readonly MqttServerStorage _mqttServerStorage;
+        readonly MqttClientConnectedHandler _mqttClientConnectedHandler;
+        readonly MqttClientDisconnectedHandler _mqttClientDisconnectedHandler;
+        readonly MqttClientSubscribedTopicHandler _mqttClientSubscribedTopicHandler;
+        readonly MqttClientUnsubscribedTopicHandler _mqttClientUnsubscribedTopicHandler;
+        readonly MqttServerConnectionValidator _mqttConnectionValidator;
+        readonly IMqttServer _mqttServer;
+        readonly MqttSubscriptionInterceptor _mqttSubscriptionInterceptor;
+        readonly MqttUnsubscriptionInterceptor _mqttUnsubscriptionInterceptor;
+        readonly PythonScriptHostService _pythonScriptHostService;
+        readonly MqttWebSocketServerAdapter _webSocketServerAdapter;
 
         public MqttServerService(
             MqttSettingsModel mqttSettings,
@@ -45,6 +46,7 @@ namespace MQTTnet.Server.Mqtt
             MqttClientUnsubscribedTopicHandler mqttClientUnsubscribedTopicHandler,
             MqttServerConnectionValidator mqttConnectionValidator,
             MqttSubscriptionInterceptor mqttSubscriptionInterceptor,
+            MqttUnsubscriptionInterceptor mqttUnsubscriptionInterceptor,
             MqttApplicationMessageInterceptor mqttApplicationMessageInterceptor,
             MqttServerStorage mqttServerStorage,
             PythonScriptHostService pythonScriptHostService,
@@ -57,16 +59,17 @@ namespace MQTTnet.Server.Mqtt
             _mqttClientUnsubscribedTopicHandler = mqttClientUnsubscribedTopicHandler ?? throw new ArgumentNullException(nameof(mqttClientUnsubscribedTopicHandler));
             _mqttConnectionValidator = mqttConnectionValidator ?? throw new ArgumentNullException(nameof(mqttConnectionValidator));
             _mqttSubscriptionInterceptor = mqttSubscriptionInterceptor ?? throw new ArgumentNullException(nameof(mqttSubscriptionInterceptor));
+            _mqttUnsubscriptionInterceptor = mqttUnsubscriptionInterceptor ?? throw new ArgumentNullException(nameof(mqttUnsubscriptionInterceptor));
             _mqttApplicationMessageInterceptor = mqttApplicationMessageInterceptor ?? throw new ArgumentNullException(nameof(mqttApplicationMessageInterceptor));
             _mqttServerStorage = mqttServerStorage ?? throw new ArgumentNullException(nameof(mqttServerStorage));
             _pythonScriptHostService = pythonScriptHostService ?? throw new ArgumentNullException(nameof(pythonScriptHostService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            _webSocketServerAdapter = new MqttWebSocketServerAdapter(mqttFactory.Logger.CreateChildLogger());
+            _webSocketServerAdapter = new MqttWebSocketServerAdapter(mqttFactory.Logger);
 
             var adapters = new List<IMqttServerAdapter>
             {
-                new MqttTcpServerAdapter(mqttFactory.Logger.CreateChildLogger())
+                new MqttTcpServerAdapter(mqttFactory.Logger)
                 {
                     TreatSocketOpeningErrorAsWarning = true // Opening other ports than for HTTP is not allows in Azure App Services.
                 },
@@ -124,7 +127,7 @@ namespace MQTTnet.Server.Mqtt
             return _mqttServer.PublishAsync(applicationMessage);
         }
 
-        private void Publish(PythonDictionary parameters)
+        void Publish(PythonDictionary parameters)
         {
             try
             {
@@ -170,7 +173,7 @@ namespace MQTTnet.Server.Mqtt
             }
         }
 
-        private IMqttServerOptions CreateMqttServerOptions()
+        IMqttServerOptions CreateMqttServerOptions()
         {
             var options = new MqttServerOptionsBuilder()
                 .WithMaxPendingMessagesPerClient(_settings.MaxPendingMessagesPerClient)
@@ -178,6 +181,7 @@ namespace MQTTnet.Server.Mqtt
                 .WithConnectionValidator(_mqttConnectionValidator)
                 .WithApplicationMessageInterceptor(_mqttApplicationMessageInterceptor)
                 .WithSubscriptionInterceptor(_mqttSubscriptionInterceptor)
+                .WithUnsubscriptionInterceptor(_mqttUnsubscriptionInterceptor)
                 .WithStorage(_mqttServerStorage);
 
             // Configure unencrypted connections
@@ -211,7 +215,7 @@ namespace MQTTnet.Server.Mqtt
                 options
                     .WithEncryptedEndpoint()
                     .WithEncryptionSslProtocol(SslProtocols.Tls12);
-                
+
                 if (!string.IsNullOrEmpty(_settings.EncryptedTcpEndPoint?.Certificate?.Path))
                 {
                     IMqttServerCertificateCredentials certificateCredentials = null;
@@ -226,7 +230,7 @@ namespace MQTTnet.Server.Mqtt
 
                     options.WithEncryptionCertificate(_settings.EncryptedTcpEndPoint.Certificate.ReadCertificate(), certificateCredentials);
                 }
-                
+
                 if (_settings.EncryptedTcpEndPoint.TryReadIPv4(out var address4))
                 {
                     options.WithEncryptedEndpointBoundIPAddress(address4);

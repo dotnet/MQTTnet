@@ -7,8 +7,7 @@
 [![NuGet Badge](https://buildstats.info/nuget/MQTTnet)](https://www.nuget.org/packages/MQTTnet)
 [![Build status](https://ci.appveyor.com/api/projects/status/ycit86voxfevm2aa/branch/master?svg=true)](https://ci.appveyor.com/project/chkr1011/mqttnet)
 [![BCH compliance](https://bettercodehub.com/edge/badge/chkr1011/MQTTnet?branch=master)](https://bettercodehub.com/)
-[![OpenCollective](https://opencollective.com/mqttnet/backers/badge.svg)](https://opencollective.com/mqttnet) 
-[![OpenCollective](https://opencollective.com/mqttnet/sponsors/badge.svg)](https://opencollective.com/mqttnet) [![Join the chat at https://gitter.im/MQTTnet/community](https://badges.gitter.im/MQTTnet/community.svg)](https://gitter.im/MQTTnet/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/MQTTnet/community](https://badges.gitter.im/MQTTnet/community.svg)](https://gitter.im/MQTTnet/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://raw.githubusercontent.com/chkr1011/MQTTnet/master/LICENSE)
 
 # MQTTnet
@@ -27,7 +26,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Uniform API across all supported versions of the MQTT protocol
 * Interfaces included for mocking and testing
 * Access to internal trace messages
-* Unit tested (~210 tests)
+* Unit tested (~250 tests)
 * No external dependencies
 
 \* Tested on local machine (Intel i7 8700K) with MQTTnet client and server running in the same process using the TCP channel. The app for verification is part of this repository and stored in _/Tests/MQTTnet.TestApp.NetCore_.
@@ -35,7 +34,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 ### Client
 
 * Communication via TCP (+TLS) or WS (WebSocket) supported
-* Included core _MqttClient_ with low level functionality
+* Included core _LowLevelMqttClient_ with low level functionality
 * Also included _ManagedMqttClient_ which maintains the connection and subscriptions automatically. Also application messages are queued and re-scheduled for higher QoS levels automatically.
 * Rx support (via another project)
 * Compatible with Microsoft Azure IoT Hub
@@ -73,6 +72,7 @@ _MQTTnet Server_ is a standalone cross platform MQTT server (like mosquitto) bas
 * Universal Windows Platform (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU, Windows 10 IoT Core)
 * Xamarin.Android 7.5+
 * Xamarin.iOS 10.14+
+* Blazor WebAssembly 3.2.0
 
 ## Supported MQTT versions
 
@@ -93,8 +93,6 @@ Please find examples and the documentation at the Wiki of this repository (<http
 If you want to contribute to this project just create a pull request. But only pull requests which are matching the code style of this library will be accepted. Before creating a pull request please have a look at the library to get an overview of the required style.
 Also additions and updates in the Wiki are welcome.
 
-**This project, like all projects requires time and money.  If you feel compelled to support the development team, you can do so through Open Collective (https://opencollective.com/mqttnet)**.
-
 ## References
 
 This library is used in the following projects:
@@ -113,7 +111,7 @@ If you use this library and want to see your project here please create a pull r
 
 MIT License
 
-MQTTnet Copyright (c) 2016-2019 Christian Kratky
+MQTTnet Copyright (c) 2016-2020 Christian Kratky
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

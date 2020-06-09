@@ -10,15 +10,22 @@ namespace MQTTnet.Client.Options
     {
         public bool UseTls { get; set; }
 
+        [Obsolete("This property will be removed soon. Use CertificateValidationHandler instead.")]
         public Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> CertificateValidationCallback
         {
             get;
             set;
         }
 
+        public Func<MqttClientCertificateValidationCallbackContext, bool> CertificateValidationHandler { get; set; }
+
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
 
+#if WINDOWS_UWP
         public IEnumerable<IEnumerable<byte>> Certificates { get; set; }
+#else
+        public IEnumerable<X509Certificate> Certificates { get; set; }
+#endif
 
         public bool AllowUntrustedCertificates { get; set; }
 

@@ -17,14 +17,14 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpChannel : IMqttChannel
+    public sealed class MqttTcpChannel : IMqttChannel
     {
-        private readonly MqttClientTcpOptions _options;
-        private readonly int _bufferSize;
+        readonly MqttClientTcpOptions _options;
+        readonly int _bufferSize;
 
-        private StreamSocket _socket;
-        private Stream _readStream;
-        private Stream _writeStream;
+        StreamSocket _socket;
+        Stream _readStream;
+        Stream _writeStream;
 
         public MqttTcpChannel(IMqttClientOptions clientOptions)
         {
@@ -64,7 +64,7 @@ namespace MQTTnet.Implementations
 
             if (_options.TlsOptions?.UseTls != true)
             {
-                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString());
+                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString()).AsTask().ConfigureAwait(false);
             }
             else
             {
@@ -85,7 +85,7 @@ namespace MQTTnet.Implementations
                     socketProtectionLevel = SocketProtectionLevel.Tls10;
                 }
 
-                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), socketProtectionLevel);
+                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), socketProtectionLevel).AsTask().ConfigureAwait(false);
             }
 
             Endpoint = _socket.Information.RemoteAddress + ":" + _socket.Information.RemotePort;

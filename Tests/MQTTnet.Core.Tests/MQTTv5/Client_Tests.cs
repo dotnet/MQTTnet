@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
@@ -17,10 +18,12 @@ namespace MQTTnet.Tests.MQTTv5
     [TestClass]
     public class Client_Tests
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public async Task Connect_With_New_Mqtt_Features()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 
@@ -55,6 +58,65 @@ namespace MQTTnet.Tests.MQTTv5
                 Assert.IsNotNull(receivedMessage);
 
                 Assert.AreEqual(2, receivedMessage.UserProperties.Count);
+            }
+        }
+        [TestMethod]
+        public async Task Connect_With_AssignedClientId()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                string serverConnectedClientId = null;
+                string serverDisconnectedClientId = null;
+                string clientAssignedClientId = null;
+
+                // Arrange server
+                var disconnectedMre = new ManualResetEventSlim();
+                var serverOptions = new MqttServerOptionsBuilder()
+                    .WithConnectionValidator((context) =>
+                    {
+                        if (string.IsNullOrEmpty(context.ClientId))
+                        {
+                            context.AssignedClientIdentifier = "test123";
+                            context.ReasonCode = MqttConnectReasonCode.Success;
+                        }
+                    });
+                await testEnvironment.StartServerAsync(serverOptions);
+                testEnvironment.Server.UseClientConnectedHandler((args) =>
+                {
+                    serverConnectedClientId = args.ClientId;
+                });
+                testEnvironment.Server.UseClientDisconnectedHandler((args) =>
+                {
+                    serverDisconnectedClientId = args.ClientId;
+                    disconnectedMre.Set();
+                });
+
+                // Arrange client
+                var client = testEnvironment.CreateClient();
+                client.UseConnectedHandler((args) =>
+                {
+                    clientAssignedClientId = args.AuthenticateResult.AssignedClientIdentifier;
+                });
+
+                // Act
+                await client.ConnectAsync(new MqttClientOptionsBuilder()
+                    .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
+                    .WithProtocolVersion(MqttProtocolVersion.V500)
+                    .WithClientId(null)
+                    .Build());
+                await client.DisconnectAsync();
+
+                // Wait for ClientDisconnectedHandler to trigger
+                disconnectedMre.Wait(500);
+
+                // Assert
+                Assert.IsNotNull(serverConnectedClientId);
+                Assert.IsNotNull(serverDisconnectedClientId);
+                Assert.IsNotNull(clientAssignedClientId);
+                Assert.AreEqual("test123", serverConnectedClientId);
+                Assert.AreEqual("test123", serverDisconnectedClientId);
+                Assert.AreEqual("test123", clientAssignedClientId);
+
             }
         }
 
@@ -109,9 +171,9 @@ namespace MQTTnet.Tests.MQTTv5
                 var result = await client.SubscribeAsync(new MqttClientSubscribeOptions()
                 {
                     SubscriptionIdentifier = 1,
-                    TopicFilters = new List<TopicFilter>
+                    TopicFilters = new List<MqttTopicFilter>
                     {
-                        new TopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}
+                        new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}
                     }
                 });
 
@@ -297,7 +359,7 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Publish_And_Receive_New_Properties()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 

@@ -1,12 +1,12 @@
-﻿using System;
-using IronPython.Runtime;
+﻿using IronPython.Runtime;
 using Microsoft.Scripting.Hosting;
+using System;
 
 namespace MQTTnet.Server.Scripting
 {
     public class PythonScriptInstance
     {
-        private readonly ScriptScope _scriptScope;
+        readonly ScriptScope _scriptScope;
 
         public PythonScriptInstance(string uid, string path, ScriptScope scriptScope)
         {

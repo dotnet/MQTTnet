@@ -4,21 +4,29 @@ namespace MQTTnet.Diagnostics
 {
     public class MqttNetLogger : IMqttNetLogger
     {
-        private readonly string _logId;
+        readonly string _logId;
+        
+        public MqttNetLogger()
+        {
+        }
 
-        public MqttNetLogger(string logId = null)
+        public MqttNetLogger(string logId)
         {
             _logId = logId;
         }
 
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        public IMqttNetChildLogger CreateChildLogger(string source = null)
+        // TODO: Consider creating a LoggerFactory which will allow creating loggers. The logger factory will
+        // be the only place which has the published event.
+        public IMqttNetScopedLogger CreateScopedLogger(string source)
         {
-            return new MqttNetChildLogger(this, source);
+            if (source is null) throw new ArgumentNullException(nameof(source));
+
+            return new MqttNetScopedLogger(this, source);
         }
 
-        public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
+        public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
         {
             var hasLocalListeners = LogMessagePublished != null;
             var hasGlobalListeners = MqttNetGlobalLogger.HasListeners;
@@ -28,28 +36,34 @@ namespace MQTTnet.Diagnostics
                 return;
             }
 
-            if (parameters?.Length > 0)
+            try
             {
-                try
-                {
-                    message = string.Format(message, parameters);
-                }
-                catch
-                {
-                    message = "MESSAGE FORMAT INVALID: " + message;
-                }
+                message = string.Format(message ?? string.Empty, parameters);
+            }
+            catch (FormatException)
+            {
+                message = "MESSAGE FORMAT INVALID: " + message;
             }
 
-            var traceMessage = new MqttNetLogMessage(_logId, DateTime.UtcNow, Environment.CurrentManagedThreadId, source, logLevel, message, exception);
+            var logMessage = new MqttNetLogMessage
+            {
+                LogId = _logId,
+                Timestamp = DateTime.UtcNow,
+                Source = source,
+                ThreadId = Environment.CurrentManagedThreadId,
+                Level = level,
+                Message = message,
+                Exception = exception
+            };
 
             if (hasGlobalListeners)
             {
-                MqttNetGlobalLogger.Publish(traceMessage);
+                MqttNetGlobalLogger.Publish(logMessage);
             }
 
             if (hasLocalListeners)
             {
-                LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(traceMessage));
+                LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(logMessage));
             }
         }
     }

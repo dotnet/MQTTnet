@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using MQTTnet.Server;
 using MQTTnet.Diagnostics;
 using MQTTnet.AspNetCore.Client;
+using MQTTnet.AspNetCore.Extensions;
 using MQTTnet.Client.Options;
 
 namespace MQTTnet.Benchmarks
@@ -26,11 +27,8 @@ namespace MQTTnet.Benchmarks
             _host = WebHost.CreateDefaultBuilder()
                    .UseKestrel(o => o.ListenAnyIP(1883, l => l.UseMqtt()))
                    .ConfigureServices(services => {
-                       var mqttServerOptions = new MqttServerOptionsBuilder()
-                            .WithoutDefaultEndpoint()
-                            .Build();
                         services
-                            .AddHostedMqttServer(mqttServerOptions)
+                            .AddHostedMqttServer(mqttServerOptions => mqttServerOptions.WithoutDefaultEndpoint())
                             .AddMqttConnectionHandler();
                    })
                    .Configure(app => {

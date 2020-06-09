@@ -8,19 +8,22 @@
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Company />
     <Product>MQTTnet</Product>
-    <Description />
-    <Authors />
+    <Description>Standalone MQTT server with Python scripting backend.</Description>
+    <Authors>The authors of MQTTnet.Server.</Authors>
     <PackageId />
     <SignAssembly>false</SignAssembly>
     <DelaySign>false</DelaySign>
     <LangVersion>latest</LangVersion>
-    <Version>1.0.0</Version>
+    <Version>3.0.11</Version>
     <TypeScriptToolsVersion>3.3</TypeScriptToolsVersion>
   </PropertyGroup>
 
   <PropertyGroup>
-    <StartupObject></StartupObject>
+    <StartupObject>MQTTnet.Server.Program</StartupObject>
     <UserSecretsId>c564f0de-28b4-45bf-b726-4d665d705653</UserSecretsId>
+    <Copyright>(c) Christian Kratky 2016-2020</Copyright>
+    <PackageProjectUrl>https://github.com/chkr1011/MQTTnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/chkr1011/MQTTnet</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -30,27 +33,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="wwwroot\**" />
-    <Content Remove="wwwroot\**" />
-    <EmbeddedResource Remove="wwwroot\**" />
-    <None Remove="wwwroot\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="IronPython" Version="2.7.9" />
-    <PackageReference Include="IronPython.StdLib" Version="2.7.9" />
-    <PackageReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.0.0-rc2" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.0.0-rc2" />
+    <PackageReference Include="IronPython" Version="2.7.10" />
+    <PackageReference Include="IronPython.StdLib" Version="2.7.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.4" />
+    <PackageReference Include="MSTest.TestAdapter" Version="2.1.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.4.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.4.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -74,11 +68,19 @@
     <None Update="Web\authorization_handler.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Web\wwwroot\Hello.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Web\wwwroot\mqtt_Test.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Web\wwwroot\pahoJS_Test.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
-    <Folder Include="Web\wwwroot\" />
   </ItemGroup>
 
 </Project>

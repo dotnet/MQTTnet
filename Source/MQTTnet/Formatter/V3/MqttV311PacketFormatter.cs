@@ -6,11 +6,6 @@ namespace MQTTnet.Formatter.V3
 {
     public class MqttV311PacketFormatter : MqttV310PacketFormatter
     {
-        public MqttV311PacketFormatter()
-            : base()
-        {
-        }
-
         public MqttV311PacketFormatter(IMqttPacketWriter packetWriter)
             : base(packetWriter)
         {

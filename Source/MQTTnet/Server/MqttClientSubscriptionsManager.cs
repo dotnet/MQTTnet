@@ -1,15 +1,15 @@
-﻿using System;
+﻿using MQTTnet.Packets;
+using MQTTnet.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
     public class MqttClientSubscriptionsManager
     {
-        private readonly Dictionary<string, TopicFilter> _subscriptions = new Dictionary<string, TopicFilter>();
+        private readonly Dictionary<string, MqttTopicFilter> _subscriptions = new Dictionary<string, MqttTopicFilter>();
         private readonly MqttClientSession _clientSession;
         private readonly IMqttServerOptions _serverOptions;
         private readonly MqttServerEventDispatcher _eventDispatcher;
@@ -67,14 +67,14 @@ namespace MQTTnet.Server
                         _subscriptions[finalTopicFilter.Topic] = finalTopicFilter;
                     }
 
-                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
+                    await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
                 }
             }
 
             return result;
         }
 
-        public async Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
+        public async Task SubscribeAsync(IEnumerable<MqttTopicFilter> topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
@@ -83,7 +83,7 @@ namespace MQTTnet.Server
                 var interceptorContext = await InterceptSubscribeAsync(topicFilter).ConfigureAwait(false);
                 if (!interceptorContext.AcceptSubscription)
                 {
-                   continue;
+                    continue;
                 }
 
                 if (interceptorContext.AcceptSubscription)
@@ -93,7 +93,7 @@ namespace MQTTnet.Server
                         _subscriptions[topicFilter.Topic] = topicFilter;
                     }
 
-                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
+                    await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
                 }
             }
         }
@@ -107,9 +107,16 @@ namespace MQTTnet.Server
                 PacketIdentifier = unsubscribePacket.PacketIdentifier
             };
 
-            lock (_subscriptions)
+            foreach (var topicFilter in unsubscribePacket.TopicFilters)
             {
-                foreach (var topicFilter in unsubscribePacket.TopicFilters)
+                var interceptorContext = await InterceptUnsubscribeAsync(topicFilter).ConfigureAwait(false);
+                if (!interceptorContext.AcceptUnsubscription)
+                {
+                    unsubAckPacket.ReasonCodes.Add(MqttUnsubscribeReasonCode.ImplementationSpecificError);
+                    continue;
+                }
+
+                lock (_subscriptions)
                 {
                     if (_subscriptions.Remove(topicFilter))
                     {
@@ -124,25 +131,29 @@ namespace MQTTnet.Server
 
             foreach (var topicFilter in unsubscribePacket.TopicFilters)
             {
-                await _eventDispatcher.HandleClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
+                await _eventDispatcher.SafeNotifyClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
             }
-            
+
             return unsubAckPacket;
         }
 
-        public Task UnsubscribeAsync(IEnumerable<string> topicFilters)
+        public async Task UnsubscribeAsync(IEnumerable<string> topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            lock (_subscriptions)
+            foreach (var topicFilter in topicFilters)
             {
-                foreach (var topicFilter in topicFilters)
+                var interceptorContext = await InterceptUnsubscribeAsync(topicFilter).ConfigureAwait(false);
+                if (!interceptorContext.AcceptUnsubscription)
+                {
+                    continue;
+                }
+
+                lock (_subscriptions)
                 {
                     _subscriptions.Remove(topicFilter);
                 }
             }
-
-            return Task.FromResult(0);
         }
 
         public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel)
@@ -195,12 +206,23 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task<MqttSubscriptionInterceptorContext> InterceptSubscribeAsync(TopicFilter topicFilter)
+        private async Task<MqttSubscriptionInterceptorContext> InterceptSubscribeAsync(MqttTopicFilter topicFilter)
         {
             var context = new MqttSubscriptionInterceptorContext(_clientSession.ClientId, topicFilter, _clientSession.Items);
             if (_serverOptions.SubscriptionInterceptor != null)
             {
                 await _serverOptions.SubscriptionInterceptor.InterceptSubscriptionAsync(context).ConfigureAwait(false);
+            }
+
+            return context;
+        }
+
+        private async Task<MqttUnsubscriptionInterceptorContext> InterceptUnsubscribeAsync(string topicFilter)
+        {
+            var context = new MqttUnsubscriptionInterceptorContext(_clientSession.ClientId, topicFilter, _clientSession.Items);
+            if (_serverOptions.UnsubscriptionInterceptor != null)
+            {
+                await _serverOptions.UnsubscriptionInterceptor.InterceptUnsubscriptionAsync(context).ConfigureAwait(false);
             }
 
             return context;

@@ -3,24 +3,43 @@
   <metadata>
     <id>MQTTnet.Extensions.WebSocket4Net</id>
     <version>0.0.0</version>
-    <authors>Christian Kratky</authors>
+    <authors>The contributors of MQTTnet</authors>
     <owners>Christian Kratky</owners>
     <license type="file">LICENSE</license>
     <projectUrl>https://github.com/chkr1011/MQTTnet</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/chkr1011/MQTTnet/master/Images/Logo_128x128.png</iconUrl>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <icon>images\Logo_128x128.png</icon>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>This is an extension library which allows using _WebSocket4Net_ as transport for MQTTnet clients.</description>
     <releaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</releaseNotes>
-    <copyright>Copyright Christian Kratky 2016-2019</copyright>
-    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin</tags> 
+    <copyright>Copyright Christian Kratky 2016-2020</copyright>
+    <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags> 
     <dependencies>
-      <dependency id="MQTTnet" version="$nugetVersion" />
+    <group targetFramework="netstandard1.3">
+        <dependency id="MQTTnet" version="$nugetVersion" />
+        <dependency id="WebSocket4Net" version="0.15.2" />
+      </group>
+      <group targetFramework="netstandard2.0">
+        <dependency id="MQTTnet" version="$nugetVersion" />
+        <dependency id="WebSocket4Net" version="0.15.2" />
+      </group>
+      <group targetFramework="netstandard2.1">
+        <dependency id="MQTTnet" version="$nugetVersion" />
+        <dependency id="WebSocket4Net" version="0.15.2" />
+      </group>
+      <group targetFramework="uap10.0">
+        <dependency id="MQTTnet" version="$nugetVersion" />
+        <dependency id="WebSocket4Net" version="0.15.2" />
+      </group>
     </dependencies>
   </metadata>
 
   <files>
     <!-- License -->
     <file src="..\LICENSE" />
+
+    <!-- Images -->
+    <file src="..\Images\Logo_128x128.png" target="images\" />
 
     <!-- .NET Standard 1.3 -->
     <file src="..\Source\MQTTnet.Extensions.WebSocket4Net\bin\Release\netstandard1.3\MQTTnet.Extensions.WebSocket4Net.*" target="lib\netstandard1.3\"/>

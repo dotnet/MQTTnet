@@ -1,29 +1,29 @@
-﻿using System;
+﻿using MQTTnet.Diagnostics;
+using MQTTnet.Internal;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
-using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientKeepAliveMonitor
+    public sealed class MqttClientKeepAliveMonitor
     {
-        private readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
+        readonly Stopwatch _lastPacketReceivedTracker = new Stopwatch();
 
-        private readonly string _clientId;
-        private readonly Func<Task> _keepAliveElapsedCallback;
-        private readonly IMqttNetChildLogger _logger;
+        readonly string _clientId;
+        readonly Func<Task> _keepAliveElapsedCallback;
+        readonly IMqttNetScopedLogger _logger;
 
-        private bool _isPaused;
+        bool _isPaused;
 
-        public MqttClientKeepAliveMonitor(string clientId, Func<Task> keepAliveElapsedCallback, IMqttNetChildLogger logger)
+        public MqttClientKeepAliveMonitor(string clientId, Func<Task> keepAliveElapsedCallback, IMqttNetLogger logger)
         {
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             _keepAliveElapsedCallback = keepAliveElapsedCallback ?? throw new ArgumentNullException(nameof(keepAliveElapsedCallback));
-            
+
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateChildLogger(nameof(MqttClientKeepAliveMonitor));
+            _logger = logger.CreateScopedLogger(nameof(MqttClientKeepAliveMonitor));
         }
 
         public void Start(int keepAlivePeriod, CancellationToken cancellationToken)
@@ -32,7 +32,7 @@ namespace MQTTnet.Server
             {
                 return;
             }
-            
+
             Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken).Forget(_logger);
         }
 
@@ -51,7 +51,7 @@ namespace MQTTnet.Server
             _lastPacketReceivedTracker.Restart();
         }
 
-        private async Task RunAsync(int keepAlivePeriod, CancellationToken cancellationToken)
+        async Task RunAsync(int keepAlivePeriod, CancellationToken cancellationToken)
         {
             try
             {

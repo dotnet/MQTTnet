@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 using MQTTnet.Server.Status;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Tests
 {
@@ -23,7 +23,7 @@ namespace MQTTnet.Tests
                     counter++;
                     return Task.CompletedTask;
                 },
-                new MqttNetLogger().CreateChildLogger());
+                new MqttNetLogger());
 
             Assert.AreEqual(0, counter);
 
@@ -46,7 +46,7 @@ namespace MQTTnet.Tests
                     counter++;
                     return Task.CompletedTask;
                 },
-                new MqttNetLogger().CreateChildLogger());
+                new MqttNetLogger());
 
             Assert.AreEqual(0, counter);
 
@@ -100,7 +100,7 @@ namespace MQTTnet.Tests
                 return Task.FromResult(0);
             }
 
-            public Task SubscribeAsync(IList<TopicFilter> topicFilters)
+            public Task SubscribeAsync(IList<MqttTopicFilter> topicFilters)
             {
                 throw new NotSupportedException();
             }

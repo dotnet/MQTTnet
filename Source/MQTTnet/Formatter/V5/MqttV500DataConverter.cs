@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using MQTTnet.Client.Connecting;
+﻿using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
@@ -11,7 +8,9 @@ using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
 
 namespace MQTTnet.Formatter.V5
@@ -127,7 +126,8 @@ namespace MQTTnet.Formatter.V5
                     RequestProblemInformation = options.RequestProblemInformation,
                     RequestResponseInformation = options.RequestResponseInformation,
                     SessionExpiryInterval = options.SessionExpiryInterval,
-                    TopicAliasMaximum = options.TopicAliasMaximum
+                    TopicAliasMaximum = options.TopicAliasMaximum,
+                    UserProperties = options.UserProperties
                 }
             };
         }
@@ -139,7 +139,7 @@ namespace MQTTnet.Formatter.V5
                 ReasonCode = connectionValidatorContext.ReasonCode,
                 Properties = new MqttConnAckPacketProperties
                 {
-                    UserProperties = connectionValidatorContext.UserProperties,
+                    UserProperties = connectionValidatorContext.ResponseUserProperties,
                     AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
                     AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
                     AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,
@@ -244,11 +244,11 @@ namespace MQTTnet.Formatter.V5
             {
                 // QoS 0 has no response. So we treat it as a success always.
                 // Both enums have the same values. So it can be easily converted.
-                 result.ReasonCode = (MqttClientPublishReasonCode)pubAckPacket.ReasonCode;
+                result.ReasonCode = (MqttClientPublishReasonCode)pubAckPacket.ReasonCode;
 
-                 result.PacketIdentifier = pubAckPacket.PacketIdentifier;
+                result.PacketIdentifier = pubAckPacket.PacketIdentifier;
             }
-            
+
             return result;
         }
 

@@ -1,10 +1,10 @@
-﻿using System;
+﻿using MQTTnet.Client.Publishing;
+using MQTTnet.Client.Receiving;
+using MQTTnet.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client.Publishing;
-using MQTTnet.Client.Receiving;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
@@ -106,7 +106,7 @@ namespace MQTTnet.Server
             return server;
         }
 
-        public static Task SubscribeAsync(this IMqttServer server, string clientId, params TopicFilter[] topicFilters)
+        public static Task SubscribeAsync(this IMqttServer server, string clientId, params MqttTopicFilter[] topicFilters)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
@@ -121,7 +121,7 @@ namespace MQTTnet.Server
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return server.SubscribeAsync(clientId, new TopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
+            return server.SubscribeAsync(clientId, new MqttTopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
         }
 
         public static Task SubscribeAsync(this IMqttServer server, string clientId, string topic)
@@ -130,7 +130,7 @@ namespace MQTTnet.Server
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return server.SubscribeAsync(clientId, new TopicFilterBuilder().WithTopic(topic).Build());
+            return server.SubscribeAsync(clientId, new MqttTopicFilterBuilder().WithTopic(topic).Build());
         }
 
         public static Task UnsubscribeAsync(this IMqttServer server, string clientId, params string[] topicFilters)

@@ -16,10 +16,17 @@ namespace MQTTnet.Client.Options
 
         public bool AllowUntrustedCertificates { get; set; }
 
+#if WINDOWS_UWP
         public List<byte[]> Certificates { get; set; }
+#else
+        public List<X509Certificate> Certificates { get; set; }
+#endif
 
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
 
+        [Obsolete("This property will be removed soon. Use CertificateValidationHandler instead.")]
         public Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> CertificateValidationCallback { get; set; }
+
+        public Func<MqttClientCertificateValidationCallbackContext, bool> CertificateValidationHandler { get; set; }
     }
 }

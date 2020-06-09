@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace MQTTnet.Server.Controllers
@@ -12,7 +13,8 @@ namespace MQTTnet.Server.Controllers
         [HttpGet]
         public ActionResult<string> GetVersion()
         {
-            return Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+            var fileVersion = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+            return fileVersion.ProductVersion.ToString();
         }
     }
 }

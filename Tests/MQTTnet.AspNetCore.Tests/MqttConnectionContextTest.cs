@@ -1,13 +1,21 @@
-﻿using Microsoft.AspNetCore.Connections;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.AspNetCore.Tests.Mockups;
-using MQTTnet.Exceptions;
-using MQTTnet.Packets;
+
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Adapter;
+using MQTTnet.AspNetCore.Tests.Mockups;
+using MQTTnet.Client.Options;
+using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
+using MQTTnet.Packets;
+using System.Net;
+using MQTTnet.AspNetCore.Extensions;
 
 namespace MQTTnet.AspNetCore.Tests
 {
@@ -37,7 +45,7 @@ namespace MQTTnet.AspNetCore.Tests
             connection.Transport = pipe;
             var ctx = new MqttConnectionContext(serializer, connection);
 
-            var tasks = Enumerable.Range(1, 10).Select(_ => Task.Run(async () => 
+            var tasks = Enumerable.Range(1, 100).Select(_ => Task.Run(async () => 
             {
                 for (int i = 0; i < 100; i++)
                 {
@@ -62,6 +70,44 @@ namespace MQTTnet.AspNetCore.Tests
 
             var readResult = await pipe.Send.Reader.ReadAsync();
             Assert.IsTrue(readResult.Buffer.Length > 20000);
+        }
+
+        private class Startup 
+        {
+            public void Configure(IApplicationBuilder app)
+            { 
+            }
+        }
+
+        [TestMethod]
+        public async Task TestEndpoint()
+        {
+            var mockup = new ConnectionHandlerMockup();
+
+
+            using (var host = new WebHostBuilder()
+                .UseKestrel(kestrel => kestrel.ListenLocalhost(1883, listener => listener.Use((ctx, next) => mockup.OnConnectedAsync(ctx))))
+                .UseStartup<Startup>()
+                .ConfigureServices((hostContext, services) =>
+                {
+                    services.AddHostedMqttServer(o => o.WithoutDefaultEndpoint());
+                    services.AddSingleton<IMqttServerAdapter>(mockup);
+                })
+                .Build())
+            using (var client = new MqttFactory().CreateMqttClient())
+            {
+                host.Start();
+                await client.ConnectAsync(new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost")
+                    .Build(), CancellationToken.None);
+
+                var ctx = await mockup.Context.Task;
+#if NETCOREAPP3_1
+                var ep = IPEndPoint.Parse(ctx.Endpoint);
+                Assert.IsNotNull(ep);
+#endif
+                Assert.IsNotNull(ctx);
+            }               
         }
     }
 }

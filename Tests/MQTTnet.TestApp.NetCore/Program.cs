@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Client;
-using MQTTnet.Client.Options;
+﻿using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Security;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -17,7 +15,9 @@ namespace MQTTnet.TestApp.NetCore
     {
         public static void Main()
         {
-            Console.WriteLine($"MQTTnet - TestApp.{TargetFrameworkInfoProvider.TargetFramework}");
+            //MqttNetConsoleLogger.ForwardToConsole();
+
+            Console.WriteLine($"MQTTnet - TestApp.{TargetFrameworkProvider.TargetFramework}");
             Console.WriteLine("1 = Start client");
             Console.WriteLine("2 = Start server");
             Console.WriteLine("3 = Start performance test");
@@ -42,8 +42,7 @@ namespace MQTTnet.TestApp.NetCore
             }
             else if (pressedKey.KeyChar == '3')
             {
-                PerformanceTest.RunClientAndServer();
-                return;
+                Task.Run(PerformanceTest.RunClientAndServer);
             }
             else if (pressedKey.KeyChar == '4')
             {
@@ -129,10 +128,15 @@ namespace MQTTnet.TestApp.NetCore
             var options = new MqttClientOptionsBuilder()
                 .WithTls(new MqttClientOptionsBuilderTlsParameters
                 {
-                    CertificateValidationCallback = (X509Certificate x, X509Chain y, SslPolicyErrors z, IMqttClientOptions o) =>
+                    CertificateValidationHandler = context =>
                         {
-                            // TODO: Check conditions of certificate by using above parameters.
-                            return true;
+                            // TODO: Check conditions of certificate by using above context.
+                            if (context.SslPolicyErrors == SslPolicyErrors.None)
+                            {
+                                return true;
+                            }
+
+                            return false;
                         }
                 })
                 .Build();

@@ -238,7 +238,7 @@ namespace MQTTnet.Server
                 {
                     if (_options.UndeliveredMessageInterceptor == null)
                     {
-                        throw new OperationCanceledException(nameof(_options.UndeliveredMessageInterceptor));
+                        return;
                     }
 
                     await _options.UndeliveredMessageInterceptor.InterceptApplicationMessagePublishAsync(new MqttApplicationMessageInterceptorContext(sender?.ClientId, sender?.Session?.Items, applicationMessage));

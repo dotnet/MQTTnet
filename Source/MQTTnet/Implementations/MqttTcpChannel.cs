@@ -127,7 +127,14 @@ namespace MQTTnet.Implementations
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(Dispose))
                 {
-                    return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+                    var stream = _stream;
+
+                    if (stream == null)
+                    {
+                        throw new ObjectDisposedException(nameof(stream));
+                    }
+
+                    return await stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (ObjectDisposedException)
@@ -157,7 +164,14 @@ namespace MQTTnet.Implementations
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(Dispose))
                 {
-                    await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+                    var stream = _stream;
+
+                    if (stream == null)
+                    {
+                        throw new ObjectDisposedException(nameof(stream));
+                    }
+
+                    await stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (ObjectDisposedException)

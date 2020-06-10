@@ -30,6 +30,6 @@ namespace MQTTnet
 
         public List<uint> SubscriptionIdentifiers { get; set; }
 
-        public uint DeliveryCount { get; set; }
+        internal uint DeliveryCount { get; set; }
     }
 }

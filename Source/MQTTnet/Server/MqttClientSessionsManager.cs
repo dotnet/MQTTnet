@@ -238,12 +238,14 @@ namespace MQTTnet.Server
 
                 if (deliveryCount == 0)
                 {
-                    if (_options.UndeliveredMessageInterceptor == null)
+                    var undeliveredMessageInterceptor = _options.UndeliveredMessageInterceptor;
+
+                    if (undeliveredMessageInterceptor == null)
                     {
                         return;
                     }
 
-                    await _options.UndeliveredMessageInterceptor.InterceptApplicationMessagePublishAsync(new MqttApplicationMessageInterceptorContext(sender?.ClientId, sender?.Session?.Items, applicationMessage));
+                    await undeliveredMessageInterceptor.InterceptApplicationMessagePublishAsync(new MqttApplicationMessageInterceptorContext(sender?.ClientId, sender?.Session?.Items, applicationMessage));
                 }
             }
             catch (OperationCanceledException)

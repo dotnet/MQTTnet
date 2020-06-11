@@ -86,6 +86,7 @@ namespace MQTTnet.Implementations
         {
             if (localEndPoint is null) throw new ArgumentNullException(nameof(localEndPoint));
 
+            _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             _socket.Bind(localEndPoint);
         }
 

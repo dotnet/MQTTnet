@@ -224,7 +224,7 @@ namespace MQTTnet.Server
                     await _retainedMessagesManager.HandleMessageAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
                 }
 
-                applicationMessage.DeliveryCount = 0;
+                var deliveryCount = 0;
 
                 foreach (var clientSession in _sessions.Values)
                 {
@@ -232,9 +232,11 @@ namespace MQTTnet.Server
                         applicationMessage,
                         sender?.ClientId,
                         false);
+
+                    deliveryCount++;
                 }
 
-                if (applicationMessage.DeliveryCount == 0)
+                if (deliveryCount == 0)
                 {
                     if (_options.UndeliveredMessageInterceptor == null)
                     {

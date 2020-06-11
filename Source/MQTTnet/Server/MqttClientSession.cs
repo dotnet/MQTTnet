@@ -56,8 +56,6 @@ namespace MQTTnet.Server
 
             _logger.Verbose("Queued application message with topic '{0}' (ClientId: {1}).", applicationMessage.Topic, ClientId);
 
-            applicationMessage.DeliveryCount++;
-
             ApplicationMessagesQueue.Enqueue(applicationMessage, senderClientId, checkSubscriptionsResult.QualityOfServiceLevel, isRetainedApplicationMessage);
         }
 

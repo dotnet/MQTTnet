@@ -29,7 +29,5 @@ namespace MQTTnet
         public byte[] CorrelationData { get; set; }
 
         public List<uint> SubscriptionIdentifiers { get; set; }
-
-        internal uint DeliveryCount { get; set; }
     }
 }

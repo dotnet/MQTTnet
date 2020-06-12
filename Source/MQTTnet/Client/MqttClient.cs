@@ -309,6 +309,7 @@ namespace MQTTnet.Client
         async Task DisconnectInternalAsync(Task sender, Exception exception, MqttClientAuthenticateResult authenticateResult)
         {
             var clientWasConnected = IsConnected;
+            var reasonCode = MqttClientDisconnectReason.NormalDisconnection;
 
             TryInitiateDisconnect();
             _isConnected = false;
@@ -326,6 +327,7 @@ namespace MQTTnet.Client
             catch (Exception adapterException)
             {
                 _logger.Warning(adapterException, "Error while disconnecting from adapter.");
+                reasonCode = MqttClientDisconnectReason.UnspecifiedError;
             }
 
             try
@@ -341,6 +343,7 @@ namespace MQTTnet.Client
             catch (Exception e)
             {
                 _logger.Warning(e, "Error while waiting for internal tasks.");
+                reasonCode = MqttClientDisconnectReason.ImplementationSpecificError;
             }
             finally
             {
@@ -354,7 +357,7 @@ namespace MQTTnet.Client
                 {
                     // This handler must be executed in a new thread because otherwise a dead lock may happen
                     // when trying to reconnect in that handler etc.
-                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult))).Forget(_logger);
+                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult, reasonCode))).Forget(_logger);
                 }
             }
         }

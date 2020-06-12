@@ -57,13 +57,7 @@ namespace MQTTnet.Client
 
         public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
 
-        public bool IsConnected
-        {
-            get
-            {
-                return _isConnected && Interlocked.Read(ref _isDisconnectPending) == 0;
-            }
-        }
+        public bool IsConnected => _isConnected && Interlocked.Read(ref _isDisconnectPending) == 0;
 
         public IMqttClientOptions Options { get; private set; }
 
@@ -164,9 +158,9 @@ namespace MQTTnet.Client
             }
         }
 
-        public async Task PingAsync(CancellationToken cancellationToken)
+        public Task PingAsync(CancellationToken cancellationToken)
         {
-            await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket(), cancellationToken).ConfigureAwait(false);
+            return SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket(), cancellationToken);
         }
 
         public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken)

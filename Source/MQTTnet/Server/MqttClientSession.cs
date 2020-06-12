@@ -46,17 +46,19 @@ namespace MQTTnet.Server
         /// </summary>
         public IDictionary<object, object> Items { get; }
 
-        public void EnqueueApplicationMessage(MqttApplicationMessage applicationMessage, string senderClientId, bool isRetainedApplicationMessage)
+        public bool EnqueueApplicationMessage(MqttApplicationMessage applicationMessage, string senderClientId, bool isRetainedApplicationMessage)
         {
             var checkSubscriptionsResult = SubscriptionsManager.CheckSubscriptions(applicationMessage.Topic, applicationMessage.QualityOfServiceLevel);
             if (!checkSubscriptionsResult.IsSubscribed)
             {
-                return;
+                return true;
             }
 
             _logger.Verbose("Queued application message with topic '{0}' (ClientId: {1}).", applicationMessage.Topic, ClientId);
 
             ApplicationMessagesQueue.Enqueue(applicationMessage, senderClientId, checkSubscriptionsResult.QualityOfServiceLevel, isRetainedApplicationMessage);
+
+            return false;
         }
 
         public async Task SubscribeAsync(ICollection<MqttTopicFilter> topicFilters)

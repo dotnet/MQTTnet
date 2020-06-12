@@ -228,12 +228,15 @@ namespace MQTTnet.Server
 
                 foreach (var clientSession in _sessions.Values)
                 {
-                    clientSession.EnqueueApplicationMessage(
+                    var isSubscribed = clientSession.EnqueueApplicationMessage(
                         applicationMessage,
                         sender?.ClientId,
                         false);
 
-                    deliveryCount++;
+                    if (isSubscribed)
+                    {
+                        deliveryCount++;
+                    }
                 }
 
                 if (deliveryCount == 0)

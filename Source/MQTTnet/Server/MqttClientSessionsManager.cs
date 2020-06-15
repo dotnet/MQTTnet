@@ -220,12 +220,31 @@ namespace MQTTnet.Server
                     await _retainedMessagesManager.HandleMessageAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
                 }
 
+                var deliveryCount = 0;
+
                 foreach (var clientSession in _sessions.Values)
                 {
-                    clientSession.EnqueueApplicationMessage(
+                    var isSubscribed = clientSession.EnqueueApplicationMessage(
                         applicationMessage,
                         sender?.ClientId,
                         false);
+
+                    if (isSubscribed)
+                    {
+                        deliveryCount++;
+                    }
+                }
+
+                if (deliveryCount == 0)
+                {
+                    var undeliveredMessageInterceptor = _options.UndeliveredMessageInterceptor;
+
+                    if (undeliveredMessageInterceptor == null)
+                    {
+                        return;
+                    }
+
+                    await undeliveredMessageInterceptor.InterceptApplicationMessagePublishAsync(new MqttApplicationMessageInterceptorContext(sender?.ClientId, sender?.Session?.Items, applicationMessage));
                 }
             }
             catch (OperationCanceledException)

@@ -18,6 +18,7 @@
 * [Server] Added state checks (throw if not started etc.) for most server APIs.
 * [Server] Exposed real X509Certificate2 (instead byte array) to TLS options (thanks to @borigas).
 * [Core] Fixed a null reference exception in the MqttTcpChannel with WriteAsync and ReadAsync.
+* [Core] Added server interceptor for undelivered messages (Thanks to @cshark-inator).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags> 

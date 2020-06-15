@@ -212,5 +212,11 @@ namespace MQTTnet.Server
         {
             return _options;
         }
+
+        public MqttServerOptionsBuilder WithUndeliveredMessageInterceptor(Action<MqttApplicationMessageInterceptorContext> value)
+        {
+            _options.UndeliveredMessageInterceptor = new MqttServerApplicationMessageInterceptorDelegate(value);
+            return this;
+        }
     }
 }

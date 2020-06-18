@@ -343,7 +343,7 @@ namespace MQTTnet.Client
             catch (Exception e)
             {
                 _logger.Warning(e, "Error while waiting for internal tasks.");
-                reasonCode = MqttClientDisconnectReason.ImplementationSpecificError;
+                reasonCode = MqttClientDisconnectReason.UnspecifiedError;
             }
             finally
             {

@@ -1,19 +1,19 @@
 ﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
-using MQTTnet.Server;
 using MQTTnet.Implementations;
-using Microsoft.Extensions.DependencyInjection;
+using MQTTnet.Server;
 
-namespace MQTTnet.AspNetCore
+namespace MQTTnet.AspNetCore.Extensions
 {
     public static class ServiceCollectionExtensions
     {
         public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, IMqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            
+
             services.AddSingleton(options);
 
             services.AddHostedMqttServer();
@@ -23,7 +23,8 @@ namespace MQTTnet.AspNetCore
 
         public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<MqttServerOptionsBuilder> configure)
         {
-            services.AddSingleton<IMqttServerOptions>(s => {
+            services.AddSingleton<IMqttServerOptions>(s =>
+            {
                 var builder = new MqttServerOptionsBuilder();
                 configure(builder);
                 return builder.Build();
@@ -36,7 +37,8 @@ namespace MQTTnet.AspNetCore
 
         public static IServiceCollection AddHostedMqttServerWithServices(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configure)
         {
-            services.AddSingleton<IMqttServerOptions>(s => {
+            services.AddSingleton<IMqttServerOptions>(s =>
+            {
                 var builder = new AspNetMqttServerOptionsBuilder(s);
                 configure(builder);
                 return builder.Build();
@@ -60,14 +62,12 @@ namespace MQTTnet.AspNetCore
         private static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
         {
             var logger = new MqttNetLogger();
-            var childLogger = logger.CreateChildLogger();
 
             services.AddSingleton<IMqttNetLogger>(logger);
-            services.AddSingleton(childLogger);
             services.AddSingleton<MqttHostedServer>();
             services.AddSingleton<IHostedService>(s => s.GetService<MqttHostedServer>());
             services.AddSingleton<IMqttServer>(s => s.GetService<MqttHostedServer>());
-            
+
             return services;
         }
 

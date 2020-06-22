@@ -1,24 +1,22 @@
-﻿using System;
-using System.Net.WebSockets;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
+using System;
+using System.Net.WebSockets;
+using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore
 {
-    public class MqttWebSocketServerAdapter : IMqttServerAdapter
+    public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter
     {
-        private readonly IMqttNetChildLogger _logger;
+        readonly IMqttNetLogger _rootLogger;
 
-        public MqttWebSocketServerAdapter(IMqttNetChildLogger logger)
+        public MqttWebSocketServerAdapter(IMqttNetLogger logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
-
-            _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
+            _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
@@ -38,7 +36,7 @@ namespace MQTTnet.AspNetCore
             if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
 
             var endpoint = $"{httpContext.Connection.RemoteIpAddress}:{httpContext.Connection.RemotePort}";
-            
+
             var clientCertificate = await httpContext.Connection.GetClientCertificateAsync().ConfigureAwait(false);
             try
             {
@@ -51,7 +49,7 @@ namespace MQTTnet.AspNetCore
                     var formatter = new MqttPacketFormatterAdapter(writer);
                     var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection, clientCertificate);
 
-                    using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger.CreateChildLogger(nameof(MqttWebSocketServerAdapter))))
+                    using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _rootLogger))
                     {
                         await clientHandler(channelAdapter).ConfigureAwait(false);
                     }

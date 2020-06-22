@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Server;
 using MQTTnet.Server.Status;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Tests.Mockups
 {
-    public class TestServerWrapper : IMqttServer
+    public sealed class TestServerWrapper : IMqttServer
     {
         public TestServerWrapper(IMqttServer implementation, TestContext testContext, TestEnvironment testEnvironment)
         {
@@ -22,16 +22,52 @@ namespace MQTTnet.Tests.Mockups
         public IMqttServer Implementation { get; }
         public TestContext TestContext { get; }
         public TestEnvironment TestEnvironment { get; }
-        public IMqttServerStartedHandler StartedHandler { get => Implementation.StartedHandler; set => Implementation.StartedHandler = value; }
-        public IMqttServerStoppedHandler StoppedHandler { get => Implementation.StoppedHandler; set => Implementation.StoppedHandler = value; }
-        public IMqttServerClientConnectedHandler ClientConnectedHandler { get => Implementation.ClientConnectedHandler; set => Implementation.ClientConnectedHandler = value; }
-        public IMqttServerClientDisconnectedHandler ClientDisconnectedHandler { get => Implementation.ClientDisconnectedHandler; set => Implementation.ClientDisconnectedHandler = value; }
-        public IMqttServerClientSubscribedTopicHandler ClientSubscribedTopicHandler { get => Implementation.ClientSubscribedTopicHandler; set => Implementation.ClientSubscribedTopicHandler = value; }
-        public IMqttServerClientUnsubscribedTopicHandler ClientUnsubscribedTopicHandler { get => Implementation.ClientUnsubscribedTopicHandler; set => Implementation.ClientUnsubscribedTopicHandler = value; }
+
+        public bool IsStarted { get; }
+
+        public IMqttServerStartedHandler StartedHandler
+        {
+            get => Implementation.StartedHandler;
+            set => Implementation.StartedHandler = value;
+        }
+
+        public IMqttServerStoppedHandler StoppedHandler
+        {
+            get => Implementation.StoppedHandler;
+            set => Implementation.StoppedHandler = value;
+        }
+
+        public IMqttServerClientConnectedHandler ClientConnectedHandler
+        {
+            get => Implementation.ClientConnectedHandler;
+            set => Implementation.ClientConnectedHandler = value;
+        }
+
+        public IMqttServerClientDisconnectedHandler ClientDisconnectedHandler
+        {
+            get => Implementation.ClientDisconnectedHandler;
+            set => Implementation.ClientDisconnectedHandler = value;
+        }
+
+        public IMqttServerClientSubscribedTopicHandler ClientSubscribedTopicHandler
+        {
+            get => Implementation.ClientSubscribedTopicHandler;
+            set => Implementation.ClientSubscribedTopicHandler = value;
+        }
+
+        public IMqttServerClientUnsubscribedTopicHandler ClientUnsubscribedTopicHandler
+        {
+            get => Implementation.ClientUnsubscribedTopicHandler;
+            set => Implementation.ClientUnsubscribedTopicHandler = value;
+        }
 
         public IMqttServerOptions Options => Implementation.Options;
 
-        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get => Implementation.ApplicationMessageReceivedHandler; set => Implementation.ApplicationMessageReceivedHandler = value; }
+        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
+        {
+            get => Implementation.ApplicationMessageReceivedHandler;
+            set => Implementation.ApplicationMessageReceivedHandler = value;
+        }
 
         public Task ClearRetainedApplicationMessagesAsync()
         {
@@ -60,22 +96,14 @@ namespace MQTTnet.Tests.Mockups
 
         public Task StartAsync(IMqttServerOptions options)
         {
-            switch (options)
+            if (TestContext != null)
             {
-                case MqttServerOptionsBuilder builder:
-                    if (builder.Build().ConnectionValidator == null)
-                    {
-                        builder.WithConnectionValidator(ConnectionValidator);
-                    }
-                    break;
-                case MqttServerOptions op:
-                    if (op.ConnectionValidator == null)
-                    {
-                        op.ConnectionValidator = new MqttServerConnectionValidatorDelegate(ConnectionValidator);
-                    }
-                    break;
-                default:
-                    break;
+                var serverOptions = (MqttServerOptions)options;
+
+                if (serverOptions.ConnectionValidator == null)
+                {
+                    serverOptions.ConnectionValidator = new MqttServerConnectionValidatorDelegate(ConnectionValidator);
+                }
             }
 
             return Implementation.StartAsync(options);
@@ -85,7 +113,7 @@ namespace MQTTnet.Tests.Mockups
         {
             if (!ctx.ClientId.StartsWith(TestContext.TestName))
             {
-                TestEnvironment.TrackException(new InvalidOperationException($"invalid client connected '{ctx.ClientId}'"));
+                TestEnvironment.TrackException(new InvalidOperationException($"Invalid client ID used ({ctx.ClientId}). It must start with UnitTest name."));
                 ctx.ReasonCode = Protocol.MqttConnectReasonCode.ClientIdentifierNotValid;
             }
         }
@@ -95,7 +123,7 @@ namespace MQTTnet.Tests.Mockups
             return Implementation.StopAsync();
         }
 
-        public Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters)
+        public Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
         {
             return Implementation.SubscribeAsync(clientId, topicFilters);
         }

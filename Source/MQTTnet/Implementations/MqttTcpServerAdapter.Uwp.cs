@@ -11,18 +11,18 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttTcpServerAdapter : IMqttServerAdapter
+    public sealed class MqttTcpServerAdapter : IMqttServerAdapter
     {
-        private readonly IMqttNetChildLogger _logger;
+        readonly IMqttNetScopedLogger _logger;
+        readonly IMqttNetLogger _rootLogger;
 
-        private IMqttServerOptions _options;
-        private StreamSocketListener _listener;
+        IMqttServerOptions _options;
+        StreamSocketListener _listener;
 
-        public MqttTcpServerAdapter(IMqttNetChildLogger logger)
+        public MqttTcpServerAdapter(IMqttNetLogger logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
-
-            _logger = logger.CreateChildLogger(nameof(MqttTcpServerAdapter));
+            _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger.CreateScopedLogger(nameof(MqttTcpServerAdapter));
         }
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
@@ -68,7 +68,7 @@ namespace MQTTnet.Implementations
             _listener = null;
         }
 
-        private async void OnConnectionReceivedAsync(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
+        async void OnConnectionReceivedAsync(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
         {
             try
             {
@@ -89,7 +89,7 @@ namespace MQTTnet.Implementations
                         }
                     }
                     
-                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, clientCertificate, _options), new MqttPacketFormatterAdapter(), _logger))
+                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, clientCertificate, _options), new MqttPacketFormatterAdapter(new MqttPacketWriter()), _rootLogger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }

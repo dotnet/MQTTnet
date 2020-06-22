@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Scripting;
+using Microsoft.Scripting.Hosting;
+using MQTTnet.Server.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
@@ -6,22 +10,18 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Hosting;
-using MQTTnet.Server.Configuration;
 
 namespace MQTTnet.Server.Scripting
 {
     public class PythonScriptHostService
     {
-        private readonly IDictionary<string, object> _proxyObjects = new ExpandoObject();
-        private readonly List<PythonScriptInstance> _scriptInstances = new List<PythonScriptInstance>();
-        private readonly string _scriptsPath;
-        private readonly ScriptingSettingsModel _scriptingSettings;
-        private readonly ILogger<PythonScriptHostService> _logger;
-        private readonly ScriptEngine _scriptEngine;
-        
+        readonly IDictionary<string, object> _proxyObjects = new ExpandoObject();
+        readonly List<PythonScriptInstance> _scriptInstances = new List<PythonScriptInstance>();
+        readonly string _scriptsPath;
+        readonly ScriptingSettingsModel _scriptingSettings;
+        readonly ILogger<PythonScriptHostService> _logger;
+        readonly ScriptEngine _scriptEngine;
+
         public PythonScriptHostService(ScriptingSettingsModel scriptingSettings, PythonIOStream pythonIOStream, ILogger<PythonScriptHostService> logger)
         {
             _scriptingSettings = scriptingSettings ?? throw new ArgumentNullException(nameof(scriptingSettings));
@@ -139,7 +139,7 @@ namespace MQTTnet.Server.Scripting
             }
         }
 
-        private async Task TryInitializeScriptAsync(string path)
+        async Task TryInitializeScriptAsync(string path)
         {
             var uid = new FileInfo(path).Name.Replace(".py", string.Empty, StringComparison.OrdinalIgnoreCase);
 
@@ -155,7 +155,7 @@ namespace MQTTnet.Server.Scripting
                 {
                     _scriptInstances.Add(scriptInstance);
                 }
-                
+
                 _logger.LogInformation($"Initialized script '{uid}'.");
             }
             catch (Exception exception)
@@ -164,7 +164,7 @@ namespace MQTTnet.Server.Scripting
             }
         }
 
-        private PythonScriptInstance CreateScriptInstance(string uid, string path, string code)
+        PythonScriptInstance CreateScriptInstance(string uid, string path, string code)
         {
             var scriptScope = _scriptEngine.CreateScope();
 
@@ -173,11 +173,11 @@ namespace MQTTnet.Server.Scripting
 
             scriptScope.SetVariable("mqtt_net_server", _proxyObjects);
             compiledCode.Execute(scriptScope);
-            
+
             return new PythonScriptInstance(uid, path, scriptScope);
         }
 
-        private void AddSearchPaths(ScriptEngine scriptEngine)
+        void AddSearchPaths(ScriptEngine scriptEngine)
         {
             if (_scriptingSettings.IncludePaths?.Any() != true)
             {

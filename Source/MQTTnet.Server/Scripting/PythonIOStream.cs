@@ -1,14 +1,14 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
 using System.Text;
-using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Server.Scripting
 {
     public class PythonIOStream : Stream
     {
-        private readonly ILogger _logger;
-        private readonly Encoding _encoder = Encoding.UTF8;
+        readonly ILogger _logger;
+        readonly Encoding _encoder = Encoding.UTF8;
 
         public PythonIOStream(ILogger<PythonIOStream> logger)
         {

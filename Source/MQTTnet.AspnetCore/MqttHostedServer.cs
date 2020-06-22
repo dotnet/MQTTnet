@@ -14,7 +14,7 @@ namespace MQTTnet.AspNetCore
         private readonly IMqttServerOptions _options;
 
         public MqttHostedServer(IMqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger) 
-            : base(adapters, logger.CreateChildLogger(nameof(MqttHostedServer)))
+            : base(adapters, logger)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }

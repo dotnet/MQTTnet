@@ -1,12 +1,12 @@
-﻿using System;
-using System.Text;
-using System.Threading.Tasks;
-using MQTTnet.Client;
+﻿using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Protocol;
+using System;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -42,12 +42,12 @@ namespace MQTTnet.TestApp.NetCore
                 {
                     Console.WriteLine("### CONNECTED WITH SERVER ###");
 
-                    await client.SubscribeAsync(new TopicFilterBuilder().WithTopic("#").Build());
+                    await client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
                     Console.WriteLine("### SUBSCRIBED ###");
                 });
 
-                client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(async e => 
+                client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(async e =>
                 {
                     Console.WriteLine("### DISCONNECTED FROM SERVER ###");
                     await Task.Delay(TimeSpan.FromSeconds(5));
@@ -77,7 +77,7 @@ namespace MQTTnet.TestApp.NetCore
                 {
                     Console.ReadLine();
 
-                    await client.SubscribeAsync(new TopicFilter { Topic = "test", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                    await client.SubscribeAsync(new MqttTopicFilter { Topic = "test", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
 
                     var applicationMessage = new MqttApplicationMessageBuilder()
                         .WithTopic("A/B/C")

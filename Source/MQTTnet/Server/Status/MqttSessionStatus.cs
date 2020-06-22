@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Server.Status
 {
     public class MqttSessionStatus : IMqttSessionStatus
     {
-        private readonly MqttClientSession _session;
-        private readonly MqttClientSessionsManager _sessionsManager;
+        readonly MqttClientSession _session;
+        readonly MqttClientSessionsManager _sessionsManager;
 
         public MqttSessionStatus(MqttClientSession session, MqttClientSessionsManager sessionsManager)
         {
@@ -17,14 +18,16 @@ namespace MQTTnet.Server.Status
         public string ClientId { get; set; }
 
         public long PendingApplicationMessagesCount { get; set; }
-    
+
         public DateTime CreatedTimestamp { get; set; }
+
+        public IDictionary<object, object> Items { get; set; }
 
         public Task DeleteAsync()
         {
             return _sessionsManager.DeleteSessionAsync(ClientId);
         }
-        
+
         public Task ClearPendingApplicationMessagesAsync()
         {
             _session.ApplicationMessagesQueue.Clear();

@@ -156,7 +156,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void Serialize_LargePacket()
         {
-            var serializer = new MqttV311PacketFormatter();
+            var serializer = new MqttV311PacketFormatter(new MqttPacketWriter());
 
             const int payloadLength = 80000;
 
@@ -449,9 +449,9 @@ namespace MQTTnet.Tests
                 PacketIdentifier = 123
             };
 
-            p.TopicFilters.Add(new TopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce });
-            p.TopicFilters.Add(new TopicFilter { Topic = "1/2/3", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
-            p.TopicFilters.Add(new TopicFilter { Topic = "x/y/z", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+            p.TopicFilters.Add(new MqttTopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce });
+            p.TopicFilters.Add(new MqttTopicFilter { Topic = "1/2/3", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+            p.TopicFilters.Add(new MqttTopicFilter { Topic = "x/y/z", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
 
             SerializeAndCompare(p, "ghoAewAFQS9CL0MCAAUxLzIvMwEABXgveS96AA==");
         }
@@ -464,9 +464,9 @@ namespace MQTTnet.Tests
                 PacketIdentifier = 123
             };
 
-            p.TopicFilters.Add(new TopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce });
-            p.TopicFilters.Add(new TopicFilter { Topic = "1/2/3", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
-            p.TopicFilters.Add(new TopicFilter { Topic = "x/y/z", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+            p.TopicFilters.Add(new MqttTopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce });
+            p.TopicFilters.Add(new MqttTopicFilter { Topic = "1/2/3", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+            p.TopicFilters.Add(new MqttTopicFilter { Topic = "x/y/z", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
 
             DeserializeAndCompare(p, "ghoAewAFQS9CL0MCAAUxLzIvMwEABXgveS96AA==");
         }
@@ -560,11 +560,11 @@ namespace MQTTnet.Tests
             IMqttPacketFormatter serializer;
             if (protocolVersion == MqttProtocolVersion.V311)
             {
-                serializer = new MqttV311PacketFormatter();
+                serializer = new MqttV311PacketFormatter(new MqttPacketWriter());
             }
             else if (protocolVersion == MqttProtocolVersion.V310)
             {
-                serializer = new MqttV310PacketFormatter();
+                serializer = new MqttV310PacketFormatter(new MqttPacketWriter());
             }
             else
             {

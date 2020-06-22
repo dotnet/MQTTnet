@@ -13,8 +13,8 @@ namespace MQTTnet.Benchmarks.Configurations
     {
         public AllowNonOptimized()
         {
-            Add(JitOptimizationsValidator.DontFailOnError); // ALLOW NON-OPTIMIZED DLLS
-            Add(Job.InProcess);
+            AddValidator(JitOptimizationsValidator.DontFailOnError); // ALLOW NON-OPTIMIZED DLLS
+            AddJob(Job.InProcess);
         }
     }
 }

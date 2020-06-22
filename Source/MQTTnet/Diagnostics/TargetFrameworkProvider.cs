@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Diagnostics
 {
-    public static class TargetFrameworkInfoProvider
+    public static class TargetFrameworkProvider
     {
         public static string TargetFramework
         {
@@ -16,6 +16,8 @@
                 return "netstandard1.3";
 #elif NETSTANDARD2_0
                 return "netstandard2.0";
+#elif NETSTANDARD2_1
+                return "netstandard2.1";
 #elif WINDOWS_UWP
                 return "uap10.0";
 #endif

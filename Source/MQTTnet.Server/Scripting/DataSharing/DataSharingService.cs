@@ -1,14 +1,14 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
 
 namespace MQTTnet.Server.Scripting.DataSharing
 {
     public class DataSharingService
     {
-        private readonly Dictionary<string, object> _storage = new Dictionary<string, object>();
-        private readonly PythonScriptHostService _pythonScriptHostService;
-        private readonly ILogger<DataSharingService> _logger;
+        readonly Dictionary<string, object> _storage = new Dictionary<string, object>();
+        readonly PythonScriptHostService _pythonScriptHostService;
+        readonly ILogger<DataSharingService> _logger;
 
         public DataSharingService(PythonScriptHostService pythonScriptHostService, ILogger<DataSharingService> logger)
         {

@@ -34,9 +34,9 @@ namespace MQTTnet.Tests.MQTTv5
 
                 await receiver.SubscribeAsync(new MqttClientSubscribeOptions
                 {
-                    TopicFilters = new List<TopicFilter>
+                    TopicFilters = new List<MqttTopicFilter>
                     {
-                        new TopicFilter { Topic = "#" }
+                        new MqttTopicFilter { Topic = "#" }
                     }
                 }, CancellationToken.None);
 

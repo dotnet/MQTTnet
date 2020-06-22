@@ -2,12 +2,17 @@
 using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
+using MQTTnet.Certificates;
+
+#if !WINDOWS_UWP
+using System.Security.Cryptography.X509Certificates;
+#endif
 
 namespace MQTTnet.Server
 {
     public class MqttServerOptionsBuilder
     {
-        private readonly MqttServerOptions _options = new MqttServerOptions();
+        readonly MqttServerOptions _options = new MqttServerOptions();
 
         public MqttServerOptionsBuilder WithConnectionBacklog(int value)
         {
@@ -82,12 +87,27 @@ namespace MQTTnet.Server
             return this;
         }
 
+#if !WINDOWS_UWP
         public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value, IMqttServerCertificateCredentials credentials = null)
         {
-            _options.TlsEndpointOptions.Certificate = value;
-            _options.TlsEndpointOptions.CertificateCredentials = credentials;
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            _options.TlsEndpointOptions.CertificateProvider = new BlobCertificateProvider(value)
+            {
+                Password = credentials?.Password
+            };
+
             return this;
         }
+
+        public MqttServerOptionsBuilder WithEncryptionCertificate(X509Certificate2 certificate)
+        {
+            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
+
+            _options.TlsEndpointOptions.CertificateProvider = new X509CertificateProvider(certificate);
+            return this;
+        }
+#endif
 
         public MqttServerOptionsBuilder WithEncryptionSslProtocol(SslProtocols value)
         {
@@ -191,6 +211,12 @@ namespace MQTTnet.Server
         public IMqttServerOptions Build()
         {
             return _options;
+        }
+
+        public MqttServerOptionsBuilder WithUndeliveredMessageInterceptor(Action<MqttApplicationMessageInterceptorContext> value)
+        {
+            _options.UndeliveredMessageInterceptor = new MqttServerApplicationMessageInterceptorDelegate(value);
+            return this;
         }
     }
 }

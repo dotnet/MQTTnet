@@ -29,7 +29,7 @@ namespace MQTTnet.Benchmarks
                 Topic = "A"
             };
 
-            _serializer = new MqttV311PacketFormatter();
+            _serializer = new MqttV311PacketFormatter(new MqttPacketWriter());
             _serializedPacket = _serializer.Encode(_packet);
         }
 

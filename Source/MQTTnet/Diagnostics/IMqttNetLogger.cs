@@ -6,7 +6,7 @@ namespace MQTTnet.Diagnostics
     {
         event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        IMqttNetChildLogger CreateChildLogger(string source = null);
+        IMqttNetScopedLogger CreateScopedLogger(string source);
 
         void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception);
     }

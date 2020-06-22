@@ -1,8 +1,14 @@
 ﻿using MQTTnet.Protocol;
+using System;
 
 namespace MQTTnet
 {
-    public class TopicFilter
+    [Obsolete("Use MqttTopicFilter instead. It is just a renamed version to align with general namings in this lib.")]
+    public class TopicFilter : MqttTopicFilter
+    {
+    }
+
+    public class MqttTopicFilter
     {
         public string Topic { get; set; }
 
@@ -26,16 +32,16 @@ namespace MQTTnet
         public override string ToString()
         {
             return string.Concat(
-                "TopicFilter: [Topic=", 
+                "TopicFilter: [Topic=",
                 Topic,
-                "] [QualityOfServiceLevel=", 
+                "] [QualityOfServiceLevel=",
                 QualityOfServiceLevel,
-                "] [NoLocal=", 
-                NoLocal, 
-                "] [RetainAsPublished=", 
-                RetainAsPublished, 
-                "] [RetainHandling=", 
-                RetainHandling, 
+                "] [NoLocal=",
+                NoLocal,
+                "] [RetainAsPublished=",
+                RetainAsPublished,
+                "] [RetainHandling=",
+                RetainHandling,
                 "]");
         }
     }

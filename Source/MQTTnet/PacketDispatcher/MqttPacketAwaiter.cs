@@ -1,18 +1,17 @@
-﻿using System;
+﻿using MQTTnet.Exceptions;
+using MQTTnet.Packets;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Exceptions;
-using MQTTnet.Internal;
-using MQTTnet.Packets;
 
 namespace MQTTnet.PacketDispatcher
 {
-    public sealed class MqttPacketAwaiter<TPacket> : Disposable, IMqttPacketAwaiter where TPacket : MqttBasePacket
+    public sealed class MqttPacketAwaiter<TPacket> : IMqttPacketAwaiter where TPacket : MqttBasePacket
     {
-        private readonly TaskCompletionSource<MqttBasePacket> _taskCompletionSource;
-        private readonly ushort? _packetIdentifier;
-        private readonly MqttPacketDispatcher _owningPacketDispatcher;
-        
+        readonly TaskCompletionSource<MqttBasePacket> _taskCompletionSource;
+        readonly ushort? _packetIdentifier;
+        readonly MqttPacketDispatcher _owningPacketDispatcher;
+
         public MqttPacketAwaiter(ushort? packetIdentifier, MqttPacketDispatcher owningPacketDispatcher)
         {
             _packetIdentifier = packetIdentifier;
@@ -38,7 +37,6 @@ namespace MQTTnet.PacketDispatcher
         public void Complete(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
-
 
 #if NET452
             // To prevent deadlocks it is required to call the _TrySetResult_ method
@@ -81,13 +79,9 @@ namespace MQTTnet.PacketDispatcher
 #endif
         }
 
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (disposing)
-            {
-                _owningPacketDispatcher.RemovePacketAwaiter<TPacket>(_packetIdentifier);
-            }
-            base.Dispose(disposing);
+            _owningPacketDispatcher.RemoveAwaiter<TPacket>(_packetIdentifier);
         }
     }
 }

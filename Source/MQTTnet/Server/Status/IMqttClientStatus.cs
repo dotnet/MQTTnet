@@ -1,6 +1,6 @@
-﻿using System;
+﻿using MQTTnet.Formatter;
+using System;
 using System.Threading.Tasks;
-using MQTTnet.Formatter;
 
 namespace MQTTnet.Server.Status
 {
@@ -9,7 +9,7 @@ namespace MQTTnet.Server.Status
         string ClientId { get; }
 
         string Endpoint { get; }
-        
+
         MqttProtocolVersion ProtocolVersion { get; }
 
         DateTime LastPacketReceivedTimestamp { get; }
@@ -29,7 +29,7 @@ namespace MQTTnet.Server.Status
         long BytesSent { get; }
 
         long BytesReceived { get; }
-        
+
         Task DisconnectAsync();
 
         void ResetStatistics();

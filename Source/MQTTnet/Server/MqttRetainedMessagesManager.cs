@@ -1,26 +1,28 @@
-﻿using System;
+﻿using MQTTnet.Diagnostics;
+using MQTTnet.Implementations;
+using MQTTnet.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
-using MQTTnet.Implementations;
-using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
     public class MqttRetainedMessagesManager : IMqttRetainedMessagesManager
     {
-        private readonly byte[] _emptyArray = new byte[0];
-        private readonly AsyncLock _messagesLock = new AsyncLock();
-        private readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>();
+        readonly byte[] _emptyArray = new byte[0];
+        readonly AsyncLock _messagesLock = new AsyncLock();
+        readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>();
 
-        private IMqttNetChildLogger _logger;
-        private IMqttServerOptions _options;
+        IMqttNetScopedLogger _logger;
+        IMqttServerOptions _options;
 
-        public Task Start(IMqttServerOptions options, IMqttNetChildLogger logger)
+        // TODO: Get rid of the logger here!
+        public Task Start(IMqttServerOptions options, IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateChildLogger(nameof(MqttRetainedMessagesManager));
+            _logger = logger.CreateScopedLogger(nameof(MqttRetainedMessagesManager));
+
             _options = options ?? throw new ArgumentNullException(nameof(options));
             return PlatformAbstractionLayer.CompletedTask;
         }
@@ -105,7 +107,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public async Task<IList<MqttApplicationMessage>> GetSubscribedMessagesAsync(ICollection<TopicFilter> topicFilters)
+        public async Task<IList<MqttApplicationMessage>> GetSubscribedMessagesAsync(ICollection<MqttTopicFilter> topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 

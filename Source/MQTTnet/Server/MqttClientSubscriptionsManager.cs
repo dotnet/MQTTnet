@@ -1,15 +1,15 @@
-﻿using System;
+﻿using MQTTnet.Packets;
+using MQTTnet.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
     public class MqttClientSubscriptionsManager
     {
-        private readonly Dictionary<string, TopicFilter> _subscriptions = new Dictionary<string, TopicFilter>();
+        private readonly Dictionary<string, MqttTopicFilter> _subscriptions = new Dictionary<string, MqttTopicFilter>();
         private readonly MqttClientSession _clientSession;
         private readonly IMqttServerOptions _serverOptions;
         private readonly MqttServerEventDispatcher _eventDispatcher;
@@ -67,14 +67,14 @@ namespace MQTTnet.Server
                         _subscriptions[finalTopicFilter.Topic] = finalTopicFilter;
                     }
 
-                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
+                    await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
                 }
             }
 
             return result;
         }
 
-        public async Task SubscribeAsync(IEnumerable<TopicFilter> topicFilters)
+        public async Task SubscribeAsync(IEnumerable<MqttTopicFilter> topicFilters)
         {
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
@@ -83,7 +83,7 @@ namespace MQTTnet.Server
                 var interceptorContext = await InterceptSubscribeAsync(topicFilter).ConfigureAwait(false);
                 if (!interceptorContext.AcceptSubscription)
                 {
-                   continue;
+                    continue;
                 }
 
                 if (interceptorContext.AcceptSubscription)
@@ -93,7 +93,7 @@ namespace MQTTnet.Server
                         _subscriptions[topicFilter.Topic] = topicFilter;
                     }
 
-                    await _eventDispatcher.HandleClientSubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
+                    await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
                 }
             }
         }
@@ -131,9 +131,9 @@ namespace MQTTnet.Server
 
             foreach (var topicFilter in unsubscribePacket.TopicFilters)
             {
-                await _eventDispatcher.HandleClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
+                await _eventDispatcher.SafeNotifyClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
             }
-            
+
             return unsubAckPacket;
         }
 
@@ -152,7 +152,7 @@ namespace MQTTnet.Server
                 lock (_subscriptions)
                 {
                     _subscriptions.Remove(topicFilter);
-                }    
+                }
             }
         }
 
@@ -192,6 +192,17 @@ namespace MQTTnet.Server
                 case MqttQualityOfServiceLevel.AtLeastOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS1;
                 case MqttQualityOfServiceLevel.ExactlyOnce: return MqttSubscribeReturnCode.SuccessMaximumQoS2;
                 default: return MqttSubscribeReturnCode.Failure;
+            }
+        }
+
+        private static MqttSubscribeReasonCode ConvertToSubscribeReasonCode(MqttQualityOfServiceLevel qualityOfServiceLevel)
+        {
+            switch (qualityOfServiceLevel)
+            {
+                case MqttQualityOfServiceLevel.AtMostOnce: return MqttSubscribeReasonCode.GrantedQoS0;
+                case MqttQualityOfServiceLevel.AtLeastOnce: return MqttSubscribeReasonCode.GrantedQoS1;
+                case MqttQualityOfServiceLevel.ExactlyOnce: return MqttSubscribeReasonCode.GrantedQoS2;
+                default: return MqttSubscribeReasonCode.UnspecifiedError;
             }
         }
 

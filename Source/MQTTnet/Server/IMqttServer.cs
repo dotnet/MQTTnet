@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using MQTTnet.Server.Status;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
     public interface IMqttServer : IApplicationMessageReceiver, IApplicationMessagePublisher
     {
+        bool IsStarted { get; }
         IMqttServerStartedHandler StartedHandler { get; set; }
         IMqttServerStoppedHandler StoppedHandler { get; set; }
 
@@ -13,7 +14,7 @@ namespace MQTTnet.Server
         IMqttServerClientDisconnectedHandler ClientDisconnectedHandler { get; set; }
         IMqttServerClientSubscribedTopicHandler ClientSubscribedTopicHandler { get; set; }
         IMqttServerClientUnsubscribedTopicHandler ClientUnsubscribedTopicHandler { get; set; }
-        
+
         IMqttServerOptions Options { get; }
 
         Task<IList<IMqttClientStatus>> GetClientStatusAsync();
@@ -22,7 +23,7 @@ namespace MQTTnet.Server
         Task<IList<MqttApplicationMessage>> GetRetainedApplicationMessagesAsync();
         Task ClearRetainedApplicationMessagesAsync();
 
-        Task SubscribeAsync(string clientId, ICollection<TopicFilter> topicFilters);
+        Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters);
         Task UnsubscribeAsync(string clientId, ICollection<string> topicFilters);
 
         Task StartAsync(IMqttServerOptions options);

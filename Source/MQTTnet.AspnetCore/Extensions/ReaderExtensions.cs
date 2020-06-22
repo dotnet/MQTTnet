@@ -5,7 +5,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
-namespace MQTTnet.AspNetCore
+namespace MQTTnet.AspNetCore.Extensions
 {
     public static class ReaderExtensions
     {
@@ -80,7 +80,7 @@ namespace MQTTnet.AspNetCore
             headerLength = 0;
             bodyLength = 0;
             
-            var temp = input.Slice(0, Math.Min(5, input.Length)).GetMemory();
+            var temp = input.Slice(0, Math.Min(5, input.Length)).GetMemory().Span;
 
             do
             {
@@ -88,7 +88,7 @@ namespace MQTTnet.AspNetCore
                 {
                     return false;
                 }
-                encodedByte = temp.Span[index];
+                encodedByte = temp[index];
                 index++;
 
                 value += (byte)(encodedByte & 127) * multiplier;

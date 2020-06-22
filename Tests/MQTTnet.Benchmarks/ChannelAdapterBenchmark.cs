@@ -43,7 +43,7 @@ namespace MQTTnet.Benchmarks
 
             var channel = new TestMqttChannel(_stream);
             
-            _channelAdapter = new MqttChannelAdapter(channel, serializer, new MqttNetLogger().CreateChildLogger(nameof(MqttChannelAdapter)));
+            _channelAdapter = new MqttChannelAdapter(channel, serializer, new MqttNetLogger());
         }
 
         [Benchmark]

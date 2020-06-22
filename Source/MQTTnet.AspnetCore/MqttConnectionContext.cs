@@ -10,11 +10,19 @@ using System.IO.Pipelines;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.AspNetCore.Extensions;
+using MQTTnet.Internal;
 
 namespace MQTTnet.AspNetCore
 {
-    public class MqttConnectionContext : IMqttChannelAdapter
+    public sealed class MqttConnectionContext : IMqttChannelAdapter
     {
+        readonly AsyncLock _writerLock = new AsyncLock();
+        readonly SpanBasedMqttPacketBodyReader _reader;
+        
+        PipeReader _input;
+        PipeWriter _output;
+        
         public MqttConnectionContext(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
         {
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
@@ -25,18 +33,20 @@ namespace MQTTnet.AspNetCore
                 _input = Connection.Transport.Input;
                 _output = Connection.Transport.Output;
             }
-            
+
             _reader = new SpanBasedMqttPacketBodyReader();
         }
-
-        private PipeReader _input;
-        private PipeWriter _output;
-        private readonly SpanBasedMqttPacketBodyReader _reader;
 
         public string Endpoint
         {
             get
             {
+#if NETCOREAPP3_1
+                if (Connection?.RemoteEndPoint != null)
+                {
+                    return Connection.RemoteEndPoint.ToString();
+                }
+#endif
                 var connection = Http?.HttpContext?.Connection;
                 if (connection == null)
                 {
@@ -51,9 +61,8 @@ namespace MQTTnet.AspNetCore
 
         public X509Certificate2 ClientCertificate => Http?.HttpContext?.Connection?.ClientCertificate;
 
-        private IHttpContextFeature Http => Connection.Features.Get<IHttpContextFeature>();
-
         public ConnectionContext Connection { get; }
+        
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
         public long BytesSent { get; set; }
@@ -62,7 +71,7 @@ namespace MQTTnet.AspNetCore
         public Action ReadingPacketStartedCallback { get; set; }
         public Action ReadingPacketCompletedCallback { get; set; }
 
-        private readonly SemaphoreSlim _writerSemaphore = new SemaphoreSlim(1, 1);
+        IHttpContextFeature Http => Connection.Features.Get<IHttpContextFeature>();
 
         public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
@@ -154,10 +163,7 @@ namespace MQTTnet.AspNetCore
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var formatter = PacketFormatterAdapter;
-
-
-            await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-            try
+            using (await _writerLock.WaitAsync(cancellationToken).ConfigureAwait(false))
             {
                 var buffer = formatter.Encode(packet);
                 var msg = buffer.AsMemory();
@@ -168,10 +174,6 @@ namespace MQTTnet.AspNetCore
                     BytesSent += msg.Length;
                 }
                 PacketFormatterAdapter.FreeBuffer();
-            }
-            finally
-            {
-                _writerSemaphore.Release();
             }
         }
 

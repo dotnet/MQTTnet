@@ -12,17 +12,14 @@
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
-* [ManagedClient] Added builder class for MqttClientUnsubscribeOptions (thanks to @dominikviererbe).
-* [ManagedClient] Added support for persisted sessions (thansk to @PMExtra).
-* [Client] Improve connection stability (thanks to @jltjohanlindqvist).
-* [ManagedClient] Fixed a memory leak (thanks to @zawodskoj).
-* [ManagedClient] Improved internal subscription management (#569, thanks to @cstichlberger).
-* [ManagedClient] Refactored log messages (thanks to @cstichlberger).
-* [Server] Added support for assigned client IDs (MQTTv5 only) (thanks to @bcrosnier).
-* [Server] Added interceptor for unsubscriptions.
-* [MQTTnet.Server] Added interceptor for unsubscriptions.
+* [RcpClient] Adjusted some namespaces (BREAKING CHANGE!)
+* [AspNetCore] Adjusted some namespaces (BREAKING CHANGE!)
+* [Server] Adjusted some namespaces (BREAKING CHANGE!)
+* [Server] Added state checks (throw if not started etc.) for most server APIs.
+* [Server] Exposed real X509Certificate2 (instead byte array) to TLS options (thanks to @borigas).
+* [Core] Fixed a null reference exception in the MqttTcpChannel with WriteAsync and ReadAsync.
+* [Core] Added server interceptor for undelivered messages (Thanks to @cshark-inator).
 * [Server] Added support for returning individual subscription errors (#80 thanks to @jimch)
-* [MQTTnet.AspNetCore] improved compatibility with AspNetCore 3.1
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags> 

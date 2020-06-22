@@ -206,7 +206,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private async Task<MqttSubscriptionInterceptorContext> InterceptSubscribeAsync(TopicFilter topicFilter)
+        private async Task<MqttSubscriptionInterceptorContext> InterceptSubscribeAsync(MqttTopicFilter topicFilter)
         {
             var context = new MqttSubscriptionInterceptorContext(_clientSession.ClientId, topicFilter, _clientSession.Items);
             if (_serverOptions.SubscriptionInterceptor != null)

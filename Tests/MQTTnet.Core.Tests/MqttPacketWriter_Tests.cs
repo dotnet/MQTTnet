@@ -6,10 +6,15 @@ namespace MQTTnet.Tests
     [TestClass]
     public class MqttPacketWriter_Tests
     {
+        protected virtual IMqttPacketWriter WriterFactory()
+        {
+            return new MqttPacketWriter();
+        }
+
         [TestMethod]
         public void WritePacket()
         {
-            var writer = new MqttPacketWriter();
+            var writer = WriterFactory();
             Assert.AreEqual(0, writer.Length);
 
             writer.WriteWithLengthPrefix("1234567890");

@@ -134,7 +134,7 @@ namespace MQTTnet.Formatter
         {
             if (_length < _offset + length)
             {
-                throw new ArgumentOutOfRangeException(nameof(_buffer), $"Expected at least {_offset + length} bytes but there are only {_length} bytes");
+                throw new MqttProtocolViolationException($"Expected at least {_offset + length} bytes but there are only {_length} bytes");
             }
         }
 

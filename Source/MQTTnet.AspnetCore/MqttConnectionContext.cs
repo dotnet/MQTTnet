@@ -145,6 +145,13 @@ namespace MQTTnet.AspNetCore
                     }
                 }
             }
+            catch (Exception e)
+            {
+                // completing the cannels makes sure that there is no more data read after a protocol error
+                _input?.Complete(e);
+                _output?.Complete(e);
+                throw;
+            }
             finally
             {
                 ReadingPacketCompletedCallback?.Invoke();

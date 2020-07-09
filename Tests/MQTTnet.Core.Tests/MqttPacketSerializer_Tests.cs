@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
+using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Formatter.V3;
 using MQTTnet.Formatter.V5;
@@ -18,6 +19,31 @@ namespace MQTTnet.Tests
     [TestClass]
     public class MqttPacketSerializer_Tests
     {
+        [TestMethod]
+        public void DetectVersionFromMqttConnectPacket()
+        {
+            var p = new MqttConnectPacket
+            {
+                ClientId = "XYZ",
+                Password = Encoding.UTF8.GetBytes("PASS"),
+                Username = "USER",
+                KeepAlivePeriod = 123,
+                CleanSession = true
+            };
+            var adapter = new MqttPacketFormatterAdapter(WriterFactory());
+                        
+            Assert.AreEqual(MqttProtocolVersion.V310, DeserializeAndDetectVersion(adapter, Serialize(p, MqttProtocolVersion.V310)));
+            Assert.AreEqual(MqttProtocolVersion.V311, DeserializeAndDetectVersion(adapter, Serialize(p, MqttProtocolVersion.V311)));
+            Assert.AreEqual(MqttProtocolVersion.V500, DeserializeAndDetectVersion(adapter, Serialize(p, MqttProtocolVersion.V500)));
+            
+            var ex = Assert.ThrowsException<MqttProtocolViolationException>(() => DeserializeAndDetectVersion(adapter, WriterFactory().AddMqttHeader(MqttControlPacketType.Connect, new byte[0])));
+            Assert.AreEqual("Mqtt Connect packet must have at least 7 bytes", ex.Message);
+            ex = Assert.ThrowsException<MqttProtocolViolationException>(() => DeserializeAndDetectVersion(adapter, WriterFactory().AddMqttHeader(MqttControlPacketType.Connect, new byte[7])));
+            Assert.AreEqual("Protocol '' not supported.", ex.Message);
+            ex = Assert.ThrowsException<MqttProtocolViolationException>(() => DeserializeAndDetectVersion(adapter, WriterFactory().AddMqttHeader(MqttControlPacketType.Connect, new byte[] { 255, 255, 0,0,0,0,0 })));
+            Assert.AreEqual("Expected at least 65537 bytes but there are only 7 bytes", ex.Message);
+        }
+
         [TestMethod]
         public void SerializeV310_MqttConnectPacket()
         {
@@ -156,7 +182,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void Serialize_LargePacket()
         {
-            var serializer = new MqttV311PacketFormatter(new MqttPacketWriter());
+            var serializer = new MqttV311PacketFormatter(WriterFactory());
 
             const int payloadLength = 80000;
 
@@ -555,25 +581,15 @@ namespace MQTTnet.Tests
             DeserializeAndCompare(p, "sAIAew==");
         }
 
-        private static void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
+        private void SerializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
-            IMqttPacketFormatter serializer;
-            if (protocolVersion == MqttProtocolVersion.V311)
-            {
-                serializer = new MqttV311PacketFormatter(new MqttPacketWriter());
-            }
-            else if (protocolVersion == MqttProtocolVersion.V310)
-            {
-                serializer = new MqttV310PacketFormatter(new MqttPacketWriter());
-            }
-            else
-            {
-                throw new NotSupportedException();
-            }
+            Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Serialize(packet, protocolVersion)));
+        }
 
-            var data = serializer.Encode(packet);
-
-            Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(data)));
+        private byte[] Serialize(MqttBasePacket packet, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
+        {
+            var serializer = MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, WriterFactory());
+            return Join(serializer.Encode(packet));
         }
 
         protected virtual IMqttPacketWriter WriterFactory()
@@ -631,6 +647,25 @@ namespace MQTTnet.Tests
                 {
                     var reader = ReaderFactory(bodyStream.ToArray());
                     return (T)serializer.Decode(new ReceivedMqttPacket(header.Flags, reader, 0));
+                }
+            }
+        }
+
+        private MqttProtocolVersion DeserializeAndDetectVersion(MqttPacketFormatterAdapter adapter, byte[] buffer)
+        {
+            using (var headerStream = new MemoryStream(buffer))
+            {
+                var channel = new TestMqttChannel(headerStream);
+                var fixedHeader = new byte[2];
+
+                var header = new MqttPacketReader(channel).ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult().FixedHeader;
+
+                using (var bodyStream = new MemoryStream(buffer, (int)headerStream.Position, (int)header.RemainingLength))
+                {
+                    var reader = ReaderFactory(bodyStream.ToArray());
+                    var packet = new ReceivedMqttPacket(header.Flags, reader, 0);
+                    adapter.DetectProtocolVersion(packet);
+                    return adapter.ProtocolVersion;
                 }
             }
         }

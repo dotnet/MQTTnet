@@ -120,6 +120,14 @@ namespace MQTTnet.Formatter
         {
             if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
 
+            if (receivedMqttPacket.Body.Length < 7)
+            {
+                // 2 byte protocol name length
+                // at least 4 byte protocol name
+                // 1 byte protocol level
+                throw new MqttProtocolViolationException("Mqtt Connect packet must have at least 7 bytes");
+            }
+
             var protocolName = receivedMqttPacket.Body.ReadStringWithLengthPrefix();
             var protocolLevel = receivedMqttPacket.Body.ReadByte();
 

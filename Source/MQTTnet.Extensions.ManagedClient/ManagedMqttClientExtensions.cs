@@ -76,36 +76,39 @@ namespace MQTTnet.Extensions.ManagedClient
             return client;
         }
 
-        public static IManagedMqttClient UseApplicationMessageReceivedHandler(this IManagedMqttClient client, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
+        public static TReceiver UseApplicationMessageReceivedHandler<TReceiver>(this TReceiver receiver, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
+            where TReceiver : IApplicationMessageReceiver
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (receiver == null) throw new ArgumentNullException(nameof(receiver));
 
             if (handler == null)
             {
-                return client.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
+                return receiver.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
             }
 
-            return client.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
+            return receiver.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
         }
 
-        public static IManagedMqttClient UseApplicationMessageReceivedHandler(this IManagedMqttClient client, Action<MqttApplicationMessageReceivedEventArgs> handler)
+        public static TReceiver UseApplicationMessageReceivedHandler<TReceiver>(this TReceiver receiver, Action<MqttApplicationMessageReceivedEventArgs> handler)
+            where TReceiver : IApplicationMessageReceiver
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (receiver == null) throw new ArgumentNullException(nameof(receiver));
 
             if (handler == null)
             {
-                return client.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
+                return receiver.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
             }
 
-            return client.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
+            return receiver.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
         }
 
-        public static IManagedMqttClient UseApplicationMessageReceivedHandler(this IManagedMqttClient client, IMqttApplicationMessageReceivedHandler handler)
+        public static TReceiver UseApplicationMessageReceivedHandler<TReceiver>(this TReceiver receiver, IMqttApplicationMessageReceivedHandler handler)
+            where TReceiver : IApplicationMessageReceiver
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (receiver == null) throw new ArgumentNullException(nameof(receiver));
 
-            client.ApplicationMessageReceivedHandler = handler;
-            return client;
+            receiver.ApplicationMessageReceivedHandler = handler;
+            return receiver;
         }
 
         public static Task SubscribeAsync(this IManagedMqttClient client, params MqttTopicFilter[] topicFilters)
@@ -138,92 +141,92 @@ namespace MQTTnet.Extensions.ManagedClient
             return client.UnsubscribeAsync(topicFilters);
         }
 
-        public static async Task PublishAsync(this IManagedMqttClient client, IEnumerable<MqttApplicationMessage> applicationMessages)
+        public static async Task PublishAsync(this IApplicationMessagePublisher publisher, IEnumerable<MqttApplicationMessage> applicationMessages)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
             foreach (var applicationMessage in applicationMessages)
             {
-                await client.PublishAsync(applicationMessage).ConfigureAwait(false);
+                await publisher.PublishAsync(applicationMessage).ConfigureAwait(false);
             }
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, MqttApplicationMessage applicationMessage)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, MqttApplicationMessage applicationMessage)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            return client.PublishAsync(applicationMessage, CancellationToken.None);
+            return publisher.PublishAsync(applicationMessage, CancellationToken.None);
         }
 
-        public static async Task PublishAsync(this IManagedMqttClient client, params MqttApplicationMessage[] applicationMessages)
+        public static async Task PublishAsync(this IApplicationMessagePublisher publisher, params MqttApplicationMessage[] applicationMessages)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
             foreach (var applicationMessage in applicationMessages)
             {
-                await client.PublishAsync(applicationMessage, CancellationToken.None).ConfigureAwait(false);
+                await publisher.PublishAsync(applicationMessage, CancellationToken.None).ConfigureAwait(false);
             }
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, string topic)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return client.PublishAsync(builder => builder
+            return publisher.PublishAsync(builder => builder
                 .WithTopic(topic));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, string topic, string payload)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return client.PublishAsync(builder => builder
+            return publisher.PublishAsync(builder => builder
                 .WithTopic(topic)
                 .WithPayload(payload));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return client.PublishAsync(builder => builder
+            return publisher.PublishAsync(builder => builder
                 .WithTopic(topic)
                 .WithPayload(payload)
                 .WithQualityOfServiceLevel(qualityOfServiceLevel));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
 
-            return client.PublishAsync(builder => builder
+            return publisher.PublishAsync(builder => builder
                 .WithTopic(topic)
                 .WithPayload(payload)
                 .WithQualityOfServiceLevel(qualityOfServiceLevel)
                 .WithRetainFlag(retain));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
 
             var message = builder(new MqttApplicationMessageBuilder()).Build();
-            return client.PublishAsync(message, cancellationToken);
+            return publisher.PublishAsync(message, cancellationToken);
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IManagedMqttClient client, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
+        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (publisher == null) throw new ArgumentNullException(nameof(publisher));
 
             var message = builder(new MqttApplicationMessageBuilder()).Build();
-            return client.PublishAsync(message, CancellationToken.None);
+            return publisher.PublishAsync(message, CancellationToken.None);
         }
     }
 }

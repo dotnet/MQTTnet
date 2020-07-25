@@ -96,7 +96,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Send_Reply_In_Message_Handler()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = new TestEnvironment())
             {
                 await testEnvironment.StartServerAsync();
                 var client1 = await testEnvironment.ConnectClientAsync();

@@ -13,7 +13,7 @@ namespace MQTTnet.Server
     public class MqttServerOptionsBuilder
     {
         readonly MqttServerOptions _options = new MqttServerOptions();
-
+        
         public MqttServerOptionsBuilder WithConnectionBacklog(int value)
         {
             _options.DefaultEndpointOptions.ConnectionBacklog = value;
@@ -190,6 +190,18 @@ namespace MQTTnet.Server
         public MqttServerOptionsBuilder WithSubscriptionInterceptor(Action<MqttSubscriptionInterceptorContext> value)
         {
             _options.SubscriptionInterceptor = new MqttServerSubscriptionInterceptorDelegate(value);
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithDefaultEndpointReuseAddress()
+        {
+            _options.DefaultEndpointOptions.ReuseAddress = true;
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithTlsEndpointReuseAddress()
+        {
+            _options.TlsEndpointOptions.ReuseAddress = true;
             return this;
         }
 

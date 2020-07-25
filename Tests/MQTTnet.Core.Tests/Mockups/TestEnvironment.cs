@@ -2,7 +2,6 @@
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
-using MQTTnet.Internal;
 using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
@@ -11,13 +10,10 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Tests.Mockups
 {
-    public sealed class TestEnvironment : Disposable
+    public sealed class TestEnvironment : IDisposable
     {
         readonly MqttFactory _mqttFactory = new MqttFactory();
         readonly List<IMqttClient> _clients = new List<IMqttClient>();
-        readonly IMqttNetLogger _serverLogger = new MqttNetLogger("server");
-        readonly IMqttNetLogger _clientLogger = new MqttNetLogger("client");
-
         readonly List<string> _serverErrors = new List<string>();
         readonly List<string> _clientErrors = new List<string>();
 
@@ -31,9 +27,9 @@ namespace MQTTnet.Tests.Mockups
 
         public int ServerPort { get; set; } = 1888;
 
-        public IMqttNetLogger ServerLogger => _serverLogger;
+        public IMqttNetLogger ServerLogger { get; } = new MqttNetLogger("server");
 
-        public IMqttNetLogger ClientLogger => _clientLogger;
+        public IMqttNetLogger ClientLogger { get; } = new MqttNetLogger("client");
 
         public TestContext TestContext { get; }
 
@@ -45,7 +41,7 @@ namespace MQTTnet.Tests.Mockups
         {
             TestContext = testContext;
 
-            _serverLogger.LogMessagePublished += (s, e) =>
+            ServerLogger.LogMessagePublished += (s, e) =>
             {
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {
@@ -56,7 +52,7 @@ namespace MQTTnet.Tests.Mockups
                 }
             };
 
-            _clientLogger.LogMessagePublished += (s, e) =>
+            ClientLogger.LogMessagePublished += (s, e) =>
             {
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {
@@ -70,7 +66,7 @@ namespace MQTTnet.Tests.Mockups
 
         public IMqttClient CreateClient()
         {
-            var client = _mqttFactory.CreateMqttClient(_clientLogger);
+            var client = _mqttFactory.CreateMqttClient(ClientLogger);
             _clients.Add(client);
 
             return new TestClientWrapper(client, TestContext);
@@ -83,13 +79,18 @@ namespace MQTTnet.Tests.Mockups
 
         public async Task<IMqttServer> StartServerAsync(MqttServerOptionsBuilder options)
         {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
             if (Server != null)
             {
                 throw new InvalidOperationException("Server already started.");
             }
 
-            Server = new TestServerWrapper(_mqttFactory.CreateMqttServer(_serverLogger), TestContext, this);
-            await Server.StartAsync(options.WithDefaultEndpointPort(ServerPort).Build());
+            Server = new TestServerWrapper(_mqttFactory.CreateMqttServer(ServerLogger), TestContext, this);
+
+            options.WithDefaultEndpointPort(ServerPort);
+            
+            await Server.StartAsync(options.Build()).ConfigureAwait(false);
 
             return Server;
         }
@@ -106,7 +107,7 @@ namespace MQTTnet.Tests.Mockups
             options = options.WithTcpServer("localhost", ServerPort);
 
             var client = CreateClient();
-            await client.ConnectAsync(options.Build());
+            await client.ConnectAsync(options.Build()).ConfigureAwait(false);
 
             return client;
         }
@@ -116,7 +117,7 @@ namespace MQTTnet.Tests.Mockups
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             var client = CreateClient();
-            await client.ConnectAsync(options);
+            await client.ConnectAsync(options).ConfigureAwait(false);
 
             return client;
         }
@@ -140,26 +141,22 @@ namespace MQTTnet.Tests.Mockups
             }
         }
 
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (disposing)
+            foreach (var mqttClient in _clients)
             {
-                foreach (var mqttClient in _clients)
-                {
-                    mqttClient?.Dispose();
-                }
-
-                Server?.StopAsync().GetAwaiter().GetResult();
-
-                ThrowIfLogErrors();
-
-                if (_exceptions.Any())
-                {
-                    throw new Exception($"{_exceptions.Count} exceptions tracked.\r\n" + string.Join(Environment.NewLine, _exceptions));
-                }
+                mqttClient?.Dispose();
             }
 
-            base.Dispose(disposing);
+            Server?.StopAsync().GetAwaiter().GetResult();
+            Server?.Dispose();
+
+            ThrowIfLogErrors();
+
+            if (_exceptions.Any())
+            {
+                throw new Exception($"{_exceptions.Count} exceptions tracked.\r\n" + string.Join(Environment.NewLine, _exceptions));
+            }
         }
 
         public void TrackException(Exception exception)

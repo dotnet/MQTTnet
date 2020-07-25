@@ -17,6 +17,7 @@
 * [Server] Adjusted some namespaces (BREAKING CHANGE!)
 * [Server] Added state checks (throw if not started etc.) for most server APIs.
 * [Server] Exposed real X509Certificate2 (instead byte array) to TLS options (thanks to @borigas).
+* [Server] Fixed memory leak with TCP sockets (MqttServer is now sealed!) (BREAKING CHANGE!)
 * [Core] Fixed a null reference exception in the MqttTcpChannel with WriteAsync and ReadAsync.
 * [Core] Added server interceptor for undelivered messages (thanks to @cshark-inator).
 * [nuget] Added support for SourceLink (thanks to @JTOne123).

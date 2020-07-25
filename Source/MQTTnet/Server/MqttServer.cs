@@ -11,10 +11,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
-    public class MqttServer : IMqttServer
+    public class MqttServer : Disposable, IMqttServer
     {
         readonly MqttServerEventDispatcher _eventDispatcher;
         readonly ICollection<IMqttServerAdapter> _adapters;
@@ -77,6 +78,7 @@ namespace MQTTnet.Server
 
         public Task<IList<IMqttClientStatus>> GetClientStatusAsync()
         {
+            ThrowIfDisposed();
             ThrowIfNotStarted();
 
             return _clientSessionsManager.GetClientStatusAsync();
@@ -84,6 +86,7 @@ namespace MQTTnet.Server
 
         public Task<IList<IMqttSessionStatus>> GetSessionStatusAsync()
         {
+            ThrowIfDisposed();
             ThrowIfNotStarted();
 
             return _clientSessionsManager.GetSessionStatusAsync();
@@ -91,6 +94,7 @@ namespace MQTTnet.Server
 
         public Task<IList<MqttApplicationMessage>> GetRetainedApplicationMessagesAsync()
         {
+            ThrowIfDisposed();
             ThrowIfNotStarted();
 
             return _retainedMessagesManager.GetMessagesAsync();
@@ -98,6 +102,7 @@ namespace MQTTnet.Server
 
         public Task ClearRetainedApplicationMessagesAsync()
         {
+            ThrowIfDisposed();
             ThrowIfNotStarted();
 
             return _retainedMessagesManager?.ClearMessagesAsync() ?? PlatformAbstractionLayer.CompletedTask;
@@ -107,7 +112,8 @@ namespace MQTTnet.Server
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
-
+            
+            ThrowIfDisposed();
             ThrowIfNotStarted();
 
             return _clientSessionsManager.SubscribeAsync(clientId, topicFilters);
@@ -118,6 +124,7 @@ namespace MQTTnet.Server
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
+            ThrowIfDisposed();
             ThrowIfNotStarted();
 
             return _clientSessionsManager.UnsubscribeAsync(clientId, topicFilters);
@@ -126,6 +133,8 @@ namespace MQTTnet.Server
         public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
+            ThrowIfDisposed();
 
             MqttTopicValidator.ThrowIfInvalid(applicationMessage.Topic);
 
@@ -138,6 +147,7 @@ namespace MQTTnet.Server
 
         public async Task StartAsync(IMqttServerOptions options)
         {
+            ThrowIfDisposed();
             ThrowIfStarted();
 
             Options = options ?? throw new ArgumentNullException(nameof(options));
@@ -190,13 +200,13 @@ namespace MQTTnet.Server
             }
             finally
             {
+                _clientSessionsManager?.Dispose();
+                _clientSessionsManager = null;
+
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
 
                 _retainedMessagesManager = null;
-
-                _clientSessionsManager?.Dispose();
-                _clientSessionsManager = null;
             }
 
             var stoppedHandler = StoppedHandler;
@@ -204,6 +214,21 @@ namespace MQTTnet.Server
             {
                 await stoppedHandler.HandleServerStoppedAsync(EventArgs.Empty).ConfigureAwait(false);
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                StopAsync().GetAwaiter().GetResult();
+
+                foreach (var adapter in _adapters)
+                {
+                    adapter.Dispose();
+                }
+            }
+
+            base.Dispose(disposing);
         }
 
         Task OnHandleClient(IMqttChannelAdapter channelAdapter)

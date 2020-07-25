@@ -37,7 +37,7 @@ namespace MQTTnet.Tests
             Assert.AreEqual(MqttProtocolVersion.V500, DeserializeAndDetectVersion(adapter, Serialize(p, MqttProtocolVersion.V500)));
             
             var ex = Assert.ThrowsException<MqttProtocolViolationException>(() => DeserializeAndDetectVersion(adapter, WriterFactory().AddMqttHeader(MqttControlPacketType.Connect, new byte[0])));
-            Assert.AreEqual("Mqtt Connect packet must have at least 7 bytes", ex.Message);
+            Assert.AreEqual("CONNECT packet must have at least 7 bytes.", ex.Message);
             ex = Assert.ThrowsException<MqttProtocolViolationException>(() => DeserializeAndDetectVersion(adapter, WriterFactory().AddMqttHeader(MqttControlPacketType.Connect, new byte[7])));
             Assert.AreEqual("Protocol '' not supported.", ex.Message);
             ex = Assert.ThrowsException<MqttProtocolViolationException>(() => DeserializeAndDetectVersion(adapter, WriterFactory().AddMqttHeader(MqttControlPacketType.Connect, new byte[] { 255, 255, 0,0,0,0,0 })));

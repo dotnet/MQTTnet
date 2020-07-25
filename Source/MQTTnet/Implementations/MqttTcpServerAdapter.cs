@@ -1,7 +1,6 @@
 ﻿#if !WINDOWS_UWP
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
-using MQTTnet.Internal;
 using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
@@ -13,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Implementations
 {
-    public sealed class MqttTcpServerAdapter : Disposable, IMqttServerAdapter
+    public sealed class MqttTcpServerAdapter : IMqttServerAdapter
     {
         readonly List<MqttTcpServerListener> _listeners = new List<MqttTcpServerListener>();
         readonly IMqttNetScopedLogger _logger;
@@ -67,14 +66,9 @@ namespace MQTTnet.Implementations
             return PlatformAbstractionLayer.CompletedTask;
         }
 
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (disposing)
-            {
-                Cleanup();
-            }
-
-            base.Dispose(disposing);
+            Cleanup();
         }
 
         void Cleanup()

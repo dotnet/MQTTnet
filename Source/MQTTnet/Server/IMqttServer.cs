@@ -1,10 +1,11 @@
-﻿using MQTTnet.Server.Status;
+﻿using System;
+using MQTTnet.Server.Status;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
-    public interface IMqttServer : IApplicationMessageReceiver, IApplicationMessagePublisher
+    public interface IMqttServer : IApplicationMessageReceiver, IApplicationMessagePublisher, IDisposable
     {
         bool IsStarted { get; }
         IMqttServerStartedHandler StartedHandler { get; set; }

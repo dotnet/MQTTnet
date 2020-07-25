@@ -287,7 +287,7 @@ namespace MQTTnet.Tests
                 c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
                 var optionsBuilder = new MqttClientSubscribeOptionsBuilder();
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 500; i++)
                 {
                     optionsBuilder.WithTopicFilter(i.ToString(), MqttQualityOfServiceLevel.AtMostOnce);
                 }
@@ -297,16 +297,16 @@ namespace MQTTnet.Tests
                 var c2 = await testEnvironment.ConnectClientAsync();
 
                 var messageBuilder = new MqttApplicationMessageBuilder();
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 500; i++)
                 {
                     messageBuilder.WithTopic(i.ToString());
 
                     await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
                 }
 
-                SpinWait.SpinUntil(() => receivedMessagesCount == 1000, 2000);
+                SpinWait.SpinUntil(() => receivedMessagesCount == 500, 2000);
 
-                Assert.AreEqual(1000, receivedMessagesCount);
+                Assert.AreEqual(500, receivedMessagesCount);
             }
         }
 
@@ -322,7 +322,7 @@ namespace MQTTnet.Tests
                 var c1 = await testEnvironment.ConnectClientAsync();
                 c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 500; i++)
                 {
                     var so = new MqttClientSubscribeOptionsBuilder()
                         .WithTopicFilter(i.ToString(), MqttQualityOfServiceLevel.AtMostOnce).Build();
@@ -333,16 +333,16 @@ namespace MQTTnet.Tests
                 var c2 = await testEnvironment.ConnectClientAsync();
 
                 var messageBuilder = new MqttApplicationMessageBuilder();
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 500; i++)
                 {
                     messageBuilder.WithTopic(i.ToString());
 
                     await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
                 }
 
-                SpinWait.SpinUntil(() => receivedMessagesCount == 1000, 2000);
+                SpinWait.SpinUntil(() => receivedMessagesCount == 500, 2000);
 
-                Assert.AreEqual(1000, receivedMessagesCount);
+                Assert.AreEqual(500, receivedMessagesCount);
             }
         }
 
@@ -1391,14 +1391,14 @@ namespace MQTTnet.Tests
             using (var testEnvironment = new TestEnvironment())
             {
                 var undeliverd = string.Empty;
-                var svr = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithUndeliveredMessageInterceptor(
-                              context =>
-                              {
-                                  undeliverd = context.ApplicationMessage.Topic;
-                              }));
 
-                var topicAReceived = false;
-                var topicBReceived = false;
+                var options = new MqttServerOptionsBuilder().WithUndeliveredMessageInterceptor(
+                    context =>
+                    {
+                        undeliverd = context.ApplicationMessage.Topic;
+                    });
+
+                await testEnvironment.StartServerAsync(options);
 
                 var client = await testEnvironment.ConnectClientAsync();
 
@@ -1408,8 +1408,7 @@ namespace MQTTnet.Tests
 
                 await Task.Delay(500);
 
-                Assert.AreEqual(undeliverd, "a");
-
+                Assert.AreEqual("a", undeliverd);
             }
         }
     }

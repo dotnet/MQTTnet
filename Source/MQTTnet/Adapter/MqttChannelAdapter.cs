@@ -58,9 +58,9 @@ namespace MQTTnet.Adapter
 
         public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            ThrowIfDisposed();
             cancellationToken.ThrowIfCancellationRequested();
-
+            ThrowIfDisposed();
+            
             try
             {
                 if (timeout == TimeSpan.Zero)
@@ -85,9 +85,9 @@ namespace MQTTnet.Adapter
 
         public async Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            ThrowIfDisposed();
             cancellationToken.ThrowIfCancellationRequested();
-
+            ThrowIfDisposed();
+            
             try
             {
                 if (timeout == TimeSpan.Zero)
@@ -113,9 +113,9 @@ namespace MQTTnet.Adapter
 
         public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            ThrowIfDisposed();
             cancellationToken.ThrowIfCancellationRequested();
-
+            ThrowIfDisposed();
+            
             try
             {
                 await _writerSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -169,8 +169,8 @@ namespace MQTTnet.Adapter
 
         public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            ThrowIfDisposed();
             cancellationToken.ThrowIfCancellationRequested();
+            ThrowIfDisposed();
 
             try
             {

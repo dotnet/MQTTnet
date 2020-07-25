@@ -132,5 +132,9 @@ namespace MQTTnet.Tests.Mockups
         {
             return Implementation.UnsubscribeAsync(clientId, topicFilters);
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

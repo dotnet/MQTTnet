@@ -51,14 +51,14 @@ namespace MQTTnet.Server
             var checkSubscriptionsResult = SubscriptionsManager.CheckSubscriptions(applicationMessage.Topic, applicationMessage.QualityOfServiceLevel);
             if (!checkSubscriptionsResult.IsSubscribed)
             {
-                return true;
+                return false;
             }
 
             _logger.Verbose("Queued application message with topic '{0}' (ClientId: {1}).", applicationMessage.Topic, ClientId);
 
             ApplicationMessagesQueue.Enqueue(applicationMessage, senderClientId, checkSubscriptionsResult.QualityOfServiceLevel, isRetainedApplicationMessage);
 
-            return false;
+            return true;
         }
 
         public async Task SubscribeAsync(ICollection<MqttTopicFilter> topicFilters)

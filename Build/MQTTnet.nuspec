@@ -20,6 +20,7 @@
 * [Core] Fixed a null reference exception in the MqttTcpChannel with WriteAsync and ReadAsync.
 * [Core] Added server interceptor for undelivered messages (Thanks to @cshark-inator).
 * [Server] Added support for returning individual subscription errors (#80 thanks to @jimch)
+* [nuget] Added support for SourceLink (thanks to @JTOne123).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags> 

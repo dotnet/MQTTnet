@@ -117,6 +117,10 @@ namespace MQTTnet.AspNetCore
             var span = _buffer.Span;
             var length = BinaryPrimitives.ReadUInt16BigEndian(span.Slice(_offset));
 
+            if (Length < _offset + length)
+            {
+                throw new MqttProtocolViolationException($"Expected at least {_offset + 2 + length} bytes but there are only {Length} bytes");
+            }
             var result = span.Slice(_offset + 2, length);
             _offset += 2 + length;
             return result;

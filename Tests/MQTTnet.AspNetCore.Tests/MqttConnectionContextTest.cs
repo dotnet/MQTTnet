@@ -16,6 +16,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using System.Net;
 using MQTTnet.AspNetCore.Extensions;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.AspNetCore.Tests
 {
@@ -35,7 +36,25 @@ namespace MQTTnet.AspNetCore.Tests
 
             await Assert.ThrowsExceptionAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None));
         }
-        
+
+        [TestMethod]
+        public async Task TestCorruptedConnectPacket()
+        {
+            var writer = new MqttPacketWriter();
+            var serializer = new MqttPacketFormatterAdapter(writer);
+            var pipe = new DuplexPipeMockup();
+            var connection = new DefaultConnectionContext();
+            connection.Transport = pipe;
+            var ctx = new MqttConnectionContext(serializer, connection);
+            
+            await pipe.Receive.Writer.WriteAsync(writer.AddMqttHeader(MqttControlPacketType.Connect, new byte[0]));
+
+            await Assert.ThrowsExceptionAsync<MqttProtocolViolationException>(() => ctx.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None));
+
+            // the first exception should complete the pipes so if someone tries to use the connection after that it should throw immidiatly
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() =>  ctx.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None));
+        }
+
         [TestMethod]
         public async Task TestParallelWrites()
         {

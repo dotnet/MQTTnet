@@ -10,6 +10,11 @@ namespace MQTTnet.AspNetCore
     {
         readonly ArrayPool<byte> _pool = ArrayPool<byte>.Create();
 
+        public SpanBasedMqttPacketWriter()
+        {
+            Reset(0);
+        }
+
         byte[] _buffer;
         int _position;
 

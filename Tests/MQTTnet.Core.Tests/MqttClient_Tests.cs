@@ -125,6 +125,8 @@ namespace MQTTnet.Tests
 
                 await client1.PublishAsync("request", null, MqttQualityOfServiceLevel.AtLeastOnce);
 
+                await Task.Delay(500);
+
                 SpinWait.SpinUntil(() => replyReceived, TimeSpan.FromSeconds(10));
 
                 Assert.IsTrue(replyReceived);

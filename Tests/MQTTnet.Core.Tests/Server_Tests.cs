@@ -304,7 +304,7 @@ namespace MQTTnet.Tests
                     await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
                 }
 
-                SpinWait.SpinUntil(() => receivedMessagesCount == 500, 2000);
+                SpinWait.SpinUntil(() => receivedMessagesCount == 500, 5000);
 
                 Assert.AreEqual(500, receivedMessagesCount);
             }
@@ -325,7 +325,7 @@ namespace MQTTnet.Tests
                 for (var i = 0; i < 500; i++)
                 {
                     var so = new MqttClientSubscribeOptionsBuilder()
-                        .WithTopicFilter(i.ToString(), MqttQualityOfServiceLevel.AtMostOnce).Build();
+                        .WithTopicFilter(i.ToString()).Build();
 
                     await c1.SubscribeAsync(so).ConfigureAwait(false);
                 }
@@ -340,7 +340,7 @@ namespace MQTTnet.Tests
                     await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
                 }
 
-                SpinWait.SpinUntil(() => receivedMessagesCount == 500, 2000);
+                SpinWait.SpinUntil(() => receivedMessagesCount == 500, 5000);
 
                 Assert.AreEqual(500, receivedMessagesCount);
             }

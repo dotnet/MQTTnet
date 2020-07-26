@@ -328,6 +328,8 @@ namespace MQTTnet.Tests
                         .WithTopicFilter(i.ToString()).Build();
 
                     await c1.SubscribeAsync(so).ConfigureAwait(false);
+
+                    await Task.Delay(10);
                 }
                 
                 var c2 = await testEnvironment.ConnectClientAsync();
@@ -338,6 +340,8 @@ namespace MQTTnet.Tests
                     messageBuilder.WithTopic(i.ToString());
 
                     await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
+
+                    await Task.Delay(10);
                 }
 
                 SpinWait.SpinUntil(() => receivedMessagesCount == 500, 5000);

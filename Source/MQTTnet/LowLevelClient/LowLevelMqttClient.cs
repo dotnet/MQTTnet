@@ -48,7 +48,7 @@ namespace MQTTnet.LowLevelClient
             }
             catch (Exception)
             {
-                _adapter.Dispose();
+                _adapter?.Dispose();
                 throw;
             }
 

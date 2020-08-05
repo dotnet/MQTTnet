@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Exceptions;
 
 namespace MQTTnet.Tests
 {
@@ -15,6 +16,18 @@ namespace MQTTnet.Tests
     public class LowLevelMqttClient_Tests
     {
         public TestContext TestContext { get; set; }
+
+        [TestMethod]
+        [ExpectedException(typeof(MqttCommunicationException))]
+        public async Task Connect_To_Not_Existing_Server()
+        {
+            var client = new MqttFactory().CreateLowLevelMqttClient();
+            var options = new MqttClientOptionsBuilder()
+                .WithTcpServer("localhost")
+                .Build();
+
+            await client.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
+        }
 
         [TestMethod]
         public async Task Connect_And_Disconnect()
@@ -78,7 +91,7 @@ namespace MQTTnet.Tests
 
         async Task<MqttConnAckPacket> Authenticate(ILowLevelMqttClient client)
         {
-            await client.SendAsync(new MqttConnectPacket()
+            await client.SendAsync(new MqttConnectPacket
             {
                 CleanSession = true,
                 ClientId = TestContext.TestName,

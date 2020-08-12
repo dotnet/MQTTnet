@@ -1,6 +1,4 @@
 ﻿
-#if NETCOREAPP3_1
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
@@ -17,5 +15,3 @@ namespace MQTTnet.AspNetCore
         }
     }
 }
-
-#endif

@@ -12,16 +12,7 @@
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
-* [LowLevelClient] Fixed a null reference exception when connecting to a not existing server (thanks to @SGStino).      
-* [RcpClient] Adjusted some namespaces (BREAKING CHANGE!).
-* [AspNetCore] Adjusted some namespaces (BREAKING CHANGE!).
-* [Server] Adjusted some namespaces (BREAKING CHANGE!).
-* [Server] Added state checks (throw if not started etc.) for most server APIs.
-* [Server] Exposed real X509Certificate2 (instead byte array) to TLS options (thanks to @borigas).
-* [Server] Fixed memory leak with TCP sockets (MqttServer is now Disposable!) (BREAKING CHANGE!).
-* [Core] Fixed a null reference exception in the MqttTcpChannel with WriteAsync and ReadAsync.
-* [Core] Added server interceptor for undelivered messages (thanks to @cshark-inator).
-* [nuget] Added support for SourceLink (thanks to @JTOne123).
+* [Client] Fixed wrong value for "ClientWasConnected" in "MqttClientDisconnectedEventArgs" #976 (thanks to @dbeinder).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags> 

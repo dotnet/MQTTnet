@@ -254,8 +254,7 @@ namespace MQTTnet.Client
 
             _adapter?.Dispose();
         }
-
-
+        
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -302,7 +301,7 @@ namespace MQTTnet.Client
 
         async Task DisconnectInternalAsync(Task sender, Exception exception, MqttClientAuthenticateResult authenticateResult)
         {
-            var clientWasConnected = IsConnected;
+            var clientWasConnected = _isConnected;
             var reasonCode = MqttClientDisconnectReason.NormalDisconnection;
 
             TryInitiateDisconnect();

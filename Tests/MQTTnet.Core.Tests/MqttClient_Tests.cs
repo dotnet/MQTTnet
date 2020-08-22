@@ -24,6 +24,38 @@ namespace MQTTnet.Tests
         public TestContext TestContext { get; set; }
 
         [TestMethod]
+        public async Task Set_ClientWasConnected_On_ServerDisconnect()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                var server = await testEnvironment.StartServerAsync();
+                var client = await testEnvironment.ConnectClientAsync();
+
+                Assert.IsTrue(client.IsConnected);
+                client.UseDisconnectedHandler(e => Assert.IsTrue(e.ClientWasConnected));
+
+                await server.StopAsync();
+                await Task.Delay(4000);
+            }
+        }
+
+        [TestMethod]
+        public async Task Set_ClientWasConnected_On_ClientDisconnect()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                var server = await testEnvironment.StartServerAsync();
+                var client = await testEnvironment.ConnectClientAsync();
+
+                Assert.IsTrue(client.IsConnected);
+                client.UseDisconnectedHandler(e => Assert.IsTrue(e.ClientWasConnected));
+
+                await client.DisconnectAsync();
+                await Task.Delay(200);
+            }
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(MqttCommunicationTimedOutException))]
         public async Task Connect_To_Invalid_Server_Wrong_IP()
         {

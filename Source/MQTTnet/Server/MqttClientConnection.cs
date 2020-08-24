@@ -397,17 +397,13 @@ namespace MQTTnet.Server
                     // Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
                     publishPacket.Retain = queuedApplicationMessage.IsRetainedMessage;
 
-                    if (publishPacket.QualityOfServiceLevel > 0)
-                    {
-                        publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
-                    }
-
                     if (_serverOptions.ClientMessageQueueInterceptor != null)
                     {
                         var context = new MqttClientMessageQueueInterceptorContext(
                             queuedApplicationMessage.SenderClientId,
                             ClientId,
-                            queuedApplicationMessage.ApplicationMessage);
+                            queuedApplicationMessage.ApplicationMessage,
+                            queuedApplicationMessage.SubscriptionQualityOfServiceLevel);
 
                         if (_serverOptions.ClientMessageQueueInterceptor != null)
                         {
@@ -421,7 +417,12 @@ namespace MQTTnet.Server
 
                         publishPacket.Topic = context.ApplicationMessage.Topic;
                         publishPacket.Payload = context.ApplicationMessage.Payload;
-                        publishPacket.QualityOfServiceLevel = context.ApplicationMessage.QualityOfServiceLevel;
+                        publishPacket.QualityOfServiceLevel = context.SubscriptionQualityOfServiceLevel;
+                    }
+
+                    if (publishPacket.QualityOfServiceLevel > 0)
+                    {
+                        publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
                     }
 
                     if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)

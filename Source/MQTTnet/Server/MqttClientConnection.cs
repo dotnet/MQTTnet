@@ -392,7 +392,7 @@ namespace MQTTnet.Server
                     }
 
                     publishPacket = _dataConverter.CreatePublishPacket(queuedApplicationMessage.ApplicationMessage);
-                    publishPacket.QualityOfServiceLevel = queuedApplicationMessage.QualityOfServiceLevel;
+                    publishPacket.QualityOfServiceLevel = queuedApplicationMessage.SubscriptionQualityOfServiceLevel;
 
                     // Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
                     publishPacket.Retain = queuedApplicationMessage.IsRetainedMessage;

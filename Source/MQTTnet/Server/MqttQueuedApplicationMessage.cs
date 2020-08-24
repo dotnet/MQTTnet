@@ -1,4 +1,5 @@
-﻿using MQTTnet.Protocol;
+﻿using System;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
@@ -10,7 +11,14 @@ namespace MQTTnet.Server
 
         public bool IsRetainedMessage { get; set; }
 
-        public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
+        public MqttQualityOfServiceLevel SubscriptionQualityOfServiceLevel { get; set; }
+
+        [Obsolete("Use 'SubscriptionQualityOfServiceLevel' instead.")]
+        public MqttQualityOfServiceLevel QualityOfServiceLevel
+        {
+            get => SubscriptionQualityOfServiceLevel;
+            set => SubscriptionQualityOfServiceLevel = value;
+        }
 
         public bool IsDuplicate { get; set; }
     }

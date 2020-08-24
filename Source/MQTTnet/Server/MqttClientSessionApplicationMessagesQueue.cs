@@ -27,7 +27,7 @@ namespace MQTTnet.Server
             {
                 ApplicationMessage = applicationMessage,
                 SenderClientId = senderClientId,
-                QualityOfServiceLevel = qualityOfServiceLevel,
+                SubscriptionQualityOfServiceLevel = qualityOfServiceLevel,
                 IsRetainedMessage = isRetainedMessage
             });
         }

@@ -280,7 +280,9 @@ namespace MQTTnet.Client.Options
 #pragma warning disable CS0618 // Type or member is obsolete
                         CertificateValidationCallback = _tlsParameters.CertificateValidationCallback,
 #pragma warning restore CS0618 // Type or member is obsolete
-
+#if NETCOREAPP3_1
+	                    ApplicationProtocols = _tlsParameters.ApplicationProtocols,
+#endif
                         CertificateValidationHandler = _tlsParameters.CertificateValidationHandler,
                         IgnoreCertificateChainErrors = _tlsParameters.IgnoreCertificateChainErrors,
                         IgnoreCertificateRevocationErrors = _tlsParameters.IgnoreCertificateRevocationErrors

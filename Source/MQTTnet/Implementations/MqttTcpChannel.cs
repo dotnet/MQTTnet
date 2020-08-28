@@ -81,7 +81,22 @@ namespace MQTTnet.Implementations
                     var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                     try
                     {
-                        await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, !_options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+                        
+#if NETCOREAPP3_1
+	                    var sslOptions = new SslClientAuthenticationOptions
+	                    {
+		                    ApplicationProtocols = _options.TlsOptions.ApplicationProtocols,
+		                    ClientCertificates = LoadCertificates(),
+		                    EnabledSslProtocols = _options.TlsOptions.SslProtocol,
+		                    CertificateRevocationCheckMode = _options.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.Online : X509RevocationMode.NoCheck,
+		                    TargetHost = _options.Server
+	                    };
+	                    await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
+#else 
+                        
+                        
+	                    await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, !_options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+#endif
                     }
                     catch
                     {

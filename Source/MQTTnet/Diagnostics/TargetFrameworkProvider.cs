@@ -20,6 +20,8 @@
                 return "netstandard2.1";
 #elif WINDOWS_UWP
                 return "uap10.0";
+#elif NETCOREAPP3_1
+                return "netcoreapp3.1";
 #endif
             }
         }

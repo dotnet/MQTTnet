@@ -27,7 +27,11 @@ namespace MQTTnet.Client.Options
         public IEnumerable<X509Certificate> Certificates { get; set; }
 #endif
 
-        public bool AllowUntrustedCertificates { get; set; }
+        #if NETCOREAPP3_1
+	    public List<SslApplicationProtocol> ApplicationProtocols {get;set;}
+        #endif 
+
+	    public bool AllowUntrustedCertificates { get; set; }
 
         public bool IgnoreCertificateChainErrors { get; set; }
 

@@ -23,7 +23,6 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
   </ItemGroup>
     
   <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1'">

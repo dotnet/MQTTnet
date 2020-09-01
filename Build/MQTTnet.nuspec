@@ -35,6 +35,12 @@
         <dependency id="System.Net.WebSockets" version="4.3.0" />
         <dependency id="System.Net.WebSockets.Client" version="4.3.2" />
       </group>
+      <group targetFramework="netcoreapp3.1">
+        <dependency id="NETStandard.Library" version="2.0.0" />
+        <dependency id="System.Net.Security" version="4.3.2" />
+        <dependency id="System.Net.WebSockets" version="4.3.0" />
+        <dependency id="System.Net.WebSockets.Client" version="4.3.2" />
+      </group>
       <group targetFramework="uap10.0">
         <dependency id="Microsoft.NETCore.UniversalWindowsPlatform" version="6.2.10" />
       </group>
@@ -56,6 +62,9 @@
 
     <!-- .NET Standard 2.1 -->
     <file src="..\Source\MQTTnet\bin\Release\netstandard2.1\MQTTnet.*" target="lib\netstandard2.1\"/>
+
+    <!-- .NET Standard 3.1 -->
+    <file src="..\Source\MQTTnet\bin\Release\netcoreapp3.1\MQTTnet.*" target="lib\netcoreapp3.1\"/>
 
     <!-- Universal Windows -->
     <file src="..\Source\MQTTnet\bin\Release\uap10.0\MQTTnet.*" target="lib\uap10.0\"/>

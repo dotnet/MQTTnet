@@ -15,7 +15,7 @@
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags> 
     <dependencies>
-      <dependency id="MQTTnet" version="$nugetVersion" />
+      <dependency id="MQTTnet" version="0.0.1" />
     </dependencies>
   </metadata>
 

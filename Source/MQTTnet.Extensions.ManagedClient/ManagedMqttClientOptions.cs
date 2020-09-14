@@ -1,5 +1,4 @@
 ﻿using System;
-using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Server;
 
@@ -8,6 +7,8 @@ namespace MQTTnet.Extensions.ManagedClient
     public class ManagedMqttClientOptions : IManagedMqttClientOptions
     {
         public IMqttClientOptions ClientOptions { get; set; }
+
+        public bool AutoReconnect { get; set; } = true;
 
         public TimeSpan AutoReconnectDelay { get; set; } = TimeSpan.FromSeconds(5);
 

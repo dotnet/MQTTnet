@@ -16,12 +16,12 @@
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags>
     <dependencies>
       <group targetFramework="netstandard2.0">
-        <dependency id="MQTTnet" version="$nugetVersion" />
+        <dependency id="MQTTnet" version="0.0.1" />
         <dependency id="Microsoft.AspNetCore.Http.Connections" version="1.0.0"  />
       </group>
       
       <group targetFramework="netcoreapp3.1">
-        <dependency id="MQTTnet" version="$nugetVersion" />
+        <dependency id="MQTTnet" version="0.0.1" />
       </group>
     </dependencies>
   </metadata>

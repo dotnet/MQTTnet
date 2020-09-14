@@ -22,6 +22,10 @@ namespace MQTTnet.Client.Options
         public List<X509Certificate> Certificates { get; set; }
 #endif
 
+#if NETCOREAPP3_1
+		public List<SslApplicationProtocol> ApplicationProtocols {get;set;}
+#endif
+
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
 
         [Obsolete("This property will be removed soon. Use CertificateValidationHandler instead.")]

@@ -1415,5 +1415,68 @@ namespace MQTTnet.Tests
                 Assert.AreEqual("a", undeliverd);
             }
         }
+
+        [TestMethod]
+        public async Task Intercept_ClientMessageQueue()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder()
+                    .WithClientMessageQueueInterceptor(c => c.ApplicationMessage.Topic = "a"));
+
+                var topicAReceived = false;
+                var topicBReceived = false;
+
+                var client = await testEnvironment.ConnectClientAsync();
+                client.UseApplicationMessageReceivedHandler(c =>
+                {
+                    if (c.ApplicationMessage.Topic == "a")
+                    {
+                        topicAReceived = true;
+                    }
+                    else if (c.ApplicationMessage.Topic == "b")
+                    {
+                        topicBReceived = true;
+                    }
+                });
+
+                await client.SubscribeAsync("a");
+                await client.SubscribeAsync("b");
+
+                await client.PublishAsync("b");
+
+                await Task.Delay(500);
+
+                Assert.IsTrue(topicAReceived);
+                Assert.IsFalse(topicBReceived);
+            }
+        }
+
+        [TestMethod]
+        public async Task Intercept_ClientMessageQueue_Different_QoS_Of_Subscription_And_Message()
+        {
+            const string topic = "a";
+
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder()
+                    .WithClientMessageQueueInterceptor(c => { })); // Interceptor does nothing but has to be present.
+
+                bool receivedMessage = false;
+                var client = await testEnvironment.ConnectClientAsync();
+                client.UseApplicationMessageReceivedHandler(c =>
+                {
+                    receivedMessage = true;
+                });
+
+                await client.SubscribeAsync(topic, MqttQualityOfServiceLevel.AtLeastOnce);
+
+                await client.PublishAsync(new MqttApplicationMessage{ Topic = topic, QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+
+                await Task.Delay(500);
+
+                Assert.IsTrue(receivedMessage);
+            }
+        }
     }
 }

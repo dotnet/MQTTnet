@@ -16,7 +16,6 @@
   <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1'">
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
-    <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
   </ItemGroup>
 
   <ItemGroup>

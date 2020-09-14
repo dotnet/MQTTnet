@@ -4,7 +4,7 @@ if ([string]::IsNullOrEmpty($assemblyVersion)) {$assemblyVersion = "0.0.1"}
 if ([string]::IsNullOrEmpty($nugetVersion)) {$nugetVersion = "0.0.1"}
 
 $vswhere = ${Env:\ProgramFiles(x86)} + '\Microsoft Visual Studio\Installer\vswhere'
-$msbuild = &$vswhere -products * -requires Microsoft.Component.MSBuild -latest -find MSBuild\**\Bin\MSBuild.exe
+$msbuild = &$vswhere -products * -requires Microsoft.Component.MSBuild -latest -find MSBuild\**\Bin\MSBuild.exe -prerelease
 
 Write-Host
 Write-Host "Assembly version = $assemblyVersion"

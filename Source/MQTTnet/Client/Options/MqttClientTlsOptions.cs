@@ -23,7 +23,7 @@ namespace MQTTnet.Client.Options
 #endif
 
 #if NETCOREAPP3_1
-		public List<SslApplicationProtocol> ApplicationProtocols {get;set;}
+        public List<SslApplicationProtocol> ApplicationProtocols { get; set; }
 #endif
 
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;

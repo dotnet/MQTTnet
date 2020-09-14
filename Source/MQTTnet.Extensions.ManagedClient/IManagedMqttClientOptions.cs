@@ -8,6 +8,8 @@ namespace MQTTnet.Extensions.ManagedClient
     {
         IMqttClientOptions ClientOptions { get; }
 
+        bool AutoReconnect { get; }
+
         TimeSpan AutoReconnectDelay { get; }
 
         TimeSpan ConnectionCheckInterval { get; }

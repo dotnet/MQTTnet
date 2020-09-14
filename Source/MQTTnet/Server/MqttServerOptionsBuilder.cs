@@ -175,6 +175,18 @@ namespace MQTTnet.Server
             return this;
         }
 
+        public MqttServerOptionsBuilder WithClientMessageQueueInterceptor(IMqttServerClientMessageQueueInterceptor value)
+        {
+            _options.ClientMessageQueueInterceptor = value;
+            return this;
+        }
+
+        public MqttServerOptionsBuilder WithClientMessageQueueInterceptor(Action<MqttClientMessageQueueInterceptorContext> value)
+        {
+            _options.ClientMessageQueueInterceptor = new MqttClientMessageQueueInterceptorDelegate(value);
+            return this;
+        }
+
         public MqttServerOptionsBuilder WithSubscriptionInterceptor(IMqttServerSubscriptionInterceptor value)
         {
             _options.SubscriptionInterceptor = value;

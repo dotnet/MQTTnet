@@ -5,27 +5,27 @@ namespace MQTTnet.Server
 {
     public class MqttServerClientDisconnectedHandlerDelegate : IMqttServerClientDisconnectedHandler
     {
-        private readonly Func<MqttServerClientDisconnectedEventArgs, Task> _handler;
+        private readonly Func<MqttServerClientDisconnectedEventArgs, Task> _callback;
 
-        public MqttServerClientDisconnectedHandlerDelegate(Action<MqttServerClientDisconnectedEventArgs> handler)
+        public MqttServerClientDisconnectedHandlerDelegate(Action<MqttServerClientDisconnectedEventArgs> callback)
         {
-            if (handler == null) throw new ArgumentNullException(nameof(handler));
+            if (callback == null) throw new ArgumentNullException(nameof(callback));
 
-            _handler = eventArgs =>
+            _callback = eventArgs =>
             {
-                handler(eventArgs);
+                callback(eventArgs);
                 return Task.FromResult(0);
             };
         }
 
-        public MqttServerClientDisconnectedHandlerDelegate(Func<MqttServerClientDisconnectedEventArgs, Task> handler)
+        public MqttServerClientDisconnectedHandlerDelegate(Func<MqttServerClientDisconnectedEventArgs, Task> callback)
         {
-            _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+            _callback = callback ?? throw new ArgumentNullException(nameof(callback));
         }
 
         public Task HandleClientDisconnectedAsync(MqttServerClientDisconnectedEventArgs eventArgs)
         {
-            return _handler(eventArgs);
+            return _callback(eventArgs);
         }
     }
 }

@@ -46,6 +46,7 @@ namespace MQTTnet.Extensions.ManagedClient
         public ManagedMqttClient(IMqttClient mqttClient, IMqttNetLogger logger)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
+            InternalClient = mqttClient;
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateScopedLogger(nameof(ManagedMqttClient));
@@ -55,6 +56,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public bool IsStarted => _connectionCancellationToken != null;
         
+        public IMqttClient InternalClient { get; }
+
         public int PendingApplicationMessagesCount => _messageQueue.Count;
         
         public IManagedMqttClientOptions Options { get; private set; }

@@ -316,7 +316,11 @@ namespace MQTTnet.Server
         {
             if (clientId != null)
             {
-                _connections.TryRemove(clientId, out _);
+                // in case it is a takeover _connections already contains the new connection
+                if (disconnectType != MqttClientDisconnectType.Takeover)
+                {
+                    _connections.TryRemove(clientId, out _);
+                }
 
                 if (!_options.EnablePersistentSessions)
                 {
@@ -364,38 +368,39 @@ namespace MQTTnet.Server
         {
             using (await _createConnectionGate.WaitAsync(_cancellationToken).ConfigureAwait(false))
             {
-                var isSessionPresent = _sessions.TryGetValue(connectPacket.ClientId, out var session);
-
-                var isConnectionPresent = _connections.TryGetValue(connectPacket.ClientId, out var existingConnection);
-                if (isConnectionPresent)
+                var session = _sessions.AddOrUpdate(connectPacket.ClientId, key =>
                 {
-                    await existingConnection.StopAsync(true).ConfigureAwait(false);
-                }
-
-                if (isSessionPresent)
+                    _logger.Verbose("Created a new session for client '{0}'.", key);
+                    return new MqttClientSession(key, connectionValidatorContext.SessionItems, _eventDispatcher, _options, _retainedMessagesManager, _rootLogger);
+                }, (key, existingSession) =>
                 {
                     if (connectPacket.CleanSession)
                     {
-                        session = null;
-
                         _logger.Verbose("Deleting existing session of client '{0}'.", connectPacket.ClientId);
+                        return new MqttClientSession(key, connectionValidatorContext.SessionItems, _eventDispatcher, _options, _retainedMessagesManager, _rootLogger);
                     }
                     else
                     {
                         _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
+                        return existingSession;
                     }
-                }
-
-                if (session == null)
-                {
-                    session = new MqttClientSession(connectPacket.ClientId, connectionValidatorContext.SessionItems, _eventDispatcher, _options, _retainedMessagesManager, _rootLogger);
-                    _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);
-                }
+                });
 
                 var connection = new MqttClientConnection(connectPacket, channelAdapter, session, _options, this, _retainedMessagesManager, onStart, onStop, _rootLogger);
+                MqttClientConnection existingConnection = null;
+                _connections.AddOrUpdate(connectPacket.ClientId, key => 
+                {
+                    return connection;
+                }, (key, tempexistingConnection) =>
+                {
+                    existingConnection = tempexistingConnection;
+                    return connection;
+                });
 
-                _connections[connection.ClientId] = connection;
-                _sessions[session.ClientId] = session;
+                if (existingConnection != null)
+                {
+                    await existingConnection.StopAsync(true).ConfigureAwait(false);
+                }
 
                 return connection;
             }

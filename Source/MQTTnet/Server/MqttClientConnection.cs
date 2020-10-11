@@ -257,6 +257,15 @@ namespace MQTTnet.Server
                     Session.WillMessage = null;
                 }
 
+                if (_isTakeover)
+                {
+                    // dont use SendAsync here _cancellationToken is already cancelled
+                    await _channelAdapter.SendPacketAsync(new MqttDisconnectPacket()
+                    {
+                        ReasonCode = MqttDisconnectReasonCode.SessionTakenOver
+                    }, TimeSpan.Zero, CancellationToken.None).ConfigureAwait(false);
+                }
+
                 _packetDispatcher.Reset();
 
                 _channelAdapter.ReadingPacketStartedCallback = null;

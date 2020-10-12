@@ -33,5 +33,7 @@ namespace MQTTnet.Server
         public IMqttRetainedMessagesManager RetainedMessagesManager { get; set; } = new MqttRetainedMessagesManager();
 
         public IMqttServerApplicationMessageInterceptor UndeliveredMessageInterceptor { get; set; }
+
+        public IMqttServerClientDisconnectedHandler ClientDisconnectedInterceptor { get; set; }
     }
 }

@@ -391,9 +391,9 @@ namespace MQTTnet.Server
                 _connections.AddOrUpdate(connectPacket.ClientId, key => 
                 {
                     return connection;
-                }, (key, tempexistingConnection) =>
+                }, (key, tempExistingConnection) =>
                 {
-                    existingConnection = tempexistingConnection;
+                    existingConnection = tempExistingConnection;
                     return connection;
                 });
 

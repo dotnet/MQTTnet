@@ -568,7 +568,6 @@ namespace MQTTnet.Client
 
                     await DisconnectAsync(new MqttClientDisconnectOptions() 
                     {
-                        // todo conversion
                         ReasonCode = (MqttClientDisconnectReason)(disconnectPacket.ReasonCode ?? MqttDisconnectReasonCode.UnspecifiedError)
                     }, cancellationToken).ConfigureAwait(false);
                 }

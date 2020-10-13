@@ -561,7 +561,7 @@ namespace MQTTnet.Client
                 {
                     await SendAsync(new MqttPingRespPacket(), cancellationToken).ConfigureAwait(false);
                 }
-                else if (packet is MqttDisconnectPacket disc)
+                else if (packet is MqttDisconnectPacket disconnectPacket)
                 {
                     // Also dispatch disconnect to waiting threads to generate a proper exception.
                     _packetDispatcher.Dispatch(packet);
@@ -569,7 +569,7 @@ namespace MQTTnet.Client
                     await DisconnectAsync(new MqttClientDisconnectOptions() 
                     {
                         // todo conversion
-                        ReasonCode = disc.ReasonCode
+                        ReasonCode = (MqttClientDisconnectReason)(disconnectPacket.ReasonCode ?? MqttDisconnectReasonCode.UnspecifiedError)
                     }, cancellationToken).ConfigureAwait(false);
                 }
                 else if (packet is MqttAuthPacket authPacket)

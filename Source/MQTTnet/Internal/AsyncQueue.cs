@@ -7,16 +7,15 @@ namespace MQTTnet.Internal
 {
     public sealed class AsyncQueue<TItem> : IDisposable
     {
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
-
-        private ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
-
+        SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
+        
         public int Count => _queue.Count;
 
         public void Enqueue(TItem item)
         {
             _queue.Enqueue(item);
-            _semaphore.Release();
+            _semaphore?.Release();
         }
 
         public async Task<AsyncQueueDequeueResult<TItem>> TryDequeueAsync(CancellationToken cancellationToken)
@@ -25,12 +24,17 @@ namespace MQTTnet.Internal
             {
                 try
                 {
+                    if (_semaphore == null)
+                    {
+                        return new AsyncQueueDequeueResult<TItem>(false, default);
+                    }
+
                     await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
                     cancellationToken.ThrowIfCancellationRequested();
                 }
                 catch (OperationCanceledException)
                 {
-                    return new AsyncQueueDequeueResult<TItem>(false, default(TItem));
+                    return new AsyncQueueDequeueResult<TItem>(false, default);
                 }
 
                 if (_queue.TryDequeue(out var item))
@@ -39,7 +43,7 @@ namespace MQTTnet.Internal
                 }
             }
 
-            return new AsyncQueueDequeueResult<TItem>(false, default(TItem));
+            return new AsyncQueueDequeueResult<TItem>(false, default);
         }
 
         public AsyncQueueDequeueResult<TItem> TryDequeue()
@@ -49,7 +53,7 @@ namespace MQTTnet.Internal
                 return new AsyncQueueDequeueResult<TItem>(true, item);
             }
 
-            return new AsyncQueueDequeueResult<TItem>(false, default(TItem));
+            return new AsyncQueueDequeueResult<TItem>(false, default);
         }
 
         public void Clear()
@@ -60,6 +64,7 @@ namespace MQTTnet.Internal
         public void Dispose()
         {
             _semaphore?.Dispose();
+            _semaphore = null;
         }
     }
 }

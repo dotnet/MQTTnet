@@ -16,6 +16,7 @@
 * [Client] Added direct support for Amazon AWS connections (requires .NET Core 3.1) (thanks to @henning-krause).
 * [ManagedClient] Exposed the internal MQTT client.
 * [Server] Added client message queue interceptor for QoS level (tahnks to @msallin).
+* [Server] Exposed _ClientDisconnectedInterceptor_ (thanks to @SeppPenner).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags> 

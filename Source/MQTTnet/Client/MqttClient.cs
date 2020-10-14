@@ -245,16 +245,22 @@ namespace MQTTnet.Client
 
         void Cleanup()
         {
-            _backgroundCancellationTokenSource?.Cancel(false);
-            _backgroundCancellationTokenSource?.Dispose();
-            _backgroundCancellationTokenSource = null;
+            try
+            {
+                _backgroundCancellationTokenSource?.Cancel(false);
+            }
+            finally
+            {
+                _backgroundCancellationTokenSource?.Dispose();
+                _backgroundCancellationTokenSource = null;
 
-            _publishPacketReceiverQueue?.Dispose();
-            _publishPacketReceiverQueue = null;
+                _publishPacketReceiverQueue?.Dispose();
+                _publishPacketReceiverQueue = null;
 
-            _adapter?.Dispose();
+                _adapter?.Dispose();
+            }
         }
-        
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -387,7 +393,7 @@ namespace MQTTnet.Client
         async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttBasePacket
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             ushort identifier = 0;
             if (requestPacket is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier.HasValue)
             {
@@ -436,7 +442,7 @@ namespace MQTTnet.Client
                 {
                     // Values described here: [MQTT-3.1.2-24].
                     var waitTime = keepAlivePeriod - _sendTracker.Elapsed;
-                    
+
                     if (waitTime <= TimeSpan.Zero)
                     {
                         await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket(), cancellationToken).ConfigureAwait(false);
@@ -566,7 +572,7 @@ namespace MQTTnet.Client
                     // Also dispatch disconnect to waiting threads to generate a proper exception.
                     _packetDispatcher.Dispatch(packet);
 
-                    await DisconnectAsync(new MqttClientDisconnectOptions() 
+                    await DisconnectAsync(new MqttClientDisconnectOptions()
                     {
                         ReasonCode = (MqttClientDisconnectReason)(disconnectPacket.ReasonCode ?? MqttDisconnectReasonCode.UnspecifiedError)
                     }, cancellationToken).ConfigureAwait(false);
@@ -631,7 +637,6 @@ namespace MQTTnet.Client
                 try
                 {
                     var publishPacketDequeueResult = await _publishPacketReceiverQueue.TryDequeueAsync(cancellationToken);
-
                     if (!publishPacketDequeueResult.IsSuccess)
                     {
                         return;

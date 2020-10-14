@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
+using MQTTnet.Client.Options;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -82,6 +83,41 @@ namespace MQTTnet.Tests
                 var session = sessionStatus.First();
 
                 Assert.AreEqual(true, session.Items["can_subscribe_x"]);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task Manage_Session_MaxParallel()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                testEnvironment.IgnoreClientLogErrors = true;
+                var serverOptions = new MqttServerOptionsBuilder();
+                await testEnvironment.StartServerAsync(serverOptions);
+
+                var options = new MqttClientOptionsBuilder()
+                    .WithClientId("1")
+                    ;
+
+                var clients = await Task.WhenAll(Enumerable.Range(0, 10)
+                    .Select(i => TryConnect(testEnvironment, options)));
+
+                var connectedClients = clients.Where(c => c?.IsConnected ?? false).ToList();
+
+                Assert.AreEqual(1, connectedClients.Count);
+            }
+        }
+
+        private async Task<IMqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
+        {
+            try
+            {
+                return await testEnvironment.ConnectClientAsync(options);
+            }
+            catch (System.Exception)
+            {
+                return null;
             }
         }
     }

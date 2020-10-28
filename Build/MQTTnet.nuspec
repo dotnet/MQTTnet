@@ -14,7 +14,8 @@
     <releaseNotes>
 * [Client] Fixed wrong value for "ClientWasConnected" in "MqttClientDisconnectedEventArgs" #976 (thanks to @dbeinder).
 * [Client] Added direct support for Amazon AWS connections (requires .NET Core 3.1) (thanks to @henning-krause).
-* [Client] handle disconnect package and propagate disconnect reason code (thanks to @JanEggers)
+* [Client] handle disconnect package and propagate disconnect reason code (thanks to @JanEggers)      
+* [Client] Fixed an issue when checking for revoked SSL certificates for target platform NETCOREAPP3_1.
 * [ManagedClient] Exposed the internal MQTT client.
 * [Server] Added client message queue interceptor for QoS level (thanks to @msallin).
 * [Server] improved behavior when multiple connections fight over a session (thanks to @JanEggers)

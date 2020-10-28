@@ -34,9 +34,9 @@ namespace MQTTnet.PacketDispatcher
             }
 
             ushort identifier = 0;
-            if (packet is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier.HasValue)
+            if (packet is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier > 0)
             {
-                identifier = packetWithIdentifier.PacketIdentifier.Value;
+                identifier = packetWithIdentifier.PacketIdentifier;
             }
 
             var type = packet.GetType();

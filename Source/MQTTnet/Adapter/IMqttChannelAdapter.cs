@@ -21,9 +21,7 @@ namespace MQTTnet.Adapter
 
         long BytesReceived { get; }
 
-        Action ReadingPacketStartedCallback { get; set; }
-
-        Action ReadingPacketCompletedCallback { get; set; }
+        bool IsReadingPacket { get; }
 
         Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken);
 

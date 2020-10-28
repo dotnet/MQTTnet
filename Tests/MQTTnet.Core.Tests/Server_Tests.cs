@@ -6,14 +6,12 @@ using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Client.Subscribing;
-using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +19,7 @@ using System.Threading.Tasks;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class Server_Tests
+    public sealed class Server_Tests
     {
         public TestContext TestContext { get; set; }
 
@@ -331,7 +329,7 @@ namespace MQTTnet.Tests
 
                     await Task.Delay(10);
                 }
-                
+
                 var c2 = await testEnvironment.ConnectClientAsync();
 
                 var messageBuilder = new MqttApplicationMessageBuilder();
@@ -1220,68 +1218,6 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public async Task Close_Idle_Connection()
-        {
-            using (var testEnvironment = new TestEnvironment(TestContext))
-            {
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
-
-                var client = new CrossPlatformSocket(AddressFamily.InterNetwork);
-                await client.ConnectAsync("localhost", testEnvironment.ServerPort, CancellationToken.None);
-
-                // Don't send anything. The server should close the connection.
-                await Task.Delay(TimeSpan.FromSeconds(3));
-
-                try
-                {
-                    var receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
-                    if (receivedBytes == 0)
-                    {
-                        return;
-                    }
-
-                    Assert.Fail("Receive should throw an exception.");
-                }
-                catch (SocketException)
-                {
-                }
-            }
-        }
-
-        [TestMethod]
-        public async Task Send_Garbage()
-        {
-            using (var testEnvironment = new TestEnvironment(TestContext))
-            {
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
-
-                // Send an invalid packet and ensure that the server will close the connection and stay in a waiting state
-                // forever. This is security related.
-                var client = new CrossPlatformSocket(AddressFamily.InterNetwork);
-                await client.ConnectAsync("localhost", testEnvironment.ServerPort, CancellationToken.None);
-
-                var buffer = Encoding.UTF8.GetBytes("Garbage");
-                await client.SendAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
-
-                await Task.Delay(TimeSpan.FromSeconds(3));
-
-                try
-                {
-                    var receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
-                    if (receivedBytes == 0)
-                    {
-                        return;
-                    }
-
-                    Assert.Fail("Receive should throw an exception.");
-                }
-                catch (SocketException)
-                {
-                }
-            }
-        }
-
-        [TestMethod]
         public async Task Do_Not_Send_Retained_Messages_For_Denied_Subscription()
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
@@ -1471,7 +1407,7 @@ namespace MQTTnet.Tests
 
                 await client.SubscribeAsync(topic, MqttQualityOfServiceLevel.AtLeastOnce);
 
-                await client.PublishAsync(new MqttApplicationMessage{ Topic = topic, QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                await client.PublishAsync(new MqttApplicationMessage { Topic = topic, QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
 
                 await Task.Delay(500);
 

@@ -2,8 +2,10 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttPublishPacket : MqttBasePublishPacket
+    public sealed class MqttPublishPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
+        public ushort PacketIdentifier { get; set; }
+
         public bool Retain { get; set; }
 
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Internal;
@@ -9,7 +10,65 @@ namespace MQTTnet.Tests
     public class AsyncLock_Tests
     {
         [TestMethod]
-        public void AsyncLock()
+        public async Task Lock_Serial_Calls()
+        {
+            var sum = 0;
+
+            var @lock = new AsyncLock();
+            for (var i = 0; i < 100; i++)
+            {
+                using (await @lock.WaitAsync().ConfigureAwait(false))
+                {
+                    sum++;
+                }
+            }
+
+            Assert.AreEqual(100, sum);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(TaskCanceledException))]
+        public async Task Test_Cancellation()
+        {
+            var @lock = new AsyncLock();
+
+            // This call will never "release" the lock due to missing _using_.
+            await @lock.WaitAsync().ConfigureAwait(false);
+
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
+            {
+                await @lock.WaitAsync(cts.Token).ConfigureAwait(false);
+            }
+        }
+
+        //[TestMethod]
+        //public async Task Test_Cancellation_With_Later_Access()
+        //{
+        //    var @lock = new AsyncLock();
+
+        //    var releaser = await @lock.WaitAsync().ConfigureAwait(false);
+
+        //    try
+        //    {
+        //        using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
+        //        {
+        //            await @lock.WaitAsync(cts.Token).ConfigureAwait(false);
+        //        }
+        //    }
+        //    catch (OperationCanceledException)
+        //    {
+        //    }
+            
+        //    releaser.Dispose();
+
+        //    using (await @lock.WaitAsync().ConfigureAwait(false))
+        //    {
+        //        // When the method finished, the thread got access.
+        //    }
+        //}
+
+        [TestMethod]
+        public void Lock_10_Parallel_Tasks()
         {
             const int ThreadsCount = 10;
 

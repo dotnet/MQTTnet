@@ -66,10 +66,10 @@ namespace MQTTnet.AspNetCore
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
         public long BytesSent { get; set; }
+
         public long BytesReceived { get; set; }
 
-        public Action ReadingPacketStartedCallback { get; set; }
-        public Action ReadingPacketCompletedCallback { get; set; }
+        public bool IsReadingPacket { get; private set; }
 
         IHttpContextFeature Http => Connection.Features.Get<IHttpContextFeature>();
 
@@ -128,7 +128,7 @@ namespace MQTTnet.AspNetCore
                             else
                             {
                                 // we did receive something but the message is not yet complete
-                                ReadingPacketStartedCallback?.Invoke();
+                                IsReadingPacket = true;
                             }
                         }
                         else if (readResult.IsCompleted)
@@ -147,14 +147,14 @@ namespace MQTTnet.AspNetCore
             }
             catch (Exception e)
             {
-                // completing the cannels makes sure that there is no more data read after a protocol error
+                // completing the channel makes sure that there is no more data read after a protocol error
                 _input?.Complete(e);
                 _output?.Complete(e);
                 throw;
             }
             finally
             {
-                ReadingPacketCompletedCallback?.Invoke();
+                IsReadingPacket = false;
             }
 
             cancellationToken.ThrowIfCancellationRequested();

@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttUserProperty
+    public sealed class MqttUserProperty
     {
         public MqttUserProperty(string name, string value)
         {

@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttUnsubAckPacketProperties
+    public sealed class MqttUnsubAckPacketProperties
     {
         public string ReasonString { get; set; }
 

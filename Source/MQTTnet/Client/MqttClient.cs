@@ -395,9 +395,9 @@ namespace MQTTnet.Client
             cancellationToken.ThrowIfCancellationRequested();
 
             ushort identifier = 0;
-            if (requestPacket is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier.HasValue)
+            if (requestPacket is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier > 0)
             {
-                identifier = packetWithIdentifier.PacketIdentifier.Value;
+                identifier = packetWithIdentifier.PacketIdentifier;
             }
 
             using (var packetAwaiter = _packetDispatcher.AddAwaiter<TResponsePacket>(identifier))
@@ -636,7 +636,8 @@ namespace MQTTnet.Client
             {
                 try
                 {
-                    var publishPacketDequeueResult = await _publishPacketReceiverQueue.TryDequeueAsync(cancellationToken);
+                    var publishPacketDequeueResult =
+                        await _publishPacketReceiverQueue.TryDequeueAsync(cancellationToken);
                     if (!publishPacketDequeueResult.IsSuccess)
                     {
                         return;
@@ -676,6 +677,9 @@ namespace MQTTnet.Client
                     {
                         throw new MqttProtocolViolationException("Received a not supported QoS level.");
                     }
+                }
+                catch (OperationCanceledException)
+                {
                 }
                 catch (Exception exception)
                 {

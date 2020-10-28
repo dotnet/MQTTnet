@@ -51,10 +51,10 @@ namespace MQTTnet.Adapter
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
         public long BytesSent => Interlocked.Read(ref _bytesSent);
+
         public long BytesReceived => Interlocked.Read(ref _bytesReceived);
 
-        public Action ReadingPacketStartedCallback { get; set; }
-        public Action ReadingPacketCompletedCallback { get; set; }
+        public bool IsReadingPacket { get; private set; }
 
         public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
@@ -79,7 +79,7 @@ namespace MQTTnet.Adapter
                     throw;
                 }
 
-                WrapException(exception);
+                WrapAndThrowException(exception);
             }
         }
 
@@ -107,7 +107,7 @@ namespace MQTTnet.Adapter
                     throw;
                 }
 
-                WrapException(exception);
+                WrapAndThrowException(exception);
             }
         }
 
@@ -148,7 +148,7 @@ namespace MQTTnet.Adapter
                             throw;
                         }
 
-                        WrapException(exception);
+                        WrapAndThrowException(exception);
                     }
                     finally
                     {
@@ -214,7 +214,7 @@ namespace MQTTnet.Adapter
                     throw;
                 }
 
-                WrapException(exception);
+                WrapAndThrowException(exception);
             }
 
             return null;
@@ -253,7 +253,7 @@ namespace MQTTnet.Adapter
                     return null;
                 }
 
-                ReadingPacketStartedCallback?.Invoke();
+                IsReadingPacket = true;
 
                 var fixedHeader = readFixedHeaderResult.FixedHeader;
                 if (fixedHeader.RemainingLength == 0)
@@ -293,7 +293,7 @@ namespace MQTTnet.Adapter
             }
             finally
             {
-                ReadingPacketCompletedCallback?.Invoke();
+                IsReadingPacket = false;
             }
         }
 
@@ -304,7 +304,7 @@ namespace MQTTnet.Adapter
                    exception is MqttCommunicationException;
         }
 
-        static void WrapException(Exception exception)
+        static void WrapAndThrowException(Exception exception)
         {
             if (exception is IOException && exception.InnerException is SocketException innerException)
             {
@@ -313,10 +313,14 @@ namespace MQTTnet.Adapter
 
             if (exception is SocketException socketException)
             {
-                if (socketException.SocketErrorCode == SocketError.ConnectionAborted ||
-                    socketException.SocketErrorCode == SocketError.OperationAborted)
+                if (socketException.SocketErrorCode == SocketError.OperationAborted)
                 {
                     throw new OperationCanceledException();
+                }
+                
+                if (socketException.SocketErrorCode == SocketError.ConnectionAborted)
+                {
+                    throw new MqttCommunicationException(socketException);
                 }
             }
 

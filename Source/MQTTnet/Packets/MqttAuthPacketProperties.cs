@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttAuthPacketProperties
+    public sealed class MqttAuthPacketProperties
     {
         public string AuthenticationMethod { get; set; }
 

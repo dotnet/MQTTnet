@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttConnectPacketProperties
+    public sealed class MqttConnectPacketProperties
     {
         public uint? WillDelayInterval { get; set; }
 

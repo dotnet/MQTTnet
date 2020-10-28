@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttSubscribePacketProperties
+    public sealed class MqttSubscribePacketProperties
     {
         public uint? SubscriptionIdentifier { get; set; }
 

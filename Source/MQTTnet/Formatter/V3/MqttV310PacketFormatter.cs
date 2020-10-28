@@ -210,7 +210,7 @@ namespace MQTTnet.Formatter.V3
 
             var topic = receivedMqttPacket.Body.ReadStringWithLengthPrefix();
 
-            ushort? packetIdentifier = null;
+            ushort packetIdentifier = 0;
             if (qualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
             {
                 packetIdentifier = receivedMqttPacket.Body.ReadTwoByteInteger();
@@ -414,12 +414,12 @@ namespace MQTTnet.Formatter.V3
 
         static byte EncodePubRelPacket(MqttPubRelPacket packet, IMqttPacketWriter packetWriter)
         {
-            if (!packet.PacketIdentifier.HasValue)
+            if (packet.PacketIdentifier == 0)
             {
                 throw new MqttProtocolViolationException("PubRel packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.Write(packet.PacketIdentifier);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRel, 0x02);
         }
@@ -432,12 +432,12 @@ namespace MQTTnet.Formatter.V3
 
             if (packet.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
             {
-                if (!packet.PacketIdentifier.HasValue)
+                if (packet.PacketIdentifier == 0)
                 {
                     throw new MqttProtocolViolationException("Publish packet has no packet identifier.");
                 }
 
-                packetWriter.Write(packet.PacketIdentifier.Value);
+                packetWriter.Write(packet.PacketIdentifier);
             }
             else
             {
@@ -471,36 +471,36 @@ namespace MQTTnet.Formatter.V3
 
         static byte EncodePubAckPacket(MqttPubAckPacket packet, IMqttPacketWriter packetWriter)
         {
-            if (!packet.PacketIdentifier.HasValue)
+            if (packet.PacketIdentifier == 0)
             {
                 throw new MqttProtocolViolationException("PubAck packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.Write(packet.PacketIdentifier);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubAck);
         }
 
         static byte EncodePubRecPacket(MqttPubRecPacket packet, IMqttPacketWriter packetWriter)
         {
-            if (!packet.PacketIdentifier.HasValue)
+            if (packet.PacketIdentifier == 0)
             {
                 throw new MqttProtocolViolationException("PubRec packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.Write(packet.PacketIdentifier);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubRec);
         }
 
         static byte EncodePubCompPacket(MqttPubCompPacket packet, IMqttPacketWriter packetWriter)
         {
-            if (!packet.PacketIdentifier.HasValue)
+            if (packet.PacketIdentifier == 0)
             {
                 throw new MqttProtocolViolationException("PubComp packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.Write(packet.PacketIdentifier);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.PubComp);
         }
@@ -509,12 +509,12 @@ namespace MQTTnet.Formatter.V3
         {
             if (!packet.TopicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
 
-            if (!packet.PacketIdentifier.HasValue)
+            if (packet.PacketIdentifier == 0)
             {
                 throw new MqttProtocolViolationException("Subscribe packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.Write(packet.PacketIdentifier);
 
             if (packet.TopicFilters?.Count > 0)
             {
@@ -530,12 +530,12 @@ namespace MQTTnet.Formatter.V3
 
         static byte EncodeSubAckPacket(MqttSubAckPacket packet, IMqttPacketWriter packetWriter)
         {
-            if (!packet.PacketIdentifier.HasValue)
+            if (packet.PacketIdentifier == 0)
             {
                 throw new MqttProtocolViolationException("SubAck packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.Write(packet.PacketIdentifier);
 
             if (packet.ReturnCodes?.Any() == true)
             {
@@ -552,12 +552,12 @@ namespace MQTTnet.Formatter.V3
         {
             if (!packet.TopicFilters.Any()) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.10.3-2].");
 
-            if (!packet.PacketIdentifier.HasValue)
+            if (packet.PacketIdentifier == 0)
             {
                 throw new MqttProtocolViolationException("Unsubscribe packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.Write(packet.PacketIdentifier);
 
             if (packet.TopicFilters?.Any() == true)
             {
@@ -572,12 +572,12 @@ namespace MQTTnet.Formatter.V3
 
         static byte EncodeUnsubAckPacket(MqttUnsubAckPacket packet, IMqttPacketWriter packetWriter)
         {
-            if (!packet.PacketIdentifier.HasValue)
+            if (packet.PacketIdentifier == 0)
             {
                 throw new MqttProtocolViolationException("UnsubAck packet has no packet identifier.");
             }
 
-            packetWriter.Write(packet.PacketIdentifier.Value);
+            packetWriter.Write(packet.PacketIdentifier);
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.UnsubAck);
         }
 

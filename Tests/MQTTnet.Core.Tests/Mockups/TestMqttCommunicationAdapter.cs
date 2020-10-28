@@ -11,7 +11,7 @@ namespace MQTTnet.Tests.Mockups
 {
     public class TestMqttCommunicationAdapter : IMqttChannelAdapter
     {
-        private readonly BlockingCollection<MqttBasePacket> _incomingPackets = new BlockingCollection<MqttBasePacket>();
+        readonly BlockingCollection<MqttBasePacket> _incomingPackets = new BlockingCollection<MqttBasePacket>();
 
         public TestMqttCommunicationAdapter Partner { get; set; }
 
@@ -26,8 +26,7 @@ namespace MQTTnet.Tests.Mockups
         public long BytesSent { get; }
         public long BytesReceived { get; }
 
-        public Action ReadingPacketStartedCallback { get; set; }
-        public Action ReadingPacketCompletedCallback { get; set; }
+        public bool IsReadingPacket { get; }
 
         public void Dispose()
         {

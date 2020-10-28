@@ -9,6 +9,7 @@ using MQTTnet.Server.Status;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -61,6 +62,11 @@ namespace MQTTnet.Server
             {
                 await connection.StopAsync().ConfigureAwait(false);
             }
+        }
+
+        public List<MqttClientConnection> GetConnections()
+        {
+            return _connections.Values.ToList();
         }
 
         public Task HandleClientConnectionAsync(IMqttChannelAdapter clientAdapter)

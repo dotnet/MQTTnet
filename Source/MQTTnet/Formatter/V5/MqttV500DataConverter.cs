@@ -200,6 +200,18 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
+        public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, Server.MqttClientSubscribeResult subscribeResult)
+        {
+            var subackPacket = new MqttSubAckPacket
+            {
+                PacketIdentifier = subscribePacket.PacketIdentifier
+            };
+
+            subackPacket.ReasonCodes.AddRange(subscribeResult.ReasonCodes);
+
+            return subackPacket;
+        }
+
         public MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
@@ -213,6 +225,15 @@ namespace MQTTnet.Formatter.V5
             packet.Properties.UserProperties = options.UserProperties;
 
             return packet;
+        }
+
+        public MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, List<MqttUnsubscribeReasonCode> reasonCodes)
+        {
+            return new MqttUnsubAckPacket
+            {
+                PacketIdentifier = unsubscribePacket.PacketIdentifier,
+                ReasonCodes = reasonCodes
+            };
         }
 
         public MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options)

@@ -4,9 +4,9 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public class MqttSubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public sealed class MqttSubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
-        public ushort? PacketIdentifier { get; set; }
+        public ushort PacketIdentifier { get; set; }
 
         public List<MqttSubscribeReturnCode> ReturnCodes { get; set; } = new List<MqttSubscribeReturnCode>();
 

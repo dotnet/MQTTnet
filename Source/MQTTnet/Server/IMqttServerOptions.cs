@@ -12,6 +12,7 @@ namespace MQTTnet.Server
         MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; }
 
         TimeSpan DefaultCommunicationTimeout { get; }
+        TimeSpan KeepAliveMonitorInterval { get; }
 
         IMqttServerConnectionValidator ConnectionValidator { get; }
         IMqttServerSubscriptionInterceptor SubscriptionInterceptor { get; }

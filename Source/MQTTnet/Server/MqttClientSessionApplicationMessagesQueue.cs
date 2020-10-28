@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientSessionApplicationMessagesQueue : Disposable
+    public sealed class MqttClientSessionApplicationMessagesQueue : IDisposable
     {
-        private readonly AsyncQueue<MqttQueuedApplicationMessage> _messageQueue = new AsyncQueue<MqttQueuedApplicationMessage>();
-        
-        private readonly IMqttServerOptions _options;
+        readonly AsyncQueue<MqttQueuedApplicationMessage> _messageQueue = new AsyncQueue<MqttQueuedApplicationMessage>();
+
+        readonly IMqttServerOptions _options;
 
         public MqttClientSessionApplicationMessagesQueue(IMqttServerOptions options)
         {
@@ -30,22 +30,6 @@ namespace MQTTnet.Server
                 SubscriptionQualityOfServiceLevel = qualityOfServiceLevel,
                 IsRetainedMessage = isRetainedMessage
             });
-        }
-
-        public void Clear()
-        {
-            _messageQueue.Clear();
-        }
-
-        public async Task<MqttQueuedApplicationMessage> TakeAsync(CancellationToken cancellationToken)
-        {
-            var dequeueResult = await _messageQueue.TryDequeueAsync(cancellationToken).ConfigureAwait(false);
-            if (!dequeueResult.IsSuccess)
-            {
-                return null;
-            }
-
-            return dequeueResult.Item;
         }
 
         public void Enqueue(MqttQueuedApplicationMessage queuedApplicationMessage)
@@ -71,14 +55,25 @@ namespace MQTTnet.Server
             }
         }
 
-        protected override void Dispose(bool disposing)
+        public async Task<MqttQueuedApplicationMessage> DequeueAsync(CancellationToken cancellationToken)
         {
-            if (disposing)
+            var dequeueResult = await _messageQueue.TryDequeueAsync(cancellationToken).ConfigureAwait(false);
+            if (!dequeueResult.IsSuccess)
             {
-                _messageQueue.Dispose();
+                return null;
             }
 
-            base.Dispose(disposing);
+            return dequeueResult.Item;
+        }
+
+        public void Clear()
+        {
+            _messageQueue.Clear();
+        }
+
+        public void Dispose()
+        {
+            _messageQueue?.Dispose();
         }
     }
 }

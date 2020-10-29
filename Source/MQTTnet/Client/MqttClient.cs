@@ -77,7 +77,7 @@ namespace MQTTnet.Client
                 Options = options;
 
                 _packetIdentifierProvider.Reset();
-                _packetDispatcher.Reset();
+                _packetDispatcher.Cancel();
 
                 _backgroundCancellationTokenSource = new CancellationTokenSource();
                 var backgroundCancellationToken = _backgroundCancellationTokenSource.Token;
@@ -266,8 +266,6 @@ namespace MQTTnet.Client
             if (disposing)
             {
                 Cleanup();
-
-                DisconnectedHandler = null;
             }
 
             base.Dispose(disposing);
@@ -464,6 +462,7 @@ namespace MQTTnet.Client
 
                 if (exception is OperationCanceledException)
                 {
+                    return;
                 }
                 else if (exception is MqttCommunicationException)
                 {
@@ -567,15 +566,15 @@ namespace MQTTnet.Client
                 {
                     await SendAsync(new MqttPingRespPacket(), cancellationToken).ConfigureAwait(false);
                 }
-                else if (packet is MqttDisconnectPacket disconnectPacket)
+                else if (packet is MqttDisconnectPacket)
                 {
                     // Also dispatch disconnect to waiting threads to generate a proper exception.
                     _packetDispatcher.Dispatch(packet);
 
-                    await DisconnectAsync(new MqttClientDisconnectOptions()
+                    if (!DisconnectIsPending())
                     {
-                        ReasonCode = (MqttClientDisconnectReason)(disconnectPacket.ReasonCode ?? MqttDisconnectReasonCode.UnspecifiedError)
-                    }, cancellationToken).ConfigureAwait(false);
+                        await DisconnectInternalAsync(_packetReceiverTask, null, null);
+                    }
                 }
                 else if (packet is MqttAuthPacket authPacket)
                 {
@@ -626,7 +625,7 @@ namespace MQTTnet.Client
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Error while enqueueing application message.");
+                _logger.Error(exception, "Error while queueing application message.");
             }
         }
 
@@ -636,8 +635,7 @@ namespace MQTTnet.Client
             {
                 try
                 {
-                    var publishPacketDequeueResult =
-                        await _publishPacketReceiverQueue.TryDequeueAsync(cancellationToken);
+                    var publishPacketDequeueResult = await _publishPacketReceiverQueue.TryDequeueAsync(cancellationToken);
                     if (!publishPacketDequeueResult.IsSuccess)
                     {
                         return;

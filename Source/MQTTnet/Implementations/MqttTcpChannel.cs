@@ -138,16 +138,21 @@ namespace MQTTnet.Implementations
 
             try
             {
+                var stream = _stream;
+
+                if (stream == null)
+                {
+                    return 0;
+                }
+
+                if (!stream.CanRead)
+                {
+                    return 0;
+                }
+
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(Dispose))
                 {
-                    var stream = _stream;
-
-                    if (stream == null)
-                    {
-                        return 0;
-                    }
-
                     return await stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -182,7 +187,7 @@ namespace MQTTnet.Implementations
 
                     if (stream == null)
                     {
-                        throw new ObjectDisposedException(nameof(stream));
+                        throw new MqttCommunicationException("The TCP connection is closed.");
                     }
 
                     await stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
@@ -194,6 +199,7 @@ namespace MQTTnet.Implementations
             }
             catch (ObjectDisposedException)
             {
+                throw new MqttCommunicationException("The TCP connection is closed.");
             }
             catch (IOException exception)
             {

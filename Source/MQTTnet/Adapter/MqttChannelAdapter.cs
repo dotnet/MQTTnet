@@ -116,49 +116,42 @@ namespace MQTTnet.Adapter
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
 
-            try
+            using (await _syncRoot.WaitAsync(cancellationToken).ConfigureAwait(false))
             {
-                using (await _syncRoot.WaitAsync(cancellationToken).ConfigureAwait(false))
+                // Check for cancellation here again because "WaitAsync" might take some time.
+                cancellationToken.ThrowIfCancellationRequested();
+
+                try
                 {
-                    // Check for cancellation here again because "WaitAsync" might take some time.
-                    cancellationToken.ThrowIfCancellationRequested();
+                    var packetData = PacketFormatterAdapter.Encode(packet);
 
-                    try
+                    if (timeout == TimeSpan.Zero)
                     {
-                        var packetData = PacketFormatterAdapter.Encode(packet);
-
-                        if (timeout == TimeSpan.Zero)
-                        {
-                            await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            await MqttTaskTimeout.WaitAsync(
-                                t => _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, t), timeout, cancellationToken).ConfigureAwait(false);
-                        }
-
-                        Interlocked.Add(ref _bytesReceived, packetData.Count);
-
-                        _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Count, packet);
+                        await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
                     }
-                    catch (Exception exception)
+                    else
                     {
-                        if (IsWrappedException(exception))
-                        {
-                            throw;
-                        }
+                        await MqttTaskTimeout.WaitAsync(
+                            t => _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, t), timeout, cancellationToken).ConfigureAwait(false);
+                    }
 
-                        WrapAndThrowException(exception);
-                    }
-                    finally
-                    {
-                        PacketFormatterAdapter.FreeBuffer();
-                    }
+                    Interlocked.Add(ref _bytesReceived, packetData.Count);
+
+                    _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Count, packet);
                 }
-            }
-            catch (ObjectDisposedException)
-            {
-                throw new OperationCanceledException();
+                catch (Exception exception)
+                {
+                    if (IsWrappedException(exception))
+                    {
+                        throw;
+                    }
+
+                    WrapAndThrowException(exception);
+                }
+                finally
+                {
+                    PacketFormatterAdapter.FreeBuffer();
+                }
             }
         }
 

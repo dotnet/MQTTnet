@@ -51,7 +51,7 @@ namespace MQTTnet.PacketDispatcher
             throw new MqttProtocolViolationException($"Received packet '{packet}' at an unexpected time.");
         }
 
-        public void Reset()
+        public void Cancel()
         {
             foreach (var awaiter in _awaiters)
             {

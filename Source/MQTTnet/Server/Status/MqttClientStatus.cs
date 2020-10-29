@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Server.Status
 {
-    public class MqttClientStatus : IMqttClientStatus
+    public sealed class MqttClientStatus : IMqttClientStatus
     {
         readonly MqttClientConnection _connection;
 

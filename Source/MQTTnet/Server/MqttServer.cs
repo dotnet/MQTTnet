@@ -186,10 +186,10 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                await _clientSessionsManager.StopAsync().ConfigureAwait(false);
-
                 _cancellationTokenSource.Cancel(false);
 
+                await _clientSessionsManager.CloseAllConnectionsAsync().ConfigureAwait(false);
+                
                 foreach (var adapter in _adapters)
                 {
                     adapter.ClientHandler = null;

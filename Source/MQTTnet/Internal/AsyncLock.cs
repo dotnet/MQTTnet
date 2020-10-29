@@ -7,8 +7,10 @@ namespace MQTTnet.Internal
     // From Stephen Toub (https://blogs.msdn.microsoft.com/pfxteam/2012/02/12/building-async-coordination-primitives-part-6-asynclock/)
     public sealed class AsyncLock : IDisposable
     {
-        readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        readonly object _syncRoot = new object();
         readonly Task<IDisposable> _releaser;
+
+        SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public AsyncLock()
         {
@@ -36,21 +38,33 @@ namespace MQTTnet.Internal
 
         public void Dispose()
         {
-            _semaphore?.Dispose();
+            lock (_syncRoot)
+            {
+                _semaphore?.Dispose();
+                _semaphore = null;
+            }
         }
 
-        class Releaser : IDisposable
+        internal void Release()
         {
-            readonly AsyncLock _toRelease;
-
-            internal Releaser(AsyncLock toRelease)
+            lock (_syncRoot)
             {
-                _toRelease = toRelease;
+                _semaphore?.Release();
+            }
+        }
+
+        sealed class Releaser : IDisposable
+        {
+            readonly AsyncLock _lock;
+
+            internal Releaser(AsyncLock @lock)
+            {
+                _lock = @lock;
             }
 
             public void Dispose()
             {
-                _toRelease._semaphore.Release();
+                _lock.Release();
             }
         }
     }

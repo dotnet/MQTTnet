@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -101,6 +102,16 @@ namespace MQTTnet
         {
             _qualityOfServiceLevel = qualityOfServiceLevel;
             return this;
+        }
+
+        public MqttApplicationMessageBuilder WithQualityOfServiceLevel(int qualityOfServiceLevel)
+        {
+            if (qualityOfServiceLevel < 0 || qualityOfServiceLevel > 2)
+            {
+                throw new ArgumentOutOfRangeException(nameof(qualityOfServiceLevel));
+            }
+
+            return WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qualityOfServiceLevel);
         }
 
         public MqttApplicationMessageBuilder WithRetainFlag(bool value = true)

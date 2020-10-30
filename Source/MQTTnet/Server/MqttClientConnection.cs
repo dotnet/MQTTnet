@@ -105,7 +105,7 @@ namespace MQTTnet.Server
 
             StopInternal();
 
-            await _packageReceiverTask;
+            await (_packageReceiverTask ?? PlatformAbstractionLayer.CompletedTask);
         }
 
         public void ResetStatistics()

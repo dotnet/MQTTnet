@@ -646,11 +646,11 @@ namespace MQTTnet.Tests
                             {
                                 // Clear retained message.
                                 await client.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("r" + i2)
-                                    .WithPayload(new byte[0]).WithRetainFlag().Build());
+                                    .WithPayload(new byte[0]).WithRetainFlag().WithQualityOfServiceLevel(1).Build());
 
                                 // Set retained message.
                                 await client.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("r" + i2)
-                                    .WithPayload("value").WithRetainFlag().Build());
+                                    .WithPayload("value").WithRetainFlag().WithQualityOfServiceLevel(1).Build());
 
                                 await client.DisconnectAsync();
                             }

@@ -42,6 +42,7 @@ namespace MQTTnet.Client
         bool _cleanDisconnectInitiated;
         long _isDisconnectPending;
         bool _isConnected;
+        MqttClientDisconnectReason _disconnectReason;
 
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
@@ -122,6 +123,8 @@ namespace MQTTnet.Client
             }
             catch (Exception exception)
             {
+                _disconnectReason = MqttClientDisconnectReason.UnspecifiedError;
+
                 _logger.Error(exception, "Error while connecting with server.");
 
                 if (!DisconnectIsPending())
@@ -141,6 +144,7 @@ namespace MQTTnet.Client
 
             try
             {
+                _disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
                 _cleanDisconnectInitiated = true;
 
                 if (IsConnected)
@@ -306,8 +310,7 @@ namespace MQTTnet.Client
         async Task DisconnectInternalAsync(Task sender, Exception exception, MqttClientAuthenticateResult authenticateResult)
         {
             var clientWasConnected = _isConnected;
-            var reasonCode = MqttClientDisconnectReason.NormalDisconnection;
-
+            
             TryInitiateDisconnect();
             _isConnected = false;
 
@@ -324,7 +327,6 @@ namespace MQTTnet.Client
             catch (Exception adapterException)
             {
                 _logger.Warning(adapterException, "Error while disconnecting from adapter.");
-                reasonCode = MqttClientDisconnectReason.UnspecifiedError;
             }
 
             try
@@ -340,7 +342,6 @@ namespace MQTTnet.Client
             catch (Exception e)
             {
                 _logger.Warning(e, "Error while waiting for internal tasks.");
-                reasonCode = MqttClientDisconnectReason.UnspecifiedError;
             }
             finally
             {
@@ -354,7 +355,7 @@ namespace MQTTnet.Client
                 {
                     // This handler must be executed in a new thread because otherwise a dead lock may happen
                     // when trying to reconnect in that handler etc.
-                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult, reasonCode))).Forget(_logger);
+                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult, _disconnectReason))).Forget(_logger);
                 }
             }
         }
@@ -566,8 +567,10 @@ namespace MQTTnet.Client
                 {
                     await SendAsync(new MqttPingRespPacket(), cancellationToken).ConfigureAwait(false);
                 }
-                else if (packet is MqttDisconnectPacket)
+                else if (packet is MqttDisconnectPacket disconnectPacket)
                 {
+                    _disconnectReason = (MqttClientDisconnectReason)(disconnectPacket.ReasonCode ?? MqttDisconnectReasonCode.NormalDisconnection);
+
                     // Also dispatch disconnect to waiting threads to generate a proper exception.
                     _packetDispatcher.Dispatch(packet);
 

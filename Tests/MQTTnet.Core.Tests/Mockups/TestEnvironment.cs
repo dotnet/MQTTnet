@@ -68,10 +68,13 @@ namespace MQTTnet.Tests.Mockups
 
         public IMqttClient CreateClient()
         {
-            var client = _mqttFactory.CreateMqttClient(ClientLogger);
-            _clients.Add(client);
+            lock (_clients)
+            {
+                var client = _mqttFactory.CreateMqttClient(ClientLogger);
+                _clients.Add(client);
 
-            return new TestClientWrapper(client, TestContext);
+                return new TestClientWrapper(client, TestContext);
+            }
         }
 
         public Task<IMqttServer> StartServerAsync()

@@ -16,14 +16,14 @@ using WebSocket4Net;
 
 namespace MQTTnet.Extensions.WebSocket4Net
 {
-    public class WebSocket4NetMqttChannel : IMqttChannel
+    public sealed class WebSocket4NetMqttChannel : IMqttChannel
     {
-        private readonly BlockingCollection<byte> _receiveBuffer = new BlockingCollection<byte>();
+        readonly BlockingCollection<byte> _receiveBuffer = new BlockingCollection<byte>();
 
-        private readonly IMqttClientOptions _clientOptions;
-        private readonly MqttClientWebSocketOptions _webSocketOptions;
+        readonly IMqttClientOptions _clientOptions;
+        readonly MqttClientWebSocketOptions _webSocketOptions;
 
-        private WebSocket _webSocket;
+        WebSocket _webSocket;
 
         public WebSocket4NetMqttChannel(IMqttClientOptions clientOptions, MqttClientWebSocketOptions webSocketOptions)
         {
@@ -166,12 +166,12 @@ namespace MQTTnet.Extensions.WebSocket4Net
             _webSocket = null;
         }
 
-        private void OnError(object sender, ErrorEventArgs e)
+        static void OnError(object sender, ErrorEventArgs e)
         {
             System.Diagnostics.Debug.Write(e.Exception.ToString());
         }
 
-        private void OnDataReceived(object sender, DataReceivedEventArgs e)
+        void OnDataReceived(object sender, DataReceivedEventArgs e)
         {
             foreach (var @byte in e.Data)
             {
@@ -179,7 +179,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
             }
         }
 
-        private async Task ConnectInternalAsync(CancellationToken cancellationToken)
+        async Task ConnectInternalAsync(CancellationToken cancellationToken)
         {
             _webSocket.Error += OnError;
             _webSocket.DataReceived += OnDataReceived;

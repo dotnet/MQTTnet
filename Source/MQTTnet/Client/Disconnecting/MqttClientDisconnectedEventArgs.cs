@@ -3,14 +3,16 @@ using MQTTnet.Client.Connecting;
 
 namespace MQTTnet.Client.Disconnecting
 {
-    public class MqttClientDisconnectedEventArgs : EventArgs
+    public sealed class MqttClientDisconnectedEventArgs : EventArgs
     {
-        public MqttClientDisconnectedEventArgs(bool clientWasConnected, Exception exception, MqttClientAuthenticateResult authenticateResult, MqttClientDisconnectReason reasonCode)
+        public MqttClientDisconnectedEventArgs(bool clientWasConnected, Exception exception, MqttClientAuthenticateResult authenticateResult, MqttClientDisconnectReason reason)
         {
             ClientWasConnected = clientWasConnected;
             Exception = exception;
             AuthenticateResult = authenticateResult;
-            ReasonCode = reasonCode;
+            Reason = reason;
+
+            ReasonCode = reason;
         }
 
         public bool ClientWasConnected { get; }
@@ -19,6 +21,9 @@ namespace MQTTnet.Client.Disconnecting
 
         public MqttClientAuthenticateResult AuthenticateResult { get; }
 
-        public MqttClientDisconnectReason ReasonCode { get; set; } = MqttClientDisconnectReason.NormalDisconnection;
+        public MqttClientDisconnectReason Reason { get; set; }
+
+        [Obsolete("Please use 'Reason' instead. This property will be removed in the future!")]
+        public MqttClientDisconnectReason ReasonCode { get; set; }
     }
 }

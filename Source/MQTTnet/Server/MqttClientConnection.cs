@@ -41,6 +41,7 @@ namespace MQTTnet.Server
         long _sentPacketsCount = 1; // Start with 1 because the CONNECT packet is not counted anywhere.
         long _receivedApplicationMessagesCount;
         long _sentApplicationMessagesCount;
+        MqttDisconnectReasonCode _disconnectReason;
 
         public MqttClientConnection(MqttConnectPacket connectPacket,
             IMqttChannelAdapter channelAdapter,
@@ -70,9 +71,9 @@ namespace MQTTnet.Server
             _lastNonKeepAlivePacketReceivedTimestamp = LastPacketReceivedTimestamp;
         }
 
-        public MqttConnectPacket ConnectPacket { get; }
+        public MqttClientConnectionStatus Status { get; private set; } = MqttClientConnectionStatus.Initializing;
 
-        public bool IsTakeOver { get; set; }
+        public MqttConnectPacket ConnectPacket { get; }
 
         public string ClientId => ConnectPacket.ClientId;
 
@@ -82,9 +83,12 @@ namespace MQTTnet.Server
 
         public MqttClientSession Session { get; }
 
-        public async Task StopAsync()
+        public async Task StopAsync(MqttDisconnectReasonCode reason)
         {
-            if (IsTakeOver)
+            Status = MqttClientConnectionStatus.Finalizing;
+            _disconnectReason = reason;
+
+            if (reason == MqttDisconnectReasonCode.SessionTakenOver || reason == MqttDisconnectReasonCode.KeepAliveTimeout)
             {
                 // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
                 // token because the entire connection is closed (disposed) as soon as the cancellation
@@ -94,7 +98,7 @@ namespace MQTTnet.Server
                 {
                     await _channelAdapter.SendPacketAsync(new MqttDisconnectPacket
                     {
-                        ReasonCode = MqttDisconnectReasonCode.SessionTakenOver
+                        ReasonCode = reason
                     }, _serverOptions.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
                 }
                 catch (Exception exception)
@@ -161,6 +165,8 @@ namespace MQTTnet.Server
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
+                    Status = MqttClientConnectionStatus.Running;
+
                     var packet = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
                     if (packet == null)
                     {
@@ -242,7 +248,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                if (IsTakeOver)
+                if (_disconnectReason == MqttDisconnectReasonCode.SessionTakenOver)
                 {
                     disconnectType = MqttClientDisconnectType.Takeover;
                 }

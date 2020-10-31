@@ -2,7 +2,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Formatter;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests
@@ -17,7 +19,9 @@ namespace MQTTnet.Tests
             {
                 var server = await testEnvironment.StartServerAsync();
 
-                var client = await testEnvironment.ConnectLowLevelClientAsync(o => o.WithCommunicationTimeout(TimeSpan.FromSeconds(2))).ConfigureAwait(false);
+                var client = await testEnvironment.ConnectLowLevelClientAsync(o => o
+                    .WithCommunicationTimeout(TimeSpan.FromSeconds(2))
+                    .WithProtocolVersion(MqttProtocolVersion.V500)).ConfigureAwait(false);
 
                 await client.SendAsync(new MqttConnectPacket
                 {
@@ -32,11 +36,23 @@ namespace MQTTnet.Tests
 
                 await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
                 await Task.Delay(500);
+                var responsePacket = await client.ReceiveAsync(CancellationToken.None);
+                Assert.IsTrue(responsePacket is MqttPingRespPacket);
+
                 await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
                 await Task.Delay(500);
+                responsePacket = await client.ReceiveAsync(CancellationToken.None);
+                Assert.IsTrue(responsePacket is MqttPingRespPacket);
+
                 await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
                 await Task.Delay(500);
+                responsePacket = await client.ReceiveAsync(CancellationToken.None);
+                Assert.IsTrue(responsePacket is MqttPingRespPacket);
+
                 await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+                await Task.Delay(500);
+                responsePacket = await client.ReceiveAsync(CancellationToken.None);
+                Assert.IsTrue(responsePacket is MqttPingRespPacket);
 
                 // If we reach this point everything works as expected (server did not close the connection
                 // due to proper ping messages.
@@ -44,14 +60,16 @@ namespace MQTTnet.Tests
 
                 await Task.Delay(1200);
                 await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+                responsePacket = await client.ReceiveAsync(CancellationToken.None);
+                Assert.IsTrue(responsePacket is MqttPingRespPacket);
 
                 // Now we will wait longer than 1.5 so that the server will close the connection.
+                responsePacket = await client.ReceiveAsync(CancellationToken.None);
 
-                await Task.Delay(3000);
+                var disconnectPacket = responsePacket as MqttDisconnectPacket;
 
-                await server.StopAsync();
-
-                await client.ReceiveAsync(CancellationToken.None);
+                Assert.IsTrue(disconnectPacket != null);
+                Assert.AreEqual(disconnectPacket.ReasonCode, MqttDisconnectReasonCode.KeepAliveTimeout);
             }
         }
     }

@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Implementations;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
@@ -69,11 +70,11 @@ namespace MQTTnet.Server
         {
             try
             {
-                //if (connection.IsStopped)
-                //{
-                //    // The connection is already dead so there is no need to check it.
-                //    return;
-                //}
+                if (connection.Status != MqttClientConnectionStatus.Running)
+                {
+                    // The connection is already dead or just created so there is no need to check it.
+                    return;
+                }
 
                 if (connection.ConnectPacket.KeepAlivePeriod == 0)
                 {
@@ -104,7 +105,7 @@ namespace MQTTnet.Server
 
                 // Execute the disconnection in background so that the keep alive monitor can continue
                 // with checking other connections.
-                Task.Run(() => connection.StopAsync());
+                Task.Run(() => connection.StopAsync(MqttDisconnectReasonCode.KeepAliveTimeout));
             }
             catch (Exception exception)
             {

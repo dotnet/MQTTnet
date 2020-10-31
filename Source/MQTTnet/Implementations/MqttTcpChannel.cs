@@ -88,7 +88,7 @@ namespace MQTTnet.Implementations
                             ApplicationProtocols = _options.TlsOptions.ApplicationProtocols,
                             ClientCertificates = LoadCertificates(),
                             EnabledSslProtocols = _options.TlsOptions.SslProtocol,
-                            CertificateRevocationCheckMode = _options.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.Online : X509RevocationMode.NoCheck,
+                            CertificateRevocationCheckMode = _options.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : X509RevocationMode.Online,
                             TargetHost = _options.Server
                         };
 

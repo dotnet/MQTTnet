@@ -212,9 +212,15 @@ namespace MQTTnet.Server.Mqtt
             // Configure encrypted connections
             if (_settings.EncryptedTcpEndPoint.Enabled)
             {
+#if NETCOREAPP3_1 || NET5_0
+                options
+                    .WithEncryptedEndpoint()
+                    .WithEncryptionSslProtocol(SslProtocols.Tls13);
+#else
                 options
                     .WithEncryptedEndpoint()
                     .WithEncryptionSslProtocol(SslProtocols.Tls12);
+#endif
 
                 if (!string.IsNullOrEmpty(_settings.EncryptedTcpEndPoint?.Certificate?.Path))
                 {

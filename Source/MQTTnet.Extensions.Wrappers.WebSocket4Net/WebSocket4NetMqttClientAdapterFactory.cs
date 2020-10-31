@@ -52,7 +52,11 @@ namespace MQTTnet.TestApp.NetCore
                 if (channelOptions.TlsOptions.UseTls)
                 {
                     uri = "wss://" + channelOptions.Uri;
+#if NETCOREAPP3_0 || NET5_0
+                    sslProtocols = SslProtocols.Tls13;
+#else
                     sslProtocols = SslProtocols.Tls12;
+#endif
                 }
 
                 var subProtocol = channelOptions.SubProtocols.FirstOrDefault() ?? string.Empty;

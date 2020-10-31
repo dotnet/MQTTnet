@@ -39,7 +39,11 @@ namespace MQTTnet.Implementations
 
             CreateStreams();
 
+#if NETCOREAPP3_0 || NET5_0
+            IsSecureConnection = socket.Information.ProtectionLevel >= SocketProtectionLevel.Tls13;
+#else
             IsSecureConnection = socket.Information.ProtectionLevel >= SocketProtectionLevel.Tls12;
+#endif
             ClientCertificate = clientCertificate;
 
             Endpoint = _socket.Information.RemoteAddress + ":" + _socket.Information.RemotePort;
@@ -75,11 +79,23 @@ namespace MQTTnet.Implementations
                     _socket.Control.IgnorableServerCertificateErrors.Add(ignorableChainValidationResult);
                 }
 
+#if NETCOREAPP3_0 || NET5_0
+                var socketProtectionLevel = SocketProtectionLevel.Tls13;
+                if (_options.TlsOptions.SslProtocol == SslProtocols.Tls12)
+                {
+                    socketProtectionLevel = SocketProtectionLevel.Tls12;
+                }
+                else if (_options.TlsOptions.SslProtocol == SslProtocols.Tls11)
+                {
+                    socketProtectionLevel = SocketProtectionLevel.Tls11;
+                }
+#else                
                 var socketProtectionLevel = SocketProtectionLevel.Tls12;
                 if (_options.TlsOptions.SslProtocol == SslProtocols.Tls11)
                 {
                     socketProtectionLevel = SocketProtectionLevel.Tls11;
                 }
+#endif
                 else if (_options.TlsOptions.SslProtocol == SslProtocols.Tls)
                 {
                     socketProtectionLevel = SocketProtectionLevel.Tls10;

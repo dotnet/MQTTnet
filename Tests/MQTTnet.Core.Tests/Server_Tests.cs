@@ -471,11 +471,19 @@ namespace MQTTnet.Tests
                 var client1 = await testEnvironment.ConnectClientAsync(options);
                 await Task.Delay(500);
 
+                MqttClientDisconnectReason disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
+                client1.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(c =>
+                {
+                    disconnectReason = c.Reason;
+                });
+
                 var client2 = await testEnvironment.ConnectClientAsync(options);
                 await Task.Delay(500);
 
                 Assert.IsFalse(client1.IsConnected);
                 Assert.IsTrue(client2.IsConnected);
+
+                Assert.AreEqual(MqttClientDisconnectReason.SessionTakenOver, disconnectReason);
             }
         }
 

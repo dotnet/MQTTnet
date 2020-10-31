@@ -15,6 +15,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.Tests
 {
@@ -464,6 +465,7 @@ namespace MQTTnet.Tests
 
                 var options = new MqttClientOptionsBuilder()
                     .WithCleanSession(false)
+                    .WithProtocolVersion(MqttProtocolVersion.V500) // Disconnect reason is only available in MQTT 5+
                     .WithClientId("a");
 
                 var client1 = await testEnvironment.ConnectClientAsync(options);

@@ -11,12 +11,12 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Extensions.Rpc
 {
-    public sealed class MqttRpcClient : IDisposable
+    public sealed class MqttRpcClient : IMqttRpcClient
     {
-        private readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
-        private readonly IMqttClient _mqttClient;
-        private readonly IMqttRpcClientOptions _options;
-        private readonly RpcAwareApplicationMessageReceivedHandler _applicationMessageReceivedHandler;
+        readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
+        readonly IMqttClient _mqttClient;
+        readonly IMqttRpcClientOptions _options;
+        readonly RpcAwareApplicationMessageReceivedHandler _applicationMessageReceivedHandler;
 
         [Obsolete("Use MqttRpcClient(IMqttClient mqttClient, IMqttRpcClientOptions options).")]
         public MqttRpcClient(IMqttClient mqttClient) : this(mqttClient, new MqttRpcClientOptions())
@@ -53,11 +53,6 @@ namespace MQTTnet.Extensions.Rpc
         public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, CancellationToken cancellationToken)
         {
             if (methodName == null) throw new ArgumentNullException(nameof(methodName));
-
-            if (methodName.Contains("/") || methodName.Contains("+") || methodName.Contains("#"))
-            {
-                throw new ArgumentException("The method name cannot contain /, + or #.");
-            }
 
             if (!(_mqttClient.ApplicationMessageReceivedHandler is RpcAwareApplicationMessageReceivedHandler))
             {
@@ -139,7 +134,7 @@ namespace MQTTnet.Extensions.Rpc
             }
         }
 
-        private Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
+        Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
             if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var tcs))
             {

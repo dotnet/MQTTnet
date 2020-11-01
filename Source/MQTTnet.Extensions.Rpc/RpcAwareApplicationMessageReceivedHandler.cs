@@ -4,9 +4,9 @@ using MQTTnet.Client.Receiving;
 
 namespace MQTTnet.Extensions.Rpc
 {
-    public class RpcAwareApplicationMessageReceivedHandler : IMqttApplicationMessageReceivedHandler
+    public sealed class RpcAwareApplicationMessageReceivedHandler : IMqttApplicationMessageReceivedHandler
     {
-        private readonly Func<MqttApplicationMessageReceivedEventArgs, Task> _handleReceivedApplicationMessageAsync;
+        readonly Func<MqttApplicationMessageReceivedEventArgs, Task> _handleReceivedApplicationMessageAsync;
 
         public RpcAwareApplicationMessageReceivedHandler(
             IMqttApplicationMessageReceivedHandler originalHandler,
@@ -18,14 +18,14 @@ namespace MQTTnet.Extensions.Rpc
 
         public IMqttApplicationMessageReceivedHandler OriginalHandler { get; }
 
-        public async Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
+        public Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
             if (OriginalHandler != null)
             {
-                await OriginalHandler.HandleApplicationMessageReceivedAsync(eventArgs).ConfigureAwait(false);
+                return OriginalHandler.HandleApplicationMessageReceivedAsync(eventArgs);
             }
 
-            await _handleReceivedApplicationMessageAsync(eventArgs).ConfigureAwait(false);
+            return _handleReceivedApplicationMessageAsync(eventArgs);
         }
     }
 }

@@ -3,7 +3,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Extensions.Rpc.Options.TopicGeneration
 {
-    public class TopicGenerationContext
+    public sealed class TopicGenerationContext
     {
         public string MethodName { get; set; }
 

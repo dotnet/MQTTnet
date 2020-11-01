@@ -3,7 +3,7 @@ using System;
 
 namespace MQTTnet.Extensions.Rpc.Options
 {
-    public class MqttRpcClientOptionsBuilder
+    public sealed class MqttRpcClientOptionsBuilder
     {
         IMqttRpcClientTopicGenerationStrategy _topicGenerationStrategy = new DefaultMqttRpcClientTopicGenerationStrategy();
 

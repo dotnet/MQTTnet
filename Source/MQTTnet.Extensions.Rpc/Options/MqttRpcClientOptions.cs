@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Extensions.Rpc.Options
 {
-    public class MqttRpcClientOptions : IMqttRpcClientOptions
+    public sealed class MqttRpcClientOptions : IMqttRpcClientOptions
     {
         public IMqttRpcClientTopicGenerationStrategy TopicGenerationStrategy { get; set; } = new DefaultMqttRpcClientTopicGenerationStrategy();
     }

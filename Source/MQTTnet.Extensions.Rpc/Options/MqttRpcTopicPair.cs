@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Extensions.Rpc.Options
 {
-    public class MqttRpcTopicPair
+    public sealed class MqttRpcTopicPair
     {
         public string RequestTopic { get; set; }
 

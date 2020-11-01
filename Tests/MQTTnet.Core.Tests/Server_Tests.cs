@@ -668,6 +668,8 @@ namespace MQTTnet.Tests
                             testEnvironment2.TrackException(exception);
                         }
                     }));
+
+                    await Task.Delay(10);
                 }
 
                 await Task.WhenAll(tasks);

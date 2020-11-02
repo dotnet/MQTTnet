@@ -167,7 +167,7 @@ namespace MQTTnet.Server
                 {
                     Status = MqttClientConnectionStatus.Running;
 
-                    var packet = await _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
+                    var packet = await _channelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
                     if (packet == null)
                     {
                         // The client has closed the connection gracefully.

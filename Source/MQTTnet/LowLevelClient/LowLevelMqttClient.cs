@@ -18,10 +18,9 @@ namespace MQTTnet.LowLevelClient
 
         public LowLevelMqttClient(IMqttClientAdapterFactory clientAdapterFactory, IMqttNetLogger logger)
         {
-            if (clientAdapterFactory is null) throw new ArgumentNullException(nameof(clientAdapterFactory));
-            if (logger is null) throw new ArgumentNullException(nameof(logger));
+            _clientAdapterFactory = clientAdapterFactory ?? throw new ArgumentNullException(nameof(clientAdapterFactory));
 
-            _clientAdapterFactory = clientAdapterFactory;
+            if (logger is null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.CreateScopedLogger(nameof(LowLevelMqttClient));
         }
 
@@ -95,7 +94,7 @@ namespace MQTTnet.LowLevelClient
 
             try
             {
-                return await _adapter.ReceivePacketAsync(_options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
+                return await _adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception)
             {

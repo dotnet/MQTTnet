@@ -105,7 +105,10 @@ namespace MQTTnet.Server
 
                 // Execute the disconnection in background so that the keep alive monitor can continue
                 // with checking other connections.
-                Task.Run(() => connection.StopAsync(MqttDisconnectReasonCode.KeepAliveTimeout));
+                // We do not need to wait for the task so no await is needed.
+                // Also the internal state of the connection must be swapped to "Finalizing" because the
+                // next iteration of the keep alive timer happens.
+                var _ = connection.StopAsync(MqttDisconnectReasonCode.KeepAliveTimeout);
             }
             catch (Exception exception)
             {

@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using OperationCanceledException = System.OperationCanceledException;
 
 namespace MQTTnet.Server
 {
@@ -59,13 +60,23 @@ namespace MQTTnet.Server
                 MqttConnectPacket connectPacket;
                 try
                 {
-                    var firstPacket = await channelAdapter.ReceivePacketAsync(_options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false);
-                    connectPacket = firstPacket as MqttConnectPacket;
-                    if (connectPacket == null)
+                    using (var timeoutToken = new CancellationTokenSource(_options.DefaultCommunicationTimeout))
                     {
-                        _logger.Warning(null, "The first packet from client '{0}' was no 'CONNECT' packet [MQTT-3.1.0-1].", channelAdapter.Endpoint);
-                        return;
+                        var firstPacket = await channelAdapter.ReceivePacketAsync(timeoutToken.Token).ConfigureAwait(false);
+                        connectPacket = firstPacket as MqttConnectPacket;
+                        if (connectPacket == null)
+                        {
+                            _logger.Warning(null,
+                                "The first packet from client '{0}' was no 'CONNECT' packet [MQTT-3.1.0-1].",
+                                channelAdapter.Endpoint);
+                            return;
+                        }
                     }
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.Warning(null, "Client '{0}' connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
+                    return;
                 }
                 catch (MqttCommunicationTimedOutException)
                 {

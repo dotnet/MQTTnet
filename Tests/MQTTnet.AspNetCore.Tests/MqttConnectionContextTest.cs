@@ -34,7 +34,7 @@ namespace MQTTnet.AspNetCore.Tests
 
             pipe.Receive.Writer.Complete();
 
-            await Assert.ThrowsExceptionAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None));
+            await Assert.ThrowsExceptionAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(CancellationToken.None));
         }
 
         [TestMethod]
@@ -49,10 +49,10 @@ namespace MQTTnet.AspNetCore.Tests
             
             await pipe.Receive.Writer.WriteAsync(writer.AddMqttHeader(MqttControlPacketType.Connect, new byte[0]));
 
-            await Assert.ThrowsExceptionAsync<MqttProtocolViolationException>(() => ctx.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None));
+            await Assert.ThrowsExceptionAsync<MqttProtocolViolationException>(() => ctx.ReceivePacketAsync(CancellationToken.None));
 
             // the first exception should complete the pipes so if someone tries to use the connection after that it should throw immidiatly
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() =>  ctx.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None));
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() =>  ctx.ReceivePacketAsync(CancellationToken.None));
         }
 
         // COMMENTED OUT DUE TO DEAD LOCK? OR VERY VERY SLOW PERFORMANCE ON LOCAL DEV MACHINE. TEST WAS STILL RUNNING AFTER SEVERAL MINUTES!

@@ -96,9 +96,7 @@ namespace MQTTnet.Tests
                 var serverOptions = new MqttServerOptionsBuilder();
                 await testEnvironment.StartServerAsync(serverOptions);
 
-                var options = new MqttClientOptionsBuilder()
-                    .WithClientId("1")
-                    ;
+                var options = new MqttClientOptionsBuilder().WithClientId("1");
 
                 var clients = await Task.WhenAll(Enumerable.Range(0, 10)
                     .Select(i => TryConnect(testEnvironment, options)));
@@ -109,7 +107,7 @@ namespace MQTTnet.Tests
             }
         }
 
-        private async Task<IMqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
+        async Task<IMqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
         {
             try
             {

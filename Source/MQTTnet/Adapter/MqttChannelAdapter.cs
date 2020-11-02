@@ -155,42 +155,33 @@ namespace MQTTnet.Adapter
             }
         }
 
-        public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task<MqttBasePacket> ReceivePacketAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
 
             try
             {
-                ReceivedMqttPacket receivedMqttPacket;
-                if (timeout == TimeSpan.Zero)
-                {
-                    receivedMqttPacket = await ReceiveAsync(cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    receivedMqttPacket = await MqttTaskTimeout.WaitAsync(ReceiveAsync, timeout, cancellationToken).ConfigureAwait(false);
-                }
-
-                if (receivedMqttPacket == null || cancellationToken.IsCancellationRequested)
+                var receivedPacket = await ReceiveAsync(cancellationToken).ConfigureAwait(false);
+                if (receivedPacket == null || cancellationToken.IsCancellationRequested)
                 {
                     return null;
                 }
 
-                Interlocked.Add(ref _bytesSent, receivedMqttPacket.TotalLength);
+                Interlocked.Add(ref _bytesSent, receivedPacket.TotalLength);
 
                 if (PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.Unknown)
                 {
-                    PacketFormatterAdapter.DetectProtocolVersion(receivedMqttPacket);
+                    PacketFormatterAdapter.DetectProtocolVersion(receivedPacket);
                 }
 
-                var packet = PacketFormatterAdapter.Decode(receivedMqttPacket);
+                var packet = PacketFormatterAdapter.Decode(receivedPacket);
                 if (packet == null)
                 {
                     throw new MqttProtocolViolationException("Received malformed packet.");
                 }
 
-                _logger.Verbose("RX ({0} bytes) <<< {1}", receivedMqttPacket.TotalLength, packet);
+                _logger.Verbose("RX ({0} bytes) <<< {1}", receivedPacket.TotalLength, packet);
 
                 return packet;
             }

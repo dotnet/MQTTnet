@@ -169,6 +169,7 @@ namespace MQTTnet.Tests.Mockups
         {
             foreach (var mqttClient in _clients)
             {
+                mqttClient.DisconnectAsync().GetAwaiter().GetResult();
                 mqttClient?.Dispose();
             }
 

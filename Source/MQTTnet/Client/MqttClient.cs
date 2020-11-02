@@ -493,7 +493,7 @@ namespace MQTTnet.Client
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var packet = await _adapter.ReceivePacketAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
+                    var packet = await _adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
 
                     if (cancellationToken.IsCancellationRequested)
                     {

@@ -92,7 +92,7 @@ namespace MQTTnet.AspNetCore
             return Task.CompletedTask;
         }
 
-        public async Task<MqttBasePacket> ReceivePacketAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task<MqttBasePacket> ReceivePacketAsync(CancellationToken cancellationToken)
         {
             var input = Connection.Transport.Input;
 

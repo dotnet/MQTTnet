@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Client.Connecting
 {
@@ -25,6 +26,8 @@ namespace MQTTnet.Client.Connecting
         public string ReasonString { get; set; }
 
         public ushort? ReceiveMaximum { get; set; }
+        
+        public MqttQualityOfServiceLevel? MaximumQoS { get; set; }
 
         public string ResponseInformation { get; set; }
 

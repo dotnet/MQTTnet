@@ -93,6 +93,7 @@ namespace MQTTnet.Formatter.V5
                 MaximumPacketSize = connAckPacket.Properties?.MaximumPacketSize,
                 ReasonString = connAckPacket.Properties?.ReasonString,
                 ReceiveMaximum = connAckPacket.Properties?.ReceiveMaximum,
+                MaximumQoS = connAckPacket.Properties?.MaximumQoS,
                 ResponseInformation = connAckPacket.Properties?.ResponseInformation,
                 TopicAliasMaximum = connAckPacket.Properties?.TopicAliasMaximum,
                 ServerReference = connAckPacket.Properties?.ServerReference,

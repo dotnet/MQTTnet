@@ -10,15 +10,9 @@ namespace MQTTnet.Formatter.V5
     {
         private readonly IMqttPacketWriter _packetWriter;
 
-        public MqttV500PacketEncoder()
-            : this(new MqttPacketWriter())
-        {
-
-        }
-
         public MqttV500PacketEncoder(IMqttPacketWriter packetWriter)
         {
-            _packetWriter = packetWriter;
+            _packetWriter = packetWriter ?? throw new ArgumentNullException(nameof(packetWriter));
         }
 
 

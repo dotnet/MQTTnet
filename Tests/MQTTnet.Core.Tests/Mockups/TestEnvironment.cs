@@ -5,6 +5,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -43,6 +44,8 @@ namespace MQTTnet.Tests.Mockups
 
             ServerLogger.LogMessagePublished += (s, e) =>
             {
+                Debug.WriteLine(e.LogMessage.ToString());
+
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {
                     lock (_serverErrors)
@@ -54,6 +57,8 @@ namespace MQTTnet.Tests.Mockups
 
             ClientLogger.LogMessagePublished += (s, e) =>
             {
+                Debug.WriteLine(e.LogMessage.ToString());
+
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {
                     lock (_clientErrors)
@@ -121,6 +126,18 @@ namespace MQTTnet.Tests.Mockups
 
             var client = CreateClient();
             await client.ConnectAsync(options).ConfigureAwait(false);
+
+            return client;
+        }
+
+        public async Task<IMqttClient> ConnectClientAsync(Action<MqttClientOptionsBuilder> optionsBuilder)
+        {
+            var options = new MqttClientOptionsBuilder();
+            options = options.WithTcpServer("localhost", ServerPort);
+            optionsBuilder?.Invoke(options);
+
+            var client = CreateClient();
+            await client.ConnectAsync(options.Build()).ConfigureAwait(false);
 
             return client;
         }

@@ -452,7 +452,12 @@ namespace MQTTnet.Server
                             await SendAsync(publishPacket).ConfigureAwait(false);
                             await awaiter1.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
 
-                            await SendAsync(new MqttPubRelPacket { PacketIdentifier = publishPacket.PacketIdentifier }).ConfigureAwait(false);
+                            await SendAsync(new MqttPubRelPacket
+                            {
+                                PacketIdentifier = publishPacket.PacketIdentifier,
+                                ReasonCode = MqttPubRelReasonCode.Success
+                            }, cancellationToken).ConfigureAwait(false);
+
                             await awaiter2.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
                         }
                     }

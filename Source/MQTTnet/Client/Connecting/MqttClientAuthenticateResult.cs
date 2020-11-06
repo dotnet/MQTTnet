@@ -27,7 +27,7 @@ namespace MQTTnet.Client.Connecting
 
         public ushort? ReceiveMaximum { get; set; }
         
-        public MqttQualityOfServiceLevel? MaximumQoS { get; set; }
+        public MqttQualityOfServiceLevel MaximumQoS { get; set; }
 
         public string ResponseInformation { get; set; }
 

@@ -89,6 +89,7 @@ namespace MQTTnet.Formatter.V5
             {
                 throw new MqttProtocolViolationException($"Unexpected Maximum QoS value: {value}");
             }
+            
             return (MqttQualityOfServiceLevel)value;
         }
 

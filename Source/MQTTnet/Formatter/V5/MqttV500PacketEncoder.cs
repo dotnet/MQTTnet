@@ -197,6 +197,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteAuthenticationData(packet.Properties.AuthenticationData);
                 propertiesWriter.WriteRetainAvailable(packet.Properties.RetainAvailable);
                 propertiesWriter.WriteReceiveMaximum(packet.Properties.ReceiveMaximum);
+                propertiesWriter.WriteMaximumQoS(packet.Properties.MaximumQoS);
                 propertiesWriter.WriteAssignedClientIdentifier(packet.Properties.AssignedClientIdentifier);
                 propertiesWriter.WriteTopicAliasMaximum(packet.Properties.TopicAliasMaximum);
                 propertiesWriter.WriteReasonString(packet.Properties.ReasonString);

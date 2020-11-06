@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Internal
 {
-    // From Stephen Toub (https://blogs.msdn.microsoft.com/pfxteam/2012/02/12/building-async-coordination-primitives-part-6-asynclock/)
     public sealed class AsyncLock : IDisposable
     {
         readonly object _syncRoot = new object();
@@ -24,10 +23,19 @@ namespace MQTTnet.Internal
 
         public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
         {
-            var task = _semaphore.WaitAsync(cancellationToken);
-            if (task.Status == TaskStatus.RanToCompletion)
+            Task task;
+            lock (_syncRoot)
             {
-                return _releaser;
+                if (_semaphore == null)
+                {
+                    throw new ObjectDisposedException("The AsyncLock is disposed.");
+                }
+
+                task = _semaphore.WaitAsync(cancellationToken);
+                if (task.Status == TaskStatus.RanToCompletion)
+                {
+                    return _releaser;
+                }
             }
 
             return task.ContinueWith(

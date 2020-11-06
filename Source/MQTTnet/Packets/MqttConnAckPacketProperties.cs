@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
@@ -7,6 +8,8 @@ namespace MQTTnet.Packets
         public uint? SessionExpiryInterval { get; set; }
 
         public ushort? ReceiveMaximum { get; set; }
+
+        public MqttQualityOfServiceLevel? MaximumQoS { get; set; }
 
         public bool? RetainAvailable { get; set; }
 

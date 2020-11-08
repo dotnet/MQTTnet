@@ -456,7 +456,7 @@ namespace MQTTnet.Server
                             {
                                 PacketIdentifier = publishPacket.PacketIdentifier,
                                 ReasonCode = MqttPubRelReasonCode.Success
-                            }, cancellationToken).ConfigureAwait(false);
+                            }).ConfigureAwait(false);
 
                             await awaiter2.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
                         }

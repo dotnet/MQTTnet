@@ -251,13 +251,18 @@ namespace MQTTnet.Formatter.V5
             var propertiesWriter = new MqttV500PropertiesWriter();
             if (packet.Properties != null)
             {
-                propertiesWriter.WritePayloadFormatIndicator(packet.Properties.PayloadFormatIndicator);
-                propertiesWriter.WriteMessageExpiryInterval(packet.Properties.MessageExpiryInterval);
-                propertiesWriter.WriteTopicAlias(packet.Properties.TopicAlias);
-                propertiesWriter.WriteResponseTopic(packet.Properties.ResponseTopic);
-                propertiesWriter.WriteCorrelationData(packet.Properties.CorrelationData);
-                propertiesWriter.WriteSubscriptionIdentifiers(packet.Properties.SubscriptionIdentifiers);
+                if (packet.Properties.TopicAlias == 0)
+                {
+                    throw new MqttProtocolViolationException("A Topic Alias of 0 is not permitted. A sender MUST NOT send a PUBLISH packet containing a Topic Alias which has the value 0 [MQTT-3.3.2-8].");
+                }
+
                 propertiesWriter.WriteContentType(packet.Properties.ContentType);
+                propertiesWriter.WriteCorrelationData(packet.Properties.CorrelationData);
+                propertiesWriter.WriteMessageExpiryInterval(packet.Properties.MessageExpiryInterval);
+                propertiesWriter.WritePayloadFormatIndicator(packet.Properties.PayloadFormatIndicator);
+                propertiesWriter.WriteResponseTopic(packet.Properties.ResponseTopic);
+                propertiesWriter.WriteSubscriptionIdentifiers(packet.Properties.SubscriptionIdentifiers);
+                propertiesWriter.WriteTopicAlias(packet.Properties.TopicAlias);
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 

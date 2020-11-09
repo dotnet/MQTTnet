@@ -124,6 +124,20 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
 
+        public async Task<IMqttClient> ConnectClientAsync(Action<MqttClientOptionsBuilder> optionsBuilder)
+        {
+            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
+
+            var options = new MqttClientOptionsBuilder();
+            options = options.WithTcpServer("localhost", ServerPort);
+            optionsBuilder.Invoke(options);
+
+            var client = CreateClient();
+            await client.ConnectAsync(options.Build()).ConfigureAwait(false);
+
+            return client;
+        }
+
         public async Task<IMqttClient> ConnectClientAsync(MqttClientOptionsBuilder options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));

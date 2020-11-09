@@ -15,6 +15,10 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client.Receiving;
+using MQTTnet.Diagnostics;
+using MQTTnet.Extensions.ManagedClient;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.Tests
 {
@@ -741,6 +745,42 @@ namespace MQTTnet.Tests
                 Assert.IsNotNull(receivedMessage);
                 Assert.AreEqual("A", receivedMessage.Topic);
                 Assert.AreEqual(null, receivedMessage.Payload);
+            }
+        }
+
+        [TestMethod]
+        public async Task Subscribe_With_QoS2()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+                var client1 = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                var client2 = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+
+                var disconnectedFired = false;
+                client1.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(c =>
+                {
+                    disconnectedFired = true;
+                });
+
+                var messageReceived = false;
+                client1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c =>
+                {
+                    messageReceived = true;
+                });
+
+                await client1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("topic1").WithExactlyOnceQoS().Build());
+
+                await Task.Delay(500);
+
+                var message = new MqttApplicationMessageBuilder().WithTopic("topic1").WithPayload("Hello World").WithExactlyOnceQoS().WithRetainFlag().Build();
+                
+                await client2.PublishAsync(message);
+                await Task.Delay(500);
+
+                Assert.IsTrue(messageReceived);
+                Assert.IsTrue(client1.IsConnected);
+                Assert.IsFalse(disconnectedFired);
             }
         }
     }

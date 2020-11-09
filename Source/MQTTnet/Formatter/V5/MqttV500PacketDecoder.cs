@@ -254,6 +254,10 @@ namespace MQTTnet.Formatter.V5
                 {
                     packet.Properties.ReceiveMaximum = propertiesReader.ReadReceiveMaximum();
                 }
+                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.MaximumQoS)
+                {
+                    packet.Properties.MaximumQoS = propertiesReader.ReadMaximumQoS();
+                }
                 else if (propertiesReader.CurrentPropertyId == MqttPropertyId.AssignedClientIdentifier)
                 {
                     packet.Properties.AssignedClientIdentifier = propertiesReader.ReadAssignedClientIdentifier();

@@ -82,6 +82,17 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadTwoByteInteger();
         }
 
+        public MqttQualityOfServiceLevel ReadMaximumQoS()
+        {
+            byte value = _body.ReadByte();
+            if (value > 1)
+            {
+                throw new MqttProtocolViolationException($"Unexpected Maximum QoS value: {value}");
+            }
+            
+            return (MqttQualityOfServiceLevel)value;
+        }
+
         public string ReadAssignedClientIdentifier()
         {
             return _body.ReadStringWithLengthPrefix();

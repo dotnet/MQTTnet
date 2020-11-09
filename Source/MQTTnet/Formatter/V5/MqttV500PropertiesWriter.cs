@@ -132,6 +132,17 @@ namespace MQTTnet.Formatter.V5
             Write(MqttPropertyId.ReceiveMaximum, value);
         }
 
+        public void WriteMaximumQoS(MqttQualityOfServiceLevel? value)
+        {
+            if (!value.HasValue || value.Value > MqttQualityOfServiceLevel.AtLeastOnce)
+            {
+                return;
+            }
+
+            _packetWriter.Write((byte)MqttPropertyId.MaximumQoS);
+            _packetWriter.Write((byte)value.Value);
+        }
+
         public void WriteMaximumPacketSize(uint? value)
         {
             WriteAsFourByteInteger(MqttPropertyId.MaximumPacketSize, value);

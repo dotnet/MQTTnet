@@ -5,6 +5,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,6 +46,8 @@ namespace MQTTnet.Tests.Mockups
 
             ServerLogger.LogMessagePublished += (s, e) =>
             {
+                Debug.WriteLine(e.LogMessage.ToString());
+
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {
                     lock (_serverErrors)
@@ -56,6 +59,8 @@ namespace MQTTnet.Tests.Mockups
 
             ClientLogger.LogMessagePublished += (s, e) =>
             {
+                Debug.WriteLine(e.LogMessage.ToString());
+
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {
                     lock (_clientErrors)
@@ -159,7 +164,7 @@ namespace MQTTnet.Tests.Mockups
 
             return client;
         }
-
+        
         public void ThrowIfLogErrors()
         {
             lock (_serverErrors)

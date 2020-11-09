@@ -10,14 +10,9 @@ namespace MQTTnet.Formatter.V5
     {
         readonly IMqttPacketWriter _packetWriter;
 
-        public MqttV500PacketEncoder()
-            : this(new MqttPacketWriter())
-        {
-        }
-
         public MqttV500PacketEncoder(IMqttPacketWriter packetWriter)
         {
-            _packetWriter = packetWriter;
+            _packetWriter = packetWriter ?? throw new ArgumentNullException(nameof(packetWriter));
         }
 
         public ArraySegment<byte> Encode(MqttBasePacket packet)
@@ -201,6 +196,7 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteAuthenticationData(packet.Properties.AuthenticationData);
                 propertiesWriter.WriteRetainAvailable(packet.Properties.RetainAvailable);
                 propertiesWriter.WriteReceiveMaximum(packet.Properties.ReceiveMaximum);
+                propertiesWriter.WriteMaximumQoS(packet.Properties.MaximumQoS);
                 propertiesWriter.WriteAssignedClientIdentifier(packet.Properties.AssignedClientIdentifier);
                 propertiesWriter.WriteTopicAliasMaximum(packet.Properties.TopicAliasMaximum);
                 propertiesWriter.WriteReasonString(packet.Properties.ReasonString);

@@ -4,15 +4,10 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Formatter.V5
 {
-    public class MqttV500PacketFormatter : IMqttPacketFormatter
+    public sealed class MqttV500PacketFormatter : IMqttPacketFormatter
     {
-        private readonly MqttV500PacketEncoder _encoder;
-        private readonly MqttV500PacketDecoder _decoder = new MqttV500PacketDecoder();
-
-        public MqttV500PacketFormatter()
-        {
-            _encoder = new MqttV500PacketEncoder();
-        }
+        readonly MqttV500PacketDecoder _decoder = new MqttV500PacketDecoder();
+        readonly MqttV500PacketEncoder _encoder;
 
         public MqttV500PacketFormatter(IMqttPacketWriter writer)
         {

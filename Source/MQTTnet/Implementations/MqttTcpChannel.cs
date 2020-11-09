@@ -191,10 +191,6 @@ namespace MQTTnet.Implementations
                     }
 
                     await stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-
-                    // This subsequent call is required to check whether the socket is still connected. 
-                    // Without this call a broken connection is only recognized at the next call.
-                    await stream.WriteAsync(PlatformAbstractionLayer.EmptyByteArray, 0, 0, cancellationToken);
                 }
             }
             catch (ObjectDisposedException)

@@ -18,6 +18,8 @@ namespace MQTTnet.Formatter
 
         MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket);
 
+        MqttBasePacket CreatePubRecPacket(MqttPublishPacket publishPacket);
+
         MqttApplicationMessage CreateApplicationMessage(MqttPublishPacket publishPacket);
 
         MqttClientAuthenticateResult CreateClientConnectResult(MqttConnAckPacket connAckPacket);

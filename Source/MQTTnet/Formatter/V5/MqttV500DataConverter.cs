@@ -58,6 +58,15 @@ namespace MQTTnet.Formatter.V5
             };
         }
 
+        public MqttBasePacket CreatePubRecPacket(MqttPublishPacket publishPacket)
+        {
+            return new MqttPubRecPacket
+            {
+                PacketIdentifier = publishPacket.PacketIdentifier,
+                ReasonCode = MqttPubRecReasonCode.Success
+            };
+        }
+
         public MqttApplicationMessage CreateApplicationMessage(MqttPublishPacket publishPacket)
         {
             return new MqttApplicationMessage

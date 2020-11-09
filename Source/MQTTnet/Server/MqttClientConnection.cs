@@ -18,6 +18,7 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientConnection : IDisposable
     {
+        readonly Dictionary<ushort, string> _topicAlias = new Dictionary<ushort, string>();
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
@@ -316,19 +317,26 @@ namespace MQTTnet.Server
         {
             Interlocked.Increment(ref _sentApplicationMessagesCount);
 
+            HandleTopicAlias(publishPacket);
+
+            var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
+            _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
+
             switch (publishPacket.QualityOfServiceLevel)
             {
                 case MqttQualityOfServiceLevel.AtMostOnce:
                     {
-                        return HandleIncomingPublishPacketWithQoS0Async(publishPacket);
+                        return PlatformAbstractionLayer.CompletedTask;
                     }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                     {
-                        return HandleIncomingPublishPacketWithQoS1Async(publishPacket, cancellationToken);
+                        var pubAckPacket = _dataConverter.CreatePubAckPacket(publishPacket);
+                        return SendAsync(pubAckPacket, cancellationToken);
                     }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                     {
-                        return HandleIncomingPublishPacketWithQoS2Async(publishPacket, cancellationToken);
+                        var pubRecPacket = _dataConverter.CreatePubRecPacket(publishPacket);
+                        return SendAsync(pubRecPacket, cancellationToken);
                     }
                 default:
                     {
@@ -337,36 +345,33 @@ namespace MQTTnet.Server
             }
         }
 
-        Task HandleIncomingPublishPacketWithQoS0Async(MqttPublishPacket publishPacket)
+        void HandleTopicAlias(MqttPublishPacket publishPacket)
         {
-            var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
-
-            _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
-
-            return PlatformAbstractionLayer.CompletedTask;
-        }
-
-        Task HandleIncomingPublishPacketWithQoS1Async(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
-        {
-            var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
-            _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
-
-            var pubAckPacket = _dataConverter.CreatePubAckPacket(publishPacket);
-            return SendAsync(pubAckPacket, cancellationToken);
-        }
-
-        Task HandleIncomingPublishPacketWithQoS2Async(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
-        {
-            var applicationMessage = _dataConverter.CreateApplicationMessage(publishPacket);
-            _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
-
-            var pubRecPacket = new MqttPubRecPacket
+            if (publishPacket.Properties?.TopicAlias == null)
             {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = MqttPubRecReasonCode.Success
-            };
+                return;
+            }
 
-            return SendAsync(pubRecPacket, cancellationToken);
+            var topicAlias = publishPacket.Properties.TopicAlias.Value;
+
+            lock (_topicAlias)
+            {
+                if (!string.IsNullOrEmpty(publishPacket.Topic))
+                {
+                    _topicAlias[topicAlias] = publishPacket.Topic;
+                }
+                else
+                {
+                    if (_topicAlias.TryGetValue(topicAlias, out var topic))
+                    {
+                        publishPacket.Topic = topic;
+                    }
+                    else
+                    {
+
+                    }
+                }
+            }
         }
 
         async Task SendPendingPacketsAsync(CancellationToken cancellationToken)

@@ -1,9 +1,22 @@
-﻿using MQTTnet.Exceptions;
+﻿using System;
+using MQTTnet.Exceptions;
 
 namespace MQTTnet.Protocol
 {
     public static class MqttTopicValidator
     {
+        public static void ThrowIfInvalid(MqttApplicationMessage applicationMessage)
+        {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+
+            if (applicationMessage.TopicAlias > 0)
+            {
+                return;
+            }
+
+            ThrowIfInvalid(applicationMessage.Topic);
+        }
+
         public static void ThrowIfInvalid(string topic)
         {
             if (string.IsNullOrEmpty(topic))

@@ -57,11 +57,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{A56E3128-1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Blazor", "Blazor", "{61B165A0-5AA8-4E04-A53D-A22A84AA6EB7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Test.BlazorApp.Server", "Tests\MQTTnet.Test.BlazorApp\Server\MQTTnet.Test.BlazorApp.Server.csproj", "{A9662AF3-3520-4BF8-9DFF-C55C0C33D08F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Test.BlazorApp.Server", "Tests\MQTTnet.Test.BlazorApp\Server\MQTTnet.Test.BlazorApp.Server.csproj", "{A9662AF3-3520-4BF8-9DFF-C55C0C33D08F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Test.BlazorApp.Client", "Tests\MQTTnet.Test.BlazorApp\Client\MQTTnet.Test.BlazorApp.Client.csproj", "{D260D63D-7902-4C55-9665-84C5CACBBB24}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Test.BlazorApp.Client", "Tests\MQTTnet.Test.BlazorApp\Client\MQTTnet.Test.BlazorApp.Client.csproj", "{D260D63D-7902-4C55-9665-84C5CACBBB24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Test.BlazorApp.Shared", "Tests\MQTTnet.Test.BlazorApp\Shared\MQTTnet.Test.BlazorApp.Shared.csproj", "{DDB069BA-6E1A-48C7-B374-5D903B553CAD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Test.BlazorApp.Shared", "Tests\MQTTnet.Test.BlazorApp\Shared\MQTTnet.Test.BlazorApp.Shared.csproj", "{DDB069BA-6E1A-48C7-B374-5D903B553CAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

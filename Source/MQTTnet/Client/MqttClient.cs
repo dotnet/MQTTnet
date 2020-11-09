@@ -219,7 +219,7 @@ namespace MQTTnet.Client
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            MqttTopicValidator.ThrowIfInvalid(applicationMessage.Topic);
+            MqttTopicValidator.ThrowIfInvalid(applicationMessage);
 
             ThrowIfDisposed();
             ThrowIfNotConnected();

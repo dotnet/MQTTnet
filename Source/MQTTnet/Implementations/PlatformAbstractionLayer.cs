@@ -5,8 +5,6 @@ namespace MQTTnet.Implementations
 {
     public static class PlatformAbstractionLayer
     {
-        public static readonly byte[] EmptyByteArray = new byte[0];
-
 #if NET452
         public static Task CompletedTask => Task.FromResult(0);
 #else

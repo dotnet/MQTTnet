@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <DebugType>Full</DebugType>
-    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;net5.0</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net461</TargetFrameworks>
   </PropertyGroup>
 

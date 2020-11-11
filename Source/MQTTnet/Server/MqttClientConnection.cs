@@ -186,40 +186,24 @@ namespace MQTTnet.Server
                     if (packet is MqttPublishPacket publishPacket)
                     {
                         await HandleIncomingPublishPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-                        continue;
                     }
-
-                    if (packet is MqttPubRelPacket pubRelPacket)
+                    else if (packet is MqttPubRelPacket pubRelPacket)
                     {
-                        var pubCompPacket = new MqttPubCompPacket
-                        {
-                            PacketIdentifier = pubRelPacket.PacketIdentifier,
-                            ReasonCode = MqttPubCompReasonCode.Success
-                        };
-
-                        await SendAsync(pubCompPacket, cancellationToken).ConfigureAwait(false);
-                        continue;
+                        await HandleIncomingPubRelPacketAsync(pubRelPacket, cancellationToken).ConfigureAwait(false);
                     }
-
-                    if (packet is MqttSubscribePacket subscribePacket)
+                    else if (packet is MqttSubscribePacket subscribePacket)
                     {
                         await HandleIncomingSubscribePacketAsync(subscribePacket, cancellationToken).ConfigureAwait(false);
-                        continue;
                     }
-
-                    if (packet is MqttUnsubscribePacket unsubscribePacket)
+                    else if (packet is MqttUnsubscribePacket unsubscribePacket)
                     {
                         await HandleIncomingUnsubscribePacketAsync(unsubscribePacket, cancellationToken).ConfigureAwait(false);
-                        continue;
                     }
-
-                    if (packet is MqttPingReqPacket)
+                    else if (packet is MqttPingReqPacket)
                     {
                         await SendAsync(MqttPingRespPacket.Instance, cancellationToken).ConfigureAwait(false);
-                        continue;
                     }
-
-                    if (packet is MqttDisconnectPacket)
+                    else if (packet is MqttDisconnectPacket)
                     {
                         Session.WillMessage = null;
                         disconnectType = MqttClientDisconnectType.Clean;
@@ -227,8 +211,10 @@ namespace MQTTnet.Server
                         StopInternal();
                         return;
                     }
-
-                    _packetDispatcher.Dispatch(packet);
+                    else
+                    {
+                        _packetDispatcher.Dispatch(packet);
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -287,6 +273,17 @@ namespace MQTTnet.Server
             {
                 Session.EnqueueApplicationMessage(applicationMessage, ClientId, true);
             }
+        }
+
+        Task HandleIncomingPubRelPacketAsync(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
+        {
+            var pubCompPacket = new MqttPubCompPacket
+            {
+                PacketIdentifier = pubRelPacket.PacketIdentifier,
+                ReasonCode = MqttPubCompReasonCode.Success
+            };
+
+            return SendAsync(pubCompPacket, cancellationToken);
         }
 
         async Task HandleIncomingSubscribePacketAsync(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)

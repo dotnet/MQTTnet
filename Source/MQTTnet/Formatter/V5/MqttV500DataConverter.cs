@@ -153,7 +153,8 @@ namespace MQTTnet.Formatter.V5
                     AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
                     AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
                     AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,
-                    ReasonString = connectionValidatorContext.ReasonString
+                    ReasonString = connectionValidatorContext.ReasonString,
+                    TopicAliasMaximum = ushort.MaxValue
                 }
             };
         }

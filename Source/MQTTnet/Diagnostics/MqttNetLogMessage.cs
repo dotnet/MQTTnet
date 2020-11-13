@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Diagnostics
 {
-    public class MqttNetLogMessage
+    public sealed class MqttNetLogMessage
     {
         public string LogId { get; set; }
 

@@ -67,8 +67,7 @@ namespace MQTTnet.TestApp.NetCore
                     {
                         Server = "127.0.0.1"
                     },
-                    CleanSession = true,
-                    //KeepAlivePeriod = TimeSpan.FromSeconds(1)
+                    CleanSession = true
                 };
 
                 var client = new MqttFactory().CreateMqttClient();

@@ -217,8 +217,6 @@ namespace MQTTnet.Client
 
         public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
-
             MqttTopicValidator.ThrowIfInvalid(applicationMessage);
 
             ThrowIfDisposed();

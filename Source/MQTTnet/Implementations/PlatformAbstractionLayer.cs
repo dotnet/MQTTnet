@@ -7,8 +7,12 @@ namespace MQTTnet.Implementations
     {
 #if NET452
         public static Task CompletedTask => Task.FromResult(0);
+
+        public static byte[] EmptyByteArray { get; } = new byte[0];
 #else
         public static Task CompletedTask => Task.CompletedTask;
+
+        public static byte[] EmptyByteArray { get; } = Array.Empty<byte>();
 #endif
 
         public static void Sleep(TimeSpan timeout)

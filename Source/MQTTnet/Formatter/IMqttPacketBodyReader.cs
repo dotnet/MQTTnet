@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MQTTnet.Formatter
+﻿namespace MQTTnet.Formatter
 {
     public interface IMqttPacketBodyReader
     {

@@ -17,7 +17,7 @@ namespace MQTTnet.Tests
             var @lock = new AsyncLock();
             for (var i = 0; i < 100; i++)
             {
-                using (await @lock.WaitAsync().ConfigureAwait(false))
+                using (await @lock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
                 {
                     sum++;
                 }
@@ -33,7 +33,7 @@ namespace MQTTnet.Tests
             var @lock = new AsyncLock();
 
             // This call will never "release" the lock due to missing _using_.
-            await @lock.WaitAsync().ConfigureAwait(false);
+            await @lock.WaitAsync(CancellationToken.None).ConfigureAwait(false);
 
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
             {

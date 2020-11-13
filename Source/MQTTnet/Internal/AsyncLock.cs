@@ -16,28 +16,31 @@ namespace MQTTnet.Internal
             _releaser = Task.FromResult((IDisposable)new Releaser(this));
         }
 
-        public Task<IDisposable> WaitAsync()
-        {
-            return WaitAsync(CancellationToken.None);
-        }
-
         public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
         {
             Task task;
+
+            // This lock is required to avoid ObjectDisposedExceptions.
+            // These are fired when this lock gets disposed (and thus the semaphore)
+            // and a worker thread tries to call this method at the same time.
+            // Another way would be catching all ObjectDisposedExceptions but this situation happens
+            // quite often when clients are disconnecting.
             lock (_syncRoot)
             {
-                if (_semaphore == null)
-                {
-                    throw new ObjectDisposedException("The AsyncLock is disposed.");
-                }
-
-                task = _semaphore.WaitAsync(cancellationToken);
-                if (task.Status == TaskStatus.RanToCompletion)
-                {
-                    return _releaser;
-                }
+                task = _semaphore?.WaitAsync(cancellationToken);
             }
 
+            if (task == null)
+            {
+                throw new ObjectDisposedException("The AsyncLock is disposed.");
+            }
+
+            if (task.Status == TaskStatus.RanToCompletion)
+            {
+                return _releaser;
+            }
+
+            // Wait for the _WaitAsync_ method and return the releaser afterwards.
             return task.ContinueWith(
                 (_, state) => (IDisposable)state, 
                 _releaser.Result, 

@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Adapter
 {
-    public class ReceivedMqttPacket
+    public sealed class ReceivedMqttPacket
     {
         public ReceivedMqttPacket(byte fixedHeader, IMqttPacketBodyReader body, int totalLength)
         {
@@ -11,7 +11,7 @@ namespace MQTTnet.Adapter
             TotalLength = totalLength;
         }
 
-        public byte FixedHeader { get; set; }
+        public byte FixedHeader { get; }
 
         public IMqttPacketBodyReader Body { get; }
 

@@ -18,7 +18,7 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientSessionsManager : IDisposable
     {
-        readonly AsyncQueue<MqttEnqueuedApplicationMessage> _messageQueue = new AsyncQueue<MqttEnqueuedApplicationMessage>();
+        readonly BlockingCollection<MqttEnqueuedApplicationMessage> _messageQueue = new BlockingCollection<MqttEnqueuedApplicationMessage>();
 
         readonly object _createConnectionSyncRoot = new object();
         readonly Dictionary<string, MqttClientConnection> _connections = new Dictionary<string, MqttClientConnection>();
@@ -176,7 +176,7 @@ namespace MQTTnet.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            _messageQueue.Enqueue(new MqttEnqueuedApplicationMessage(applicationMessage, sender));
+            _messageQueue.Add(new MqttEnqueuedApplicationMessage(applicationMessage, sender));
         }
 
         public Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
@@ -270,46 +270,41 @@ namespace MQTTnet.Server
         {
             try
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
+                cancellationToken.ThrowIfCancellationRequested();
 
-                var dequeueResult = await _messageQueue.TryDequeueAsync(cancellationToken).ConfigureAwait(false);
-                if (!dequeueResult.IsSuccess)
-                {
-                    return;
-                }
-
-                var queuedApplicationMessage = dequeueResult.Item;
-
+                var queuedApplicationMessage = _messageQueue.Take(cancellationToken);
                 var sender = queuedApplicationMessage.Sender;
+                var senderClientId = sender?.ClientId ?? _options.ClientId;
                 var applicationMessage = queuedApplicationMessage.ApplicationMessage;
 
-                var interceptorContext = await InterceptApplicationMessageAsync(sender, applicationMessage).ConfigureAwait(false);
-                if (interceptorContext != null)
+                var interceptor = _options.ApplicationMessageInterceptor;
+                if (interceptor != null)
                 {
-                    if (interceptorContext.CloseConnection)
+                    var interceptorContext = await InterceptApplicationMessageAsync(interceptor, sender, applicationMessage).ConfigureAwait(false);
+                    if (interceptorContext != null)
                     {
-                        if (sender != null)
+                        if (interceptorContext.CloseConnection)
                         {
-                            await sender.StopAsync(MqttDisconnectReasonCode.NormalDisconnection).ConfigureAwait(false);
+                            if (sender != null)
+                            {
+                                await sender.StopAsync(MqttDisconnectReasonCode.NormalDisconnection).ConfigureAwait(false);
+                            }
                         }
-                    }
 
-                    if (interceptorContext.ApplicationMessage == null || !interceptorContext.AcceptPublish)
-                    {
-                        return;
-                    }
+                        if (interceptorContext.ApplicationMessage == null || !interceptorContext.AcceptPublish)
+                        {
+                            return;
+                        }
 
-                    applicationMessage = interceptorContext.ApplicationMessage;
+                        applicationMessage = interceptorContext.ApplicationMessage;
+                    }
                 }
-
-                await _eventDispatcher.SafeNotifyApplicationMessageReceivedAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
+                
+                await _eventDispatcher.SafeNotifyApplicationMessageReceivedAsync(senderClientId, applicationMessage).ConfigureAwait(false);
 
                 if (applicationMessage.Retain)
                 {
-                    await _retainedMessagesManager.HandleMessageAsync(sender?.ClientId, applicationMessage).ConfigureAwait(false);
+                    await _retainedMessagesManager.HandleMessageAsync(senderClientId, applicationMessage).ConfigureAwait(false);
                 }
 
                 var deliveryCount = 0;
@@ -318,11 +313,7 @@ namespace MQTTnet.Server
                 {
                     foreach (var clientSession in _sessions.Values)
                     {
-                        var isSubscribed = clientSession.EnqueueApplicationMessage(
-                            applicationMessage,
-                            sender?.ClientId,
-                            false);
-
+                        var isSubscribed = clientSession.EnqueueApplicationMessage(applicationMessage, senderClientId, false);
                         if (isSubscribed)
                         {
                             deliveryCount++;
@@ -333,13 +324,12 @@ namespace MQTTnet.Server
                 if (deliveryCount == 0)
                 {
                     var undeliveredMessageInterceptor = _options.UndeliveredMessageInterceptor;
-
                     if (undeliveredMessageInterceptor == null)
                     {
                         return;
                     }
 
-                    await undeliveredMessageInterceptor.InterceptApplicationMessagePublishAsync(new MqttApplicationMessageInterceptorContext(sender?.ClientId, sender?.Session?.Items, applicationMessage));
+                    await undeliveredMessageInterceptor.InterceptApplicationMessagePublishAsync(new MqttApplicationMessageInterceptorContext(senderClientId, sender?.Session?.Items, applicationMessage));
                 }
             }
             catch (OperationCanceledException)
@@ -423,14 +413,8 @@ namespace MQTTnet.Server
             }
         }
 
-        async Task<MqttApplicationMessageInterceptorContext> InterceptApplicationMessageAsync(MqttClientConnection senderConnection, MqttApplicationMessage applicationMessage)
+        async Task<MqttApplicationMessageInterceptorContext> InterceptApplicationMessageAsync(IMqttServerApplicationMessageInterceptor interceptor, MqttClientConnection senderConnection, MqttApplicationMessage applicationMessage)
         {
-            var interceptor = _options.ApplicationMessageInterceptor;
-            if (interceptor == null)
-            {
-                return null;
-            }
-
             string senderClientId;
             IDictionary<object, object> sessionItems;
 

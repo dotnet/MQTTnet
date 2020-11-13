@@ -109,6 +109,7 @@ namespace MQTTnet.Tests
                 try
                 {
                     await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None).ConfigureAwait(false);
+                    await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None).ConfigureAwait(false);
                 }
                 catch (MqttCommunicationException exception)
                 {

@@ -188,8 +188,18 @@ namespace MQTTnet.Tests.Mockups
         {
             foreach (var mqttClient in _clients)
             {
-                mqttClient.DisconnectAsync().GetAwaiter().GetResult();
-                mqttClient?.Dispose();
+                try
+                {
+                    mqttClient.DisconnectAsync().GetAwaiter().GetResult();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // This can happen when the test already disconnected the client.
+                }
+                finally
+                {
+                    mqttClient?.Dispose();
+                }
             }
 
             Server?.StopAsync().GetAwaiter().GetResult();

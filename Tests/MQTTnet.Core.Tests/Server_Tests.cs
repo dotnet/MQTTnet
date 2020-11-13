@@ -415,33 +415,27 @@ namespace MQTTnet.Tests
         public async Task Publish_Multiple_Clients()
         {
             var receivedMessagesCount = 0;
-            var locked = new object();
-
+            
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
 
                 var c1 = await testEnvironment.ConnectClientAsync();
                 var c2 = await testEnvironment.ConnectClientAsync();
-
-                c1.UseApplicationMessageReceivedHandler(c =>
-                {
-                    lock (locked)
-                    {
-                        receivedMessagesCount++;
-                    }
-                });
+                var c3 = await testEnvironment.ConnectClientAsync();
 
                 c2.UseApplicationMessageReceivedHandler(c =>
                 {
-                    lock (locked)
-                    {
-                        receivedMessagesCount++;
-                    }
+                    Interlocked.Increment(ref receivedMessagesCount);
                 });
 
-                await c1.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce }).ConfigureAwait(false);
+                c3.UseApplicationMessageReceivedHandler(c =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                });
+
                 await c2.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce }).ConfigureAwait(false);
+                await c3.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce }).ConfigureAwait(false);
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
 
@@ -450,8 +444,8 @@ namespace MQTTnet.Tests
                     await c1.PublishAsync(message).ConfigureAwait(false);
                 }
 
-                await Task.Delay(5000);
-
+                SpinWait.SpinUntil(() => receivedMessagesCount == 1000, TimeSpan.FromSeconds(10));
+                
                 Assert.AreEqual(1000, receivedMessagesCount);
             }
         }

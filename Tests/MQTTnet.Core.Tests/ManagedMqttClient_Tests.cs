@@ -59,7 +59,7 @@ namespace MQTTnet.Tests
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var receivedMessagesCount = 0;
-                
+
                 await testEnvironment.StartServerAsync();
 
                 var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").WithAtMostOnceQoS().Build();
@@ -270,14 +270,17 @@ namespace MQTTnet.Tests
                 var connectionCheckInterval = TimeSpan.FromSeconds(10);
                 var managedClient = await CreateManagedClientAsync(testEnvironment, null, connectionCheckInterval);
                 var sendingClient = await testEnvironment.ConnectClientAsync();
+                 
                 await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", Payload = new byte[] { 1 }, Retain = true });
-
-                await managedClient.SubscribeAsync("topic");
 
                 var subscribeTime = DateTime.UtcNow;
 
-                var messages = await SetupReceivingOfMessages(managedClient, 1);
+                var messagesTask = SetupReceivingOfMessages(managedClient, 1);
 
+                await managedClient.SubscribeAsync("topic");
+
+                var messages = await messagesTask;
+                
                 var elapsed = DateTime.UtcNow - subscribeTime;
                 Assert.IsTrue(elapsed < TimeSpan.FromSeconds(1), $"Subscriptions must be activated immediately, this one took {elapsed}");
                 Assert.AreEqual(messages.Single().Topic, "topic");
@@ -308,7 +311,7 @@ namespace MQTTnet.Tests
 
                 var clientOptions = new MqttClientOptionsBuilder()
                    .WithTcpServer("localhost", testEnvironment.ServerPort);
-                
+
                 var receivedManagedMessages = new List<MqttApplicationMessage>();
                 var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger());
                 managedClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c =>
@@ -350,9 +353,9 @@ namespace MQTTnet.Tests
         }
 
         async Task<ManagedMqttClient> CreateManagedClientAsync(
-          TestEnvironment testEnvironment,
-          IMqttClient underlyingClient = null,
-          TimeSpan? connectionCheckInterval = null)
+            TestEnvironment testEnvironment,
+            IMqttClient underlyingClient = null,
+            TimeSpan? connectionCheckInterval = null)
         {
             await testEnvironment.StartServerAsync();
 
@@ -368,8 +371,7 @@ namespace MQTTnet.Tests
             // at connection check intervals
             managedOptions.ConnectionCheckInterval = connectionCheckInterval ?? TimeSpan.FromSeconds(0.1);
 
-            var managedClient =
-              new ManagedMqttClient(underlyingClient ?? testEnvironment.CreateClient(), new MqttNetLogger());
+            var managedClient = new ManagedMqttClient(underlyingClient ?? testEnvironment.CreateClient(), new MqttNetLogger());
 
             var connected = GetConnectedTask(managedClient);
 
@@ -401,17 +403,19 @@ namespace MQTTnet.Tests
         Task<List<MqttApplicationMessage>> SetupReceivingOfMessages(ManagedMqttClient managedClient, int expectedNumberOfMessages)
         {
             var receivedMessages = new List<MqttApplicationMessage>();
-            var allReceived = new TaskCompletionSource<List<MqttApplicationMessage>>();
+            var result = new TaskCompletionSource<List<MqttApplicationMessage>>(TaskCreationOptions.RunContinuationsAsynchronously);
+
             managedClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(r =>
             {
                 receivedMessages.Add(r.ApplicationMessage);
+
                 if (receivedMessages.Count == expectedNumberOfMessages)
                 {
-                    allReceived.SetResult(receivedMessages);
+                    result.TrySetResult(receivedMessages);
                 }
             });
 
-            return allReceived.Task;
+            return result.Task;
         }
     }
 

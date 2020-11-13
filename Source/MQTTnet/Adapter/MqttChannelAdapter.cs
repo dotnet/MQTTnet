@@ -230,13 +230,13 @@ namespace MQTTnet.Adapter
                 return null;
             }
 
+            if (readFixedHeaderResult.ConnectionClosed)
+            {
+                return null;
+            }
+
             try
             {
-                if (readFixedHeaderResult.ConnectionClosed)
-                {
-                    return null;
-                }
-
                 IsReadingPacket = true;
 
                 var fixedHeader = readFixedHeaderResult.FixedHeader;
@@ -245,9 +245,11 @@ namespace MQTTnet.Adapter
                     return new ReceivedMqttPacket(fixedHeader.Flags, null, 2);
                 }
 
-                var body = new byte[fixedHeader.RemainingLength];
+                var bodyLength = fixedHeader.RemainingLength;
+                var body = new byte[bodyLength];
+
                 var bodyOffset = 0;
-                var chunkSize = Math.Min(ReadBufferSize, fixedHeader.RemainingLength);
+                var chunkSize = Math.Min(ReadBufferSize, bodyLength);
 
                 do
                 {
@@ -270,9 +272,9 @@ namespace MQTTnet.Adapter
                     }
 
                     bodyOffset += readBytes;
-                } while (bodyOffset < body.Length);
+                } while (bodyOffset < bodyLength);
 
-                var bodyReader = new MqttPacketBodyReader(body, 0, body.Length);
+                var bodyReader = new MqttPacketBodyReader(body, 0, bodyLength);
                 return new ReceivedMqttPacket(fixedHeader.Flags, bodyReader, fixedHeader.TotalLength);
             }
             finally

@@ -9,12 +9,17 @@ namespace MQTTnet.Protocol
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            if (applicationMessage.TopicAlias > 0)
+            if (!applicationMessage.TopicAlias.HasValue)
             {
-                return;
+                ThrowIfInvalid(applicationMessage.Topic);
             }
-
-            ThrowIfInvalid(applicationMessage.Topic);
+            else
+            {
+                if (applicationMessage.TopicAlias.Value == 0)
+                {
+                    throw new MqttProtocolViolationException("The topic alias cannot be 0.");
+                }
+            }
         }
 
         public static void ThrowIfInvalid(string topic)

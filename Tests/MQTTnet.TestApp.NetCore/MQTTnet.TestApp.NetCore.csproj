@@ -21,4 +21,10 @@
     <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Start.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

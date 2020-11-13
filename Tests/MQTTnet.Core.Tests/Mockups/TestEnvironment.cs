@@ -46,7 +46,10 @@ namespace MQTTnet.Tests.Mockups
 
             ServerLogger.LogMessagePublished += (s, e) =>
             {
-                Debug.WriteLine(e.LogMessage.ToString());
+                if (Debugger.IsAttached)
+                {
+                    Debug.WriteLine(e.LogMessage.ToString());
+                }
 
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {
@@ -59,7 +62,10 @@ namespace MQTTnet.Tests.Mockups
 
             ClientLogger.LogMessagePublished += (s, e) =>
             {
-                Debug.WriteLine(e.LogMessage.ToString());
+                if (Debugger.IsAttached)
+                {
+                    Debug.WriteLine(e.LogMessage.ToString());
+                }
 
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {

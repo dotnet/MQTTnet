@@ -228,6 +228,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     _unsubscriptions.Remove(topicFilter.Topic);
                 }
             }
+
             _subscriptionsQueuedSignal.Release();
 
             return Task.FromResult(0);
@@ -305,7 +306,9 @@ namespace MQTTnet.Extensions.ManagedClient
 
                     _logger.Info("Stopped");
                 }
+
                 _reconnectSubscriptions.Clear();
+
                 lock (_subscriptions)
                 {
                     _subscriptions.Clear();

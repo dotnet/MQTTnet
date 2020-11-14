@@ -105,7 +105,7 @@ namespace MQTTnet.Tests.Mockups
             Server = new TestServerWrapper(_mqttFactory.CreateMqttServer(ServerLogger), TestContext, this);
 
             options.WithDefaultEndpointPort(ServerPort);
-            
+
             await Server.StartAsync(options.Build()).ConfigureAwait(false);
 
             return Server;
@@ -118,7 +118,7 @@ namespace MQTTnet.Tests.Mockups
 
         public Task<ILowLevelMqttClient> ConnectLowLevelClientAsync()
         {
-            return ConnectLowLevelClientAsync(o => {});
+            return ConnectLowLevelClientAsync(o => { });
         }
 
         public async Task<ILowLevelMqttClient> ConnectLowLevelClientAsync(Action<MqttClientOptionsBuilder> optionsBuilder)
@@ -160,7 +160,7 @@ namespace MQTTnet.Tests.Mockups
 
             return client;
         }
-        
+
         public async Task<IMqttClient> ConnectClientAsync(IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
@@ -170,7 +170,7 @@ namespace MQTTnet.Tests.Mockups
 
             return client;
         }
-        
+
         public void ThrowIfLogErrors()
         {
             lock (_serverErrors)
@@ -198,7 +198,7 @@ namespace MQTTnet.Tests.Mockups
                 {
                     mqttClient.DisconnectAsync().GetAwaiter().GetResult();
                 }
-                catch (ObjectDisposedException)
+                catch
                 {
                     // This can happen when the test already disconnected the client.
                 }
@@ -208,8 +208,18 @@ namespace MQTTnet.Tests.Mockups
                 }
             }
 
-            Server?.StopAsync().GetAwaiter().GetResult();
-            Server?.Dispose();
+            try
+            {
+                Server?.StopAsync().GetAwaiter().GetResult();
+            }
+            catch
+            {
+                // This can happen when the test already stopped the server.
+            }
+            finally
+            {
+                Server?.Dispose();
+            }
 
             ThrowIfLogErrors();
 

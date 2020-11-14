@@ -48,9 +48,9 @@ namespace MQTTnet.Server
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
         }
 
-        public void Start(CancellationToken cancellation)
+        public void Start(CancellationToken cancellationToken)
         {
-            Task.Run(() => TryProcessQueuedApplicationMessagesAsync(cancellation), cancellation).Forget(_logger);
+            Task.Run(() => TryProcessQueuedApplicationMessagesAsync(cancellationToken), cancellationToken).Forget(_logger);
         }
 
         public async Task HandleClientConnectionAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
@@ -272,7 +272,20 @@ namespace MQTTnet.Server
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var queuedApplicationMessage = _messageQueue.Take(cancellationToken);
+                MqttEnqueuedApplicationMessage queuedApplicationMessage;
+                try
+                {
+                     queuedApplicationMessage = _messageQueue.Take(cancellationToken);
+                }
+                catch (ArgumentNullException)
+                {
+                    return;
+                }
+                catch (ObjectDisposedException)
+                {
+                    return;
+                }
+
                 var sender = queuedApplicationMessage.Sender;
                 var senderClientId = sender?.ClientId ?? _options.ClientId;
                 var applicationMessage = queuedApplicationMessage.ApplicationMessage;

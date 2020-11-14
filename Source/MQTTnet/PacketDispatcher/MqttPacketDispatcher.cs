@@ -34,9 +34,9 @@ namespace MQTTnet.PacketDispatcher
             }
 
             ushort identifier = 0;
-            if (packet is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier.HasValue)
+            if (packet is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier > 0)
             {
-                identifier = packetWithIdentifier.PacketIdentifier.Value;
+                identifier = packetWithIdentifier.PacketIdentifier;
             }
 
             var type = packet.GetType();
@@ -51,7 +51,7 @@ namespace MQTTnet.PacketDispatcher
             throw new MqttProtocolViolationException($"Received packet '{packet}' at an unexpected time.");
         }
 
-        public void Reset()
+        public void Cancel()
         {
             foreach (var awaiter in _awaiters)
             {

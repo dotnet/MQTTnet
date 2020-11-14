@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Internal;
@@ -36,9 +37,22 @@ namespace MQTTnet.Tests
             Assert.AreEqual(3, queue.Count);
         }
 
+        [TestMethod]
+        public async Task Cancellation()
+        {
+            var queue = new AsyncQueue<int>();
+
+            bool success;
+            using (var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
+            {
+                success = (await queue.TryDequeueAsync(cancellationTokenSource.Token)).IsSuccess;
+            }
+
+            Assert.AreEqual(false, success);
+        }
 
         [TestMethod]
-        public async Task Preserve_ProcessAsync()
+        public async Task Process_Async()
         {
             var queue = new AsyncQueue<int>();
 
@@ -50,7 +64,37 @@ namespace MQTTnet.Tests
                     sum += (await queue.TryDequeueAsync(CancellationToken.None)).Item;
                 }
             });
-            
+
+            queue.Enqueue(1);
+            await Task.Delay(500);
+
+            queue.Enqueue(2);
+            await Task.Delay(500);
+
+            queue.Enqueue(3);
+            await Task.Delay(500);
+
+            Assert.AreEqual(6, sum);
+            Assert.AreEqual(TaskStatus.RanToCompletion, worker.Status);
+        }
+
+        [TestMethod]
+        public async Task Process_Async_With_Initial_Delay()
+        {
+            var queue = new AsyncQueue<int>();
+
+            var sum = 0;
+            var worker = Task.Run(async () =>
+            {
+                while (sum < 6)
+                {
+                    sum += (await queue.TryDequeueAsync(CancellationToken.None)).Item;
+                }
+            });
+
+            // This line is the diff to test _Process_Async_ 
+            await Task.Delay(500);
+
             queue.Enqueue(1);
             await Task.Delay(500);
 

@@ -79,6 +79,8 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task TimeoutAfterMemoryUsage()
         {
+            var initialMemory = GC.GetTotalMemory(true);
+
             var tasks = Enumerable.Range(0, 100000)
                 .Select(i =>
                 {
@@ -87,10 +89,10 @@ namespace MQTTnet.Tests
                 });
 
             await Task.WhenAll(tasks);
-            AssertIsLess(3_000_000, GC.GetTotalMemory(true));
+            AssertIsLess(initialMemory + 2_000_000, GC.GetTotalMemory(true));
         }
 
-        private static void AssertIsLess(long bound, long actual)
+        static void AssertIsLess(long bound, long actual)
         {
             if (bound < actual)
             {

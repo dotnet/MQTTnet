@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttDisconnectPacketProperties
+    public sealed class MqttDisconnectPacketProperties
     {
         public uint? SessionExpiryInterval { get; set; }
 

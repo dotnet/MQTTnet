@@ -5,10 +5,9 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5
 {
-    public class MqttV500PropertiesWriter
+    public sealed class MqttV500PropertiesWriter
     {
-        // TODO: Consider lazy init on first write to avoid useless allocations.
-        private readonly MqttPacketWriter _packetWriter = new MqttPacketWriter();
+        readonly MqttPacketWriter _packetWriter = new MqttPacketWriter();
 
         public int Length => _packetWriter.Length;
 
@@ -189,7 +188,7 @@ namespace MQTTnet.Formatter.V5
             Write(MqttPropertyId.ResponseInformation, value);
         }
 
-        private void Write(MqttPropertyId id, bool? value)
+        void Write(MqttPropertyId id, bool? value)
         {
             if (!value.HasValue)
             {
@@ -200,7 +199,7 @@ namespace MQTTnet.Formatter.V5
             _packetWriter.Write(value.Value ? (byte)0x1 : (byte)0x0);
         }
 
-        private void Write(MqttPropertyId id, byte? value)
+        void Write(MqttPropertyId id, byte? value)
         {
             if (!value.HasValue)
             {
@@ -211,7 +210,7 @@ namespace MQTTnet.Formatter.V5
             _packetWriter.Write(value.Value);
         }
 
-        private void Write(MqttPropertyId id, ushort? value)
+        void Write(MqttPropertyId id, ushort? value)
         {
             if (!value.HasValue)
             {
@@ -222,7 +221,7 @@ namespace MQTTnet.Formatter.V5
             _packetWriter.Write(value.Value);
         }
 
-        private void WriteAsVariableLengthInteger(MqttPropertyId id, uint? value)
+        void WriteAsVariableLengthInteger(MqttPropertyId id, uint? value)
         {
             if (!value.HasValue)
             {
@@ -233,7 +232,7 @@ namespace MQTTnet.Formatter.V5
             _packetWriter.WriteVariableLengthInteger(value.Value);
         }
 
-        private void WriteAsFourByteInteger(MqttPropertyId id, uint? value)
+        void WriteAsFourByteInteger(MqttPropertyId id, uint? value)
         {
             if (!value.HasValue)
             {
@@ -247,7 +246,7 @@ namespace MQTTnet.Formatter.V5
             _packetWriter.Write((byte)value.Value);
         }
 
-        private void Write(MqttPropertyId id, string value)
+        void Write(MqttPropertyId id, string value)
         {
             if (value == null)
             {
@@ -258,7 +257,7 @@ namespace MQTTnet.Formatter.V5
             _packetWriter.WriteWithLengthPrefix(value);
         }
 
-        private void Write(MqttPropertyId id, byte[] value)
+        void Write(MqttPropertyId id, byte[] value)
         {
             if (value == null)
             {

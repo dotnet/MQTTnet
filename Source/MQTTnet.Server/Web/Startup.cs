@@ -116,10 +116,15 @@ namespace MQTTnet.Server.Web
             {
                 var securityScheme = new OpenApiSecurityScheme
                 {
-                    Scheme = "Basic",
+                    Scheme = "basic",
                     Name = HeaderNames.Authorization,
                     Type = SecuritySchemeType.Http,
-                    In = ParameterLocation.Header
+                    In = ParameterLocation.Header,
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Swagger"
+                    }
                 };
 
                 c.AddSecurityDefinition("Swagger", securityScheme);

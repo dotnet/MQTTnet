@@ -4,9 +4,9 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public class MqttUnsubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public sealed class MqttUnsubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
-        public ushort? PacketIdentifier { get; set; }
+        public ushort PacketIdentifier { get; set; }
 
         #region Added in MQTTv5
 

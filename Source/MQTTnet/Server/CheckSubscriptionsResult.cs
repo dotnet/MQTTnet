@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Server
 {
-    public class CheckSubscriptionsResult
+    public struct CheckSubscriptionsResult
     {
         public bool IsSubscribed { get; set; }
 

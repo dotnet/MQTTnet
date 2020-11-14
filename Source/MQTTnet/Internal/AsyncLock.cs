@@ -4,30 +4,43 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Internal
 {
-    // From Stephen Toub (https://blogs.msdn.microsoft.com/pfxteam/2012/02/12/building-async-coordination-primitives-part-6-asynclock/)
     public sealed class AsyncLock : IDisposable
     {
-        readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        readonly object _syncRoot = new object();
         readonly Task<IDisposable> _releaser;
+
+        SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public AsyncLock()
         {
             _releaser = Task.FromResult((IDisposable)new Releaser(this));
         }
 
-        public Task<IDisposable> WaitAsync()
-        {
-            return WaitAsync(CancellationToken.None);
-        }
-
         public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
         {
-            var task = _semaphore.WaitAsync(cancellationToken);
+            Task task;
+
+            // This lock is required to avoid ObjectDisposedExceptions.
+            // These are fired when this lock gets disposed (and thus the semaphore)
+            // and a worker thread tries to call this method at the same time.
+            // Another way would be catching all ObjectDisposedExceptions but this situation happens
+            // quite often when clients are disconnecting.
+            lock (_syncRoot)
+            {
+                task = _semaphore?.WaitAsync(cancellationToken);
+            }
+
+            if (task == null)
+            {
+                throw new ObjectDisposedException("The AsyncLock is disposed.");
+            }
+
             if (task.Status == TaskStatus.RanToCompletion)
             {
                 return _releaser;
             }
 
+            // Wait for the _WaitAsync_ method and return the releaser afterwards.
             return task.ContinueWith(
                 (_, state) => (IDisposable)state, 
                 _releaser.Result, 
@@ -36,21 +49,33 @@ namespace MQTTnet.Internal
 
         public void Dispose()
         {
-            _semaphore?.Dispose();
+            lock (_syncRoot)
+            {
+                _semaphore?.Dispose();
+                _semaphore = null;
+            }
         }
 
-        class Releaser : IDisposable
+        internal void Release()
         {
-            readonly AsyncLock _toRelease;
-
-            internal Releaser(AsyncLock toRelease)
+            lock (_syncRoot)
             {
-                _toRelease = toRelease;
+                _semaphore?.Release();
+            }
+        }
+
+        sealed class Releaser : IDisposable
+        {
+            readonly AsyncLock _lock;
+
+            internal Releaser(AsyncLock @lock)
+            {
+                _lock = @lock;
             }
 
             public void Dispose()
             {
-                _toRelease._semaphore.Release();
+                _lock.Release();
             }
         }
     }

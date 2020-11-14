@@ -3,7 +3,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public class MqttPublishPacketProperties
+    public sealed class MqttPublishPacketProperties
     {
         public MqttPayloadFormatIndicator? PayloadFormatIndicator { get; set; }
 

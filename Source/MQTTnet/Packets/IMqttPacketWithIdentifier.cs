@@ -2,6 +2,6 @@
 {
     public interface IMqttPacketWithIdentifier
     {
-        ushort? PacketIdentifier { get; set; }
+        ushort PacketIdentifier { get; set; }
     }
 }

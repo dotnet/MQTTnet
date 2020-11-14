@@ -4,7 +4,7 @@ namespace MQTTnet.Internal
 {
     public abstract class Disposable : IDisposable
     {
-        protected bool IsDisposed { get; private set; } = false;
+        protected bool IsDisposed { get; private set; }
 
         protected void ThrowIfDisposed()
         {
@@ -17,13 +17,6 @@ namespace MQTTnet.Internal
         protected virtual void Dispose(bool disposing)
         {
         }
-
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~Disposable()
-        // {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
 
         // This code added to correctly implement the disposable pattern.
         public void Dispose()

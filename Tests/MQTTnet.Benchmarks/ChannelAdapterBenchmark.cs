@@ -53,7 +53,7 @@ namespace MQTTnet.Benchmarks
 
             for (var i = 0; i < 10000; i++)
             {
-                _channelAdapter.ReceivePacketAsync(TimeSpan.Zero, CancellationToken.None).GetAwaiter().GetResult();
+                _channelAdapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
             }
 
             _stream.Position = 0;

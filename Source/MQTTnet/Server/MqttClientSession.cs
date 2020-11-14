@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientSession
+    public sealed class MqttClientSession
     {
         readonly IMqttNetScopedLogger _logger;
 

@@ -165,6 +165,8 @@ namespace MQTTnet.Tests
 
                 SpinWait.SpinUntil(() => replyReceived, TimeSpan.FromSeconds(10));
 
+                await Task.Delay(500);
+
                 Assert.IsTrue(replyReceived);
             }
         }

@@ -16,6 +16,8 @@
 * [Core] Added support for _MaximumQoS_ transmit when using MQTTv5 (thanks to @nayato).
 * [RpcClient] Moved the RPC topic validation to the topic generation strategy.
 * [RcpClient] Added interface for _MqttRpcClient_.
+* [Server] Reduced async tasks count by moving dedicated keep alive tasks per connection to shared one.
+* [Server] Session takeover and keep alive timeout are now properly set in DISCONNECT packet.
 * [Server] Fixed bug in PubRel packet generation (MQTTv5 only).
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>

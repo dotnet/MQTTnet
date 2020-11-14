@@ -47,7 +47,7 @@ namespace MQTTnet.Implementations
                 {
                     throw new ArgumentException("TLS certificate is not set.");
                 }
-                
+
                 var tlsCertificate = options.TlsEndpointOptions.CertificateProvider.GetCertificate();
                 if (!tlsCertificate.HasPrivateKey)
                 {
@@ -73,16 +73,22 @@ namespace MQTTnet.Implementations
 
         void Cleanup()
         {
-            _cancellationTokenSource?.Cancel(false);
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
-
-            foreach (var listener in _listeners)
+            try
             {
-                listener.Dispose();
+                _cancellationTokenSource?.Cancel(false);
             }
+            finally
+            {
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
 
-            _listeners.Clear();
+                foreach (var listener in _listeners)
+                {
+                    listener.Dispose();
+                }
+
+                _listeners.Clear();
+            }
         }
 
         void RegisterListeners(MqttServerTcpEndpointBaseOptions options, X509Certificate2 tlsCertificate, CancellationToken cancellationToken)

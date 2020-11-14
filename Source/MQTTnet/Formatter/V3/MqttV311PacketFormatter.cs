@@ -4,7 +4,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V3
 {
-    public class MqttV311PacketFormatter : MqttV310PacketFormatter
+    public sealed class MqttV311PacketFormatter : MqttV310PacketFormatter
     {
         public MqttV311PacketFormatter(IMqttPacketWriter packetWriter)
             : base(packetWriter)

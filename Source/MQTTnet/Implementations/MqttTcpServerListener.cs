@@ -77,7 +77,7 @@ namespace MQTTnet.Implementations
 
                 _socket.Bind(_localEndPoint);
                 _socket.Listen(_options.ConnectionBacklog);
-
+                
                 Task.Run(() => AcceptClientConnectionsAsync(cancellationToken), cancellationToken).Forget(_logger);
 
                 return true;
@@ -152,9 +152,7 @@ namespace MQTTnet.Implementations
                     _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
 
                 clientSocket.NoDelay = _options.NoDelay;
-
                 stream = clientSocket.GetStream();
-
                 X509Certificate2 clientCertificate = null;
 
                 if (_tlsCertificate != null)
@@ -208,17 +206,17 @@ namespace MQTTnet.Implementations
                 {
                     stream?.Dispose();
                     clientSocket?.Dispose();
-
-                    _logger.Verbose("Client '{0}' disconnected at TCP listener '{1}, {2}'.",
-                        remoteEndPoint,
-                        _localEndPoint,
-                        _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
                 }
                 catch (Exception disposeException)
                 {
                     _logger.Error(disposeException, "Error while cleaning up client connection");
                 }
             }
+
+            _logger.Verbose("Client '{0}' disconnected at TCP listener '{1}, {2}'.",
+                remoteEndPoint,
+                _localEndPoint,
+                _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
         }
     }
 }

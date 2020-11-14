@@ -135,6 +135,7 @@ namespace MQTTnet.Tests.Mockups
 
         public void Dispose()
         {
+            Implementation.Dispose();
         }
     }
 }

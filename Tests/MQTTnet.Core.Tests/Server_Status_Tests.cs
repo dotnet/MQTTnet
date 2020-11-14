@@ -6,7 +6,6 @@ using MQTTnet.Tests.Mockups;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using System.Threading;
 
 namespace MQTTnet.Tests
 {
@@ -63,7 +62,6 @@ namespace MQTTnet.Tests
                 var clientStatus = await server.GetClientStatusAsync();
 
                 Assert.AreEqual(1, clientStatus.Count);
-                
                 Assert.IsTrue(clientStatus.Any(s => s.ClientId == c1.Options.ClientId));
 
                 await clientStatus.First().DisconnectAsync();

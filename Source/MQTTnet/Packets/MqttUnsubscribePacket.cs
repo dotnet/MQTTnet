@@ -2,9 +2,9 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttUnsubscribePacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public sealed class MqttUnsubscribePacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
-        public ushort? PacketIdentifier { get; set; }
+        public ushort PacketIdentifier { get; set; }
 
         public List<string> TopicFilters { get; set; } = new List<string>();
 

@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.LowLevelClient;
 
 namespace MQTTnet.Tests.Mockups
 {
@@ -44,7 +46,10 @@ namespace MQTTnet.Tests.Mockups
 
             ServerLogger.LogMessagePublished += (s, e) =>
             {
-                Debug.WriteLine(e.LogMessage.ToString());
+                if (Debugger.IsAttached)
+                {
+                    Debug.WriteLine(e.LogMessage.ToString());
+                }
 
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {
@@ -57,7 +62,10 @@ namespace MQTTnet.Tests.Mockups
 
             ClientLogger.LogMessagePublished += (s, e) =>
             {
-                Debug.WriteLine(e.LogMessage.ToString());
+                if (Debugger.IsAttached)
+                {
+                    Debug.WriteLine(e.LogMessage.ToString());
+                }
 
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {
@@ -108,6 +116,39 @@ namespace MQTTnet.Tests.Mockups
             return ConnectClientAsync(new MqttClientOptionsBuilder());
         }
 
+        public Task<ILowLevelMqttClient> ConnectLowLevelClientAsync()
+        {
+            return ConnectLowLevelClientAsync(o => {});
+        }
+
+        public async Task<ILowLevelMqttClient> ConnectLowLevelClientAsync(Action<MqttClientOptionsBuilder> optionsBuilder)
+        {
+            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
+
+            var options = new MqttClientOptionsBuilder();
+            options = options.WithTcpServer("127.0.0.1", ServerPort);
+            optionsBuilder.Invoke(options);
+
+            var client = new MqttFactory().CreateLowLevelMqttClient();
+            await client.ConnectAsync(options.Build(), CancellationToken.None).ConfigureAwait(false);
+
+            return client;
+        }
+
+        public async Task<IMqttClient> ConnectClientAsync(Action<MqttClientOptionsBuilder> optionsBuilder)
+        {
+            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
+
+            var options = new MqttClientOptionsBuilder();
+            options = options.WithTcpServer("localhost", ServerPort);
+            optionsBuilder.Invoke(options);
+
+            var client = CreateClient();
+            await client.ConnectAsync(options.Build()).ConfigureAwait(false);
+
+            return client;
+        }
+
         public async Task<IMqttClient> ConnectClientAsync(MqttClientOptionsBuilder options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
@@ -119,7 +160,7 @@ namespace MQTTnet.Tests.Mockups
 
             return client;
         }
-
+        
         public async Task<IMqttClient> ConnectClientAsync(IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
@@ -129,19 +170,7 @@ namespace MQTTnet.Tests.Mockups
 
             return client;
         }
-
-        public async Task<IMqttClient> ConnectClientAsync(Action<MqttClientOptionsBuilder> optionsBuilder)
-        {
-            var options = new MqttClientOptionsBuilder();
-            options = options.WithTcpServer("localhost", ServerPort);
-            optionsBuilder?.Invoke(options);
-
-            var client = CreateClient();
-            await client.ConnectAsync(options.Build()).ConfigureAwait(false);
-
-            return client;
-        }
-
+        
         public void ThrowIfLogErrors()
         {
             lock (_serverErrors)
@@ -165,7 +194,18 @@ namespace MQTTnet.Tests.Mockups
         {
             foreach (var mqttClient in _clients)
             {
-                mqttClient?.Dispose();
+                try
+                {
+                    mqttClient.DisconnectAsync().GetAwaiter().GetResult();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // This can happen when the test already disconnected the client.
+                }
+                finally
+                {
+                    mqttClient?.Dispose();
+                }
             }
 
             Server?.StopAsync().GetAwaiter().GetResult();

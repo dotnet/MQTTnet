@@ -2,8 +2,10 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttPubRecPacket : MqttBasePublishPacket
+    public sealed class MqttPubRecPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
+        public ushort PacketIdentifier { get; set; }
+
         #region Added in MQTTv5
 
         public MqttPubRecReasonCode? ReasonCode { get; set; }

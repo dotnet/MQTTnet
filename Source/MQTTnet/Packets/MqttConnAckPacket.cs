@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttConnAckPacket : MqttBasePacket
+    public sealed class MqttConnAckPacket : MqttBasePacket
     {
         public MqttConnectReturnCode? ReturnCode { get; set; }
 

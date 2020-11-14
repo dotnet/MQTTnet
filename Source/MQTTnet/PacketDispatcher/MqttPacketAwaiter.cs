@@ -27,10 +27,11 @@ namespace MQTTnet.PacketDispatcher
         {
             using (var timeoutToken = new CancellationTokenSource(timeout))
             {
-                timeoutToken.Token.Register(() => Fail(new MqttCommunicationTimedOutException()));
-
-                var packet = await _taskCompletionSource.Task.ConfigureAwait(false);
-                return (TPacket)packet;
+                using (timeoutToken.Token.Register(() => Fail(new MqttCommunicationTimedOutException())))
+                {
+                    var packet = await _taskCompletionSource.Task.ConfigureAwait(false);
+                    return (TPacket)packet;
+                }
             }
         }
 

@@ -8,7 +8,7 @@ namespace MQTTnet.Internal
 {
     public class TestMqttChannel : IMqttChannel
     {
-        private readonly MemoryStream _stream;
+        readonly MemoryStream _stream;
 
         public TestMqttChannel(MemoryStream stream)
         {

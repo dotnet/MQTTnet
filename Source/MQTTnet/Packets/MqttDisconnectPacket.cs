@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttDisconnectPacket : MqttBasePacket
+    public sealed class MqttDisconnectPacket : MqttBasePacket
     {
         #region Added in MQTTv5
 

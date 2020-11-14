@@ -1,0 +1,1 @@
+dotnet MQTTnet.TestApp.NetCore.dll

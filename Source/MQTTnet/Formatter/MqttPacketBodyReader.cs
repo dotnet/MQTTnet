@@ -6,13 +6,13 @@ using MQTTnet.Exceptions;
 
 namespace MQTTnet.Formatter
 {
-    public class MqttPacketBodyReader : IMqttPacketBodyReader
+    public sealed class MqttPacketBodyReader : IMqttPacketBodyReader
     {
-        private readonly byte[] _buffer;
-        private readonly int _initialOffset;
-        private readonly int _length;
+        readonly byte[] _buffer;
+        readonly int _initialOffset;
+        readonly int _length;
 
-        private int _offset;
+        int _offset;
 
         public MqttPacketBodyReader(byte[] buffer, int offset, int length)
         {

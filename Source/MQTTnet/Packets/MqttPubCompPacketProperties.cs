@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Packets
 {
-    public class MqttPubCompPacketProperties
+    public sealed class MqttPubCompPacketProperties
     {
         public string ReasonString { get; set; }
 

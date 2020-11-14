@@ -1,10 +1,13 @@
-﻿using MQTTnet.Packets;
+﻿using System.Collections.Generic;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public class MqttClientSubscribeResult
+    public sealed class MqttClientSubscribeResult
     {
-        public MqttSubAckPacket ResponsePacket { get; set; }
+        public List<MqttSubscribeReturnCode> ReturnCodes { get; } = new List<MqttSubscribeReturnCode>();
+
+        public List<MqttSubscribeReasonCode> ReasonCodes { get; } = new List<MqttSubscribeReasonCode>();
 
         public bool CloseConnection { get; set; }
     }

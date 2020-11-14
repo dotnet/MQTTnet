@@ -9,6 +9,7 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
 
@@ -36,6 +37,15 @@ namespace MQTTnet.Formatter.V3
             {
                 PacketIdentifier = publishPacket.PacketIdentifier,
                 ReasonCode = MqttPubAckReasonCode.Success
+            };
+        }
+
+        public MqttBasePacket CreatePubRecPacket(MqttPublishPacket publishPacket)
+        {
+            return new MqttPubRecPacket
+            {
+                PacketIdentifier = publishPacket.PacketIdentifier,
+                ReasonCode = MqttPubRecReasonCode.Success
             };
         }
 
@@ -172,6 +182,18 @@ namespace MQTTnet.Formatter.V3
             return subscribePacket;
         }
 
+        public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, Server.MqttClientSubscribeResult subscribeResult)
+        {
+            var subackPacket = new MqttSubAckPacket
+            {
+                PacketIdentifier = subscribePacket.PacketIdentifier
+            };
+
+            subackPacket.ReturnCodes.AddRange(subscribeResult.ReturnCodes);
+
+            return subackPacket;
+        }
+
         public MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
@@ -180,6 +202,15 @@ namespace MQTTnet.Formatter.V3
             unsubscribePacket.TopicFilters.AddRange(options.TopicFilters);
 
             return unsubscribePacket;
+        }
+
+        public MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, List<MqttUnsubscribeReasonCode> reasonCodes)
+        {
+            return new MqttUnsubAckPacket
+            {
+                PacketIdentifier = unsubscribePacket.PacketIdentifier,
+                ReasonCodes = reasonCodes
+            };
         }
 
         public MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options)

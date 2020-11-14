@@ -6,11 +6,11 @@ using MQTTnet.Exceptions;
 
 namespace MQTTnet.Formatter
 {
-    public class MqttPacketReader
+    public sealed class MqttPacketReader
     {
-        private readonly byte[] _singleByteBuffer = new byte[1];
+        readonly byte[] _singleByteBuffer = new byte[1];
 
-        private readonly IMqttChannel _channel;
+        readonly IMqttChannel _channel;
 
         public MqttPacketReader(IMqttChannel channel)
         {
@@ -70,7 +70,7 @@ namespace MQTTnet.Formatter
             };
         }
 
-        private async Task<int?> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
+        async Task<int?> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
         {
             var offset = 0;
             var multiplier = 128;

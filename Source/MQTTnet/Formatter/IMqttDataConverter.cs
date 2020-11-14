@@ -1,10 +1,12 @@
-﻿using MQTTnet.Client.Connecting;
+﻿using System.Collections.Generic;
+using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
 
@@ -15,6 +17,8 @@ namespace MQTTnet.Formatter
         MqttPublishPacket CreatePublishPacket(MqttApplicationMessage applicationMessage);
 
         MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket);
+
+        MqttBasePacket CreatePubRecPacket(MqttPublishPacket publishPacket);
 
         MqttApplicationMessage CreateApplicationMessage(MqttPublishPacket publishPacket);
 
@@ -30,7 +34,11 @@ namespace MQTTnet.Formatter
 
         MqttSubscribePacket CreateSubscribePacket(MqttClientSubscribeOptions options);
 
+        MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, Server.MqttClientSubscribeResult subscribeResult);
+
         MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options);
+
+        MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, List<MqttUnsubscribeReasonCode> reasonCodes);
 
         MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options);
 

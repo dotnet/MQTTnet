@@ -304,7 +304,7 @@ namespace MQTTnet.Tests
                     await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
                 }
 
-                SpinWait.SpinUntil(() => receivedMessagesCount == 500, 5000);
+                SpinWait.SpinUntil(() => receivedMessagesCount == 500, TimeSpan.FromSeconds(15));
 
                 Assert.AreEqual(500, receivedMessagesCount);
             }
@@ -445,7 +445,7 @@ namespace MQTTnet.Tests
                     await c1.PublishAsync(message).ConfigureAwait(false);
                 }
 
-                SpinWait.SpinUntil(() => receivedMessagesCount == 1000, TimeSpan.FromSeconds(10));
+                SpinWait.SpinUntil(() => receivedMessagesCount == 1000, TimeSpan.FromSeconds(15));
                 
                 Assert.AreEqual(1000, receivedMessagesCount);
             }
@@ -953,7 +953,8 @@ namespace MQTTnet.Tests
 
                 byte[] receivedBody = null;
 
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
+                await testEnvironment.StartServerAsync();
+
                 var client1 = await testEnvironment.ConnectClientAsync();
                 client1.UseApplicationMessageReceivedHandler(c =>
                 {
@@ -965,7 +966,7 @@ namespace MQTTnet.Tests
                 var client2 = await testEnvironment.ConnectClientAsync();
                 await client2.PublishAsync("string", longBody);
 
-                await Task.Delay(500);
+                await Task.Delay(TimeSpan.FromSeconds(5));
 
                 Assert.IsTrue(longBody.SequenceEqual(receivedBody ?? new byte[0]));
             }

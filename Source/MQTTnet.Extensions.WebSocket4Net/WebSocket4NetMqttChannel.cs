@@ -201,7 +201,9 @@ namespace MQTTnet.Extensions.WebSocket4Net
                 _webSocket.Opened += SuccessHandler;
                 _webSocket.Error += ErrorHandler;
 
+#pragma warning disable AsyncFixer02 // Long-running or blocking operations inside an async method
                 _webSocket.Open();
+#pragma warning restore AsyncFixer02 // Long-running or blocking operations inside an async method
 
                 var exception = await MqttTaskTimeout.WaitAsync(c =>
                 {

@@ -104,7 +104,7 @@ namespace MQTTnet.Server
                 }
                 catch (Exception exception)
                 {
-                    _logger.Error(exception, "Client '{0}': Error while sending DISCONNECT packet after takeover.", ClientId);
+                    _logger.Warning(exception, "Client '{0}': Error while sending DISCONNECT packet after takeover.", ClientId);
                 }
             }
 

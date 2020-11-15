@@ -142,12 +142,14 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
 
+            var disconnectIsPending = DisconnectIsPending();
+
             try
             {
                 _disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
                 _cleanDisconnectInitiated = true;
 
-                if (IsConnected)
+                if (!disconnectIsPending && _isConnected)
                 {
                     var disconnectPacket = _adapter.PacketFormatterAdapter.DataConverter.CreateDisconnectPacket(options);
                     await SendAsync(disconnectPacket, cancellationToken).ConfigureAwait(false);
@@ -155,7 +157,7 @@ namespace MQTTnet.Client
             }
             finally
             {
-                if (!DisconnectIsPending())
+                if (!disconnectIsPending)
                 {
                     await DisconnectInternalAsync(null, null, null).ConfigureAwait(false);
                 }
@@ -364,11 +366,6 @@ namespace MQTTnet.Client
             {
                 try
                 {
-                    if (_backgroundCancellationTokenSource?.IsCancellationRequested == true)
-                    {
-                        return;
-                    }
-
                     _backgroundCancellationTokenSource?.Cancel(false);
                 }
                 catch (Exception exception)

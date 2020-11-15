@@ -1302,7 +1302,7 @@ namespace MQTTnet.Tests
             }
         }
 
-        private static async Task TestPublishAsync(
+        static async Task TestPublishAsync(
             string topic,
             MqttQualityOfServiceLevel qualityOfServiceLevel,
             string topicFilter,
@@ -1314,7 +1314,7 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
+                await testEnvironment.StartServerAsync();
 
                 var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("receiver"));
                 c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));

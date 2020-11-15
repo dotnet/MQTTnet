@@ -153,10 +153,13 @@ namespace MQTTnet.Tests
 
                 client2.UseApplicationMessageReceivedHandler(async c =>
                 {
-                    // Use AtMostOnce here because with QoS 1 or even QoS 2 the process waits for 
-                    // the ACK etc. The problem is that the SpinUntil below only waits until the 
-                    // flag is set. It does not wait until the client has sent the ACK
-                    await client2.PublishAsync("reply", null, MqttQualityOfServiceLevel.AtMostOnce);
+                    if (c.ApplicationMessage.Topic == "request")
+                    {
+                        // Use AtMostOnce here because with QoS 1 or even QoS 2 the process waits for 
+                        // the ACK etc. The problem is that the SpinUntil below only waits until the 
+                        // flag is set. It does not wait until the client has sent the ACK
+                        await client2.PublishAsync("reply", null, MqttQualityOfServiceLevel.AtMostOnce);
+                    }
                 });
 
                 await client1.PublishAsync("request", null, MqttQualityOfServiceLevel.AtLeastOnce);

@@ -123,57 +123,41 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Connect()
         {
-            var server = new MqttFactory().CreateMqttServer();
-            var client = new MqttFactory().CreateMqttClient();
-
-            try
+            using (var testEnvironment = new TestEnvironment())
             {
-                await server.StartAsync(new MqttServerOptions());
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
-            }
-            finally
-            {
-                await server.StopAsync();
+                await testEnvironment.StartServerAsync();
+                await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500).Build());
             }
         }
 
         [TestMethod]
         public async Task Connect_And_Disconnect()
         {
-            var server = new MqttFactory().CreateMqttServer();
-            var client = new MqttFactory().CreateMqttClient();
-
-            try
+            using (var testEnvironment = new TestEnvironment())
             {
-                await server.StartAsync(new MqttServerOptions());
+                await testEnvironment.StartServerAsync();
 
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
                 await client.DisconnectAsync();
-            }
-            finally
-            {
-                await server.StopAsync();
             }
         }
 
         [TestMethod]
         public async Task Subscribe()
         {
-            var server = new MqttFactory().CreateMqttServer();
-            var client = new MqttFactory().CreateMqttClient();
-
-            try
+            using (var testEnvironment = new TestEnvironment())
             {
-                await server.StartAsync(new MqttServerOptions());
+                await testEnvironment.StartServerAsync();
 
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+                var client =
+                    await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
 
                 var result = await client.SubscribeAsync(new MqttClientSubscribeOptions()
                 {
                     SubscriptionIdentifier = 1,
                     TopicFilters = new List<MqttTopicFilter>
                     {
-                        new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}
+                        new MqttTopicFilter {Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}
                     }
                 });
 
@@ -181,112 +165,81 @@ namespace MQTTnet.Tests.MQTTv5
 
                 Assert.AreEqual(1, result.Items.Count);
                 Assert.AreEqual(MqttClientSubscribeResultCode.GrantedQoS1, result.Items[0].ResultCode);
-            }
-            finally
-            {
-                await server.StopAsync();
+
             }
         }
 
         [TestMethod]
         public async Task Unsubscribe()
         {
-            var server = new MqttFactory().CreateMqttServer();
-            var client = new MqttFactory().CreateMqttClient();
-
-            try
+            using (var testEnvironment = new TestEnvironment())
             {
-                await server.StartAsync(new MqttServerOptions());
+                await testEnvironment.StartServerAsync();
 
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
                 await client.SubscribeAsync("a");
+
                 var result = await client.UnsubscribeAsync("a");
                 await client.DisconnectAsync();
 
                 Assert.AreEqual(1, result.Items.Count);
                 Assert.AreEqual(MqttClientUnsubscribeResultCode.Success, result.Items[0].ReasonCode);
             }
-            finally
-            {
-                await server.StopAsync();
-            }
         }
 
         [TestMethod]
         public async Task Publish_QoS_0()
         {
-            var server = new MqttFactory().CreateMqttServer();
-            var client = new MqttFactory().CreateMqttClient();
-
-            try
+            using (var testEnvironment = new TestEnvironment())
             {
-                await server.StartAsync(new MqttServerOptions());
+                await testEnvironment.StartServerAsync();
 
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
                 var result = await client.PublishAsync("a", "b");
                 await client.DisconnectAsync();
 
                 Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
-            }
-            finally
-            {
-                await server.StopAsync();
             }
         }
 
         [TestMethod]
         public async Task Publish_QoS_1()
         {
-            var server = new MqttFactory().CreateMqttServer();
-            var client = new MqttFactory().CreateMqttClient();
-
-            try
+            using (var testEnvironment = new TestEnvironment())
             {
-                await server.StartAsync(new MqttServerOptions());
+                await testEnvironment.StartServerAsync();
 
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
                 var result = await client.PublishAsync("a", "b", MqttQualityOfServiceLevel.AtLeastOnce);
                 await client.DisconnectAsync();
 
                 Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
-            }
-            finally
-            {
-                await server.StopAsync();
             }
         }
 
         [TestMethod]
         public async Task Publish_QoS_2()
         {
-            var server = new MqttFactory().CreateMqttServer();
-            var client = new MqttFactory().CreateMqttClient();
-
-            try
+            using (var testEnvironment = new TestEnvironment())
             {
-                await server.StartAsync(new MqttServerOptions());
+                await testEnvironment.StartServerAsync();
 
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
                 var result = await client.PublishAsync("a", "b", MqttQualityOfServiceLevel.ExactlyOnce);
                 await client.DisconnectAsync();
 
                 Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
-            }
-            finally
-            {
-                await server.StopAsync();
             }
         }
 
         [TestMethod]
         public async Task Publish_With_Properties()
         {
-            var server = new MqttFactory().CreateMqttServer();
-            var client = new MqttFactory().CreateMqttClient();
-
-            try
+            using (var testEnvironment = new TestEnvironment())
             {
-                await server.StartAsync(new MqttServerOptions());
+                await testEnvironment.StartServerAsync();
+
+                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
 
                 var applicationMessage = new MqttApplicationMessageBuilder()
                     .WithTopic("Hello")
@@ -301,32 +254,23 @@ namespace MQTTnet.Tests.MQTTv5
                     .WithTopicAlias(2)
                     .Build();
 
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
                 var result = await client.PublishAsync(applicationMessage);
                 await client.DisconnectAsync();
 
                 Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
-            }
-            finally
-            {
-                await server.StopAsync();
             }
         }
 
         [TestMethod]
         public async Task Subscribe_And_Publish()
         {
-            var server = new MqttFactory().CreateMqttServer();
-            var client1 = new MqttFactory().CreateMqttClient();
-            var client2 = new MqttFactory().CreateMqttClient();
-
-            try
+            using (var testEnvironment = new TestEnvironment())
             {
-                await server.StartAsync(new MqttServerOptions());
+                await testEnvironment.StartServerAsync();
 
                 var receivedMessages = new List<MqttApplicationMessageReceivedEventArgs>();
 
-                await client1.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithClientId("client1").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+                var client1 = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client1"));
                 client1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     lock (receivedMessages)
@@ -337,7 +281,7 @@ namespace MQTTnet.Tests.MQTTv5
 
                 await client1.SubscribeAsync("a");
 
-                await client2.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithClientId("client2").WithProtocolVersion(MqttProtocolVersion.V500).Build());
+                var client2 = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client2"));
                 await client2.PublishAsync("a", "b");
 
                 await Task.Delay(500);
@@ -349,10 +293,6 @@ namespace MQTTnet.Tests.MQTTv5
                 Assert.AreEqual("client1", receivedMessages[0].ClientId);
                 Assert.AreEqual("a", receivedMessages[0].ApplicationMessage.Topic);
                 Assert.AreEqual("b", receivedMessages[0].ApplicationMessage.ConvertPayloadToString());
-            }
-            finally
-            {
-                await server.StopAsync();
             }
         }
 

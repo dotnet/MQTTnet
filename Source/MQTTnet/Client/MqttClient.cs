@@ -763,6 +763,8 @@ namespace MQTTnet.Client
 
         bool DisconnectIsPending()
         {
+            // This will read the _isDisconnectPending and set it to "1" afterwards regardless of the value.
+            // So the first caller will get a "false" and all subsequent ones will get "true".
             return Interlocked.CompareExchange(ref _isDisconnectPending, 1, 0) != 0;
         }
     }

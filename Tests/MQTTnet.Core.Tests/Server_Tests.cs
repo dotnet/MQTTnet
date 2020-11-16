@@ -445,7 +445,7 @@ namespace MQTTnet.Tests
                     await c1.PublishAsync(message).ConfigureAwait(false);
                 }
 
-                SpinWait.SpinUntil(() => receivedMessagesCount == 1000, TimeSpan.FromSeconds(15));
+                SpinWait.SpinUntil(() => receivedMessagesCount == 1000, TimeSpan.FromSeconds(20));
                 
                 Assert.AreEqual(1000, receivedMessagesCount);
             }

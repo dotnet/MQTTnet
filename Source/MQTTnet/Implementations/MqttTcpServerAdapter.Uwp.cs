@@ -113,7 +113,7 @@ namespace MQTTnet.Implementations
                 }
                 catch (Exception exception)
                 { 
-                    _logger.Error(exception, "Error while cleaning up client connection");
+                    _logger.Error(exception, "Error while cleaning up client connection.");
                 }
             }
         }

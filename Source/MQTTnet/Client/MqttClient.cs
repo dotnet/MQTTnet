@@ -89,7 +89,7 @@ namespace MQTTnet.Client
 
                 using (var combined = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))
                 {
-                    _logger.Verbose($"Trying to connect with server '{options.ChannelOptions}' (Timeout={options.CommunicationTimeout}).");
+                    _logger.Verbose("Trying to connect with server '{0}' (Timeout={1}).", options.ChannelOptions, options.CommunicationTimeout);
                     await _adapter.ConnectAsync(options.CommunicationTimeout, combined.Token).ConfigureAwait(false);
                     _logger.Verbose("Connection with server established.");
 
@@ -404,7 +404,7 @@ namespace MQTTnet.Client
                 }
                 catch (Exception e)
                 {
-                    _logger.Warning(e, "Error when sending packet of type '{0}'.", typeof(TResponsePacket).Name);
+                    _logger.Warning(e, "Error when sending request packet ({0}).", requestPacket.GetType().Name);
                     packetAwaiter.Cancel();
                 }
 
@@ -416,7 +416,7 @@ namespace MQTTnet.Client
                 {
                     if (exception is MqttCommunicationTimedOutException)
                     {
-                        _logger.Warning(null, "Timeout while waiting for packet of type '{0}'.", typeof(TResponsePacket).Name);
+                        _logger.Warning(null, "Timeout while waiting for response packet ({0}).", typeof(TResponsePacket).Name);
                     }
 
                     throw;

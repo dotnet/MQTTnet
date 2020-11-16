@@ -39,7 +39,7 @@ namespace MQTTnet.LowLevelClient
 
             try
             {
-                _logger.Verbose($"Trying to connect with server '{options.ChannelOptions}' (Timeout={options.CommunicationTimeout}).");
+                _logger.Verbose("Trying to connect with server '{0}' (Timeout={1}).", options.ChannelOptions, options.CommunicationTimeout);
                 await newAdapter.ConnectAsync(options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
                 _logger.Verbose("Connection with server established.");
 

@@ -67,20 +67,21 @@ namespace MQTTnet.Server
                         if (connectPacket == null)
                         {
                             _logger.Warning(null,
-                                "The first packet from client '{0}' was no 'CONNECT' packet [MQTT-3.1.0-1].",
+                                "Client '{0}': First received packet was no 'CONNECT' packet [MQTT-3.1.0-1].",
                                 channelAdapter.Endpoint);
+
                             return;
                         }
                     }
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger.Warning(null, "Client '{0}' connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
+                    _logger.Warning(null, "Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
                     return;
                 }
                 catch (MqttCommunicationTimedOutException)
                 {
-                    _logger.Warning(null, "Client '{0}' connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
+                    _logger.Warning(null, "Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
                     return;
                 }
 

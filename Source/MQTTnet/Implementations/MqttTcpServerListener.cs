@@ -59,7 +59,7 @@ namespace MQTTnet.Implementations
 
                 _localEndPoint = new IPEndPoint(boundIp, _options.Port);
 
-                _logger.Info($"Starting TCP listener for {_localEndPoint} TLS={_tlsCertificate != null}.");
+                _logger.Info("Starting TCP listener for {0} TLS={1}.", _localEndPoint, _tlsCertificate != null);
 
                 _socket = new CrossPlatformSocket(_addressFamily);
 
@@ -131,7 +131,7 @@ namespace MQTTnet.Implementations
                         }
                     }
 
-                    _logger.Error(exception, $"Error while accepting connection at TCP listener {_localEndPoint} TLS={_tlsCertificate != null}.");
+                    _logger.Error(exception, "Error while accepting connection at TCP listener {0} TLS={1}.", _localEndPoint, _tlsCertificate != null);
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }

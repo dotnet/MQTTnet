@@ -425,7 +425,7 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 transmitException = exception;
 
-                _logger.Warning(exception, $"Publishing application ({message.Id}) message failed.");
+                _logger.Warning(exception, "Publishing application message ({0}) failed.", message.Id);
 
                 if (message.ApplicationMessage.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
                 {
@@ -450,7 +450,7 @@ namespace MQTTnet.Extensions.ManagedClient
             catch (Exception exception)
             {
                 transmitException = exception;
-                _logger.Error(exception, $"Error while publishing application message ({message.Id}).");
+                _logger.Error(exception, "Error while publishing application message ({0}).", message.Id);
             }
             finally
             {
@@ -484,7 +484,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     continue;
                 }
 
-                _logger.Verbose($"Publishing subscriptions ({subscriptions.Count} subscriptions and {unsubscriptions.Count} unsubscriptions)");
+                _logger.Verbose("Publishing {0} subscriptions and {1} unsubscriptions)", subscriptions.Count, unsubscriptions.Count);
 
                 foreach (var unsubscription in unsubscriptions)
                 {

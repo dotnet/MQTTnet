@@ -2,6 +2,7 @@
 
 namespace MQTTnet.Diagnostics
 {
+    [Obsolete("Please pass an instance of the IMqttNetLogger to the factory/server or client. The global logger will be deleted in the future.")]
     public static class MqttNetGlobalLogger
     {
         public static event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
@@ -10,8 +11,6 @@ namespace MQTTnet.Diagnostics
 
         public static void Publish(MqttNetLogMessage logMessage)
         {
-            if (logMessage == null) throw new ArgumentNullException(nameof(logMessage));
-
             LogMessagePublished?.Invoke(null, new MqttNetLogMessagePublishedEventArgs(logMessage));
         }
     }

@@ -453,7 +453,7 @@ namespace MQTTnet.Server
                         }
                     }
 
-                    _logger.Verbose("Queued application message sent (ClientId: {0}).", ClientId);
+                    _logger.Verbose("Client '{0}': Queued application message sent.", ClientId);
                 }
             }
             catch (Exception exception)
@@ -463,15 +463,15 @@ namespace MQTTnet.Server
                 }
                 else if (exception is MqttCommunicationTimedOutException)
                 {
-                    _logger.Warning(exception, "Sending publish packet failed: Timeout (ClientId: {0}).", ClientId);
+                    _logger.Warning(exception, "Client '{0}': Sending publish packet failed: Timeout.", ClientId);
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning(exception, "Sending publish packet failed: Communication exception (ClientId: {0}).", ClientId);
+                    _logger.Warning(exception, "Client '{0}': Sending publish packet failed: Communication exception.", ClientId);
                 }
                 else
                 {
-                    _logger.Error(exception, "Sending publish packet failed (ClientId: {0}).", ClientId);
+                    _logger.Error(exception, "Client '{0}': Sending publish packet failed.", ClientId);
                 }
 
                 if (publishPacket?.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)

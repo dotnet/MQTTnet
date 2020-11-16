@@ -105,6 +105,7 @@ namespace MQTTnet.Tests.Mockups
             Server = new TestServerWrapper(_mqttFactory.CreateMqttServer(ServerLogger), TestContext, this);
 
             options.WithDefaultEndpointPort(ServerPort);
+            options.WithMaxPendingMessagesPerClient(int.MaxValue);
 
             await Server.StartAsync(options.Build()).ConfigureAwait(false);
 

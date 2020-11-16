@@ -36,13 +36,16 @@ namespace MQTTnet.Diagnostics
                 return;
             }
 
-            try
+            if (parameters?.Length > 0 && message?.Length > 0)
             {
-                message = string.Format(message ?? string.Empty, parameters);
-            }
-            catch (FormatException)
-            {
-                message = "MESSAGE FORMAT INVALID: " + message;
+                try
+                {
+                    message = string.Format(message, parameters);
+                }
+                catch (FormatException)
+                {
+                    message = "MESSAGE FORMAT INVALID: " + message;
+                }
             }
 
             var logMessage = new MqttNetLogMessage

@@ -39,12 +39,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="IronPython" Version="2.7.10" />
-    <PackageReference Include="IronPython.StdLib" Version="2.7.10" />
+    <PackageReference Include="IronPython" Version="2.7.11" />
+    <PackageReference Include="IronPython.StdLib" Version="2.7.11" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.5" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.1.2" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.5.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.5.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.6.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.6.3" />
   </ItemGroup>
 
   <ItemGroup>

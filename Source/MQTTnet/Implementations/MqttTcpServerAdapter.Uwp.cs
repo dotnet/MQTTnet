@@ -48,7 +48,7 @@ namespace MQTTnet.Implementations
 
             if (options.TlsEndpointOptions.IsEnabled)
             {
-                throw new NotSupportedException("TLS servers are not supported for UWP apps.");
+                throw new NotSupportedException("TLS servers are not supported when using 'uap10.0'.");
             }
         }
 

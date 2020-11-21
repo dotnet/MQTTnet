@@ -141,7 +141,7 @@ namespace MQTTnet.Implementations
 
             if (options.TlsOptions.Certificates.Count > 1)
             {
-                throw new NotSupportedException("Only one client certificate is supported for UWP.");
+                throw new NotSupportedException("Only one client certificate is supported when using 'uap10.0'.");
             }
 
             return new Certificate(options.TlsOptions.Certificates.First().AsBuffer());

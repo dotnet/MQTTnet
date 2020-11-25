@@ -29,7 +29,7 @@ namespace MQTTnet.Server
             // support async/await. Async etc. is avoided here because the thread will usually check
             // the connections every few milliseconds and thus the context changes (due to async) are 
             // only consuming resources. Also there is just 1 thread for the entire server which is fine at all!
-            Task.Factory.StartNew(_ => DoWork(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning).Forget(_logger);
+            Task.Factory.StartNew(_ => DoWork(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning).RunInBackground(_logger);
         }
 
         void DoWork(CancellationToken cancellationToken)

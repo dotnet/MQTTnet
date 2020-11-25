@@ -50,7 +50,7 @@ namespace MQTTnet.Server
 
         public void Start(CancellationToken cancellationToken)
         {
-            Task.Run(() => TryProcessQueuedApplicationMessagesAsync(cancellationToken), cancellationToken).Forget(_logger);
+            Task.Run(() => TryProcessQueuedApplicationMessagesAsync(cancellationToken), cancellationToken).RunInBackground(_logger);
         }
 
         public async Task HandleClientConnectionAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)

@@ -160,7 +160,7 @@ namespace MQTTnet.Server
 
                 await SendAsync(_channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(_connectionValidatorContext), cancellationToken).ConfigureAwait(false);
 
-                Task.Run(() => SendPendingPacketsAsync(cancellationToken), cancellationToken).Forget(_logger);
+                Task.Run(() => SendPendingPacketsAsync(cancellationToken), cancellationToken).RunInBackground(_logger);
 
                 Session.IsCleanSession = false;
 

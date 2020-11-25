@@ -78,7 +78,7 @@ namespace MQTTnet.Implementations
                 _socket.Bind(_localEndPoint);
                 _socket.Listen(_options.ConnectionBacklog);
                 
-                Task.Run(() => AcceptClientConnectionsAsync(cancellationToken), cancellationToken).Forget(_logger);
+                Task.Run(() => AcceptClientConnectionsAsync(cancellationToken), cancellationToken).RunInBackground(_logger);
 
                 return true;
             }
@@ -115,7 +115,7 @@ namespace MQTTnet.Implementations
                         continue;
                     }
 
-                    Task.Run(() => TryHandleClientConnectionAsync(clientSocket), cancellationToken).Forget(_logger);
+                    Task.Run(() => TryHandleClientConnectionAsync(clientSocket), cancellationToken).RunInBackground(_logger);
                 }
                 catch (OperationCanceledException)
                 {

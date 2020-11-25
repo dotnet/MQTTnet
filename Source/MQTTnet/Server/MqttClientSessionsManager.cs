@@ -287,21 +287,21 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                var sender = queuedApplicationMessage.Sender;
-                var senderClientId = sender?.ClientId ?? _options.ClientId;
+                var clientConnection = queuedApplicationMessage.Sender;
+                var senderClientId = clientConnection?.ClientId ?? _options.ClientId;
                 var applicationMessage = queuedApplicationMessage.ApplicationMessage;
 
                 var interceptor = _options.ApplicationMessageInterceptor;
                 if (interceptor != null)
                 {
-                    var interceptorContext = await InterceptApplicationMessageAsync(interceptor, sender, applicationMessage).ConfigureAwait(false);
+                    var interceptorContext = await InterceptApplicationMessageAsync(interceptor, clientConnection, applicationMessage).ConfigureAwait(false);
                     if (interceptorContext != null)
                     {
                         if (interceptorContext.CloseConnection)
                         {
-                            if (sender != null)
+                            if (clientConnection != null)
                             {
-                                await sender.StopAsync(MqttDisconnectReasonCode.NormalDisconnection).ConfigureAwait(false);
+                                await clientConnection.StopAsync(MqttDisconnectReasonCode.NormalDisconnection).ConfigureAwait(false);
                             }
                         }
 
@@ -343,7 +343,8 @@ namespace MQTTnet.Server
                         return;
                     }
 
-                    await undeliveredMessageInterceptor.InterceptApplicationMessagePublishAsync(new MqttApplicationMessageInterceptorContext(senderClientId, sender?.Session?.Items, applicationMessage));
+                    // The delegate signature is the same as for regular message interceptor. So the call is fine and just uses a different interceptor.
+                    await InterceptApplicationMessageAsync(undeliveredMessageInterceptor, clientConnection, applicationMessage).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -427,12 +428,12 @@ namespace MQTTnet.Server
             }
         }
 
-        async Task<MqttApplicationMessageInterceptorContext> InterceptApplicationMessageAsync(IMqttServerApplicationMessageInterceptor interceptor, MqttClientConnection senderConnection, MqttApplicationMessage applicationMessage)
+        async Task<MqttApplicationMessageInterceptorContext> InterceptApplicationMessageAsync(IMqttServerApplicationMessageInterceptor interceptor, MqttClientConnection clientConnection, MqttApplicationMessage applicationMessage)
         {
             string senderClientId;
             IDictionary<object, object> sessionItems;
 
-            var messageIsFromServer = senderConnection == null;
+            var messageIsFromServer = clientConnection == null;
             if (messageIsFromServer)
             {
                 senderClientId = _options.ClientId;
@@ -440,8 +441,8 @@ namespace MQTTnet.Server
             }
             else
             {
-                senderClientId = senderConnection.ClientId;
-                sessionItems = senderConnection.Session.Items;
+                senderClientId = clientConnection.ClientId;
+                sessionItems = clientConnection.Session.Items;
             }
 
             var interceptorContext = new MqttApplicationMessageInterceptorContext(senderClientId, sessionItems, applicationMessage);

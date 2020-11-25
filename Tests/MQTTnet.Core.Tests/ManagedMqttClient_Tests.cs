@@ -352,6 +352,66 @@ namespace MQTTnet.Tests
             }
         }
 
+        [TestMethod]
+        public async Task Manage_Session_MaxParallel_Subscribe()
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                testEnvironment.IgnoreClientLogErrors = true;
+
+                var serverOptions = new MqttServerOptionsBuilder();
+                await testEnvironment.StartServerAsync(serverOptions);
+
+                var options = new MqttClientOptionsBuilder().WithClientId("1").WithKeepAlivePeriod(TimeSpan.FromSeconds(5));
+                
+                var hasReceive = false;
+
+                void OnReceive()
+                {
+                    if (!hasReceive)
+                    {
+                        hasReceive = true;
+                    }
+                }
+
+                var clients = await Task.WhenAll(Enumerable.Range(0, 25)
+                    .Select(i => TryConnect_Subscribe(testEnvironment, options, OnReceive)));
+
+                var connectedClients = clients.Where(c => c?.IsConnected ?? false).ToList();
+
+                Assert.AreEqual(1, connectedClients.Count);
+
+                await Task.Delay(10000); // over 1.5T
+
+                var option2 = new MqttClientOptionsBuilder().WithClientId("2").WithKeepAlivePeriod(TimeSpan.FromSeconds(10));
+                var sendClient = await testEnvironment.ConnectClientAsync(option2);
+                await sendClient.PublishAsync("aaa", "1");
+                
+                await Task.Delay(3000);
+
+                Assert.AreEqual(true, hasReceive);
+            }
+        }
+
+        private async Task<IMqttClient> TryConnect_Subscribe(TestEnvironment testEnvironment, MqttClientOptionsBuilder options, Action onReceive)
+        {
+
+            try
+            {
+                var sendClient = await testEnvironment.ConnectClientAsync(options);
+                sendClient.ApplicationMessageReceivedHandler = new MQTTnet.Client.Receiving.MqttApplicationMessageReceivedHandlerDelegate(e =>
+                {
+                    onReceive();
+                });
+                await sendClient.SubscribeAsync("aaa");
+                return sendClient;
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
+        }
+
         async Task<ManagedMqttClient> CreateManagedClientAsync(
             TestEnvironment testEnvironment,
             IMqttClient underlyingClient = null,

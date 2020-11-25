@@ -99,9 +99,9 @@ namespace MQTTnet.Extensions.ManagedClient
 
             Options = options;
 
-            if (Options.Storage != null)
+            if (options.Storage != null)
             {
-                _storageManager = new ManagedMqttClientStorageManager(Options.Storage);
+                _storageManager = new ManagedMqttClientStorageManager(options.Storage);
                 var messages = await _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false);
 
                 foreach (var message in messages)
@@ -110,16 +110,13 @@ namespace MQTTnet.Extensions.ManagedClient
                 }
             }
 
-            if (Options.AutoReconnect)
-            {
-                var cancellationTokenSource = new CancellationTokenSource();
-                var cancellationToken = cancellationTokenSource.Token;
-                _connectionCancellationToken = cancellationTokenSource;
+            var cancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = cancellationTokenSource.Token;
+            _connectionCancellationToken = cancellationTokenSource;
 
-                _maintainConnectionTask = Task.Run(() => MaintainConnectionAsync(cancellationToken), cancellationToken);
-                _maintainConnectionTask.Forget(_logger);
-            }
-            
+            _maintainConnectionTask = Task.Run(() => MaintainConnectionAsync(cancellationToken), cancellationToken);
+            _maintainConnectionTask.RunInBackground(_logger);
+
             _logger.Info("Started");
         }
 
@@ -579,7 +576,7 @@ namespace MQTTnet.Extensions.ManagedClient
             var cancellationToken = cancellationTokenSource.Token;
             _publishingCancellationToken = cancellationTokenSource;
 
-            Task.Run(() => PublishQueuedMessagesAsync(cancellationToken), cancellationToken).Forget(_logger);
+            Task.Run(() => PublishQueuedMessagesAsync(cancellationToken), cancellationToken).RunInBackground(_logger);
         }
 
         void StopPublishing()

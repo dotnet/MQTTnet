@@ -8,8 +8,6 @@ namespace MQTTnet.Extensions.ManagedClient
     {
         public IMqttClientOptions ClientOptions { get; set; }
 
-        public bool AutoReconnect { get; set; } = true;
-
         public TimeSpan AutoReconnectDelay { get; set; } = TimeSpan.FromSeconds(5);
 
         public TimeSpan ConnectionCheckInterval { get; set; } = TimeSpan.FromSeconds(1);

@@ -68,18 +68,6 @@ namespace MQTTnet.Extensions.ManagedClient
             options(_clientOptionsBuilder);
             return this;
         }
-
-        public ManagedMqttClientOptionsBuilder WithAutoReconnect()
-        {
-            _options.AutoReconnect = true;
-            return this;
-        }
-
-        public ManagedMqttClientOptionsBuilder WithoutAutoReconnect()
-        {
-            _options.AutoReconnect = false;
-            return this;
-        }
         
         public ManagedMqttClientOptions Build()
         {

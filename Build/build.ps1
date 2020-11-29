@@ -64,6 +64,10 @@ vstest.console.exe ..\Tests\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\M
 
 Remove-Item .\NuGet -Force -Recurse -ErrorAction SilentlyContinue
 
+$gitCommit = git log -1 --format=%h
+
+Copy-Item MQTTnet.nuspec -Destination MQTTnet.nuspec.old -Force
+(Get-Content MQTTnet.nuspec) -replace '\$gitCommit', $gitCommit | Set-Content MQTTnet.nuspec
 Copy-Item MQTTnet.AspNetCore.nuspec -Destination MQTTnet.AspNetCore.nuspec.old -Force
 (Get-Content MQTTnet.AspNetCore.nuspec) -replace '\$nugetVersion', $nugetVersion | Set-Content MQTTnet.AspNetCore.nuspec
 Copy-Item MQTTnet.Extensions.Rpc.nuspec -Destination MQTTnet.Extensions.Rpc.nuspec.old -Force
@@ -80,6 +84,7 @@ New-Item -ItemType Directory -Force -Path .\NuGet
 .\nuget.exe pack MQTTnet.Extensions.ManagedClient.nuspec -Verbosity detailed -Symbols -SymbolPackageFormat snupkg -OutputDir "NuGet" -Version $nugetVersion
 .\nuget.exe pack MQTTnet.Extensions.WebSocket4Net.nuspec -Verbosity detailed -Symbols -SymbolPackageFormat snupkg -OutputDir "NuGet" -Version $nugetVersion
 
+Move-Item MQTTnet.nuspec.old -Destination MQTTnet.nuspec -Force
 Move-Item MQTTnet.AspNetCore.nuspec.old -Destination MQTTnet.AspNetCore.nuspec -Force
 Move-Item MQTTnet.Extensions.Rpc.nuspec.old -Destination MQTTnet.Extensions.Rpc.nuspec -Force
 Move-Item MQTTnet.Extensions.ManagedClient.nuspec.old -Destination MQTTnet.Extensions.ManagedClient.nuspec -Force

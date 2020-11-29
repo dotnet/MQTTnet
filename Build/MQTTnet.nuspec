@@ -23,6 +23,8 @@
 * [Server] Fixed bug in PubRel packet generation (MQTTv5 only).
 * [Server] Improved message processing performance (+ ~5%).
 * [Server] Fix wrong usage of client session items for undelivered messages.
+
+Git commit: $gitCommit
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags> 

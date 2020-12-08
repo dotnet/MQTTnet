@@ -72,11 +72,10 @@ namespace MQTTnet.Implementations
             {
 #if NET452 || NET461
                 var clientSocket = await Task.Factory.FromAsync(_socket.BeginAccept, _socket.EndAccept, null).ConfigureAwait(false);
-                return new CrossPlatformSocket(clientSocket);
 #else
                 var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
-                return new CrossPlatformSocket(clientSocket);
 #endif
+                return new CrossPlatformSocket(clientSocket);
             }
             catch (ObjectDisposedException)
             {

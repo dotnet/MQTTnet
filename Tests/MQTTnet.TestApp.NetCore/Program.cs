@@ -8,6 +8,7 @@ using System.IO;
 using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -29,6 +30,7 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("9 = Start server (no trace)");
             Console.WriteLine("a = Start QoS 2 benchmark");
             Console.WriteLine("b = Start QoS 1 benchmark");
+            Console.WriteLine("c = Start QoS 0 benchmark");
             Console.WriteLine("c = Start QoS 0 benchmark");
 
             var pressedKey = Console.ReadKey(true);
@@ -85,11 +87,51 @@ namespace MQTTnet.TestApp.NetCore
 
             Thread.Sleep(Timeout.Infinite);
         }
-    }
 
+        static int _count;
+
+        static async Task ClientTestWithHandlers()
+        {
+            //private static int _count = 0;
+
+            var factory = new MqttFactory();
+            var mqttClient = factory.CreateMqttClient();
+
+            var options = new MqttClientOptionsBuilder()
+                .WithClientId("mqttnetspeed")
+                .WithTcpServer("#serveraddress#")
+                .WithCredentials("#username#", "#password#")
+                .WithCleanSession()
+                .Build();
+
+            //mqttClient.ApplicationMessageReceived += (s, e) =>    // version 2.8.5
+            mqttClient.UseApplicationMessageReceivedHandler(e =>    // version 3.0.0+
+            {
+                Interlocked.Increment(ref _count);
+            });
+
+            //mqttClient.Connected += async (s, e) =>               // version 2.8.5
+            mqttClient.UseConnectedHandler(async e =>               // version 3.0.0+
+            {
+                Console.WriteLine("### CONNECTED WITH SERVER ###");
+                await mqttClient.SubscribeAsync("topic/+", MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce);
+                Console.WriteLine("### SUBSCRIBED ###");
+            });
+
+            await mqttClient.ConnectAsync(options);
+
+            while (true)
+            {
+                Console.WriteLine($"{Interlocked.Exchange(ref _count, 0)}/s");
+                await Task.Delay(TimeSpan.FromSeconds(1));
+            }
+
+        }
+    }
+    
     public class RetainedMessageHandler : IMqttServerStorage
     {
-        private const string Filename = "C:\\MQTT\\RetainedMessages.json";
+        const string Filename = "C:\\MQTT\\RetainedMessages.json";
 
         public Task SaveRetainedMessagesAsync(IList<MqttApplicationMessage> messages)
         {

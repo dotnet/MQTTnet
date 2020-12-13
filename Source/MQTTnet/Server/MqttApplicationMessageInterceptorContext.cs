@@ -1,15 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Server
 {
-    public class MqttApplicationMessageInterceptorContext
+    public sealed class MqttApplicationMessageInterceptorContext
     {
-        public MqttApplicationMessageInterceptorContext(string clientId, IDictionary<object, object> sessionItems, MqttApplicationMessage applicationMessage)
+        public MqttApplicationMessageInterceptorContext(string clientId, IDictionary<object, object> sessionItems, IMqttNetScopedLogger logger)
         {
             ClientId = clientId;
-            ApplicationMessage = applicationMessage;
             SessionItems = sessionItems;
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
+
+        /// <summary>
+        /// Gets the currently used logger.
+        /// </summary>
+        public IMqttNetScopedLogger Logger { get; }
 
         public string ClientId { get; }
 

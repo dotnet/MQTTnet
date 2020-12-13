@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Server
 {
-    public class MqttServerApplicationMessageInterceptorDelegate : IMqttServerApplicationMessageInterceptor
+    public sealed class MqttServerApplicationMessageInterceptorDelegate : IMqttServerApplicationMessageInterceptor
     {
-        private readonly Func<MqttApplicationMessageInterceptorContext, Task> _callback;
+        readonly Func<MqttApplicationMessageInterceptorContext, Task> _callback;
 
         public MqttServerApplicationMessageInterceptorDelegate(Action<MqttApplicationMessageInterceptorContext> callback)
         {

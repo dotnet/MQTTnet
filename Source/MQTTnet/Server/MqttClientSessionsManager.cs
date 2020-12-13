@@ -322,19 +322,21 @@ namespace MQTTnet.Server
                 }
 
                 var deliveryCount = 0;
-
+                List<MqttClientSession> sessions;
                 lock (_sessions)
                 {
-                    foreach (var clientSession in _sessions.Values)
+                    sessions = _sessions.Values.ToList();
+                }
+
+                foreach (var clientSession in sessions)
+                {
+                    var isSubscribed = clientSession.EnqueueApplicationMessage(applicationMessage, senderClientId, false);
+                    if (isSubscribed)
                     {
-                        var isSubscribed = clientSession.EnqueueApplicationMessage(applicationMessage, senderClientId, false);
-                        if (isSubscribed)
-                        {
-                            deliveryCount++;
-                        }
+                        deliveryCount++;
                     }
                 }
-                
+
                 if (deliveryCount == 0)
                 {
                     var undeliveredMessageInterceptor = _options.UndeliveredMessageInterceptor;
@@ -445,7 +447,13 @@ namespace MQTTnet.Server
                 sessionItems = clientConnection.Session.Items;
             }
 
-            var interceptorContext = new MqttApplicationMessageInterceptorContext(senderClientId, sessionItems, applicationMessage);
+            var interceptorContext = new MqttApplicationMessageInterceptorContext(senderClientId, sessionItems, _logger)
+            {
+                AcceptPublish = true,
+                ApplicationMessage = applicationMessage,
+                CloseConnection =  false
+            };
+
             await interceptor.InterceptApplicationMessagePublishAsync(interceptorContext).ConfigureAwait(false);
             return interceptorContext;
         }

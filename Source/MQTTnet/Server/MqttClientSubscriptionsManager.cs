@@ -193,10 +193,7 @@ namespace MQTTnet.Server
 
             if (qosLevels.Count == 0)
             {
-                return new CheckSubscriptionsResult
-                {
-                    IsSubscribed = false
-                };
+                return CheckSubscriptionsResult.NotSubscribed;
             }
 
             return CreateSubscriptionResult(qosLevel, qosLevels);

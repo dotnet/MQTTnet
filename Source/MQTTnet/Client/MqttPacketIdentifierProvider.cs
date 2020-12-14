@@ -1,9 +1,10 @@
 ﻿namespace MQTTnet.Client
 {
-    public class MqttPacketIdentifierProvider
+    public sealed class MqttPacketIdentifierProvider
     {
-        private readonly object _syncRoot = new object();
-        private ushort _value;
+        readonly object _syncRoot = new object();
+
+        ushort _value;
 
         public void Reset()
         {

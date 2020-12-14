@@ -13,11 +13,8 @@ namespace MQTTnet.Formatter
     /// </summary>
     public sealed class MqttPacketWriter : IMqttPacketWriter
     {
-        static readonly ArraySegment<byte> ZeroVariableLengthIntegerArray = new ArraySegment<byte>(new byte[1], 0, 1);
-        static readonly ArraySegment<byte> ZeroTwoByteIntegerArray = new ArraySegment<byte>(new byte[2], 0, 2);
-
-        public static int InitialBufferSize = 128;
-        public static int MaxBufferSize = 4096;
+        public static int InitialBufferSize = 4096;
+        public static int MaxBufferSize = 4096 + 4;
 
         byte[] _buffer = new byte[InitialBufferSize];
 
@@ -38,59 +35,72 @@ namespace MQTTnet.Formatter
             var x = value;
             do
             {
-                x = x / 128;
+                x /= 128;
                 result++;
             } while (x > 0);
 
             return result;
         }
 
-        public static ArraySegment<byte> EncodeVariableLengthInteger(uint value)
+        public void WriteVariableLengthInteger(uint value)
         {
             if (value == 0)
             {
-                return ZeroVariableLengthIntegerArray;
+                _buffer[_offset] = 0;
+                IncreasePosition(1);
+
+                return;
             }
 
             if (value <= 127)
             {
-                return new ArraySegment<byte>(new[] { (byte)value }, 0, 1);
+                _buffer[_offset] = (byte)value;
+                IncreasePosition(1);
+
+                return;
             }
 
-            var buffer = new byte[4];
-            var bufferOffset = 0;
-
+            var size = 0;
             var x = value;
             do
             {
                 var encodedByte = x % 128;
-                x = x / 128;
+                x /= 128;
                 if (x > 0)
                 {
-                    encodedByte = encodedByte | 128;
+                    encodedByte |= 128;
                 }
 
-                buffer[bufferOffset] = (byte)encodedByte;
-                bufferOffset++;
+                _buffer[_offset + size] = (byte)encodedByte;
+                size++;
             } while (x > 0);
 
-            return new ArraySegment<byte>(buffer, 0, bufferOffset);
-        }
-
-        public void WriteVariableLengthInteger(uint value)
-        {
-            Write(EncodeVariableLengthInteger(value));
+            IncreasePosition(size);
         }
 
         public void WriteWithLengthPrefix(string value)
         {
             if (string.IsNullOrEmpty(value))
             {
-                Write(ZeroTwoByteIntegerArray);
+                EnsureAdditionalCapacity(2);
+
+                _buffer[_offset] = 0;
+                _buffer[_offset + 1] = 0;
+
+                IncreasePosition(2);
             }
             else
             {
-                WriteWithLengthPrefix(Encoding.UTF8.GetBytes(value));
+                var bufferSize = Encoding.UTF8.GetByteCount(value);
+
+                EnsureAdditionalCapacity(bufferSize + 2);
+
+                _buffer[_offset] = (byte)(bufferSize >> 8);
+                _buffer[_offset + 1] = (byte)bufferSize;
+                
+                Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _offset + 2);
+
+                IncreasePosition(bufferSize + 2);
             }
         }
 
@@ -98,13 +108,22 @@ namespace MQTTnet.Formatter
         {
             if (value == null || value.Length == 0)
             {
-                Write(ZeroTwoByteIntegerArray);
+                EnsureAdditionalCapacity(2);
+
+                _buffer[_offset] = 0;
+                _buffer[_offset + 1] = 0;
+
+                IncreasePosition(2);
             }
             else
             {
                 EnsureAdditionalCapacity(value.Length + 2);
-                Write((ushort)value.Length);
-                Write(value, 0, value.Length);
+
+                _buffer[_offset] = (byte)(value.Length >> 8);
+                _buffer[_offset + 1] = (byte)value.Length;
+                
+                Array.Copy(value, 0, _buffer, _offset + 2, value.Length);
+                IncreasePosition(value.Length + 2);
             }
         }
 
@@ -143,8 +162,6 @@ namespace MQTTnet.Formatter
 
         public void Write(IMqttPacketWriter propertyWriter)
         {
-            if (propertyWriter == null) throw new ArgumentNullException(nameof(propertyWriter));
-
             if (propertyWriter is MqttPacketWriter writer)
             {
                 if (writer.Length == 0)
@@ -156,7 +173,12 @@ namespace MQTTnet.Formatter
                 return;
             }
 
-            throw new InvalidOperationException($"{nameof(propertyWriter)} must be of type {typeof(MqttPacketWriter).Name}");
+            if (propertyWriter == null)
+            {
+                throw new ArgumentNullException(nameof(propertyWriter));
+            }
+
+            throw new InvalidOperationException($"{nameof(propertyWriter)} must be of type {nameof(MqttPacketWriter)}");
         }
 
         public void Reset(int length)
@@ -190,12 +212,7 @@ namespace MQTTnet.Formatter
 
             Array.Resize(ref _buffer, MaxBufferSize);
         }
-
-        void Write(ArraySegment<byte> buffer)
-        {
-            Write(buffer.Array, buffer.Offset, buffer.Count);
-        }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void EnsureAdditionalCapacity(int additionalCapacity)
         {

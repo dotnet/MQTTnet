@@ -1,8 +1,8 @@
 ﻿namespace MQTTnet.Server
 {
-    public class MqttEnqueuedApplicationMessage
+    public sealed class MqttPendingApplicationMessage
     {
-        public MqttEnqueuedApplicationMessage(MqttApplicationMessage applicationMessage, MqttClientConnection sender)
+        public MqttPendingApplicationMessage(MqttApplicationMessage applicationMessage, MqttClientConnection sender)
         {
             Sender = sender;
             ApplicationMessage = applicationMessage;

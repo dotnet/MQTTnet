@@ -18,7 +18,7 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientSessionsManager : IDisposable
     {
-        readonly BlockingCollection<MqttEnqueuedApplicationMessage> _messageQueue = new BlockingCollection<MqttEnqueuedApplicationMessage>();
+        readonly BlockingCollection<MqttPendingApplicationMessage> _messageQueue = new BlockingCollection<MqttPendingApplicationMessage>();
 
         readonly object _createConnectionSyncRoot = new object();
         readonly Dictionary<string, MqttClientConnection> _connections = new Dictionary<string, MqttClientConnection>();
@@ -92,7 +92,7 @@ namespace MQTTnet.Server
                     // Send failure response here without preparing a session. The result for a successful connect
                     // will be sent from the session itself.
                     var connAckPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext);
-                    await channelAdapter.SendPacketAsync(connAckPacket, _options.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false);
+                    await channelAdapter.SendPacketAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
 
                     return;
                 }
@@ -177,7 +177,7 @@ namespace MQTTnet.Server
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            _messageQueue.Add(new MqttEnqueuedApplicationMessage(applicationMessage, sender));
+            _messageQueue.Add(new MqttPendingApplicationMessage(applicationMessage, sender));
         }
 
         public Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
@@ -273,7 +273,7 @@ namespace MQTTnet.Server
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                MqttEnqueuedApplicationMessage queuedApplicationMessage;
+                MqttPendingApplicationMessage queuedApplicationMessage;
                 try
                 {
                      queuedApplicationMessage = _messageQueue.Take(cancellationToken);

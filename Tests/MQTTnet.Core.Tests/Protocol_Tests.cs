@@ -11,9 +11,11 @@ namespace MQTTnet.Tests
         {
             for (uint i = 0; i < 268435455; i++)
             {
-                var buffer = MqttPacketWriter.EncodeVariableLengthInteger(i);
-                var reader = new MqttPacketBodyReader(buffer.Array, buffer.Offset, buffer.Count);
+                var writer = new MqttPacketWriter();
+                writer.WriteVariableLengthInteger(i);
+                var buffer = writer.GetBuffer();
 
+                var reader = new MqttPacketBodyReader(buffer, 0, writer.Length);
                 var checkValue = reader.ReadVariableLengthInteger();
 
                 Assert.AreEqual(i, checkValue);

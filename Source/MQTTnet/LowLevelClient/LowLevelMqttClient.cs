@@ -76,7 +76,7 @@ namespace MQTTnet.LowLevelClient
 
             try
             {
-                await _adapter.SendPacketAsync(packet, _options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
+                await _adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception)
             {

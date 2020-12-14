@@ -100,7 +100,7 @@ namespace MQTTnet.Server
                     await _channelAdapter.SendPacketAsync(new MqttDisconnectPacket
                     {
                         ReasonCode = reason
-                    }, _serverOptions.DefaultCommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
+                    }, CancellationToken.None).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -485,16 +485,17 @@ namespace MQTTnet.Server
             }
         }
 
-        async Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            await _channelAdapter.SendPacketAsync(packet, _serverOptions.DefaultCommunicationTimeout, cancellationToken).ConfigureAwait(false);
-
-            Interlocked.Increment(ref _receivedPacketsCount);
-
-            if (packet is MqttPublishPacket)
+            return _channelAdapter.SendPacketAsync(packet, cancellationToken).ContinueWith(task =>
             {
-                Interlocked.Increment(ref _receivedApplicationMessagesCount);
-            }
+                Interlocked.Increment(ref _receivedPacketsCount);
+
+                if (packet is MqttPublishPacket)
+                {
+                    Interlocked.Increment(ref _receivedApplicationMessagesCount);
+                }
+            }, cancellationToken);
         }
     }
 }

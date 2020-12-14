@@ -167,7 +167,7 @@ namespace MQTTnet.AspNetCore
             BytesSent = 0;
         }
 
-        public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
             var formatter = PacketFormatterAdapter;
             using (await _writerLock.WaitAsync(cancellationToken).ConfigureAwait(false))
@@ -180,6 +180,7 @@ namespace MQTTnet.AspNetCore
                 {
                     BytesSent += msg.Length;
                 }
+
                 PacketFormatterAdapter.FreeBuffer();
             }
         }

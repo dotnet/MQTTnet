@@ -17,14 +17,14 @@ namespace MQTTnet.Implementations
     public sealed class MqttTcpChannel : IMqttChannel
     {
         readonly IMqttClientOptions _clientOptions;
-        readonly MqttClientTcpOptions _options;
+        readonly MqttClientTcpOptions _tcpOptions;
 
         Stream _stream;
 
         public MqttTcpChannel(IMqttClientOptions clientOptions)
         {
             _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
-            _options = (MqttClientTcpOptions)clientOptions.ChannelOptions;
+            _tcpOptions = (MqttClientTcpOptions)clientOptions.ChannelOptions;
 
             IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
         }
@@ -50,34 +50,35 @@ namespace MQTTnet.Implementations
             CrossPlatformSocket socket = null;
             try
             {
-                if (_options.AddressFamily == AddressFamily.Unspecified)
+                if (_tcpOptions.AddressFamily == AddressFamily.Unspecified)
                 {
                     socket = new CrossPlatformSocket();
                 }
                 else
                 {
-                    socket = new CrossPlatformSocket(_options.AddressFamily);
+                    socket = new CrossPlatformSocket(_tcpOptions.AddressFamily);
                 }
 
-                socket.ReceiveBufferSize = _options.BufferSize;
-                socket.SendBufferSize = _options.BufferSize;
-                socket.NoDelay = _options.NoDelay;
+                socket.ReceiveBufferSize = _tcpOptions.BufferSize;
+                socket.SendBufferSize = _tcpOptions.BufferSize;
+                socket.SendTimeout = (int)_clientOptions.CommunicationTimeout.TotalMilliseconds;
+                socket.NoDelay = _tcpOptions.NoDelay;
 
-                if (_options.DualMode.HasValue)
+                if (_tcpOptions.DualMode.HasValue)
                 {
                     // It is important to avoid setting the flag if no specific value is set by the user
                     // because on IPv4 only networks the setter will always throw an exception. Regardless
                     // of the actual value.
-                    socket.DualMode = _options.DualMode.Value;
+                    socket.DualMode = _tcpOptions.DualMode.Value;
                 }
 
-                await socket.ConnectAsync(_options.Server, _options.GetPort(), cancellationToken).ConfigureAwait(false);
+                await socket.ConnectAsync(_tcpOptions.Server, _tcpOptions.GetPort(), cancellationToken).ConfigureAwait(false);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var networkStream = socket.GetStream();
                 
-                if (_options.TlsOptions?.UseTls == true)
+                if (_tcpOptions.TlsOptions?.UseTls == true)
                 {
                     var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                     try
@@ -85,16 +86,16 @@ namespace MQTTnet.Implementations
 #if NETCOREAPP3_1
                         var sslOptions = new SslClientAuthenticationOptions
                         {
-                            ApplicationProtocols = _options.TlsOptions.ApplicationProtocols,
+                            ApplicationProtocols = _tcpOptions.TlsOptions.ApplicationProtocols,
                             ClientCertificates = LoadCertificates(),
-                            EnabledSslProtocols = _options.TlsOptions.SslProtocol,
-                            CertificateRevocationCheckMode = _options.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : X509RevocationMode.Online,
-                            TargetHost = _options.Server
+                            EnabledSslProtocols = _tcpOptions.TlsOptions.SslProtocol,
+                            CertificateRevocationCheckMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : X509RevocationMode.Online,
+                            TargetHost = _tcpOptions.Server
                         };
 
                         await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
 #else 
-                        await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, !_options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+                        await sslStream.AuthenticateAsClientAsync(_tcpOptions.Server, LoadCertificates(), _tcpOptions.TlsOptions.SslProtocol, !_tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
 #endif
                     }
                     catch
@@ -132,8 +133,6 @@ namespace MQTTnet.Implementations
 
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            if (buffer is null) throw new ArgumentNullException(nameof(buffer));
-
             cancellationToken.ThrowIfCancellationRequested();
 
             try
@@ -174,8 +173,6 @@ namespace MQTTnet.Implementations
 
         public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            if (buffer is null) throw new ArgumentNullException(nameof(buffer));
-
             cancellationToken.ThrowIfCancellationRequested();
 
             try
@@ -232,7 +229,7 @@ namespace MQTTnet.Implementations
             #region OBSOLETE
 
 #pragma warning disable CS0618 // Type or member is obsolete
-            var certificateValidationCallback = _options?.TlsOptions?.CertificateValidationCallback;
+            var certificateValidationCallback = _tcpOptions?.TlsOptions?.CertificateValidationCallback;
 #pragma warning restore CS0618 // Type or member is obsolete
             if (certificateValidationCallback != null)
             {
@@ -240,7 +237,7 @@ namespace MQTTnet.Implementations
             }
             #endregion
 
-            var certificateValidationHandler = _options?.TlsOptions?.CertificateValidationHandler;
+            var certificateValidationHandler = _tcpOptions?.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)
             {
                 var context = new MqttClientCertificateValidationCallbackContext
@@ -248,7 +245,7 @@ namespace MQTTnet.Implementations
                     Certificate = x509Certificate,
                     Chain = chain,
                     SslPolicyErrors = sslPolicyErrors,
-                    ClientOptions = _options
+                    ClientOptions = _tcpOptions
                 };
 
                 return certificateValidationHandler(context);
@@ -261,7 +258,7 @@ namespace MQTTnet.Implementations
 
             if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.OfflineRevocation))
             {
-                if (_options?.TlsOptions?.IgnoreCertificateRevocationErrors != true)
+                if (_tcpOptions?.TlsOptions?.IgnoreCertificateRevocationErrors != true)
                 {
                     return false;
                 }
@@ -269,24 +266,24 @@ namespace MQTTnet.Implementations
 
             if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.PartialChain))
             {
-                if (_options?.TlsOptions?.IgnoreCertificateChainErrors != true)
+                if (_tcpOptions?.TlsOptions?.IgnoreCertificateChainErrors != true)
                 {
                     return false;
                 }
             }
 
-            return _options?.TlsOptions?.AllowUntrustedCertificates == true;
+            return _tcpOptions?.TlsOptions?.AllowUntrustedCertificates == true;
         }
 
         X509CertificateCollection LoadCertificates()
         {
             var certificates = new X509CertificateCollection();
-            if (_options.TlsOptions.Certificates == null)
+            if (_tcpOptions.TlsOptions.Certificates == null)
             {
                 return certificates;
             }
 
-            foreach (var certificate in _options.TlsOptions.Certificates)
+            foreach (var certificate in _tcpOptions.TlsOptions.Certificates)
             {
                 certificates.Add(certificate);
             }

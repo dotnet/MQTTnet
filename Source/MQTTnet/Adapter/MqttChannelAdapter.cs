@@ -111,7 +111,7 @@ namespace MQTTnet.Adapter
             }
         }
 
-        public async Task SendPacketAsync(MqttBasePacket packet, TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
@@ -125,15 +125,7 @@ namespace MQTTnet.Adapter
                 {
                     var packetData = PacketFormatterAdapter.Encode(packet);
 
-                    if (timeout == TimeSpan.Zero)
-                    {
-                        await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await MqttTaskTimeout.WaitAsync(
-                            t => _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, t), timeout, cancellationToken).ConfigureAwait(false);
-                    }
+                    await _channel.WriteAsync(packetData.Array, packetData.Offset, packetData.Count, cancellationToken).ConfigureAwait(false);
 
                     Interlocked.Add(ref _bytesReceived, packetData.Count);
 

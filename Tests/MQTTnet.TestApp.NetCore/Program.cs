@@ -31,7 +31,6 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("a = Start QoS 2 benchmark");
             Console.WriteLine("b = Start QoS 1 benchmark");
             Console.WriteLine("c = Start QoS 0 benchmark");
-            Console.WriteLine("c = Start QoS 0 benchmark");
 
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.KeyChar == '1')

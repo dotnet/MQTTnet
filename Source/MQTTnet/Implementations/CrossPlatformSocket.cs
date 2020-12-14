@@ -51,11 +51,17 @@ namespace MQTTnet.Implementations
             get => _socket.ReceiveBufferSize;
             set => _socket.ReceiveBufferSize = value;
         }
-
+        
         public int SendBufferSize
         {
             get => _socket.SendBufferSize;
             set => _socket.SendBufferSize = value;
+        }
+
+        public int SendTimeout
+        {
+            get => _socket.SendTimeout;
+            set => _socket.SendTimeout = value;
         }
 
         public EndPoint RemoteEndPoint => _socket.RemoteEndPoint;

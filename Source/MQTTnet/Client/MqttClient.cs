@@ -219,11 +219,13 @@ namespace MQTTnet.Client
 
         public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             MqttTopicValidator.ThrowIfInvalid(applicationMessage);
 
             ThrowIfDisposed();
             ThrowIfNotConnected();
-
+            
             var publishPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(applicationMessage);
 
             switch (applicationMessage.QualityOfServiceLevel)
@@ -381,7 +383,7 @@ namespace MQTTnet.Client
 
             _sendTracker.Restart();
 
-            return _adapter.SendPacketAsync(packet, Options.CommunicationTimeout, cancellationToken);
+            return _adapter.SendPacketAsync(packet, cancellationToken);
         }
 
         async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttBasePacket
@@ -399,8 +401,7 @@ namespace MQTTnet.Client
                 try
                 {
                     _sendTracker.Restart();
-
-                    await _adapter.SendPacketAsync(requestPacket, Options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
+                    await _adapter.SendPacketAsync(requestPacket, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
@@ -439,7 +440,7 @@ namespace MQTTnet.Client
 
                     if (waitTime <= TimeSpan.Zero)
                     {
-                        await SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket(), cancellationToken).ConfigureAwait(false);
+                        await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
                     }
 
                     // Wait a fixed time in all cases. Calculation of the remaining time is complicated

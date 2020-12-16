@@ -21,11 +21,11 @@
     <DefineConstants>RELEASE;NETSTANDARD2_0</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' or '$(TargetFramework)' == 'net5.0' ">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
     
-  <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1'">
+  <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1' and '$(TargetFramework)' != 'net5.0' ">
     <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.1.0" />
   </ItemGroup>
 

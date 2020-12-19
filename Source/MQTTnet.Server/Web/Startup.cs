@@ -186,8 +186,7 @@ namespace MQTTnet.Server.Web
 
             var webSocketOptions = new WebSocketOptions
             {
-                KeepAliveInterval = TimeSpan.FromSeconds(mqttSettings.WebSocketEndPoint.KeepAliveInterval),
-                ReceiveBufferSize = mqttSettings.WebSocketEndPoint.ReceiveBufferSize
+                KeepAliveInterval = TimeSpan.FromSeconds(mqttSettings.WebSocketEndPoint.KeepAliveInterval)
             };
 
             if (mqttSettings.WebSocketEndPoint.AllowedOrigins?.Any() == true)

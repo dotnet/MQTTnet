@@ -40,7 +40,7 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             _sender = new SocketSender(_socket, PipeScheduler.ThreadPool);
             _receiver = new SocketReceiver(_socket, PipeScheduler.ThreadPool);
         }
-#if NETCOREAPP3_1
+#if NETCOREAPP3_1 || NET5_0
         public override ValueTask DisposeAsync()
 #else
         public Task DisposeAsync()
@@ -53,7 +53,7 @@ namespace MQTTnet.AspNetCore.Client.Tcp
 
             _socket?.Dispose();
 
-#if NETCOREAPP3_1
+#if NETCOREAPP3_1 || NET5_0
 
             return base.DisposeAsync();
         }

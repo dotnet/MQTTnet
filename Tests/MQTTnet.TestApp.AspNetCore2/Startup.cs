@@ -27,7 +27,7 @@ namespace MQTTnet.TestApp.AspNetCore2
         }
 
         // In class _Startup_ of the ASP.NET Core 3.1 project.
-#if NETCOREAPP3_1
+#if NETCOREAPP3_1 || NET5_0
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseRouting();

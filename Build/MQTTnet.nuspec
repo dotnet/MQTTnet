@@ -16,6 +16,7 @@
 * [Core] Added support for TLS 1.3 (requires .NET Core 3.1+) (thanks to @Dvergatal).
 * [Core] Added support for _MaximumQoS_ transmit when using MQTTv5 (thanks to @nayato).
 * [Core] Aligned the format of some log messages.
+* [Client] Fixed an issue with connection state detection (thanks to @tobiasfrick).
 * [ManagedClient] Removed _AutoReconnect_ since this does no longer work (BREAKING CHANGE!).
 * [RpcClient] Moved the RPC topic validation to the topic generation strategy.
 * [RcpClient] Added interface for _MqttRpcClient_.

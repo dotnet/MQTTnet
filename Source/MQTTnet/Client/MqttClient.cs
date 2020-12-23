@@ -142,14 +142,17 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
 
-            var disconnectIsPending = DisconnectIsPending();
+            if (DisconnectIsPending())
+            {
+                return;
+            }
 
             try
             {
                 _disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
                 _cleanDisconnectInitiated = true;
 
-                if (!disconnectIsPending && _isConnected)
+                if (_isConnected)
                 {
                     var disconnectPacket = _adapter.PacketFormatterAdapter.DataConverter.CreateDisconnectPacket(options);
                     await SendAsync(disconnectPacket, cancellationToken).ConfigureAwait(false);
@@ -157,10 +160,7 @@ namespace MQTTnet.Client
             }
             finally
             {
-                if (!disconnectIsPending)
-                {
-                    await DisconnectInternalAsync(null, null, null).ConfigureAwait(false);
-                }
+                await DisconnectInternalAsync(null, null, null).ConfigureAwait(false);
             }
         }
 
@@ -225,7 +225,7 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
             ThrowIfNotConnected();
-            
+
             var publishPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(applicationMessage);
 
             switch (applicationMessage.QualityOfServiceLevel)
@@ -312,7 +312,7 @@ namespace MQTTnet.Client
         async Task DisconnectInternalAsync(Task sender, Exception exception, MqttClientAuthenticateResult authenticateResult)
         {
             var clientWasConnected = _isConnected;
-            
+
             TryInitiateDisconnect();
             _isConnected = false;
 
@@ -572,7 +572,7 @@ namespace MQTTnet.Client
 
                     if (!DisconnectIsPending())
                     {
-                        await DisconnectInternalAsync(_packetReceiverTask, null, null);
+                        await DisconnectInternalAsync(_packetReceiverTask, null, null).ConfigureAwait(false);
                     }
                 }
                 else if (packet is MqttAuthPacket authPacket)
@@ -634,7 +634,7 @@ namespace MQTTnet.Client
             {
                 try
                 {
-                    var publishPacketDequeueResult = await _publishPacketReceiverQueue.TryDequeueAsync(cancellationToken);
+                    var publishPacketDequeueResult = await _publishPacketReceiverQueue.TryDequeueAsync(cancellationToken).ConfigureAwait(false);
                     if (!publishPacketDequeueResult.IsSuccess)
                     {
                         return;

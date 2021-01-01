@@ -13,8 +13,8 @@ namespace MQTTnet.Exceptions
         {
         }
 
-        public MqttCommunicationException(string message)
-            : base(message)
+        public MqttCommunicationException(string message, Exception innerException = null)
+            : base(message, innerException)
         {
         }
     }

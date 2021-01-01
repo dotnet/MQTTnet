@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Exceptions;
 
 namespace MQTTnet.Implementations
 {
@@ -123,9 +124,19 @@ namespace MQTTnet.Implementations
                     _networkStream = new NetworkStream(_socket, true);
                 }
             }
+            catch (SocketException socketException)
+            {
+                if (socketException.SocketErrorCode == SocketError.OperationAborted)
+                {
+                    throw new OperationCanceledException();
+                }
+
+                throw new MqttCommunicationException($"Error while connecting with host '{host}:{port}'.", socketException);
+            }
             catch (ObjectDisposedException)
             {
                 // This will happen when _socket.EndConnect gets called by Task library but the socket is already disposed.
+                cancellationToken.ThrowIfCancellationRequested();
             }
         }
 

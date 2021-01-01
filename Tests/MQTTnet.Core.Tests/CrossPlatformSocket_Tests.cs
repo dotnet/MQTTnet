@@ -29,14 +29,15 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        [ExpectedException(typeof(OperationCanceledException))]
         public async Task Try_Connect_Invalid_Host()
         {
             var crossPlatformSocket = new CrossPlatformSocket();
 
-            var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             cancellationToken.Token.Register(() => crossPlatformSocket.Dispose());
 
-            await crossPlatformSocket.ConnectAsync("www.google.de", 1234, CancellationToken.None);
+            await crossPlatformSocket.ConnectAsync("www.google.de", 54321, cancellationToken.Token);
         }
 
         //[TestMethod]

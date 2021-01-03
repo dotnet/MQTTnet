@@ -15,12 +15,26 @@ namespace MQTTnet.Client.Disconnecting
             ReasonCode = reason;
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the client was connected or not.
+        /// </summary>
         public bool ClientWasConnected { get; }
 
+        /// <summary>
+        /// Gets the exception.
+        /// </summary>
         public Exception Exception { get; }
 
+        /// <summary>
+        /// Gets the authentication result.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
         public MqttClientAuthenticateResult AuthenticateResult { get; }
 
+        /// <summary>
+        /// Gets or sets the reason.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
         public MqttClientDisconnectReason Reason { get; set; }
 
         [Obsolete("Please use 'Reason' instead. This property will be removed in the future!")]

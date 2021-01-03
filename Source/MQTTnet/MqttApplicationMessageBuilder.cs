@@ -11,31 +11,128 @@ namespace MQTTnet
 {
     public class MqttApplicationMessageBuilder
     {
+        /// <summary>
+        /// The quality of service level.
+        /// The Quality of Service (QoS) level is an agreement between the sender of a message and the receiver of a message that defines the guarantee of delivery for a specific message.
+        /// There are 3 QoS levels in MQTT:
+        /// - At most once  (0): Message gets delivered no time, once or multiple times.
+        /// - At least once (1): Message gets delivered at least once (one time or more often).
+        /// - Exactly once  (2): Message gets delivered exactly once (It's ensured that the message only comes once).
+        /// </summary>
         private MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
+
+        /// <summary>
+        /// The MQTT topic.
+        /// In MQTT, the word topic refers to an UTF-8 string that the broker uses to filter messages for each connected client.
+        /// The topic consists of one or more topic levels. Each topic level is separated by a forward slash (topic level separator). 
+        /// </summary>
         private string _topic;
+
+        /// <summary>
+        /// The payload.
+        /// The payload is the data bytes sent via the MQTT protocol.
+        /// </summary>
         private byte[] _payload;
+
+        /// <summary>
+        /// A value indicating whether the message should be retained or not.
+        /// A retained message is a normal MQTT message with the retained flag set to true.
+        /// The broker stores the last retained message and the corresponding QoS for that topic.
+        /// </summary>
         private bool _retain;
+
+        /// <summary>
+        /// The content type.
+        /// The content type must be a UTF-8 encoded string. The content type value identifies the kind of UTF-8 encoded payload.
+        /// </summary>
         private string _contentType;
+
+        /// <summary>
+        /// The response topic.
+        /// In MQTT 5 the ability to publish a response topic was added in the publish message which allows you to implement the request/response pattern between clients that is common in web applications.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
         private string _responseTopic;
+
+        /// <summary>
+        /// The correlation data.
+        /// In order for the sender to know what sent message the response refers to it can also send correlation data with the published message.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
         private byte[] _correlationData;
+
+        /// <summary>
+        /// The topic alias.
+        /// Topic aliases were introduced are a mechanism for reducing the size of published packets by reducing the size of the topic field.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
         private ushort? _topicAlias;
+
+        /// <summary>
+        /// The subscription identifiers.
+        /// The client can specify a subscription identifier when subscribing.
+        /// The broker will establish and store the mapping relationship between this subscription and subscription identifier when successfully create or modify subscription.
+        /// The broker will return the subscription identifier associated with this PUBLISH packet and the PUBLISH packet to the client when need to forward PUBLISH packets matching this subscription to this client.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
         private List<uint> _subscriptionIdentifiers;
+
+        /// <summary>
+        /// The message expiry interval.
+        /// A client can set the message expiry interval in seconds for each PUBLISH message individually.
+        /// This interval defines the period of time that the broker stores the PUBLISH message for any matching subscribers that are not currently connected.
+        /// When no message expiry interval is set, the broker must store the message for matching subscribers indefinitely.
+        /// When the retained=true option is set on the PUBLISH message, this interval also defines how long a message is retained on a topic.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
         private uint? _messageExpiryInterval;
+
+        /// <summary>
+        /// The payload format indicator.
+        /// The payload format indicator is part of any MQTT packet that can contain a payload. The indicator is an optional byte value.
+        /// A value of 0 indicates an “unspecified byte stream”.
+        /// A value of 1 indicates a "UTF-8 encoded payload".
+        /// If no payload format indicator is provided, the default value is 0.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
         private MqttPayloadFormatIndicator? _payloadFormatIndicator;
+
+        /// <summary>
+        /// The user properties.
+        /// In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT packet.
+        /// As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add metadata to MQTT messages and pass information between publisher, broker, and subscriber.
+        /// The feature is very similar to the HTTP header concept.
+        /// </summary>
+        /// Hint: MQTT 5 feature only.
         private List<MqttUserProperty> _userProperties;
 
+        /// <summary>
+        /// Adds a topic to the message.
+        /// </summary>
+        /// <param name="topic">The topic.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithTopic(string topic)
         {
             _topic = topic;
             return this;
         }
 
+        /// <summary>
+        /// Adds a payload to the message.
+        /// </summary>
+        /// <param name="payload">The payload.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayload(byte[] payload)
         {
             _payload = payload;
             return this;
         }
 
+        /// <summary>
+        /// Adds a payload to the message.
+        /// </summary>
+        /// <param name="payload">The payload.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayload(IEnumerable<byte> payload)
         {
             if (payload == null)
@@ -54,6 +151,11 @@ namespace MQTTnet
             return this;
         }
 
+        /// <summary>
+        /// Adds a payload to the message.
+        /// </summary>
+        /// <param name="payload">The payload.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayload(Stream payload)
         {
             if (payload == null)
@@ -65,6 +167,12 @@ namespace MQTTnet
             return WithPayload(payload, payload.Length - payload.Position);
         }
 
+        /// <summary>
+        /// Adds a payload to the message.
+        /// </summary>
+        /// <param name="payload">The payload.</param>
+        /// <param name="length">The stream length.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayload(Stream payload, long length)
         {
             if (payload == null)
@@ -86,6 +194,11 @@ namespace MQTTnet
             return this;
         }
 
+        /// <summary>
+        /// Adds a payload to the message.
+        /// </summary>
+        /// <param name="payload">The payload.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayload(string payload)
         {
             if (payload == null)
@@ -98,12 +211,22 @@ namespace MQTTnet
             return this;
         }
 
+        /// <summary>
+        /// Adds the quality of service level to the message.
+        /// </summary>
+        /// <param name="qualityOfServiceLevel">The quality of service level.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithQualityOfServiceLevel(MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             _qualityOfServiceLevel = qualityOfServiceLevel;
             return this;
         }
 
+        /// <summary>
+        /// Adds the quality of service level to the message.
+        /// </summary>
+        /// <param name="qualityOfServiceLevel">The quality of service level.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithQualityOfServiceLevel(int qualityOfServiceLevel)
         {
             if (qualityOfServiceLevel < 0 || qualityOfServiceLevel > 2)
@@ -114,24 +237,40 @@ namespace MQTTnet
             return WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qualityOfServiceLevel);
         }
 
+        /// <summary>
+        /// Adds retain flag to the message.
+        /// </summary>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithRetainFlag(bool value = true)
         {
             _retain = value;
             return this;
         }
 
+        /// <summary>
+        /// Adds the quality of service level 0 (at least once) to the message.
+        /// </summary>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithAtLeastOnceQoS()
         {
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce;
             return this;
         }
 
+        /// <summary>
+        /// Adds the quality of service level 1 (at most once) to the message.
+        /// </summary>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithAtMostOnceQoS()
         {
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
             return this;
         }
 
+        /// <summary>
+        /// Adds the quality of service level 2 (exactly once) to the message.
+        /// </summary>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithExactlyOnceQoS()
         {
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce;
@@ -139,8 +278,12 @@ namespace MQTTnet
         }
 
         /// <summary>
-        /// This is only supported when using MQTTv5.
+        /// Adds the user property to the message.
+        /// Hint: MQTT 5 feature only.
         /// </summary>
+        /// <param name="name">The property name.</param>
+        /// <param name="value">The property value.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithUserProperty(string name, string value)
         {
             if (_userProperties == null)
@@ -153,8 +296,10 @@ namespace MQTTnet
         }
 
         /// <summary>
-        /// This is only supported when using MQTTv5.
+        /// Adds the content type to the message.
+        /// Hint: MQTT 5 feature only.
         /// </summary>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithContentType(string contentType)
         {
             _contentType = contentType;
@@ -162,8 +307,11 @@ namespace MQTTnet
         }
 
         /// <summary>
-        /// This is only supported when using MQTTv5.
+        /// Adds the response topic to the message.
+        /// Hint: MQTT 5 feature only.
         /// </summary>
+        /// <param name="responseTopic">The response topic.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithResponseTopic(string responseTopic)
         {
             _responseTopic = responseTopic;
@@ -171,8 +319,11 @@ namespace MQTTnet
         }
 
         /// <summary>
-        /// This is only supported when using MQTTv5.
+        /// Adds the correlation data to the message.
+        /// Hint: MQTT 5 feature only.
         /// </summary>
+        /// <param name="correlationData">The correlation data.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithCorrelationData(byte[] correlationData)
         {
             _correlationData = correlationData;
@@ -180,8 +331,11 @@ namespace MQTTnet
         }
 
         /// <summary>
-        /// This is only supported when using MQTTv5.
+        /// Adds the topic alias to the message.
+        /// Hint: MQTT 5 feature only.
         /// </summary>
+        /// <param name="topicAlias">The topic alias.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithTopicAlias(ushort topicAlias)
         {
             _topicAlias = topicAlias;
@@ -189,8 +343,11 @@ namespace MQTTnet
         }
 
         /// <summary>
-        /// This is only supported when using MQTTv5.
+        /// Adds the subscription identifier to the message.
+        /// Hint: MQTT 5 feature only.
         /// </summary>
+        /// <param name="subscriptionIdentifier">The subscription identifier.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithSubscriptionIdentifier(uint subscriptionIdentifier)
         {
             if (_subscriptionIdentifiers == null)
@@ -203,8 +360,11 @@ namespace MQTTnet
         }
 
         /// <summary>
-        /// This is only supported when using MQTTv5.
+        /// Adds the message expiry interval to the message.
+        /// Hint: MQTT 5 feature only.
         /// </summary>
+        /// <param name="messageExpiryInterval">The message expiry interval.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithMessageExpiryInterval(uint messageExpiryInterval)
         {
             _messageExpiryInterval = messageExpiryInterval;
@@ -212,14 +372,21 @@ namespace MQTTnet
         }
 
         /// <summary>
-        /// This is only supported when using MQTTv5.
+        /// Adds the payload format indicator to the message.
+        /// Hint: MQTT 5 feature only.
         /// </summary>
+        /// <param name="payloadFormatIndicator">The payload format indicator.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayloadFormatIndicator(MqttPayloadFormatIndicator payloadFormatIndicator)
         {
             _payloadFormatIndicator = payloadFormatIndicator;
             return this;
         }
 
+        /// <summary>
+        /// Builds the message.
+        /// </summary>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessage"/> class.</returns>
         public MqttApplicationMessage Build()
         {
             if (!_topicAlias.HasValue && string.IsNullOrEmpty(_topic))

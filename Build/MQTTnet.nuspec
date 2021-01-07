@@ -17,6 +17,7 @@
 * [Core] Added support for _MaximumQoS_ transmit when using MQTTv5 (thanks to @nayato).
 * [Core] Aligned the format of some log messages.
 * [Client] Fixed an issue with connection state detection (thanks to @tobiasfrick).
+* [Client] Fixed an issue when receiving partial QoS 2 packets after a reconnect.
 * [ManagedClient] Removed _AutoReconnect_ since this does no longer work (BREAKING CHANGE!).
 * [RpcClient] Moved the RPC topic validation to the topic generation strategy.
 * [RcpClient] Added interface for _MqttRpcClient_.
@@ -67,6 +68,9 @@ Git commit: $gitCommit
 
     <!-- Images -->
     <file src="..\Images\Logo_128x128.png" target="images\" />
+
+    <!-- .NET 5.0 -->
+    <file src="..\Source\MQTTnet\bin\Release\net5.0\MQTTnet.*" target="lib\net5.0"/>
 
     <!-- .NET Standard 1.3 -->
     <file src="..\Source\MQTTnet\bin\Release\netstandard1.3\MQTTnet.*" target="lib\netstandard1.3\"/>

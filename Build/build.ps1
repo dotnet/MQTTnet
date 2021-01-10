@@ -95,7 +95,7 @@ Remove-Item "nuget.exe" -Force -Recurse -ErrorAction SilentlyContinue
 ####################################################################
 
 # Build MQTTnet.Server Portable
-&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion
+&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --framework net5.0
 
 $source = (Convert-Path .) + "\..\Source\MQTTnet.Server\bin\Release\netcoreapp3.1\publish"
 $destination = (Convert-Path .) + "\..\Source\MQTTnet.Server\bin\MQTTnet.Server-Portable-v$nugetVersion.zip"
@@ -106,7 +106,7 @@ If(Test-path $destination) {Remove-item $destination}
 ####################################################################
 
 # Build MQTTnet.Server Linux-x64
-&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime linux-x64 
+&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime linux-x64 --framework net5.0
 
 $source = (Convert-Path .) + "\..\Source\MQTTnet.Server\bin\Release\netcoreapp3.1\linux-x64\publish"
 $destination = (Convert-Path .) + "\..\Source\MQTTnet.Server\bin\MQTTnet.Server-Linux-x64-v$nugetVersion.zip"
@@ -117,7 +117,7 @@ If(Test-path $destination) {Remove-item $destination}
 ####################################################################
 
 # Build MQTTnet.Server Linux-ARM
-&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime linux-arm 
+&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime linux-arm --framework net5.0
 
 $source = (Convert-Path .) + "\..\Source\MQTTnet.Server\bin\Release\netcoreapp3.1\linux-ARM\publish"
 $destination = (Convert-Path .) + "\..\Source\MQTTnet.Server\bin\MQTTnet.Server-Linux-ARM-v$nugetVersion.zip"
@@ -128,7 +128,7 @@ If(Test-path $destination) {Remove-item $destination}
 ####################################################################
 
 # Build MQTTnet.Server Windows-x64
-&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime win-x64
+&dotnet publish ..\Source\MQTTnet.Server\MQTTnet.Server.csproj --configuration Release /p:FileVersion=$assemblyVersion /p:Version=$nugetVersion --self-contained --runtime win-x64 --framework net5.0
 
 $source = (Convert-Path .) + "\..\Source\MQTTnet.Server\bin\Release\netcoreapp3.1\win-x64\publish"
 $destination = (Convert-Path .) + "\..\Source\MQTTnet.Server\bin\MQTTnet.Server-Windows-x64-v$nugetVersion.zip"

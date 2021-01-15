@@ -31,26 +31,12 @@ namespace MQTTnet.Client.Subscribing
             return this;
         }
 
-        /// <summary>
-        /// Adds the subscription identifier to the subscribe options.
-        /// </summary>
-        /// <param name="subscriptionIdentifier">The subscription identifier.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttClientSubscribeOptionsBuilder WithSubscriptionIdentifier(uint? subscriptionIdentifier)
         {
             _subscribeOptions.SubscriptionIdentifier = subscriptionIdentifier;
             return this;
         }
 
-        /// <summary>
-        /// Adds a topic filter to the subscribe options.
-        /// </summary>
-        /// <param name="topic">The topic.</param>
-        /// <param name="qualityOfServiceLevel">The quality of service level.</param>
-        /// <param name="noLocal">A value indicating whether to not send messages originating on this client (noLocal) or not.</param>
-        /// <param name="retainAsPublished">A value indicating whether messages are retained as published or not.</param>
-        /// <param name="retainHandling">The retain handling.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttClientSubscribeOptionsBuilder WithTopicFilter(
             string topic,
             MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
@@ -68,11 +54,6 @@ namespace MQTTnet.Client.Subscribing
             });
         }
 
-        /// <summary>
-        /// Adds the topic filter to the subscribe options.
-        /// </summary>
-        /// <param name="topicFilterBuilder">The topic filter builder.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttClientSubscribeOptionsBuilder WithTopicFilter(Action<MqttTopicFilterBuilder> topicFilterBuilder)
         {
             if (topicFilterBuilder == null) throw new ArgumentNullException(nameof(topicFilterBuilder));
@@ -83,11 +64,6 @@ namespace MQTTnet.Client.Subscribing
             return WithTopicFilter(internalTopicFilterBuilder);
         }
 
-        /// <summary>
-        /// Adds the topic filter to the subscribe options.
-        /// </summary>
-        /// <param name="topicFilterBuilder">The topic filter builder.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttClientSubscribeOptionsBuilder WithTopicFilter(MqttTopicFilterBuilder topicFilterBuilder)
         {
             if (topicFilterBuilder == null) throw new ArgumentNullException(nameof(topicFilterBuilder));
@@ -95,11 +71,6 @@ namespace MQTTnet.Client.Subscribing
             return WithTopicFilter(topicFilterBuilder.Build());
         }
 
-        /// <summary>
-        /// Adds the topic filter to the subscribe options.
-        /// </summary>
-        /// <param name="topicFilter">The topic filter.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttClientSubscribeOptionsBuilder WithTopicFilter(MqttTopicFilter topicFilter)
         {
             if (topicFilter == null) throw new ArgumentNullException(nameof(topicFilter));
@@ -114,10 +85,6 @@ namespace MQTTnet.Client.Subscribing
             return this;
         }
 
-        /// <summary>
-        /// Builds the subscription options.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttClientSubscribeOptions"/> class.</returns>
         public MqttClientSubscribeOptions Build()
         {
             return _subscribeOptions;

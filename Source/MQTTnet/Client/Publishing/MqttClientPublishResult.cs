@@ -6,9 +6,6 @@ namespace MQTTnet.Client.Publishing
 {
     public class MqttClientPublishResult
     {
-        /// <summary>
-        /// Gets or sets the packet identifier.
-        /// </summary>
         public ushort? PacketIdentifier { get; set; }
 
         /// <summary>

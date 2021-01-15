@@ -53,9 +53,6 @@ namespace MQTTnet.Client.ExtendedAuthenticationExchange
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; }
 
-        /// <summary>
-        /// Gets the client.
-        /// </summary>
         public IMqttClient Client { get; }
     }
 }

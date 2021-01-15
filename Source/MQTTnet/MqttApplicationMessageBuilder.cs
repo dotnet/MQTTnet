@@ -106,33 +106,18 @@ namespace MQTTnet
         /// Hint: MQTT 5 feature only.
         private List<MqttUserProperty> _userProperties;
 
-        /// <summary>
-        /// Adds a topic to the message.
-        /// </summary>
-        /// <param name="topic">The topic.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithTopic(string topic)
         {
             _topic = topic;
             return this;
         }
 
-        /// <summary>
-        /// Adds a payload to the message.
-        /// </summary>
-        /// <param name="payload">The payload.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayload(byte[] payload)
         {
             _payload = payload;
             return this;
         }
 
-        /// <summary>
-        /// Adds a payload to the message.
-        /// </summary>
-        /// <param name="payload">The payload.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayload(IEnumerable<byte> payload)
         {
             if (payload == null)
@@ -151,11 +136,6 @@ namespace MQTTnet
             return this;
         }
 
-        /// <summary>
-        /// Adds a payload to the message.
-        /// </summary>
-        /// <param name="payload">The payload.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayload(Stream payload)
         {
             if (payload == null)
@@ -167,12 +147,6 @@ namespace MQTTnet
             return WithPayload(payload, payload.Length - payload.Position);
         }
 
-        /// <summary>
-        /// Adds a payload to the message.
-        /// </summary>
-        /// <param name="payload">The payload.</param>
-        /// <param name="length">The stream length.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayload(Stream payload, long length)
         {
             if (payload == null)
@@ -194,11 +168,6 @@ namespace MQTTnet
             return this;
         }
 
-        /// <summary>
-        /// Adds a payload to the message.
-        /// </summary>
-        /// <param name="payload">The payload.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithPayload(string payload)
         {
             if (payload == null)
@@ -211,22 +180,12 @@ namespace MQTTnet
             return this;
         }
 
-        /// <summary>
-        /// Adds the quality of service level to the message.
-        /// </summary>
-        /// <param name="qualityOfServiceLevel">The quality of service level.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithQualityOfServiceLevel(MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             _qualityOfServiceLevel = qualityOfServiceLevel;
             return this;
         }
 
-        /// <summary>
-        /// Adds the quality of service level to the message.
-        /// </summary>
-        /// <param name="qualityOfServiceLevel">The quality of service level.</param>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithQualityOfServiceLevel(int qualityOfServiceLevel)
         {
             if (qualityOfServiceLevel < 0 || qualityOfServiceLevel > 2)
@@ -237,40 +196,24 @@ namespace MQTTnet
             return WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qualityOfServiceLevel);
         }
 
-        /// <summary>
-        /// Adds retain flag to the message.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithRetainFlag(bool value = true)
         {
             _retain = value;
             return this;
         }
 
-        /// <summary>
-        /// Adds the quality of service level 0 (at least once) to the message.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithAtLeastOnceQoS()
         {
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce;
             return this;
         }
 
-        /// <summary>
-        /// Adds the quality of service level 1 (at most once) to the message.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithAtMostOnceQoS()
         {
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
             return this;
         }
 
-        /// <summary>
-        /// Adds the quality of service level 2 (exactly once) to the message.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttApplicationMessageBuilder WithExactlyOnceQoS()
         {
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce;
@@ -383,10 +326,6 @@ namespace MQTTnet
             return this;
         }
 
-        /// <summary>
-        /// Builds the message.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttApplicationMessage"/> class.</returns>
         public MqttApplicationMessage Build()
         {
             if (!_topicAlias.HasValue && string.IsNullOrEmpty(_topic))

@@ -28,62 +28,36 @@ namespace MQTTnet
         /// </summary>
         string _topic;
 
-        /// <summary>
-        /// Adds a topic to the topic filter.
-        /// </summary>
-        /// <param name="topic">The topic.</param>
-        /// <returns>A new instance of the <see cref="MqttTopicFilterBuilder"/> class.</returns>
         public MqttTopicFilterBuilder WithTopic(string topic)
         {
             _topic = topic;
             return this;
         }
 
-        /// <summary>
-        /// Adds the quality of service level to the topic filter.
-        /// </summary>
-        /// <param name="qualityOfServiceLevel">The quality of service level.</param>
-        /// <returns>A new instance of the <see cref="MqttTopicFilterBuilder"/> class.</returns>
         public MqttTopicFilterBuilder WithQualityOfServiceLevel(MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             _qualityOfServiceLevel = qualityOfServiceLevel;
             return this;
         }
 
-        /// <summary>
-        /// Adds the quality of service level 0 (at least once) to the topic filter.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttTopicFilterBuilder"/> class.</returns>
         public MqttTopicFilterBuilder WithAtLeastOnceQoS()
         {
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce;
             return this;
         }
 
-        /// <summary>
-        /// Adds the quality of service level 1 (at most once) to the topic filter.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttTopicFilterBuilder"/> class.</returns>
         public MqttTopicFilterBuilder WithAtMostOnceQoS()
         {
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
             return this;
         }
 
-        /// <summary>
-        /// Adds the quality of service level 2 (exactly once) to the topic filter.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttTopicFilterBuilder"/> class.</returns>
         public MqttTopicFilterBuilder WithExactlyOnceQoS()
         {
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce;
             return this;
         }
 
-        /// <summary>
-        /// Builds the topic filter.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttTopicFilter"/> class.</returns>
         public MqttTopicFilter Build()
         {
             if (string.IsNullOrEmpty(_topic))

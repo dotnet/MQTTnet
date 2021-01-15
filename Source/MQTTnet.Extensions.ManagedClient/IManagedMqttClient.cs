@@ -19,11 +19,11 @@ namespace MQTTnet.Extensions.ManagedClient
         bool IsStarted { get; }
 
         bool IsConnected { get; }
-        
+
         int PendingApplicationMessagesCount { get; }
-        
+
         IManagedMqttClientOptions Options { get; }
-        
+
         IMqttClientConnectedHandler ConnectedHandler { get; set; }
 
         IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
@@ -33,7 +33,7 @@ namespace MQTTnet.Extensions.ManagedClient
         IApplicationMessageSkippedHandler ApplicationMessageSkippedHandler { get; set; }
 
         IConnectingFailedHandler ConnectingFailedHandler { get; set; }
-        
+
         ISynchronizingSubscriptionsFailedHandler SynchronizingSubscriptionsFailedHandler { get; set; }
 
         Task StartAsync(IManagedMqttClientOptions options);

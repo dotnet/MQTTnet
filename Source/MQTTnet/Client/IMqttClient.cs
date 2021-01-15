@@ -14,10 +14,6 @@ namespace MQTTnet.Client
     {
         bool IsConnected { get; }
 
-        /// <summary>
-        /// Gets the options.
-        /// This contains all the set options for the client.
-        /// </summary>
         IMqttClientOptions Options { get; }
 
         /// <summary>

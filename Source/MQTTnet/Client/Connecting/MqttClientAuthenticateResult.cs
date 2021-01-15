@@ -13,24 +13,12 @@ namespace MQTTnet.Client.Connecting
         /// </summary>
         public MqttClientConnectResultCode ResultCode { get; set; }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the session is present or not.
-        /// </summary>
         public bool IsSessionPresent { get; set; }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether wildcard subscriptions are available.
-        /// </summary>
         public bool? WildcardSubscriptionAvailable { get; set; }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether retained messages are available.
-        /// </summary>
         public bool? RetainAvailable { get; set; }
 
-        /// <summary>
-        /// Gets or sets the assigned client identifier.
-        /// </summary>
         public string AssignedClientIdentifier { get; set; }
 
         /// <summary>
@@ -45,9 +33,6 @@ namespace MQTTnet.Client.Connecting
         /// </summary>
         public byte[] AuthenticationData { get; set; }
 
-        /// <summary>
-        /// Gets or sets the maximum packet size.
-        /// </summary>
         public uint? MaximumPacketSize { get; set; }
 
         /// <summary>
@@ -56,14 +41,8 @@ namespace MQTTnet.Client.Connecting
         /// </summary>
         public string ReasonString { get; set; }
 
-        /// <summary>
-        /// Gets or sets the receive maximum.
-        /// </summary>
         public ushort? ReceiveMaximum { get; set; }
         
-        /// <summary>
-        /// Gets or sets the maximum quality od service level.
-        /// </summary>
         public MqttQualityOfServiceLevel MaximumQoS { get; set; }
 
         /// <summary>
@@ -72,24 +51,12 @@ namespace MQTTnet.Client.Connecting
         /// </summary>
         public string ResponseInformation { get; set; }
 
-        /// <summary>
-        /// Gets or sets the topic alias maximum.
-        /// </summary>
         public ushort? TopicAliasMaximum { get; set; }
 
-        /// <summary>
-        /// Gets or sets the server reference.
-        /// </summary>
         public string ServerReference { get; set; }
 
-        /// <summary>
-        /// Gets or sets the server keep alive.
-        /// </summary>
         public ushort? ServerKeepAlive { get; set; }
 
-        /// <summary>
-        /// Gets or sets the session expiry interval.
-        /// </summary>
         public uint? SessionExpiryInterval { get; set; }
 
         /// <summary>

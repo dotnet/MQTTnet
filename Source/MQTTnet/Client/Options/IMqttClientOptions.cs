@@ -24,29 +24,14 @@ namespace MQTTnet.Client.Options
         /// </summary>
         bool CleanSession { get; }
 
-        /// <summary>
-        /// Gets the credentials.
-        /// </summary>
         IMqttClientCredentials Credentials { get; }
 
-        /// <summary>
-        /// Gets the extended authentication exchange handler.
-        /// </summary>
         IMqttExtendedAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; }
 
-        /// <summary>
-        /// Gets the protocol version.
-        /// </summary>
         MqttProtocolVersion ProtocolVersion { get; }
 
-        /// <summary>
-        /// Gets the channel options.
-        /// </summary>
         IMqttClientChannelOptions ChannelOptions { get; }
 
-        /// <summary>
-        /// Gets the timeout the communication uses.
-        /// </summary>
         TimeSpan CommunicationTimeout { get; }
 
         /// <summary>
@@ -82,9 +67,6 @@ namespace MQTTnet.Client.Options
         /// </summary>
         byte[] AuthenticationData { get; }
 
-        /// <summary>
-        /// Gets the maximum packet size.
-        /// </summary>
         uint? MaximumPacketSize { get; }
 
         /// <summary>

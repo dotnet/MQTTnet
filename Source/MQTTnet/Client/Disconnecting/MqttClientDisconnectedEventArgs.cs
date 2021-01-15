@@ -15,14 +15,8 @@ namespace MQTTnet.Client.Disconnecting
             ReasonCode = reason;
         }
 
-        /// <summary>
-        /// Gets a value indicating whether the client was connected or not.
-        /// </summary>
         public bool ClientWasConnected { get; }
 
-        /// <summary>
-        /// Gets the exception.
-        /// </summary>
         public Exception Exception { get; }
 
         /// <summary>

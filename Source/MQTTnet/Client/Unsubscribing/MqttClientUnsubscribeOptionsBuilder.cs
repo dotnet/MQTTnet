@@ -43,11 +43,6 @@ namespace MQTTnet.Client.Unsubscribing
             return this;
         }
 
-        /// <summary>
-        /// Adds the topic filter to the unsubscribe options.
-        /// </summary>
-        /// <param name="topic">The topic.</param>
-        /// <returns>A new instance of the <see cref="MqttClientUnsubscribeOptionsBuilder"/> class.</returns>
         public MqttClientUnsubscribeOptionsBuilder WithTopicFilter(string topic)
         {
             if (topic is null) throw new ArgumentNullException(nameof(topic));
@@ -62,11 +57,6 @@ namespace MQTTnet.Client.Unsubscribing
             return this;
         }
 
-        /// <summary>
-        /// Adds the topic filter to the unsubscribe options.
-        /// </summary>
-        /// <param name="topicFilter">The topic filter.</param>
-        /// <returns>A new instance of the <see cref="MqttClientUnsubscribeOptionsBuilder"/> class.</returns>
         public MqttClientUnsubscribeOptionsBuilder WithTopicFilter(MqttTopicFilter topicFilter)
         {
             if (topicFilter is null) throw new ArgumentNullException(nameof(topicFilter));
@@ -74,10 +64,6 @@ namespace MQTTnet.Client.Unsubscribing
             return WithTopicFilter(topicFilter.Topic);
         }
 
-        /// <summary>
-        /// Builds the unsubscription options.
-        /// </summary>
-        /// <returns>A new instance of the <see cref="MqttClientUnsubscribeOptions"/> class.</returns>
         public MqttClientUnsubscribeOptions Build()
         {
             return _unsubscribeOptions;

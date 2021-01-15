@@ -24,29 +24,14 @@ namespace MQTTnet.Client.Options
         /// </summary>
         public bool CleanSession { get; set; } = true;
 
-        /// <summary>
-        /// Gets or sets the credentials.
-        /// </summary>
         public IMqttClientCredentials Credentials { get; set; }
 
-        /// <summary>
-        /// Gets or sets the extended authentication exchange handler.
-        /// </summary>
         public IMqttExtendedAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
 
-        /// <summary>
-        /// Gets or sets the protocol version.
-        /// </summary>
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
 
-        /// <summary>
-        /// Gets or sets the channel options.
-        /// </summary>
         public IMqttClientChannelOptions ChannelOptions { get; set; }
 
-        /// <summary>
-        /// Gets or sets the timeout the communication uses.
-        /// </summary>
         public TimeSpan CommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
@@ -82,9 +67,6 @@ namespace MQTTnet.Client.Options
         /// </summary>
         public byte[] AuthenticationData { get; set; }
 
-        /// <summary>
-        /// Gets or sets the maximum packet size.
-        /// </summary>
         public uint? MaximumPacketSize { get; set; }
 
         /// <summary>

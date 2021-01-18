@@ -630,25 +630,28 @@ namespace MQTTnet.Client
                     }
 
                     var publishPacket = publishPacketDequeueResult.Item;
+                    var publishResult = await HandleReceivedApplicationMessageAsync(publishPacket);
 
                     if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
                     {
-                        await HandleReceivedApplicationMessageAsync(publishPacket).ConfigureAwait(false);
+                        // no response required
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
                     {
-                        if (await HandleReceivedApplicationMessageAsync(publishPacket).ConfigureAwait(false))
+                        if (publishResult.ProcessingSucceeded)
                         {
-                            await SendAsync(new MqttPubAckPacket
+                            var pubAckPacket = new MqttPubAckPacket
                             {
                                 PacketIdentifier = publishPacket.PacketIdentifier,
                                 ReasonCode = MqttPubAckReasonCode.Success
-                            }, cancellationToken).ConfigureAwait(false);
+                            };
+
+                            await PublishResponseForReceivedPublishPacket(publishResult, pubAckPacket, cancellationToken).ConfigureAwait(false);
                         }
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
                     {
-                        if (await HandleReceivedApplicationMessageAsync(publishPacket).ConfigureAwait(false))
+                        if (publishResult.ProcessingSucceeded)
                         {
                             var pubRecPacket = new MqttPubRecPacket
                             {
@@ -656,7 +659,7 @@ namespace MQTTnet.Client
                                 ReasonCode = MqttPubRecReasonCode.Success
                             };
 
-                            await SendAsync(pubRecPacket, cancellationToken).ConfigureAwait(false);
+                            await PublishResponseForReceivedPublishPacket(publishResult, pubRecPacket, cancellationToken).ConfigureAwait(false);
                         }
                     }
                     else
@@ -671,6 +674,31 @@ namespace MQTTnet.Client
                 {
                     _logger.Error(exception, "Error while handling application message.");
                 }
+            }
+        }
+
+        async Task PublishResponseForReceivedPublishPacket(ReceivedApplicationMessageResult publishResult, MqttBasePacket resultPacket, CancellationToken cancellationToken)
+        {
+            if (publishResult.PendingTask == null)
+            {
+                await SendAsync(resultPacket, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                _ = publishResult.PendingTask.ContinueWith(async x =>
+                {
+                    try
+                    {
+                        if (x.Result) await SendAsync(resultPacket, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.Error(exception, "Error while handling application message.");
+                    }
+                });
             }
         }
 
@@ -756,7 +784,19 @@ namespace MQTTnet.Client
             return _adapter.PacketFormatterAdapter.DataConverter.CreatePublishResult(pubRecPacket, pubCompPacket);
         }
 
-        async Task<bool> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket)
+        struct ReceivedApplicationMessageResult
+        {
+            public readonly bool ProcessingSucceeded;
+            public readonly Task<bool> PendingTask;
+
+            public ReceivedApplicationMessageResult(bool processingSucceeded, Task<bool> pendingTask)
+            {
+                this.ProcessingSucceeded = processingSucceeded;
+                this.PendingTask = pendingTask;
+            }
+        }
+
+        async Task<ReceivedApplicationMessageResult> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket)
         {
             var applicationMessage = _adapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket);
 
@@ -765,10 +805,10 @@ namespace MQTTnet.Client
             {
                 var eventArgs = new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage);
                 await handler.HandleApplicationMessageReceivedAsync(eventArgs).ConfigureAwait(false);
-                return !eventArgs.ProcessingFailed;
+                return new ReceivedApplicationMessageResult(!eventArgs.ProcessingFailed, eventArgs.PendingTask);
             }
 
-            return true;
+            return new ReceivedApplicationMessageResult(true, null);
         }
 
         async Task WaitForTaskAsync(Task task, Task sender)

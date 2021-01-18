@@ -646,7 +646,7 @@ namespace MQTTnet.Client
                                 ReasonCode = MqttPubAckReasonCode.Success
                             };
 
-                            await PublishResponseForReceivedPublishPacket(publishResult, pubAckPacket, cancellationToken).ConfigureAwait(false);
+                            await SendResponseForReceivedPublishPacket(publishResult, pubAckPacket, cancellationToken).ConfigureAwait(false);
                         }
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
@@ -659,7 +659,7 @@ namespace MQTTnet.Client
                                 ReasonCode = MqttPubRecReasonCode.Success
                             };
 
-                            await PublishResponseForReceivedPublishPacket(publishResult, pubRecPacket, cancellationToken).ConfigureAwait(false);
+                            await SendResponseForReceivedPublishPacket(publishResult, pubRecPacket, cancellationToken).ConfigureAwait(false);
                         }
                     }
                     else
@@ -677,7 +677,7 @@ namespace MQTTnet.Client
             }
         }
 
-        async Task PublishResponseForReceivedPublishPacket(ReceivedApplicationMessageResult publishResult, MqttBasePacket resultPacket, CancellationToken cancellationToken)
+        async Task SendResponseForReceivedPublishPacket(ReceivedApplicationMessageResult publishResult, MqttBasePacket resultPacket, CancellationToken cancellationToken)
         {
             if (publishResult.PendingTask == null)
             {

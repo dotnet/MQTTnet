@@ -77,7 +77,7 @@ namespace MQTTnet.Implementations
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var networkStream = socket.GetStream();
-                
+
                 if (_tcpOptions.TlsOptions?.UseTls == true)
                 {
                     var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
@@ -94,7 +94,7 @@ namespace MQTTnet.Implementations
                         };
 
                         await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
-#else 
+#else
                         await sslStream.AuthenticateAsClientAsync(_tcpOptions.Server, LoadCertificates(), _tcpOptions.TlsOptions.SslProtocol, !_tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
 #endif
                     }

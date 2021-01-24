@@ -25,21 +25,21 @@ namespace MQTTnet.Formatter.V5
 
             switch ((MqttControlPacketType)controlPacketType)
             {
-                case MqttControlPacketType.Connect: return DecodeConnectPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.ConnAck: return DecodeConnAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Disconnect: return DecodeDisconnectPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Publish: return DecodePublishPacket(receivedMqttPacket.FixedHeader, receivedMqttPacket.Body);
-                case MqttControlPacketType.PubAck: return DecodePubAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubRec: return DecodePubRecPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubRel: return DecodePubRelPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubComp: return DecodePubCompPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.Connect: return DecodeConnectPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.ConnAck: return DecodeConnAckPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.Disconnect: return DecodeDisconnectPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.Publish: return DecodePublishPacket(receivedMqttPacket.FixedHeader, receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.PubAck: return DecodePubAckPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.PubRec: return DecodePubRecPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.PubRel: return DecodePubRelPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.PubComp: return DecodePubCompPacket(receivedMqttPacket.BodyReader);
                 case MqttControlPacketType.PingReq: return DecodePingReqPacket();
                 case MqttControlPacketType.PingResp: return DecodePingRespPacket();
-                case MqttControlPacketType.Subscribe: return DecodeSubscribePacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.SubAck: return DecodeSubAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Unsubscibe: return DecodeUnsubscribePacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.UnsubAck: return DecodeUnsubAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Auth: return DecodeAuthPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.Subscribe: return DecodeSubscribePacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.SubAck: return DecodeSubAckPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.Unsubscibe: return DecodeUnsubscribePacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.UnsubAck: return DecodeUnsubAckPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.Auth: return DecodeAuthPacket(receivedMqttPacket.BodyReader);
 
                 default: throw new MqttProtocolViolationException($"Packet type ({controlPacketType}) not supported.");
             }

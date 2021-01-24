@@ -13,6 +13,9 @@ namespace MQTTnet
     {
         MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
         string _topic;
+        bool? _noLocal;
+        bool? _retainAsPublished;
+        MqttRetainHandling? _retainHandling;
 
         public MqttTopicFilterBuilder WithTopic(string topic)
         {
@@ -44,6 +47,24 @@ namespace MQTTnet
             return this;
         }
 
+        public MqttTopicFilterBuilder WithNoLocal(bool? value = true)
+        {
+            _noLocal = value;
+            return this;
+        }
+
+        public MqttTopicFilterBuilder WithRetainAsPublished(bool? value = true)
+        {
+            _retainAsPublished = value;
+            return this;
+        }
+
+        public MqttTopicFilterBuilder WithRetainHandling(MqttRetainHandling? value)
+        {
+            _retainHandling = value;
+            return this;
+        }
+        
         public MqttTopicFilter Build()
         {
             if (string.IsNullOrEmpty(_topic))
@@ -51,7 +72,14 @@ namespace MQTTnet
                 throw new MqttProtocolViolationException("Topic is not set.");
             }
 
-            return new MqttTopicFilter { Topic = _topic, QualityOfServiceLevel = _qualityOfServiceLevel };
+            return new MqttTopicFilter
+            {
+                Topic = _topic, 
+                QualityOfServiceLevel = _qualityOfServiceLevel,
+                NoLocal = _noLocal,
+                RetainAsPublished = _retainAsPublished,
+                RetainHandling = _retainHandling
+            };
         }
     }
 }

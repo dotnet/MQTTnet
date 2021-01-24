@@ -63,20 +63,20 @@ namespace MQTTnet.Formatter.V3
 
             switch ((MqttControlPacketType)controlPacketType)
             {
-                case MqttControlPacketType.Connect: return DecodeConnectPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.ConnAck: return DecodeConnAckPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.Connect: return DecodeConnectPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.ConnAck: return DecodeConnAckPacket(receivedMqttPacket.BodyReader);
                 case MqttControlPacketType.Disconnect: return DisconnectPacket;
                 case MqttControlPacketType.Publish: return DecodePublishPacket(receivedMqttPacket);
-                case MqttControlPacketType.PubAck: return DecodePubAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubRec: return DecodePubRecPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubRel: return DecodePubRelPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubComp: return DecodePubCompPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.PubAck: return DecodePubAckPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.PubRec: return DecodePubRecPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.PubRel: return DecodePubRelPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.PubComp: return DecodePubCompPacket(receivedMqttPacket.BodyReader);
                 case MqttControlPacketType.PingReq: return PingReqPacket;
                 case MqttControlPacketType.PingResp: return PingRespPacket;
-                case MqttControlPacketType.Subscribe: return DecodeSubscribePacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.SubAck: return DecodeSubAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Unsubscibe: return DecodeUnsubscribePacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.UnsubAck: return DecodeUnsubAckPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.Subscribe: return DecodeSubscribePacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.SubAck: return DecodeSubAckPacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.Unsubscibe: return DecodeUnsubscribePacket(receivedMqttPacket.BodyReader);
+                case MqttControlPacketType.UnsubAck: return DecodeUnsubAckPacket(receivedMqttPacket.BodyReader);
 
                 default: throw new MqttProtocolViolationException($"Packet type ({controlPacketType}) not supported.");
             }
@@ -202,18 +202,18 @@ namespace MQTTnet.Formatter.V3
 
         static MqttBasePacket DecodePublishPacket(ReceivedMqttPacket receivedMqttPacket)
         {
-            ThrowIfBodyIsEmpty(receivedMqttPacket.Body);
+            ThrowIfBodyIsEmpty(receivedMqttPacket.BodyReader);
 
             var retain = (receivedMqttPacket.FixedHeader & 0x1) > 0;
             var qualityOfServiceLevel = (MqttQualityOfServiceLevel)(receivedMqttPacket.FixedHeader >> 1 & 0x3);
             var dup = (receivedMqttPacket.FixedHeader & 0x8) > 0;
 
-            var topic = receivedMqttPacket.Body.ReadStringWithLengthPrefix();
+            var topic = receivedMqttPacket.BodyReader.ReadStringWithLengthPrefix();
 
             ushort packetIdentifier = 0;
             if (qualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
             {
-                packetIdentifier = receivedMqttPacket.Body.ReadTwoByteInteger();
+                packetIdentifier = receivedMqttPacket.BodyReader.ReadTwoByteInteger();
             }
 
             var packet = new MqttPublishPacket
@@ -225,9 +225,9 @@ namespace MQTTnet.Formatter.V3
                 Dup = dup
             };
 
-            if (!receivedMqttPacket.Body.EndOfStream)
+            if (!receivedMqttPacket.BodyReader.EndOfStream)
             {
-                packet.Payload = receivedMqttPacket.Body.ReadRemainingData();
+                packet.Payload = receivedMqttPacket.BodyReader.ReadRemainingData();
             }
 
             return packet;

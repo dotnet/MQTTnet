@@ -3,6 +3,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using System;
 using System.Collections.Generic;
+using MQTTnet.Diagnostics.PacketInspection;
 
 namespace MQTTnet.Client.Options
 {
@@ -31,5 +32,7 @@ namespace MQTTnet.Client.Options
         public uint? SessionExpiryInterval { get; set; }
         public ushort? TopicAliasMaximum { get; set; }
         public List<MqttUserProperty> UserProperties { get; set; }
+
+        public IMqttPacketInspector PacketInspector { get; set; }
     }
 }

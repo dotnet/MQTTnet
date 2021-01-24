@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MQTTnet.Diagnostics.PacketInspection;
 
 namespace MQTTnet.Client.Options
 {
@@ -253,6 +254,12 @@ namespace MQTTnet.Client.Options
 
             _tlsParameters = new MqttClientOptionsBuilderTlsParameters();
             optionsBuilder(_tlsParameters);
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithPacketInspector(IMqttPacketInspector packetInspector)
+        {
+            _options.PacketInspector = packetInspector;
             return this;
         }
 

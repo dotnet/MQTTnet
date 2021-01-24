@@ -7,7 +7,7 @@ using System;
 
 namespace MQTTnet.Extensions.WebSocket4Net
 {
-    public class WebSocket4NetMqttClientAdapterFactory : IMqttClientAdapterFactory
+    public sealed class WebSocket4NetMqttClientAdapterFactory : IMqttClientAdapterFactory
     {
         readonly IMqttNetLogger _logger;
 
@@ -23,14 +23,22 @@ namespace MQTTnet.Extensions.WebSocket4Net
             switch (options.ChannelOptions)
             {
                 case MqttClientTcpOptions _:
-                    {
-                        return new MqttChannelAdapter(new MqttTcpChannel(options), new MqttPacketFormatterAdapter(options.ProtocolVersion), _logger);
-                    }
+                {
+                    return new MqttChannelAdapter(
+                        new MqttTcpChannel(options),
+                        new MqttPacketFormatterAdapter(options.ProtocolVersion),
+                        options.PacketInspector,
+                        _logger);
+                }
 
                 case MqttClientWebSocketOptions webSocketOptions:
-                    {
-                        return new MqttChannelAdapter(new WebSocket4NetMqttChannel(options, webSocketOptions), new MqttPacketFormatterAdapter(options.ProtocolVersion), _logger);
-                    }
+                {
+                    return new MqttChannelAdapter(
+                        new WebSocket4NetMqttChannel(options, webSocketOptions),
+                        new MqttPacketFormatterAdapter(options.ProtocolVersion), 
+                        options.PacketInspector,
+                        _logger);
+                }
 
                 default:
                     {

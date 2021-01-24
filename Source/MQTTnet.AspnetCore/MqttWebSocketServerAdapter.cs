@@ -49,7 +49,7 @@ namespace MQTTnet.AspNetCore
                     var formatter = new MqttPacketFormatterAdapter(writer);
                     var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection, clientCertificate);
 
-                    using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _rootLogger))
+                    using (var channelAdapter = new MqttChannelAdapter(channel, formatter, null, _rootLogger))
                     {
                         await clientHandler(channelAdapter).ConfigureAwait(false);
                     }

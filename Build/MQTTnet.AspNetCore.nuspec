@@ -19,8 +19,12 @@
         <dependency id="MQTTnet" version="$nugetVersion" />
         <dependency id="Microsoft.AspNetCore.Http.Connections" version="1.0.0"  />
       </group>
-      
+
       <group targetFramework="netcoreapp3.1">
+        <dependency id="MQTTnet" version="$nugetVersion" />
+      </group>
+
+      <group targetFramework="net5.0">
         <dependency id="MQTTnet" version="$nugetVersion" />
       </group>
     </dependencies>
@@ -33,10 +37,13 @@
     <!-- Images -->
     <file src="..\Images\Logo_128x128.png" target="images\" />
 
+    <!-- .NET 5.0 -->
+    <file src="..\Source\MQTTnet.AspNetCore\bin\Release\net5.0\MQTTnet.*" target="lib\net5.0\" />
+
     <!-- .NET Standard 2.0 -->
-    <file src="..\Source\MQTTnet.AspNetCore\bin\Release\netstandard2.0\MQTTnet.AspNetCore.*" target="lib\netstandard2.0\"/>
-    
+    <file src="..\Source\MQTTnet.AspNetCore\bin\Release\netstandard2.0\MQTTnet.AspNetCore.*" target="lib\netstandard2.0\" />
+
     <!-- .NET Core App 3.1 -->
-    <file src="..\Source\MQTTnet.AspNetCore\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.*" target="lib\netcoreapp3.1\"/>
+    <file src="..\Source\MQTTnet.AspNetCore\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.*" target="lib\netcoreapp3.1\" />
   </files>
 </package>

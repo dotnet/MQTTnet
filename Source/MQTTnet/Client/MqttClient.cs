@@ -25,8 +25,8 @@ namespace MQTTnet.Client
     {
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
-        readonly Stopwatch _sendTracker = new Stopwatch();
-        readonly Stopwatch _receiveTracker = new Stopwatch();
+        volatile int _lastSentAtTicks;
+        volatile int _lastReceivedAtTicks;
         readonly object _disconnectLock = new object();
 
         readonly IMqttClientAdapterFactory _adapterFactory;
@@ -102,8 +102,8 @@ namespace MQTTnet.Client
                     authenticateResult = await AuthenticateAsync(adapter, options.WillMessage, combined.Token).ConfigureAwait(false);
                 }
 
-                _sendTracker.Restart();
-                _receiveTracker.Restart();
+                _lastSentAtTicks = Environment.TickCount;
+                _lastReceivedAtTicks = Environment.TickCount;
 
                 if (Options.KeepAlivePeriod != TimeSpan.Zero)
                 {
@@ -382,7 +382,7 @@ namespace MQTTnet.Client
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            _sendTracker.Restart();
+            _lastReceivedAtTicks = Environment.TickCount;
 
             return _adapter.SendPacketAsync(packet, cancellationToken);
         }
@@ -401,7 +401,7 @@ namespace MQTTnet.Client
             {
                 try
                 {
-                    _sendTracker.Restart();
+                    _lastSentAtTicks = Environment.TickCount;
                     await _adapter.SendPacketAsync(requestPacket, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception e)
@@ -437,7 +437,7 @@ namespace MQTTnet.Client
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     // Values described here: [MQTT-3.1.2-24].
-                    var waitTime = keepAlivePeriod - _sendTracker.Elapsed;
+                    var waitTime = keepAlivePeriod - TimeSpan.FromMilliseconds(unchecked(Environment.TickCount - _lastSentAtTicks));
 
                     if (waitTime <= TimeSpan.Zero)
                     {
@@ -546,7 +546,7 @@ namespace MQTTnet.Client
         {
             try
             {
-                _receiveTracker.Restart();
+                _lastReceivedAtTicks = Environment.TickCount;
 
                 if (packet is MqttPublishPacket publishPacket)
                 {

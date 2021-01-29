@@ -55,6 +55,12 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public void TopicFilterComparer_EndMultipleLevelsWildcardMatchEmptyLevel()
+        {
+            CompareAndAssert("A/", "A/#", true);
+        }
+
+        [TestMethod]
         public void TopicFilterComparer_AllLevelsWildcardMatch()
         {
             CompareAndAssert("A/B/C/D", "#", true);

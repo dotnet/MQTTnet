@@ -14,7 +14,8 @@ namespace MQTTnet.Formatter
     public sealed class MqttPacketWriter : IMqttPacketWriter
     {
         public static int InitialBufferSize = 4096;
-        public static int MaxBufferSize = 4096 + 4;
+
+        public static int MaxBufferSize = 4096 * 4;
 
         byte[] _buffer = new byte[InitialBufferSize];
 

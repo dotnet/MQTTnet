@@ -7,6 +7,20 @@ namespace MQTTnet.Tests
     public class TopicFilterComparer_Tests
     {
         [TestMethod]
+        public void TopicFilterComparer_Plus_Match_With_Separator_Only()
+        {
+            //A Topic Name or Topic Filter consisting only of the ‘/’ character is valid
+            CompareAndAssert("A", "+", true);
+        }
+
+        [TestMethod]
+        public void TopicFilterComparer_Hash_Match_With_Separator_Only()
+        {
+            //A Topic Name or Topic Filter consisting only of the ‘/’ character is valid
+            CompareAndAssert("/", "#", true);
+        }
+
+        [TestMethod]
         public void TopicFilterComparer_DirectMatch()
         {
             CompareAndAssert("A/B/C", "A/B/C", true);

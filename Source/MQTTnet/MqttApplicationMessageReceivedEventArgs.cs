@@ -1,5 +1,4 @@
-﻿using MQTTnet.Protocol;
-using System;
+﻿using System;
 
 namespace MQTTnet
 {
@@ -17,6 +16,6 @@ namespace MQTTnet
 
         public bool ProcessingFailed { get; set; }
 
-        public int? ReasonCode { get; set; }
+        public MqttApplicationMessageReceivedReasonCode ReasonCode { get; set; } = MqttApplicationMessageReceivedReasonCode.Success;
     }
 }

@@ -64,7 +64,7 @@ namespace MQTTnet
             _retainHandling = value;
             return this;
         }
-        
+
         public MqttTopicFilter Build()
         {
             if (string.IsNullOrEmpty(_topic))
@@ -74,7 +74,7 @@ namespace MQTTnet
 
             return new MqttTopicFilter
             {
-                Topic = _topic, 
+                Topic = _topic,
                 QualityOfServiceLevel = _qualityOfServiceLevel,
                 NoLocal = _noLocal,
                 RetainAsPublished = _retainAsPublished,

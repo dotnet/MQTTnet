@@ -637,25 +637,27 @@ namespace MQTTnet.Client
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
                     {
-                        var reasonCode = await HandleReceivedApplicationMessageAsync(publishPacket).ConfigureAwait(false);
-                        if (reasonCode != null && Enum.IsDefined(typeof(MqttPubAckReasonCode), reasonCode.Value))
+                        var eventArgs = await HandleReceivedApplicationMessageAsync(publishPacket).ConfigureAwait(false);
+
+                        if (!eventArgs.ProcessingFailed)
                         {
                             await SendAsync(new MqttPubAckPacket
                             {
                                 PacketIdentifier = publishPacket.PacketIdentifier,
-                                ReasonCode = (MqttPubAckReasonCode)reasonCode.Value
+                                ReasonCode = (MqttPubAckReasonCode)eventArgs.ReasonCode
                             }, cancellationToken).ConfigureAwait(false);
                         }
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
                     {
-                        var reasonCode = await HandleReceivedApplicationMessageAsync(publishPacket).ConfigureAwait(false);
-                        if (reasonCode != null && Enum.IsDefined(typeof(MqttPubRecReasonCode), reasonCode.Value))
+                        var eventArgs = await HandleReceivedApplicationMessageAsync(publishPacket).ConfigureAwait(false);
+
+                        if (!eventArgs.ProcessingFailed)
                         {
                             await SendAsync(new MqttPubRecPacket
                             {
                                 PacketIdentifier = publishPacket.PacketIdentifier,
-                                ReasonCode = (MqttPubRecReasonCode)reasonCode.Value
+                                ReasonCode = (MqttPubRecReasonCode)eventArgs.ReasonCode
                             }, cancellationToken).ConfigureAwait(false);
                         }
                     }
@@ -678,7 +680,7 @@ namespace MQTTnet.Client
         {
             if (!_packetDispatcher.TryDispatch(pubRecPacket))
             {
-                // The packet is unknown. Probably due to a restart of the client. 
+                // The packet is unknown. Probably due to a restart of the client.
                 // So wen send this to the server to trigger a full resend of the message.
                 return SendAsync(new MqttPubRelPacket
                 {
@@ -756,22 +758,18 @@ namespace MQTTnet.Client
             return _adapter.PacketFormatterAdapter.DataConverter.CreatePublishResult(pubRecPacket, pubCompPacket);
         }
 
-        async Task<int?> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket)
+        async Task<MqttApplicationMessageReceivedEventArgs> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket)
         {
-            int? reasonCode = 0;
             var applicationMessage = _adapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket);
+            var eventArgs = new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage);
 
             var handler = ApplicationMessageReceivedHandler;
             if (handler != null)
             {
-                var eventArgs = new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage);
                 await handler.HandleApplicationMessageReceivedAsync(eventArgs).ConfigureAwait(false);
-                if (eventArgs.ProcessingFailed)
-                {
-                    reasonCode = eventArgs.ReasonCode;
-                }
             }
-            return reasonCode;
+
+            return eventArgs;
         }
 
         async Task WaitForTaskAsync(Task task, Task sender)

@@ -31,6 +31,13 @@ namespace MQTTnet.Server
                         {
                             return true;
                         }
+                        // Check for e.g. foo/ matching foo/#
+                        if (sPos == sLen - 2
+                                && filter[sPos] == LevelSeparator
+                                && filter[sPos + 1] == MultiLevelWildcard)
+                        {
+                            return true;
+                        }
                     }
 
                     sPos++;

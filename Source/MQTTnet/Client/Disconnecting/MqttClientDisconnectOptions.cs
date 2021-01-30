@@ -1,6 +1,6 @@
 ﻿namespace MQTTnet.Client.Disconnecting
 {
-    public class MqttClientDisconnectOptions
+    public sealed class MqttClientDisconnectOptions
     {
         public MqttClientDisconnectReason ReasonCode { get; set; } = MqttClientDisconnectReason.NormalDisconnection;
 

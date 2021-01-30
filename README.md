@@ -64,15 +64,32 @@ _MQTTnet Server_ is a standalone cross platform MQTT server (like mosquitto) bas
 
 ## Supported frameworks
 
+* .NET 5.0+
 * .NET Standard 1.3+
 * .NET Core 1.1+
 * .NET Core App 1.1+
-* .NET Framework 4.5.2+ (x86, x64, AnyCPU)
+* .NET Framework 4.5.2+
 * Mono 5.2+
-* Universal Windows Platform (UWP) 10.0.10240+ (x86, x64, ARM, AnyCPU, Windows 10 IoT Core)
+* Universal Windows Platform (UWP) 10.0.10240+ (Windows 10 IoT Core)
 * Xamarin.Android 7.5+
 * Xamarin.iOS 10.14+
-* Blazor WebAssembly 3.2.0
+* Blazor WebAssembly 3.2.0+
+
+## Supported platforms
+
+* x86
+* x64
+* AnyCPU
+* ARM
+
+## Supported OS
+
+* Windows
+* Windows 10 IoT Core
+* Linux (Ubuntu, Raspbian etc.)
+* macOS
+* Android
+* iOS
 
 ## Supported MQTT versions
 
@@ -97,11 +114,12 @@ Also additions and updates in the Wiki are welcome.
 
 This library is used in the following projects:
 
-* Azure Functions MQTT Bindings, [CaseOnline.Azure.WebJobs.Extensions.Mqtt](https://github.com/keesschollaart81/CaseOnline.Azure.WebJobs.Extensions.Mqtt/)
+* Azure Functions MQTT Bindings, <https://github.com/keesschollaart81/CaseOnline.Azure.WebJobs.Extensions.Mqtt>)
 * HA4IoT (Open Source Home Automation system for .NET, <https://github.com/chkr1011/HA4IoT>)
 * MQTT Client Rx (Wrapper for Reactive Extensions, <https://github.com/1iveowl/MQTTClient.rx>)
 * MQTT Client Rx (Managed Client Wrapper for Reactive Extensions, <https://github.com/mmuecke/RxMQTTnet>)
 * MQTT Tester (MQTT client test app for [Android](https://play.google.com/store/apps/details?id=com.liveowl.mqtttester) and [iOS](https://itunes.apple.com/us/app/mqtt-tester/id1278621826?mt=8))
+* MQTTnet App (Cross platform client application for MQTT debugging, inspection etc., <https://github.com/chkr1011/MQTTnet.App>)
 * Wirehome.Core (Open Source Home Automation system for .NET Core, <https://github.com/chkr1011/Wirehome.Core>)
 
 Further projects using this project can be found under https://github.com/chkr1011/MQTTnet/network/dependents.
@@ -112,7 +130,7 @@ If you use this library and want to see your project here please create a pull r
 
 MIT License
 
-MQTTnet Copyright (c) 2016-2020 Christian Kratky
+MQTTnet Copyright (c) 2016-2021 Christian Kratky
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

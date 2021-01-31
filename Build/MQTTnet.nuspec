@@ -29,6 +29,7 @@
 * [Server] Fix wrong usage of client session items for undelivered messages.
 * [Server] Allow to respond with a reason code in PUBACK/PUBREC (thanks to @muneebmajeed).
 * [Server] Fixed topic filter comparer on edge cases, e.g. "foo/" matching "foo/#" (thanks to @dagophil).
+* [Core] Added code documentation.
 
 Git commit: $gitCommit
     </releaseNotes>

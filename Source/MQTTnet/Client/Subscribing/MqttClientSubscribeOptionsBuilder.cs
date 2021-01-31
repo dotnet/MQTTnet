@@ -9,6 +9,13 @@ namespace MQTTnet.Client.Subscribing
     {
         private readonly MqttClientSubscribeOptions _subscribeOptions = new MqttClientSubscribeOptions();
 
+        /// <summary>
+        /// Adds the user property to the subscribe options.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
+        /// <param name="name">The property name.</param>
+        /// <param name="value">The property value.</param>
+        /// <returns>A new instance of the <see cref="MqttApplicationMessageBuilder"/> class.</returns>
         public MqttClientSubscribeOptionsBuilder WithUserProperty(string name, string value)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
@@ -27,7 +34,6 @@ namespace MQTTnet.Client.Subscribing
         public MqttClientSubscribeOptionsBuilder WithSubscriptionIdentifier(uint? subscriptionIdentifier)
         {
             _subscribeOptions.SubscriptionIdentifier = subscriptionIdentifier;
-
             return this;
         }
 

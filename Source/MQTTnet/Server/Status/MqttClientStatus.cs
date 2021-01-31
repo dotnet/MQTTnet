@@ -14,6 +14,10 @@ namespace MQTTnet.Server.Status
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
+        /// <summary>
+        /// Gets or sets the client identifier.
+        /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
+        /// </summary>
         public string ClientId { get; set; }
 
         public string Endpoint { get; set; }

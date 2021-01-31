@@ -15,6 +15,10 @@ namespace MQTTnet.Server.Status
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
         }
 
+        /// <summary>
+        /// Gets or sets the client identifier.
+        /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
+        /// </summary>
         public string ClientId { get; set; }
 
         public long PendingApplicationMessagesCount { get; set; }

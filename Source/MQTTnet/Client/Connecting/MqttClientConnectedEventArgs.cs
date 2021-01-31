@@ -9,6 +9,10 @@ namespace MQTTnet.Client.Connecting
             AuthenticateResult = authenticateResult ?? throw new ArgumentNullException(nameof(authenticateResult));
         }
 
+        /// <summary>
+        /// Gets the authentication result.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
         public MqttClientAuthenticateResult AuthenticateResult { get; }
     }
 }

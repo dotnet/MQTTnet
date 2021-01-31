@@ -121,6 +121,7 @@ This library is used in the following projects:
 * MQTT Tester (MQTT client test app for [Android](https://play.google.com/store/apps/details?id=com.liveowl.mqtttester) and [iOS](https://itunes.apple.com/us/app/mqtt-tester/id1278621826?mt=8))
 * MQTTnet App (Cross platform client application for MQTT debugging, inspection etc., <https://github.com/chkr1011/MQTTnet.App>)
 * Wirehome.Core (Open Source Home Automation system for .NET Core, <https://github.com/chkr1011/Wirehome.Core>)
+* SparkplugNet (Sparkplug library for .Net, <https://github.com/SeppPenner/SparkplugNet>)
 
 Further projects using this project can be found under https://github.com/chkr1011/MQTTnet/network/dependents.
 

@@ -13,6 +13,7 @@ using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Client.Subscribing;
+using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -22,6 +23,55 @@ namespace MQTTnet.Tests
     [TestClass]
     public class Server_Tests
     {
+        [TestMethod]
+        [DataRow("", null)]
+        [DataRow("", "")]
+        [DataRow(null, null)]
+        public async Task Use_Admissible_Credentials(string username, string password)
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+
+                var client = testEnvironment.CreateClient();
+
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost", testEnvironment.ServerPort)
+                    .WithCredentials(username, password)
+                    .Build();
+
+                var connectResult = await client.ConnectAsync(clientOptions);
+
+                Assert.IsFalse(connectResult.IsSessionPresent);
+                Assert.IsTrue(client.IsConnected);
+            }
+        }
+
+        [TestMethod]
+        public async Task Use_Username_Null_Password_Empty()
+        {
+            string username = null;
+            string password = string.Empty;
+
+            using (var testEnvironment = new TestEnvironment())
+            {
+                testEnvironment.IgnoreClientLogErrors = true;
+
+                await testEnvironment.StartServerAsync();
+
+                var client = testEnvironment.CreateClient();
+
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost", testEnvironment.ServerPort)
+                    .WithCredentials(username, password)
+                    .Build();
+
+                var ex = await Assert.ThrowsExceptionAsync<MqttCommunicationException>(async () => await client.ConnectAsync(clientOptions));
+                Assert.IsInstanceOfType(ex.InnerException, typeof(MqttProtocolViolationException));
+                Assert.AreEqual("If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].", ex.Message, false);
+            }
+        }
+
         [TestMethod]
         public async Task Use_Empty_Client_ID()
         {
@@ -1063,7 +1113,7 @@ namespace MQTTnet.Tests
                 // forever. This is security related.
                 var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 await client.ConnectAsync("localhost", testEnvironment.ServerPort);
-                                
+
                 var buffer = Encoding.UTF8.GetBytes("Garbage");
                 client.Send(buffer, buffer.Length, SocketFlags.None);
 

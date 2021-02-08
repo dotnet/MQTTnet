@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
@@ -69,9 +69,9 @@ namespace MQTTnet.Tests
                     .WithCredentials(username, password)
                     .Build();
 
-                var ex = await Assert.ThrowsExceptionAsync<MqttCommunicationException>(async () => await client.ConnectAsync(clientOptions));
+                var ex = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(async () => await client.ConnectAsync(clientOptions));
                 Assert.IsInstanceOfType(ex.InnerException, typeof(MqttProtocolViolationException));
-                Assert.AreEqual("If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].", ex.Message, false);
+                Assert.AreEqual("Error while authenticating. If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].", ex.Message, false);
             }
         }
 
@@ -466,7 +466,7 @@ namespace MQTTnet.Tests
         public async Task Publish_Multiple_Clients()
         {
             var receivedMessagesCount = 0;
-            
+
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
@@ -496,7 +496,7 @@ namespace MQTTnet.Tests
                 }
 
                 SpinWait.SpinUntil(() => receivedMessagesCount == 1000, TimeSpan.FromSeconds(20));
-                
+
                 Assert.AreEqual(1000, receivedMessagesCount);
             }
         }

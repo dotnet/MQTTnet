@@ -280,16 +280,25 @@ namespace MQTTnet.Client
 
         async Task<MqttClientAuthenticateResult> AuthenticateAsync(IMqttChannelAdapter channelAdapter, MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)
         {
-            var connectPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnectPacket(
-                willApplicationMessage,
-                Options);
+            MqttClientAuthenticateResult result;
 
-            var connAckPacket = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
-            var result = channelAdapter.PacketFormatterAdapter.DataConverter.CreateClientConnectResult(connAckPacket);
+            try
+            {
+                var connectPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnectPacket(
+                    willApplicationMessage,
+                    Options);
+
+                var connAckPacket = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
+                result = channelAdapter.PacketFormatterAdapter.DataConverter.CreateClientConnectResult(connAckPacket);
+            }
+            catch (Exception exception)
+            {
+                throw new MqttConnectingFailedException($"Error while authenticating. {exception.Message}", exception, null);
+            }
 
             if (result.ResultCode != MqttClientConnectResultCode.Success)
             {
-                throw new MqttConnectingFailedException(result);
+                throw new MqttConnectingFailedException($"Connecting with MQTT server failed ({result.ResultCode}).", null, result);
             }
 
             _logger.Verbose("Authenticated MQTT connection with server established.");
@@ -404,10 +413,10 @@ namespace MQTTnet.Client
                     _sendTracker.Restart();
                     await _adapter.SendPacketAsync(requestPacket, cancellationToken).ConfigureAwait(false);
                 }
-                catch (Exception e)
+                catch (Exception exception)
                 {
-                    _logger.Warning(e, "Error when sending request packet ({0}).", requestPacket.GetType().Name);
-                    packetAwaiter.Cancel();
+                    _logger.Warning(exception, "Error when sending request packet ({0}).", requestPacket.GetType().Name);
+                    packetAwaiter.Fail(exception);
                 }
 
                 try

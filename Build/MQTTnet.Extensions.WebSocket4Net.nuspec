@@ -42,7 +42,7 @@
     <file src="..\Images\Logo_128x128.png" target="images\" />
 
     <!-- .NET 5.0 -->
-    <file src="..\Source\MQTTnet.Extensions.WebSocket4Net\bin\Release\net5.0\MQTTnet.*" target="lib\net5.0\" />
+    <file src="..\Source\MQTTnet.Extensions.WebSocket4Net\bin\Release\net5.0\MQTTnet.Extensions.WebSocket4Net.*" target="lib\net5.0\" />
 
     <!-- .NET Standard 1.3 -->
     <file src="..\Source\MQTTnet.Extensions.WebSocket4Net\bin\Release\netstandard1.3\MQTTnet.Extensions.WebSocket4Net.*" target="lib\netstandard1.3\" />

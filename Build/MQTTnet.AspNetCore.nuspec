@@ -38,7 +38,7 @@
     <file src="..\Images\Logo_128x128.png" target="images\" />
 
     <!-- .NET 5.0 -->
-    <file src="..\Source\MQTTnet.AspNetCore\bin\Release\net5.0\MQTTnet.*" target="lib\net5.0\" />
+    <file src="..\Source\MQTTnet.AspNetCore\bin\Release\net5.0\MQTTnet.AspNetCore.*" target="lib\net5.0\" />
 
     <!-- .NET Standard 2.0 -->
     <file src="..\Source\MQTTnet.AspNetCore\bin\Release\netstandard2.0\MQTTnet.AspNetCore.*" target="lib\netstandard2.0\" />

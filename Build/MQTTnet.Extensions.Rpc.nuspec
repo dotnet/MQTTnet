@@ -27,7 +27,7 @@
     <file src="..\Images\Logo_128x128.png" target="images\" />
 
     <!-- .NET 5.0 -->
-    <file src="..\Source\MQTTnet.Extensions.Rpc\bin\Release\net5.0\MQTTnet.*" target="lib\net5.0\" />
+    <file src="..\Source\MQTTnet.Extensions.Rpc\bin\Release\net5.0\MQTTnet.Extensions.Rpc.*" target="lib\net5.0\" />
 
     <!-- .NET Standard 1.3 -->
     <file src="..\Source\MQTTnet.Extensions.Rpc\bin\Release\netstandard1.3\MQTTnet.Extensions.Rpc.*" target="lib\netstandard1.3\" />

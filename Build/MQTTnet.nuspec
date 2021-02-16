@@ -14,6 +14,7 @@
     <releaseNotes>
 * [Core] Fixed some issues in nuget packages.
 * [Client] Changed exception types so that proper exceptions are thrown when connecting (#1082).
+* [RpcClient] Fixed ExecuteRpcAsync no longer works if MqttClient already has a message receive handler (#1093).
 
 Git commit: $gitCommit
     </releaseNotes>

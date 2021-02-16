@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using MQTTnet.Client.Receiving;
 
@@ -20,11 +20,7 @@ namespace MQTTnet.Extensions.Rpc
 
         public Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
-            if (OriginalHandler != null)
-            {
-                return OriginalHandler.HandleApplicationMessageReceivedAsync(eventArgs);
-            }
-
+            OriginalHandler?.HandleApplicationMessageReceivedAsync(eventArgs);
             return _handleReceivedApplicationMessageAsync(eventArgs);
         }
     }

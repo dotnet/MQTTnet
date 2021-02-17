@@ -35,6 +35,9 @@
     <!-- .NET Standard 2.0 -->
     <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.0\MQTTnet.Extensions.ManagedClient.*" target="lib\netstandard2.0\" />
 
+    <!-- .NET Standard 2.1 -->
+    <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\netstandard2.1\MQTTnet.Extensions.ManagedClient.*" target="lib\netstandard2.1\" />
+
     <!-- Universal Windows -->
     <file src="..\Source\MQTTnet.Extensions.ManagedClient\bin\Release\uap10.0\MQTTnet.Extensions.ManagedClient.*" target="lib\uap10.0\" />
 

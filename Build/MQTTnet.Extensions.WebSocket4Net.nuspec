@@ -15,22 +15,8 @@
     <copyright>Copyright Christian Kratky 2016-2020</copyright>
     <tags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</tags>
     <dependencies>
-    <group targetFramework="netstandard1.3">
-        <dependency id="MQTTnet" version="$nugetVersion" />
-        <dependency id="WebSocket4Net" version="0.15.2" />
-      </group>
-      <group targetFramework="netstandard2.0">
-        <dependency id="MQTTnet" version="$nugetVersion" />
-        <dependency id="WebSocket4Net" version="0.15.2" />
-      </group>
-      <group targetFramework="netstandard2.1">
-        <dependency id="MQTTnet" version="$nugetVersion" />
-        <dependency id="WebSocket4Net" version="0.15.2" />
-      </group>
-      <group targetFramework="uap10.0">
-        <dependency id="MQTTnet" version="$nugetVersion" />
-        <dependency id="WebSocket4Net" version="0.15.2" />
-      </group>
+      <dependency id="MQTTnet" version="$nugetVersion" />
+      <dependency id="WebSocket4Net" version="0.15.2" />
     </dependencies>
   </metadata>
 
@@ -49,6 +35,9 @@
 
     <!-- .NET Standard 2.0 -->
     <file src="..\Source\MQTTnet.Extensions.WebSocket4Net\bin\Release\netstandard2.0\MQTTnet.Extensions.WebSocket4Net.*" target="lib\netstandard2.0\" />
+
+    <!-- .NET Standard 2.1 -->
+    <file src="..\Source\MQTTnet.Extensions.WebSocket4Net\bin\Release\netstandard2.1\MQTTnet.Extensions.WebSocket4Net.*" target="lib\netstandard2.1\" />
 
     <!-- Universal Windows -->
     <file src="..\Source\MQTTnet.Extensions.WebSocket4Net\bin\Release\uap10.0\MQTTnet.Extensions.WebSocket4Net.*" target="lib\uap10.0\" />

@@ -18,14 +18,15 @@ namespace MQTTnet.Extensions.Rpc
 
         public IMqttApplicationMessageReceivedHandler OriginalHandler { get; }
 
-        public Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
+        public async Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
+            // First try to check if there is a pending RPC call! 
+            await _handleReceivedApplicationMessageAsync(eventArgs).ConfigureAwait(false);
+            
             if (OriginalHandler != null)
             {
-                return OriginalHandler.HandleApplicationMessageReceivedAsync(eventArgs);
+                await OriginalHandler.HandleApplicationMessageReceivedAsync(eventArgs).ConfigureAwait(false);
             }
-
-            return _handleReceivedApplicationMessageAsync(eventArgs);
         }
     }
 }

@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.Extensions.Rpc
 {
@@ -88,8 +89,8 @@ namespace MQTTnet.Extensions.Rpc
 
             try
             {
-                var tcs = new TaskCompletionSource<byte[]>();
-                if (!_waitingCalls.TryAdd(responseTopic, tcs))
+                var promise = new TaskCompletionSource<byte[]>();
+                if (!_waitingCalls.TryAdd(responseTopic, promise))
                 {
                     throw new InvalidOperationException();
                 }
@@ -102,15 +103,15 @@ namespace MQTTnet.Extensions.Rpc
                 {
                     linkedCts.Token.Register(() =>
                     {
-                        if (!tcs.Task.IsCompleted && !tcs.Task.IsFaulted && !tcs.Task.IsCanceled)
+                        if (!promise.Task.IsCompleted && !promise.Task.IsFaulted && !promise.Task.IsCanceled)
                         {
-                            tcs.TrySetCanceled();
+                            promise.TrySetCanceled();
                         }
                     });
 
                     try
                     {
-                        var result = await tcs.Task.ConfigureAwait(false);
+                        var result = await promise.Task.ConfigureAwait(false);
                         timeoutCts.Cancel(false);
                         return result;
                     }
@@ -136,14 +137,17 @@ namespace MQTTnet.Extensions.Rpc
 
         Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
-            if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var tcs))
+            if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var promise))
             {
-                return Task.FromResult(0);
+                return PlatformAbstractionLayer.CompletedTask;
             }
 
-            tcs.TrySetResult(eventArgs.ApplicationMessage.Payload);
+            promise.TrySetResult(eventArgs.ApplicationMessage.Payload);
 
-            return Task.FromResult(0);
+            // Set this message to handled to that other code can avoid execution etc.
+            eventArgs.IsHandled = true;
+            
+            return PlatformAbstractionLayer.CompletedTask;
         }
 
         public void Dispose()

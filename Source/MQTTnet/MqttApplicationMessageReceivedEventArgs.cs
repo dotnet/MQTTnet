@@ -21,5 +21,13 @@ namespace MQTTnet
         public bool ProcessingFailed { get; set; }
 
         public MqttApplicationMessageReceivedReasonCode ReasonCode { get; set; } = MqttApplicationMessageReceivedReasonCode.Success;
+        
+        /// <summary>
+        /// Gets or sets whether this message was handled.
+        /// This value can be used in user code for custom control flow.
+        /// </summary>
+        public bool IsHandled { get; set; }
+        
+        public object Tag { get; set; }
     }
 }

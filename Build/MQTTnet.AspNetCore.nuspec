@@ -28,14 +28,6 @@
         <dependency id="MQTTnet" version="$nugetVersion" />
       </group>
     </dependencies>
-    <frameworkReferences>
-      <group targetFramework=".NETCoreApp3.1">
-        <frameworkReference name="Microsoft.AspNetCore.App" />
-      </group>
-      <group targetFramework="net5.0">
-        <frameworkReference name="Microsoft.AspNetCore.App" />
-      </group>
-    </frameworkReferences>
   </metadata>
 
   <files>

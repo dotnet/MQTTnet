@@ -31,21 +31,43 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket)
+        public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
         {
+            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+            
             return new MqttPubAckPacket
             {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = MqttPubAckReasonCode.Success
+                PacketIdentifier = publishPacket.PacketIdentifier
             };
         }
 
-        public MqttBasePacket CreatePubRecPacket(MqttPublishPacket publishPacket)
+        public MqttPubRecPacket CreatePubRecPacket(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
         {
+            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+            
             return new MqttPubRecPacket
             {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = MqttPubRecReasonCode.Success
+                PacketIdentifier = publishPacket.PacketIdentifier
+            };
+        }
+
+        public MqttPubCompPacket CreatePubCompPacket(MqttPubRelPacket pubRelPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
+        {
+            if (pubRelPacket == null) throw new ArgumentNullException(nameof(pubRelPacket));
+            
+            return new MqttPubCompPacket
+            {
+                PacketIdentifier = pubRelPacket.PacketIdentifier
+            };
+        }
+
+        public MqttPubRelPacket CreatePubRelPacket(MqttPubRecPacket pubRecPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
+        {
+            if (pubRecPacket == null) throw new ArgumentNullException(nameof(pubRecPacket));
+            
+            return new MqttPubRelPacket
+            {
+                PacketIdentifier = pubRecPacket.PacketIdentifier
             };
         }
 
@@ -58,7 +80,8 @@ namespace MQTTnet.Formatter.V3
                 Topic = publishPacket.Topic,
                 Payload = publishPacket.Payload,
                 QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
-                Retain = publishPacket.Retain
+                Retain = publishPacket.Retain,
+                Dup = publishPacket.Dup
             };
         }
 
@@ -184,6 +207,9 @@ namespace MQTTnet.Formatter.V3
 
         public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, Server.MqttClientSubscribeResult subscribeResult)
         {
+            if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
+            if (subscribeResult == null) throw new ArgumentNullException(nameof(subscribeResult));
+
             var subackPacket = new MqttSubAckPacket
             {
                 PacketIdentifier = subscribePacket.PacketIdentifier
@@ -206,6 +232,9 @@ namespace MQTTnet.Formatter.V3
 
         public MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, List<MqttUnsubscribeReasonCode> reasonCodes)
         {
+            if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
+            if (reasonCodes == null) throw new ArgumentNullException(nameof(reasonCodes));
+
             return new MqttUnsubAckPacket
             {
                 PacketIdentifier = unsubscribePacket.PacketIdentifier,
@@ -223,7 +252,7 @@ namespace MQTTnet.Formatter.V3
             return new MqttDisconnectPacket();
         }
 
-        public MqttClientPublishResult CreatePublishResult(MqttPubAckPacket pubAckPacket)
+        public MqttClientPublishResult CreateClientPublishResult(MqttPubAckPacket pubAckPacket)
         {
             return new MqttClientPublishResult
             {
@@ -232,7 +261,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        public MqttClientPublishResult CreatePublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
+        public MqttClientPublishResult CreateClientPublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
         {
             if (pubRecPacket == null || pubCompPacket == null)
             {

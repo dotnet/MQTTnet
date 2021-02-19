@@ -1,7 +1,7 @@
 ﻿using MQTTnet.Formatter;
 using System;
 using System.Threading.Tasks;
-using MQTTnet.Protocol;
+using MQTTnet.Client.Disconnecting;
 
 namespace MQTTnet.Server.Status
 {
@@ -46,7 +46,7 @@ namespace MQTTnet.Server.Status
 
         public Task DisconnectAsync()
         {
-            return _connection.StopAsync(MqttDisconnectReasonCode.NormalDisconnection);
+            return _connection.StopAsync(MqttClientDisconnectReason.NormalDisconnection);
         }
 
         public void ResetStatistics()

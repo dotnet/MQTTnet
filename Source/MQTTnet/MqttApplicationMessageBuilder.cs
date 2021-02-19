@@ -19,54 +19,56 @@ namespace MQTTnet
         /// - At least once (1): Message gets delivered at least once (one time or more often).
         /// - Exactly once  (2): Message gets delivered exactly once (It's ensured that the message only comes once).
         /// </summary>
-        private MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
+        MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
 
         /// <summary>
         /// The MQTT topic.
         /// In MQTT, the word topic refers to an UTF-8 string that the broker uses to filter messages for each connected client.
         /// The topic consists of one or more topic levels. Each topic level is separated by a forward slash (topic level separator). 
         /// </summary>
-        private string _topic;
+        string _topic;
 
         /// <summary>
         /// The payload.
         /// The payload is the data bytes sent via the MQTT protocol.
         /// </summary>
-        private byte[] _payload;
+        byte[] _payload;
 
         /// <summary>
         /// A value indicating whether the message should be retained or not.
         /// A retained message is a normal MQTT message with the retained flag set to true.
         /// The broker stores the last retained message and the corresponding QoS for that topic.
         /// </summary>
-        private bool _retain;
+        bool _retain;
+
+        bool _dup;
 
         /// <summary>
         /// The content type.
         /// The content type must be a UTF-8 encoded string. The content type value identifies the kind of UTF-8 encoded payload.
         /// </summary>
-        private string _contentType;
+        string _contentType;
 
         /// <summary>
         /// The response topic.
         /// In MQTT 5 the ability to publish a response topic was added in the publish message which allows you to implement the request/response pattern between clients that is common in web applications.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        private string _responseTopic;
+        string _responseTopic;
 
         /// <summary>
         /// The correlation data.
         /// In order for the sender to know what sent message the response refers to it can also send correlation data with the published message.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        private byte[] _correlationData;
+        byte[] _correlationData;
 
         /// <summary>
         /// The topic alias.
         /// Topic aliases were introduced are a mechanism for reducing the size of published packets by reducing the size of the topic field.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        private ushort? _topicAlias;
+        ushort? _topicAlias;
 
         /// <summary>
         /// The subscription identifiers.
@@ -75,7 +77,7 @@ namespace MQTTnet
         /// The broker will return the subscription identifier associated with this PUBLISH packet and the PUBLISH packet to the client when need to forward PUBLISH packets matching this subscription to this client.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        private List<uint> _subscriptionIdentifiers;
+        List<uint> _subscriptionIdentifiers;
 
         /// <summary>
         /// The message expiry interval.
@@ -85,7 +87,7 @@ namespace MQTTnet
         /// When the retained=true option is set on the PUBLISH message, this interval also defines how long a message is retained on a topic.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        private uint? _messageExpiryInterval;
+        uint? _messageExpiryInterval;
 
         /// <summary>
         /// The payload format indicator.
@@ -95,7 +97,7 @@ namespace MQTTnet
         /// If no payload format indicator is provided, the default value is 0.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        private MqttPayloadFormatIndicator? _payloadFormatIndicator;
+        MqttPayloadFormatIndicator? _payloadFormatIndicator;
 
         /// <summary>
         /// The user properties.
@@ -104,7 +106,7 @@ namespace MQTTnet
         /// The feature is very similar to the HTTP header concept.
         /// </summary>
         /// Hint: MQTT 5 feature only.
-        private List<MqttUserProperty> _userProperties;
+        List<MqttUserProperty> _userProperties;
 
         public MqttApplicationMessageBuilder WithTopic(string topic)
         {
@@ -126,12 +128,7 @@ namespace MQTTnet
                 return this;
             }
 
-            _payload = payload as byte[];
-
-            if (_payload == null)
-            {
-                _payload = payload.ToArray();
-            }
+            _payload = payload as byte[] ?? payload.ToArray();
 
             return this;
         }
@@ -199,6 +196,12 @@ namespace MQTTnet
         public MqttApplicationMessageBuilder WithRetainFlag(bool value = true)
         {
             _retain = value;
+            return this;
+        }
+        
+        public MqttApplicationMessageBuilder WithDupFlag(bool value = true)
+        {
+            _dup = value;
             return this;
         }
 
@@ -338,12 +341,18 @@ namespace MQTTnet
                 throw new MqttProtocolViolationException("A Topic Alias of 0 is not permitted. A sender MUST NOT send a PUBLISH packet containing a Topic Alias which has the value 0 [MQTT-3.3.2-8].");
             }
 
+            if (_qualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce && _dup)
+            {
+                throw new MqttProtocolViolationException("The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].");
+            }
+
             var applicationMessage = new MqttApplicationMessage
             {
                 Topic = _topic,
                 Payload = _payload,
                 QualityOfServiceLevel = _qualityOfServiceLevel,
                 Retain = _retain,
+                Dup = _dup,
                 ContentType = _contentType,
                 ResponseTopic = _responseTopic,
                 CorrelationData = _correlationData,

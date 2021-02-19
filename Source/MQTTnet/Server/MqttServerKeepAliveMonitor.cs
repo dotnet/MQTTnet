@@ -3,8 +3,8 @@ using MQTTnet.Internal;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Implementations;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
@@ -108,7 +108,7 @@ namespace MQTTnet.Server
                 // We do not need to wait for the task so no await is needed.
                 // Also the internal state of the connection must be swapped to "Finalizing" because the
                 // next iteration of the keep alive timer happens.
-                var _ = connection.StopAsync(MqttDisconnectReasonCode.KeepAliveTimeout);
+                var _ = connection.StopAsync(MqttClientDisconnectReason.KeepAliveTimeout);
             }
             catch (Exception exception)
             {

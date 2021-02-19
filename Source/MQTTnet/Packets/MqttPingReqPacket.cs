@@ -3,7 +3,7 @@
     public sealed class MqttPingReqPacket : MqttBasePacket
     {
         // This is a minor performance improvement.
-        public static MqttPingReqPacket Instance = new MqttPingReqPacket();
+        public static readonly MqttPingReqPacket Instance = new MqttPingReqPacket();
 
         public override string ToString()
         {

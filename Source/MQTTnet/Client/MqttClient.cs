@@ -167,7 +167,7 @@ namespace MQTTnet.Client
 
         public Task PingAsync(CancellationToken cancellationToken)
         {
-            return SendAndReceiveAsync<MqttPingRespPacket>(new MqttPingReqPacket(), cancellationToken);
+            return SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken);
         }
 
         public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken)
@@ -650,11 +650,8 @@ namespace MQTTnet.Client
 
                         if (!eventArgs.ProcessingFailed)
                         {
-                            await SendAsync(new MqttPubAckPacket
-                            {
-                                PacketIdentifier = publishPacket.PacketIdentifier,
-                                ReasonCode = (MqttPubAckReasonCode)eventArgs.ReasonCode
-                            }, cancellationToken).ConfigureAwait(false);
+                            var pubAckPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubAckPacket(publishPacket, eventArgs.ReasonCode);
+                            await SendAsync(pubAckPacket, cancellationToken).ConfigureAwait(false);
                         }
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
@@ -663,11 +660,8 @@ namespace MQTTnet.Client
 
                         if (!eventArgs.ProcessingFailed)
                         {
-                            await SendAsync(new MqttPubRecPacket
-                            {
-                                PacketIdentifier = publishPacket.PacketIdentifier,
-                                ReasonCode = (MqttPubRecReasonCode)eventArgs.ReasonCode
-                            }, cancellationToken).ConfigureAwait(false);
+                            var pubRecPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubRecPacket(publishPacket, eventArgs.ReasonCode);
+                            await SendAsync(pubRecPacket, cancellationToken).ConfigureAwait(false);
                         }
                     }
                     else
@@ -691,11 +685,8 @@ namespace MQTTnet.Client
             {
                 // The packet is unknown. Probably due to a restart of the client.
                 // So wen send this to the server to trigger a full resend of the message.
-                return SendAsync(new MqttPubRelPacket
-                {
-                    PacketIdentifier = pubRecPacket.PacketIdentifier,
-                    ReasonCode = MqttPubRelReasonCode.PacketIdentifierNotFound
-                }, cancellationToken);
+                var pubRelPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubRelPacket(pubRecPacket, MqttApplicationMessageReceivedReasonCode.PacketIdentifierNotFound);
+                return SendAsync(pubRelPacket, cancellationToken);
             }
 
             return PlatformAbstractionLayer.CompletedTask;
@@ -703,11 +694,8 @@ namespace MQTTnet.Client
 
         Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
         {
-            return SendAsync(new MqttPubCompPacket
-            {
-                PacketIdentifier = pubRelPacket.PacketIdentifier,
-                ReasonCode = MqttPubCompReasonCode.Success
-            }, cancellationToken);
+            var pubCompPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubCompPacket(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            return SendAsync(pubCompPacket, cancellationToken);
         }
 
         Task ProcessReceivedDisconnectPacket(MqttDisconnectPacket disconnectPacket)
@@ -740,14 +728,14 @@ namespace MQTTnet.Client
         {
             // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
             await SendAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-            return _adapter.PacketFormatterAdapter.DataConverter.CreatePublishResult(null);
+            return _adapter.PacketFormatterAdapter.DataConverter.CreateClientPublishResult(null);
         }
 
         async Task<MqttClientPublishResult> PublishAtLeastOnceAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
             var response = await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
-            return _adapter.PacketFormatterAdapter.DataConverter.CreatePublishResult(response);
+            return _adapter.PacketFormatterAdapter.DataConverter.CreateClientPublishResult(response);
         }
 
         async Task<MqttClientPublishResult> PublishExactlyOnceAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
@@ -756,15 +744,11 @@ namespace MQTTnet.Client
 
             var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
 
-            var pubRelPacket = new MqttPubRelPacket
-            {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = MqttPubRelReasonCode.Success
-            };
-
+            var pubRelPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubRelPacket(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            
             var pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
 
-            return _adapter.PacketFormatterAdapter.DataConverter.CreatePublishResult(pubRecPacket, pubCompPacket);
+            return _adapter.PacketFormatterAdapter.DataConverter.CreateClientPublishResult(pubRecPacket, pubCompPacket);
         }
 
         async Task<MqttApplicationMessageReceivedEventArgs> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket)

@@ -35,6 +35,14 @@ namespace MQTTnet
         /// The broker stores the last retained message and the corresponding QoS for that topic.
         /// </summary>
         public bool Retain { get; set; }
+        
+        /// <summary>
+        /// If the DUP flag is set to 0, it indicates that this is the first occasion that the Client or Server has attempted to send this MQTT PUBLISH Packet.
+        /// If the DUP flag is set to 1, it indicates that this might be re-delivery of an earlier attempt to send the Packet.
+        /// The DUP flag MUST be set to 1 by the Client or Server when it attempts to re-deliver a PUBLISH Packet [MQTT-3.3.1.-1].
+        /// The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].
+        /// </summary>
+        public bool Dup { get; set; }
 
         /// <summary>
         /// Gets or sets the user properties.

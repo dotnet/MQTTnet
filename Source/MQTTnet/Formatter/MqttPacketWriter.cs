@@ -14,7 +14,8 @@ namespace MQTTnet.Formatter
     public sealed class MqttPacketWriter : IMqttPacketWriter
     {
         public static int InitialBufferSize = 4096;
-        public static int MaxBufferSize = 4096 + 4;
+
+        public static int MaxBufferSize = 4096 * 4;
 
         byte[] _buffer = new byte[InitialBufferSize];
 
@@ -97,7 +98,7 @@ namespace MQTTnet.Formatter
 
                 _buffer[_offset] = (byte)(bufferSize >> 8);
                 _buffer[_offset + 1] = (byte)bufferSize;
-                
+
                 Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _offset + 2);
 
                 IncreasePosition(bufferSize + 2);
@@ -121,7 +122,7 @@ namespace MQTTnet.Formatter
 
                 _buffer[_offset] = (byte)(value.Length >> 8);
                 _buffer[_offset + 1] = (byte)value.Length;
-                
+
                 Array.Copy(value, 0, _buffer, _offset + 2, value.Length);
                 IncreasePosition(value.Length + 2);
             }
@@ -201,8 +202,8 @@ namespace MQTTnet.Formatter
         {
             // This method frees the used memory by shrinking the buffer. This is required because the buffer
             // is used across several messages. In general this is not a big issue because subsequent Ping packages
-            // have the same size but a very big publish package with 100 MB of payload will increase the buffer 
-            // a lot and the size will never reduced. So this method tries to find a size which can be held in 
+            // have the same size but a very big publish package with 100 MB of payload will increase the buffer
+            // a lot and the size will never reduced. So this method tries to find a size which can be held in
             // memory for a long time without causing troubles.
 
             if (_buffer.Length < MaxBufferSize)
@@ -212,7 +213,7 @@ namespace MQTTnet.Formatter
 
             Array.Resize(ref _buffer, MaxBufferSize);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void EnsureAdditionalCapacity(int additionalCapacity)
         {

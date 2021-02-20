@@ -3,6 +3,7 @@ using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using System;
+using MQTTnet.Channel;
 
 namespace MQTTnet.Implementations
 {
@@ -19,16 +20,19 @@ namespace MQTTnet.Implementations
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
+            IMqttChannel channel;
             switch (options.ChannelOptions)
             {
                 case MqttClientTcpOptions _:
                     {
-                        return new MqttChannelAdapter(new MqttTcpChannel(options), new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttPacketWriter()), _logger);
+                        channel = new MqttTcpChannel(options);
+                        break;
                     }
 
                 case MqttClientWebSocketOptions webSocketOptions:
                     {
-                        return new MqttChannelAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttPacketWriter()), _logger);
+                        channel = new MqttWebSocketChannel(webSocketOptions);
+                        break;
                     }
 
                 default:
@@ -36,6 +40,9 @@ namespace MQTTnet.Implementations
                         throw new NotSupportedException();
                     }
             }
+
+            var packetFormatterAdapter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttPacketWriter());
+            return new MqttChannelAdapter(channel, packetFormatterAdapter, options.PacketInspector, _logger);
         }
     }
 }

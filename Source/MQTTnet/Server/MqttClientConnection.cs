@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client.Disconnecting;
 
 namespace MQTTnet.Server
 {
@@ -42,7 +43,7 @@ namespace MQTTnet.Server
         long _sentPacketsCount = 1; // Start with 1 because the CONNECT packet is not counted anywhere.
         long _receivedApplicationMessagesCount;
         long _sentApplicationMessagesCount;
-        MqttDisconnectReasonCode _disconnectReason;
+        MqttClientDisconnectReason _disconnectReason;
 
         public MqttClientConnection(MqttConnectPacket connectPacket,
             IMqttChannelAdapter channelAdapter,
@@ -84,12 +85,12 @@ namespace MQTTnet.Server
 
         public MqttClientSession Session { get; }
 
-        public async Task StopAsync(MqttDisconnectReasonCode reason)
+        public async Task StopAsync(MqttClientDisconnectReason reason)
         {
             Status = MqttClientConnectionStatus.Finalizing;
             _disconnectReason = reason;
 
-            if (reason == MqttDisconnectReasonCode.SessionTakenOver || reason == MqttDisconnectReasonCode.KeepAliveTimeout)
+            if (reason == MqttClientDisconnectReason.SessionTakenOver || reason == MqttClientDisconnectReason.KeepAliveTimeout)
             {
                 // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
                 // token because the entire connection is closed (disposed) as soon as the cancellation
@@ -97,10 +98,18 @@ namespace MQTTnet.Server
                 // at the client!
                 try
                 {
-                    await _channelAdapter.SendPacketAsync(new MqttDisconnectPacket
+                    var disconnectOptions = new MqttClientDisconnectOptions
                     {
-                        ReasonCode = reason
-                    }, CancellationToken.None).ConfigureAwait(false);
+                        ReasonCode = reason,
+                        ReasonString = reason.ToString()
+                    };
+                    
+                    var disconnectPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreateDisconnectPacket(disconnectOptions);
+
+                    using (var timeout = new CancellationTokenSource(_serverOptions.DefaultCommunicationTimeout))
+                    {
+                        await _channelAdapter.SendPacketAsync(disconnectPacket, timeout.Token).ConfigureAwait(false);
+                    }
                 }
                 catch (Exception exception)
                 {
@@ -235,7 +244,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                if (_disconnectReason == MqttDisconnectReasonCode.SessionTakenOver)
+                if (_disconnectReason == MqttClientDisconnectReason.SessionTakenOver)
                 {
                     disconnectType = MqttClientDisconnectType.Takeover;
                 }
@@ -277,12 +286,7 @@ namespace MQTTnet.Server
 
         Task HandleIncomingPubRelPacketAsync(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
         {
-            var pubCompPacket = new MqttPubCompPacket
-            {
-                PacketIdentifier = pubRelPacket.PacketIdentifier,
-                ReasonCode = MqttPubCompReasonCode.Success
-            };
-
+            var pubCompPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePubCompPacket(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
             return SendAsync(pubCompPacket, cancellationToken);
         }
 
@@ -327,12 +331,12 @@ namespace MQTTnet.Server
                     }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                     {
-                        var pubAckPacket = _dataConverter.CreatePubAckPacket(publishPacket);
+                        var pubAckPacket = _dataConverter.CreatePubAckPacket(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
                         return SendAsync(pubAckPacket, cancellationToken);
                     }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                     {
-                        var pubRecPacket = _dataConverter.CreatePubRecPacket(publishPacket);
+                        var pubRecPacket = _dataConverter.CreatePubRecPacket(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
                         return SendAsync(pubRecPacket, cancellationToken);
                     }
                 default:
@@ -441,13 +445,10 @@ namespace MQTTnet.Server
                         using (var awaiter2 = _packetDispatcher.AddAwaiter<MqttPubCompPacket>(publishPacket.PacketIdentifier))
                         {
                             await SendAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-                            await awaiter1.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
+                            var pubRecPacket = await awaiter1.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
 
-                            await SendAsync(new MqttPubRelPacket
-                            {
-                                PacketIdentifier = publishPacket.PacketIdentifier,
-                                ReasonCode = MqttPubRelReasonCode.Success
-                            }, cancellationToken).ConfigureAwait(false);
+                            var pubRelPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePubRelPacket(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
+                            await SendAsync(pubRelPacket, cancellationToken).ConfigureAwait(false);
 
                             await awaiter2.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
                         }

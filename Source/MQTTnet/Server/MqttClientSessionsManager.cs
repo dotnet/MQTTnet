@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client.Disconnecting;
 using OperationCanceledException = System.OperationCanceledException;
 
 namespace MQTTnet.Server
@@ -121,7 +122,7 @@ namespace MQTTnet.Server
 
             foreach (var connection in connections)
             {
-                await connection.StopAsync(MqttDisconnectReasonCode.NormalDisconnection).ConfigureAwait(false);
+                await connection.StopAsync(MqttClientDisconnectReason.NormalDisconnection).ConfigureAwait(false);
             }
         }
 
@@ -211,7 +212,7 @@ namespace MQTTnet.Server
 
             if (connection != null)
             {
-                await connection.StopAsync(MqttDisconnectReasonCode.NormalDisconnection).ConfigureAwait(false);
+                await connection.StopAsync(MqttClientDisconnectReason.NormalDisconnection).ConfigureAwait(false);
             }
             
             _logger.Verbose("Session for client '{0}' deleted.", clientId);
@@ -301,7 +302,7 @@ namespace MQTTnet.Server
                         {
                             if (clientConnection != null)
                             {
-                                await clientConnection.StopAsync(MqttDisconnectReasonCode.NormalDisconnection).ConfigureAwait(false);
+                                await clientConnection.StopAsync(MqttClientDisconnectReason.NormalDisconnection).ConfigureAwait(false);
                             }
                         }
 
@@ -424,7 +425,7 @@ namespace MQTTnet.Server
                     _connections[connectPacket.ClientId] = connection;
                 }
 
-                existingConnection?.StopAsync(MqttDisconnectReasonCode.SessionTakenOver).GetAwaiter().GetResult();
+                existingConnection?.StopAsync(MqttClientDisconnectReason.SessionTakenOver).GetAwaiter().GetResult();
 
                 return connection;
             }

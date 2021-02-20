@@ -10,8 +10,16 @@ namespace MQTTnet.Client.Subscribing
             ResultCode = resultCode;
         }
 
+        /// <summary>
+        /// Gets or sets the topic filter.
+        /// The topic filter can contain topics and wildcards.
+        /// </summary>
         public MqttTopicFilter TopicFilter { get; }
 
+        /// <summary>
+        /// Gets or sets the result code.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
         public MqttClientSubscribeResultCode ResultCode { get; }
     }
 }

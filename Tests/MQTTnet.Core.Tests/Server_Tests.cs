@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
@@ -6,6 +6,7 @@ using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Client.Subscribing;
+using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -24,6 +25,55 @@ namespace MQTTnet.Tests
     public sealed class Server_Tests
     {
         public TestContext TestContext { get; set; }
+
+        [TestMethod]
+        [DataRow("", null)]
+        [DataRow("", "")]
+        [DataRow(null, null)]
+        public async Task Use_Admissible_Credentials(string username, string password)
+        {
+            using (var testEnvironment = new TestEnvironment())
+            {
+                await testEnvironment.StartServerAsync();
+
+                var client = testEnvironment.CreateClient();
+
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost", testEnvironment.ServerPort)
+                    .WithCredentials(username, password)
+                    .Build();
+
+                var connectResult = await client.ConnectAsync(clientOptions);
+
+                Assert.IsFalse(connectResult.IsSessionPresent);
+                Assert.IsTrue(client.IsConnected);
+            }
+        }
+
+        [TestMethod]
+        public async Task Use_Username_Null_Password_Empty()
+        {
+            string username = null;
+            string password = string.Empty;
+
+            using (var testEnvironment = new TestEnvironment())
+            {
+                testEnvironment.IgnoreClientLogErrors = true;
+
+                await testEnvironment.StartServerAsync();
+
+                var client = testEnvironment.CreateClient();
+
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithTcpServer("localhost", testEnvironment.ServerPort)
+                    .WithCredentials(username, password)
+                    .Build();
+
+                var ex = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(async () => await client.ConnectAsync(clientOptions));
+                Assert.IsInstanceOfType(ex.InnerException, typeof(MqttProtocolViolationException));
+                Assert.AreEqual("Error while authenticating. If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].", ex.Message, false);
+            }
+        }
 
         [TestMethod]
         public async Task Use_Empty_Client_ID()
@@ -416,7 +466,7 @@ namespace MQTTnet.Tests
         public async Task Publish_Multiple_Clients()
         {
             var receivedMessagesCount = 0;
-            
+
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
@@ -446,7 +496,7 @@ namespace MQTTnet.Tests
                 }
 
                 SpinWait.SpinUntil(() => receivedMessagesCount == 1000, TimeSpan.FromSeconds(20));
-                
+
                 Assert.AreEqual(1000, receivedMessagesCount);
             }
         }

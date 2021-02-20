@@ -128,7 +128,21 @@ namespace MQTTnet.Client
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 
-            return client.DisconnectAsync(new MqttClientDisconnectOptions());
+            return client.DisconnectAsync(CancellationToken.None);
+        }
+
+        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectOptions options)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            return client.DisconnectAsync(options, CancellationToken.None);
+        }
+
+        public static Task DisconnectAsync(this IMqttClient client, CancellationToken cancellationToken)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            return client.DisconnectAsync(new MqttClientDisconnectOptions(), cancellationToken);
         }
 
         public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, params MqttTopicFilter[] topicFilters)
@@ -174,13 +188,6 @@ namespace MQTTnet.Client
             if (client == null) throw new ArgumentNullException(nameof(client));
 
             return client.ConnectAsync(options, CancellationToken.None);
-        }
-
-        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectOptions options)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            return client.DisconnectAsync(options, CancellationToken.None);
         }
 
         public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)

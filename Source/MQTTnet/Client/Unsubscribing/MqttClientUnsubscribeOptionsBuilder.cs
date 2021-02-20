@@ -8,6 +8,13 @@ namespace MQTTnet.Client.Unsubscribing
     {
         private readonly MqttClientUnsubscribeOptions _unsubscribeOptions = new MqttClientUnsubscribeOptions();
 
+        /// <summary>
+        /// Adds the user property to the unsubscribe options.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
+        /// <param name="name">The property name.</param>
+        /// <param name="value">The property value.</param>
+        /// <returns>A new instance of the <see cref="MqttClientUnsubscribeOptionsBuilder"/> class.</returns>
         public MqttClientUnsubscribeOptionsBuilder WithUserProperty(string name, string value)
         {
             if (name is null) throw new ArgumentNullException(nameof(name));
@@ -16,6 +23,12 @@ namespace MQTTnet.Client.Unsubscribing
             return WithUserProperty(new MqttUserProperty(name, value));
         }
 
+        /// <summary>
+        /// Adds the user property to the unsubscribe options.
+        /// Hint: MQTT 5 feature only.
+        /// </summary>
+        /// <param name="userProperty">The user property.</param>
+        /// <returns>A new instance of the <see cref="MqttClientUnsubscribeOptionsBuilder"/> class.</returns>
         public MqttClientUnsubscribeOptionsBuilder WithUserProperty(MqttUserProperty userProperty)
         {
             if (userProperty is null) throw new ArgumentNullException(nameof(userProperty));

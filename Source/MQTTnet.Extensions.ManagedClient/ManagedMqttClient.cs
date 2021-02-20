@@ -53,11 +53,11 @@ namespace MQTTnet.Extensions.ManagedClient
         public bool IsConnected => InternalClient.IsConnected;
 
         public bool IsStarted => _connectionCancellationToken != null;
-        
+
         public IMqttClient InternalClient { get; }
 
         public int PendingApplicationMessagesCount => _messageQueue.Count;
-        
+
         public IManagedMqttClientOptions Options { get; private set; }
 
         public IMqttClientConnectedHandler ConnectedHandler
@@ -92,7 +92,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (options.ClientOptions == null) throw new ArgumentException("The client options are not set.", nameof(options));
-            
+
             if (!_maintainConnectionTask?.IsCompleted ?? false) throw new InvalidOperationException("The managed client is already started.");
 
             Options = options;
@@ -292,7 +292,14 @@ namespace MQTTnet.Extensions.ManagedClient
                 {
                     try
                     {
-                        await InternalClient.DisconnectAsync().ConfigureAwait(false);
+                        using (var disconnectTimeout = new CancellationTokenSource(Options.ClientOptions.CommunicationTimeout))
+                        {
+                            await InternalClient.DisconnectAsync(disconnectTimeout.Token).ConfigureAwait(false);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.Warning("Timeout while sending DISCONNECT packet.");
                     }
                     catch (Exception exception)
                     {

@@ -12,7 +12,7 @@
         ServerBusy = 137,
         ServerShuttingDown = 139,
         BadAuthenticationMethod = 140,
-        KeepaliveTimeout = 141,
+        KeepAliveTimeout = 141,
         SessionTakenOver = 142,
         TopicFilterInvalid = 143,
         TopicNameInvalid = 144,

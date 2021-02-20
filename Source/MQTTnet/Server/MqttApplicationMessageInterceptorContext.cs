@@ -18,6 +18,10 @@ namespace MQTTnet.Server
         /// </summary>
         public IMqttNetScopedLogger Logger { get; }
 
+        /// <summary>
+        /// Gets the client identifier.
+        /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
+        /// </summary>
         public string ClientId { get; }
 
         public MqttApplicationMessage ApplicationMessage { get; set; }

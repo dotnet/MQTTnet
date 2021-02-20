@@ -1,5 +1,4 @@
-﻿using System;
-using MQTTnet.Adapter;
+﻿using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.LowLevelClient;
 

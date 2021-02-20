@@ -6,13 +6,18 @@ using MQTTnet.Channel;
 
 namespace MQTTnet.Internal
 {
-    public class TestMqttChannel : IMqttChannel
+    public sealed class TestMqttChannel : IMqttChannel
     {
         readonly MemoryStream _stream;
 
         public TestMqttChannel(MemoryStream stream)
         {
             _stream = stream;
+        }
+
+        public TestMqttChannel(byte[] buffer)
+        {
+            _stream = new MemoryStream(buffer);
         }
 
         public string Endpoint { get; } = "<Test channel>";

@@ -212,6 +212,10 @@ namespace MQTTnet.Server
                     {
                         await SendAsync(MqttPingRespPacket.Instance, cancellationToken).ConfigureAwait(false);
                     }
+                    else if (packet is MqttPingRespPacket)
+                    {
+                        throw new MqttProtocolViolationException("A PINGRESP Packet is sent by the Server to the Client in response to a PINGREQ Packet only.");
+                    }
                     else if (packet is MqttDisconnectPacket)
                     {
                         Session.WillMessage = null;
@@ -222,7 +226,10 @@ namespace MQTTnet.Server
                     }
                     else
                     {
-                        _packetDispatcher.Dispatch(packet);
+                        if (!_packetDispatcher.TryDispatch(packet))
+                        {
+                            throw new MqttProtocolViolationException($"Received packet '{packet}' at an unexpected time.");
+                        }
                     }
                 }
             }
@@ -255,7 +262,7 @@ namespace MQTTnet.Server
                     Session.WillMessage = null;
                 }
 
-                _packetDispatcher.Cancel();
+                _packetDispatcher.CancelAll();
 
                 _logger.Info("Client '{0}': Connection stopped.", ClientId);
 

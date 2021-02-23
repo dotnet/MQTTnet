@@ -15,7 +15,9 @@
 * [Core] Fixed some issues in nuget packages.
 * [Client] Changed exception types so that proper exceptions are thrown when connecting (#1082).
 * [Client] Exposed Dup flag in application messages.
+* [Client] Improved keep alive message sending.
 * [RpcClient] Fixed an issue when using a custom application message reveived handler (#1093).
+* [Server] Improved keep alive message sending.
 
 Git commit: $gitCommit
     </releaseNotes>

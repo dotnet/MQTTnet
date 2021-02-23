@@ -14,7 +14,6 @@ using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Implementations;
@@ -25,8 +24,6 @@ namespace MQTTnet.Client
     {
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
-        readonly Stopwatch _sendTracker = new Stopwatch();
-        readonly Stopwatch _receiveTracker = new Stopwatch();
         readonly object _disconnectLock = new object();
 
         readonly IMqttClientAdapterFactory _adapterFactory;
@@ -44,6 +41,8 @@ namespace MQTTnet.Client
         long _isDisconnectPending;
         bool _isConnected;
         MqttClientDisconnectReason _disconnectReason;
+        
+        DateTime _lastPacketSentTimestamp;
 
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
@@ -79,7 +78,7 @@ namespace MQTTnet.Client
                 Options = options;
 
                 _packetIdentifierProvider.Reset();
-                _packetDispatcher.Cancel();
+                _packetDispatcher.CancelAll();
 
                 _backgroundCancellationTokenSource = new CancellationTokenSource();
                 var backgroundCancellationToken = _backgroundCancellationTokenSource.Token;
@@ -102,8 +101,7 @@ namespace MQTTnet.Client
                     authenticateResult = await AuthenticateAsync(adapter, options.WillMessage, combined.Token).ConfigureAwait(false);
                 }
 
-                _sendTracker.Restart();
-                _receiveTracker.Restart();
+                _lastPacketSentTimestamp = DateTime.UtcNow;
 
                 if (Options.KeepAlivePeriod != TimeSpan.Zero)
                 {
@@ -391,8 +389,8 @@ namespace MQTTnet.Client
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            _sendTracker.Restart();
-
+            _lastPacketSentTimestamp = DateTime.UtcNow;
+            
             return _adapter.SendPacketAsync(packet, cancellationToken);
         }
 
@@ -400,18 +398,17 @@ namespace MQTTnet.Client
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            ushort identifier = 0;
-            if (requestPacket is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier > 0)
+            ushort packetIdentifier = 0;
+            if (requestPacket is IMqttPacketWithIdentifier packetWithIdentifier)
             {
-                identifier = packetWithIdentifier.PacketIdentifier;
+                packetIdentifier = packetWithIdentifier.PacketIdentifier;
             }
 
-            using (var packetAwaiter = _packetDispatcher.AddAwaiter<TResponsePacket>(identifier))
+            using (var packetAwaiter = _packetDispatcher.AddAwaiter<TResponsePacket>(packetIdentifier))
             {
                 try
                 {
-                    _sendTracker.Restart();
-                    await _adapter.SendPacketAsync(requestPacket, cancellationToken).ConfigureAwait(false);
+                    await SendAsync(requestPacket, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -446,15 +443,15 @@ namespace MQTTnet.Client
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     // Values described here: [MQTT-3.1.2-24].
-                    var waitTime = keepAlivePeriod - _sendTracker.Elapsed;
+                    var timeWithoutPacketSent = DateTime.UtcNow - _lastPacketSentTimestamp;
 
-                    if (waitTime <= TimeSpan.Zero)
+                    if (timeWithoutPacketSent > keepAlivePeriod)
                     {
-                        await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
+                        await PingAsync(cancellationToken).ConfigureAwait(false);
                     }
 
                     // Wait a fixed time in all cases. Calculation of the remaining time is complicated
-                    // due to some edge cases and was buggy in the past. Now we wait half a second because the
+                    // due to some edge cases and was buggy in the past. Now we wait several ms because the
                     // min keep alive value is one second so that the server will wait 1.5 seconds for a PING
                     // packet.
                     await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken).ConfigureAwait(false);
@@ -538,7 +535,7 @@ namespace MQTTnet.Client
                     _logger.Error(exception, "Error while receiving packets.");
                 }
 
-                _packetDispatcher.Dispatch(exception);
+                _packetDispatcher.FailAll(exception);
 
                 if (!DisconnectIsPending())
                 {
@@ -555,8 +552,6 @@ namespace MQTTnet.Client
         {
             try
             {
-                _receiveTracker.Restart();
-
                 if (packet is MqttPublishPacket publishPacket)
                 {
                     EnqueueReceivedPublishPacket(publishPacket);
@@ -569,10 +564,6 @@ namespace MQTTnet.Client
                 {
                     await ProcessReceivedPubRelPacket(pubRelPacket, cancellationToken).ConfigureAwait(false);
                 }
-                else if (packet is MqttPingReqPacket)
-                {
-                    await SendAsync(MqttPingRespPacket.Instance, cancellationToken).ConfigureAwait(false);
-                }
                 else if (packet is MqttDisconnectPacket disconnectPacket)
                 {
                     await ProcessReceivedDisconnectPacket(disconnectPacket).ConfigureAwait(false);
@@ -581,9 +572,20 @@ namespace MQTTnet.Client
                 {
                     await ProcessReceivedAuthPacket(authPacket).ConfigureAwait(false);
                 }
+                else if (packet is MqttPingRespPacket)
+                {
+                    _packetDispatcher.TryDispatch(packet);
+                }
+                else if (packet is MqttPingReqPacket)
+                {
+                    throw new MqttProtocolViolationException("The PINGREQ Packet is sent from a Client to the Server only.");
+                }
                 else
                 {
-                    _packetDispatcher.Dispatch(packet);
+                    if (!_packetDispatcher.TryDispatch(packet))
+                    {
+                        throw new MqttProtocolViolationException($"Received packet '{packet}' at an unexpected time.");
+                    }
                 }
             }
             catch (Exception exception)
@@ -605,7 +607,7 @@ namespace MQTTnet.Client
                     _logger.Error(exception, "Error while receiving packets.");
                 }
 
-                _packetDispatcher.Dispatch(exception);
+                _packetDispatcher.FailAll(exception);
 
                 if (!DisconnectIsPending())
                 {
@@ -703,8 +705,8 @@ namespace MQTTnet.Client
             _disconnectReason = (MqttClientDisconnectReason)(disconnectPacket.ReasonCode ?? MqttDisconnectReasonCode.NormalDisconnection);
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
-            _packetDispatcher.Dispatch(disconnectPacket);
-
+            _packetDispatcher.FailAll(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));
+            
             if (!DisconnectIsPending())
             {
                 return DisconnectInternalAsync(_packetReceiverTask, null, null);

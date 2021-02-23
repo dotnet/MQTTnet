@@ -1,103 +1,101 @@
-using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace MQTTnet.PacketDispatcher
 {
     public sealed class MqttPacketDispatcher
     {
-        readonly ConcurrentDictionary<Tuple<ushort, Type>, IMqttPacketAwaiter> _awaiters = new ConcurrentDictionary<Tuple<ushort, Type>, IMqttPacketAwaiter>();
+        readonly List<IMqttPacketAwaiter> _awaiters = new List<IMqttPacketAwaiter>();
 
-        public void Dispatch(Exception exception)
+        public void FailAll(Exception exception)
         {
-            foreach (var awaiter in _awaiters)
-            {
-                awaiter.Value.Fail(exception);
-            }
+            if (exception == null) throw new ArgumentNullException(nameof(exception));
 
-            _awaiters.Clear();
+            lock (_awaiters)
+            {
+                foreach (var awaiter in _awaiters)
+                {
+                    awaiter.Fail(exception);
+                }
+
+                _awaiters.Clear();
+            }
         }
 
+        public void CancelAll()
+        {
+            lock (_awaiters)
+            {
+                foreach (var entry in _awaiters)
+                {
+                    entry.Cancel();
+                }
+
+                _awaiters.Clear();
+            }
+        }
+        
         public bool TryDispatch(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
-
-            if (packet is MqttDisconnectPacket disconnectPacket)
-            {
-                foreach (var packetAwaiter in _awaiters)
-                {
-                    packetAwaiter.Value.Fail(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));
-                }
-
-                return true;
-            }
-
+            
             ushort identifier = 0;
-            if (packet is IMqttPacketWithIdentifier packetWithIdentifier && packetWithIdentifier.PacketIdentifier > 0)
+            if (packet is IMqttPacketWithIdentifier packetWithIdentifier)
             {
                 identifier = packetWithIdentifier.PacketIdentifier;
             }
 
-            var type = packet.GetType();
-            var key = new Tuple<ushort, Type>(identifier, type);
-
-            if (_awaiters.TryRemove(key, out var awaiter))
+            var packetType = packet.GetType();
+            var matchingAwaiters = new List<IMqttPacketAwaiter>();
+            
+            lock (_awaiters)
             {
-                awaiter.Complete(packet);
-                return true;
+                for (var i = _awaiters.Count - 1; i >= 0; i--)
+                {
+                    var entry = _awaiters[i];
+
+                    // Note: The PingRespPacket will also arrive here and has NO identifier but there
+                    // is code which waits for it. So the code must be able to deal with filters which
+                    // are referring to the type only (identifier is 0)!
+                    if (entry.PacketFilter.Type != packetType || entry.PacketFilter.Identifier != identifier)
+                    {
+                        continue;
+                    }
+                    
+                    matchingAwaiters.Add(entry);
+                    _awaiters.RemoveAt(i);
+                }
+            }
+            
+            foreach (var matchingEntry in matchingAwaiters)
+            {
+                matchingEntry.Complete(packet);
             }
 
-            return false;
+            return matchingAwaiters.Count > 0;
         }
-
-        public void Dispatch(MqttBasePacket packet)
+        
+        public MqttPacketAwaiter<TResponsePacket> AddAwaiter<TResponsePacket>(ushort packetIdentifier) where TResponsePacket : MqttBasePacket
         {
-            if (packet == null) throw new ArgumentNullException(nameof(packet));
+            var awaiter = new MqttPacketAwaiter<TResponsePacket>(packetIdentifier, this);
 
-            if (!TryDispatch(packet))
+            lock (_awaiters)
             {
-                throw new MqttProtocolViolationException($"Received packet '{packet}' at an unexpected time.");
+                _awaiters.Add(awaiter);
             }
-        }
-
-        public void Cancel()
-        {
-            foreach (var awaiter in _awaiters)
-            {
-                awaiter.Value.Cancel();
-            }
-
-            _awaiters.Clear();
-        }
-
-        public MqttPacketAwaiter<TResponsePacket> AddAwaiter<TResponsePacket>(ushort? identifier) where TResponsePacket : MqttBasePacket
-        {
-            if (!identifier.HasValue)
-            {
-                identifier = 0;
-            }
-
-            var awaiter = new MqttPacketAwaiter<TResponsePacket>(identifier, this);
-
-            var key = new Tuple<ushort, Type>(identifier.Value, typeof(TResponsePacket));
-            if (!_awaiters.TryAdd(key, awaiter))
-            {
-                throw new InvalidOperationException($"The packet dispatcher already has an awaiter for packet of type '{key.Item2.Name}' with identifier {key.Item1}.");
-            }
-
+            
             return awaiter;
         }
 
-        public void RemoveAwaiter<TResponsePacket>(ushort? identifier) where TResponsePacket : MqttBasePacket
+        public void RemoveAwaiter(IMqttPacketAwaiter awaiter)
         {
-            if (!identifier.HasValue)
+            if (awaiter == null) throw new ArgumentNullException(nameof(awaiter));
+            
+            lock (_awaiters)
             {
-                identifier = 0;
+                _awaiters.Remove(awaiter);
             }
-
-            var key = new Tuple<ushort, Type>(identifier.Value, typeof(TResponsePacket));
-            _awaiters.TryRemove(key, out _);
         }
     }
 }

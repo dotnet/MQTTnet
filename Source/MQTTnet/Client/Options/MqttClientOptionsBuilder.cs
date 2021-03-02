@@ -252,7 +252,11 @@ namespace MQTTnet.Client.Options
         {
             if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
 
-            _tlsParameters = new MqttClientOptionsBuilderTlsParameters();
+            _tlsParameters = new MqttClientOptionsBuilderTlsParameters
+            {
+                UseTls = true
+            };
+            
             optionsBuilder(_tlsParameters);
             return this;
         }

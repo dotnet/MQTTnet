@@ -82,7 +82,7 @@ namespace MQTTnet.Tests
                 var sessionStatus = await testEnvironment.Server.GetSessionStatusAsync();
                 var session = sessionStatus.First();
 
-                Assert.AreEqual(true, session.Items["can_subscribe_x"]);
+                Assert.AreEqual(true, session.SessionItems["can_subscribe_x"]);
             }
         }
 

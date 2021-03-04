@@ -25,7 +25,7 @@ namespace MQTTnet.Server.Status
 
         public DateTime CreatedTimestamp { get; set; }
 
-        public IDictionary<object, object> Items { get; set; }
+        public IDictionary<object, object> SessionItems { get; set; }
 
         public Task DeleteAsync()
         {

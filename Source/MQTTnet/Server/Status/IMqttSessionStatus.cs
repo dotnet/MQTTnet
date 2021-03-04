@@ -13,7 +13,7 @@ namespace MQTTnet.Server.Status
 
         long PendingApplicationMessagesCount { get; }
 
-        IDictionary<object, object> Items { get; }
+        IDictionary<object, object> SessionItems { get; }
 
         Task ClearPendingApplicationMessagesAsync();
 

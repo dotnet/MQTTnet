@@ -86,7 +86,7 @@ namespace MQTTnet.Server
             status.ClientId = ClientId;
             status.CreatedTimestamp = _createdTimestamp;
             status.PendingApplicationMessagesCount = ApplicationMessagesQueue.Count;
-            status.Items = Items;
+            status.SessionItems = Items;
         }
     }
 }

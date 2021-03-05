@@ -81,18 +81,19 @@ namespace MQTTnet.Tests
 
                 var requestSender = await testEnvironment.ConnectClientAsync();
 
-                var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().WithTopicGenerationStrategy(new TestTopicStrategy()) .Build());
+                var rpcClient = await testEnvironment.ConnectRpcClientAsync(new MqttRpcClientOptionsBuilder().WithTopicGenerationStrategy(new TestTopicStrategy()) .Build());
+                
                 await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
             }
         }
 
-        private async Task Execute_Success(MqttQualityOfServiceLevel qosLevel, MqttProtocolVersion protocolVersion)
+        async Task Execute_Success(MqttQualityOfServiceLevel qosLevel, MqttProtocolVersion protocolVersion)
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServerAsync();
                 var responseSender = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithProtocolVersion(protocolVersion));
-                await responseSender.SubscribeAsync("MQTTnet.RPC/+/ping");
+                await responseSender.SubscribeAsync("MQTTnet.RPC/+/ping", qosLevel);
 
                 responseSender.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(async e =>
                 {
@@ -101,14 +102,16 @@ namespace MQTTnet.Tests
 
                 var requestSender = await testEnvironment.ConnectClientAsync();
 
-                var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build());
-                var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), "ping", "", qosLevel);
-
-                Assert.AreEqual("pong", Encoding.UTF8.GetString(response));
+                using (var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build()))
+                {
+                    var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), "ping", "", qosLevel);
+                    
+                    Assert.AreEqual("pong", Encoding.UTF8.GetString(response));
+                }
             }
         }
 
-        private class TestTopicStrategy : IMqttRpcClientTopicGenerationStrategy
+        class TestTopicStrategy : IMqttRpcClientTopicGenerationStrategy
         {
             public MqttRpcTopicPair CreateRpcTopics(TopicGenerationContext context)
             {

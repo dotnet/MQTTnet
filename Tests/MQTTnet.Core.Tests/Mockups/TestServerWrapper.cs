@@ -109,15 +109,6 @@ namespace MQTTnet.Tests.Mockups
             return Implementation.StartAsync(options);
         }
 
-        public void ConnectionValidator(MqttConnectionValidatorContext ctx)
-        {
-            if (!ctx.ClientId.StartsWith(TestContext.TestName))
-            {
-                TestEnvironment.TrackException(new InvalidOperationException($"Invalid client ID used ({ctx.ClientId}). It must start with UnitTest name."));
-                ctx.ReasonCode = Protocol.MqttConnectReasonCode.ClientIdentifierNotValid;
-            }
-        }
-
         public Task StopAsync()
         {
             return Implementation.StopAsync();
@@ -136,6 +127,15 @@ namespace MQTTnet.Tests.Mockups
         public void Dispose()
         {
             Implementation.Dispose();
+        }
+        
+        void ConnectionValidator(MqttConnectionValidatorContext ctx)
+        {
+            if (!ctx.ClientId.StartsWith(TestContext.TestName))
+            {
+                TestEnvironment.TrackException(new InvalidOperationException($"Invalid client ID used ({ctx.ClientId}). It must start with UnitTest name."));
+                ctx.ReasonCode = Protocol.MqttConnectReasonCode.ClientIdentifierNotValid;
+            }
         }
     }
 }

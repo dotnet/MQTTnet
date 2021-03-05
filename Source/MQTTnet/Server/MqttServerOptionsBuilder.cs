@@ -164,6 +164,12 @@ namespace MQTTnet.Server
             _options.ConnectionValidator = new MqttServerConnectionValidatorDelegate(value);
             return this;
         }
+        
+        public MqttServerOptionsBuilder WithConnectionValidator(Func<MqttConnectionValidatorContext, Task> value)
+        {
+            _options.ConnectionValidator = new MqttServerConnectionValidatorDelegate(value);
+            return this;
+        }
 
         public MqttServerOptionsBuilder WithDisconnectedInterceptor(IMqttServerClientDisconnectedHandler value)
         {

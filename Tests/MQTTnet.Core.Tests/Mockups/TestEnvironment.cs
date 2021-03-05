@@ -9,6 +9,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Extensions.Rpc;
+using MQTTnet.Extensions.Rpc.Options;
 using MQTTnet.LowLevelClient;
 
 namespace MQTTnet.Tests.Mockups
@@ -75,6 +77,11 @@ namespace MQTTnet.Tests.Mockups
                     }
                 }
             };
+        }
+
+        public async Task<IMqttRpcClient> ConnectRpcClientAsync(IMqttRpcClientOptions options)
+        {
+            return new MqttRpcClient(await ConnectClientAsync(), options);
         }
 
         public IMqttClient CreateClient()

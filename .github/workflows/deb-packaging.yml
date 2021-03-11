@@ -1,0 +1,67 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Deb Packaging
+
+# Controls when the action will run. 
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      FileVersion:
+        description: 'File Version'
+        required: true
+        default: ''
+      Version:
+        description: 'Version'
+        required: true
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build MQTTnetServer
+        run: dotnet publish Source/MQTTnet.Server/MQTTnet.Server.csproj --configuration Release /p:FileVersion=${{ github.event.inputs.fileVersion }} /p:Version=${{ github.event.inputs.version }} --self-contained --runtime linux-x64 --framework net5.0
+
+      - name: Set up installation directory
+        run: mkdir -p packaging/opt/MQTTnetServer
+
+      - name: Copy meta data
+        run: |
+          cp -R Build/deb-meta/* packaging/
+          chmod 755 packaging/DEBIAN/postinst
+          chmod 755 packaging/DEBIAN/postrm
+
+      - name: Move artifacts to packaging directory
+        run: cp -R Source/MQTTnet.Server/bin/Release/net5.0/linux-x64/publish/* packaging/opt/MQTTnetServer
+
+      - name: Adjust files
+        run: |
+          rm packaging/opt/MQTTnetServer/appsettings.Development.json
+          mv packaging/opt/MQTTnetServer/appsettings.json packaging/opt/MQTTnetServer/appsettings.template.json
+
+      - name: Adjust permissions
+        run: |
+          cd packaging/opt/MQTTnetServer
+          find . -type f | xargs chmod -R 644
+          chmod 755 MQTTnet.Server
+
+      - name: Generate MD5s
+        run: |
+          cd packaging/          
+          md5sum $(find * -type f -not -path 'DEBIAN/*') > DEBIAN/md5sums
+      
+      - name: Patch meta
+        run: sed -i 's/\$VERSION/${{ github.event.inputs.version }}/' packaging/DEBIAN/control
+
+      - name: Package everything
+        run: dpkg-deb -v --build packaging/ mqttnet-server_${{ github.event.inputs.version }}.deb
+      
+      - name: Save artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: mqttnet-server
+          path: mqttnet-server_${{ github.event.inputs.version }}.deb

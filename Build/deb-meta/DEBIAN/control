@@ -1,0 +1,10 @@
+Package: mqttnet-server
+Version: $VERSION
+Section: base
+Priority: optional
+Architecture: amd64
+Depends:
+Suggests:
+Maintainer: Damian Wolgast <packages@asymetrixs.net>
+Description:
+  MQTTnet Server is a standalone cross platform MQTT server (like mosquitto) basing on this library.

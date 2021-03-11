@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Reload systemd because of absent service file
+systemctl daemon-reload

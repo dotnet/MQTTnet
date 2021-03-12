@@ -3,5 +3,8 @@
 BASEPATH=/opt
 INSTALLPATH=$BASEPATH/MQTTnetServer
 
+# Stop service before uninstalling
+systemctl stop mqttnet-server
+
 # Remove permission to open ports
 setcap CAP_NET_BIND_SERVICE=-eip $INSTALLPATH/MQTTnet.Server

@@ -1,5 +1,5 @@
 Package: mqttnet-server
-Version: $VERSION
+Version: VERSIONPLACEHOLDER
 Section: base
 Priority: optional
 Architecture: amd64

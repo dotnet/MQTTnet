@@ -19,10 +19,20 @@ jobs:
           
       - name: Validate version
         run: |
+          echo "ls -la Source/MQTTnet.Server"
+          ls -la Source/MQTTnet.Server
+          echo "ls -la Source/MQTTnet.Server/MQTTnet.Server.csproj"
           ls -la Source/MQTTnet.Server/MQTTnet.Server.csproj
+          echo "ls-la"
           ls -la
+          echo "echo ${{ env.VERSION }}"
           echo ${{ env.VERSION }}
+          echo "echo $VERSION"
           echo $VERSION
+          echo "$VERSION"
+          cat Source/MQTTnet.Server/MQTTnet.Server.csproj
+          echo "grep"
+          grep '<Version>' Source/MQTTnet.Server/MQTTnet.Server.csproj | grep '[0-9\.]+' -o
 
       - name: Build MQTTnetServer
         run: dotnet publish Source/MQTTnet.Server/MQTTnet.Server.csproj --configuration Release --self-contained --runtime linux-x64 --framework net5.0

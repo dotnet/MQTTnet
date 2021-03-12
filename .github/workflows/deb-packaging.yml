@@ -59,7 +59,7 @@ jobs:
         run: sed -i 's/\$VERSION/${{ github.event.inputs.version }}/' packaging/DEBIAN/control
 
       - name: Package everything
-        run: dpkg-deb -v --build packaging/ mqttnet-server_${{ github.event.inputs.version }}.deb
+        run: dpkg-deb -v --build packaging/ mqttnet-server_${{ github.event.inputs.version }}-1_amd64.deb
       
       - name: Save artifact
         uses: actions/upload-artifact@v2

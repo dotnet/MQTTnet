@@ -19,6 +19,10 @@ jobs:
           
       - name: Validate version
         run: |
+          ls -la
+          ls -la Source
+          ls -la Source/MQTTnet.Server
+          [ -f "Source/MQTTnet.Server/MQTTnet.Server.csproj" ] && echo -1-
           echo "echo ${{ env.VERSION }}"
           echo ${{ env.VERSION }}
           echo "echo $VERSION"

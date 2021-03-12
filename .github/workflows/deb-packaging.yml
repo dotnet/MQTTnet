@@ -34,6 +34,7 @@ jobs:
           cp -R Build/deb-meta/* packaging/
           chmod 755 packaging/DEBIAN/postinst
           chmod 755 packaging/DEBIAN/postrm
+          chmod 755 packaging/DEBIAN/prerm
 
       - name: Move artifacts to packaging directory
         run: cp -R Source/MQTTnet.Server/bin/Release/net5.0/linux-x64/publish/* packaging/opt/MQTTnetServer

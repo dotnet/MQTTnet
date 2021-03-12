@@ -25,8 +25,13 @@ if [ ! -f "$INSTALLPATH/appsettings.json" ]; then
     cp $INSTALLPATH/appsettings.template.json $INSTALLPATH/appsettings.json
 fi
 
-# Enable MQTTServer.NET to bind to IP interface
-setcap CAP_NET_BIND_SERVICE=+eip $INSTALLPATH/MQTTnet.Server
+
+# Check if setcap exists, does not exist in docker containers
+SCAP=$(which setcap >/dev/null; echo $?)
+if [ "$SCAP" -eq "0" ]; then
+    # Enable MQTTServer.NET to bind to IP interface
+    setcap CAP_NET_BIND_SERVICE=+eip $INSTALLPATH/MQTTnet.Server
+fi
 
 chmod 644 /etc/systemd/system/mqttnet-server.service
 

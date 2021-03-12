@@ -3,7 +3,7 @@ Version: $VERSION
 Section: base
 Priority: optional
 Architecture: amd64
-Depends:
+Depends: libssl1.1
 Suggests:
 Maintainer: Damian Wolgast <packages@asymetrixs.net>
 Description:

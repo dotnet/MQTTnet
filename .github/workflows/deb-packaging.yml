@@ -6,15 +6,6 @@ name: Deb Packaging
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-    inputs:
-      FileVersion:
-        description: 'File Version'
-        required: true
-        default: ''
-      Version:
-        description: 'Version'
-        required: true
-        default: ''
 
 jobs:
   build:
@@ -23,8 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Parse version
+        run: echo "VERSION=$(grep '<Version>' Source/MQTTnet.Server/MQTTnet.Server.csproj | grep '[0-9\.]+' -o)" >> $GITHUB_ENV
+
       - name: Build MQTTnetServer
-        run: dotnet publish Source/MQTTnet.Server/MQTTnet.Server.csproj --configuration Release /p:FileVersion=${{ github.event.inputs.fileVersion }} /p:Version=${{ github.event.inputs.version }} --self-contained --runtime linux-x64 --framework net5.0
+        run: dotnet publish Source/MQTTnet.Server/MQTTnet.Server.csproj --configuration Release --self-contained --runtime linux-x64 --framework net5.0
 
       - name: Set up installation directory
         run: mkdir -p packaging/opt/MQTTnetServer
@@ -56,13 +50,13 @@ jobs:
           md5sum $(find * -type f -not -path 'DEBIAN/*') > DEBIAN/md5sums
       
       - name: Patch meta
-        run: sed -i 's/\$VERSION/${{ github.event.inputs.version }}/' packaging/DEBIAN/control
+        run: sed -i 's/\VERSIONPLACEHOLDER/${{ env.VERSION }}/' packaging/DEBIAN/control
 
       - name: Package everything
-        run: dpkg-deb -v --build packaging/ mqttnet-server_${{ github.event.inputs.version }}-1_amd64.deb
+        run: dpkg-deb -v --build packaging/ mqttnet-server_${{ env.VERSION }}-1_amd64.deb
       
       - name: Save artifact
         uses: actions/upload-artifact@v2
         with:
           name: mqttnet-server
-          path: mqttnet-server_${{ github.event.inputs.version }}-1_amd64.deb
+          path: mqttnet-server_${{ env.VERSION }}-1_amd64.deb

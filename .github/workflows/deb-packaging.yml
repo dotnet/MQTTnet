@@ -15,14 +15,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Parse version
-        run: echo "VERSION=$(grep '<Version>' Source/MQTTnet.Server/MQTTnet.Server.csproj | grep '[0-9\.]+' -o)" >> $GITHUB_ENV
-          
-      - name: Validate version
-        run: |
-          ls -la Source/MQTTnet.Server/MQTTnet.Server.csproj
-          ls -la
-          echo ${{ env.VERSION }}
-          echo $VERSION
+        run: echo VERSION=$(grep '<Version>' Source/MQTTnet.Server/MQTTnet.Server.csproj | grep [0-9\.]* -o) >> $GITHUB_ENV
 
       - name: Build MQTTnetServer
         run: dotnet publish Source/MQTTnet.Server/MQTTnet.Server.csproj --configuration Release --self-contained --runtime linux-x64 --framework net5.0

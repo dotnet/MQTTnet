@@ -4,7 +4,7 @@ BASEPATH=/opt
 INSTALLPATH=$BASEPATH/MQTTnetServer
 
 # Check if systemctl exists, does not exist in docker containers
-SCTL=$(which systemct1l >/dev/null; echo $?)
+SCTL=$(which systemctl >/dev/null; echo $?)
 
 if [ "$SCTL" -eq "0" ]; then
     # Stop service before uninstalling

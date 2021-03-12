@@ -9,7 +9,7 @@ INSTALLPATH=$BASEPATH/MQTTnetServer
 
 # If user does not exist, create it
 if (( $USEREXISTS == 1 )); then
-        useradd -d $INSTALLPATH -m -r $USER
+        useradd -d $INSTALLPATH  -r $USER
         EC=$(echo $?)
 
         if (( $EC == 1 )); then

@@ -65,4 +65,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: mqttnet-server
-          path: mqttnet-server_${{ github.event.inputs.version }}.deb
+          path: mqttnet-server_${{ github.event.inputs.version }}-1_amd64.deb

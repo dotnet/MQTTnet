@@ -1,15 +1,40 @@
-﻿using System;
+using MQTTnet.Client;
+using MQTTnet.Implementations;
+using MQTTnet.Packets;
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet
 {
     public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     {
-        public MqttApplicationMessageReceivedEventArgs(string clientId, MqttApplicationMessage applicationMessage)
+        public MqttApplicationMessageReceivedEventArgs(MqttClient client, MqttPublishPacket publishPacket, CancellationToken cancellationToken, string clientId, MqttApplicationMessage applicationMessage)
         {
+            Client = client ?? throw new ArgumentNullException(nameof(client));
+            PublishPacket = publishPacket ?? throw new ArgumentNullException(nameof(publishPacket));
+            CancellationToken = cancellationToken;
+            acknowledged = 0;
             ClientId = clientId;
             ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
+            AutoAcknowledge = true;
         }
+
+        public MqttApplicationMessageReceivedEventArgs(string clientId, MqttApplicationMessage applicationMessage)
+        {
+            acknowledged = 1;
+            ClientId = clientId;
+            ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
+            AutoAcknowledge = true;
+        }
+
+        internal MqttClient Client { get; }
+
+        internal CancellationToken CancellationToken { get; }
+
+        internal MqttPublishPacket PublishPacket { get; }
+
+        int acknowledged;
 
         /// <summary>
         /// Gets the client identifier.
@@ -31,6 +56,18 @@ namespace MQTTnet
         
         public object Tag { get; set; }
 
-        public Task<bool> PendingTask { get; set; }
+        public bool AutoAcknowledge { get; set; }
+
+        public Task Acknowledge() 
+        { 
+            if (Interlocked.CompareExchange(ref acknowledged, 1, 0) == 0)
+            {
+                return Client.AcknowledgeReceivedPublishPacket(this);
+            }
+            else
+            {
+                return PlatformAbstractionLayer.CompletedTask;
+            }
+        }
     }
 }

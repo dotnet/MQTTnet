@@ -641,32 +641,13 @@ namespace MQTTnet.Client
                     }
 
                     var publishPacket = publishPacketDequeueResult.Item;
-                    var eventArgs = await HandleReceivedApplicationMessageAsync(publishPacket);
+                    var eventArgs = await HandleReceivedApplicationMessageAsync(publishPacket, cancellationToken);
 
-                    if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
+                    if (eventArgs.AutoAcknowledge) 
                     {
-                        // no response required
+                        await eventArgs.Acknowledge();
                     }
-                    else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
-                    {
-                        if (!eventArgs.ProcessingFailed)
-                        {
-                            var pubAckPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubAckPacket(publishPacket, eventArgs.ReasonCode);
-                            await SendResponseForReceivedPublishPacket(eventArgs, pubAckPacket, cancellationToken).ConfigureAwait(false);
-                        }
-                    }
-                    else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
-                    {
-                        if (!eventArgs.ProcessingFailed)
-                        {
-                            var pubRecPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubRecPacket(publishPacket, eventArgs.ReasonCode);
-                            await SendResponseForReceivedPublishPacket(eventArgs, pubRecPacket, cancellationToken).ConfigureAwait(false);
-                        }
-                    }
-                    else
-                    {
-                        throw new MqttProtocolViolationException("Received a not supported QoS level.");
-                    }
+                    
                 }
                 catch (OperationCanceledException)
                 {
@@ -678,29 +659,34 @@ namespace MQTTnet.Client
             }
         }
 
-        async Task SendResponseForReceivedPublishPacket(MqttApplicationMessageReceivedEventArgs eventArgs, MqttBasePacket resultPacket, CancellationToken cancellationToken)
+        internal Task AcknowledgeReceivedPublishPacket(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
-            if (eventArgs.PendingTask == null)
+            if (eventArgs.PublishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
-                await SendAsync(resultPacket, cancellationToken).ConfigureAwait(false);
+                // no response required
+            }
+            else if (eventArgs.PublishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
+            {
+                if (!eventArgs.ProcessingFailed)
+                {
+                    var pubAckPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubAckPacket(eventArgs.PublishPacket, eventArgs.ReasonCode);
+                    return SendAsync(pubAckPacket, eventArgs.CancellationToken);
+                }
+            }
+            else if (eventArgs.PublishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
+            {
+                if (!eventArgs.ProcessingFailed)
+                {
+                    var pubRecPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubRecPacket(eventArgs.PublishPacket, eventArgs.ReasonCode);
+                    return SendAsync(pubRecPacket, eventArgs.CancellationToken);
+                }
             }
             else
             {
-                _ = eventArgs.PendingTask.ContinueWith(async x =>
-                {
-                    try
-                    {
-                        if (x.Result) await SendAsync(resultPacket, cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                    }
-                    catch (Exception exception)
-                    {
-                        _logger.Error(exception, "Error while handling application message.");
-                    }
-                });
+                throw new MqttProtocolViolationException("Received a not supported QoS level.");
             }
+
+            return PlatformAbstractionLayer.CompletedTask;
         }
 
         Task ProcessReceivedPubRecPacket(MqttPubRecPacket pubRecPacket, CancellationToken cancellationToken)
@@ -775,10 +761,10 @@ namespace MQTTnet.Client
             return _adapter.PacketFormatterAdapter.DataConverter.CreateClientPublishResult(pubRecPacket, pubCompPacket);
         }
 
-        async Task<MqttApplicationMessageReceivedEventArgs> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket)
+        async Task<MqttApplicationMessageReceivedEventArgs> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             var applicationMessage = _adapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket);
-            var eventArgs = new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage);
+            var eventArgs = new MqttApplicationMessageReceivedEventArgs(this, publishPacket, cancellationToken, Options.ClientId, applicationMessage);
 
             var handler = ApplicationMessageReceivedHandler;
             if (handler != null)

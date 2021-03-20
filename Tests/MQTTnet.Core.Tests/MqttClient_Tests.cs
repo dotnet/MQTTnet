@@ -465,7 +465,8 @@ namespace MQTTnet.Tests
                 Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
                     var value = int.Parse(eventArgs.ApplicationMessage.ConvertPayloadToString());
-                    eventArgs.PendingTask = Task.Delay(value).ContinueWith(x => true);
+                    eventArgs.AutoAcknowledge = false;
+                    Task.Delay(value).ContinueWith(x => eventArgs.Acknowledge());
 
                     System.Diagnostics.Debug.WriteLine($"received {value}");
                     lock (receivedValues)

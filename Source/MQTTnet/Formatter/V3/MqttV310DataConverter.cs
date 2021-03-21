@@ -244,11 +244,6 @@ namespace MQTTnet.Formatter.V3
 
         public MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options)
         {
-            if (options.ReasonCode != MqttClientDisconnectReason.NormalDisconnection || options.ReasonString != null)
-            {
-                throw new MqttProtocolViolationException("Reason codes and reason string for disconnect are only supported for MQTTv5.");
-            }
-
             return new MqttDisconnectPacket();
         }
 

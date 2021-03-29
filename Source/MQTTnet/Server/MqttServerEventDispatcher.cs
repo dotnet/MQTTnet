@@ -1,4 +1,4 @@
-﻿using MQTTnet.Client.Receiving;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
 using System;
 using System.Threading.Tasks;
@@ -44,7 +44,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public async Task SafeNotifyClientDisconnectedAsync(string clientId, MqttClientDisconnectType disconnectType)
+        public async Task SafeNotifyClientDisconnectedAsync(string clientId, MqttClientDisconnectType disconnectType, string clientEndpoint)
         {
             try
             {
@@ -54,7 +54,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                await handler.HandleClientDisconnectedAsync(new MqttServerClientDisconnectedEventArgs(clientId, disconnectType)).ConfigureAwait(false);
+                await handler.HandleClientDisconnectedAsync(new MqttServerClientDisconnectedEventArgs(clientId, disconnectType, clientEndpoint)).ConfigureAwait(false);
             }
             catch (Exception exception)
             {

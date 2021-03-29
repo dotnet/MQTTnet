@@ -1,4 +1,4 @@
-﻿using MQTTnet.Adapter;
+using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
@@ -237,11 +237,13 @@ namespace MQTTnet.Server
                 }
             }
 
+            var clientEndpoint = channelAdapter.Endpoint;
+
             await SafeCleanupChannelAsync(channelAdapter).ConfigureAwait(false);
 
             if (clientId != null)
             {
-                await _eventDispatcher.SafeNotifyClientDisconnectedAsync(clientId, disconnectType).ConfigureAwait(false);
+                await _eventDispatcher.SafeNotifyClientDisconnectedAsync(clientId, disconnectType, clientEndpoint).ConfigureAwait(false);
             }
         }
 

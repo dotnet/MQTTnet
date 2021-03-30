@@ -466,7 +466,7 @@ namespace MQTTnet.Tests
                 {
                     var value = int.Parse(eventArgs.ApplicationMessage.ConvertPayloadToString());
                     eventArgs.AutoAcknowledge = false;
-                    Task.Delay(value).ContinueWith(x => eventArgs.Acknowledge());
+                    Task.Delay(value).ContinueWith(x => eventArgs.AcknowledgeAsync(CancellationToken.None));
 
                     System.Diagnostics.Debug.WriteLine($"received {value}");
                     lock (receivedValues)

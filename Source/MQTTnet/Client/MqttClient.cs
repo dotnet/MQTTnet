@@ -41,7 +41,7 @@ namespace MQTTnet.Client
         long _isDisconnectPending;
         bool _isConnected;
         MqttClientDisconnectReason _disconnectReason;
-        
+
         DateTime _lastPacketSentTimestamp;
 
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
@@ -390,7 +390,7 @@ namespace MQTTnet.Client
             cancellationToken.ThrowIfCancellationRequested();
 
             _lastPacketSentTimestamp = DateTime.UtcNow;
-            
+
             return _adapter.SendPacketAsync(packet, cancellationToken);
         }
 
@@ -585,8 +585,8 @@ namespace MQTTnet.Client
                     if (!_packetDispatcher.TryDispatch(packet))
                     {
                         throw new MqttProtocolViolationException($"Received packet '{packet}' at an unexpected time.");
-                    }
                 }
+            }
             }
             catch (Exception exception)
             {
@@ -641,35 +641,13 @@ namespace MQTTnet.Client
                     }
 
                     var publishPacket = publishPacketDequeueResult.Item;
+                    var eventArgs = await HandleReceivedApplicationMessageAsync(publishPacket, cancellationToken);
 
-                    if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
+                    if (eventArgs.AutoAcknowledge) 
                     {
-                        await HandleReceivedApplicationMessageAsync(publishPacket).ConfigureAwait(false);
+                        await eventArgs.Acknowledge();
                     }
-                    else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
-                    {
-                        var eventArgs = await HandleReceivedApplicationMessageAsync(publishPacket).ConfigureAwait(false);
-
-                        if (!eventArgs.ProcessingFailed)
-                        {
-                            var pubAckPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubAckPacket(publishPacket, eventArgs.ReasonCode);
-                            await SendAsync(pubAckPacket, cancellationToken).ConfigureAwait(false);
-                        }
-                    }
-                    else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
-                    {
-                        var eventArgs = await HandleReceivedApplicationMessageAsync(publishPacket).ConfigureAwait(false);
-
-                        if (!eventArgs.ProcessingFailed)
-                        {
-                            var pubRecPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubRecPacket(publishPacket, eventArgs.ReasonCode);
-                            await SendAsync(pubRecPacket, cancellationToken).ConfigureAwait(false);
-                        }
-                    }
-                    else
-                    {
-                        throw new MqttProtocolViolationException("Received a not supported QoS level.");
-                    }
+                    
                 }
                 catch (OperationCanceledException)
                 {
@@ -679,6 +657,36 @@ namespace MQTTnet.Client
                     _logger.Error(exception, "Error while handling application message.");
                 }
             }
+        }
+
+        internal Task AcknowledgeReceivedPublishPacket(MqttApplicationMessageReceivedEventArgs eventArgs)
+        {
+            if (eventArgs.PublishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
+            {
+                // no response required
+            }
+            else if (eventArgs.PublishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
+            {
+                if (!eventArgs.ProcessingFailed)
+                {
+                    var pubAckPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubAckPacket(eventArgs.PublishPacket, eventArgs.ReasonCode);
+                    return SendAsync(pubAckPacket, eventArgs.CancellationToken);
+                }
+            }
+            else if (eventArgs.PublishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
+            {
+                if (!eventArgs.ProcessingFailed)
+                {
+                    var pubRecPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubRecPacket(eventArgs.PublishPacket, eventArgs.ReasonCode);
+                    return SendAsync(pubRecPacket, eventArgs.CancellationToken);
+                }
+            }
+            else
+            {
+                throw new MqttProtocolViolationException("Received a not supported QoS level.");
+            }
+
+            return PlatformAbstractionLayer.CompletedTask;
         }
 
         Task ProcessReceivedPubRecPacket(MqttPubRecPacket pubRecPacket, CancellationToken cancellationToken)
@@ -706,7 +714,7 @@ namespace MQTTnet.Client
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
             _packetDispatcher.FailAll(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));
-            
+
             if (!DisconnectIsPending())
             {
                 return DisconnectInternalAsync(_packetReceiverTask, null, null);
@@ -753,10 +761,10 @@ namespace MQTTnet.Client
             return _adapter.PacketFormatterAdapter.DataConverter.CreateClientPublishResult(pubRecPacket, pubCompPacket);
         }
 
-        async Task<MqttApplicationMessageReceivedEventArgs> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket)
+        async Task<MqttApplicationMessageReceivedEventArgs> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             var applicationMessage = _adapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket);
-            var eventArgs = new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage);
+            var eventArgs = new MqttApplicationMessageReceivedEventArgs(this, publishPacket, cancellationToken, Options.ClientId, applicationMessage);
 
             var handler = ApplicationMessageReceivedHandler;
             if (handler != null)

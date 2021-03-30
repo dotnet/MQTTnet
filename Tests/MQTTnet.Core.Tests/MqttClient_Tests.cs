@@ -446,6 +446,55 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
+        public async Task Preserve_Message_Order_With_Delayed_Acknowledgement()
+        {
+            // The messages are sent in reverse or to ensure that the delay in the handler
+            // needs longer for the first messages and later messages may be processed earlier (if there
+            // is an issue).
+            const int MessagesCount = 50;
+
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                await testEnvironment.StartServerAsync();
+
+                var client1 = await testEnvironment.ConnectClientAsync();
+                await client1.SubscribeAsync("x", MqttQualityOfServiceLevel.ExactlyOnce);
+
+                var receivedValues = new List<int>();
+
+                Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
+                {
+                    var value = int.Parse(eventArgs.ApplicationMessage.ConvertPayloadToString());
+                    eventArgs.AutoAcknowledge = false;
+                    Task.Delay(value).ContinueWith(x => eventArgs.Acknowledge());
+
+                    System.Diagnostics.Debug.WriteLine($"received {value}");
+                    lock (receivedValues)
+                    {
+                        receivedValues.Add(value);
+                    }
+
+                    return Task.CompletedTask;
+                }
+
+                client1.UseApplicationMessageReceivedHandler(Handler1);
+
+                var client2 = await testEnvironment.ConnectClientAsync();
+                for (var i = MessagesCount; i > 0; i--)
+                {
+                    await client2.PublishAsync("x", i.ToString(), MqttQualityOfServiceLevel.ExactlyOnce);
+                }
+
+                await Task.Delay(5000);
+
+                for (var i = MessagesCount; i > 0; i--)
+                {
+                    Assert.AreEqual(i, receivedValues[MessagesCount - i]);
+                }
+            }
+        }
+
+        [TestMethod]
         public async Task Send_Reply_For_Any_Received_Message()
         {
             using (var testEnvironment = new TestEnvironment(TestContext))

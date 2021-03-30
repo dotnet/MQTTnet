@@ -1,41 +1,30 @@
-using MQTTnet.Client;
-using MQTTnet.Implementations;
-using MQTTnet.Packets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Packets;
 
 namespace MQTTnet
 {
     public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     {
-        public MqttApplicationMessageReceivedEventArgs(MqttClient client, MqttPublishPacket publishPacket, CancellationToken cancellationToken, string clientId, MqttApplicationMessage applicationMessage)
+        readonly Func<MqttApplicationMessageReceivedEventArgs, CancellationToken, Task> _acknowledgeHandler;
+        
+        int _isAcknowledged;
+        
+        public MqttApplicationMessageReceivedEventArgs(
+            string clientId, 
+            MqttApplicationMessage applicationMessage,
+            MqttPublishPacket publishPacket,
+            Func<MqttApplicationMessageReceivedEventArgs, CancellationToken, Task> acknowledgeHandler)
         {
-            Client = client ?? throw new ArgumentNullException(nameof(client));
-            PublishPacket = publishPacket ?? throw new ArgumentNullException(nameof(publishPacket));
-            CancellationToken = cancellationToken;
-            acknowledged = 0;
             ClientId = clientId;
             ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
-            AutoAcknowledge = true;
+            PublishPacket = publishPacket;
+            _acknowledgeHandler = acknowledgeHandler;
         }
-
-        public MqttApplicationMessageReceivedEventArgs(string clientId, MqttApplicationMessage applicationMessage)
-        {
-            acknowledged = 1;
-            ClientId = clientId;
-            ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
-            AutoAcknowledge = true;
-        }
-
-        internal MqttClient Client { get; }
-
-        internal CancellationToken CancellationToken { get; }
 
         internal MqttPublishPacket PublishPacket { get; }
-
-        int acknowledged;
-
+        
         /// <summary>
         /// Gets the client identifier.
         /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
@@ -53,21 +42,27 @@ namespace MQTTnet
         /// This value can be used in user code for custom control flow.
         /// </summary>
         public bool IsHandled { get; set; }
+
+        /// <summary>
+        /// Gets ir sets whether the library should send MQTT ACK packets automatically if required.
+        /// </summary>
+        public bool AutoAcknowledge { get; set; } = true;
         
         public object Tag { get; set; }
-
-        public bool AutoAcknowledge { get; set; }
-
-        public Task Acknowledge() 
-        { 
-            if (Interlocked.CompareExchange(ref acknowledged, 1, 0) == 0)
+        
+        public Task AcknowledgeAsync(CancellationToken cancellationToken) 
+        {
+            if (_acknowledgeHandler == null)
             {
-                return Client.AcknowledgeReceivedPublishPacket(this);
+                throw new NotSupportedException("Deferred acknowledgement of application message is not yet supported in MQTTnet server.");
             }
-            else
+            
+            if (Interlocked.CompareExchange(ref _isAcknowledged, 1, 0) == 0)
             {
-                return PlatformAbstractionLayer.CompletedTask;
+                return _acknowledgeHandler(this, cancellationToken);
             }
+            
+            throw new InvalidOperationException("The application message is already acknowledged.");
         }
     }
 }

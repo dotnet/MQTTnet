@@ -19,6 +19,6 @@ namespace MQTTnet.Server
 
         public MqttClientDisconnectType DisconnectType { get; }
 
-        public string Endpoint { get; set; }
+        public string Endpoint { get; }
     }
 }

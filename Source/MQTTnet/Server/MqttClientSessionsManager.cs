@@ -237,13 +237,13 @@ namespace MQTTnet.Server
                 }
             }
 
-            var clientEndpoint = channelAdapter.Endpoint;
+            var endpoint = channelAdapter.Endpoint;
 
             await SafeCleanupChannelAsync(channelAdapter).ConfigureAwait(false);
 
             if (clientId != null)
             {
-                await _eventDispatcher.SafeNotifyClientDisconnectedAsync(clientId, disconnectType, clientEndpoint).ConfigureAwait(false);
+                await _eventDispatcher.SafeNotifyClientDisconnectedAsync(clientId, disconnectType, endpoint).ConfigureAwait(false);
             }
         }
 

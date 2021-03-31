@@ -44,7 +44,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public async Task SafeNotifyClientDisconnectedAsync(string clientId, MqttClientDisconnectType disconnectType, string clientEndpoint)
+        public async Task SafeNotifyClientDisconnectedAsync(string clientId, MqttClientDisconnectType disconnectType, string endpoint)
         {
             try
             {
@@ -54,7 +54,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                await handler.HandleClientDisconnectedAsync(new MqttServerClientDisconnectedEventArgs(clientId, disconnectType, clientEndpoint)).ConfigureAwait(false);
+                await handler.HandleClientDisconnectedAsync(new MqttServerClientDisconnectedEventArgs(clientId, disconnectType, endpoint)).ConfigureAwait(false);
             }
             catch (Exception exception)
             {

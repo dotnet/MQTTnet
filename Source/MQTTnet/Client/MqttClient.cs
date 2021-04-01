@@ -71,6 +71,9 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
 
+            if (Volatile.Read(ref _isDisconnectPending) != 0)
+                throw new InvalidOperationException("Not allowed to connect while disconnect is pending.");
+
             MqttClientAuthenticateResult authenticateResult = null;
 
             try
@@ -83,7 +86,6 @@ namespace MQTTnet.Client
                 _backgroundCancellationTokenSource = new CancellationTokenSource();
                 var backgroundCancellationToken = _backgroundCancellationTokenSource.Token;
 
-                _isDisconnectPending = 0;
                 var adapter = _adapterFactory.CreateClientAdapter(options);
                 _adapter = adapter;
 
@@ -357,6 +359,7 @@ namespace MQTTnet.Client
             {
                 Cleanup();
                 _cleanDisconnectInitiated = false;
+                Volatile.Write(ref _isDisconnectPending, 0);
 
                 _logger.Info("Disconnected.");
 

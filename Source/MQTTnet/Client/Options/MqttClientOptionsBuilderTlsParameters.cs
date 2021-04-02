@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Security;
 using System.Security.Authentication;
@@ -31,9 +31,9 @@ namespace MQTTnet.Client.Options
         public IEnumerable<X509Certificate> Certificates { get; set; }
 #endif
 
-#if NETCOREAPP3_1
+#if NETCOREAPP3_1 || NET5_0
 	    public List<SslApplicationProtocol> ApplicationProtocols { get;set; }
-#endif 
+#endif
 
 	    public bool AllowUntrustedCertificates { get; set; }
 

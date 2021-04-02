@@ -17,7 +17,7 @@ namespace MQTTnet.Implementations
 
         public static void Sleep(TimeSpan timeout)
         {
-#if !NETSTANDARD1_3
+#if !NETSTANDARD1_3 && !WINDOWS_UWP
             System.Threading.Thread.Sleep(timeout);
 #else
             Task.Delay(timeout).Wait();

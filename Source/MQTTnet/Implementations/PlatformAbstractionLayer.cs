@@ -17,7 +17,7 @@ namespace MQTTnet.Implementations
 
         public static void Sleep(TimeSpan timeout)
         {
-#if NET452 || NETSTANDARD2_0 || NETSTANDARD2_1 || NETCOREAPP3_1
+#if !NETSTANDARD1_3
             System.Threading.Thread.Sleep(timeout);
 #else
             Task.Delay(timeout).Wait();

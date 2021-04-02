@@ -98,7 +98,7 @@ namespace MQTTnet.Implementations
         {
             _socket?.Dispose();
 
-#if NETSTANDARD1_3 || NETSTANDARD2_0 || NET461 || NET472
+#if !NET452
             _tlsCertificate?.Dispose();
 #endif
         }

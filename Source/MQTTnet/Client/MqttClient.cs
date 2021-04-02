@@ -38,15 +38,7 @@ namespace MQTTnet.Client
 
         IMqttChannelAdapter _adapter;
         bool _cleanDisconnectInitiated;
-        volatile int _connectState;
-
-        enum ConnectState
-        {
-            Disconnected = 0,
-            Disconnecting,
-            Connected,
-            Connecting
-        }
+        volatile int _connectionStatus;
 
         MqttClientDisconnectReason _disconnectReason;
 
@@ -66,7 +58,7 @@ namespace MQTTnet.Client
 
         public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
 
-        public bool IsConnected => (ConnectState)_connectState == ConnectState.Connected;
+        public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
         public IMqttClientOptions Options { get; private set; }
 
@@ -79,7 +71,7 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
 
-            if (CompareExchangeConnectState(ConnectState.Connecting, ConnectState.Disconnected) != ConnectState.Disconnected)
+            if (CompareExchangeConnectionStatus(MqttClientConnectionStatus.Connecting, MqttClientConnectionStatus.Disconnected) != MqttClientConnectionStatus.Disconnected)
                 throw new InvalidOperationException("Not allowed to connect while connect/disconnect is pending.");
 
             MqttClientAuthenticateResult authenticateResult = null;
@@ -118,7 +110,7 @@ namespace MQTTnet.Client
                     _keepAlivePacketsSenderTask = Task.Run(() => TrySendKeepAliveMessagesAsync(backgroundCancellationToken), backgroundCancellationToken);
                 }
 
-                CompareExchangeConnectState(ConnectState.Connected, ConnectState.Connecting);
+                CompareExchangeConnectionStatus(MqttClientConnectionStatus.Connected, MqttClientConnectionStatus.Connecting);
 
                 _logger.Info("Connected.");
 
@@ -370,7 +362,7 @@ namespace MQTTnet.Client
             {
                 Cleanup();
                 _cleanDisconnectInitiated = false;
-                CompareExchangeConnectState(ConnectState.Disconnected, ConnectState.Disconnecting);
+                CompareExchangeConnectionStatus(MqttClientConnectionStatus.Disconnected, MqttClientConnectionStatus.Disconnecting);
 
                 _logger.Info("Disconnected.");
 
@@ -805,32 +797,32 @@ namespace MQTTnet.Client
 
         bool DisconnectIsPendingOrFinished()
         {
-            var connectState = (ConnectState)_connectState;
+            var connectionStatus = (MqttClientConnectionStatus)_connectionStatus;
             do
             {
-                switch (connectState)
+                switch (connectionStatus)
                 {
-                    case ConnectState.Disconnected:
-                    case ConnectState.Disconnecting:
+                    case MqttClientConnectionStatus.Disconnected:
+                    case MqttClientConnectionStatus.Disconnecting:
                         return true;
-                    case ConnectState.Connected:
-                    case ConnectState.Connecting:
-                        // This will compare the _connectState to old value and set it to "CONNECT_STATED_DISCONNECTING" afterwards.
+                    case MqttClientConnectionStatus.Connected:
+                    case MqttClientConnectionStatus.Connecting:
+                        // This will compare the _connectionStatus to old value and set it to "MqttClientConnectionStatus.Disconnecting" afterwards.
                         // So the first caller will get a "false" and all subsequent ones will get "true".
-                        var newState = CompareExchangeConnectState(ConnectState.Disconnecting, connectState);
-                        if (newState == connectState)
+                        var curStatus = CompareExchangeConnectionStatus(MqttClientConnectionStatus.Disconnecting, connectionStatus);
+                        if (curStatus == connectionStatus)
                         {
                             return false;
                         }
-                        connectState = newState;
+                        connectionStatus = curStatus;
                         break;
                 }
             } while (true);
         }
 
-        ConnectState CompareExchangeConnectState(ConnectState value, ConnectState comparand)
+        MqttClientConnectionStatus CompareExchangeConnectionStatus(MqttClientConnectionStatus value, MqttClientConnectionStatus comparand)
         {
-            return (ConnectState)Interlocked.CompareExchange(ref _connectState, (int)value, (int)comparand);
+            return (MqttClientConnectionStatus)Interlocked.CompareExchange(ref _connectionStatus, (int)value, (int)comparand);
         }
     }
 }

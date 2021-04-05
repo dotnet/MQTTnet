@@ -320,10 +320,12 @@ namespace MQTTnet.Client
         Task DisconnectInternalAsync(Task sender, Exception exception, MqttClientAuthenticateResult authenticateResult)
         {
             var clientWasConnected = IsConnected;
+            
             if (!DisconnectIsPendingOrFinished())
             {
                 return DisconnectCoreAsync(sender, exception, authenticateResult, clientWasConnected);
             }
+            
             return PlatformAbstractionLayer.CompletedTask;
         }
 
@@ -371,8 +373,7 @@ namespace MQTTnet.Client
                 {
                     // This handler must be executed in a new thread because otherwise a dead lock may happen
                     // when trying to reconnect in that handler etc.
-                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult, _disconnectReason)))
-                        .RunInBackground(_logger);
+                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult, _disconnectReason))).RunInBackground(_logger);
                 }
             }
         }
@@ -798,6 +799,7 @@ namespace MQTTnet.Client
         bool DisconnectIsPendingOrFinished()
         {
             var connectionStatus = (MqttClientConnectionStatus)_connectionStatus;
+            
             do
             {
                 switch (connectionStatus)
@@ -814,6 +816,7 @@ namespace MQTTnet.Client
                         {
                             return false;
                         }
+                        
                         connectionStatus = curStatus;
                         break;
                 }

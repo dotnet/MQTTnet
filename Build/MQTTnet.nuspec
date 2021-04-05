@@ -18,6 +18,7 @@
 * [Client] Improved keep alive message sending.
 * [Client] Added support for deferred message approval (#1075, thanks to @tkurucsai).
 * [Client] Exposed missing APIs for .NET 5.0 build (thanks to @yyjdelete).
+* [Client] Improved disconnect handling (#1134, thanks to @yyjdelete).
 * [RpcClient] Fixed an issue when using a custom application message reveived handler (#1093).
 * [RpcClient] Fixed a race condition when using timeout and cancellation token at the same time (BREAKING CHANGE!).
 * [Server] Improved keep alive message sending.

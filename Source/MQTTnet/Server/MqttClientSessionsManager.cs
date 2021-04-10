@@ -47,6 +47,8 @@ namespace MQTTnet.Server
             _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
+
+            eventDispatcher.ClientDisconnectedHandler = options.ClientDisconnectedInterceptor;
         }
 
         public void Start(CancellationToken cancellationToken)

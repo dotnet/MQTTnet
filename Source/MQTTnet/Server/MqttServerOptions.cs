@@ -34,12 +34,10 @@ namespace MQTTnet.Server
 
         public IMqttServerUnsubscriptionInterceptor UnsubscriptionInterceptor { get; set; }
 
+        public IMqttServerApplicationMessageInterceptor UndeliveredMessageInterceptor { get; set; }
+
         public IMqttServerStorage Storage { get; set; }
 
         public IMqttRetainedMessagesManager RetainedMessagesManager { get; set; } = new MqttRetainedMessagesManager();
-
-        public IMqttServerApplicationMessageInterceptor UndeliveredMessageInterceptor { get; set; }
-
-        public IMqttServerClientDisconnectedHandler ClientDisconnectedInterceptor { get; set; }
     }
 }

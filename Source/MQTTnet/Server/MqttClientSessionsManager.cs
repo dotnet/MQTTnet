@@ -13,7 +13,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client.Disconnecting;
-using OperationCanceledException = System.OperationCanceledException;
 
 namespace MQTTnet.Server
 {

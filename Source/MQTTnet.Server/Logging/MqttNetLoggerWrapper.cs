@@ -55,7 +55,7 @@ namespace MQTTnet.Server.Logging
                 case MqttNetLogLevel.Error: return LogLevel.Error;
                 case MqttNetLogLevel.Warning: return LogLevel.Warning;
                 case MqttNetLogLevel.Info: return LogLevel.Information;
-                case MqttNetLogLevel.Verbose: return LogLevel.Debug;
+                case MqttNetLogLevel.Verbose: return LogLevel.Trace;
             }
 
             return LogLevel.Debug;

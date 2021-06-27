@@ -72,7 +72,9 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
 
             if (CompareExchangeConnectionStatus(MqttClientConnectionStatus.Connecting, MqttClientConnectionStatus.Disconnected) != MqttClientConnectionStatus.Disconnected)
+            {
                 throw new InvalidOperationException("Not allowed to connect while connect/disconnect is pending.");
+            }
 
             MqttClientAuthenticateResult authenticateResult = null;
 
@@ -734,8 +736,10 @@ namespace MQTTnet.Client
         async Task<MqttClientPublishResult> PublishAtLeastOnceAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
-            var response = await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
-            return _adapter.PacketFormatterAdapter.DataConverter.CreateClientPublishResult(response);
+            
+            var pubAckPacket = await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
+            
+            return _adapter.PacketFormatterAdapter.DataConverter.CreateClientPublishResult(pubAckPacket);
         }
 
         async Task<MqttClientPublishResult> PublishExactlyOnceAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)

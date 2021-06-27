@@ -12,16 +12,14 @@
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
-* [Core] Fixed some issues in nuget packages.
-* [Client] Changed exception types so that proper exceptions are thrown when connecting (#1082).
-* [Client] Exposed Dup flag in application messages.
-* [Client] Improved keep alive message sending.
+* [Core] Fixed _DISCONNECT_ packet reading for protocol version 3.1.0.DisconnectPacket
 * [Client] Added support for deferred message approval (#1075, thanks to @tkurucsai).
 * [Client] Exposed missing APIs for .NET 5.0 build (thanks to @yyjdelete).
 * [Client] Improved disconnect handling (#1134, thanks to @yyjdelete).
-* [RpcClient] Fixed an issue when using a custom application message reveived handler (#1093).
-* [RpcClient] Fixed a race condition when using timeout and cancellation token at the same time (BREAKING CHANGE!).
-* [Server] Improved keep alive message sending.
+* [Client] Fix TLS parameter options builder (#1104).
+* [Server] Add new overload for options builder.
+* [Server] Exposed endpoint in _MqttServerClientDisconnectedEventArgs_.
+* [Server] Remove client disconnected handler from wrong implementation location (BREAKING CHANGE).
 
 Git commit: $gitCommit
     </releaseNotes>

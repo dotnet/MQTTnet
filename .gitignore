@@ -294,3 +294,5 @@ __pycache__/
 /Tests/MQTTnet.TestApp.NetCore/RetainedMessages.json
 
 Build/NuGet/
+
+Build/nuget.exe

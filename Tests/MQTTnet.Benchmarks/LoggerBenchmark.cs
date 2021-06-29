@@ -9,7 +9,7 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class LoggerBenchmark
     {
-        IMqttNetLogger _logger;
+        MqttNetLogger _logger;
         IMqttNetScopedLogger _childLogger;
         bool _useHandler;
 
@@ -19,10 +19,10 @@ namespace MQTTnet.Benchmarks
             _logger = new MqttNetLogger();
             _childLogger = _logger.CreateScopedLogger("child");
 
-            MqttNetGlobalLogger.LogMessagePublished += OnLogMessagePublished;
+            _logger.LogMessagePublished += OnLogMessagePublished;
         }
 
-        private void OnLogMessagePublished(object sender, MqttNetLogMessagePublishedEventArgs eventArgs)
+        void OnLogMessagePublished(object sender, MqttNetLogMessagePublishedEventArgs eventArgs)
         {
             if (_useHandler)
             {

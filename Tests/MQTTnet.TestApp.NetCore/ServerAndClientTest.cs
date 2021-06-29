@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
+using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 
 namespace MQTTnet.TestApp.NetCore
@@ -10,9 +11,10 @@ namespace MQTTnet.TestApp.NetCore
     {
         public static async Task RunAsync()
         {
-            MqttNetConsoleLogger.ForwardToConsole();
+            var logger = new MqttNetLogger();
+            MqttNetConsoleLogger.ForwardToConsole(logger);
 
-            var factory = new MqttFactory();
+            var factory = new MqttFactory(logger);
             var server = factory.CreateMqttServer();
             var client = factory.CreateMqttClient();
 

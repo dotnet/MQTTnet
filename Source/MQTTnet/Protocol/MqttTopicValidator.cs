@@ -42,5 +42,15 @@ namespace MQTTnet.Protocol
                 }
             }
         }
+
+        public static void ThrowIfInvalidSubscribe(string topic)
+        {
+            if (string.IsNullOrEmpty(topic))
+            {
+                throw new MqttProtocolViolationException("Topic should not be empty.");
+            }
+
+            if (topic.IndexOf("#") != -1 && topic.IndexOf("#") != topic.Length - 1) throw new MqttProtocolViolationException("The character '#' is only allowed as last character");
+        }
     }
 }

@@ -18,31 +18,28 @@ namespace MQTTnet.TestApp.NetCore
         {
             // MqttNetConsoleLogger.ForwardToConsole();
 
-            // For most of these connections to work, set output target to Net5.0.
+            // For most of these connections to work, set output target to Net5.0.            
 
-            // Note: TLS13 is only available in Net5.0
+#if NET5_0_OR_GREATER
+            // TLS13 is only available in Net5.0
             var unsafeTls13 = new MqttClientOptionsBuilderTlsParameters
             {
                 UseTls = true,
-#if NET5_0_OR_GREATER
                 SslProtocol = SslProtocols.Tls13,
-#else
-                SslProtocol = SslProtocols.Tls12,
-#endif
+                // Don't use this in production code. This handler simply allows any invalid certificate to work.
                 CertificateValidationHandler = (w) => true
             };
+#endif
 
-            // Also defining TLS12 for server test.mosquitto.org
-            // It seems that in Win10, using TLS13 on this server, this exception is raised:
-            // "The client and server cannot communicate, because they do not possess a common algorithm."
+            // Also defining TLS12 for servers that don't seem no to support TLS13.
             var unsafeTls12 = new MqttClientOptionsBuilderTlsParameters
             {
                 UseTls = true,
                 SslProtocol = SslProtocols.Tls12,
+                // Don't use this in production code. This handler simply allows any invalid certificate to work.
                 CertificateValidationHandler = (w) => true
             };
 
-            
             // mqtt.eclipseprojects.io
             await ExecuteTestAsync("mqtt.eclipseprojects.io TCP",
                     new MqttClientOptionsBuilder().WithTcpServer("mqtt.eclipseprojects.io", 1883)
@@ -52,11 +49,12 @@ namespace MQTTnet.TestApp.NetCore
                 new MqttClientOptionsBuilder().WithWebSocketServer("mqtt.eclipseprojects.io:80/mqtt")
                     .WithProtocolVersion(MqttProtocolVersion.V311).Build());
 
-            await ExecuteTestAsync("mqtt.eclipseprojects.io WS TLS",
+#if NET5_0_OR_GREATER
+            await ExecuteTestAsync("mqtt.eclipseprojects.io WS TLS13",
                 new MqttClientOptionsBuilder().WithWebSocketServer("mqtt.eclipseprojects.io:443/mqtt")
                     .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls13).Build());
+#endif
 
-            
             // test.mosquitto.org
             await ExecuteTestAsync("test.mosquitto.org TCP",
                 new MqttClientOptionsBuilder().WithTcpServer("test.mosquitto.org", 1883)
@@ -67,11 +65,17 @@ namespace MQTTnet.TestApp.NetCore
                     .WithCredentials("rw", "readwrite")
                     .WithProtocolVersion(MqttProtocolVersion.V311).Build());
 
-            await ExecuteTestAsync("test.mosquitto.org TCP TLS",
+            await ExecuteTestAsync("test.mosquitto.org TCP TLS12",
                 new MqttClientOptionsBuilder().WithTcpServer("test.mosquitto.org", 8883)
                     .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build());
 
-            await ExecuteTestAsync("test.mosquitto.org TCP TLS - Authenticated",
+#if NET5_0_OR_GREATER
+            await ExecuteTestAsync("test.mosquitto.org TCP TLS13",
+                new MqttClientOptionsBuilder().WithTcpServer("test.mosquitto.org", 8883)
+                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls13).Build());
+#endif
+
+            await ExecuteTestAsync("test.mosquitto.org TCP TLS12 - Authenticated",
                 new MqttClientOptionsBuilder().WithTcpServer("test.mosquitto.org", 8885)
                     .WithCredentials("rw", "readwrite")
                     .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build());
@@ -80,27 +84,32 @@ namespace MQTTnet.TestApp.NetCore
                 new MqttClientOptionsBuilder().WithWebSocketServer("test.mosquitto.org:8080/mqtt")
                     .WithProtocolVersion(MqttProtocolVersion.V311).Build());
 
-            await ExecuteTestAsync("test.mosquitto.org WS TLS",
+            await ExecuteTestAsync("test.mosquitto.org WS TLS12",
                 new MqttClientOptionsBuilder().WithWebSocketServer("test.mosquitto.org:8081/mqtt")
                     .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build());
 
-            
             // broker.emqx.io
             await ExecuteTestAsync("broker.emqx.io TCP",
                 new MqttClientOptionsBuilder().WithTcpServer("broker.emqx.io", 1883)
                      .WithProtocolVersion(MqttProtocolVersion.V311).Build());
 
-            await ExecuteTestAsync("broker.emqx.io TCP TLS",
+            await ExecuteTestAsync("broker.emqx.io TCP TLS12",
+                new MqttClientOptionsBuilder().WithTcpServer("broker.emqx.io", 8083)
+                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build());
+
+#if NET5_0_OR_GREATER
+            await ExecuteTestAsync("broker.emqx.io TCP TLS13",
                 new MqttClientOptionsBuilder().WithTcpServer("broker.emqx.io", 8083)
                     .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls13).Build());
+#endif
 
             await ExecuteTestAsync("broker.emqx.io WS",
                 new MqttClientOptionsBuilder().WithWebSocketServer("broker.emqx.io:8083/mqtt")
                     .WithProtocolVersion(MqttProtocolVersion.V311).Build());
 
-            await ExecuteTestAsync("broker.emqx.io WS TLS",
+            await ExecuteTestAsync("broker.emqx.io WS TLS12",
                 new MqttClientOptionsBuilder().WithWebSocketServer("broker.emqx.io:8084/mqtt")
-                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls13).Build());
+                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build());
 
 
             // broker.hivemq.com

@@ -506,7 +506,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     //aws only allows 8 in a single message
                     if (subs.Count == Options.MaxSubcribeUnsubscribeMessagesAtOnce)
                     {
-                        await SendSubscribeUnsubscribe(subs, null);
+                        await SendSubscribeUnsubscribe(subs, null).ConfigureAwait(false);
                         subs.Clear();
                     }
                 }
@@ -520,7 +520,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     //aws only allows 8 in a single message
                     if (unSubs.Count == Options.MaxSubcribeUnsubscribeMessagesAtOnce)
                     {
-                        await SendSubscribeUnsubscribe(null, unSubs);
+                        await SendSubscribeUnsubscribe(null, unSubs).ConfigureAwait(false);
                         unSubs.Clear();
                     }
                 }
@@ -558,7 +558,19 @@ namespace MQTTnet.Extensions.ManagedClient
                 if (_reconnectSubscriptions.Any())
                 {
                     var subscriptions = _reconnectSubscriptions.Select(i => new MqttTopicFilter { Topic = i.Key, QualityOfServiceLevel = i.Value });
-                    await InternalClient.SubscribeAsync(subscriptions.ToArray()).ConfigureAwait(false);
+                    List<MqttTopicFilter> subs = new List<MqttTopicFilter>();
+                    foreach (var sub in subscriptions)
+                    {
+                        subs.Add(sub);
+                        //aws only allows 8 in a single message
+                        if (subs.Count == Options.MaxSubcribeUnsubscribeMessagesAtOnce)
+                        {
+                            await SendSubscribeUnsubscribe(subs, null).ConfigureAwait(false);
+                            subs.Clear();
+                        }
+                    }
+
+                    await SendSubscribeUnsubscribe(subs, null).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

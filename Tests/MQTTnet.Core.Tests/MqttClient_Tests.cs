@@ -16,9 +16,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client.Receiving;
-using MQTTnet.Diagnostics;
-using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Formatter;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Tests
 {
@@ -27,6 +26,42 @@ namespace MQTTnet.Tests
     {
         public TestContext TestContext { get; set; }
 
+        [TestMethod]
+        public async Task Ensure_Queue_Drain()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                var server = await testEnvironment.StartServerAsync();
+                var client = await testEnvironment.ConnectLowLevelClientAsync();
+
+                var i = 0;
+                server.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c =>
+                {
+                    i++;
+                });
+
+                await client.SendAsync(new MqttConnectPacket
+                {
+                    ClientId = "Ensure_Queue_Drain_Test"
+                }, CancellationToken.None);
+
+                await client.SendAsync(new MqttPublishPacket
+                {
+                    Topic = "Test"
+                }, CancellationToken.None);
+                
+                await Task.Delay(1000);
+                
+                // This will simulate a device which closes the connection directly
+                // after sending the data so do delay is added between send and dispose!
+                client.Dispose();
+                
+                await Task.Delay(1000);
+
+                Assert.AreEqual(1, i);
+            }
+        }
+        
         [TestMethod]
         public async Task Set_ClientWasConnected_On_ServerDisconnect()
         {

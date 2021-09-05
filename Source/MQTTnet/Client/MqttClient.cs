@@ -194,6 +194,11 @@ namespace MQTTnet.Client
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
+            foreach (var topicFilter in options.TopicFilters)
+            {
+                MqttTopicValidator.ThrowIfInvalidSubscribe(topicFilter.Topic);
+            }
+
             ThrowIfDisposed();
             ThrowIfNotConnected();
 

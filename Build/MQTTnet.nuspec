@@ -14,7 +14,7 @@
     <releaseNotes>
 * [ManagedClient] Extended ReconnectAsync (thanks to @nvsnkv, #1202). 
 * [MQTTnet.Server] Moved server project to a dedicated GitHub repository.
-
+* [MQTTnet, MQTTnet.Extensions.ManagedClient] Fixed bug that allowed invalid subscriptions (Thanks to @marcelwinh).
 Git commit: $gitCommit
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2020</copyright>

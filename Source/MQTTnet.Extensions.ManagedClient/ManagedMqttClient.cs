@@ -215,6 +215,11 @@ namespace MQTTnet.Extensions.ManagedClient
 
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
+            foreach (var topicFilter in topicFilters)
+            {
+                MqttTopicValidator.ThrowIfInvalidSubscribe(topicFilter.Topic);
+            }
+
             lock (_subscriptions)
             {
                 foreach (var topicFilter in topicFilters)

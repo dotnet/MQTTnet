@@ -18,6 +18,7 @@ namespace MQTTnet.Tests.Mockups
     public sealed class TestEnvironment : IDisposable
     {
         readonly MqttFactory _mqttFactory = new MqttFactory();
+        readonly List<ILowLevelMqttClient> _lowLevelClients = new List<ILowLevelMqttClient>();
         readonly List<IMqttClient> _clients = new List<IMqttClient>();
         readonly List<string> _serverErrors = new List<string>();
         readonly List<string> _clientErrors = new List<string>();
@@ -79,11 +80,6 @@ namespace MQTTnet.Tests.Mockups
             };
         }
 
-        public async Task<IMqttRpcClient> ConnectRpcClientAsync(IMqttRpcClientOptions options)
-        {
-            return new MqttRpcClient(await ConnectClientAsync(), options);
-        }
-
         public IMqttClient CreateClient()
         {
             lock (_clients)
@@ -93,6 +89,82 @@ namespace MQTTnet.Tests.Mockups
 
                 return new TestClientWrapper(client, TestContext);
             }
+        }
+
+        public Task<IMqttClient> ConnectClientAsync()
+        {
+            return ConnectClientAsync(new MqttClientOptionsBuilder());
+        }
+
+        public async Task<IMqttClient> ConnectClientAsync(Action<MqttClientOptionsBuilder> optionsBuilder)
+        {
+            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
+
+            var options = new MqttClientOptionsBuilder();
+            options = options.WithTcpServer("localhost", ServerPort);
+            optionsBuilder.Invoke(options);
+
+            var client = CreateClient();
+            await client.ConnectAsync(options.Build()).ConfigureAwait(false);
+
+            return client;
+        }
+        
+        public async Task<IMqttClient> ConnectClientAsync(MqttClientOptionsBuilder options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            options = options.WithTcpServer("localhost", ServerPort);
+
+            var client = CreateClient();
+            await client.ConnectAsync(options.Build()).ConfigureAwait(false);
+
+            return client;
+        }
+
+        public async Task<IMqttClient> ConnectClientAsync(IMqttClientOptions options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            var client = CreateClient();
+            await client.ConnectAsync(options).ConfigureAwait(false);
+
+            return client;
+        }
+        
+        public ILowLevelMqttClient CreateLowLevelClient()
+        {
+            lock (_clients)
+            {
+                var client = _mqttFactory.CreateLowLevelMqttClient(ClientLogger);
+                _lowLevelClients.Add(client);
+
+                return client;
+            }
+        }
+        
+        public Task<ILowLevelMqttClient> ConnectLowLevelClientAsync()
+        {
+            return ConnectLowLevelClientAsync(o => { });
+        }
+
+        public async Task<ILowLevelMqttClient> ConnectLowLevelClientAsync(Action<MqttClientOptionsBuilder> optionsBuilder)
+        {
+            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
+
+            var options = new MqttClientOptionsBuilder();
+            options = options.WithTcpServer("127.0.0.1", ServerPort);
+            optionsBuilder.Invoke(options);
+
+            var client = CreateLowLevelClient();
+            await client.ConnectAsync(options.Build(), CancellationToken.None).ConfigureAwait(false);
+
+            return client;
+        }
+        
+        public async Task<IMqttRpcClient> ConnectRpcClientAsync(IMqttRpcClientOptions options)
+        {
+            return new MqttRpcClient(await ConnectClientAsync(), options);
         }
 
         public Task<IMqttServer> StartServerAsync()
@@ -119,66 +191,6 @@ namespace MQTTnet.Tests.Mockups
             return Server;
         }
 
-        public Task<IMqttClient> ConnectClientAsync()
-        {
-            return ConnectClientAsync(new MqttClientOptionsBuilder());
-        }
-
-        public Task<ILowLevelMqttClient> ConnectLowLevelClientAsync()
-        {
-            return ConnectLowLevelClientAsync(o => { });
-        }
-
-        public async Task<ILowLevelMqttClient> ConnectLowLevelClientAsync(Action<MqttClientOptionsBuilder> optionsBuilder)
-        {
-            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
-
-            var options = new MqttClientOptionsBuilder();
-            options = options.WithTcpServer("127.0.0.1", ServerPort);
-            optionsBuilder.Invoke(options);
-
-            var client = new MqttFactory().CreateLowLevelMqttClient();
-            await client.ConnectAsync(options.Build(), CancellationToken.None).ConfigureAwait(false);
-
-            return client;
-        }
-
-        public async Task<IMqttClient> ConnectClientAsync(Action<MqttClientOptionsBuilder> optionsBuilder)
-        {
-            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
-
-            var options = new MqttClientOptionsBuilder();
-            options = options.WithTcpServer("localhost", ServerPort);
-            optionsBuilder.Invoke(options);
-
-            var client = CreateClient();
-            await client.ConnectAsync(options.Build()).ConfigureAwait(false);
-
-            return client;
-        }
-
-        public async Task<IMqttClient> ConnectClientAsync(MqttClientOptionsBuilder options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            options = options.WithTcpServer("localhost", ServerPort);
-
-            var client = CreateClient();
-            await client.ConnectAsync(options.Build()).ConfigureAwait(false);
-
-            return client;
-        }
-
-        public async Task<IMqttClient> ConnectClientAsync(IMqttClientOptions options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            var client = CreateClient();
-            await client.ConnectAsync(options).ConfigureAwait(false);
-
-            return client;
-        }
-
         public void ThrowIfLogErrors()
         {
             lock (_serverErrors)
@@ -198,6 +210,14 @@ namespace MQTTnet.Tests.Mockups
             }
         }
 
+        public void TrackException(Exception exception)
+        {
+            lock (_exceptions)
+            {
+                _exceptions.Add(exception);
+            }
+        }
+        
         public void Dispose()
         {
             foreach (var mqttClient in _clients)
@@ -214,6 +234,11 @@ namespace MQTTnet.Tests.Mockups
                 {
                     mqttClient?.Dispose();
                 }
+            }
+
+            foreach (var lowLevelMqttClient in _lowLevelClients)
+            {
+                lowLevelMqttClient.Dispose();
             }
 
             try
@@ -234,14 +259,6 @@ namespace MQTTnet.Tests.Mockups
             if (_exceptions.Any())
             {
                 throw new Exception($"{_exceptions.Count} exceptions tracked.\r\n" + string.Join(Environment.NewLine, _exceptions));
-            }
-        }
-
-        public void TrackException(Exception exception)
-        {
-            lock (_exceptions)
-            {
-                _exceptions.Add(exception);
             }
         }
     }

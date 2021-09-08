@@ -2,19 +2,11 @@
 
 namespace MQTTnet.Server
 {
-    public class MqttClientMessageQueueInterceptorContext
+    public sealed class MqttClientMessageQueueInterceptorContext
     {
-        public MqttClientMessageQueueInterceptorContext(string senderClientId, string receiverClientId, MqttApplicationMessage applicationMessage, MqttQualityOfServiceLevel subscriptionQualityOfServiceLevel)
-        {
-            SenderClientId = senderClientId;
-            ReceiverClientId = receiverClientId;
-            ApplicationMessage = applicationMessage;
-            SubscriptionQualityOfServiceLevel = subscriptionQualityOfServiceLevel;
-        }
+        public string SenderClientId { get; internal set; }
 
-        public string SenderClientId { get; }
-
-        public string ReceiverClientId { get; }
+        public string ReceiverClientId { get; internal set; }
 
         public MqttApplicationMessage ApplicationMessage { get; set; }
 

@@ -3,7 +3,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public class MqttQueuedApplicationMessage
+    public sealed class MqttQueuedApplicationMessage
     {
         public MqttApplicationMessage ApplicationMessage { get; set; }
 

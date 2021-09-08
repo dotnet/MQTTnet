@@ -4,21 +4,21 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using MQTTnet.Adapter;
 using MQTTnet.Formatter;
+using MQTTnet.Implementations;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public class MqttConnectionValidatorContext
+    public sealed class MqttConnectionValidatorContext
     {
-        private readonly MqttConnectPacket _connectPacket;
-        private readonly IMqttChannelAdapter _clientAdapter;
+        readonly MqttConnectPacket _connectPacket;
+        readonly IMqttChannelAdapter _clientAdapter;
 
-        public MqttConnectionValidatorContext(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter, IDictionary<object, object> sessionItems)
+        public MqttConnectionValidatorContext(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
         {
             _connectPacket = connectPacket;
             _clientAdapter = clientAdapter ?? throw new ArgumentNullException(nameof(clientAdapter));
-            SessionItems = sessionItems;
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace MQTTnet.Server
 
         public byte[] RawPassword => _connectPacket?.Password;
 
-        public string Password => Encoding.UTF8.GetString(RawPassword ?? new byte[0]);
+        public string Password => Encoding.UTF8.GetString(RawPassword ?? PlatformAbstractionLayer.EmptyByteArray);
 
         /// <summary>
         /// Gets or sets the will delay interval.
@@ -128,7 +128,7 @@ namespace MQTTnet.Server
         /// <summary>
         /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
         /// </summary>
-        public IDictionary<object, object> SessionItems { get; }
+        public IDictionary<object, object> SessionItems { get; internal set; }
 
         /// <summary>
         /// This is used for MQTTv3 only.

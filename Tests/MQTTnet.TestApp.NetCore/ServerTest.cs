@@ -2,8 +2,10 @@
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Client.Receiving;
+using MQTTnet.Diagnostics;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -12,6 +14,19 @@ namespace MQTTnet.TestApp.NetCore
         public static void RunEmptyServer()
         {
             var mqttServer = new MqttFactory().CreateMqttServer();
+            mqttServer.StartAsync(new MqttServerOptions()).GetAwaiter().GetResult();
+            
+            Console.WriteLine("Press any key to exit.");
+            Console.ReadLine();
+        }
+
+        public static void RunEmptyServerWithLogging()
+        {
+            var logger = new MqttNetLogger();
+            MqttNetConsoleLogger.ForwardToConsole(logger);
+           
+            var mqttFactory = new MqttFactory(logger);
+            var mqttServer = mqttFactory.CreateMqttServer();
             mqttServer.StartAsync(new MqttServerOptions()).GetAwaiter().GetResult();
 
             Console.WriteLine("Press any key to exit.");

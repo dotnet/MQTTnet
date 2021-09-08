@@ -2,23 +2,16 @@ using System;
 
 namespace MQTTnet.Server
 {
-    public class MqttServerClientDisconnectedEventArgs : EventArgs
+    public sealed class MqttServerClientDisconnectedEventArgs : EventArgs
     {
-        public MqttServerClientDisconnectedEventArgs(string clientId, MqttClientDisconnectType disconnectType, string endpoint)
-        {
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
-            DisconnectType = disconnectType;
-            Endpoint = endpoint;
-        }
-
         /// <summary>
         /// Gets the client identifier.
         /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
-        public string ClientId { get; }
+        public string ClientId { get; internal set; }
 
-        public MqttClientDisconnectType DisconnectType { get; }
+        public MqttClientDisconnectType DisconnectType { get; internal set; }
 
-        public string Endpoint { get; }
+        public string Endpoint { get; internal set; }
     }
 }

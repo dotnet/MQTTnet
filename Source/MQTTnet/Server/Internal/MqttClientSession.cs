@@ -1,10 +1,10 @@
-﻿using MQTTnet.Diagnostics;
-using MQTTnet.Server.Status;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics;
+using MQTTnet.Server.Status;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server.Internal
 {
     public sealed class MqttClientSession
     {
@@ -81,7 +81,7 @@ namespace MQTTnet.Server
             return SubscriptionsManager.UnsubscribeAsync(topicFilters);
         }
 
-        public void FillStatus(MqttSessionStatus status)
+        public void FillSessionStatus(MqttSessionStatus status)
         {
             status.ClientId = ClientId;
             status.CreatedTimestamp = _createdTimestamp;

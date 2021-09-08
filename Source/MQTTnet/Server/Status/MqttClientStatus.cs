@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using MQTTnet.Client.Disconnecting;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server.Status
 {
@@ -24,9 +25,11 @@ namespace MQTTnet.Server.Status
 
         public MqttProtocolVersion ProtocolVersion { get; set; }
 
-        public DateTime LastPacketReceivedTimestamp { get; set; }
-
         public DateTime ConnectedTimestamp { get; set; }
+        
+        public DateTime LastPacketReceivedTimestamp { get; set; }
+        
+        public DateTime LastPacketSentTimestamp { get; set; }
 
         public DateTime LastNonKeepAlivePacketReceivedTimestamp { get; set; }
 
@@ -43,7 +46,7 @@ namespace MQTTnet.Server.Status
         public long BytesSent { get; set; }
 
         public long BytesReceived { get; set; }
-
+        
         public Task DisconnectAsync()
         {
             return _connection.StopAsync(MqttClientDisconnectReason.NormalDisconnection);

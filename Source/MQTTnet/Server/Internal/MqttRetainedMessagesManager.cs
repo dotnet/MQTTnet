@@ -1,13 +1,13 @@
-﻿using MQTTnet.Diagnostics;
-using MQTTnet.Implementations;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics;
+using MQTTnet.Implementations;
 using MQTTnet.Internal;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server.Internal
 {
     public sealed class MqttRetainedMessagesManager : IMqttRetainedMessagesManager
     {

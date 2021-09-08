@@ -2,20 +2,13 @@
 
 namespace MQTTnet.Server
 {
-    public class MqttSubscriptionInterceptorContext
+    public sealed class MqttSubscriptionInterceptorContext
     {
-        public MqttSubscriptionInterceptorContext(string clientId, MqttTopicFilter topicFilter, IDictionary<object, object> sessionItems)
-        {
-            ClientId = clientId;
-            TopicFilter = topicFilter;
-            SessionItems = sessionItems;
-        }
-
         /// <summary>
         /// Gets the client identifier.
         /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
-        public string ClientId { get; }
+        public string ClientId { get; internal set; }
 
         /// <summary>
         /// Gets or sets the topic filter.
@@ -26,7 +19,7 @@ namespace MQTTnet.Server
         /// <summary>
         /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
         /// </summary>
-        public IDictionary<object, object> SessionItems { get; }
+        public IDictionary<object, object> SessionItems { get; internal set; }
 
         public bool AcceptSubscription { get; set; } = true;
 

@@ -133,7 +133,7 @@ namespace MQTTnet.Client.Options
             return this;
         }
 
-        public MqttClientOptionsBuilder WithCredentials(string username, string password = null)
+        public MqttClientOptionsBuilder WithCredentials(string username, string password)
         {
             byte[] passwordBuffer = null;
 
@@ -145,12 +145,22 @@ namespace MQTTnet.Client.Options
             return WithCredentials(username, passwordBuffer);
         }
 
-        public MqttClientOptionsBuilder WithCredentials(string username, byte[] password = null)
+        public MqttClientOptionsBuilder WithCredentials(string username, byte[] password)
         {
             _options.Credentials = new MqttClientCredentials
             {
                 Username = username,
                 Password = password
+            };
+
+            return this;
+        }
+        
+        public MqttClientOptionsBuilder WithCredentials(string username)
+        {
+            _options.Credentials = new MqttClientCredentials
+            {
+                Username = username
             };
 
             return this;

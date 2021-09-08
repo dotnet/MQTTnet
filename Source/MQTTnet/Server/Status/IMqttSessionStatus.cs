@@ -11,6 +11,9 @@ namespace MQTTnet.Server.Status
         /// </summary>
         string ClientId { get; }
 
+        /// <summary>
+        /// Gets the count of messages which are not yet sent to the client but already queued.
+        /// </summary>
         long PendingApplicationMessagesCount { get; }
 
         IDictionary<object, object> Items { get; }

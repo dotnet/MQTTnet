@@ -363,9 +363,9 @@ namespace MQTTnet.Client
 
                 await Task.WhenAll(receiverTask, publishPacketReceiverTask, keepAliveTask).ConfigureAwait(false);
             }
-            catch (Exception e)
+            catch (Exception innerException)
             {
-                _logger.Warning(e, "Error while waiting for internal tasks.");
+                _logger.Warning(innerException, "Error while waiting for internal tasks.");
             }
             finally
             {
@@ -439,7 +439,7 @@ namespace MQTTnet.Client
                 {
                     if (exception is MqttCommunicationTimedOutException)
                     {
-                        _logger.Warning(null, "Timeout while waiting for response packet ({0}).", typeof(TResponsePacket).Name);
+                        _logger.Warning("Timeout while waiting for response packet ({0}).", typeof(TResponsePacket).Name);
                     }
 
                     throw;

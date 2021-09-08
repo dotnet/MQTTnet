@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Server;
 using System;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Benchmarks
 {

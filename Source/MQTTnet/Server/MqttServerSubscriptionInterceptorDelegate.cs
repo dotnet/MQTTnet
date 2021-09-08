@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.Server
 {
-    public class MqttServerSubscriptionInterceptorDelegate : IMqttServerSubscriptionInterceptor
+    public sealed class MqttServerSubscriptionInterceptorDelegate : IMqttServerSubscriptionInterceptor
     {
-        private readonly Func<MqttSubscriptionInterceptorContext, Task> _callback;
+        readonly Func<MqttSubscriptionInterceptorContext, Task> _callback;
 
         public MqttServerSubscriptionInterceptorDelegate(Action<MqttSubscriptionInterceptorContext> callback)
         {
@@ -14,7 +15,7 @@ namespace MQTTnet.Server
             _callback = context =>
             {
                 callback(context);
-                return Task.FromResult(0);
+                return PlatformAbstractionLayer.CompletedTask;
             };
         }
 

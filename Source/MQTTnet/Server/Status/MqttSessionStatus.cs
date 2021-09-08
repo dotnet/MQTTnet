@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server.Status
 {
@@ -25,8 +26,11 @@ namespace MQTTnet.Server.Status
 
         public DateTime CreatedTimestamp { get; set; }
 
+        /// <summary>
+        /// This items can be used by the library user in order to store custom information.
+        /// </summary>
         public IDictionary<object, object> Items { get; set; }
-
+        
         public Task DeleteAsync()
         {
             return _sessionsManager.DeleteSessionAsync(ClientId);

@@ -16,7 +16,7 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Tests.MQTTv5
 {
     [TestClass]
-    public class Client_Tests
+    public sealed class Client_Tests
     {
         public TestContext TestContext { get; set; }
 
@@ -60,6 +60,7 @@ namespace MQTTnet.Tests.MQTTv5
                 Assert.AreEqual(2, receivedMessage.UserProperties.Count);
             }
         }
+        
         [TestMethod]
         public async Task Connect_With_AssignedClientId()
         {
@@ -116,7 +117,6 @@ namespace MQTTnet.Tests.MQTTv5
                 Assert.AreEqual("test123", serverConnectedClientId);
                 Assert.AreEqual("test123", serverDisconnectedClientId);
                 Assert.AreEqual("test123", clientAssignedClientId);
-
             }
         }
 
@@ -165,7 +165,6 @@ namespace MQTTnet.Tests.MQTTv5
 
                 Assert.AreEqual(1, result.Items.Count);
                 Assert.AreEqual(MqttClientSubscribeResultCode.GrantedQoS1, result.Items[0].ResultCode);
-
             }
         }
 

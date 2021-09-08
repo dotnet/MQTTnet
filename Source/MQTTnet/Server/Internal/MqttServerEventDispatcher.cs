@@ -1,9 +1,11 @@
-using MQTTnet.Client.Receiving;
-using MQTTnet.Diagnostics;
 using System;
 using System.Threading.Tasks;
+using MQTTnet.Adapter;
+using MQTTnet.Client.Receiving;
+using MQTTnet.Diagnostics;
+using MQTTnet.Packets;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server.Internal
 {
     public sealed class MqttServerEventDispatcher
     {
@@ -26,7 +28,7 @@ namespace MQTTnet.Server
 
         public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
 
-        public async Task SafeNotifyClientConnectedAsync(string clientId)
+        public async Task SafeNotifyClientConnectedAsync(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter)
         {
             try
             {
@@ -36,7 +38,13 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                await handler.HandleClientConnectedAsync(new MqttServerClientConnectedEventArgs(clientId)).ConfigureAwait(false);
+                await handler.HandleClientConnectedAsync(new MqttServerClientConnectedEventArgs
+                {
+                    ClientId = connectPacket.ClientId,
+                    UserName = connectPacket.Username,
+                    ProtocolVersion = channelAdapter.PacketFormatterAdapter.ProtocolVersion,
+                    Endpoint = channelAdapter.Endpoint
+                }).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -54,7 +62,12 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                await handler.HandleClientDisconnectedAsync(new MqttServerClientDisconnectedEventArgs(clientId, disconnectType, endpoint)).ConfigureAwait(false);
+                await handler.HandleClientDisconnectedAsync(new MqttServerClientDisconnectedEventArgs
+                {
+                    ClientId = clientId,
+                    DisconnectType = disconnectType,
+                    Endpoint = endpoint
+                }).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -72,7 +85,11 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                await handler.HandleClientSubscribedTopicAsync(new MqttServerClientSubscribedTopicEventArgs(clientId, topicFilter)).ConfigureAwait(false);
+                await handler.HandleClientSubscribedTopicAsync(new MqttServerClientSubscribedTopicEventArgs
+                {
+                    ClientId = clientId,
+                    TopicFilter = topicFilter
+                }).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -90,7 +107,11 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                await handler.HandleClientUnsubscribedTopicAsync(new MqttServerClientUnsubscribedTopicEventArgs(clientId, topicFilter)).ConfigureAwait(false);
+                await handler.HandleClientUnsubscribedTopicAsync(new MqttServerClientUnsubscribedTopicEventArgs
+                {
+                    ClientId = clientId,
+                    TopicFilter = topicFilter
+                }).ConfigureAwait(false);
             }
             catch (Exception exception)
             {

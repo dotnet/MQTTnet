@@ -31,6 +31,7 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("a = Start QoS 2 benchmark");
             Console.WriteLine("b = Start QoS 1 benchmark");
             Console.WriteLine("c = Start QoS 0 benchmark");
+            Console.WriteLine("d = Start server with logging");
 
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.KeyChar == '1')
@@ -82,6 +83,10 @@ namespace MQTTnet.TestApp.NetCore
             else if (pressedKey.KeyChar == 'c')
             {
                 Task.Run(PerformanceTest.RunQoS0Test);
+            }
+            else if (pressedKey.KeyChar == 'd')
+            {
+                Task.Run(ServerTest.RunEmptyServerWithLogging);
             }
 
             Thread.Sleep(Timeout.Infinite);

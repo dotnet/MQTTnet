@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.Server
 {
-    public class MqttServerClientDisconnectedHandlerDelegate : IMqttServerClientDisconnectedHandler
+    public sealed class MqttServerClientDisconnectedHandlerDelegate : IMqttServerClientDisconnectedHandler
     {
-        private readonly Func<MqttServerClientDisconnectedEventArgs, Task> _handler;
+        readonly Func<MqttServerClientDisconnectedEventArgs, Task> _handler;
 
         public MqttServerClientDisconnectedHandlerDelegate(Action<MqttServerClientDisconnectedEventArgs> handler)
         {
@@ -14,7 +15,7 @@ namespace MQTTnet.Server
             _handler = eventArgs =>
             {
                 handler(eventArgs);
-                return Task.FromResult(0);
+                return PlatformAbstractionLayer.CompletedTask;
             };
         }
 

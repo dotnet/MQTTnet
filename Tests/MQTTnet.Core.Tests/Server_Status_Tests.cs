@@ -10,10 +10,8 @@ using MQTTnet.Server;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class Server_Status_Tests
+    public sealed class Server_Status_Tests : BaseTestClass
     {
-        public TestContext TestContext { get; set; }
-
         [TestMethod]
         public async Task Show_Client_And_Session_Statistics()
         {
@@ -143,7 +141,7 @@ namespace MQTTnet.Tests
                     // At most once will send one packet to the client and the server will reply
                     // with an additional ACK packet.
                     await c1.PublishAsync("a", string.Empty, MqttQualityOfServiceLevel.AtLeastOnce);
-                    await Task.Delay(50);
+                    await Task.Delay(250);
 
                     var clientStatus = await server.GetClientStatusAsync();
 

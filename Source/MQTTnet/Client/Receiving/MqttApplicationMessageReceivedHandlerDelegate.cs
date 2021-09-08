@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.Client.Receiving
 {
-    public class MqttApplicationMessageReceivedHandlerDelegate : IMqttApplicationMessageReceivedHandler
+    public sealed class MqttApplicationMessageReceivedHandlerDelegate : IMqttApplicationMessageReceivedHandler
     {
-        private readonly Func<MqttApplicationMessageReceivedEventArgs, Task> _handler;
+        readonly Func<MqttApplicationMessageReceivedEventArgs, Task> _handler;
 
         public MqttApplicationMessageReceivedHandlerDelegate(Action<MqttApplicationMessageReceivedEventArgs> handler)
         {
@@ -14,7 +15,7 @@ namespace MQTTnet.Client.Receiving
             _handler = context =>
             {
                 handler(context);
-                return Task.FromResult(0);
+                return PlatformAbstractionLayer.CompletedTask;
             };
         }
 

@@ -1,4 +1,6 @@
-﻿namespace MQTTnet.Server
+﻿using MQTTnet.Server.Internal;
+
+namespace MQTTnet.Server
 {
     public sealed class MqttPendingApplicationMessage
     {

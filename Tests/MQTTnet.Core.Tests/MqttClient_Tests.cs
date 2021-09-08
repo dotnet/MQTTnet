@@ -50,7 +50,7 @@ namespace MQTTnet.Tests
                     Topic = "Test"
                 }, CancellationToken.None);
                 
-                await Task.Delay(1000);
+                await Task.Delay(500);
                 
                 // This will simulate a device which closes the connection directly
                 // after sending the data so do delay is added between send and dispose!

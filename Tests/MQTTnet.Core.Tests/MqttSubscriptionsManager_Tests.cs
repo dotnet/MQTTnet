@@ -5,6 +5,7 @@ using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Tests
 {

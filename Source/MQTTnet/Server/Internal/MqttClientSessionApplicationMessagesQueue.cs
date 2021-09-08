@@ -1,10 +1,10 @@
-﻿using MQTTnet.Internal;
-using MQTTnet.Protocol;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Internal;
+using MQTTnet.Protocol;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server.Internal
 {
     public sealed class MqttClientSessionApplicationMessagesQueue : IDisposable
     {

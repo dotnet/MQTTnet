@@ -147,7 +147,7 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public async Task Will_Message_Do_Not_Send()
+        public async Task Will_Message_Do_Not_Send_On_Clean_Disconnect()
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
@@ -155,7 +155,7 @@ namespace MQTTnet.Tests
 
                 await testEnvironment.StartServerAsync();
 
-                var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").WithAtMostOnceQoS().Build();
+                var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").Build();
 
                 var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage);
 
@@ -166,6 +166,38 @@ namespace MQTTnet.Tests
                 var c2 = await testEnvironment.ConnectClientAsync(clientOptions);
                 await c2.DisconnectAsync().ConfigureAwait(false);
 
+                await Task.Delay(1000);
+
+                Assert.AreEqual(0, receivedMessagesCount);
+            }
+        }
+        
+        [TestMethod]
+        public async Task Will_Message_Do_Not_Send_On_Takeover()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServerAsync();
+                
+                // C1 will receive the last will!
+                var c1 = await testEnvironment.ConnectClientAsync();
+                c1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c => Interlocked.Increment(ref receivedMessagesCount));
+                await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
+
+                // C2 has the last will defined.
+                var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").Build();
+                
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithWillMessage(willMessage)
+                    .WithClientId("WillOwner");
+                
+                var c2 = await testEnvironment.ConnectClientAsync(clientOptions);
+                
+                // C3 will do the connection takeover.
+                var c3 = await testEnvironment.ConnectClientAsync(clientOptions);
+                
                 await Task.Delay(1000);
 
                 Assert.AreEqual(0, receivedMessagesCount);
@@ -571,7 +603,12 @@ namespace MQTTnet.Tests
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 var server = await testEnvironment.StartServerAsync();
-                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(e => server.SubscribeAsync(e.ClientId, "topic1"));
+                
+                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(async e =>
+                {
+                    // Every client will automatically subscribe to this topic.
+                    await server.SubscribeAsync(e.ClientId, "topic1");
+                });
 
                 var client = await testEnvironment.ConnectClientAsync();
                 var receivedMessages = new List<MqttApplicationMessage>();
@@ -636,11 +673,11 @@ namespace MQTTnet.Tests
                 Assert.AreEqual(1, clientConnectedCalled);
                 Assert.AreEqual(0, clientDisconnectedCalled);
 
-                await Task.Delay(500);
+                await Task.Delay(1000);
 
                 await c1.DisconnectAsync();
 
-                await Task.Delay(500);
+                await Task.Delay(1000);
 
                 Assert.AreEqual(1, clientConnectedCalled);
                 Assert.AreEqual(1, clientDisconnectedCalled);

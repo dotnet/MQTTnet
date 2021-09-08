@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {

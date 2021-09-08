@@ -1,12 +1,12 @@
-﻿using MQTTnet.Diagnostics;
-using MQTTnet.Internal;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client.Disconnecting;
+using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server.Internal
 {
     public sealed class MqttServerKeepAliveMonitor
     {
@@ -70,7 +70,7 @@ namespace MQTTnet.Server
         {
             try
             {
-                if (connection.Status != MqttClientConnectionStatus.Running)
+                if (!connection.IsRunning)
                 {
                     // The connection is already dead or just created so there is no need to check it.
                     return;
@@ -94,14 +94,14 @@ namespace MQTTnet.Server
                 // If the client sends 1 sec. the server will allow up to 1.5 seconds.
                 var maxDurationWithoutPacket = connection.ConnectPacket.KeepAlivePeriod * 1.5D;
 
-                var secondsWithoutPackage = (now - connection.LastPacketReceivedTimestamp).TotalSeconds;
+                var secondsWithoutPackage = (now - connection.Statistics.LastPacketReceivedTimestamp).TotalSeconds;
                 if (secondsWithoutPackage < maxDurationWithoutPacket)
                 {
                     // A packet was received before the timeout is affected.
                     return;
                 }
 
-                _logger.Warning(null, "Client '{0}': Did not receive any packet or keep alive signal.", connection.ClientId);
+                _logger.Warning("Client '{0}': Did not receive any packet or keep alive signal.", connection.ClientId);
 
                 // Execute the disconnection in background so that the keep alive monitor can continue
                 // with checking other connections.

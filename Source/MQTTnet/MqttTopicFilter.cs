@@ -8,6 +8,7 @@ namespace MQTTnet
     {
     }
 
+    // TODO: Consider using struct instead.
     public class MqttTopicFilter
     {
         /// <summary>

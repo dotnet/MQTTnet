@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.Server
 {
-    public class MqttServerStartedHandlerDelegate : IMqttServerStartedHandler
+    public sealed class MqttServerStartedHandlerDelegate : IMqttServerStartedHandler
     {
-        private readonly Func<EventArgs, Task> _handler;
+        readonly Func<EventArgs, Task> _handler;
 
         public MqttServerStartedHandlerDelegate(Action<EventArgs> handler)
         {
@@ -14,7 +15,7 @@ namespace MQTTnet.Server
             _handler = eventArgs =>
             {
                 handler(eventArgs);
-                return Task.FromResult(0);
+                return PlatformAbstractionLayer.CompletedTask;
             };
         }
 

@@ -172,21 +172,25 @@ namespace MQTTnet.Tests.Mockups
             return StartServerAsync(new MqttServerOptionsBuilder());
         }
 
-        public async Task<IMqttServer> StartServerAsync(MqttServerOptionsBuilder options)
+        public IMqttServer CreateServer()
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
             if (Server != null)
             {
                 throw new InvalidOperationException("Server already started.");
             }
 
             Server = new TestServerWrapper(_mqttFactory.CreateMqttServer(ServerLogger), TestContext, this);
+            return Server;
+        }
 
+        public async Task<IMqttServer> StartServerAsync(MqttServerOptionsBuilder options)
+        {
+            CreateServer();
+            
             options.WithDefaultEndpointPort(ServerPort);
             options.WithMaxPendingMessagesPerClient(int.MaxValue);
-
-            await Server.StartAsync(options.Build()).ConfigureAwait(false);
+            
+            await Server.StartAsync(options.Build());
 
             return Server;
         }

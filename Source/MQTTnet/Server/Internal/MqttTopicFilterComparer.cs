@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server.Internal
 {
     public static class MqttTopicFilterComparer
     {

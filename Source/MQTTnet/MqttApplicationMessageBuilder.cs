@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -198,7 +198,7 @@ namespace MQTTnet
             _retain = value;
             return this;
         }
-        
+
         public MqttApplicationMessageBuilder WithDupFlag(bool value = true)
         {
             _dup = value;
@@ -306,7 +306,7 @@ namespace MQTTnet
         }
 
         /// <summary>
-        /// Adds the message expiry interval to the message.
+        /// Adds the message expiry interval in seconds to the message.
         /// Hint: MQTT 5 feature only.
         /// </summary>
         /// <param name="messageExpiryInterval">The message expiry interval.</param>

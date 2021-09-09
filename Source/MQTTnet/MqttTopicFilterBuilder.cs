@@ -27,9 +27,9 @@ namespace MQTTnet
         /// The topic consists of one or more topic levels. Each topic level is separated by a forward slash (topic level separator).
         /// </summary>
         string _topic;
-        bool? _noLocal;
-        bool? _retainAsPublished;
-        MqttRetainHandling? _retainHandling;
+        bool _noLocal;
+        bool _retainAsPublished;
+        MqttRetainHandling _retainHandling = MqttRetainHandling.SendAtSubscribe;
 
         public MqttTopicFilterBuilder WithTopic(string topic)
         {
@@ -61,19 +61,40 @@ namespace MQTTnet
             return this;
         }
 
+        [Obsolete("Please use overload with _bool_ instead.")]
         public MqttTopicFilterBuilder WithNoLocal(bool? value = true)
+        {
+            _noLocal = value == true;
+            return this;
+        }
+        
+        public MqttTopicFilterBuilder WithNoLocal(bool value = true)
         {
             _noLocal = value;
             return this;
         }
 
+        [Obsolete("Please use overload with _bool_ instead.")]
         public MqttTopicFilterBuilder WithRetainAsPublished(bool? value = true)
+        {
+            _retainAsPublished = value == true;
+            return this;
+        }
+        
+        public MqttTopicFilterBuilder WithRetainAsPublished(bool value = true)
         {
             _retainAsPublished = value;
             return this;
         }
 
+        [Obsolete("Please use overload with _MqttRetainHandling_ instead.")]
         public MqttTopicFilterBuilder WithRetainHandling(MqttRetainHandling? value)
+        {
+            _retainHandling = value ?? MqttRetainHandling.SendAtSubscribe;
+            return this;
+        }
+        
+        public MqttTopicFilterBuilder WithRetainHandling(MqttRetainHandling value)
         {
             _retainHandling = value;
             return this;

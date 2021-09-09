@@ -1,3 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
@@ -7,19 +13,12 @@ using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
-using MQTTnet.Formatter;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Server
 {
     [TestClass]
     public sealed class Server_Tests
@@ -34,7 +33,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var client = testEnvironment.CreateClient();
 
@@ -60,7 +59,7 @@ namespace MQTTnet.Tests
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var client = testEnvironment.CreateClient();
 
@@ -80,7 +79,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var client = testEnvironment.CreateClient();
 
@@ -137,7 +136,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var client = testEnvironment.CreateClient();
                 var connectResult = await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost", testEnvironment.ServerPort).WithCleanSession().Build());
@@ -153,17 +152,17 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").Build();
 
                 var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage);
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 c1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
-                var c2 = await testEnvironment.ConnectClientAsync(clientOptions);
+                var c2 = await testEnvironment.ConnectClient(clientOptions);
                 await c2.DisconnectAsync().ConfigureAwait(false);
 
                 await Task.Delay(1000);
@@ -179,10 +178,10 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
                 
                 // C1 will receive the last will!
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 c1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
@@ -193,10 +192,10 @@ namespace MQTTnet.Tests
                     .WithWillMessage(willMessage)
                     .WithClientId("WillOwner");
                 
-                var c2 = await testEnvironment.ConnectClientAsync(clientOptions);
+                var c2 = await testEnvironment.ConnectClient(clientOptions);
                 
                 // C3 will do the connection takeover.
-                var c3 = await testEnvironment.ConnectClientAsync(clientOptions);
+                var c3 = await testEnvironment.ConnectClient(clientOptions);
                 
                 await Task.Delay(1000);
 
@@ -211,17 +210,17 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").WithAtMostOnceQoS().Build();
 
                 var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage);
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
-                var c2 = await testEnvironment.ConnectClientAsync(clientOptions);
+                var c2 = await testEnvironment.ConnectClient(clientOptions);
                 c2.Dispose(); // Dispose will not send a DISCONNECT pattern first so the will message must be sent.
 
                 await Task.Delay(1000);
@@ -235,7 +234,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithSubscriptionInterceptor(
+                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithSubscriptionInterceptor(
                     c =>
                     {
                         // Set the topic to "a" regards what the client wants to subscribe.
@@ -245,7 +244,7 @@ namespace MQTTnet.Tests
                 var topicAReceived = false;
                 var topicBReceived = false;
 
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
                 client.UseApplicationMessageReceivedHandler(c =>
                 {
                     if (c.ApplicationMessage.Topic == "a")
@@ -276,12 +275,12 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("c1"));
+                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("c1"));
                 c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
-                var c2 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("c2"));
+                var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("c2"));
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
                 await c2.PublishAsync(message);
@@ -290,7 +289,7 @@ namespace MQTTnet.Tests
                 Assert.AreEqual(0, receivedMessagesCount);
 
                 var subscribeEventCalled = false;
-                server.ClientSubscribedTopicHandler = new MqttServerClientSubscribedHandlerDelegate(e =>
+                server.ClientSubscribedTopicHandler = new MqttServerClientSubscribedTopicHandlerDelegate(e =>
                 {
                     subscribeEventCalled = e.TopicFilter.Topic == "a" && e.ClientId == c1.Options.ClientId;
                 });
@@ -330,9 +329,9 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
                     .WithTopicFilter("a")
@@ -340,7 +339,7 @@ namespace MQTTnet.Tests
                     .WithTopicFilter("c")
                     .Build());
 
-                var c2 = await testEnvironment.ConnectClientAsync();
+                var c2 = await testEnvironment.ConnectClient();
 
                 await c2.PublishAsync("a");
                 await Task.Delay(100);
@@ -363,9 +362,9 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
                 var optionsBuilder = new MqttClientSubscribeOptionsBuilder();
@@ -376,7 +375,7 @@ namespace MQTTnet.Tests
 
                 await c1.SubscribeAsync(optionsBuilder.Build()).ConfigureAwait(false);
 
-                var c2 = await testEnvironment.ConnectClientAsync();
+                var c2 = await testEnvironment.ConnectClient();
 
                 var messageBuilder = new MqttApplicationMessageBuilder();
                 for (var i = 0; i < 500; i++)
@@ -399,9 +398,9 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
                 for (var i = 0; i < 500; i++)
@@ -414,7 +413,7 @@ namespace MQTTnet.Tests
                     await Task.Delay(10);
                 }
 
-                var c2 = await testEnvironment.ConnectClientAsync();
+                var c2 = await testEnvironment.ConnectClient();
 
                 var messageBuilder = new MqttApplicationMessageBuilder();
                 for (var i = 0; i < 500; i++)
@@ -439,9 +438,9 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
                     .WithTopicFilter("a")
@@ -455,7 +454,7 @@ namespace MQTTnet.Tests
                     .WithTopicFilter("c")
                     .Build());
 
-                var c2 = await testEnvironment.ConnectClientAsync();
+                var c2 = await testEnvironment.ConnectClient();
 
                 await c2.PublishAsync("a");
                 await Task.Delay(100);
@@ -476,11 +475,11 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
 
                 var receivedMessagesCount = 0;
 
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
                 client.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
@@ -501,11 +500,11 @@ namespace MQTTnet.Tests
 
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync();
-                var c2 = await testEnvironment.ConnectClientAsync();
-                var c3 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
+                var c2 = await testEnvironment.ConnectClient();
+                var c3 = await testEnvironment.ConnectClient();
 
                 c2.UseApplicationMessageReceivedHandler(c =>
                 {
@@ -538,14 +537,14 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var options = new MqttClientOptionsBuilder()
                     .WithCleanSession(false)
                     .WithProtocolVersion(MqttProtocolVersion.V500) // Disconnect reason is only available in MQTT 5+
                     .WithClientId("a");
 
-                var client1 = await testEnvironment.ConnectClientAsync(options);
+                var client1 = await testEnvironment.ConnectClient(options);
                 await Task.Delay(500);
 
                 MqttClientDisconnectReason disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
@@ -554,7 +553,7 @@ namespace MQTTnet.Tests
                     disconnectReason = c.Reason;
                 });
 
-                var client2 = await testEnvironment.ConnectClientAsync(options);
+                var client2 = await testEnvironment.ConnectClient(options);
                 await Task.Delay(500);
 
                 Assert.IsFalse(client1.IsConnected);
@@ -569,9 +568,9 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
                 var receivedMessages = new List<MqttApplicationMessage>();
 
                 client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(async e =>
@@ -602,7 +601,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
                 
                 server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(async e =>
                 {
@@ -610,7 +609,7 @@ namespace MQTTnet.Tests
                     await server.SubscribeAsync(e.ClientId, "topic1");
                 });
 
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
                 var receivedMessages = new List<MqttApplicationMessage>();
 
                 client.UseApplicationMessageReceivedHandler(c =>
@@ -638,11 +637,11 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
+                var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder());
 
                 var disconnectCalled = 0;
 
-                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder());
+                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder());
                 c1.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(e => disconnectCalled++);
 
                 await Task.Delay(100);
@@ -660,7 +659,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
+                var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder());
 
                 var clientConnectedCalled = 0;
                 var clientDisconnectedCalled = 0;
@@ -668,7 +667,7 @@ namespace MQTTnet.Tests
                 server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(_ => Interlocked.Increment(ref clientConnectedCalled));
                 server.ClientDisconnectedHandler = new MqttServerClientDisconnectedHandlerDelegate(_ => Interlocked.Increment(ref clientDisconnectedCalled));
 
-                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder());
+                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder());
 
                 Assert.AreEqual(1, clientConnectedCalled);
                 Assert.AreEqual(0, clientDisconnectedCalled);
@@ -691,10 +690,10 @@ namespace MQTTnet.Tests
             {
                 bool clientWasConnected;
 
-                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
+                var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder());
                 try
                 {
-                    var client = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder());
+                    var client = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder());
 
                     clientWasConnected = true;
 
@@ -720,7 +719,7 @@ namespace MQTTnet.Tests
 
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
 
                 var tasks = new List<Task>();
                 for (var i = 0; i < ClientCount; i++)
@@ -732,7 +731,7 @@ namespace MQTTnet.Tests
                     {
                         try
                         {
-                            using (var client = await testEnvironment2.ConnectClientAsync())
+                            using (var client = await testEnvironment2.ConnectClient())
                             {
                                 // Clear retained message.
                                 await client.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("r" + i2)
@@ -776,12 +775,12 @@ namespace MQTTnet.Tests
             {
                 var retainedMessage = new MqttApplicationMessageBuilder().WithTopic("r").WithPayload("r").WithRetainFlag().Build();
 
-                await testEnvironment.StartServerAsync();
-                var c1 = await testEnvironment.ConnectClientAsync();
+                await testEnvironment.StartServer();
+                var c1 = await testEnvironment.ConnectClient();
 
                 var receivedMessages = 0;
 
-                var c2 = await testEnvironment.ConnectClientAsync();
+                var c2 = await testEnvironment.ConnectClient();
                 c2.UseApplicationMessageReceivedHandler(c =>
                 {
                     Interlocked.Increment(ref receivedMessages);
@@ -811,15 +810,15 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
                 await c1.DisconnectAsync();
 
                 var receivedMessagesCount = 0;
 
-                var c2 = await testEnvironment.ConnectClientAsync();
+                var c2 = await testEnvironment.ConnectClient();
                 c2.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c2.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("retained_other").Build());
 
@@ -834,15 +833,15 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
                 await c1.DisconnectAsync();
 
                 var receivedMessages = new List<MqttApplicationMessage>();
 
-                var c2 = await testEnvironment.ConnectClientAsync();
+                var c2 = await testEnvironment.ConnectClient();
                 c2.UseApplicationMessageReceivedHandler(c =>
                 {
                     lock (receivedMessages)
@@ -867,16 +866,16 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
 
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[0]).WithRetainFlag().Build());
 
                 await c1.DisconnectAsync();
 
-                var c2 = await testEnvironment.ConnectClientAsync();
+                var c2 = await testEnvironment.ConnectClient();
 
                 c2.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
@@ -895,16 +894,16 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
 
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload((byte[])null).WithRetainFlag().Build());
 
                 await c1.DisconnectAsync();
 
-                var c2 = await testEnvironment.ConnectClientAsync();
+                var c2 = await testEnvironment.ConnectClient();
 
                 c2.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
 
@@ -921,12 +920,12 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync(
+                await testEnvironment.StartServer(
                     new MqttServerOptionsBuilder().WithApplicationMessageInterceptor(
                         c => { c.ApplicationMessage = new MqttApplicationMessage { Topic = "new_topic" }; }));
 
                 string receivedTopic = null;
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 await c1.SubscribeAsync("#");
                 c1.UseApplicationMessageReceivedHandler(a => { receivedTopic = a.ApplicationMessage.Topic; });
 
@@ -944,9 +943,9 @@ namespace MQTTnet.Tests
 
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithStorage(serverStorage));
+                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithStorage(serverStorage));
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
 
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
 
@@ -961,7 +960,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
                 server.UseClientConnectedHandler(async e =>
                 {
                     await server.PublishAsync("/test/1", "true", MqttQualityOfServiceLevel.ExactlyOnce, false);
@@ -969,14 +968,14 @@ namespace MQTTnet.Tests
 
                 string receivedTopic = null;
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
                 c1.UseApplicationMessageReceivedHandler(e => { receivedTopic = e.ApplicationMessage.Topic; });
                 await c1.SubscribeAsync("#");
 
-                await testEnvironment.ConnectClientAsync();
-                await testEnvironment.ConnectClientAsync();
-                await testEnvironment.ConnectClientAsync();
-                await testEnvironment.ConnectClientAsync();
+                await testEnvironment.ConnectClient();
+                await testEnvironment.ConnectClient();
+                await testEnvironment.ConnectClient();
+                await testEnvironment.ConnectClient();
 
                 await Task.Delay(500);
 
@@ -994,10 +993,10 @@ namespace MQTTnet.Tests
 
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithApplicationMessageInterceptor(Interceptor));
+                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithApplicationMessageInterceptor(Interceptor));
 
-                var c1 = await testEnvironment.ConnectClientAsync();
-                var c2 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
+                var c2 = await testEnvironment.ConnectClient();
                 await c2.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("test").Build());
 
                 var isIntercepted = false;
@@ -1040,9 +1039,9 @@ namespace MQTTnet.Tests
 
                 byte[] receivedBody = null;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var client1 = await testEnvironment.ConnectClientAsync();
+                var client1 = await testEnvironment.ConnectClient();
                 client1.UseApplicationMessageReceivedHandler(c =>
                 {
                     receivedBody = c.ApplicationMessage.Payload;
@@ -1050,7 +1049,7 @@ namespace MQTTnet.Tests
 
                 await client1.SubscribeAsync("string");
 
-                var client2 = await testEnvironment.ConnectClientAsync();
+                var client2 = await testEnvironment.ConnectClient();
                 await client2.PublishAsync("string", longBody);
 
                 await Task.Delay(TimeSpan.FromSeconds(5));
@@ -1071,9 +1070,9 @@ namespace MQTTnet.Tests
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
-                await testEnvironment.StartServerAsync(serverOptions);
+                await testEnvironment.StartServer(serverOptions);
 
-                var connectingFailedException = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(() => testEnvironment.ConnectClientAsync());
+                var connectingFailedException = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(() => testEnvironment.ConnectClient());
                 Assert.AreEqual(MqttClientConnectResultCode.NotAuthorized, connectingFailedException.ResultCode);
             }
         }
@@ -1103,7 +1102,7 @@ namespace MQTTnet.Tests
                 _connected = new Dictionary<string, bool>();
                 var options = new MqttServerOptionsBuilder();
                 options.WithConnectionValidator(e => ConnectionValidationHandler(e));
-                var server = await testEnvironment.StartServerAsync(options);
+                var server = await testEnvironment.StartServer(options);
 
                 var events = new List<string>();
 
@@ -1127,7 +1126,7 @@ namespace MQTTnet.Tests
                     .WithClientId("same_id");
 
                 // c
-                var c1 = await testEnvironment.ConnectClientAsync(clientOptions);
+                var c1 = await testEnvironment.ConnectClient(clientOptions);
 
                 c1.UseDisconnectedHandler(_ =>
                 {
@@ -1160,7 +1159,7 @@ namespace MQTTnet.Tests
 
                 try
                 {
-                    await testEnvironment.ConnectClientAsync(clientOptions);
+                    await testEnvironment.ConnectClient(clientOptions);
                     Assert.Fail("same id connection is expected to fail");
                 }
                 catch
@@ -1187,7 +1186,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
+                var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder());
 
                 var events = new List<string>();
 
@@ -1211,7 +1210,7 @@ namespace MQTTnet.Tests
                     .WithClientId(Guid.NewGuid().ToString());
 
                 // c
-                var c1 = await testEnvironment.ConnectClientAsync(clientOptionsBuilder);
+                var c1 = await testEnvironment.ConnectClient(clientOptionsBuilder);
 
                 await Task.Delay(500);
 
@@ -1220,7 +1219,7 @@ namespace MQTTnet.Tests
 
                 // dc
                 // Connect client with same client ID. Should disconnect existing client.
-                var c2 = await testEnvironment.ConnectClientAsync(clientOptionsBuilder);
+                var c2 = await testEnvironment.ConnectClient(clientOptionsBuilder);
 
                 await Task.Delay(500);
 
@@ -1272,10 +1271,10 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder());
+                var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder());
 
                 var clientOptions = new MqttClientOptionsBuilder();
-                var c1 = await testEnvironment.ConnectClientAsync(clientOptions);
+                var c1 = await testEnvironment.ConnectClient(clientOptions);
                 await Task.Delay(500);
                 Assert.AreEqual(1, (await server.GetClientStatusAsync()).Count);
 
@@ -1293,14 +1292,14 @@ namespace MQTTnet.Tests
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
 
-                await testEnvironment.ConnectClientAsync();
+                await testEnvironment.ConnectClient();
                 await server.StopAsync();
 
                 try
                 {
-                    await testEnvironment.ConnectClientAsync();
+                    await testEnvironment.ConnectClient();
                     Assert.Fail("Connecting should fail.");
                 }
                 catch (Exception)
@@ -1308,7 +1307,7 @@ namespace MQTTnet.Tests
                 }
 
                 await server.StartAsync(new MqttServerOptionsBuilder().WithDefaultEndpointPort(testEnvironment.ServerPort).Build());
-                await testEnvironment.ConnectClientAsync();
+                await testEnvironment.ConnectClient();
             }
         }
 
@@ -1317,7 +1316,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithSubscriptionInterceptor(c =>
+                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithSubscriptionInterceptor(c =>
                 {
                     // This should lead to no subscriptions for "n" at all. So also no sending of retained messages.
                     if (c.TopicFilter.Topic == "n")
@@ -1327,7 +1326,7 @@ namespace MQTTnet.Tests
                 }));
 
                 // Prepare some retained messages.
-                var client1 = await testEnvironment.ConnectClientAsync();
+                var client1 = await testEnvironment.ConnectClient();
                 await client1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("y").WithPayload("x").WithRetainFlag().Build());
                 await client1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("n").WithPayload("x").WithRetainFlag().Build());
                 await client1.DisconnectAsync();
@@ -1336,7 +1335,7 @@ namespace MQTTnet.Tests
 
                 // Subscribe to all retained message types.
                 // It is important to do this in a range of filters to ensure that a subscription is not "hidden".
-                var client2 = await testEnvironment.ConnectClientAsync();
+                var client2 = await testEnvironment.ConnectClient();
 
                 var buffer = new StringBuilder();
 
@@ -1361,10 +1360,10 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithPersistentSessions());
+                var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 
                 // Create the session including the subscription.
-                var client1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("a"));
+                var client1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("a"));
                 await client1.SubscribeAsync("x");
                 await client1.DisconnectAsync();
                 await Task.Delay(500);
@@ -1372,7 +1371,7 @@ namespace MQTTnet.Tests
                 var clientStatus = await server.GetClientStatusAsync();
                 Assert.AreEqual(0, clientStatus.Count);
 
-                var client2 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("b"));
+                var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b"));
                 await client2.PublishAsync("x", "1");
                 await client2.PublishAsync("x", "2");
                 await client2.PublishAsync("x", "3");
@@ -1402,13 +1401,13 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("receiver"));
+                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("receiver"));
                 c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topicFilter).WithQualityOfServiceLevel(filterQualityOfServiceLevel).Build());
 
-                var c2 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("sender"));
+                var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("sender"));
                 await c2.PublishAsync(new MqttApplicationMessageBuilder().WithTopic(topic).WithPayload(new byte[0]).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
                 await c2.DisconnectAsync().ConfigureAwait(false);
 
@@ -1433,9 +1432,9 @@ namespace MQTTnet.Tests
                         undeliverd = context.ApplicationMessage.Topic;
                     });
 
-                await testEnvironment.StartServerAsync(options);
+                await testEnvironment.StartServer(options);
 
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
 
                 await client.SubscribeAsync("b");
 
@@ -1452,13 +1451,13 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder()
+                await testEnvironment.StartServer(new MqttServerOptionsBuilder()
                     .WithClientMessageQueueInterceptor(c => c.ApplicationMessage.Topic = "a"));
 
                 var topicAReceived = false;
                 var topicBReceived = false;
 
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
                 client.UseApplicationMessageReceivedHandler(c =>
                 {
                     if (c.ApplicationMessage.Topic == "a")
@@ -1490,11 +1489,11 @@ namespace MQTTnet.Tests
 
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder()
+                await testEnvironment.StartServer(new MqttServerOptionsBuilder()
                     .WithClientMessageQueueInterceptor(c => { })); // Interceptor does nothing but has to be present.
 
                 bool receivedMessage = false;
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
                 client.UseApplicationMessageReceivedHandler(c =>
                 {
                     receivedMessage = true;

@@ -17,6 +17,7 @@ using MQTTnet.Packets;
 using System.Net;
 using MQTTnet.AspNetCore.Extensions;
 using MQTTnet.Protocol;
+using MQTTnet.Tests.Extensions;
 
 namespace MQTTnet.AspNetCore.Tests
 {

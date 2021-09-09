@@ -6,19 +6,18 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
-using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public sealed class Server_Connection_Tests
+    public sealed class Connection_Tests : BaseTestClass
     {
         [TestMethod]
         public async Task Close_Idle_Connection_On_Connect()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = CreateTestEnvironment())
             {
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
+                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
 
                 var client = new CrossPlatformSocket(AddressFamily.InterNetwork);
                 await client.ConnectAsync("localhost", testEnvironment.ServerPort, CancellationToken.None);
@@ -45,9 +44,9 @@ namespace MQTTnet.Tests
         [TestMethod]
         public async Task Send_Garbage()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = CreateTestEnvironment())
             {
-                await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
+                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
 
                 // Send an invalid packet and ensure that the server will close the connection and stay in a waiting state
                 // forever. This is security related.

@@ -8,13 +8,12 @@ namespace MQTTnet.Packets
         public ushort PacketIdentifier { get; set; }
 
         public List<MqttTopicFilter> TopicFilters { get; set; } = new List<MqttTopicFilter>();
-
-        #region Added in MQTTv5
-
+        
+        /// <summary>
+        /// Added in MQTT V5.
+        /// </summary>
         public MqttSubscribePacketProperties Properties { get; set; }
-
-        #endregion
-
+        
         public override string ToString()
         {
             var topicFiltersText = string.Join(",", TopicFilters.Select(f => f.Topic + "@" + f.QualityOfServiceLevel));

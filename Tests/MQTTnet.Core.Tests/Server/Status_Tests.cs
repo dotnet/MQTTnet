@@ -1,26 +1,26 @@
 ﻿using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
-using MQTTnet.Client.Options;
-using MQTTnet.Tests.Mockups;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
+using MQTTnet.Client.Options;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public sealed class Server_Status_Tests : BaseTestClass
+    public sealed class Status_Tests : BaseTestClass
     {
         [TestMethod]
         public async Task Show_Client_And_Session_Statistics()
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client1"));
-                var c2 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client2"));
+                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client1"));
+                var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client2"));
 
                 await Task.Delay(500);
 
@@ -51,9 +51,9 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client1"));
+                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client1"));
                 
                 await Task.Delay(1000);
 
@@ -79,10 +79,10 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithPersistentSessions());
+                var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 
-                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client1"));
-                var c2 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithClientId("client2"));
+                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client1"));
+                var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client2"));
 
                 await c1.DisconnectAsync();
 
@@ -111,9 +111,9 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithPersistentSessions());
+                var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 
-                var c1 = await testEnvironment.ConnectClientAsync();
+                var c1 = await testEnvironment.ConnectClient();
 
                 for (var i = 1; i < 25; i++)
                 {
@@ -132,9 +132,9 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync(new MqttServerOptionsBuilder().WithPersistentSessions());
+                var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 
-                var c1 = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithNoKeepAlive());
+                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithNoKeepAlive());
 
                 for (var i = 1; i < 25; i++)
                 {

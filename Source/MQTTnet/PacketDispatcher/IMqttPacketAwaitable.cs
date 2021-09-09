@@ -3,9 +3,9 @@ using System;
 
 namespace MQTTnet.PacketDispatcher
 {
-    public interface IMqttPacketAwaiter : IDisposable
+    public interface IMqttPacketAwaitable : IDisposable
     {
-        MqttPacketAwaiterPacketFilter PacketFilter { get; }
+        MqttPacketAwaitableFilter Filter { get; }
         
         void Complete(MqttBasePacket packet);
 

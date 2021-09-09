@@ -62,9 +62,9 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
                 
-                var requestSender = await testEnvironment.ConnectClientAsync();
+                var requestSender = await testEnvironment.ConnectClient();
 
                 var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build());
                 await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
@@ -77,11 +77,11 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var requestSender = await testEnvironment.ConnectClientAsync();
+                var requestSender = await testEnvironment.ConnectClient();
 
-                var rpcClient = await testEnvironment.ConnectRpcClientAsync(new MqttRpcClientOptionsBuilder().WithTopicGenerationStrategy(new TestTopicStrategy()) .Build());
+                var rpcClient = await testEnvironment.ConnectRpcClient(new MqttRpcClientOptionsBuilder().WithTopicGenerationStrategy(new TestTopicStrategy()) .Build());
                 
                 await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
             }
@@ -91,8 +91,8 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
-                var responseSender = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithProtocolVersion(protocolVersion));
+                await testEnvironment.StartServer();
+                var responseSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(protocolVersion));
                 await responseSender.SubscribeAsync("MQTTnet.RPC/+/ping", qosLevel);
 
                 responseSender.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(async e =>
@@ -100,7 +100,7 @@ namespace MQTTnet.Tests
                     await responseSender.PublishAsync(e.ApplicationMessage.Topic + "/response", "pong");
                 });
 
-                var requestSender = await testEnvironment.ConnectClientAsync();
+                var requestSender = await testEnvironment.ConnectClient();
 
                 using (var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build()))
                 {

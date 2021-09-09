@@ -8,7 +8,7 @@ using MQTTnet.Client.Subscribing;
 using MQTTnet.Formatter;
 using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests.MQTTv5
+namespace MQTTnet.Tests.Server
 {
     [TestClass]
     public class Feature_Tests
@@ -20,10 +20,10 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var sender = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
-                var receiver = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
+                var sender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
+                var receiver = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
 
                 var message = new MqttApplicationMessageBuilder()
                     .WithTopic("A")

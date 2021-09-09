@@ -8,6 +8,7 @@ using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Formatter
 {
@@ -41,7 +42,7 @@ namespace MQTTnet.Formatter
         
         MqttSubscribePacket CreateSubscribePacket(MqttClientSubscribeOptions options);
 
-        MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, Server.MqttClientSubscribeResult subscribeResult);
+        MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, SubscribeResult subscribeResult);
 
         MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options);
 

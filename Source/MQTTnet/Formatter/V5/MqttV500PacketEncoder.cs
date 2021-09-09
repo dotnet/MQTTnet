@@ -425,19 +425,19 @@ namespace MQTTnet.Formatter.V5
 
                     var options = (byte)topicFilter.QualityOfServiceLevel;
 
-                    if (topicFilter.NoLocal == true)
+                    if (topicFilter.NoLocal)
                     {
                         options |= 1 << 2;
                     }
 
-                    if (topicFilter.RetainAsPublished == true)
+                    if (topicFilter.RetainAsPublished)
                     {
                         options |= 1 << 3;
                     }
 
-                    if (topicFilter.RetainHandling.HasValue)
+                    if (topicFilter.RetainHandling != MqttRetainHandling.SendAtSubscribe)
                     {
-                        options |= (byte)((byte)topicFilter.RetainHandling.Value << 4);
+                        options |= (byte)((byte)topicFilter.RetainHandling << 4);
                     }
                     
                     packetWriter.Write(options);

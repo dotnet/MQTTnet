@@ -6,21 +6,21 @@ using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public class Server_TopicAlias_Tests
+    public class Topic_Alias_Tests
     {
         [TestMethod]
         public async Task Publish_After_Client_Connects()
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var receivedTopics = new List<string>();
 
-                var c1 = await testEnvironment.ConnectClientAsync(options => options.WithProtocolVersion(MqttProtocolVersion.V500));
+                var c1 = await testEnvironment.ConnectClient(options => options.WithProtocolVersion(MqttProtocolVersion.V500));
                 c1.UseApplicationMessageReceivedHandler(e =>
                 {
                     lock (receivedTopics)
@@ -31,7 +31,7 @@ namespace MQTTnet.Tests
 
                 await c1.SubscribeAsync("#");
 
-                var c2 = await testEnvironment.ConnectClientAsync(options => options.WithProtocolVersion(MqttProtocolVersion.V500));
+                var c2 = await testEnvironment.ConnectClient(options => options.WithProtocolVersion(MqttProtocolVersion.V500));
 
                 var message = new MqttApplicationMessage
                 {

@@ -14,6 +14,7 @@ using MQTTnet.Formatter.V5;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Tests.Extensions;
 
 namespace MQTTnet.Tests
 {

@@ -11,6 +11,7 @@ using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MQTTnet.Server.Internal;
 using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
 
 namespace MQTTnet.Formatter.V5
@@ -242,7 +243,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, Server.MqttClientSubscribeResult subscribeResult)
+        public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, SubscribeResult subscribeResult)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
             if (subscribeResult == null) throw new ArgumentNullException(nameof(subscribeResult));

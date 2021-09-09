@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Formatter;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests
@@ -9,12 +10,12 @@ namespace MQTTnet.Tests
     {
         public TestContext TestContext { get; set; }
         
-        protected TestEnvironment CreateTestEnvironment()
+        protected TestEnvironment CreateTestEnvironment(MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
-            return new TestEnvironment(TestContext);
+            return new TestEnvironment(TestContext, protocolVersion);
         }
 
-        protected Task LongDelay()
+        protected Task LongTestDelay()
         {
             return Task.Delay(TimeSpan.FromSeconds(1));
         }

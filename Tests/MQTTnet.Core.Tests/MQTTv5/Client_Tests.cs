@@ -25,10 +25,10 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 // This test can be also executed against "broker.hivemq.com" to validate package format.
-                var client = await testEnvironment.ConnectClientAsync(
+                var client = await testEnvironment.ConnectClient(
                     new MqttClientOptionsBuilder()
                         //.WithTcpServer("broker.hivemq.com")
                         .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
@@ -81,7 +81,7 @@ namespace MQTTnet.Tests.MQTTv5
                             context.ReasonCode = MqttConnectReasonCode.Success;
                         }
                     });
-                await testEnvironment.StartServerAsync(serverOptions);
+                await testEnvironment.StartServer(serverOptions);
                 testEnvironment.Server.UseClientConnectedHandler((args) =>
                 {
                     serverConnectedClientId = args.ClientId;
@@ -125,8 +125,8 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
-                await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500).Build());
+                await testEnvironment.StartServer();
+                await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500).Build());
             }
         }
 
@@ -135,9 +135,9 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
                 await client.DisconnectAsync();
             }
         }
@@ -147,10 +147,10 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var client =
-                    await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                    await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
 
                 var result = await client.SubscribeAsync(new MqttClientSubscribeOptions()
                 {
@@ -173,9 +173,9 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
                 await client.SubscribeAsync("a");
 
                 var result = await client.UnsubscribeAsync("a");
@@ -191,9 +191,9 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
                 var result = await client.PublishAsync("a", "b");
                 await client.DisconnectAsync();
 
@@ -206,9 +206,9 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
                 var result = await client.PublishAsync("a", "b", MqttQualityOfServiceLevel.AtLeastOnce);
                 await client.DisconnectAsync();
 
@@ -221,9 +221,9 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
                 var result = await client.PublishAsync("a", "b", MqttQualityOfServiceLevel.ExactlyOnce);
                 await client.DisconnectAsync();
 
@@ -236,9 +236,9 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var client = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
 
                 var applicationMessage = new MqttApplicationMessageBuilder()
                     .WithTopic("Hello")
@@ -265,11 +265,11 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var receivedMessages = new List<MqttApplicationMessageReceivedEventArgs>();
 
-                var client1 = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client1"));
+                var client1 = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client1"));
                 client1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     lock (receivedMessages)
@@ -280,7 +280,7 @@ namespace MQTTnet.Tests.MQTTv5
 
                 await client1.SubscribeAsync("a");
 
-                var client2 = await testEnvironment.ConnectClientAsync(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client2"));
+                var client2 = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client2"));
                 await client2.PublishAsync("a", "b");
 
                 await Task.Delay(500);
@@ -300,9 +300,9 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var receiver = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
+                var receiver = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
                 await receiver.SubscribeAsync("#");
 
                 MqttApplicationMessage receivedMessage = null;
@@ -311,7 +311,7 @@ namespace MQTTnet.Tests.MQTTv5
                     receivedMessage = c.ApplicationMessage;
                 });
 
-                var sender = await testEnvironment.ConnectClientAsync(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
+                var sender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
 
                 var applicationMessage = new MqttApplicationMessageBuilder()
                     .WithTopic("Hello")

@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.PacketDispatcher
 {
-    public sealed class MqttPacketAwaiter<TPacket> : IMqttPacketAwaiter where TPacket : MqttBasePacket
+    public sealed class MqttPacketAwaitable<TPacket> : IMqttPacketAwaitable where TPacket : MqttBasePacket
     {
         readonly TaskCompletionSource<MqttBasePacket> _taskCompletionSource;
         readonly MqttPacketDispatcher _owningPacketDispatcher;
 
-        public MqttPacketAwaiter(ushort packetIdentifier, MqttPacketDispatcher owningPacketDispatcher)
+        public MqttPacketAwaitable(ushort packetIdentifier, MqttPacketDispatcher owningPacketDispatcher)
         {
-            PacketFilter = new MqttPacketAwaiterPacketFilter
+            Filter = new MqttPacketAwaitableFilter
             {
                 Type = typeof(TPacket),
                 Identifier = packetIdentifier
@@ -27,7 +27,7 @@ namespace MQTTnet.PacketDispatcher
 #endif
         }
         
-        public MqttPacketAwaiterPacketFilter PacketFilter { get; }
+        public MqttPacketAwaitableFilter Filter { get; }
         
         public async Task<TPacket> WaitOneAsync(TimeSpan timeout)
         {
@@ -88,7 +88,7 @@ namespace MQTTnet.PacketDispatcher
 
         public void Dispose()
         {
-            _owningPacketDispatcher.RemoveAwaiter(this);
+            _owningPacketDispatcher.RemoveAwaitable(this);
         }
     }
 }

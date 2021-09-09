@@ -408,7 +408,7 @@ namespace MQTTnet.Formatter.V3
         protected virtual byte EncodeConnAckPacket(MqttConnAckPacket packet, IMqttPacketWriter packetWriter)
         {
             packetWriter.Write(0); // Reserved.
-            packetWriter.Write((byte)packet.ReturnCode.Value);
+            packetWriter.Write((byte)packet.ReturnCode);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }

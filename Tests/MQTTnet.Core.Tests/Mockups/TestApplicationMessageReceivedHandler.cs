@@ -36,7 +36,7 @@ namespace MQTTnet.Tests.Mockups
         {
             lock (_messageReceivedEventArgs)
             {
-                Assert.AreEqual(_messageReceivedEventArgs.Count, expectedCount);
+                Assert.AreEqual(expectedCount, _messageReceivedEventArgs.Count);
             }
         }
     }

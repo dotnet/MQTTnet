@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MQTTnet.Server.Internal;
-using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
 
 namespace MQTTnet.Formatter.V5
 {
@@ -123,9 +122,9 @@ namespace MQTTnet.Formatter.V5
             return new MqttClientAuthenticateResult
             {
                 IsSessionPresent = connAckPacket.IsSessionPresent,
-                ResultCode = (MqttClientConnectResultCode)(int)(connAckPacket.ReasonCode ?? 0),
-                WildcardSubscriptionAvailable = connAckPacket.Properties?.WildcardSubscriptionAvailable,
-                RetainAvailable = connAckPacket.Properties?.RetainAvailable,
+                ResultCode = (MqttClientConnectResultCode)(int)connAckPacket.ReasonCode,
+                WildcardSubscriptionAvailable = connAckPacket.Properties?.WildcardSubscriptionAvailable ?? true,
+                RetainAvailable = connAckPacket.Properties?.RetainAvailable ?? true,
                 AssignedClientIdentifier = connAckPacket.Properties?.AssignedClientIdentifier,
                 AuthenticationMethod = connAckPacket.Properties?.AuthenticationMethod,
                 AuthenticationData = connAckPacket.Properties?.AuthenticationData,
@@ -138,9 +137,9 @@ namespace MQTTnet.Formatter.V5
                 ServerReference = connAckPacket.Properties?.ServerReference,
                 ServerKeepAlive = connAckPacket.Properties?.ServerKeepAlive,
                 SessionExpiryInterval = connAckPacket.Properties?.SessionExpiryInterval,
-                SubscriptionIdentifiersAvailable = connAckPacket.Properties?.SubscriptionIdentifiersAvailable,
-                SharedSubscriptionAvailable = connAckPacket.Properties?.SharedSubscriptionAvailable,
-                UserProperties = connAckPacket.Properties?.UserProperties
+                SubscriptionIdentifiersAvailable = connAckPacket.Properties?.SubscriptionIdentifiersAvailable ?? true,
+                SharedSubscriptionAvailable = connAckPacket.Properties?.SharedSubscriptionAvailable ?? true,
+                UserProperties = connAckPacket.Properties?.UserProperties ?? new List<MqttUserProperty>()
             };
         }
 
@@ -181,12 +180,17 @@ namespace MQTTnet.Formatter.V5
                 ReasonCode = connectionValidatorContext.ReasonCode,
                 Properties = new MqttConnAckPacketProperties
                 {
+                    RetainAvailable = true,
+                    SubscriptionIdentifiersAvailable = true,
+                    SharedSubscriptionAvailable = false,
+                    TopicAliasMaximum = ushort.MaxValue,
+                    WildcardSubscriptionAvailable = true,
+                    
                     UserProperties = connectionValidatorContext.ResponseUserProperties,
                     AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
                     AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
                     AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,
-                    ReasonString = connectionValidatorContext.ReasonString,
-                    TopicAliasMaximum = ushort.MaxValue
+                    ReasonString = connectionValidatorContext.ReasonString
                 }
             };
         }

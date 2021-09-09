@@ -14,7 +14,7 @@ namespace MQTTnet.Server.Internal
         // Since writing is done by multiple threads (server API or connection thread), we cannot avoid locking
         // completely by swapping references etc.
         readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim();
-        readonly Dictionary<string, MqttTopicFilter> _subscriptions = new Dictionary<string, MqttTopicFilter>(4096);
+        readonly Dictionary<string, Subscription> _subscriptions = new Dictionary<string, Subscription>(4096);
         readonly MqttClientSession _clientSession;
         readonly IMqttServerOptions _options;
         readonly MqttServerEventDispatcher _eventDispatcher;
@@ -22,7 +22,7 @@ namespace MQTTnet.Server.Internal
 
         public MqttClientSubscriptionsManager(
             MqttClientSession clientSession,
-            IMqttServerOptions serverOptions, 
+            IMqttServerOptions serverOptions,
             MqttServerEventDispatcher eventDispatcher,
             IMqttRetainedMessagesManager retainedMessagesManager)
         {
@@ -38,10 +38,10 @@ namespace MQTTnet.Server.Internal
 
             var retainedApplicationMessages = await _retainedMessagesManager.GetMessagesAsync().ConfigureAwait(false);
             var result = new SubscribeResult();
-            
+
             // The topic filters are order by its QoS so that the higher QoS will win over a
             // lower one.
-            foreach (var originalTopicFilter in subscribePacket.TopicFilters.OrderBy(f => f.QualityOfServiceLevel))
+            foreach (var originalTopicFilter in subscribePacket.TopicFilters.OrderByDescending(f => f.QualityOfServiceLevel))
             {
                 var interceptorContext = await InterceptSubscribe(originalTopicFilter).ConfigureAwait(false);
                 var finalTopicFilter = interceptorContext?.TopicFilter ?? originalTopicFilter;
@@ -69,60 +69,16 @@ namespace MQTTnet.Server.Internal
                     continue;
                 }
 
-                bool isNewSubscription;
-                _subscriptionsLock.EnterWriteLock();
-                try
-                {
-                    isNewSubscription = !_subscriptions.ContainsKey(finalTopicFilter.Topic);
-                    _subscriptions[finalTopicFilter.Topic] = finalTopicFilter;
-                }
-                finally
-                {
-                    _subscriptionsLock.ExitWriteLock();
-                }
+                var subscription = CreateSubscription(finalTopicFilter, subscribePacket);
 
                 await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
-                
-                // Collect the existing retained application messages which are affected by the current subscription.
-                for (var i = retainedApplicationMessages.Count - 1; i >= 0; i--)
-                {
-                    var retainedApplicationMessage = retainedApplicationMessages[i];
-                    if (retainedApplicationMessage == null)
-                    {
-                        continue;
-                    }
 
-                    if (finalTopicFilter.RetainHandling == MqttRetainHandling.DoNotSendOnSubscribe)
-                    {
-                        // This is a MQTT V5+ feature.
-                        continue;
-                    }
-                    
-                    if (finalTopicFilter.RetainHandling == MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly && !isNewSubscription)
-                    {
-                        // This is a MQTT V5+ feature.
-                        continue;
-                    }
-                    
-                    if (!MqttTopicFilterComparer.IsMatch(retainedApplicationMessage.Topic, finalTopicFilter.Topic))
-                    {
-                        continue;
-                    }
-                    
-                    result.RetainedApplicationMessages.Add(new MqttQueuedApplicationMessage
-                    {
-                        ApplicationMessage = retainedApplicationMessage,
-                        IsRetainedMessage = true,
-                        SubscriptionQualityOfServiceLevel = finalTopicFilter.QualityOfServiceLevel
-                    });
-                    
-                    retainedApplicationMessages[i] = null;
-                }
+                FilterRetainedApplicationMessages(retainedApplicationMessages, subscription, result);
             }
 
             return result;
         }
-        
+
         public async Task<List<MqttUnsubscribeReasonCode>> Unsubscribe(MqttUnsubscribePacket unsubscribePacket)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
@@ -158,14 +114,14 @@ namespace MQTTnet.Server.Internal
 
             return reasonCodes;
         }
-        
+
         public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel, string senderClientId)
         {
-            List<MqttTopicFilter> topicFilters;
+            List<Subscription> subscriptions;
             _subscriptionsLock.EnterReadLock();
             try
             {
-                topicFilters = _subscriptions.Values.ToList();
+                subscriptions = _subscriptions.Values.ToList();
             }
             finally
             {
@@ -173,22 +129,36 @@ namespace MQTTnet.Server.Internal
             }
 
             var senderIsReceiver = string.Equals(senderClientId, _clientSession.ClientId);
-            
-            var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
-            foreach (var topicFilter in topicFilters)
-            {
-                if (!MqttTopicFilterComparer.IsMatch(topic, topicFilter.Topic))
-                {
-                    continue;
-                }
 
-                if (topicFilter.NoLocal && senderIsReceiver)
+            var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
+            var subscriptionIdentifiers = new HashSet<uint>();
+            var retainAsPublished = false;
+
+            foreach (var subscription in subscriptions)
+            {
+                if (subscription.NoLocal && senderIsReceiver)
                 {
                     // This is a MQTTv5 feature!
                     continue;
                 }
-                
-                qosLevels.Add(topicFilter.QualityOfServiceLevel);
+
+                if (subscription.RetainAsPublished)
+                {
+                    // This is a MQTTv5 feature!
+                    retainAsPublished = true;
+                }
+
+                if (!MqttTopicFilterComparer.IsMatch(topic, subscription.Topic))
+                {
+                    continue;
+                }
+
+                qosLevels.Add(subscription.QualityOfServiceLevel);
+
+                if (subscription.Identifier > 0)
+                {
+                    subscriptionIdentifiers.Add(subscription.Identifier);
+                }
             }
 
             if (qosLevels.Count == 0)
@@ -196,7 +166,84 @@ namespace MQTTnet.Server.Internal
                 return CheckSubscriptionsResult.NotSubscribed;
             }
 
-            return CreateSubscriptionResult(qosLevel, qosLevels);
+            return new CheckSubscriptionsResult
+            {
+                IsSubscribed = true,
+                RetainAsPublished = retainAsPublished,
+                SubscriptionIdentifiers = subscriptionIdentifiers.ToList(),
+                QualityOfServiceLevel = GetEffectiveQoS(qosLevel, qosLevels)
+            };
+        }
+
+        Subscription CreateSubscription(MqttTopicFilter topicFilter, MqttSubscribePacket subscribePacket)
+        {
+            var subscription = new Subscription
+            {
+                Topic = topicFilter.Topic,
+                NoLocal = topicFilter.NoLocal,
+                RetainHandling = topicFilter.RetainHandling,
+                RetainAsPublished = topicFilter.RetainAsPublished,
+                QualityOfServiceLevel = topicFilter.QualityOfServiceLevel,
+                Identifier = subscribePacket.Properties?.SubscriptionIdentifier ?? 0
+            };
+
+            _subscriptionsLock.EnterWriteLock();
+            try
+            {
+                subscription.IsNewSubscription = !_subscriptions.ContainsKey(topicFilter.Topic);
+                _subscriptions[topicFilter.Topic] = subscription;
+            }
+            finally
+            {
+                _subscriptionsLock.ExitWriteLock();
+            }
+
+            return subscription;
+        }
+
+        static void FilterRetainedApplicationMessages(IList<MqttApplicationMessage> retainedApplicationMessages, Subscription subscription, SubscribeResult subscribeResult)
+        {
+            for (var i = retainedApplicationMessages.Count - 1; i >= 0; i--)
+            {
+                var retainedApplicationMessage = retainedApplicationMessages[i];
+                if (retainedApplicationMessage == null)
+                {
+                    continue;
+                }
+
+                if (subscription.RetainHandling == MqttRetainHandling.DoNotSendOnSubscribe)
+                {
+                    // This is a MQTT V5+ feature.
+                    continue;
+                }
+
+                if (subscription.RetainHandling == MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly && !subscription.IsNewSubscription)
+                {
+                    // This is a MQTT V5+ feature.
+                    continue;
+                }
+
+                if (!MqttTopicFilterComparer.IsMatch(retainedApplicationMessage.Topic, subscription.Topic))
+                {
+                    continue;
+                }
+
+                var queuedApplicationMessage = new MqttQueuedApplicationMessage
+                {
+                    ApplicationMessage = retainedApplicationMessage,
+                    IsRetainedMessage = true,
+                    SubscriptionQualityOfServiceLevel = subscription.QualityOfServiceLevel
+                };
+
+                if (subscription.Identifier > 0)
+                {
+                    queuedApplicationMessage.SubscriptionIdentifiers = new List<uint> { subscription.Identifier };
+                }
+
+                subscribeResult.RetainedApplicationMessages.Add(queuedApplicationMessage);
+
+                retainedApplicationMessages[i] = null;
+            }
         }
 
         static MqttSubscribeReturnCode ConvertToSubscribeReturnCode(MqttQualityOfServiceLevel qualityOfServiceLevel)
@@ -249,7 +296,7 @@ namespace MQTTnet.Server.Internal
             return context;
         }
 
-        static CheckSubscriptionsResult CreateSubscriptionResult(MqttQualityOfServiceLevel qosLevel, HashSet<MqttQualityOfServiceLevel> subscribedQoSLevels)
+        static MqttQualityOfServiceLevel GetEffectiveQoS(MqttQualityOfServiceLevel qosLevel, HashSet<MqttQualityOfServiceLevel> subscribedQoSLevels)
         {
             MqttQualityOfServiceLevel effectiveQoS;
             if (subscribedQoSLevels.Contains(qosLevel))
@@ -265,11 +312,7 @@ namespace MQTTnet.Server.Internal
                 effectiveQoS = subscribedQoSLevels.Max();
             }
 
-            return new CheckSubscriptionsResult
-            {
-                IsSubscribed = true,
-                QualityOfServiceLevel = effectiveQoS
-            };
+            return effectiveQoS;
         }
     }
 }

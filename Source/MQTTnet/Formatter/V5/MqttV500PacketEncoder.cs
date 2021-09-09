@@ -173,12 +173,7 @@ namespace MQTTnet.Formatter.V5
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
             if (packetWriter == null) throw new ArgumentNullException(nameof(packetWriter));
-
-            if (!packet.ReasonCode.HasValue)
-            {
-                ThrowReasonCodeNotSetException();
-            }
-
+            
             byte connectAcknowledgeFlags = 0x0;
             if (packet.IsSessionPresent)
             {
@@ -186,7 +181,7 @@ namespace MQTTnet.Formatter.V5
             }
 
             packetWriter.Write(connectAcknowledgeFlags);
-            packetWriter.Write((byte)packet.ReasonCode.Value);
+            packetWriter.Write((byte)packet.ReasonCode);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
             if (packet.Properties != null)
@@ -247,19 +242,18 @@ namespace MQTTnet.Formatter.V5
             var propertiesWriter = new MqttV500PropertiesWriter();
             if (packet.Properties != null)
             {
-                if (packet.Properties.TopicAlias == 0)
-                {
-                    throw new MqttProtocolViolationException("A Topic Alias of 0 is not permitted. A sender MUST NOT send a PUBLISH packet containing a Topic Alias which has the value 0 [MQTT-3.3.2-8].");
-                }
-
                 propertiesWriter.WriteContentType(packet.Properties.ContentType);
                 propertiesWriter.WriteCorrelationData(packet.Properties.CorrelationData);
                 propertiesWriter.WriteMessageExpiryInterval(packet.Properties.MessageExpiryInterval);
                 propertiesWriter.WritePayloadFormatIndicator(packet.Properties.PayloadFormatIndicator);
                 propertiesWriter.WriteResponseTopic(packet.Properties.ResponseTopic);
                 propertiesWriter.WriteSubscriptionIdentifiers(packet.Properties.SubscriptionIdentifiers);
-                propertiesWriter.WriteTopicAlias(packet.Properties.TopicAlias);
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
+
+                if (packet.Properties.TopicAlias > 0)
+                {
+                    propertiesWriter.WriteTopicAlias(packet.Properties.TopicAlias);
+                }
             }
 
             propertiesWriter.WriteTo(packetWriter);
@@ -411,7 +405,11 @@ namespace MQTTnet.Formatter.V5
             var propertiesWriter = new MqttV500PropertiesWriter();
             if (packet.Properties != null)
             {
-                propertiesWriter.WriteSubscriptionIdentifier(packet.Properties.SubscriptionIdentifier);
+                if (packet.Properties.SubscriptionIdentifier > 0)
+                {
+                    propertiesWriter.WriteSubscriptionIdentifier(packet.Properties.SubscriptionIdentifier);
+                }
+
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 

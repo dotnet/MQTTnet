@@ -7,6 +7,7 @@ using MQTTnet.Client;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
@@ -238,32 +239,22 @@ namespace MQTTnet.Server.Internal
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     queuedApplicationMessage = await Session.ApplicationMessagesQueue.Dequeue(cancellationToken).ConfigureAwait(false);
-                    if (queuedApplicationMessage == null)
-                    {
-                        return;
-                    }
-
+                    
+                    // Also check the cancellation token here because the dequeue is blocking and may take some time.
                     if (cancellationToken.IsCancellationRequested)
                     {
                         return;
                     }
-
-                    publishPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(queuedApplicationMessage.ApplicationMessage);
-                    publishPacket.QualityOfServiceLevel = queuedApplicationMessage.SubscriptionQualityOfServiceLevel;
-
-                    // Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
-                    publishPacket.Retain = queuedApplicationMessage.IsRetainedMessage;
-
-                    publishPacket = await InvokeClientMessageQueueInterceptor(publishPacket, queuedApplicationMessage).ConfigureAwait(false);
-                    if (publishPacket == null)
+                    
+                    if (queuedApplicationMessage == null)
                     {
-                        // The interceptor has decided that the message is not relevant and will be fully ignored.
                         continue;
                     }
 
-                    if (publishPacket.QualityOfServiceLevel > 0)
+                    publishPacket = await CreatePublishPacket(queuedApplicationMessage).ConfigureAwait(false);
+                    if (publishPacket == null)
                     {
-                        publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
+                        continue;
                     }
 
                     if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
@@ -327,6 +318,34 @@ namespace MQTTnet.Server.Internal
             }
         }
 
+        async Task<MqttPublishPacket> CreatePublishPacket(MqttQueuedApplicationMessage queuedApplicationMessage)
+        {
+            var publishPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(queuedApplicationMessage.ApplicationMessage);
+            publishPacket.QualityOfServiceLevel = queuedApplicationMessage.SubscriptionQualityOfServiceLevel;
+
+            if (_channelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500)
+            {
+                publishPacket.Properties.SubscriptionIdentifiers = queuedApplicationMessage.SubscriptionIdentifiers;
+            }
+
+            // Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
+            publishPacket.Retain = queuedApplicationMessage.IsRetainedMessage;
+
+            publishPacket = await InvokeClientMessageQueueInterceptor(publishPacket, queuedApplicationMessage).ConfigureAwait(false);
+            if (publishPacket == null)
+            {
+                // The interceptor has decided that the message is not relevant and will be fully ignored.
+                return null;
+            }
+
+            if (publishPacket.QualityOfServiceLevel > 0)
+            {
+                publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
+            }
+
+            return publishPacket;
+        }
+
         void StopInternal()
         {
             _cancellationToken?.Cancel();
@@ -353,9 +372,7 @@ namespace MQTTnet.Server.Internal
             
             foreach (var retainedApplicationMessage in subscribeResult.RetainedApplicationMessages)
             {
-                //Session.ApplicationMessagesQueue.Enqueue(retainedApplicationMessage, ClientId, checkSubscriptionsResult.QualityOfServiceLevel, true);
                 Session.ApplicationMessagesQueue.Enqueue(retainedApplicationMessage);
-                //Session.EnqueueApplicationMessage(applicationMessage, ClientId, true);
             }
         }
 

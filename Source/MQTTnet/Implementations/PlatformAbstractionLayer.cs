@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Implementations
@@ -18,7 +19,16 @@ namespace MQTTnet.Implementations
         public static void Sleep(TimeSpan timeout)
         {
 #if !NETSTANDARD1_3 && !WINDOWS_UWP
-            System.Threading.Thread.Sleep(timeout);
+            try
+            {
+                System.Threading.Thread.Sleep(timeout);
+            }
+            catch (ThreadAbortException)
+            {
+                // The ThreadAbortException is not actively catched in this project.
+                // So we use a one which is similar and will be catched properly.
+                throw new OperationCanceledException();
+            }
 #else
             Task.Delay(timeout).Wait();
 #endif

@@ -90,7 +90,7 @@ namespace MQTTnet.Formatter.V3
             if (connAckPacket == null) throw new ArgumentNullException(nameof(connAckPacket));
 
             MqttClientConnectResultCode resultCode;
-            switch (connAckPacket.ReturnCode.Value)
+            switch (connAckPacket.ReturnCode)
             {
                 case MqttConnectReturnCode.ConnectionAccepted:
                     {
@@ -134,6 +134,8 @@ namespace MQTTnet.Formatter.V3
 
             return new MqttClientAuthenticateResult
             {
+                RetainAvailable = true, // Always true because v3.1.1 does not have a way to "disable" that feature.
+                WildcardSubscriptionAvailable = true, // Always true because v3.1.1 does not have a way to "disable" that feature.
                 IsSessionPresent = connAckPacket.IsSessionPresent,
                 ResultCode = resultCode
             };

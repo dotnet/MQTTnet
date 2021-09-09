@@ -2,6 +2,7 @@
 using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
+using MQTTnet.Exceptions;
 
 namespace MQTTnet.Client.Subscribing
 {
@@ -31,8 +32,13 @@ namespace MQTTnet.Client.Subscribing
             return this;
         }
 
-        public MqttClientSubscribeOptionsBuilder WithSubscriptionIdentifier(uint? subscriptionIdentifier)
+        public MqttClientSubscribeOptionsBuilder WithSubscriptionIdentifier(uint subscriptionIdentifier)
         {
+            if (subscriptionIdentifier == 0)
+            {
+                throw new MqttProtocolViolationException("Subscription identifier cannot be 0.");
+            }
+            
             _subscribeOptions.SubscriptionIdentifier = subscriptionIdentifier;
             return this;
         }

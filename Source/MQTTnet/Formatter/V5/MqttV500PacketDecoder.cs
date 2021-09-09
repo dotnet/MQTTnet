@@ -225,15 +225,17 @@ namespace MQTTnet.Formatter.V5
                 IsSessionPresent = (acknowledgeFlags & 0x1) > 0,
                 ReasonCode = (MqttConnectReasonCode)body.ReadByte()
             };
+            
+            // Set all default values according to specification. When they are missing the often
+            // indicate that a feature is available.
+            packet.Properties.RetainAvailable = true;
+            packet.Properties.SharedSubscriptionAvailable = true;
+            packet.Properties.SubscriptionIdentifiersAvailable = true;
+            packet.Properties.WildcardSubscriptionAvailable = true;
 
             var propertiesReader = new MqttV500PropertiesReader(body);
             while (propertiesReader.MoveNext())
             {
-                if (packet.Properties == null)
-                {
-                    packet.Properties = new MqttConnAckPacketProperties();
-                }
-
                 if (propertiesReader.CurrentPropertyId == MqttPropertyId.SessionExpiryInterval)
                 {
                     packet.Properties.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval();

@@ -8,11 +8,11 @@ namespace MQTTnet.Packets
         public ushort PacketIdentifier { get; set; }
 
         public List<MqttTopicFilter> TopicFilters { get; set; } = new List<MqttTopicFilter>();
-        
+
         /// <summary>
         /// Added in MQTT V5.
         /// </summary>
-        public MqttSubscribePacketProperties Properties { get; set; }
+        public MqttSubscribePacketProperties Properties { get; set; } = new MqttSubscribePacketProperties();
         
         public override string ToString()
         {

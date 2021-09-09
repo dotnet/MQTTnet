@@ -313,10 +313,10 @@ namespace MQTTnet.Server.Internal
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                MqttPendingApplicationMessage queuedApplicationMessage;
+                MqttPendingApplicationMessage pendingApplicationMessage;
                 try
                 {
-                    queuedApplicationMessage = _messageQueue.Take(cancellationToken);
+                    pendingApplicationMessage = _messageQueue.Take(cancellationToken);
                 }
                 catch (ArgumentNullException)
                 {
@@ -327,9 +327,9 @@ namespace MQTTnet.Server.Internal
                     return;
                 }
 
-                var clientConnection = queuedApplicationMessage.Sender;
+                var clientConnection = pendingApplicationMessage.Sender;
                 var senderClientId = clientConnection?.ClientId ?? _options.ClientId;
-                var applicationMessage = queuedApplicationMessage.ApplicationMessage;
+                var applicationMessage = pendingApplicationMessage.ApplicationMessage;
 
                 var interceptor = _options.ApplicationMessageInterceptor;
                 if (interceptor != null)
@@ -382,12 +382,21 @@ namespace MQTTnet.Server.Internal
 
                     _logger.Verbose("Client '{0}': Queued application message with topic '{1}'.", clientSession.ClientId, applicationMessage.Topic);
 
-                    clientSession.ApplicationMessagesQueue.Enqueue(new MqttQueuedApplicationMessage
+                    var queuedApplicationMessage = new MqttQueuedApplicationMessage
                     {
                         ApplicationMessage = applicationMessage,
                         SubscriptionQualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel,
-                    });
+                        SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers
+                    };
+                    
+                    if (checkSubscriptionsResult.RetainAsPublished)
+                    {
+                        // Transfer the original retain state from the publisher.
+                        // This is a MQTTv5 feature.
+                        queuedApplicationMessage.IsRetainedMessage = applicationMessage.Retain;
+                    }
 
+                    clientSession.ApplicationMessagesQueue.Enqueue(queuedApplicationMessage);
                     deliveryCount++;
                 }
 

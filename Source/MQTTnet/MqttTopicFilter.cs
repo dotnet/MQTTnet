@@ -29,7 +29,7 @@ namespace MQTTnet
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether to not send messages originating on this client (noLocal) or not.
+        /// Gets or sets a value indicating whether the sender will not receive its own published application messages.
         /// </summary>
         /// Hint: MQTT 5 feature only.
         public bool NoLocal { get; set; }

@@ -159,7 +159,7 @@ namespace MQTTnet.Server.Internal
             return reasonCodes;
         }
         
-        public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel)
+        public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel, string senderClientId)
         {
             List<MqttTopicFilter> topicFilters;
             _subscriptionsLock.EnterReadLock();
@@ -172,11 +172,19 @@ namespace MQTTnet.Server.Internal
                 _subscriptionsLock.ExitReadLock();
             }
 
+            var senderIsReceiver = string.Equals(senderClientId, _clientSession.ClientId);
+            
             var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
             foreach (var topicFilter in topicFilters)
             {
                 if (!MqttTopicFilterComparer.IsMatch(topic, topicFilter.Topic))
                 {
+                    continue;
+                }
+
+                if (topicFilter.NoLocal && senderIsReceiver)
+                {
+                    // This is a MQTTv5 feature!
                     continue;
                 }
                 

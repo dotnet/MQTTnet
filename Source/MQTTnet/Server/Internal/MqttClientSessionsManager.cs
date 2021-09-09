@@ -370,7 +370,11 @@ namespace MQTTnet.Server.Internal
 
                 foreach (var clientSession in sessions)
                 {
-                    var checkSubscriptionsResult = clientSession.SubscriptionsManager.CheckSubscriptions(applicationMessage.Topic, applicationMessage.QualityOfServiceLevel);
+                    var checkSubscriptionsResult = clientSession.SubscriptionsManager.CheckSubscriptions(
+                        applicationMessage.Topic, 
+                        applicationMessage.QualityOfServiceLevel,
+                        senderClientId);
+                    
                     if (!checkSubscriptionsResult.IsSubscribed)
                     {
                         continue;

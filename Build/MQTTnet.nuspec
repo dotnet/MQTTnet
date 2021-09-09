@@ -15,6 +15,7 @@
 * [Core] Added all builders to the MQTT factory.
 * [ManagedClient] Extended ReconnectAsync (thanks to @nvsnkv, #1202). 
 * [Server] Added support for _RetainHandling_ (MQTTv5, BREAKING CHANGE!).
+* [Server] Added support for _NoLocal_ (MQTTv5, BREAKING CHANGE!).
 * [Server] Fixed a memory/performance leak when using QoS Level 1.
 * [Server] Exposed connection timestamp in client status. 
 * [Server] Refactored connection management code. 

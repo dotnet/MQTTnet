@@ -24,7 +24,7 @@ namespace MQTTnet.Tests.Server
 
             await sm.Subscribe(sp);
 
-            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce);
+            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce, "");
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
         }
@@ -41,7 +41,7 @@ namespace MQTTnet.Tests.Server
 
             await sm.Subscribe(sp);
 
-            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce);
+            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce, "");
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
         }
@@ -59,7 +59,7 @@ namespace MQTTnet.Tests.Server
 
             await sm.Subscribe(sp);
 
-            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce);
+            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce, "");
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtLeastOnce);
         }
@@ -76,7 +76,7 @@ namespace MQTTnet.Tests.Server
 
             await sm.Subscribe(sp);
 
-            Assert.IsFalse(sm.CheckSubscriptions("A/B/X", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
+            Assert.IsFalse(sm.CheckSubscriptions("A/B/X", MqttQualityOfServiceLevel.AtMostOnce, "").IsSubscribed);
         }
 
         [TestMethod]
@@ -91,13 +91,13 @@ namespace MQTTnet.Tests.Server
 
             await sm.Subscribe(sp);
 
-            Assert.IsTrue(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
+            Assert.IsTrue(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce, "").IsSubscribed);
 
             var up = new MqttUnsubscribePacket();
             up.TopicFilters.Add("A/B/C");
             await sm.Unsubscribe(up);
 
-            Assert.IsFalse(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
+            Assert.IsFalse(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce, "").IsSubscribed);
         }
 
         MqttClientSession CreateSession()

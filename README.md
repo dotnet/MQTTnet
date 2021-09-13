@@ -122,6 +122,7 @@ This library is used in the following projects:
 * MQTTnet App (Cross platform client application for MQTT debugging, inspection etc., <https://github.com/chkr1011/MQTTnet.App>)
 * Wirehome.Core (Open Source Home Automation system for .NET Core, <https://github.com/chkr1011/Wirehome.Core>)
 * SparkplugNet (Sparkplug library for .Net, <https://github.com/SeppPenner/SparkplugNet>)
+* Silverback (Framework to build event-driven applications - support for MQTT, Kafka & RabbitMQ) <https://github.com/BEagle1984/silverback>
 
 Further projects using this project can be found under https://github.com/chkr1011/MQTTnet/network/dependents.
 

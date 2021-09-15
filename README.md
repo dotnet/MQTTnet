@@ -56,7 +56,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 
 _MQTTnet Server_ is a standalone cross platform MQTT server (like mosquitto) basing on this library. It has the following features.
 * Running portable (no installation required)
-* Runs und Windows, Linux, macOS, Raspberry Pi
+* Runs under Windows, Linux, macOS, Raspberry Pi
 * Python scripting support for manipulating messages, validation of clients, building business logic etc.
 * Supports WebSocket and TCP (with and without TLS) connections
 * Provides a HTTP based API (including Swagger endpoint)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using MQTTnet.Client.Options;
 using MQTTnet.Server;
 
@@ -17,5 +17,7 @@ namespace MQTTnet.Extensions.ManagedClient
         public int MaxPendingMessages { get; set; } = int.MaxValue;
 
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropNewMessage;
+
+        public int? MaxSubcribeUnsubscribeMessagesAtOnce { get; set; } = null;
     }
 }

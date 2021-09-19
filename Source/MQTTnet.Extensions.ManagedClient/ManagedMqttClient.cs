@@ -1,4 +1,4 @@
-﻿using MQTTnet.Client;
+using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Publishing;
@@ -504,22 +504,53 @@ namespace MQTTnet.Extensions.ManagedClient
                     _reconnectSubscriptions[subscription.Topic] = subscription.QualityOfServiceLevel;
                 }
 
-                try
+                List<MqttTopicFilter> subs = new List<MqttTopicFilter>();
+                foreach (var sub in subscriptions)
                 {
-                    if (unsubscriptions.Any())
+                    subs.Add(sub);
+                    //aws only allows 8 in a single message
+                    if (subs.Count == Options.MaxSubcribeUnsubscribeMessagesAtOnce)
                     {
-                        await InternalClient.UnsubscribeAsync(unsubscriptions.ToArray()).ConfigureAwait(false);
+                        await SendSubscribeUnsubscribe(subs, null).ConfigureAwait(false);
+                        subs.Clear();
                     }
+                }
 
-                    if (subscriptions.Any())
+                await SendSubscribeUnsubscribe(subs, null);
+
+                List<string> unSubs = new List<string>();
+                foreach (var unSub in unsubscriptions)
+                {
+                    unSubs.Add(unSub);
+                    //aws only allows 8 in a single message
+                    if (unSubs.Count == Options.MaxSubcribeUnsubscribeMessagesAtOnce)
                     {
-                        await InternalClient.SubscribeAsync(subscriptions.ToArray()).ConfigureAwait(false);
+                        await SendSubscribeUnsubscribe(null, unSubs).ConfigureAwait(false);
+                        unSubs.Clear();
                     }
                 }
-                catch (Exception exception)
+
+                await SendSubscribeUnsubscribe(null, unSubs);
+            }
+        }
+
+        async Task SendSubscribeUnsubscribe(List<MqttTopicFilter> subscriptions, List<string> unsubscriptions)
+        {
+            try
+            {
+                if (unsubscriptions != null && unsubscriptions.Any())
                 {
-                    await HandleSubscriptionExceptionAsync(exception).ConfigureAwait(false);
+                    await InternalClient.UnsubscribeAsync(unsubscriptions.ToArray()).ConfigureAwait(false);
                 }
+
+                if (subscriptions != null && subscriptions.Any())
+                {
+                    await InternalClient.SubscribeAsync(subscriptions.ToArray()).ConfigureAwait(false);
+                }
+            }
+            catch (Exception exception)
+            {
+                await HandleSubscriptionExceptionAsync(exception).ConfigureAwait(false);
             }
         }
 
@@ -532,7 +563,19 @@ namespace MQTTnet.Extensions.ManagedClient
                 if (_reconnectSubscriptions.Any())
                 {
                     var subscriptions = _reconnectSubscriptions.Select(i => new MqttTopicFilter { Topic = i.Key, QualityOfServiceLevel = i.Value });
-                    await InternalClient.SubscribeAsync(subscriptions.ToArray()).ConfigureAwait(false);
+                    List<MqttTopicFilter> subs = new List<MqttTopicFilter>();
+                    foreach (var sub in subscriptions)
+                    {
+                        subs.Add(sub);
+                        //aws only allows 8 in a single message
+                        if (subs.Count == Options.MaxSubcribeUnsubscribeMessagesAtOnce)
+                        {
+                            await SendSubscribeUnsubscribe(subs, null).ConfigureAwait(false);
+                            subs.Clear();
+                        }
+                    }
+
+                    await SendSubscribeUnsubscribe(subs, null).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

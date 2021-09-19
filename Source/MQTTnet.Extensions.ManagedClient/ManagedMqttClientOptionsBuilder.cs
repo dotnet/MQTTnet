@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using MQTTnet.Client.Options;
 using MQTTnet.Server;
 
@@ -68,7 +68,13 @@ namespace MQTTnet.Extensions.ManagedClient
             options(_clientOptionsBuilder);
             return this;
         }
-        
+
+        public ManagedMqttClientOptionsBuilder WithMaxSubcribeUnsubscribeMessagesAtOnce(int? value)
+        {
+            _options.MaxSubcribeUnsubscribeMessagesAtOnce = value;
+            return this;
+        }
+
         public ManagedMqttClientOptions Build()
         {
             if (_clientOptionsBuilder != null)

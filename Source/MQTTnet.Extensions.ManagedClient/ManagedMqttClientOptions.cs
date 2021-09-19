@@ -4,7 +4,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public class ManagedMqttClientOptions : IManagedMqttClientOptions
+    public sealed class ManagedMqttClientOptions : IManagedMqttClientOptions
     {
         public IMqttClientOptions ClientOptions { get; set; }
 
@@ -18,6 +18,6 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropNewMessage;
 
-        public int? MaxSubcribeUnsubscribeMessagesAtOnce { get; set; } = null;
+        public int MaxTopicFiltersInSubscribeUnsubscribePackets { get; set; } = int.MaxValue;
     }
 }

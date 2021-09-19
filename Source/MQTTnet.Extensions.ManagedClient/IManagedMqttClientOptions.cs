@@ -18,6 +18,10 @@ namespace MQTTnet.Extensions.ManagedClient
 
         MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; }
 
-        int? MaxSubcribeUnsubscribeMessagesAtOnce { get; }
+        /// <summary>
+        /// Defines the maximum amount of topic filters which will be sent in a SUBSCRIBE/UNSUBSCRIBE packet.
+        /// Amazon AWS limits this number to 8. The default is int.MaxValue.
+        /// </summary>
+        int MaxTopicFiltersInSubscribeUnsubscribePackets { get; }
     }
 }

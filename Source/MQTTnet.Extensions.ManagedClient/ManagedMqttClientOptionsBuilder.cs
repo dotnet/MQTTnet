@@ -69,9 +69,9 @@ namespace MQTTnet.Extensions.ManagedClient
             return this;
         }
 
-        public ManagedMqttClientOptionsBuilder WithMaxSubcribeUnsubscribeMessagesAtOnce(int? value)
+        public ManagedMqttClientOptionsBuilder WithMaxTopicFiltersInSubscribeUnsubscribePackets(int value)
         {
-            _options.MaxSubcribeUnsubscribeMessagesAtOnce = value;
+            _options.MaxTopicFiltersInSubscribeUnsubscribePackets = value;
             return this;
         }
 

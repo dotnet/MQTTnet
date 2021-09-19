@@ -17,7 +17,8 @@
 * [Server] Fixed a memory/performance leak when using QoS Level 1.
 * [Server] Exposed connection timestamp in client status. 
 * [Server] Refactored connection management code. 
-* [Server] Exposed more details in _MqttServerClientConnectedEventArgs_.
+* [Server] Exposed more details in _MqttServerClientConnectedEventArgs_. 
+* [Server] Processing all pending messages before stopping (thanks to @AblEdge, #1234).
 * [MQTTnet.Server] Moved server project to a dedicated GitHub repository.
 * [MQTTnet, MQTTnet.Extensions.ManagedClient] Fixed bug that allowed invalid subscriptions (Thanks to @marcelwinh).
 Git commit: $gitCommit

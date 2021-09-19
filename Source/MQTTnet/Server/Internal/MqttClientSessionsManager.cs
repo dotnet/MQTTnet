@@ -80,7 +80,7 @@ namespace MQTTnet.Server.Internal
             _logger.Warning("Client '{0}': First received packet was no 'CONNECT' packet [MQTT-3.1.0-1].", channelAdapter.Endpoint);
             return null;
         }
-        
+
         public async Task HandleClientConnectionAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
         {
             MqttClientConnection clientConnection = null;
@@ -95,7 +95,7 @@ namespace MQTTnet.Server.Internal
                 }
 
                 MqttConnAckPacket connAckPacket;
-                
+
                 var connectionValidatorContext = await ValidateConnection(connectPacket, channelAdapter).ConfigureAwait(false);
                 if (connectionValidatorContext.ReasonCode != MqttConnectReasonCode.Success)
                 {
@@ -272,11 +272,12 @@ namespace MQTTnet.Server.Internal
 
         async Task TryProcessQueuedApplicationMessagesAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            //make sure all queued messages are proccessed befor server stops
+            while (!cancellationToken.IsCancellationRequested || _messageQueue.Any())
             {
                 try
                 {
-                    await TryProcessNextQueuedApplicationMessageAsync(cancellationToken).ConfigureAwait(false);
+                    await TryProcessNextQueuedApplicationMessageAsync().ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -288,16 +289,14 @@ namespace MQTTnet.Server.Internal
             }
         }
 
-        async Task TryProcessNextQueuedApplicationMessageAsync(CancellationToken cancellationToken)
+        async Task TryProcessNextQueuedApplicationMessageAsync()
         {
             try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
                 MqttPendingApplicationMessage queuedApplicationMessage;
                 try
                 {
-                    queuedApplicationMessage = _messageQueue.Take(cancellationToken);
+                    queuedApplicationMessage = _messageQueue.Take();
                 }
                 catch (ArgumentNullException)
                 {
@@ -369,9 +368,6 @@ namespace MQTTnet.Server.Internal
                     // The delegate signature is the same as for regular message interceptor. So the call is fine and just uses a different interceptor.
                     await InterceptApplicationMessageAsync(undeliveredMessageInterceptor, clientConnection, applicationMessage).ConfigureAwait(false);
                 }
-            }
-            catch (OperationCanceledException)
-            {
             }
             catch (Exception exception)
             {

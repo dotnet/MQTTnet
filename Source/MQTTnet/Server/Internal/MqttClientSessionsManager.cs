@@ -291,11 +291,12 @@ namespace MQTTnet.Server.Internal
 
         async Task TryProcessQueuedApplicationMessagesAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            // Make sure all queued messages are proccessed befor server stops.
+            while (!cancellationToken.IsCancellationRequested || _messageQueue.Any())
             {
                 try
                 {
-                    await TryProcessNextQueuedApplicationMessage(cancellationToken).ConfigureAwait(false);
+                    await TryProcessNextQueuedApplicationMessage().ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -307,16 +308,14 @@ namespace MQTTnet.Server.Internal
             }
         }
 
-        async Task TryProcessNextQueuedApplicationMessage(CancellationToken cancellationToken)
+        async Task TryProcessNextQueuedApplicationMessage()
         {
             try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
                 MqttPendingApplicationMessage pendingApplicationMessage;
                 try
                 {
-                    pendingApplicationMessage = _messageQueue.Take(cancellationToken);
+                    pendingApplicationMessage = _messageQueue.Take();
                 }
                 catch (ArgumentNullException)
                 {
@@ -411,9 +410,6 @@ namespace MQTTnet.Server.Internal
                     // The delegate signature is the same as for regular message interceptor. So the call is fine and just uses a different interceptor.
                     await InterceptApplicationMessageAsync(undeliveredMessageInterceptor, clientConnection, applicationMessage).ConfigureAwait(false);
                 }
-            }
-            catch (OperationCanceledException)
-            {
             }
             catch (Exception exception)
             {

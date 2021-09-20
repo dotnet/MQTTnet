@@ -62,7 +62,7 @@ namespace MQTTnet.Client
 
         public IMqttClientOptions Options { get; private set; }
 
-        public async Task<MqttClientAuthenticateResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)
+        public async Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (options.ChannelOptions == null) throw new ArgumentException("ChannelOptions are not set.");
@@ -76,7 +76,7 @@ namespace MQTTnet.Client
                 throw new InvalidOperationException("Not allowed to connect while connect/disconnect is pending.");
             }
 
-            MqttClientAuthenticateResult authenticateResult = null;
+            MqttClientConnectResult connectResult = null;
 
             try
             {
@@ -102,7 +102,7 @@ namespace MQTTnet.Client
 
                     _packetReceiverTask = Task.Run(() => TryReceivePacketsAsync(backgroundCancellationToken), backgroundCancellationToken);
 
-                    authenticateResult = await AuthenticateAsync(adapter, options.WillMessage, combined.Token).ConfigureAwait(false);
+                    connectResult = await AuthenticateAsync(adapter, options.WillMessage, combined.Token).ConfigureAwait(false);
                 }
 
                 _lastPacketSentTimestamp = DateTime.UtcNow;
@@ -119,10 +119,10 @@ namespace MQTTnet.Client
                 var connectedHandler = ConnectedHandler;
                 if (connectedHandler != null)
                 {
-                    await connectedHandler.HandleConnectedAsync(new MqttClientConnectedEventArgs(authenticateResult)).ConfigureAwait(false);
+                    await connectedHandler.HandleConnectedAsync(new MqttClientConnectedEventArgs(connectResult)).ConfigureAwait(false);
                 }
 
-                return authenticateResult;
+                return connectResult;
             }
             catch (Exception exception)
             {
@@ -130,7 +130,7 @@ namespace MQTTnet.Client
 
                 _logger.Error(exception, "Error while connecting with server.");
 
-                await DisconnectInternalAsync(null, exception, authenticateResult).ConfigureAwait(false);
+                await DisconnectInternalAsync(null, exception, connectResult).ConfigureAwait(false);
 
                 throw;
             }
@@ -283,9 +283,9 @@ namespace MQTTnet.Client
             base.Dispose(disposing);
         }
 
-        async Task<MqttClientAuthenticateResult> AuthenticateAsync(IMqttChannelAdapter channelAdapter, MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)
+        async Task<MqttClientConnectResult> AuthenticateAsync(IMqttChannelAdapter channelAdapter, MqttApplicationMessage willApplicationMessage, CancellationToken cancellationToken)
         {
-            MqttClientAuthenticateResult result;
+            MqttClientConnectResult result;
 
             try
             {
@@ -324,19 +324,19 @@ namespace MQTTnet.Client
             if (IsConnected) throw new MqttProtocolViolationException(message);
         }
 
-        Task DisconnectInternalAsync(Task sender, Exception exception, MqttClientAuthenticateResult authenticateResult)
+        Task DisconnectInternalAsync(Task sender, Exception exception, MqttClientConnectResult connectResult)
         {
             var clientWasConnected = IsConnected;
             
             if (!DisconnectIsPendingOrFinished())
             {
-                return DisconnectCoreAsync(sender, exception, authenticateResult, clientWasConnected);
+                return DisconnectCoreAsync(sender, exception, connectResult, clientWasConnected);
             }
             
             return PlatformAbstractionLayer.CompletedTask;
         }
 
-        async Task DisconnectCoreAsync(Task sender, Exception exception, MqttClientAuthenticateResult authenticateResult, bool clientWasConnected)
+        async Task DisconnectCoreAsync(Task sender, Exception exception, MqttClientConnectResult connectResult, bool clientWasConnected)
         {
             TryInitiateDisconnect();
 
@@ -380,7 +380,7 @@ namespace MQTTnet.Client
                 {
                     // This handler must be executed in a new thread because otherwise a dead lock may happen
                     // when trying to reconnect in that handler etc.
-                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult, _disconnectReason))).RunInBackground(_logger);
+                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, connectResult, _disconnectReason))).RunInBackground(_logger);
                 }
             }
         }

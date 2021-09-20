@@ -17,7 +17,7 @@ namespace MQTTnet.Packets
 
         public string AssignedClientIdentifier { get; set; }
 
-        public ushort? TopicAliasMaximum { get; set; }
+        public ushort TopicAliasMaximum { get; set; }
 
         public string ReasonString { get; set; }
 

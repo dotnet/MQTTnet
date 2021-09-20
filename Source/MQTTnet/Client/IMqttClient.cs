@@ -28,7 +28,7 @@ namespace MQTTnet.Client
         /// </summary>
         IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
 
-        Task<MqttClientAuthenticateResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken);
+        Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken);
 
         Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken);
 

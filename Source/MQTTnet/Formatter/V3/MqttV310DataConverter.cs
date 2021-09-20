@@ -85,7 +85,7 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        public MqttClientAuthenticateResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
+        public MqttClientConnectResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
         {
             if (connAckPacket == null) throw new ArgumentNullException(nameof(connAckPacket));
 
@@ -132,7 +132,7 @@ namespace MQTTnet.Formatter.V3
                     throw new MqttProtocolViolationException("Received unexpected return code.");
             }
 
-            return new MqttClientAuthenticateResult
+            return new MqttClientConnectResult
             {
                 RetainAvailable = true, // Always true because v3.1.1 does not have a way to "disable" that feature.
                 WildcardSubscriptionAvailable = true, // Always true because v3.1.1 does not have a way to "disable" that feature.

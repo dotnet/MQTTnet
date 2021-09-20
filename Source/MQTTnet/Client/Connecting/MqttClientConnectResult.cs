@@ -4,8 +4,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Client.Connecting
 {
-    // TODO: Consider renaming this to _MqttClientConnectResult_
-    public sealed class MqttClientAuthenticateResult
+    public sealed class MqttClientConnectResult
     {
         /// <summary>
         /// Gets the result code.
@@ -38,13 +37,13 @@ namespace MQTTnet.Client.Connecting
         public string AssignedClientIdentifier { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the authentication method.
+        /// Gets the authentication method.
         /// MQTTv5 only.
         /// </summary>
         public string AuthenticationMethod { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the authentication data.
+        /// Gets the authentication data.
         /// MQTTv5 only.
         /// </summary>
         public byte[] AuthenticationData { get; internal set; }
@@ -52,7 +51,7 @@ namespace MQTTnet.Client.Connecting
         public uint? MaximumPacketSize { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the reason string.
+        /// Gets the reason string.
         /// MQTTv5 only.
         /// </summary>
         public string ReasonString { get; internal set; }
@@ -66,33 +65,46 @@ namespace MQTTnet.Client.Connecting
         public MqttQualityOfServiceLevel MaximumQoS { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the response information.
+        /// Gets the response information.
         /// MQTTv5 only.
         /// </summary>
         public string ResponseInformation { get; internal set; }
 
-        public ushort? TopicAliasMaximum { get; internal set; }
+        /// <summary>
+        /// Gets the maximum value for a topic alias. 0 means not supported.
+        /// MQTTv5 only.
+        /// </summary>
+        public ushort TopicAliasMaximum { get; internal set; }
 
+        /// <summary>
+        /// Gets an alternate server which should be used instead of the current one.
+        /// MQTTv5 only.
+        /// </summary>
         public string ServerReference { get; internal set; }
 
+        /// <summary>
+        /// Gets the keep alive interval which was chosen by the server instead of the
+        /// keep alive interval from the client CONNECT packet.
+        /// MQTTv5 only.
+        /// </summary>
         public ushort? ServerKeepAlive { get; internal set; }
 
         public uint? SessionExpiryInterval { get; internal set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the subscription identifiers are available or not.
+        /// Gets a value indicating whether the subscription identifiers are available or not.
         /// MQTTv5 only.
         /// </summary>
         public bool SubscriptionIdentifiersAvailable { get; internal set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the shared subscriptions are available or not.
+        /// Gets a value indicating whether the shared subscriptions are available or not.
         /// MQTTv5 only.
         /// </summary>
         public bool SharedSubscriptionAvailable { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the user properties.
+        /// Gets the user properties.
         /// In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT packet.
         /// As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add metadata to MQTT messages and pass information between publisher, broker, and subscriber.
         /// The feature is very similar to the HTTP header concept.

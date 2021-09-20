@@ -201,6 +201,21 @@ namespace MQTTnet.Tests.Mockups
             return Server;
         }
         
+        public async Task<IMqttServer> StartServer(Action<MqttServerOptionsBuilder> options)
+        {
+            CreateServer();
+
+            var optionsBuilder = Factory.CreateServerOptionsBuilder();
+            optionsBuilder.WithDefaultEndpointPort(ServerPort);
+            optionsBuilder.WithMaxPendingMessagesPerClient(int.MaxValue);
+            
+            options?.Invoke(optionsBuilder);
+            
+            await Server.StartAsync(optionsBuilder.Build());
+
+            return Server;
+        }
+        
         public TestApplicationMessageReceivedHandler CreateApplicationMessageHandler(IMqttClient mqttClient)
         {
             if (mqttClient == null) throw new ArgumentNullException(nameof(mqttClient));

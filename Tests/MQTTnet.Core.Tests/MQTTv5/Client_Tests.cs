@@ -62,65 +62,6 @@ namespace MQTTnet.Tests.MQTTv5
         }
         
         [TestMethod]
-        public async Task Connect_With_AssignedClientId()
-        {
-            using (var testEnvironment = new TestEnvironment(TestContext))
-            {
-                string serverConnectedClientId = null;
-                string serverDisconnectedClientId = null;
-                string clientAssignedClientId = null;
-
-                // Arrange server
-                var disconnectedMre = new ManualResetEventSlim();
-                var serverOptions = new MqttServerOptionsBuilder()
-                    .WithConnectionValidator((context) =>
-                    {
-                        if (string.IsNullOrEmpty(context.ClientId))
-                        {
-                            context.AssignedClientIdentifier = "test123";
-                            context.ReasonCode = MqttConnectReasonCode.Success;
-                        }
-                    });
-                await testEnvironment.StartServer(serverOptions);
-                testEnvironment.Server.UseClientConnectedHandler((args) =>
-                {
-                    serverConnectedClientId = args.ClientId;
-                });
-                testEnvironment.Server.UseClientDisconnectedHandler((args) =>
-                {
-                    serverDisconnectedClientId = args.ClientId;
-                    disconnectedMre.Set();
-                });
-
-                // Arrange client
-                var client = testEnvironment.CreateClient();
-                client.UseConnectedHandler((args) =>
-                {
-                    clientAssignedClientId = args.AuthenticateResult.AssignedClientIdentifier;
-                });
-
-                // Act
-                await client.ConnectAsync(new MqttClientOptionsBuilder()
-                    .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
-                    .WithProtocolVersion(MqttProtocolVersion.V500)
-                    .WithClientId(null)
-                    .Build());
-                await client.DisconnectAsync();
-
-                // Wait for ClientDisconnectedHandler to trigger
-                disconnectedMre.Wait(500);
-
-                // Assert
-                Assert.IsNotNull(serverConnectedClientId);
-                Assert.IsNotNull(serverDisconnectedClientId);
-                Assert.IsNotNull(clientAssignedClientId);
-                Assert.AreEqual("test123", serverConnectedClientId);
-                Assert.AreEqual("test123", serverDisconnectedClientId);
-                Assert.AreEqual("test123", clientAssignedClientId);
-            }
-        }
-
-        [TestMethod]
         public async Task Connect()
         {
             using (var testEnvironment = new TestEnvironment())

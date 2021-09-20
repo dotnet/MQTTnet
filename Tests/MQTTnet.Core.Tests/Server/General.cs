@@ -631,6 +631,8 @@ namespace MQTTnet.Tests.Server
 
                 var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder());
 
+                await Task.Delay(1000);
+                
                 Assert.AreEqual(1, clientConnectedCalled);
                 Assert.AreEqual(0, clientDisconnectedCalled);
 

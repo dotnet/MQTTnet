@@ -47,7 +47,7 @@ namespace MQTTnet.Tests.Mockups
             set => Implementation.ApplicationMessageReceivedHandler = value;
         }
 
-        public Task<MqttClientAuthenticateResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)
+        public Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)
         {
             if (TestContext != null)
             {

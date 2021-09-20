@@ -6,13 +6,13 @@ namespace MQTTnet.Adapter
 {
     public sealed class MqttConnectingFailedException : MqttCommunicationException
     {
-        public MqttConnectingFailedException(string message, Exception innerException, MqttClientAuthenticateResult authenticateResult)
+        public MqttConnectingFailedException(string message, Exception innerException, MqttClientConnectResult connectResult)
             : base(message, innerException)
         {
-            Result = authenticateResult;
+            Result = connectResult;
         }
 
-        public MqttClientAuthenticateResult Result { get; }
+        public MqttClientConnectResult Result { get; }
 
         public MqttClientConnectResultCode ResultCode => Result?.ResultCode ?? MqttClientConnectResultCode.UnspecifiedError;
     }

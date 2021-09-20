@@ -13,13 +13,14 @@
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
 * [Core] Added all builders to the MQTT factory.
-* [ManagedClient] Extended ReconnectAsync (thanks to @nvsnkv, #1202). 
+* [Client] Renamed _MqttClientConnectResult_ to _MqttClientConnectResult_ (BREAKING CHANGE!).
+* [ManagedClient] Extended ReconnectAsync (thanks to @nvsnkv, #1202).
+* [ManagedClient] Extended ReconnectAsync (thanks to @nvsnkv, #1202).
+* [ManagedClient] Improved Amazon AWS support (thanks to @scottbrogden-iheartmedia, #1209).
 * [Server] Added support for _RetainHandling_ (MQTTv5, BREAKING CHANGE!).
 * [Server] Added support for _NoLocal_ (MQTTv5, BREAKING CHANGE!).
 * [Server] Added support for _SubscriptionIdentifier_ (MQTTv5, BREAKING CHANGE!).
 * [Server] Server now reports supported features properly after successful connection (MQTTv5, BREAKING CHANGE!).
-* [ManagedClient] Extended ReconnectAsync (thanks to @nvsnkv, #1202).
-* [ManagedClient] Improved Amazon AWS support (thanks to @scottbrogden-iheartmedia, #1209).
 * [Server] Fixed a memory/performance leak when using QoS Level 1.
 * [Server] Exposed connection timestamp in client status. 
 * [Server] Refactored connection management code. 

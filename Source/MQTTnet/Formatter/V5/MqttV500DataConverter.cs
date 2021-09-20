@@ -115,11 +115,11 @@ namespace MQTTnet.Formatter.V5
             };
         }
 
-        public MqttClientAuthenticateResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
+        public MqttClientConnectResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
         {
             if (connAckPacket == null) throw new ArgumentNullException(nameof(connAckPacket));
 
-            return new MqttClientAuthenticateResult
+            return new MqttClientConnectResult
             {
                 IsSessionPresent = connAckPacket.IsSessionPresent,
                 ResultCode = (MqttClientConnectResultCode)(int)connAckPacket.ReasonCode,
@@ -133,7 +133,7 @@ namespace MQTTnet.Formatter.V5
                 ReceiveMaximum = connAckPacket.Properties?.ReceiveMaximum,
                 MaximumQoS = connAckPacket.Properties?.MaximumQoS ?? MqttQualityOfServiceLevel.ExactlyOnce,
                 ResponseInformation = connAckPacket.Properties?.ResponseInformation,
-                TopicAliasMaximum = connAckPacket.Properties?.TopicAliasMaximum,
+                TopicAliasMaximum = connAckPacket.Properties?.TopicAliasMaximum ?? 0,
                 ServerReference = connAckPacket.Properties?.ServerReference,
                 ServerKeepAlive = connAckPacket.Properties?.ServerKeepAlive,
                 SessionExpiryInterval = connAckPacket.Properties?.SessionExpiryInterval,
@@ -190,7 +190,8 @@ namespace MQTTnet.Formatter.V5
                     AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
                     AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
                     AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,
-                    ReasonString = connectionValidatorContext.ReasonString
+                    ReasonString = connectionValidatorContext.ReasonString,
+                    ServerReference = connectionValidatorContext.ServerReference
                 }
             };
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using MQTTnet.Client.Options;
 using MQTTnet.Server;
 
@@ -68,7 +68,13 @@ namespace MQTTnet.Extensions.ManagedClient
             options(_clientOptionsBuilder);
             return this;
         }
-        
+
+        public ManagedMqttClientOptionsBuilder WithMaxTopicFiltersInSubscribeUnsubscribePackets(int value)
+        {
+            _options.MaxTopicFiltersInSubscribeUnsubscribePackets = value;
+            return this;
+        }
+
         public ManagedMqttClientOptions Build()
         {
             if (_clientOptionsBuilder != null)

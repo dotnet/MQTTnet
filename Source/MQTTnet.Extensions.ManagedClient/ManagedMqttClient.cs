@@ -1,4 +1,4 @@
-﻿using MQTTnet.Client;
+using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Publishing;
@@ -28,6 +28,7 @@ namespace MQTTnet.Extensions.ManagedClient
         ///  at reconnect and are solely owned by <see cref="MaintainConnectionAsync"/>.
         /// </summary>
         readonly Dictionary<string, MqttQualityOfServiceLevel> _reconnectSubscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
+
         readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         readonly HashSet<string> _unsubscriptions = new HashSet<string>();
         readonly SemaphoreSlim _subscriptionsQueuedSignal = new SemaphoreSlim(0);
@@ -205,7 +206,6 @@ namespace MQTTnet.Extensions.ManagedClient
                         await applicationMessageSkippedHandler.HandleApplicationMessageSkippedAsync(applicationMessageSkippedEventArgs).ConfigureAwait(false);
                     }
                 }
-
             }
         }
 
@@ -248,6 +248,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     _unsubscriptions.Add(topic);
                 }
             }
+
             _subscriptionsQueuedSignal.Release();
 
             return Task.FromResult(0);
@@ -481,8 +482,14 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 lock (_subscriptions)
                 {
-                    subscriptions = _subscriptions.Select(i => new MqttTopicFilter { Topic = i.Key, QualityOfServiceLevel = i.Value }).ToList();
+                    subscriptions = _subscriptions.Select(i => new MqttTopicFilter
+                    {
+                        Topic = i.Key, 
+                        QualityOfServiceLevel = i.Value
+                    }).ToList();
+                    
                     _subscriptions.Clear();
+                    
                     unsubscriptions = new HashSet<string>(_unsubscriptions);
                     _unsubscriptions.Clear();
                 }
@@ -492,7 +499,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     continue;
                 }
 
-                _logger.Verbose("Publishing {0} subscriptions and {1} unsubscriptions)", subscriptions.Count, unsubscriptions.Count);
+                _logger.Verbose("Publishing {0} added and {1} removed subscriptions", subscriptions.Count, unsubscriptions.Count);
 
                 foreach (var unsubscription in unsubscriptions)
                 {
@@ -504,22 +511,53 @@ namespace MQTTnet.Extensions.ManagedClient
                     _reconnectSubscriptions[subscription.Topic] = subscription.QualityOfServiceLevel;
                 }
 
-                try
+                var addedTopicFilters = new List<MqttTopicFilter>();
+                foreach (var subscription in subscriptions)
                 {
-                    if (unsubscriptions.Any())
+                    addedTopicFilters.Add(subscription);
+                    
+                    if (addedTopicFilters.Count == Options.MaxTopicFiltersInSubscribeUnsubscribePackets)
                     {
-                        await InternalClient.UnsubscribeAsync(unsubscriptions.ToArray()).ConfigureAwait(false);
+                        await SendSubscribeUnsubscribe(addedTopicFilters, null).ConfigureAwait(false);
+                        addedTopicFilters.Clear();
                     }
+                }
 
-                    if (subscriptions.Any())
+                await SendSubscribeUnsubscribe(addedTopicFilters, null).ConfigureAwait(false);
+
+                var removedTopicFilters = new List<string>();
+                foreach (var unSub in unsubscriptions)
+                {
+                    removedTopicFilters.Add(unSub);
+                    
+                    if (removedTopicFilters.Count == Options.MaxTopicFiltersInSubscribeUnsubscribePackets)
                     {
-                        await InternalClient.SubscribeAsync(subscriptions.ToArray()).ConfigureAwait(false);
+                        await SendSubscribeUnsubscribe(null, removedTopicFilters).ConfigureAwait(false);
+                        removedTopicFilters.Clear();
                     }
                 }
-                catch (Exception exception)
+
+                await SendSubscribeUnsubscribe(null, removedTopicFilters).ConfigureAwait(false);
+            }
+        }
+
+        async Task SendSubscribeUnsubscribe(List<MqttTopicFilter> addedSubscriptions, List<string> removedSubscriptions)
+        {
+            try
+            {
+                if (removedSubscriptions != null && removedSubscriptions.Any())
                 {
-                    await HandleSubscriptionExceptionAsync(exception).ConfigureAwait(false);
+                    await InternalClient.UnsubscribeAsync(removedSubscriptions.ToArray()).ConfigureAwait(false);
                 }
+
+                if (addedSubscriptions != null && addedSubscriptions.Any())
+                {
+                    await InternalClient.SubscribeAsync(addedSubscriptions.ToArray()).ConfigureAwait(false);
+                }
+            }
+            catch (Exception exception)
+            {
+                await HandleSubscriptionExceptionAsync(exception).ConfigureAwait(false);
             }
         }
 
@@ -531,8 +569,26 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 if (_reconnectSubscriptions.Any())
                 {
-                    var subscriptions = _reconnectSubscriptions.Select(i => new MqttTopicFilter { Topic = i.Key, QualityOfServiceLevel = i.Value });
-                    await InternalClient.SubscribeAsync(subscriptions.ToArray()).ConfigureAwait(false);
+                    var subscriptions = _reconnectSubscriptions.Select(i => new MqttTopicFilter
+                    {
+                        Topic = i.Key, 
+                        QualityOfServiceLevel = i.Value
+                    });
+                    
+                    var topicFilters = new List<MqttTopicFilter>();
+                    
+                    foreach (var sub in subscriptions)
+                    {
+                        topicFilters.Add(sub);
+                        
+                        if (topicFilters.Count == Options.MaxTopicFiltersInSubscribeUnsubscribePackets)
+                        {
+                            await SendSubscribeUnsubscribe(topicFilters, null).ConfigureAwait(false);
+                            topicFilters.Clear();
+                        }
+                    }
+
+                    await SendSubscribeUnsubscribe(topicFilters, null).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

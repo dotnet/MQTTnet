@@ -56,7 +56,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 
 _MQTTnet Server_ is a standalone cross platform MQTT server (like mosquitto) basing on this library. It has the following features.
 * Running portable (no installation required)
-* Runs und Windows, Linux, macOS, Raspberry Pi
+* Runs under Windows, Linux, macOS, Raspberry Pi
 * Python scripting support for manipulating messages, validation of clients, building business logic etc.
 * Supports WebSocket and TCP (with and without TLS) connections
 * Provides a HTTP based API (including Swagger endpoint)
@@ -122,6 +122,7 @@ This library is used in the following projects:
 * MQTTnet App (Cross platform client application for MQTT debugging, inspection etc., <https://github.com/chkr1011/MQTTnet.App>)
 * Wirehome.Core (Open Source Home Automation system for .NET Core, <https://github.com/chkr1011/Wirehome.Core>)
 * SparkplugNet (Sparkplug library for .Net, <https://github.com/SeppPenner/SparkplugNet>)
+* Silverback (Framework to build event-driven applications - support for MQTT, Kafka & RabbitMQ) <https://github.com/BEagle1984/silverback>
 
 Further projects using this project can be found under https://github.com/chkr1011/MQTTnet/network/dependents.
 

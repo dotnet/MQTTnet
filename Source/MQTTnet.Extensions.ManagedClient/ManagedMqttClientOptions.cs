@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using MQTTnet.Client.Options;
 using MQTTnet.Server;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public class ManagedMqttClientOptions : IManagedMqttClientOptions
+    public sealed class ManagedMqttClientOptions : IManagedMqttClientOptions
     {
         public IMqttClientOptions ClientOptions { get; set; }
 
@@ -17,5 +17,7 @@ namespace MQTTnet.Extensions.ManagedClient
         public int MaxPendingMessages { get; set; } = int.MaxValue;
 
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropNewMessage;
+
+        public int MaxTopicFiltersInSubscribeUnsubscribePackets { get; set; } = int.MaxValue;
     }
 }

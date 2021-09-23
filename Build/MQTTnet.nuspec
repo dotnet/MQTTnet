@@ -28,6 +28,7 @@
 * [Server] Exposed more details in _MqttServerClientConnectedEventArgs_. 
 * [Server] Processing all pending messages before stopping (thanks to @AblEdge, #1234).
 * [Server] Added support for a custom exception handler in _MqttServerMultiThreadedApplicationMessageInterceptorDelegate_.
+* [Server] Removed logger from _MqttServerMultiThreadedApplicationMessageInterceptorDelegate_ (BREAKING CHANGE!).
 * [MQTTnet.Server] Moved server project to a dedicated GitHub repository.
 Git commit: $gitCommit
     </releaseNotes>

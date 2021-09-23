@@ -49,7 +49,7 @@ namespace MQTTnet.Benchmarks
         {
             var channel = new BenchmarkMqttChannel(_serializedPacket);
             var fixedHeader = new byte[2];
-            var reader = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(new MqttPacketWriter()), null, new MqttNetLogger());
+            var reader = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(new MqttPacketWriter()), null, new MqttNetEventLogger());
 
             for (var i = 0; i < 10000; i++)
             {

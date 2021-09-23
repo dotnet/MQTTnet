@@ -12,7 +12,7 @@ namespace MQTTnet.Server.Internal
     {
         readonly IMqttServerOptions _options;
         readonly MqttClientSessionsManager _sessionsManager;
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
 
         public MqttServerKeepAliveMonitor(IMqttServerOptions options, MqttClientSessionsManager sessionsManager, IMqttNetLogger logger)
         {
@@ -20,7 +20,7 @@ namespace MQTTnet.Server.Internal
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
             
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(MqttServerKeepAliveMonitor));
+            _logger = logger.WithSource(nameof(MqttServerKeepAliveMonitor));
         }
 
         public void Start(CancellationToken cancellationToken)

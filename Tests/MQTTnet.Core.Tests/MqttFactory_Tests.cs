@@ -24,7 +24,7 @@ namespace MQTTnet.Tests
             //var globalLogCount = 0;
             var localLogCount = 0;
 
-            var logger = new MqttNetLogger(logId);
+            var logger = new MqttNetEventLogger(logId);
 
             // TODO: This is commented out because it is affected by other tests.
             //// we have a theoretical bug here if a concurrent test is also logging

@@ -27,7 +27,7 @@ namespace MQTTnet.Client
         readonly object _disconnectLock = new object();
 
         readonly IMqttClientAdapterFactory _adapterFactory;
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
 
         CancellationTokenSource _backgroundCancellationTokenSource;
         Task _packetReceiverTask;
@@ -49,7 +49,7 @@ namespace MQTTnet.Client
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             _adapterFactory = channelFactory ?? throw new ArgumentNullException(nameof(channelFactory));
-            _logger = logger.CreateScopedLogger(nameof(MqttClient));
+            _logger = logger.WithSource(nameof(MqttClient));
         }
 
         public IMqttClientConnectedHandler ConnectedHandler { get; set; }

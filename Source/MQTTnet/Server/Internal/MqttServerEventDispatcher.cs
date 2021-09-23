@@ -9,13 +9,13 @@ namespace MQTTnet.Server.Internal
 {
     public sealed class MqttServerEventDispatcher
     {
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
 
         public MqttServerEventDispatcher(IMqttNetLogger logger)
         {
             if (logger is null) throw new ArgumentNullException(nameof(logger));
 
-            _logger = logger.CreateScopedLogger(nameof(MqttServerEventDispatcher));
+            _logger = logger.WithSource(nameof(MqttServerEventDispatcher));
         }
 
         public IMqttServerClientConnectedHandler ClientConnectedHandler { get; set; }

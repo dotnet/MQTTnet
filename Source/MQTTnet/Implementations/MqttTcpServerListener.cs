@@ -17,7 +17,7 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpServerListener : IDisposable
     {
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
         readonly IMqttNetLogger _rootLogger;
         readonly AddressFamily _addressFamily;
         readonly MqttServerTcpEndpointBaseOptions _options;
@@ -37,7 +37,7 @@ namespace MQTTnet.Implementations
             _options = options;
             _tlsCertificate = tlsCertificate;
             _rootLogger = logger;
-            _logger = logger.CreateScopedLogger(nameof(MqttTcpServerListener));
+            _logger = logger.WithSource(nameof(MqttTcpServerListener));
 
             if (_options is MqttServerTlsTcpEndpointOptions tlsOptions)
             {

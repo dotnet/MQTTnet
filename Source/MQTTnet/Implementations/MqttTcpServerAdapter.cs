@@ -15,7 +15,7 @@ namespace MQTTnet.Implementations
     public sealed class MqttTcpServerAdapter : IMqttServerAdapter
     {
         readonly List<MqttTcpServerListener> _listeners = new List<MqttTcpServerListener>();
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
         readonly IMqttNetLogger _rootLogger;
 
         CancellationTokenSource _cancellationTokenSource;
@@ -23,7 +23,7 @@ namespace MQTTnet.Implementations
         public MqttTcpServerAdapter(IMqttNetLogger logger)
         {
             _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(MqttTcpServerAdapter));
+            _logger = logger.WithSource(nameof(MqttTcpServerAdapter));
         }
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }

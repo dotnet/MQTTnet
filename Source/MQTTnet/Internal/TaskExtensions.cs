@@ -5,7 +5,7 @@ namespace MQTTnet.Internal
 {
     public static class TaskExtensions
     {
-        public static void RunInBackground(this Task task, IMqttNetScopedLogger logger = null)
+        public static void RunInBackground(this Task task, MqttNetSourceLogger logger = null)
         {
             task?.ContinueWith(t =>
                 {

@@ -8,7 +8,7 @@ namespace MQTTnet.TestApp.NetCore
     {
         static readonly object _lock = new object();
 
-        public static void ForwardToConsole(MqttNetLogger logger)
+        public static void ForwardToConsole(MqttNetEventLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             

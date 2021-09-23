@@ -11,7 +11,7 @@ namespace MQTTnet.TestApp.NetCore
     {
         public static async Task RunAsync()
         {
-            var logger = new MqttNetLogger();
+            var logger = new MqttNetEventLogger();
             MqttNetConsoleLogger.ForwardToConsole(logger);
 
             var factory = new MqttFactory(logger);

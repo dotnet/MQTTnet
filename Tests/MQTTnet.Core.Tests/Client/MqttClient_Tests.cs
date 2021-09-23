@@ -1,13 +1,3 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Subscribing;
-using MQTTnet.Exceptions;
-using MQTTnet.Protocol;
-using MQTTnet.Server;
-using MQTTnet.Tests.Mockups;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +5,21 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Client;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Disconnecting;
+using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
+using MQTTnet.Client.Subscribing;
+using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
+using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Client
 {
     [TestClass]
     public class Client_Tests

@@ -21,7 +21,7 @@ namespace MQTTnet.Server
         readonly MqttServerEventDispatcher _eventDispatcher;
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly IMqttNetLogger _rootLogger;
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
 
         MqttClientSessionsManager _clientSessionsManager;
         IMqttRetainedMessagesManager _retainedMessagesManager;
@@ -34,7 +34,7 @@ namespace MQTTnet.Server
             _adapters = adapters.ToList();
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(MqttServer));
+            _logger = logger.WithSource(nameof(MqttServer));
             _rootLogger = logger;
 
             _eventDispatcher = new MqttServerEventDispatcher(logger);

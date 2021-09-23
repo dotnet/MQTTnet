@@ -1,4 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Options;
@@ -7,13 +12,8 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Client
 {
     [TestClass]
     public class ManagedMqttClient_Tests
@@ -92,7 +92,7 @@ namespace MQTTnet.Tests
             {
                 var server = await testEnvironment.StartServer();
 
-                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger());
+                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetEventLogger());
                 var clientOptions = new MqttClientOptionsBuilder()
                     .WithTcpServer("localhost", testEnvironment.ServerPort);
 
@@ -122,7 +122,7 @@ namespace MQTTnet.Tests
 
                 await testEnvironment.StartServer();
 
-                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger());
+                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetEventLogger());
                 var clientOptions = new MqttClientOptionsBuilder()
                     .WithTcpServer("localhost", testEnvironment.ServerPort);
                 var storage = new ManagedMqttClientTestStorage();
@@ -313,7 +313,7 @@ namespace MQTTnet.Tests
                    .WithTcpServer("localhost", testEnvironment.ServerPort);
 
                 var receivedManagedMessages = new List<MqttApplicationMessage>();
-                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger());
+                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetEventLogger());
                 managedClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c =>
                 {
                     receivedManagedMessages.Add(c.ApplicationMessage);
@@ -431,7 +431,7 @@ namespace MQTTnet.Tests
             // at connection check intervals
             managedOptions.ConnectionCheckInterval = connectionCheckInterval ?? TimeSpan.FromSeconds(0.1);
 
-            var managedClient = new ManagedMqttClient(underlyingClient ?? testEnvironment.CreateClient(), new MqttNetLogger());
+            var managedClient = new ManagedMqttClient(underlyingClient ?? testEnvironment.CreateClient(), new MqttNetEventLogger());
 
             var connected = GetConnectedTask(managedClient);
 

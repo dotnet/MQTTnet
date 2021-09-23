@@ -30,7 +30,7 @@ namespace MQTTnet.Server.Internal
 
         readonly IMqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttServerOptions _options;
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
         readonly IMqttNetLogger _rootLogger;
 
         public MqttClientSessionsManager(
@@ -40,7 +40,7 @@ namespace MQTTnet.Server.Internal
             IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(MqttClientSessionsManager));
+            _logger = logger.WithSource(nameof(MqttClientSessionsManager));
             _rootLogger = logger;
 
             _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
@@ -448,7 +448,10 @@ namespace MQTTnet.Server.Internal
             return context;
         }
 
-        async Task<MqttClientConnection> CreateClientConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, IDictionary<object, object> sessionItems)
+        async Task<MqttClientConnection> CreateClientConnection(
+            MqttConnectPacket connectPacket, 
+            IMqttChannelAdapter channelAdapter, 
+            IDictionary<object, object> sessionItems)
         {
             MqttClientConnection connection;
 
@@ -500,7 +503,9 @@ namespace MQTTnet.Server.Internal
             return connection;
         }
 
-        async Task<MqttApplicationMessageInterceptorContext> InterceptApplicationMessageAsync(IMqttServerApplicationMessageInterceptor interceptor, MqttClientConnection clientConnection,
+        async Task<MqttApplicationMessageInterceptorContext> InterceptApplicationMessageAsync(
+            IMqttServerApplicationMessageInterceptor interceptor,
+            MqttClientConnection clientConnection,
             MqttApplicationMessage applicationMessage)
         {
             string senderClientId;
@@ -522,7 +527,6 @@ namespace MQTTnet.Server.Internal
             {
                 ClientId = senderClientId,
                 SessionItems = sessionItems,
-                Logger = _logger,
                 AcceptPublish = true,
                 ApplicationMessage = applicationMessage,
                 CloseConnection = false

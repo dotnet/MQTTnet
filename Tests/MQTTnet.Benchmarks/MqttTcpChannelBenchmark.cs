@@ -20,7 +20,7 @@ namespace MQTTnet.Benchmarks
         public void Setup()
         {
             var factory = new MqttFactory();
-            var tcpServer = new MqttTcpServerAdapter(new MqttNetLogger());
+            var tcpServer = new MqttTcpServerAdapter(new MqttNetEventLogger());
             tcpServer.ClientHandler += args =>
             {
                 _serverChannel =
@@ -31,7 +31,7 @@ namespace MQTTnet.Benchmarks
                 return Task.CompletedTask;
             };
 
-            _mqttServer = factory.CreateMqttServer(new[] { tcpServer }, new MqttNetLogger());
+            _mqttServer = factory.CreateMqttServer(new[] { tcpServer }, new MqttNetEventLogger());
 
             var serverOptions = new MqttServerOptionsBuilder().Build();
             _mqttServer.StartAsync(serverOptions).GetAwaiter().GetResult();

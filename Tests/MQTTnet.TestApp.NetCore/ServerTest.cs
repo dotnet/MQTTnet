@@ -22,7 +22,7 @@ namespace MQTTnet.TestApp.NetCore
 
         public static void RunEmptyServerWithLogging()
         {
-            var logger = new MqttNetLogger();
+            var logger = new MqttNetEventLogger();
             MqttNetConsoleLogger.ForwardToConsole(logger);
            
             var mqttFactory = new MqttFactory(logger);

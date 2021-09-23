@@ -39,7 +39,7 @@ namespace MQTTnet.Benchmarks
                    .Build();
 
             var factory = new MqttFactory();
-            _mqttClient = factory.CreateMqttClient(new MqttNetLogger(), new MqttClientConnectionContextFactory());
+            _mqttClient = factory.CreateMqttClient(new MqttNetEventLogger(), new MqttClientConnectionContextFactory());
 
             _host.StartAsync().GetAwaiter().GetResult();
 

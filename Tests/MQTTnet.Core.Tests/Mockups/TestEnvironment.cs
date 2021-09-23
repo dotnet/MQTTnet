@@ -36,9 +36,9 @@ namespace MQTTnet.Tests.Mockups
 
         public int ServerPort { get; set; } = 1888;
 
-        public MqttNetLogger ServerLogger { get; } = new MqttNetLogger("server");
+        public MqttNetEventLogger ServerLogger { get; } = new MqttNetEventLogger("server");
 
-        public MqttNetLogger ClientLogger { get; } = new MqttNetLogger("client");
+        public MqttNetEventLogger ClientLogger { get; } = new MqttNetEventLogger("client");
 
         public TestContext TestContext { get; }
 

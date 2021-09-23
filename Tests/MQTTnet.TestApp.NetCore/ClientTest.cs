@@ -17,7 +17,7 @@ namespace MQTTnet.TestApp.NetCore
         {
             try
             {
-                var logger = new MqttNetLogger();
+                var logger = new MqttNetEventLogger();
                 MqttNetConsoleLogger.ForwardToConsole(logger);
 
                 var factory = new MqttFactory(logger);

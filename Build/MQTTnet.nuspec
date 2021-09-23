@@ -15,8 +15,8 @@
 * [Core] Added all builders to the MQTT factory.
 * [Client] Renamed _MqttClientConnectResult_ to _MqttClientConnectResult_ (BREAKING CHANGE!).
 * [ManagedClient] Extended ReconnectAsync (thanks to @nvsnkv, #1202).
-* [ManagedClient] Extended ReconnectAsync (thanks to @nvsnkv, #1202).
-* [ManagedClient] Improved Amazon AWS support (thanks to @scottbrogden-iheartmedia, #1209).
+* [ManagedClient] Improved Amazon AWS support (thanks to @scottbrogden-iheartmedia, #1209). 
+* [ManagedClient] Fixed bug that allowed invalid subscriptions (Thanks to @marcelwinh).
 * [Server] Added support for _RetainHandling_ (MQTTv5, BREAKING CHANGE!).
 * [Server] Added support for _NoLocal_ (MQTTv5, BREAKING CHANGE!).
 * [Server] Added support for _SubscriptionIdentifier_ (MQTTv5, BREAKING CHANGE!).
@@ -27,7 +27,6 @@
 * [Server] Exposed more details in _MqttServerClientConnectedEventArgs_. 
 * [Server] Processing all pending messages before stopping (thanks to @AblEdge, #1234).
 * [MQTTnet.Server] Moved server project to a dedicated GitHub repository.
-* [MQTTnet, MQTTnet.Extensions.ManagedClient] Fixed bug that allowed invalid subscriptions (Thanks to @marcelwinh).
 Git commit: $gitCommit
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2021</copyright>

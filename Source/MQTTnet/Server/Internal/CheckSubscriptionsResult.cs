@@ -1,4 +1,5 @@
-﻿using MQTTnet.Protocol;
+﻿using System.Collections.Generic;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server.Internal
 {
@@ -8,6 +9,10 @@ namespace MQTTnet.Server.Internal
 
         public bool IsSubscribed { get; set; }
 
+        public bool RetainAsPublished { get; set; }
+        
+        public List<uint> SubscriptionIdentifiers { get; set; }
+        
         /// <summary>
         /// Gets or sets the quality of service level.
         /// The Quality of Service (QoS) level is an agreement between the sender of a message and the receiver of a message that defines the guarantee of delivery for a specific message.

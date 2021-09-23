@@ -1,14 +1,14 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Server
 {
     [TestClass]
     public class Session_Tests
@@ -39,11 +39,11 @@ namespace MQTTnet.Tests
                         context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(context.SessionItems["default_payload"] as string);
                     });
 
-                await testEnvironment.StartServerAsync(serverOptions);
+                await testEnvironment.StartServer(serverOptions);
 
                 string receivedPayload = null;
 
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
                 client.UseApplicationMessageReceivedHandler(delegate (MqttApplicationMessageReceivedEventArgs args)
                 {
                     receivedPayload = args.ApplicationMessage.ConvertPayloadToString();
@@ -53,7 +53,7 @@ namespace MQTTnet.Tests
 
                 Assert.AreEqual(MqttClientSubscribeResultCode.GrantedQoS0, subscribeResult.Items[0].ResultCode);
 
-                var client2 = await testEnvironment.ConnectClientAsync();
+                var client2 = await testEnvironment.ConnectClient();
                 await client2.PublishAsync("x");
 
                 await Task.Delay(1000);
@@ -75,9 +75,9 @@ namespace MQTTnet.Tests
                         context.SessionItems["default_payload"] = "Hello World";
                     });
 
-                await testEnvironment.StartServerAsync(serverOptions);
+                await testEnvironment.StartServer(serverOptions);
 
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
 
                 var sessionStatus = await testEnvironment.Server.GetSessionStatusAsync();
                 var session = sessionStatus.First();
@@ -94,7 +94,7 @@ namespace MQTTnet.Tests
             {
                 testEnvironment.IgnoreClientLogErrors = true;
                 var serverOptions = new MqttServerOptionsBuilder();
-                await testEnvironment.StartServerAsync(serverOptions);
+                await testEnvironment.StartServer(serverOptions);
 
                 var options = new MqttClientOptionsBuilder().WithClientId("1");
 
@@ -111,7 +111,7 @@ namespace MQTTnet.Tests
         {
             try
             {
-                return await testEnvironment.ConnectClientAsync(options);
+                return await testEnvironment.ConnectClient(options);
             }
             catch (System.Exception)
             {

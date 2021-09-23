@@ -9,12 +9,11 @@ namespace MQTTnet.Packets
 
         public List<MqttTopicFilter> TopicFilters { get; set; } = new List<MqttTopicFilter>();
 
-        #region Added in MQTTv5
-
-        public MqttSubscribePacketProperties Properties { get; set; }
-
-        #endregion
-
+        /// <summary>
+        /// Added in MQTT V5.
+        /// </summary>
+        public MqttSubscribePacketProperties Properties { get; set; } = new MqttSubscribePacketProperties();
+        
         public override string ToString()
         {
             var topicFiltersText = string.Join(",", TopicFilters.Select(f => f.Topic + "@" + f.QualityOfServiceLevel));

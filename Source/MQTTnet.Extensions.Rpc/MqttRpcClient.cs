@@ -95,12 +95,12 @@ namespace MQTTnet.Extensions.Rpc
             try
             {
 #if NET452
-                var promise = new TaskCompletionSource<byte[]>();
+                var awaitable = new TaskCompletionSource<byte[]>();
 #else
-                var promise = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+                var awaitable = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
 #endif
                 
-                if (!_waitingCalls.TryAdd(responseTopic, promise))
+                if (!_waitingCalls.TryAdd(responseTopic, awaitable))
                 {
                     throw new InvalidOperationException();
                 }
@@ -112,9 +112,9 @@ namespace MQTTnet.Extensions.Rpc
                 await _mqttClient.SubscribeAsync(subscribeOptions, cancellationToken).ConfigureAwait(false);
                 await _mqttClient.PublishAsync(requestMessage, cancellationToken).ConfigureAwait(false);
 
-                using (cancellationToken.Register(() => { promise.TrySetCanceled(); }))
+                using (cancellationToken.Register(() => { awaitable.TrySetCanceled(); }))
                 {
-                    return await promise.Task.ConfigureAwait(false);
+                    return await awaitable.Task.ConfigureAwait(false);
                 }
             }
             finally
@@ -127,15 +127,15 @@ namespace MQTTnet.Extensions.Rpc
 
         Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
-            if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var promise))
+            if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var awaitable))
             {
                 return PlatformAbstractionLayer.CompletedTask;
             }
 
 #if NET452
-            Task.Run(() => promise.TrySetResult(eventArgs.ApplicationMessage.Payload));
+            Task.Run(() => awaitable.TrySetResult(eventArgs.ApplicationMessage.Payload));
 #else
-            promise.TrySetResult(eventArgs.ApplicationMessage.Payload);
+            awaitable.TrySetResult(eventArgs.ApplicationMessage.Payload);
 #endif
 
             // Set this message to handled to that other code can avoid execution etc.

@@ -12,11 +12,11 @@ namespace MQTTnet.Server.Internal
     public sealed class MqttRetainedMessagesManager : IMqttRetainedMessagesManager
     {
         readonly AsyncLock _storageAccessLock = new AsyncLock();
-        readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>();
+        readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>(4096);
 
         IMqttNetScopedLogger _logger;
         IMqttServerOptions _options;
-
+        
         // TODO: Get rid of the logger here!
         public Task Start(IMqttServerOptions options, IMqttNetLogger logger)
         {
@@ -116,36 +116,7 @@ namespace MQTTnet.Server.Internal
                 _logger.Error(exception, "Unhandled exception while handling retained messages.");
             }
         }
-
-        public Task<IList<MqttApplicationMessage>> GetSubscribedMessagesAsync(ICollection<MqttTopicFilter> topicFilters)
-        {
-            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
-
-            var matchingRetainedMessages = new List<MqttApplicationMessage>();
-
-            List<MqttApplicationMessage> retainedMessages;
-            lock (_messages)
-            {
-                retainedMessages = _messages.Values.ToList();
-            }
-
-            foreach (var retainedMessage in retainedMessages)
-            {
-                foreach (var topicFilter in topicFilters)
-                {
-                    if (!MqttTopicFilterComparer.IsMatch(retainedMessage.Topic, topicFilter.Topic))
-                    {
-                        continue;
-                    }
-
-                    matchingRetainedMessages.Add(retainedMessage);
-                    break;
-                }
-            }
-
-            return Task.FromResult((IList<MqttApplicationMessage>)matchingRetainedMessages);
-        }
-
+        
         public Task<IList<MqttApplicationMessage>> GetMessagesAsync()
         {
             lock (_messages)

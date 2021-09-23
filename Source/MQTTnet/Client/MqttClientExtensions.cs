@@ -112,7 +112,7 @@ namespace MQTTnet.Client
             return client;
         }
 
-        public static Task<MqttClientAuthenticateResult> ReconnectAsync(this IMqttClient client)
+        public static Task<MqttClientConnectResult> ReconnectAsync(this IMqttClient client)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 
@@ -124,7 +124,7 @@ namespace MQTTnet.Client
             return client.ConnectAsync(client.Options);
         }
 
-        public static Task<MqttClientAuthenticateResult> ReconnectAsync(this IMqttClient client, CancellationToken cancellationToken)
+        public static Task<MqttClientConnectResult> ReconnectAsync(this IMqttClient client, CancellationToken cancellationToken)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 
@@ -195,7 +195,7 @@ namespace MQTTnet.Client
             return client.UnsubscribeAsync(options);
         }
 
-        public static Task<MqttClientAuthenticateResult> ConnectAsync(this IMqttClient client, IMqttClientOptions options)
+        public static Task<MqttClientConnectResult> ConnectAsync(this IMqttClient client, IMqttClientOptions options)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 

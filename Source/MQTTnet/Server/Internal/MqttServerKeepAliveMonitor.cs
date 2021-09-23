@@ -76,7 +76,7 @@ namespace MQTTnet.Server.Internal
                     return;
                 }
 
-                if (connection.ConnectPacket.KeepAlivePeriod == 0)
+                if (connection.KeepAlivePeriod == 0)
                 {
                     // The keep alive feature is not used by the current connection.
                     return;
@@ -92,7 +92,7 @@ namespace MQTTnet.Server.Internal
                 // Values described here: [MQTT-3.1.2-24].
                 // If the client sends 5 sec. the server will allow up to 7.5 seconds.
                 // If the client sends 1 sec. the server will allow up to 1.5 seconds.
-                var maxDurationWithoutPacket = connection.ConnectPacket.KeepAlivePeriod * 1.5D;
+                var maxDurationWithoutPacket = connection.KeepAlivePeriod * 1.5D;
 
                 var secondsWithoutPackage = (now - connection.Statistics.LastPacketReceivedTimestamp).TotalSeconds;
                 if (secondsWithoutPackage < maxDurationWithoutPacket)

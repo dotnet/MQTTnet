@@ -17,7 +17,7 @@ namespace MQTTnet.Server
 
         public MqttConnectionValidatorContext(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
         {
-            _connectPacket = connectPacket;
+            _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
             _clientAdapter = clientAdapter ?? throw new ArgumentNullException(nameof(clientAdapter));
         }
 
@@ -35,9 +35,9 @@ namespace MQTTnet.Server
 
         public MqttProtocolVersion ProtocolVersion => _clientAdapter.PacketFormatterAdapter.ProtocolVersion;
 
-        public string Username => _connectPacket?.Username;
+        public string Username => _connectPacket.Username;
 
-        public byte[] RawPassword => _connectPacket?.Password;
+        public byte[] RawPassword => _connectPacket.Password;
 
         public string Password => Encoding.UTF8.GetString(RawPassword ?? PlatformAbstractionLayer.EmptyByteArray);
 
@@ -45,7 +45,7 @@ namespace MQTTnet.Server
         /// Gets or sets the will delay interval.
         /// This is the time between the client disconnect and the time the will message will be sent.
         /// </summary>
-        public MqttApplicationMessage WillMessage => _connectPacket?.WillMessage;
+        public MqttApplicationMessage WillMessage => _connectPacket.WillMessage;
 
         /// <summary>
         /// Gets or sets a value indicating whether clean sessions are used or not.
@@ -55,7 +55,7 @@ namespace MQTTnet.Server
         /// It can also connect as a durable client using a persistent connection.
         /// In this mode, the broker will store subscription information, and undelivered messages for the client.
         /// </summary>
-        public bool? CleanSession => _connectPacket?.CleanSession;
+        public bool? CleanSession => _connectPacket.CleanSession;
 
         /// <summary>
         /// Gets or sets the keep alive period.
@@ -64,7 +64,7 @@ namespace MQTTnet.Server
         /// This message exchange confirms that the connection is open and working.
         /// This period is known as the keep alive period. 
         /// </summary>
-        public ushort? KeepAlivePeriod => _connectPacket?.KeepAlivePeriod;
+        public ushort? KeepAlivePeriod => _connectPacket.KeepAlivePeriod;
 
         /// <summary>
         /// Gets or sets the user properties.
@@ -73,57 +73,57 @@ namespace MQTTnet.Server
         /// The feature is very similar to the HTTP header concept.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public List<MqttUserProperty> UserProperties => _connectPacket?.Properties?.UserProperties;
+        public List<MqttUserProperty> UserProperties => _connectPacket.Properties?.UserProperties;
 
         /// <summary>
         /// Gets or sets the authentication data.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public byte[] AuthenticationData => _connectPacket?.Properties?.AuthenticationData;
+        public byte[] AuthenticationData => _connectPacket.Properties?.AuthenticationData;
 
         /// <summary>
         /// Gets or sets the authentication method.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public string AuthenticationMethod => _connectPacket?.Properties?.AuthenticationMethod;
+        public string AuthenticationMethod => _connectPacket.Properties?.AuthenticationMethod;
 
-        public uint? MaximumPacketSize => _connectPacket?.Properties?.MaximumPacketSize;
+        public uint? MaximumPacketSize => _connectPacket.Properties?.MaximumPacketSize;
 
         /// <summary>
         /// Gets or sets the receive maximum.
         /// This gives the maximum length of the receive messages.
         /// </summary>
-        public ushort? ReceiveMaximum => _connectPacket?.Properties?.ReceiveMaximum;
+        public ushort? ReceiveMaximum => _connectPacket.Properties?.ReceiveMaximum;
 
         /// <summary>
         /// Gets or sets the topic alias maximum.
         /// This gives the maximum length of the topic alias.
         /// </summary>
-        public ushort? TopicAliasMaximum => _connectPacket?.Properties?.TopicAliasMaximum;
+        public ushort TopicAliasMaximum => _connectPacket.Properties?.TopicAliasMaximum ?? 0;
 
         /// <summary>
         /// Gets the request problem information.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public bool? RequestProblemInformation => _connectPacket?.Properties?.RequestProblemInformation;
+        public bool? RequestProblemInformation => _connectPacket.Properties?.RequestProblemInformation;
 
         /// <summary>
         /// Gets the request response information.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public bool? RequestResponseInformation => _connectPacket?.Properties?.RequestResponseInformation;
+        public bool? RequestResponseInformation => _connectPacket.Properties?.RequestResponseInformation;
 
         /// <summary>
         /// Gets the session expiry interval.
         /// The time after a session expires when it's not actively used.
         /// </summary>
-        public uint? SessionExpiryInterval => _connectPacket?.Properties?.SessionExpiryInterval;
+        public uint? SessionExpiryInterval => _connectPacket.Properties?.SessionExpiryInterval;
 
         /// <summary>
         /// Gets or sets the will delay interval.
         /// This is the time between the client disconnect and the time the will message will be sent.
         /// </summary>
-        public uint? WillDelayInterval => _connectPacket?.Properties?.WillDelayInterval;
+        public uint? WillDelayInterval => _connectPacket.Properties?.WillDelayInterval;
 
         /// <summary>
         /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
@@ -144,7 +144,7 @@ namespace MQTTnet.Server
         /// Gets or sets the reason code. When a MQTTv3 client connects the enum value must be one which is
         /// also supported in MQTTv3. Otherwise the connection attempt will fail because not all codes can be
         /// converted properly.
-        /// Hint: MQTT 5 feature only.
+        /// MQTTv5 only.
         /// </summary>
         public MqttConnectReasonCode ReasonCode { get; set; } = MqttConnectReasonCode.Success;
 
@@ -159,12 +159,23 @@ namespace MQTTnet.Server
 
         /// <summary>
         /// Gets or sets the response authentication data.
-        /// Hint: MQTT 5 feature only.
+        /// MQTTv5 only.
         /// </summary>
         public byte[] ResponseAuthenticationData { get; set; }
 
+        /// <summary>
+        /// Gets or sets the assigned client identifier.
+        /// MQTTv5 only.
+        /// </summary>
         public string AssignedClientIdentifier { get; set; }
 
         public string ReasonString { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the server reference. This can be used together with i.e. "Server Moved" to send
+        /// a different server address to the client.
+        /// MQTTv5 only.
+        /// </summary>
+        public string ServerReference { get; set; }
     }
 }

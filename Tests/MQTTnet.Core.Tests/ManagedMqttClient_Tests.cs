@@ -60,7 +60,7 @@ namespace MQTTnet.Tests
             {
                 var receivedMessagesCount = 0;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").WithAtMostOnceQoS().Build();
                 var clientOptions = new MqttClientOptionsBuilder()
@@ -72,7 +72,7 @@ namespace MQTTnet.Tests
                     .WithClientOptions(clientOptions)
                     .Build());
 
-                var recievingClient = await testEnvironment.ConnectClientAsync();
+                var recievingClient = await testEnvironment.ConnectClient();
                 await recievingClient.SubscribeAsync("My/last/will");
 
                 recievingClient.UseApplicationMessageReceivedHandler(context => Interlocked.Increment(ref receivedMessagesCount));
@@ -90,7 +90,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
 
                 var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger());
                 var clientOptions = new MqttClientOptionsBuilder()
@@ -120,7 +120,7 @@ namespace MQTTnet.Tests
                 testEnvironment.IgnoreClientLogErrors = true;
                 testEnvironment.IgnoreServerLogErrors = true;
 
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetLogger());
                 var clientOptions = new MqttClientOptionsBuilder()
@@ -185,7 +185,7 @@ namespace MQTTnet.Tests
                 //wait a bit for the subscriptions to become established before the messages are published
                 await Task.Delay(500);
 
-                var sendingClient = await testEnvironment.ConnectClientAsync();
+                var sendingClient = await testEnvironment.ConnectClient();
 
                 async Task PublishMessages()
                 {
@@ -234,7 +234,7 @@ namespace MQTTnet.Tests
             {
                 var managedClient = await CreateManagedClientAsync(testEnvironment);
 
-                var sendingClient = await testEnvironment.ConnectClientAsync();
+                var sendingClient = await testEnvironment.ConnectClient();
 
                 await managedClient.SubscribeAsync("topic");
 
@@ -269,7 +269,7 @@ namespace MQTTnet.Tests
                 // do not depend on the connection check interval anymore
                 var connectionCheckInterval = TimeSpan.FromSeconds(10);
                 var managedClient = await CreateManagedClientAsync(testEnvironment, null, connectionCheckInterval);
-                var sendingClient = await testEnvironment.ConnectClientAsync();
+                var sendingClient = await testEnvironment.ConnectClient();
                  
                 await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", Payload = new byte[] { 1 }, Retain = true });
 
@@ -292,9 +292,9 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync().ConfigureAwait(false);
+                await testEnvironment.StartServer().ConfigureAwait(false);
 
-                var sendingClient = await testEnvironment.ConnectClientAsync().ConfigureAwait(false);
+                var sendingClient = await testEnvironment.ConnectClient().ConfigureAwait(false);
                 await sendingClient.PublishAsync(new MqttApplicationMessage
                 {
                     Topic = "topic",
@@ -360,7 +360,7 @@ namespace MQTTnet.Tests
                 testEnvironment.IgnoreClientLogErrors = true;
 
                 var serverOptions = new MqttServerOptionsBuilder();
-                await testEnvironment.StartServerAsync(serverOptions);
+                await testEnvironment.StartServer(serverOptions);
 
                 var options = new MqttClientOptionsBuilder().WithClientId("1").WithKeepAlivePeriod(TimeSpan.FromSeconds(5));
                 
@@ -384,7 +384,7 @@ namespace MQTTnet.Tests
                 await Task.Delay(10000); // over 1.5T
 
                 var option2 = new MqttClientOptionsBuilder().WithClientId("2").WithKeepAlivePeriod(TimeSpan.FromSeconds(10));
-                var sendClient = await testEnvironment.ConnectClientAsync(option2);
+                var sendClient = await testEnvironment.ConnectClient(option2);
                 await sendClient.PublishAsync("aaa", "1");
                 
                 await Task.Delay(3000);
@@ -398,7 +398,7 @@ namespace MQTTnet.Tests
 
             try
             {
-                var sendClient = await testEnvironment.ConnectClientAsync(options);
+                var sendClient = await testEnvironment.ConnectClient(options);
                 sendClient.ApplicationMessageReceivedHandler = new MQTTnet.Client.Receiving.MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     onReceive();
@@ -417,7 +417,7 @@ namespace MQTTnet.Tests
             IMqttClient underlyingClient = null,
             TimeSpan? connectionCheckInterval = null)
         {
-            await testEnvironment.StartServerAsync();
+            await testEnvironment.StartServer();
 
             var clientOptions = new MqttClientOptionsBuilder()
               .WithTcpServer("localhost", testEnvironment.ServerPort);

@@ -5,21 +5,20 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public sealed class Server_KeepAlive_Tests
+    public sealed class KeepAlive_Tests : BaseTestClass
     {
         [TestMethod]
         public async Task Disconnect_Client_DueTo_KeepAlive()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = CreateTestEnvironment())
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
-                var client = await testEnvironment.ConnectLowLevelClientAsync(o => o
+                var client = await testEnvironment.ConnectLowLevelClient(o => o
                     .WithCommunicationTimeout(TimeSpan.FromSeconds(1))
                     .WithCommunicationTimeout(TimeSpan.Zero)
                     .WithProtocolVersion(MqttProtocolVersion.V500)).ConfigureAwait(false);
@@ -27,7 +26,7 @@ namespace MQTTnet.Tests
                 await client.SendAsync(new MqttConnectPacket
                 {
                     CleanSession = true,
-                    ClientId = "abc",
+                    ClientId = "Disconnect_Client_DueTo_KeepAlive",
                     KeepAlivePeriod = 1
                 }, CancellationToken.None).ConfigureAwait(false);
 

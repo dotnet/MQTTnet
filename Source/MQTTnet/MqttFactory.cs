@@ -7,6 +7,9 @@ using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MQTTnet.Client.Options;
+using MQTTnet.Client.Subscribing;
+using MQTTnet.Client.Unsubscribing;
 
 namespace MQTTnet
 {
@@ -119,6 +122,36 @@ namespace MQTTnet
             if (serverAdapters == null) throw new ArgumentNullException(nameof(serverAdapters));
 
             return new MqttServer(serverAdapters, DefaultLogger);
+        }
+       
+        public MqttClientOptionsBuilder CreateClientOptionsBuilder()
+        {
+            return new MqttClientOptionsBuilder();
+        }
+        
+        public MqttServerOptionsBuilder CreateServerOptionsBuilder()
+        {
+            return new MqttServerOptionsBuilder();
+        }
+        
+        public MqttClientSubscribeOptionsBuilder CreateSubscribeOptionsBuilder()
+        {
+            return new MqttClientSubscribeOptionsBuilder();
+        }
+        
+        public MqttClientUnsubscribeOptionsBuilder CreateUnsubscribeOptionsBuilder()
+        {
+            return new MqttClientUnsubscribeOptionsBuilder();
+        }
+        
+        public MqttTopicFilterBuilder CreateTopicFilterBuilder()
+        {
+            return new MqttTopicFilterBuilder();
+        }
+
+        public MqttApplicationMessageBuilder CreateApplicationMessageBuilder()
+        {
+            return new MqttApplicationMessageBuilder();
         }
     }
 }

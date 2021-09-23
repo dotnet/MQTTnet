@@ -18,7 +18,7 @@ namespace MQTTnet.Client.Subscribing
         /// The broker will return the subscription identifier associated with this PUBLISH packet and the PUBLISH packet to the client when need to forward PUBLISH packets matching this subscription to this client.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public uint? SubscriptionIdentifier { get; set; }
+        public uint SubscriptionIdentifier { get; set; }
 
         /// <summary>
         /// Gets or sets the user properties.

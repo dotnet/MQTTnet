@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
@@ -11,6 +11,10 @@ namespace MQTTnet.Server
 
         public bool IsRetainedMessage { get; set; }
 
+        public List<uint> SubscriptionIdentifiers { get; set; }
+        
+        public bool IsDuplicate { get; set; }
+        
         /// <summary>
         /// Gets or sets the subscription quality of service level.
         /// The Quality of Service (QoS) level is an agreement between the sender of a message and the receiver of a message that defines the guarantee of delivery for a specific message.
@@ -20,14 +24,5 @@ namespace MQTTnet.Server
         /// - Exactly once  (2): Message gets delivered exactly once (It's ensured that the message only comes once).
         /// </summary>
         public MqttQualityOfServiceLevel SubscriptionQualityOfServiceLevel { get; set; }
-
-        [Obsolete("Use 'SubscriptionQualityOfServiceLevel' instead.")]
-        public MqttQualityOfServiceLevel QualityOfServiceLevel
-        {
-            get => SubscriptionQualityOfServiceLevel;
-            set => SubscriptionQualityOfServiceLevel = value;
-        }
-
-        public bool IsDuplicate { get; set; }
     }
 }

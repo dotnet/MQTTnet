@@ -4,15 +4,15 @@ namespace MQTTnet.Client.Connecting
 {
     public class MqttClientConnectedEventArgs : EventArgs
     {
-        public MqttClientConnectedEventArgs(MqttClientAuthenticateResult authenticateResult)
+        public MqttClientConnectedEventArgs(MqttClientConnectResult connectResult)
         {
-            AuthenticateResult = authenticateResult ?? throw new ArgumentNullException(nameof(authenticateResult));
+            ConnectResult = connectResult ?? throw new ArgumentNullException(nameof(connectResult));
         }
 
         /// <summary>
         /// Gets the authentication result.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public MqttClientAuthenticateResult AuthenticateResult { get; }
+        public MqttClientConnectResult ConnectResult { get; }
     }
 }

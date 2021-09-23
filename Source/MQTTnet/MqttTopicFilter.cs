@@ -29,22 +29,22 @@ namespace MQTTnet
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether to not send messages originating on this client (noLocal) or not.
+        /// Gets or sets a value indicating whether the sender will not receive its own published application messages.
         /// </summary>
         /// Hint: MQTT 5 feature only.
-        public bool? NoLocal { get; set; }
+        public bool NoLocal { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether messages are retained as published or not.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public bool? RetainAsPublished { get; set; }
+        public bool RetainAsPublished { get; set; }
 
         /// <summary>
         /// Gets or sets the retain handling.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public MqttRetainHandling? RetainHandling { get; set; }
+        public MqttRetainHandling RetainHandling { get; set; }
 
         public override string ToString()
         {

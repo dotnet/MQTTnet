@@ -11,7 +11,7 @@ using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Formatter.V3
 {
@@ -85,12 +85,12 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        public MqttClientAuthenticateResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
+        public MqttClientConnectResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
         {
             if (connAckPacket == null) throw new ArgumentNullException(nameof(connAckPacket));
 
             MqttClientConnectResultCode resultCode;
-            switch (connAckPacket.ReturnCode.Value)
+            switch (connAckPacket.ReturnCode)
             {
                 case MqttConnectReturnCode.ConnectionAccepted:
                     {
@@ -132,8 +132,10 @@ namespace MQTTnet.Formatter.V3
                     throw new MqttProtocolViolationException("Received unexpected return code.");
             }
 
-            return new MqttClientAuthenticateResult
+            return new MqttClientConnectResult
             {
+                RetainAvailable = true, // Always true because v3.1.1 does not have a way to "disable" that feature.
+                WildcardSubscriptionAvailable = true, // Always true because v3.1.1 does not have a way to "disable" that feature.
                 IsSessionPresent = connAckPacket.IsSessionPresent,
                 ResultCode = resultCode
             };
@@ -205,7 +207,7 @@ namespace MQTTnet.Formatter.V3
             return subscribePacket;
         }
 
-        public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, Server.MqttClientSubscribeResult subscribeResult)
+        public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, SubscribeResult subscribeResult)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
             if (subscribeResult == null) throw new ArgumentNullException(nameof(subscribeResult));

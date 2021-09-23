@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Internal;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Server.Internal
 {
@@ -18,20 +17,7 @@ namespace MQTTnet.Server.Internal
         }
 
         public int Count => _messageQueue.Count;
-
-        public void Enqueue(MqttApplicationMessage applicationMessage, string senderClientId, MqttQualityOfServiceLevel qualityOfServiceLevel, bool isRetainedMessage)
-        {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
-
-            Enqueue(new MqttQueuedApplicationMessage
-            {
-                ApplicationMessage = applicationMessage,
-                SenderClientId = senderClientId,
-                SubscriptionQualityOfServiceLevel = qualityOfServiceLevel,
-                IsRetainedMessage = isRetainedMessage
-            });
-        }
-
+        
         public void Enqueue(MqttQueuedApplicationMessage queuedApplicationMessage)
         {
             if (queuedApplicationMessage == null) throw new ArgumentNullException(nameof(queuedApplicationMessage));
@@ -55,7 +41,7 @@ namespace MQTTnet.Server.Internal
             }
         }
 
-        public async Task<MqttQueuedApplicationMessage> DequeueAsync(CancellationToken cancellationToken)
+        public async Task<MqttQueuedApplicationMessage> Dequeue(CancellationToken cancellationToken)
         {
             var dequeueResult = await _messageQueue.TryDequeueAsync(cancellationToken).ConfigureAwait(false);
             if (!dequeueResult.IsSuccess)

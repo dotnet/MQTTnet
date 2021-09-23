@@ -11,7 +11,7 @@ using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MqttClientSubscribeResult = MQTTnet.Client.Subscribing.MqttClientSubscribeResult;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Formatter.V5
 {
@@ -115,16 +115,16 @@ namespace MQTTnet.Formatter.V5
             };
         }
 
-        public MqttClientAuthenticateResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
+        public MqttClientConnectResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
         {
             if (connAckPacket == null) throw new ArgumentNullException(nameof(connAckPacket));
 
-            return new MqttClientAuthenticateResult
+            return new MqttClientConnectResult
             {
                 IsSessionPresent = connAckPacket.IsSessionPresent,
-                ResultCode = (MqttClientConnectResultCode)(int)(connAckPacket.ReasonCode ?? 0),
-                WildcardSubscriptionAvailable = connAckPacket.Properties?.WildcardSubscriptionAvailable,
-                RetainAvailable = connAckPacket.Properties?.RetainAvailable,
+                ResultCode = (MqttClientConnectResultCode)(int)connAckPacket.ReasonCode,
+                WildcardSubscriptionAvailable = connAckPacket.Properties?.WildcardSubscriptionAvailable ?? true,
+                RetainAvailable = connAckPacket.Properties?.RetainAvailable ?? true,
                 AssignedClientIdentifier = connAckPacket.Properties?.AssignedClientIdentifier,
                 AuthenticationMethod = connAckPacket.Properties?.AuthenticationMethod,
                 AuthenticationData = connAckPacket.Properties?.AuthenticationData,
@@ -133,13 +133,13 @@ namespace MQTTnet.Formatter.V5
                 ReceiveMaximum = connAckPacket.Properties?.ReceiveMaximum,
                 MaximumQoS = connAckPacket.Properties?.MaximumQoS ?? MqttQualityOfServiceLevel.ExactlyOnce,
                 ResponseInformation = connAckPacket.Properties?.ResponseInformation,
-                TopicAliasMaximum = connAckPacket.Properties?.TopicAliasMaximum,
+                TopicAliasMaximum = connAckPacket.Properties?.TopicAliasMaximum ?? 0,
                 ServerReference = connAckPacket.Properties?.ServerReference,
                 ServerKeepAlive = connAckPacket.Properties?.ServerKeepAlive,
                 SessionExpiryInterval = connAckPacket.Properties?.SessionExpiryInterval,
-                SubscriptionIdentifiersAvailable = connAckPacket.Properties?.SubscriptionIdentifiersAvailable,
-                SharedSubscriptionAvailable = connAckPacket.Properties?.SharedSubscriptionAvailable,
-                UserProperties = connAckPacket.Properties?.UserProperties
+                SubscriptionIdentifiersAvailable = connAckPacket.Properties?.SubscriptionIdentifiersAvailable ?? true,
+                SharedSubscriptionAvailable = connAckPacket.Properties?.SharedSubscriptionAvailable ?? true,
+                UserProperties = connAckPacket.Properties?.UserProperties ?? new List<MqttUserProperty>()
             };
         }
 
@@ -180,12 +180,18 @@ namespace MQTTnet.Formatter.V5
                 ReasonCode = connectionValidatorContext.ReasonCode,
                 Properties = new MqttConnAckPacketProperties
                 {
+                    RetainAvailable = true,
+                    SubscriptionIdentifiersAvailable = true,
+                    SharedSubscriptionAvailable = false,
+                    TopicAliasMaximum = ushort.MaxValue,
+                    WildcardSubscriptionAvailable = true,
+                    
                     UserProperties = connectionValidatorContext.ResponseUserProperties,
                     AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
                     AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
                     AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,
                     ReasonString = connectionValidatorContext.ReasonString,
-                    TopicAliasMaximum = ushort.MaxValue
+                    ServerReference = connectionValidatorContext.ServerReference
                 }
             };
         }
@@ -242,7 +248,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, Server.MqttClientSubscribeResult subscribeResult)
+        public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, SubscribeResult subscribeResult)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
             if (subscribeResult == null) throw new ArgumentNullException(nameof(subscribeResult));

@@ -1,6 +1,7 @@
-﻿using MQTTnet.Protocol;
+﻿using MQTTnet.Formatter;
+using MQTTnet.Protocol;
 
-namespace MQTTnet.Formatter
+namespace MQTTnet.Tests.Extensions
 {
     public static class MqttPacketWriterExtensions
     {

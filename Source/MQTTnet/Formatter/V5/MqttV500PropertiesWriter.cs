@@ -74,12 +74,12 @@ namespace MQTTnet.Formatter.V5
             WriteAsFourByteInteger(MqttPropertyId.SessionExpiryInterval, value);
         }
 
-        public void WriteSubscriptionIdentifier(uint? value)
+        public void WriteSubscriptionIdentifier(uint value)
         {
             WriteAsVariableLengthInteger(MqttPropertyId.SubscriptionIdentifier, value);
         }
 
-        public void WriteSubscriptionIdentifiers(IEnumerable<uint> value)
+        public void WriteSubscriptionIdentifiers(ICollection<uint> value)
         {
             if (value == null)
             {
@@ -148,9 +148,15 @@ namespace MQTTnet.Formatter.V5
             WriteAsFourByteInteger(MqttPropertyId.MaximumPacketSize, value);
         }
 
-        public void WriteRetainAvailable(bool? value)
+        public void WriteRetainAvailable(bool value)
         {
-            Write(MqttPropertyId.RetainAvailable, value);
+            if (value)
+            {
+                // Absence of the flag means it is supported! 
+                return;
+            }
+            
+            Write(MqttPropertyId.RetainAvailable, false);
         }
 
         public void WriteAssignedClientIdentifier(string value)
@@ -168,14 +174,26 @@ namespace MQTTnet.Formatter.V5
             Write(MqttPropertyId.WildcardSubscriptionAvailable, value);
         }
 
-        public void WriteSubscriptionIdentifiersAvailable(bool? value)
+        public void WriteSubscriptionIdentifiersAvailable(bool value)
         {
-            Write(MqttPropertyId.SubscriptionIdentifiersAvailable, value);
+            if (value)
+            {
+                // Absence of the flag means it is supported! 
+                return;
+            }
+            
+            Write(MqttPropertyId.SubscriptionIdentifiersAvailable, false);
         }
 
-        public void WriteSharedSubscriptionAvailable(bool? value)
+        public void WriteSharedSubscriptionAvailable(bool value)
         {
-            Write(MqttPropertyId.SharedSubscriptionAvailable, value);
+            if (value)
+            {
+                // Absence of the flag means it is supported! 
+                return;
+            }
+            
+            Write(MqttPropertyId.SharedSubscriptionAvailable, false);
         }
 
         public void WriteServerKeepAlive(ushort? value)
@@ -221,15 +239,10 @@ namespace MQTTnet.Formatter.V5
             _packetWriter.Write(value.Value);
         }
 
-        void WriteAsVariableLengthInteger(MqttPropertyId id, uint? value)
+        void WriteAsVariableLengthInteger(MqttPropertyId id, uint value)
         {
-            if (!value.HasValue)
-            {
-                return;
-            }
-
             _packetWriter.Write((byte)id);
-            _packetWriter.WriteVariableLengthInteger(value.Value);
+            _packetWriter.WriteVariableLengthInteger(value);
         }
 
         void WriteAsFourByteInteger(MqttPropertyId id, uint? value)

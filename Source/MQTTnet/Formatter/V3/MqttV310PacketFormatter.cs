@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
@@ -407,7 +408,7 @@ namespace MQTTnet.Formatter.V3
         protected virtual byte EncodeConnAckPacket(MqttConnAckPacket packet, IMqttPacketWriter packetWriter)
         {
             packetWriter.Write(0); // Reserved.
-            packetWriter.Write((byte)packet.ReturnCode.Value);
+            packetWriter.Write((byte)packet.ReturnCode);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }
@@ -520,6 +521,21 @@ namespace MQTTnet.Formatter.V3
             {
                 foreach (var topicFilter in packet.TopicFilters)
                 {
+                    if (topicFilter.NoLocal)
+                    {
+                        throw new MqttProtocolViolationException("NoLocal is not supported in 3.1.1.");
+                    }
+
+                    if (topicFilter.RetainAsPublished)
+                    {
+                        throw new MqttProtocolViolationException("RetainAsPublished is not supported in 3.1.1.");
+                    }
+                    
+                    if (topicFilter.RetainHandling != MqttRetainHandling.SendAtSubscribe)
+                    {
+                        throw new MqttProtocolViolationException("RetainHandling is not supported in 3.1.1.");
+                    }
+                    
                     packetWriter.WriteWithLengthPrefix(topicFilter.Topic);
                     packetWriter.Write((byte)topicFilter.QualityOfServiceLevel);
                 }

@@ -7,17 +7,17 @@ using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public sealed class Server_Events_Tests : BaseTestClass
+    public sealed class Events_Tests : BaseTestClass
     {
         [TestMethod]
         public async Task Fire_Client_Connected_Event()
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
 
                 MqttServerClientConnectedEventArgs eventArgs = null;
                 server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(e =>
@@ -25,14 +25,14 @@ namespace MQTTnet.Tests
                     eventArgs = e;
                 });
 
-                await testEnvironment.ConnectClientAsync(o => o.WithCredentials("TheUser"));
+                await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 
-                await LongDelay();
+                await LongTestDelay();
                 
                 Assert.IsNotNull(eventArgs);
                 
                 Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Connected_Event)));
-                Assert.IsTrue(eventArgs.Endpoint.Contains("::1"));
+                Assert.IsTrue(eventArgs.Endpoint.Contains("127.0.0.1"));
                 Assert.AreEqual(MqttProtocolVersion.V311, eventArgs.ProtocolVersion);
                 Assert.AreEqual("TheUser", eventArgs.UserName);
             }
@@ -43,7 +43,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
 
                 MqttServerClientDisconnectedEventArgs eventArgs = null;
                 server.ClientDisconnectedHandler = new MqttServerClientDisconnectedHandlerDelegate(e =>
@@ -51,15 +51,15 @@ namespace MQTTnet.Tests
                     eventArgs = e;
                 });
 
-                var client = await testEnvironment.ConnectClientAsync(o => o.WithCredentials("TheUser"));
+                var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 await client.DisconnectAsync();
                 
-                await LongDelay();
+                await LongTestDelay();
                 
                 Assert.IsNotNull(eventArgs);
                 
                 Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Disconnected_Event)));
-                Assert.IsTrue(eventArgs.Endpoint.Contains("::1"));
+                Assert.IsTrue(eventArgs.Endpoint.Contains("127.0.0.1"));
                 Assert.AreEqual(MqttClientDisconnectType.Clean, eventArgs.DisconnectType);
             }
         }
@@ -69,7 +69,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
 
                 MqttServerClientSubscribedTopicEventArgs eventArgs = null;
                 server.ClientSubscribedTopicHandler = new MqttServerClientSubscribedTopicHandlerDelegate(e =>
@@ -77,10 +77,10 @@ namespace MQTTnet.Tests
                     eventArgs = e;
                 });
 
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
                 await client.SubscribeAsync("The/Topic", MqttQualityOfServiceLevel.AtLeastOnce);
                 
-                await LongDelay();
+                await LongTestDelay();
                 
                 Assert.IsNotNull(eventArgs);
                 
@@ -95,7 +95,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
         
                 MqttServerClientUnsubscribedTopicEventArgs eventArgs = null;
                 server.ClientUnsubscribedTopicHandler = new MqttServerClientUnsubscribedTopicHandlerDelegate(e =>
@@ -103,10 +103,10 @@ namespace MQTTnet.Tests
                     eventArgs = e;
                 });
         
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
                 await client.UnsubscribeAsync("The/Topic");
                 
-                await LongDelay();
+                await LongTestDelay();
                 
                 Assert.IsNotNull(eventArgs);
                 
@@ -120,7 +120,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
         
                 MqttApplicationMessageReceivedEventArgs eventArgs = null;
                 server.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
@@ -128,10 +128,10 @@ namespace MQTTnet.Tests
                     eventArgs = e;
                 });
         
-                var client = await testEnvironment.ConnectClientAsync();
+                var client = await testEnvironment.ConnectClient();
                 await client.PublishAsync("The_Topic", "The_Payload");
                 
-                await LongDelay();
+                await LongTestDelay();
                 
                 Assert.IsNotNull(eventArgs);
                 
@@ -156,7 +156,7 @@ namespace MQTTnet.Tests
 
                 await server.StartAsync(new MqttServerOptionsBuilder().Build());
         
-                await LongDelay();
+                await LongTestDelay();
                 
                 Assert.IsNotNull(eventArgs);
             }
@@ -167,7 +167,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var server = await testEnvironment.StartServerAsync();
+                var server = await testEnvironment.StartServer();
         
                 EventArgs eventArgs = null;
                 server.StoppedHandler = new MqttServerStoppedHandlerDelegate(e =>
@@ -177,7 +177,7 @@ namespace MQTTnet.Tests
 
                 await server.StopAsync();
         
-                await LongDelay();
+                await LongTestDelay();
                 
                 Assert.IsNotNull(eventArgs);
             }

@@ -5,11 +5,11 @@ namespace MQTTnet.Client.Disconnecting
 {
     public sealed class MqttClientDisconnectedEventArgs : EventArgs
     {
-        public MqttClientDisconnectedEventArgs(bool clientWasConnected, Exception exception, MqttClientAuthenticateResult authenticateResult, MqttClientDisconnectReason reason)
+        public MqttClientDisconnectedEventArgs(bool clientWasConnected, Exception exception, MqttClientConnectResult connectResult, MqttClientDisconnectReason reason)
         {
             ClientWasConnected = clientWasConnected;
             Exception = exception;
-            AuthenticateResult = authenticateResult;
+            ConnectResult = connectResult;
             Reason = reason;
 
             ReasonCode = reason;
@@ -23,7 +23,7 @@ namespace MQTTnet.Client.Disconnecting
         /// Gets the authentication result.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public MqttClientAuthenticateResult AuthenticateResult { get; }
+        public MqttClientConnectResult ConnectResult { get; }
 
         /// <summary>
         /// Gets or sets the reason.

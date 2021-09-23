@@ -9,9 +9,9 @@ namespace MQTTnet.Formatter.V5
 {
     public class MqttV500PacketDecoder
     {
-        private static readonly MqttPingReqPacket PingReqPacket = new MqttPingReqPacket();
+        static readonly MqttPingReqPacket PingReqPacket = new MqttPingReqPacket();
 
-        private static readonly MqttPingRespPacket PingRespPacket = new MqttPingRespPacket();
+        static readonly MqttPingRespPacket PingRespPacket = new MqttPingRespPacket();
 
         public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
@@ -45,7 +45,7 @@ namespace MQTTnet.Formatter.V5
             }
         }
 
-        private static MqttBasePacket DecodeConnectPacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodeConnectPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -214,7 +214,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeConnAckPacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodeConnAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -225,15 +225,17 @@ namespace MQTTnet.Formatter.V5
                 IsSessionPresent = (acknowledgeFlags & 0x1) > 0,
                 ReasonCode = (MqttConnectReasonCode)body.ReadByte()
             };
+            
+            // Set all default values according to specification. When they are missing the often
+            // indicate that a feature is available.
+            packet.Properties.RetainAvailable = true;
+            packet.Properties.SharedSubscriptionAvailable = true;
+            packet.Properties.SubscriptionIdentifiersAvailable = true;
+            packet.Properties.WildcardSubscriptionAvailable = true;
 
             var propertiesReader = new MqttV500PropertiesReader(body);
             while (propertiesReader.MoveNext())
             {
-                if (packet.Properties == null)
-                {
-                    packet.Properties = new MqttConnAckPacketProperties();
-                }
-
                 if (propertiesReader.CurrentPropertyId == MqttPropertyId.SessionExpiryInterval)
                 {
                     packet.Properties.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval();
@@ -316,7 +318,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeDisconnectPacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodeDisconnectPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -363,7 +365,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubscribePacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodeSubscribePacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -422,7 +424,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeSubAckPacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodeSubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -467,7 +469,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeUnsubscribePacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodeUnsubscribePacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -507,7 +509,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeUnsubAckPacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodeUnsubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -552,17 +554,17 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodePingReqPacket()
+        static MqttBasePacket DecodePingReqPacket()
         {
             return PingReqPacket;
         }
 
-        private static MqttBasePacket DecodePingRespPacket()
+        static MqttBasePacket DecodePingRespPacket()
         {
             return PingRespPacket;
         }
 
-        private static MqttBasePacket DecodePublishPacket(byte header, IMqttPacketBodyReader body)
+        static MqttBasePacket DecodePublishPacket(byte header, IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -647,7 +649,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodePubAckPacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodePubAckPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -694,7 +696,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodePubRecPacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodePubRecPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -741,7 +743,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodePubRelPacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodePubRelPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -788,7 +790,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodePubCompPacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodePubCompPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -835,7 +837,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        private static MqttBasePacket DecodeAuthPacket(IMqttPacketBodyReader body)
+        static MqttBasePacket DecodeAuthPacket(IMqttPacketBodyReader body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -888,7 +890,7 @@ namespace MQTTnet.Formatter.V5
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        private static void ThrowIfBodyIsEmpty(IMqttPacketBodyReader body)
+        static void ThrowIfBodyIsEmpty(IMqttPacketBodyReader body)
         {
             if (body == null || body.Length == 0)
             {

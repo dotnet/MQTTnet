@@ -3,7 +3,7 @@ using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {
-    public class MqttServerOptions : IMqttServerOptions
+    public sealed class MqttServerOptions : IMqttServerOptions
     {
         public MqttServerTcpEndpointOptions DefaultEndpointOptions { get; } = new MqttServerTcpEndpointOptions();
 

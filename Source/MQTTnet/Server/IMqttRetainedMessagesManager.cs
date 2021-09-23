@@ -15,7 +15,5 @@ namespace MQTTnet.Server
         Task HandleMessageAsync(string clientId, MqttApplicationMessage applicationMessage);
 
         Task<IList<MqttApplicationMessage>> GetMessagesAsync();
-
-        Task<IList<MqttApplicationMessage>> GetSubscribedMessagesAsync(ICollection<MqttTopicFilter> topicFilters);
     }
 }

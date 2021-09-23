@@ -2,7 +2,7 @@
 
 namespace MQTTnet.PacketDispatcher
 {
-    public sealed class MqttPacketAwaiterPacketFilter
+    public sealed class MqttPacketAwaitableFilter
     {
         public Type Type { get; set; }
         

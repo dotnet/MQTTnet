@@ -18,9 +18,9 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
-                var receiverClient = await testEnvironment.ConnectClientAsync();
-                var senderClient = await testEnvironment.ConnectClientAsync();
+                await testEnvironment.StartServer();
+                var receiverClient = await testEnvironment.ConnectClient();
+                var senderClient = await testEnvironment.ConnectClient();
 
                 await receiverClient.SubscribeAsync("#");
                 

@@ -36,7 +36,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var factory = new MqttFactory();
                 var lowLevelClient = factory.CreateLowLevelMqttClient();
@@ -52,7 +52,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var factory = new MqttFactory();
                 var lowLevelClient = factory.CreateLowLevelMqttClient();
@@ -73,7 +73,7 @@ namespace MQTTnet.Tests
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                await testEnvironment.StartServerAsync();
+                await testEnvironment.StartServer();
 
                 var factory = new MqttFactory();
                 var lowLevelClient = factory.CreateLowLevelMqttClient();
@@ -97,8 +97,8 @@ namespace MQTTnet.Tests
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 testEnvironment.ServerPort = 8364;
-                var server = await testEnvironment.StartServerAsync();
-                var client = await testEnvironment.ConnectLowLevelClientAsync(o => o.WithCommunicationTimeout(TimeSpan.Zero));
+                var server = await testEnvironment.StartServer();
+                var client = await testEnvironment.ConnectLowLevelClient(o => o.WithCommunicationTimeout(TimeSpan.Zero));
 
                 await Authenticate(client).ConfigureAwait(false);
 

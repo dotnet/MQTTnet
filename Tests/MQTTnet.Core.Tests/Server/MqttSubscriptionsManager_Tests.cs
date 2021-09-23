@@ -1,13 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using MQTTnet.Tests.Mockups;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
 using MQTTnet.Server.Internal;
+using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Server
 {
     [TestClass]
     public class MqttSubscriptionsManager_Tests
@@ -17,14 +17,14 @@ namespace MQTTnet.Tests
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventDispatcher(new TestLogger()), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
 
-            await sm.SubscribeAsync(sp, new MqttConnectPacket());
+            await sm.Subscribe(sp);
 
-            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce);
+            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce, "");
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
         }
@@ -34,14 +34,14 @@ namespace MQTTnet.Tests
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventDispatcher(new TestLogger()), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
 
-            await sm.SubscribeAsync(sp, new MqttConnectPacket());
+            await sm.Subscribe(sp);
 
-            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce);
+            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce, "");
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
         }
@@ -51,15 +51,15 @@ namespace MQTTnet.Tests
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventDispatcher(new TestLogger()), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilter { Topic = "#", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
             sp.TopicFilters.Add(new MqttTopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
-            await sm.SubscribeAsync(sp, new MqttConnectPacket());
+            await sm.Subscribe(sp);
 
-            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce);
+            var result = sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce, "");
             Assert.IsTrue(result.IsSubscribed);
             Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtLeastOnce);
         }
@@ -69,14 +69,14 @@ namespace MQTTnet.Tests
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventDispatcher(new TestLogger()), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
 
-            await sm.SubscribeAsync(sp, new MqttConnectPacket());
+            await sm.Subscribe(sp);
 
-            Assert.IsFalse(sm.CheckSubscriptions("A/B/X", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
+            Assert.IsFalse(sm.CheckSubscriptions("A/B/X", MqttQualityOfServiceLevel.AtMostOnce, "").IsSubscribed);
         }
 
         [TestMethod]
@@ -84,20 +84,20 @@ namespace MQTTnet.Tests
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerEventDispatcher(new TestLogger()), new MqttServerOptions());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventDispatcher(new TestLogger()), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
 
-            await sm.SubscribeAsync(sp, new MqttConnectPacket());
+            await sm.Subscribe(sp);
 
-            Assert.IsTrue(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
+            Assert.IsTrue(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce, "").IsSubscribed);
 
             var up = new MqttUnsubscribePacket();
             up.TopicFilters.Add("A/B/C");
-            await sm.UnsubscribeAsync(up);
+            await sm.Unsubscribe(up);
 
-            Assert.IsFalse(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce).IsSubscribed);
+            Assert.IsFalse(sm.CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce, "").IsSubscribed);
         }
 
         MqttClientSession CreateSession()
@@ -107,8 +107,7 @@ namespace MQTTnet.Tests
                 new ConcurrentDictionary<object, object>(),
                 new MqttServerEventDispatcher(new TestLogger()),
                 new MqttServerOptions(),
-                new MqttRetainedMessagesManager(),
-                new TestLogger());
+                new MqttRetainedMessagesManager());
         }
     }
 }

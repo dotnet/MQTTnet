@@ -6,33 +6,33 @@ namespace MQTTnet.PacketDispatcher
 {
     public sealed class MqttPacketDispatcher
     {
-        readonly List<IMqttPacketAwaiter> _awaiters = new List<IMqttPacketAwaiter>();
+        readonly List<IMqttPacketAwaitable> _awaitables = new List<IMqttPacketAwaitable>();
 
         public void FailAll(Exception exception)
         {
             if (exception == null) throw new ArgumentNullException(nameof(exception));
 
-            lock (_awaiters)
+            lock (_awaitables)
             {
-                foreach (var awaiter in _awaiters)
+                foreach (var awaitable in _awaitables)
                 {
-                    awaiter.Fail(exception);
+                    awaitable.Fail(exception);
                 }
 
-                _awaiters.Clear();
+                _awaitables.Clear();
             }
         }
 
         public void CancelAll()
         {
-            lock (_awaiters)
+            lock (_awaitables)
             {
-                foreach (var entry in _awaiters)
+                foreach (var awaitable in _awaitables)
                 {
-                    entry.Cancel();
+                    awaitable.Cancel();
                 }
 
-                _awaiters.Clear();
+                _awaitables.Clear();
             }
         }
         
@@ -47,54 +47,54 @@ namespace MQTTnet.PacketDispatcher
             }
 
             var packetType = packet.GetType();
-            var matchingAwaiters = new List<IMqttPacketAwaiter>();
+            var awaitables = new List<IMqttPacketAwaitable>();
             
-            lock (_awaiters)
+            lock (_awaitables)
             {
-                for (var i = _awaiters.Count - 1; i >= 0; i--)
+                for (var i = _awaitables.Count - 1; i >= 0; i--)
                 {
-                    var entry = _awaiters[i];
+                    var entry = _awaitables[i];
 
                     // Note: The PingRespPacket will also arrive here and has NO identifier but there
                     // is code which waits for it. So the code must be able to deal with filters which
                     // are referring to the type only (identifier is 0)!
-                    if (entry.PacketFilter.Type != packetType || entry.PacketFilter.Identifier != identifier)
+                    if (entry.Filter.Type != packetType || entry.Filter.Identifier != identifier)
                     {
                         continue;
                     }
                     
-                    matchingAwaiters.Add(entry);
-                    _awaiters.RemoveAt(i);
+                    awaitables.Add(entry);
+                    _awaitables.RemoveAt(i);
                 }
             }
             
-            foreach (var matchingEntry in matchingAwaiters)
+            foreach (var matchingEntry in awaitables)
             {
                 matchingEntry.Complete(packet);
             }
 
-            return matchingAwaiters.Count > 0;
+            return awaitables.Count > 0;
         }
         
-        public MqttPacketAwaiter<TResponsePacket> AddAwaiter<TResponsePacket>(ushort packetIdentifier) where TResponsePacket : MqttBasePacket
+        public MqttPacketAwaitable<TResponsePacket> AddAwaitable<TResponsePacket>(ushort packetIdentifier) where TResponsePacket : MqttBasePacket
         {
-            var awaiter = new MqttPacketAwaiter<TResponsePacket>(packetIdentifier, this);
+            var awaitable = new MqttPacketAwaitable<TResponsePacket>(packetIdentifier, this);
 
-            lock (_awaiters)
+            lock (_awaitables)
             {
-                _awaiters.Add(awaiter);
+                _awaitables.Add(awaitable);
             }
             
-            return awaiter;
+            return awaitable;
         }
 
-        public void RemoveAwaiter(IMqttPacketAwaiter awaiter)
+        public void RemoveAwaitable(IMqttPacketAwaitable awaitable)
         {
-            if (awaiter == null) throw new ArgumentNullException(nameof(awaiter));
+            if (awaitable == null) throw new ArgumentNullException(nameof(awaitable));
             
-            lock (_awaiters)
+            lock (_awaitables)
             {
-                _awaiters.Remove(awaiter);
+                _awaitables.Remove(awaitable);
             }
         }
     }

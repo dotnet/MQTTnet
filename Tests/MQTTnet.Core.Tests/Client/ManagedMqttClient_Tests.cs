@@ -9,6 +9,7 @@ using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -303,14 +304,14 @@ namespace MQTTnet.Tests.Client
                 });
 
                 // Wait a bit for the retained message to be available
-                await Task.Delay(500);
+                await Task.Delay(1000);
 
                 await sendingClient.DisconnectAsync();
 
                 // Now use the managed client and check if subscriptions get cleared properly.
 
                 var clientOptions = new MqttClientOptionsBuilder()
-                   .WithTcpServer("localhost", testEnvironment.ServerPort);
+                   .WithTcpServer("127.0.0.1", testEnvironment.ServerPort);
 
                 var receivedManagedMessages = new List<MqttApplicationMessage>();
                 var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetEventLogger());
@@ -326,7 +327,7 @@ namespace MQTTnet.Tests.Client
                   .WithAutoReconnectDelay(TimeSpan.FromSeconds(1))
                   .Build());
 
-                await Task.Delay(500);
+                await Task.Delay(1000);
 
                 Assert.AreEqual(1, receivedManagedMessages.Count);
 

@@ -1,5 +1,5 @@
-﻿using MQTTnet.Diagnostics;
-using System;
+﻿using System;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Extensions.ManagedClient
 {

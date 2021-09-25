@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;

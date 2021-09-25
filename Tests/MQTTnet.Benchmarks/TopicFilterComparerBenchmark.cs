@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using MQTTnet.Server;
 using System;
 using MQTTnet.Server.Internal;
 
@@ -11,7 +10,7 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class TopicFilterComparerBenchmark
     {
-        private static readonly char[] TopicLevelSeparator = { '/' };
+        static readonly char[] TopicLevelSeparator = { '/' };
 
         [GlobalSetup]
         public void Setup()
@@ -48,7 +47,7 @@ namespace MQTTnet.Benchmarks
             }
         }
 
-        private static bool LegacyMethodByStringSplit(string topic, string filter)
+        static bool LegacyMethodByStringSplit(string topic, string filter)
         {
             if (topic == null) throw new ArgumentNullException(nameof(topic));
             if (filter == null) throw new ArgumentNullException(nameof(filter));

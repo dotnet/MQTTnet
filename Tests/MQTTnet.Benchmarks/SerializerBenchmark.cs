@@ -9,7 +9,7 @@ using MQTTnet.Channel;
 using MQTTnet.Formatter;
 using MQTTnet.Formatter.V3;
 using BenchmarkDotNet.Jobs;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Benchmarks
 {
@@ -18,9 +18,9 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class SerializerBenchmark
     {
-        private MqttBasePacket _packet;
-        private ArraySegment<byte> _serializedPacket;
-        private IMqttPacketFormatter _serializer;
+        MqttBasePacket _packet;
+        ArraySegment<byte> _serializedPacket;
+        IMqttPacketFormatter _serializer;
 
         [GlobalSetup]
         public void Setup()
@@ -59,10 +59,10 @@ namespace MQTTnet.Benchmarks
             }
         }
 
-        private class BenchmarkMqttChannel : IMqttChannel
+        class BenchmarkMqttChannel : IMqttChannel
         {
-            private readonly ArraySegment<byte> _buffer;
-            private int _position;
+            readonly ArraySegment<byte> _buffer;
+            int _position;
 
             public BenchmarkMqttChannel(ArraySegment<byte> buffer)
             {

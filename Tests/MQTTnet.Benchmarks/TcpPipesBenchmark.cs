@@ -11,8 +11,8 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class TcpPipesBenchmark
     {
-        private IDuplexPipe _client;
-        private IDuplexPipe _server;
+        IDuplexPipe _client;
+        IDuplexPipe _server;
 
         [GlobalSetup]
         public void Setup()
@@ -43,7 +43,7 @@ namespace MQTTnet.Benchmarks
             await Task.WhenAll(WriteAsync(iterations, size), ReadAsync(iterations, size));
         }
 
-        private async Task ReadAsync(int iterations, int size)
+        async Task ReadAsync(int iterations, int size)
         {
             await Task.Yield();
 
@@ -59,7 +59,7 @@ namespace MQTTnet.Benchmarks
             }
         }
 
-        private async Task WriteAsync(int iterations, int size)
+        async Task WriteAsync(int iterations, int size)
         {
             await Task.Yield();
 

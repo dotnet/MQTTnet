@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
 using System;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.AspNetCore
 {

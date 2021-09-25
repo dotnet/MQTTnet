@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Server.Internal

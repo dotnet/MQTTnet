@@ -1,6 +1,6 @@
-﻿using MQTTnet.Diagnostics;
-using System;
+﻿using System;
 using System.Text;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.TestApp.NetCore
 {

@@ -1,5 +1,6 @@
 ﻿using MQTTnet.Diagnostics;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Internal
 {

@@ -5,6 +5,7 @@ using MQTTnet.Packets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.LowLevelClient
 {

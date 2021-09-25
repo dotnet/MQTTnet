@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.TestApp.NetCore
 {

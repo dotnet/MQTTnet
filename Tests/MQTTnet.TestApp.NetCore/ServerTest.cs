@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Server.Internal;

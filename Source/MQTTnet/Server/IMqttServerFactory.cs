@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Server
 {

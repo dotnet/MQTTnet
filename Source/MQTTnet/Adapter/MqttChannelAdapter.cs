@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Diagnostics.PacketInspection;
 
 namespace MQTTnet.Adapter

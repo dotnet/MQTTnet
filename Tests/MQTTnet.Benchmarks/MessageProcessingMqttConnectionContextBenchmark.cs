@@ -1,25 +1,20 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQTTnet.Client;
-
-
-using MQTTnet.AspNetCore;
-
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using MQTTnet.Server;
-using MQTTnet.Diagnostics;
 using MQTTnet.AspNetCore.Client;
 using MQTTnet.AspNetCore.Extensions;
 using MQTTnet.Client.Options;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Benchmarks
 {
     [MemoryDiagnoser]
     public class MessageProcessingMqttConnectionContextBenchmark
     {
-        private IWebHost _host;
-        private IMqttClient _mqttClient;
-        private MqttApplicationMessage _message;
+        IWebHost _host;
+        IMqttClient _mqttClient;
+        MqttApplicationMessage _message;
 
         [GlobalSetup]
         public void Setup()

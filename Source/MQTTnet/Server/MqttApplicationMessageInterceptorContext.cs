@@ -1,15 +1,9 @@
 ﻿using System.Collections.Generic;
-using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Server
 {
     public sealed class MqttApplicationMessageInterceptorContext
-    {
-        /// <summary>
-        /// Gets the currently used logger.
-        /// </summary>
-        public IMqttNetScopedLogger Logger { get; internal set; }
-
+    { 
         /// <summary>
         /// Gets the client identifier.
         /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.

@@ -7,6 +7,7 @@ using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Formatter.V3;
@@ -626,7 +627,7 @@ namespace MQTTnet.Tests
             using (var headerStream = new MemoryStream(buffer1.ToArray()))
             {
                 var channel = new TestMqttChannel(headerStream);
-                var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, writer), null, new MqttNetLogger());
+                var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, writer), null, new MqttNetEventLogger());
                 var receivedPacket = adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
 
                 var buffer2 = serializer.Encode(receivedPacket);
@@ -656,7 +657,7 @@ namespace MQTTnet.Tests
             var buffer = serializer.Encode(packet);
             
             var channel = new TestMqttChannel(buffer.ToArray());
-            var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, writer), null, new MqttNetLogger());
+            var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, writer), null, new MqttNetEventLogger());
             return (TPacket)adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
 
             //using (var headerStream = new MemoryStream(buffer1.ToArray()))
@@ -680,7 +681,7 @@ namespace MQTTnet.Tests
         MqttProtocolVersion DeserializeAndDetectVersion(MqttPacketFormatterAdapter packetFormatterAdapter, byte[] buffer)
         {
             var channel = new TestMqttChannel(buffer);
-            var adapter = new MqttChannelAdapter(channel, packetFormatterAdapter, null, new MqttNetLogger());
+            var adapter = new MqttChannelAdapter(channel, packetFormatterAdapter, null, new MqttNetEventLogger());
 
             adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
             return packetFormatterAdapter.ProtocolVersion;

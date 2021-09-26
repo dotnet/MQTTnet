@@ -1,7 +1,7 @@
 ﻿using System;
 using BenchmarkDotNet.Running;
 using MQTTnet.Benchmarks.Configurations;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Runtime;
 
 namespace MQTTnet.Benchmarks
 {

@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -12,7 +12,7 @@ namespace MQTTnet.TestApp.NetCore
         {
             try
             {
-                var logger = new MqttNetLogger();
+                var logger = new MqttNetEventLogger();
                 MqttNetConsoleLogger.ForwardToConsole(logger);
                 
                 var factory = new MqttFactory(logger);

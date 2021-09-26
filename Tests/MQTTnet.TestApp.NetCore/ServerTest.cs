@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Server.Internal;
@@ -22,7 +23,7 @@ namespace MQTTnet.TestApp.NetCore
 
         public static void RunEmptyServerWithLogging()
         {
-            var logger = new MqttNetLogger();
+            var logger = new MqttNetEventLogger();
             MqttNetConsoleLogger.ForwardToConsole(logger);
            
             var mqttFactory = new MqttFactory(logger);

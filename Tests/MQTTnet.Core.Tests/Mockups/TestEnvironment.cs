@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
-using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
@@ -9,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Extensions.Rpc.Options;
 using MQTTnet.Formatter;
@@ -36,9 +36,9 @@ namespace MQTTnet.Tests.Mockups
 
         public int ServerPort { get; set; } = 1888;
 
-        public MqttNetLogger ServerLogger { get; } = new MqttNetLogger("server");
+        public MqttNetEventLogger ServerLogger { get; } = new MqttNetEventLogger("server");
 
-        public MqttNetLogger ClientLogger { get; } = new MqttNetLogger("client");
+        public MqttNetEventLogger ClientLogger { get; } = new MqttNetEventLogger("client");
 
         public TestContext TestContext { get; }
 
@@ -191,19 +191,19 @@ namespace MQTTnet.Tests.Mockups
 
         public async Task<IMqttServer> StartServer(MqttServerOptionsBuilder options)
         {
-            CreateServer();
+            var server = CreateServer();
             
             options.WithDefaultEndpointPort(ServerPort);
             options.WithMaxPendingMessagesPerClient(int.MaxValue);
             
-            await Server.StartAsync(options.Build());
+            await server.StartAsync(options.Build());
 
-            return Server;
+            return server;
         }
         
         public async Task<IMqttServer> StartServer(Action<MqttServerOptionsBuilder> options)
         {
-            CreateServer();
+            var server = CreateServer();
 
             var optionsBuilder = Factory.CreateServerOptionsBuilder();
             optionsBuilder.WithDefaultEndpointPort(ServerPort);
@@ -211,9 +211,9 @@ namespace MQTTnet.Tests.Mockups
             
             options?.Invoke(optionsBuilder);
             
-            await Server.StartAsync(optionsBuilder.Build());
+            await server.StartAsync(optionsBuilder.Build());
 
-            return Server;
+            return server;
         }
         
         public TestApplicationMessageReceivedHandler CreateApplicationMessageHandler(IMqttClient mqttClient)

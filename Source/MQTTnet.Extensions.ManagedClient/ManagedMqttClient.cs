@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -33,7 +34,7 @@ namespace MQTTnet.Extensions.ManagedClient
         readonly HashSet<string> _unsubscriptions = new HashSet<string>();
         readonly SemaphoreSlim _subscriptionsQueuedSignal = new SemaphoreSlim(0);
 
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
 
         readonly AsyncLock _messageQueueLock = new AsyncLock();
 
@@ -48,7 +49,7 @@ namespace MQTTnet.Extensions.ManagedClient
             InternalClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(ManagedMqttClient));
+            _logger = logger.WithSource(nameof(ManagedMqttClient));
         }
 
         public bool IsConnected => InternalClient.IsConnected;

@@ -1,6 +1,5 @@
 ﻿using MQTTnet.Adapter;
 using MQTTnet.Client;
-using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.LowLevelClient;
 using MQTTnet.Server;
@@ -10,6 +9,7 @@ using System.Linq;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet
 {
@@ -17,7 +17,7 @@ namespace MQTTnet
     {
         IMqttClientAdapterFactory _clientAdapterFactory;
 
-        public MqttFactory() : this(new MqttNetLogger())
+        public MqttFactory() : this(new MqttNetNullLogger())
         {
         }
 

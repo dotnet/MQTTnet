@@ -1,18 +1,18 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client.Options;
-using MQTTnet.LowLevelClient;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
-using MQTTnet.Tests.Mockups;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Client.Options;
 using MQTTnet.Exceptions;
+using MQTTnet.LowLevelClient;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
+using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Client
 {
     [TestClass]
     public class LowLevelMqttClient_Tests

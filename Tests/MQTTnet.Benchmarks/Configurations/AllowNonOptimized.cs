@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Jobs;
+﻿using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Validators;
 
 namespace MQTTnet.Benchmarks.Configurations

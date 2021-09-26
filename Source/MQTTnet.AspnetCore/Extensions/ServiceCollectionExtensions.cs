@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
 
@@ -61,7 +62,7 @@ namespace MQTTnet.AspNetCore.Extensions
 
         private static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
         {
-            var logger = new MqttNetLogger();
+            var logger = new MqttNetEventLogger();
 
             services.AddSingleton<IMqttNetLogger>(logger);
             services.AddSingleton<MqttHostedServer>();

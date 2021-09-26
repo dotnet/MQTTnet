@@ -1,17 +1,12 @@
-﻿using MQTTnet.Diagnostics;
-using System;
+﻿using System;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Tests.Mockups
 {
-    public class TestLogger : IMqttNetLogger
+    public sealed class TestLogger : IMqttNetLogger
     {
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
-
-        public IMqttNetScopedLogger CreateScopedLogger(string source)
-        {
-            return new MqttNetScopedLogger(this, source);
-        }
-
+        
         public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
         {
             LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(new MqttNetLogMessage

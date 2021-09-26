@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Diagnostics.PacketInspection;
 
 namespace MQTTnet.Adapter
@@ -10,7 +11,7 @@ namespace MQTTnet.Adapter
     {
         readonly MemoryStream _receivedPacketBuffer;
         readonly IMqttPacketInspector _packetInspector;
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
 
         public MqttPacketInspectorHandler(IMqttPacketInspector packetInspector, IMqttNetLogger logger)
         {
@@ -22,7 +23,7 @@ namespace MQTTnet.Adapter
             }
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(MqttPacketInspectorHandler));
+            _logger = logger.WithSource(nameof(MqttPacketInspectorHandler));
         }
 
         public void BeginReceivePacket()

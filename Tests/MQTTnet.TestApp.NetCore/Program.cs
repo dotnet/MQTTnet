@@ -9,6 +9,7 @@ using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Diagnostics.Runtime;
 
 namespace MQTTnet.TestApp.NetCore
 {

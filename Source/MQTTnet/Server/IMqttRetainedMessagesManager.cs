@@ -1,6 +1,7 @@
 ﻿using MQTTnet.Diagnostics;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Server
 {

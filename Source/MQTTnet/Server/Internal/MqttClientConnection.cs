@@ -6,6 +6,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
@@ -26,7 +27,7 @@ namespace MQTTnet.Server.Internal
         readonly MqttClientSessionsManager _sessionsManager;
 
         readonly IMqttChannelAdapter _channelAdapter;
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
         readonly IMqttServerOptions _serverOptions;
 
         readonly string _endpoint;
@@ -52,7 +53,7 @@ namespace MQTTnet.Server.Internal
             _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(MqttClientConnection));
+            _logger = logger.WithSource(nameof(MqttClientConnection));
         }
 
         public string ClientId => _connectPacket.ClientId;

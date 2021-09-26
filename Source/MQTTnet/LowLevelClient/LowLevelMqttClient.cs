@@ -5,12 +5,13 @@ using MQTTnet.Packets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.LowLevelClient
 {
     public sealed class LowLevelMqttClient : ILowLevelMqttClient
     {
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
         readonly IMqttClientAdapterFactory _clientAdapterFactory;
 
         IMqttChannelAdapter _adapter;
@@ -21,7 +22,7 @@ namespace MQTTnet.LowLevelClient
             _clientAdapterFactory = clientAdapterFactory ?? throw new ArgumentNullException(nameof(clientAdapterFactory));
 
             if (logger is null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(LowLevelMqttClient));
+            _logger = logger.WithSource(nameof(LowLevelMqttClient));
         }
 
         bool IsConnected => _adapter != null;

@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Diagnostics.PacketInspection;
 
 namespace MQTTnet.Adapter
@@ -24,7 +25,7 @@ namespace MQTTnet.Adapter
         readonly byte[] _fixedHeaderBuffer = new byte[2];
 
         readonly MqttPacketInspectorHandler _packetInspectorHandler;
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
         readonly IMqttChannel _channel;
 
         readonly AsyncLock _syncRoot = new AsyncLock();
@@ -40,7 +41,7 @@ namespace MQTTnet.Adapter
             _packetInspectorHandler = new MqttPacketInspectorHandler(packetInspector, logger);
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(MqttChannelAdapter));
+            _logger = logger.WithSource(nameof(MqttChannelAdapter));
         }
 
         public string Endpoint => _channel.Endpoint;

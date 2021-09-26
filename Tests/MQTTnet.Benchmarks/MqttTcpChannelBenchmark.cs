@@ -1,26 +1,26 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQTTnet.Channel;
 using MQTTnet.Client.Options;
-using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Benchmarks
 {
     [MemoryDiagnoser]
-    public class MqttTcpChannelBenchmark
+    public sealed class MqttTcpChannelBenchmark
     {
-        private IMqttServer _mqttServer;
-        private IMqttChannel _serverChannel;
-        private IMqttChannel _clientChannel;
+        IMqttServer _mqttServer;
+        IMqttChannel _serverChannel;
+        IMqttChannel _clientChannel;
 
         [GlobalSetup]
         public void Setup()
         {
             var factory = new MqttFactory();
-            var tcpServer = new MqttTcpServerAdapter(new MqttNetLogger());
+            var tcpServer = new MqttTcpServerAdapter(new MqttNetEventLogger());
             tcpServer.ClientHandler += args =>
             {
                 _serverChannel =
@@ -31,7 +31,7 @@ namespace MQTTnet.Benchmarks
                 return Task.CompletedTask;
             };
 
-            _mqttServer = factory.CreateMqttServer(new[] { tcpServer }, new MqttNetLogger());
+            _mqttServer = factory.CreateMqttServer(new[] { tcpServer }, new MqttNetEventLogger());
 
             var serverOptions = new MqttServerOptionsBuilder().Build();
             _mqttServer.StartAsync(serverOptions).GetAwaiter().GetResult();
@@ -54,7 +54,7 @@ namespace MQTTnet.Benchmarks
             await Task.WhenAll(WriteAsync(iterations, size), ReadAsync(iterations, size));
         }
 
-        private async Task ReadAsync(int iterations, int size)
+        async Task ReadAsync(int iterations, int size)
         {
             await Task.Yield();
 
@@ -68,7 +68,7 @@ namespace MQTTnet.Benchmarks
             }
         }
 
-        private async Task WriteAsync(int iterations, int size)
+        async Task WriteAsync(int iterations, int size)
         {
             await Task.Yield();
 

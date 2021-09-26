@@ -3,19 +3,20 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Server.Internal
 {
     public sealed class MqttServerEventDispatcher
     {
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
 
         public MqttServerEventDispatcher(IMqttNetLogger logger)
         {
             if (logger is null) throw new ArgumentNullException(nameof(logger));
 
-            _logger = logger.CreateScopedLogger(nameof(MqttServerEventDispatcher));
+            _logger = logger.WithSource(nameof(MqttServerEventDispatcher));
         }
 
         public IMqttServerClientConnectedHandler ClientConnectedHandler { get; set; }

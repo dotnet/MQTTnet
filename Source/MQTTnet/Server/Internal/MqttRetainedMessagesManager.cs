@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
 
@@ -14,14 +15,14 @@ namespace MQTTnet.Server.Internal
         readonly AsyncLock _storageAccessLock = new AsyncLock();
         readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>(4096);
 
-        IMqttNetScopedLogger _logger;
+        MqttNetSourceLogger _logger;
         IMqttServerOptions _options;
         
         // TODO: Get rid of the logger here!
         public Task Start(IMqttServerOptions options, IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(MqttRetainedMessagesManager));
+            _logger = logger.WithSource(nameof(MqttRetainedMessagesManager));
 
             _options = options ?? throw new ArgumentNullException(nameof(options));
             return PlatformAbstractionLayer.CompletedTask;

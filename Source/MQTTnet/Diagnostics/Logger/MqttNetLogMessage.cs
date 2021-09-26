@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MQTTnet.Diagnostics
+namespace MQTTnet.Diagnostics.Logger
 {
     public sealed class MqttNetLogMessage
     {

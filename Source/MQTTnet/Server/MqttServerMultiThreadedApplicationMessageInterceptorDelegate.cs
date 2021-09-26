@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
 
@@ -21,6 +20,8 @@ namespace MQTTnet.Server
             };
         }
 
+        public Func<MqttApplicationMessageInterceptorContext, Exception, Task> ExceptionHandler { get; set; }
+
         public MqttServerMultiThreadedApplicationMessageInterceptorDelegate(Func<MqttApplicationMessageInterceptorContext, Task> callback)
         {
             _callback = callback ?? throw new ArgumentNullException(nameof(callback));
@@ -36,7 +37,11 @@ namespace MQTTnet.Server
                 }
                 catch (Exception exception)
                 {
-                    context.Logger.Error(exception, "Error while intercepting application message.");
+                    var exceptionHandler = ExceptionHandler;
+                    if (exceptionHandler != null)
+                    {
+                        await exceptionHandler.Invoke(context, exception).ConfigureAwait(false);
+                    }
                 }
             }).RunInBackground();
 

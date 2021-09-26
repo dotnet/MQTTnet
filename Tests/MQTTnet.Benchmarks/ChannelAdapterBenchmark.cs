@@ -1,22 +1,22 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using System;
 using System.IO;
 using System.Threading;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Benchmarks
 {
     [MemoryDiagnoser]
-    public class ChannelAdapterBenchmark
+    public sealed class ChannelAdapterBenchmark
     {
-        private MqttChannelAdapter _channelAdapter;
-        private int _iterations;
-        private MemoryStream _stream;
-        private MqttPublishPacket _packet;
+        MqttChannelAdapter _channelAdapter;
+        int _iterations;
+        MemoryStream _stream;
+        MqttPublishPacket _packet;
 
         [GlobalSetup]
         public void Setup()
@@ -43,7 +43,7 @@ namespace MQTTnet.Benchmarks
 
             var channel = new TestMqttChannel(_stream);
             
-            _channelAdapter = new MqttChannelAdapter(channel, serializer, null, new MqttNetLogger());
+            _channelAdapter = new MqttChannelAdapter(channel, serializer, null, new MqttNetEventLogger());
         }
 
         [Benchmark]
@@ -72,7 +72,7 @@ namespace MQTTnet.Benchmarks
             _stream.Position = 0;
         }
 
-        private static byte[] Join(params ArraySegment<byte>[] chunks)
+        static byte[] Join(params ArraySegment<byte>[] chunks)
         {
             var buffer = new MemoryStream();
             foreach (var chunk in chunks)

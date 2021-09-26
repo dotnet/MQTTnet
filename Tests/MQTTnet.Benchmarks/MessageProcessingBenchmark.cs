@@ -11,9 +11,9 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class MessageProcessingBenchmark
     {
-        private IMqttServer _mqttServer;
-        private IMqttClient _mqttClient;
-        private MqttApplicationMessage _message;
+        IMqttServer _mqttServer;
+        IMqttClient _mqttClient;
+        MqttApplicationMessage _message;
 
         [GlobalSetup]
         public void Setup()

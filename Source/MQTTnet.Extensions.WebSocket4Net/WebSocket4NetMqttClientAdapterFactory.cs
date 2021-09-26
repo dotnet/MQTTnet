@@ -4,6 +4,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using System;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Extensions.WebSocket4Net
 {

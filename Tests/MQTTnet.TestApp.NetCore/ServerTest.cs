@@ -55,7 +55,7 @@ namespace MQTTnet.TestApp.NetCore
 
                     ApplicationMessageInterceptor = new MqttServerApplicationMessageInterceptorDelegate(context =>
                     {
-                        if (MqttTopicFilterComparer.IsMatch(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#"))
+                        if (MqttTopicFilterComparer.Compare(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#") == MqttTopicFilterCompareResult.IsMatch)
                         {
                             // Replace the payload with the timestamp. But also extending a JSON 
                             // based payload with the timestamp is a suitable use case.

@@ -1,128 +1,164 @@
-﻿using System;
-
-namespace MQTTnet.Server.Internal
+﻿namespace MQTTnet.Server.Internal
 {
     public static class MqttTopicFilterComparer
     {
         const char LevelSeparator = '/';
         const char MultiLevelWildcard = '#';
         const char SingleLevelWildcard = '+';
+        const char ReservedTopicPrefix = '$';
 
-        public static bool IsMatch(string topic, string filter)
+        public static MqttTopicFilterCompareResult Compare(string topic, string filter)
         {
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-            if (filter == null) throw new ArgumentNullException(nameof(filter));
-
-            var sPos = 0;
-            var sLen = filter.Length;
-            var tPos = 0;
-            var tLen = topic.Length;
-
-            while (sPos < sLen && tPos < tLen)
+            if (string.IsNullOrEmpty(topic))
             {
-                if (filter[sPos] == topic[tPos])
+                return MqttTopicFilterCompareResult.TopicInvalid;
+            }
+
+            if (string.IsNullOrEmpty(filter))
+            {
+                return MqttTopicFilterCompareResult.FilterInvalid;
+            }
+            
+            var filterOffset = 0;
+            var filterLength = filter.Length;
+
+            var topicOffset = 0;
+            var topicLength = topic.Length;
+
+            var isMultiLevelFilter = filter[filterLength - 1] == MultiLevelWildcard;
+            var isReservedTopic = topic[0] == ReservedTopicPrefix;
+
+            if (isReservedTopic && filterLength == 1 && isMultiLevelFilter)
+            {
+                // It is not allowed to receive i.e. '$foo/bar' with filter '#'.
+                return MqttTopicFilterCompareResult.NoMatch;
+            }
+            
+            if (isReservedTopic && filter[0] == SingleLevelWildcard)
+            {
+                // It is not allowed to receive i.e. '$SYS/monitor/Clients' with filter '+/monitor/Clients'.
+                return MqttTopicFilterCompareResult.NoMatch;
+            }
+
+            if (filterLength == 1 && isMultiLevelFilter)
+            {
+                // Filter '#' matches basically everything.
+                return MqttTopicFilterCompareResult.IsMatch;
+            }
+            
+            // Go through the filter char by char.
+            while (filterOffset < filterLength && topicOffset < topicLength)
+            {
+                // Check if the current char is a multi level wildcard. The char is only allowed
+                // at the very las position.
+                if (filter[filterOffset] == MultiLevelWildcard && filterOffset != filterLength - 1)
                 {
-                    if (tPos == tLen - 1)
+                    return MqttTopicFilterCompareResult.FilterInvalid;
+                }
+                
+                if (filter[filterOffset] == topic[topicOffset])
+                {
+                    if (topicOffset == topicLength - 1)
                     {
-                        // Check for e.g. foo matching foo/#
-                        if (sPos == sLen - 3
-                                && filter[sPos + 1] == LevelSeparator
-                                && filter[sPos + 2] == MultiLevelWildcard)
+                        // Check for e.g. "foo" matching "foo/#"
+                        if (filterOffset == filterLength - 3 &&
+                            filter[filterOffset + 1] == LevelSeparator &&
+                            isMultiLevelFilter)
                         {
-                            return true;
+                            return MqttTopicFilterCompareResult.IsMatch;
                         }
-                        // Check for e.g. foo/ matching foo/#
-                        if (sPos == sLen - 2
-                                && filter[sPos] == LevelSeparator
-                                && filter[sPos + 1] == MultiLevelWildcard)
+
+                        // Check for e.g. "foo/" matching "foo/#"
+                        if (filterOffset == filterLength - 2 && 
+                            filter[filterOffset] == LevelSeparator &&
+                            isMultiLevelFilter)
                         {
-                            return true;
+                            return MqttTopicFilterCompareResult.IsMatch;
                         }
                     }
 
-                    sPos++;
-                    tPos++;
+                    filterOffset++;
+                    topicOffset++;
 
-                    if (sPos == sLen && tPos == tLen)
+                    // Check if the end was reached and i.e. "foo/bar" matches "foo/bar"
+                    if (filterOffset == filterLength && topicOffset == topicLength)
                     {
-                        return true;
+                        return MqttTopicFilterCompareResult.IsMatch;
                     }
 
-                    if (tPos == tLen && sPos == sLen - 1 && filter[sPos] == SingleLevelWildcard)
+                    var endOfTopic = topicOffset == topicLength;
+                    
+                    if (endOfTopic && filterOffset == filterLength - 1 && filter[filterOffset] == SingleLevelWildcard)
                     {
-                        if (sPos > 0 && filter[sPos - 1] != LevelSeparator)
+                        if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
                         {
-                            // Invalid filter string
-                            return false;
+                            // Invalid filter.
+                            return MqttTopicFilterCompareResult.FilterInvalid;
                         }
 
-                        return true;
+                        return MqttTopicFilterCompareResult.IsMatch;
                     }
                 }
                 else
                 {
-                    if (filter[sPos] == SingleLevelWildcard)
+                    if (filter[filterOffset] == SingleLevelWildcard)
                     {
-                        // Check for bad "+foo" or "a/+foo" subscription
-                        if (sPos > 0 && filter[sPos - 1] != LevelSeparator)
+                        // Check for invalid "+foo" or "a/+foo" subscription
+                        if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
                         {
-                            // Invalid filter string
-                            return false;
+                            return MqttTopicFilterCompareResult.FilterInvalid;
                         }
 
                         // Check for bad "foo+" or "foo+/a" subscription
-                        if (sPos < sLen - 1 && filter[sPos + 1] != LevelSeparator)
+                        if (filterOffset < filterLength - 1 && filter[filterOffset + 1] != LevelSeparator)
                         {
-                            // Invalid filter string
-                            return false;
+                            return MqttTopicFilterCompareResult.FilterInvalid;
                         }
 
-                        sPos++;
-                        while (tPos < tLen && topic[tPos] != LevelSeparator)
+                        filterOffset++;
+                        while (topicOffset < topicLength && topic[topicOffset] != LevelSeparator)
                         {
-                            tPos++;
+                            topicOffset++;
                         }
 
-                        if (tPos == tLen && sPos == sLen)
+                        if (topicOffset == topicLength && filterOffset == filterLength)
                         {
-                            return true;
+                            return MqttTopicFilterCompareResult.IsMatch;
                         }
                     }
-                    else if (filter[sPos] == MultiLevelWildcard)
+                    else if (filter[filterOffset] == MultiLevelWildcard)
                     {
-                        if (sPos > 0 && filter[sPos - 1] != LevelSeparator)
+                        if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
                         {
-                            // Invalid filter string
-                            return false;
+                            return MqttTopicFilterCompareResult.FilterInvalid;
                         }
 
-                        if (sPos + 1 != sLen)
+                        if (filterOffset + 1 != filterLength)
                         {
-                            // Invalid filter string
-                            return false;
+                            return MqttTopicFilterCompareResult.FilterInvalid;
                         }
 
-                        return true;
+                        return MqttTopicFilterCompareResult.IsMatch;
                     }
                     else
                     {
-                        // Check for e.g. foo/bar matching foo/+/#
-                        if (sPos > 0
-                                && sPos + 2 == sLen
-                                && tPos == tLen
-                                && filter[sPos - 1] == SingleLevelWildcard
-                                && filter[sPos] == LevelSeparator
-                                && filter[sPos + 1] == MultiLevelWildcard)
+                        // Check for e.g. "foo/bar" matching "foo/+/#".
+                        if (filterOffset > 0 &&
+                            filterOffset + 2 == filterLength &&
+                            topicOffset == topicLength &&
+                            filter[filterOffset - 1] == SingleLevelWildcard &&
+                            filter[filterOffset] == LevelSeparator &&
+                            isMultiLevelFilter)
                         {
-                            return true;
+                            return MqttTopicFilterCompareResult.IsMatch;
                         }
 
-                        return false;
+                        return MqttTopicFilterCompareResult.NoMatch;
                     }
                 }
             }
 
-            return false;
+            return MqttTopicFilterCompareResult.NoMatch;
         }
     }
 }

@@ -234,8 +234,6 @@ namespace MQTTnet.Server.Internal
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            if (topicFilters is null) throw new ArgumentNullException(nameof(topicFilters));
-
             var fakeSubscribePacket = new MqttSubscribePacket
             {
                 TopicFilters = topicFilters.ToList()

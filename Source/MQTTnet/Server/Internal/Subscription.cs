@@ -12,7 +12,7 @@ namespace MQTTnet.Server.Internal
         
         public bool RetainAsPublished { get; set; }
         
-        public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
+        public MqttQualityOfServiceLevel GrantedQualityOfServiceLevel { get; set; }
         
         public uint Identifier { get; set; }
         

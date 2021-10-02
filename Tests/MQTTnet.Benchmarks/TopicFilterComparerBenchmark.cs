@@ -37,13 +37,13 @@ namespace MQTTnet.Benchmarks
         {
             for (var i = 0; i < 10000; i++)
             {
-                MqttTopicFilterComparer.IsMatch("sport/tennis/player1", "sport/#");
-                MqttTopicFilterComparer.IsMatch("sport/tennis/player1/ranking", "sport/#/ranking");
-                MqttTopicFilterComparer.IsMatch("sport/tennis/player1/score/wimbledon", "sport/+/player1/#");
-                MqttTopicFilterComparer.IsMatch("sport/tennis/player1", "sport/tennis/+");
-                MqttTopicFilterComparer.IsMatch("/finance", "+/+");
-                MqttTopicFilterComparer.IsMatch("/finance", "/+");
-                MqttTopicFilterComparer.IsMatch("/finance", "+");
+                MqttTopicFilterComparer.Compare("sport/tennis/player1", "sport/#");
+                MqttTopicFilterComparer.Compare("sport/tennis/player1/ranking", "sport/#/ranking");
+                MqttTopicFilterComparer.Compare("sport/tennis/player1/score/wimbledon", "sport/+/player1/#");
+                MqttTopicFilterComparer.Compare("sport/tennis/player1", "sport/tennis/+");
+                MqttTopicFilterComparer.Compare("/finance", "+/+");
+                MqttTopicFilterComparer.Compare("/finance", "/+");
+                MqttTopicFilterComparer.Compare("/finance", "+");
             }
         }
 

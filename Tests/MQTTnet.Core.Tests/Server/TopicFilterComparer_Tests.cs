@@ -4,111 +4,135 @@ using MQTTnet.Server.Internal;
 namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public class TopicFilterComparer_Tests
+    public sealed class MqttTopicFilterComparer_Tests
     {
         [TestMethod]
-        public void TopicFilterComparer_Plus_Match_With_Separator_Only()
+        public void Plus_Match_With_Separator_Only()
         {
             //A Topic Name or Topic Filter consisting only of the ‘/’ character is valid
-            CompareAndAssert("A", "+", true);
+            CompareAndAssert("A", "+", MqttTopicFilterCompareResult.IsMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_Hash_Match_With_Separator_Only()
+        public void Hash_Match_With_Separator_Only()
         {
             //A Topic Name or Topic Filter consisting only of the ‘/’ character is valid
-            CompareAndAssert("/", "#", true);
+            CompareAndAssert("/", "#", MqttTopicFilterCompareResult.IsMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_DirectMatch()
+        public void DirectMatch()
         {
-            CompareAndAssert("A/B/C", "A/B/C", true);
+            CompareAndAssert("A/B/C", "A/B/C", MqttTopicFilterCompareResult.IsMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_DirectNoMatch()
+        public void DirectNoMatch()
         {
-            CompareAndAssert("A/B/X", "A/B/C", false);
+            CompareAndAssert("A/B/X", "A/B/C", MqttTopicFilterCompareResult.NoMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_MiddleOneLevelWildcardMatch()
+        public void MiddleOneLevelWildcardMatch()
         {
-            CompareAndAssert("A/B/C", "A/+/C", true);
+            CompareAndAssert("A/B/C", "A/+/C", MqttTopicFilterCompareResult.IsMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_MiddleOneLevelWildcardNoMatch()
+        public void MiddleOneLevelWildcardNoMatch()
         {
-            CompareAndAssert("A/B/C/D", "A/+/C", false);
+            CompareAndAssert("A/B/C/D", "A/+/C", MqttTopicFilterCompareResult.NoMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_BeginningOneLevelWildcardMatch()
+        public void BeginningOneLevelWildcardMatch()
         {
-            CompareAndAssert("A/B/C", "+/B/C", true);
+            CompareAndAssert("A/B/C", "+/B/C", MqttTopicFilterCompareResult.IsMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_EndOneLevelWildcardMatch()
+        public void EndOneLevelWildcardMatch()
         {
-            CompareAndAssert("A/B/C", "A/B/+", true);
+            CompareAndAssert("A/B/C", "A/B/+", MqttTopicFilterCompareResult.IsMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_EndMultipleLevelsWildcardMatch()
+        public void EndMultipleLevelsWildcardMatch()
         {
-            CompareAndAssert("A/B/C", "A/#", true);
+            CompareAndAssert("A/B/C", "A/#", MqttTopicFilterCompareResult.IsMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_EndMultipleLevelsWildcardNoMatch()
+        public void EndMultipleLevelsWildcardNoMatch()
         {
-            CompareAndAssert("A/B/C/D", "A/C/#", false);
+            CompareAndAssert("A/B/C/D", "A/C/#", MqttTopicFilterCompareResult.NoMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_EndMultipleLevelsWildcardMatchEmptyLevel()
+        public void EndMultipleLevelsWildcardMatchEmptyLevel()
         {
-            CompareAndAssert("A/", "A/#", true);
+            CompareAndAssert("A/", "A/#", MqttTopicFilterCompareResult.IsMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_AllLevelsWildcardMatch()
+        public void AllLevelsWildcardMatch()
         {
-            CompareAndAssert("A/B/C/D", "#", true);
+            CompareAndAssert("A/B/C/D", "#", MqttTopicFilterCompareResult.IsMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_MultiLevel_Sport()
+        public void MultiLevel_Sport()
         {
             // Tests from official MQTT spec (4.7.1.2 Multi-level wildcard)
-            CompareAndAssert("sport/tennis/player1", "sport/tennis/player1/#", true);
-            CompareAndAssert("sport/tennis/player1/ranking", "sport/tennis/player1/#", true);
-            CompareAndAssert("sport/tennis/player1/score/wimbledon", "sport/tennis/player1/#", true);
+            CompareAndAssert("sport/tennis/player1", "sport/tennis/player1/#", MqttTopicFilterCompareResult.IsMatch);
+            CompareAndAssert("sport/tennis/player1/ranking", "sport/tennis/player1/#", MqttTopicFilterCompareResult.IsMatch);
+            CompareAndAssert("sport/tennis/player1/score/wimbledon", "sport/tennis/player1/#", MqttTopicFilterCompareResult.IsMatch);
 
-            CompareAndAssert("sport/tennis/player1", "sport/tennis/+", true);
-            CompareAndAssert("sport/tennis/player2", "sport/tennis/+", true);
-            CompareAndAssert("sport/tennis/player1/ranking", "sport/tennis/+", false);
+            CompareAndAssert("sport/tennis/player1", "sport/tennis/+", MqttTopicFilterCompareResult.IsMatch);
+            CompareAndAssert("sport/tennis/player2", "sport/tennis/+", MqttTopicFilterCompareResult.IsMatch);
+            CompareAndAssert("sport/tennis/player1/ranking", "sport/tennis/+", MqttTopicFilterCompareResult.NoMatch);
 
-            CompareAndAssert("sport", "sport/#", true);
-            CompareAndAssert("sport", "sport/+", false);
-            CompareAndAssert("sport/", "sport/+", true);
+            CompareAndAssert("sport", "sport/#", MqttTopicFilterCompareResult.IsMatch);
+            CompareAndAssert("sport", "sport/+", MqttTopicFilterCompareResult.NoMatch);
+            CompareAndAssert("sport/", "sport/+", MqttTopicFilterCompareResult.IsMatch);
         }
 
         [TestMethod]
-        public void TopicFilterComparer_SingleLevel_Finance()
+        public void SingleLevel_Finance()
         {
             // Tests from official MQTT spec (4.7.1.3 Single level wildcard)
-            CompareAndAssert("/finance", "+/+", true);
-            CompareAndAssert("/finance", "/+", true);
-            CompareAndAssert("/finance", "+", false);
+            CompareAndAssert("/finance", "+/+", MqttTopicFilterCompareResult.IsMatch);
+            CompareAndAssert("/finance", "/+", MqttTopicFilterCompareResult.IsMatch);
+            CompareAndAssert("/finance", "+", MqttTopicFilterCompareResult.NoMatch);
         }
-
-        private static void CompareAndAssert(string topic, string filter, bool expectedResult)
+        
+        [TestMethod]
+        public void Reserved_Multi_Level_Wildcard_Only()
         {
-            Assert.AreEqual(expectedResult, MqttTopicFilterComparer.IsMatch(topic, filter));
+            CompareAndAssert("$SPECIAL/TOPIC", "#", MqttTopicFilterCompareResult.NoMatch);
+        }
+        
+        [TestMethod]
+        public void Reserved_Single_Level_Wildcard_Prefix()
+        {
+            CompareAndAssert("$SYS/monitor/Clients", "+/monitor/Clients", MqttTopicFilterCompareResult.NoMatch);
+        }
+        
+        [TestMethod]
+        public void Reserved_Single_Level_Wildcard_Suffix()
+        {
+            CompareAndAssert("$SYS/monitor/Clients", "$SYS/monitor/+", MqttTopicFilterCompareResult.IsMatch);
+        }
+        
+        [TestMethod]
+        public void Reserved_Single_Level_Wildcard()
+        {
+            CompareAndAssert("$SYS/monitor/Clients", "$SYS/#", MqttTopicFilterCompareResult.IsMatch);
+        }
+        
+        static void CompareAndAssert(string topic, string filter, MqttTopicFilterCompareResult expectedResult)
+        {
+            Assert.AreEqual(expectedResult, MqttTopicFilterComparer.Compare(topic, filter));
         }
     }
 }

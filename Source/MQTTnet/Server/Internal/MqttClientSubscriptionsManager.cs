@@ -44,22 +44,22 @@ namespace MQTTnet.Server.Internal
             foreach (var originalTopicFilter in subscribePacket.TopicFilters.OrderByDescending(f => f.QualityOfServiceLevel))
             {
                 var interceptorContext = await InterceptSubscribe(originalTopicFilter).ConfigureAwait(false);
-                var finalTopicFilter = interceptorContext?.TopicFilter ?? originalTopicFilter;
-                var acceptSubscription = interceptorContext?.AcceptSubscription ?? true;
-                var closeConnection = interceptorContext?.CloseConnection ?? false;
-
+                var finalTopicFilter = interceptorContext.TopicFilter;
+                var acceptSubscription = interceptorContext.ReasonCode <= MqttSubscribeReasonCode.GrantedQoS2;
+                
                 if (string.IsNullOrEmpty(finalTopicFilter.Topic) || !acceptSubscription)
                 {
+                    // Return codes is for MQTT < 5 and Reason Code is for MQTT > 5.
                     result.ReturnCodes.Add(MqttSubscribeReturnCode.Failure);
-                    result.ReasonCodes.Add(MqttSubscribeReasonCode.UnspecifiedError);
+                    result.ReasonCodes.Add(interceptorContext.ReasonCode);
                 }
                 else
                 {
-                    result.ReturnCodes.Add(ConvertToSubscribeReturnCode(finalTopicFilter.QualityOfServiceLevel));
-                    result.ReasonCodes.Add(ConvertToSubscribeReasonCode(finalTopicFilter.QualityOfServiceLevel));
+                    result.ReturnCodes.Add(interceptorContext.ReturnCode);
+                    result.ReasonCodes.Add(interceptorContext.ReasonCode);
                 }
 
-                if (closeConnection)
+                if (interceptorContext.CloseConnection)
                 {
                     result.CloseConnection = true;
                 }
@@ -69,7 +69,10 @@ namespace MQTTnet.Server.Internal
                     continue;
                 }
 
-                var subscription = CreateSubscription(finalTopicFilter, subscribePacket);
+                var subscription = CreateSubscription(
+                    finalTopicFilter, 
+                    subscribePacket.Properties?.SubscriptionIdentifier ?? 0,
+                    interceptorContext.ReasonCode);
 
                 await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
 
@@ -148,12 +151,12 @@ namespace MQTTnet.Server.Internal
                     retainAsPublished = true;
                 }
 
-                if (!MqttTopicFilterComparer.IsMatch(topic, subscription.Topic))
+                if (MqttTopicFilterComparer.Compare(topic, subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
                 {
                     continue;
                 }
 
-                qosLevels.Add(subscription.QualityOfServiceLevel);
+                qosLevels.Add(subscription.GrantedQualityOfServiceLevel);
 
                 if (subscription.Identifier > 0)
                 {
@@ -175,7 +178,7 @@ namespace MQTTnet.Server.Internal
             };
         }
 
-        Subscription CreateSubscription(MqttTopicFilter topicFilter, MqttSubscribePacket subscribePacket)
+        Subscription CreateSubscription(MqttTopicFilter topicFilter, uint subscriptionIdentifier, MqttSubscribeReasonCode reasonCode)
         {
             var subscription = new Subscription
             {
@@ -183,10 +186,26 @@ namespace MQTTnet.Server.Internal
                 NoLocal = topicFilter.NoLocal,
                 RetainHandling = topicFilter.RetainHandling,
                 RetainAsPublished = topicFilter.RetainAsPublished,
-                QualityOfServiceLevel = topicFilter.QualityOfServiceLevel,
-                Identifier = subscribePacket.Properties?.SubscriptionIdentifier ?? 0
+                Identifier = subscriptionIdentifier
             };
 
+            if (reasonCode == MqttSubscribeReasonCode.GrantedQoS0)
+            {
+                subscription.GrantedQualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
+            }
+            else if (reasonCode == MqttSubscribeReasonCode.GrantedQoS1)
+            {
+                subscription.GrantedQualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce;
+            }
+            else if (reasonCode == MqttSubscribeReasonCode.GrantedQoS2)
+            {
+                subscription.GrantedQualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce;
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+            
             _subscriptionsLock.EnterWriteLock();
             try
             {
@@ -223,7 +242,7 @@ namespace MQTTnet.Server.Internal
                     continue;
                 }
 
-                if (!MqttTopicFilterComparer.IsMatch(retainedApplicationMessage.Topic, subscription.Topic))
+                if (MqttTopicFilterComparer.Compare(retainedApplicationMessage.Topic, subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
                 {
                     continue;
                 }
@@ -232,7 +251,7 @@ namespace MQTTnet.Server.Internal
                 {
                     ApplicationMessage = retainedApplicationMessage,
                     IsRetainedMessage = true,
-                    SubscriptionQualityOfServiceLevel = subscription.QualityOfServiceLevel
+                    SubscriptionQualityOfServiceLevel = subscription.GrantedQualityOfServiceLevel
                 };
 
                 if (subscription.Identifier > 0)
@@ -245,25 +264,9 @@ namespace MQTTnet.Server.Internal
                 retainedApplicationMessages[i] = null;
             }
         }
-
-        static MqttSubscribeReturnCode ConvertToSubscribeReturnCode(MqttQualityOfServiceLevel qualityOfServiceLevel)
-        {
-            return (MqttSubscribeReturnCode)(int)qualityOfServiceLevel;
-        }
-
-        static MqttSubscribeReasonCode ConvertToSubscribeReasonCode(MqttQualityOfServiceLevel qualityOfServiceLevel)
-        {
-            return (MqttSubscribeReasonCode)(int)qualityOfServiceLevel;
-        }
-
+        
         async Task<MqttSubscriptionInterceptorContext> InterceptSubscribe(MqttTopicFilter topicFilter)
         {
-            var interceptor = _options.SubscriptionInterceptor;
-            if (interceptor == null)
-            {
-                return null;
-            }
-
             var context = new MqttSubscriptionInterceptorContext
             {
                 ClientId = _clientSession.ClientId,
@@ -271,8 +274,39 @@ namespace MQTTnet.Server.Internal
                 SessionItems = _clientSession.Items
             };
 
-            await interceptor.InterceptSubscriptionAsync(context).ConfigureAwait(false);
+            if (topicFilter.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
+            {
+                context.ReturnCode = MqttSubscribeReturnCode.SuccessMaximumQoS0;
+                context.ReasonCode = MqttSubscribeReasonCode.GrantedQoS0;
+            }
+            else if (topicFilter.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
+            {
+                context.ReturnCode = MqttSubscribeReturnCode.SuccessMaximumQoS1;
+                context.ReasonCode = MqttSubscribeReasonCode.GrantedQoS1;
+            }
+            else if (topicFilter.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
+            {
+                context.ReturnCode = MqttSubscribeReturnCode.SuccessMaximumQoS2;
+                context.ReasonCode = MqttSubscribeReasonCode.GrantedQoS2;
+            }
 
+            context.DefaultReturnCode = context.ReturnCode;
+            context.DefaultReasonCode = context.ReasonCode;
+
+            if (topicFilter.Topic.StartsWith("$share/"))
+            {
+                context.ReasonCode = MqttSubscribeReasonCode.SharedSubscriptionsNotSupported;
+                context.ReturnCode = MqttSubscribeReturnCode.Failure;
+            }
+            else
+            {
+                var interceptor = _options.SubscriptionInterceptor;
+                if (interceptor != null)
+                {
+                    await interceptor.InterceptSubscriptionAsync(context).ConfigureAwait(false);    
+                }
+            }
+            
             return context;
         }
 

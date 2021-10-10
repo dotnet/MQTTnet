@@ -11,7 +11,6 @@ using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Receiving;
-using MQTTnet.Client.Subscribing;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -20,10 +19,8 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public sealed class General_Tests
+    public sealed class General_Tests : BaseTestClass
     {
-        public TestContext TestContext { get; set; }
-
         [TestMethod]
         [DataRow("", null)]
         [DataRow("", "")]
@@ -51,7 +48,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Use_Empty_Client_ID()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
@@ -77,8 +74,7 @@ namespace MQTTnet.Tests.Server
                 MqttQualityOfServiceLevel.AtMostOnce,
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtMostOnce,
-                1,
-                TestContext);
+                1);
         }
 
         [TestMethod]
@@ -89,8 +85,7 @@ namespace MQTTnet.Tests.Server
                 MqttQualityOfServiceLevel.AtLeastOnce,
                 "A/B/C",
                 MqttQualityOfServiceLevel.AtLeastOnce,
-                1,
-                TestContext);
+                1);
         }
 
         [TestMethod]
@@ -101,14 +96,13 @@ namespace MQTTnet.Tests.Server
                 MqttQualityOfServiceLevel.ExactlyOnce,
                 "A/B/C",
                 MqttQualityOfServiceLevel.ExactlyOnce,
-                1,
-                TestContext);
+                1);
         }
 
         [TestMethod]
         public async Task Use_Clean_Session()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
@@ -122,7 +116,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Will_Message_Do_Not_Send_On_Clean_Disconnect()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var receivedMessagesCount = 0;
 
@@ -148,7 +142,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Will_Message_Do_Not_Send_On_Takeover()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var receivedMessagesCount = 0;
 
@@ -180,7 +174,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Will_Message_Send()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var receivedMessagesCount = 0;
 
@@ -206,7 +200,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Publish_From_Server()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer();
 
@@ -231,7 +225,7 @@ namespace MQTTnet.Tests.Server
         {
             var receivedMessagesCount = 0;
 
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
@@ -262,7 +256,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Session_Takeover()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
@@ -290,7 +284,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task No_Messages_If_No_Subscription()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
@@ -320,7 +314,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Set_Subscription_At_Server()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer();
 
@@ -356,7 +350,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Shutdown_Disconnects_Clients_Gracefully()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder());
 
@@ -378,7 +372,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Handle_Clean_Disconnect()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder());
 
@@ -409,7 +403,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Client_Disconnect_Without_Errors()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 bool clientWasConnected;
 
@@ -440,7 +434,7 @@ namespace MQTTnet.Tests.Server
         {
             const int ClientCount = 50;
 
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer();
 
@@ -494,7 +488,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Intercept_Application_Message()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer(
                     new MqttServerOptionsBuilder().WithApplicationMessageInterceptor(
@@ -517,7 +511,7 @@ namespace MQTTnet.Tests.Server
         {
             var serverStorage = new TestServerStorage();
 
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithStorage(serverStorage));
 
@@ -534,7 +528,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Publish_After_Client_Connects()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer();
                 server.UseClientConnectedHandler(async e => { await server.PublishAsync("/test/1", "true", MqttQualityOfServiceLevel.ExactlyOnce, false); });
@@ -564,7 +558,7 @@ namespace MQTTnet.Tests.Server
                 context.ApplicationMessage.Payload = Encoding.ASCII.GetBytes("extended");
             }
 
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithApplicationMessageInterceptor(Interceptor));
 
@@ -587,7 +581,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Send_Long_Body()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 const int PayloadSizeInMB = 30;
                 const int CharCount = PayloadSizeInMB * 1024 * 1024;
@@ -630,7 +624,7 @@ namespace MQTTnet.Tests.Server
         {
             var serverOptions = new MqttServerOptionsBuilder().WithConnectionValidator(context => { context.ReasonCode = MqttConnectReasonCode.NotAuthorized; });
 
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
@@ -659,7 +653,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Same_Client_Id_Refuse_Connection()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
@@ -747,7 +741,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Same_Client_Id_Connect_Disconnect_Event_Order()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder());
 
@@ -832,7 +826,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Remove_Session()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder());
 
@@ -851,7 +845,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Stop_And_Restart()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
@@ -877,7 +871,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Do_Not_Send_Retained_Messages_For_Denied_Subscription()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithSubscriptionInterceptor(c =>
                 {
@@ -921,7 +915,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Collect_Messages_In_Disconnected_Session()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 
@@ -952,15 +946,14 @@ namespace MQTTnet.Tests.Server
             }
         }
 
-        static async Task TestPublishAsync(
+        async Task TestPublishAsync(
             string topic,
             MqttQualityOfServiceLevel qualityOfServiceLevel,
             string topicFilter,
             MqttQualityOfServiceLevel filterQualityOfServiceLevel,
-            int expectedReceivedMessagesCount,
-            TestContext testContext)
+            int expectedReceivedMessagesCount)
         {
-            using (var testEnvironment = new TestEnvironment(testContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var receivedMessagesCount = 0;
 
@@ -985,7 +978,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Intercept_Undelivered()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var undeliverd = string.Empty;
 
@@ -1009,7 +1002,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Intercept_ClientMessageQueue()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer(new MqttServerOptionsBuilder()
                     .WithClientMessageQueueInterceptor(c => c.ApplicationMessage.Topic = "a"));
@@ -1047,7 +1040,7 @@ namespace MQTTnet.Tests.Server
         {
             const string topic = "a";
 
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer(new MqttServerOptionsBuilder()
                     .WithClientMessageQueueInterceptor(c => { })); // Interceptor does nothing but has to be present.

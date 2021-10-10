@@ -1,42 +1,47 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Subscribing;
+using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public class Session_Tests
-    {
-        public TestContext TestContext { get; set; }
-
+    public sealed class Session_Tests : BaseTestClass
+    { 
         [TestMethod]
         public async Task Set_Session_Item()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var serverOptions = new MqttServerOptionsBuilder()
-                    .WithConnectionValidator(delegate (MqttConnectionValidatorContext context)
+                    .WithConnectionValidator(delegate(MqttConnectionValidatorContext context)
                     {
                         // Don't validate anything. Just set some session items.
                         context.SessionItems["can_subscribe_x"] = true;
                         context.SessionItems["default_payload"] = "Hello World";
                     })
-                    .WithSubscriptionInterceptor(delegate (MqttSubscriptionInterceptorContext context)
+                    .WithSubscriptionInterceptor(delegate(MqttSubscriptionInterceptorContext context)
                     {
                         if (context.TopicFilter.Topic == "x")
                         {
-                            context.AcceptSubscription = context.SessionItems["can_subscribe_x"] as bool? == true;
+                            if (context.SessionItems["can_subscribe_x"] as bool? == false)
+                            {
+                                context.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
+                            }
                         }
                     })
-                    .WithApplicationMessageInterceptor(delegate (MqttApplicationMessageInterceptorContext context)
+                    .WithApplicationMessageInterceptor(delegate(MqttApplicationMessageInterceptorContext context)
                     {
-                        context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(context.SessionItems["default_payload"] as string);
+                        context.ApplicationMessage.Payload =
+                            Encoding.UTF8.GetBytes(
+                                context.SessionItems["default_payload"] as string ?? String.Empty);
                     });
 
                 await testEnvironment.StartServer(serverOptions);
@@ -44,7 +49,7 @@ namespace MQTTnet.Tests.Server
                 string receivedPayload = null;
 
                 var client = await testEnvironment.ConnectClient();
-                client.UseApplicationMessageReceivedHandler(delegate (MqttApplicationMessageReceivedEventArgs args)
+                client.UseApplicationMessageReceivedHandler(delegate(MqttApplicationMessageReceivedEventArgs args)
                 {
                     receivedPayload = args.ApplicationMessage.ConvertPayloadToString();
                 });
@@ -65,10 +70,10 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Get_Session_Items_In_Status()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 var serverOptions = new MqttServerOptionsBuilder()
-                    .WithConnectionValidator(delegate (MqttConnectionValidatorContext context)
+                    .WithConnectionValidator(delegate(MqttConnectionValidatorContext context)
                     {
                         // Don't validate anything. Just set some session items.
                         context.SessionItems["can_subscribe_x"] = true;
@@ -77,7 +82,7 @@ namespace MQTTnet.Tests.Server
 
                 await testEnvironment.StartServer(serverOptions);
 
-                var client = await testEnvironment.ConnectClient();
+                await testEnvironment.ConnectClient();
 
                 var sessionStatus = await testEnvironment.Server.GetSessionStatusAsync();
                 var session = sessionStatus.First();
@@ -86,11 +91,10 @@ namespace MQTTnet.Tests.Server
             }
         }
 
-
         [TestMethod]
         public async Task Manage_Session_MaxParallel()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 testEnvironment.IgnoreClientLogErrors = true;
                 var serverOptions = new MqttServerOptionsBuilder();
@@ -106,6 +110,61 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(1, connectedClients.Count);
             }
         }
+        
+        [TestMethod]
+        public async Task Fire_Deleted_Event()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                // Arrange client and server.
+                var server = await testEnvironment.StartServer(o => o.WithPersistentSessions(false));
+                var client = await testEnvironment.ConnectClient();
+
+                // Arrange session status tracking.
+                var status = await server.GetSessionStatusAsync();
+                var clientStatus = status[0];
+
+                var deletedEventFired = false;
+                clientStatus.Deleted += (_, __) =>
+                {
+                    deletedEventFired = true;
+                };
+                
+                // Act: Disconnect the client -> Event must be fired.
+                await client.DisconnectAsync();
+
+                await LongTestDelay();
+                
+                // Assert that the event was fired properly.
+                Assert.IsTrue(deletedEventFired);
+            }
+        }
+        
+        [TestMethod]
+        public async Task Inject_Application_Message()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                // Arrange client and server.
+                var server = await testEnvironment.StartServer();
+                var client = await testEnvironment.ConnectClient();
+                var messageReceivedHandler = testEnvironment.CreateApplicationMessageHandler(client);
+                
+                // Arrange session status tracking.
+                var status = await server.GetSessionStatusAsync();
+                var clientStatus = status[0];
+
+                // Act: Inject the application message.
+                await clientStatus.EnqueueApplicationMessageAsync(new MqttApplicationMessageBuilder()
+                    .WithTopic("injected_one").Build());
+
+                await LongTestDelay();
+                
+                // Assert 
+                Assert.AreEqual(1, messageReceivedHandler.ReceivedApplicationMessages.Count);
+                Assert.AreEqual("injected_one", messageReceivedHandler.ReceivedApplicationMessages[0].Topic);
+            }
+        }
 
         async Task<IMqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
         {
@@ -113,7 +172,7 @@ namespace MQTTnet.Tests.Server
             {
                 return await testEnvironment.ConnectClient(options);
             }
-            catch (System.Exception)
+            catch
             {
                 return null;
             }

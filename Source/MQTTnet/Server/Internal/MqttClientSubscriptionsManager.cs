@@ -29,7 +29,8 @@ namespace MQTTnet.Server.Internal
             _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));
             _options = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
-            _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
+            _retainedMessagesManager = retainedMessagesManager ??
+                                       throw new ArgumentNullException(nameof(retainedMessagesManager));
         }
 
         public async Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket)
@@ -46,7 +47,7 @@ namespace MQTTnet.Server.Internal
                 var interceptorContext = await InterceptSubscribe(originalTopicFilter).ConfigureAwait(false);
                 var finalTopicFilter = interceptorContext.TopicFilter;
                 var acceptSubscription = interceptorContext.ReasonCode <= MqttSubscribeReasonCode.GrantedQoS2;
-                
+
                 if (string.IsNullOrEmpty(finalTopicFilter.Topic) || !acceptSubscription)
                 {
                     // Return codes is for MQTT < 5 and Reason Code is for MQTT > 5.
@@ -69,56 +70,73 @@ namespace MQTTnet.Server.Internal
                     continue;
                 }
 
-                var subscription = CreateSubscription(
-                    finalTopicFilter, 
-                    subscribePacket.Properties?.SubscriptionIdentifier ?? 0,
-                    interceptorContext.ReasonCode);
+                if (interceptorContext.ProcessSubscription)
+                {
+                    var subscription = CreateSubscription(
+                        finalTopicFilter,
+                        subscribePacket.Properties?.SubscriptionIdentifier ?? 0,
+                        interceptorContext.ReasonCode);
 
-                await _eventDispatcher.SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter).ConfigureAwait(false);
+                    await _eventDispatcher
+                        .SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter)
+                        .ConfigureAwait(false);
 
-                FilterRetainedApplicationMessages(retainedApplicationMessages, subscription, result);
+                    FilterRetainedApplicationMessages(retainedApplicationMessages, subscription, result);
+                }
             }
 
             return result;
         }
 
-        public async Task<List<MqttUnsubscribeReasonCode>> Unsubscribe(MqttUnsubscribePacket unsubscribePacket)
+        public async Task<UnsubscribeResult> Unsubscribe(MqttUnsubscribePacket unsubscribePacket)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
 
-            var reasonCodes = new List<MqttUnsubscribeReasonCode>();
+            var result = new UnsubscribeResult();
 
-            foreach (var topicFilter in unsubscribePacket.TopicFilters)
+            _subscriptionsLock.EnterWriteLock();
+            try
             {
-                var interceptorContext = await InterceptUnsubscribe(topicFilter).ConfigureAwait(false);
-                if (interceptorContext != null && !interceptorContext.AcceptUnsubscription)
+                foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
-                    reasonCodes.Add(MqttUnsubscribeReasonCode.ImplementationSpecificError);
-                    continue;
-                }
+                    _subscriptions.TryGetValue(topicFilter, out var existingSubscription);
+                    
+                    var interceptorContext = await InterceptUnsubscribe(topicFilter, existingSubscription).ConfigureAwait(false);
+                    var acceptUnsubscription = interceptorContext.ReasonCode == MqttUnsubscribeReasonCode.Success;
 
-                _subscriptionsLock.EnterWriteLock();
-                try
-                {
-                    reasonCodes.Add(_subscriptions.Remove(topicFilter)
-                        ? MqttUnsubscribeReasonCode.Success
-                        : MqttUnsubscribeReasonCode.NoSubscriptionExisted);
+                    if (interceptorContext.CloseConnection)
+                    {
+                        result.CloseConnection = true;
+                    }
+                    
+                    if (!acceptUnsubscription)
+                    {
+                        result.ReasonCodes.Add(interceptorContext.ReasonCode);
+                        continue;
+                    }
+
+                    if (interceptorContext.ProcessUnsubscription)
+                    {
+                        _subscriptions.Remove(topicFilter);
+                    }
                 }
-                finally
-                {
-                    _subscriptionsLock.ExitWriteLock();
-                }
+            }
+            finally
+            {
+                _subscriptionsLock.ExitWriteLock();
             }
 
             foreach (var topicFilter in unsubscribePacket.TopicFilters)
             {
-                await _eventDispatcher.SafeNotifyClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
+                await _eventDispatcher.SafeNotifyClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter)
+                    .ConfigureAwait(false);
             }
 
-            return reasonCodes;
+            return result;
         }
 
-        public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel, string senderClientId)
+        public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel,
+            string senderClientId)
         {
             List<Subscription> subscriptions;
             _subscriptionsLock.EnterReadLock();
@@ -178,7 +196,8 @@ namespace MQTTnet.Server.Internal
             };
         }
 
-        Subscription CreateSubscription(MqttTopicFilter topicFilter, uint subscriptionIdentifier, MqttSubscribeReasonCode reasonCode)
+        Subscription CreateSubscription(MqttTopicFilter topicFilter, uint subscriptionIdentifier,
+            MqttSubscribeReasonCode reasonCode)
         {
             var subscription = new Subscription
             {
@@ -205,7 +224,7 @@ namespace MQTTnet.Server.Internal
             {
                 throw new InvalidOperationException();
             }
-            
+
             _subscriptionsLock.EnterWriteLock();
             try
             {
@@ -220,7 +239,8 @@ namespace MQTTnet.Server.Internal
             return subscription;
         }
 
-        static void FilterRetainedApplicationMessages(IList<MqttApplicationMessage> retainedApplicationMessages, Subscription subscription, SubscribeResult subscribeResult)
+        static void FilterRetainedApplicationMessages(IList<MqttApplicationMessage> retainedApplicationMessages,
+            Subscription subscription, SubscribeResult subscribeResult)
         {
             for (var i = retainedApplicationMessages.Count - 1; i >= 0; i--)
             {
@@ -236,13 +256,15 @@ namespace MQTTnet.Server.Internal
                     continue;
                 }
 
-                if (subscription.RetainHandling == MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly && !subscription.IsNewSubscription)
+                if (subscription.RetainHandling == MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly &&
+                    !subscription.IsNewSubscription)
                 {
                     // This is a MQTT V5+ feature.
                     continue;
                 }
 
-                if (MqttTopicFilterComparer.Compare(retainedApplicationMessage.Topic, subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
+                if (MqttTopicFilterComparer.Compare(retainedApplicationMessage.Topic, subscription.Topic) !=
+                    MqttTopicFilterCompareResult.IsMatch)
                 {
                     continue;
                 }
@@ -256,7 +278,7 @@ namespace MQTTnet.Server.Internal
 
                 if (subscription.Identifier > 0)
                 {
-                    queuedApplicationMessage.SubscriptionIdentifiers = new List<uint> { subscription.Identifier };
+                    queuedApplicationMessage.SubscriptionIdentifiers = new List<uint> {subscription.Identifier};
                 }
 
                 subscribeResult.RetainedApplicationMessages.Add(queuedApplicationMessage);
@@ -264,7 +286,7 @@ namespace MQTTnet.Server.Internal
                 retainedApplicationMessages[i] = null;
             }
         }
-        
+
         async Task<MqttSubscriptionInterceptorContext> InterceptSubscribe(MqttTopicFilter topicFilter)
         {
             var context = new MqttSubscriptionInterceptorContext
@@ -303,21 +325,15 @@ namespace MQTTnet.Server.Internal
                 var interceptor = _options.SubscriptionInterceptor;
                 if (interceptor != null)
                 {
-                    await interceptor.InterceptSubscriptionAsync(context).ConfigureAwait(false);    
+                    await interceptor.InterceptSubscriptionAsync(context).ConfigureAwait(false);
                 }
             }
-            
+
             return context;
         }
 
-        async Task<MqttUnsubscriptionInterceptorContext> InterceptUnsubscribe(string topicFilter)
+        async Task<MqttUnsubscriptionInterceptorContext> InterceptUnsubscribe(string topicFilter, Subscription subscription)
         {
-            var interceptor = _options.UnsubscriptionInterceptor;
-            if (interceptor == null)
-            {
-                return null;
-            }
-
             var context = new MqttUnsubscriptionInterceptorContext
             {
                 ClientId = _clientSession.ClientId,
@@ -325,12 +341,28 @@ namespace MQTTnet.Server.Internal
                 SessionItems = _clientSession.Items
             };
 
+            if (subscription == null)
+            {
+                context.DefaultReasonCode = MqttUnsubscribeReasonCode.NoSubscriptionExisted;
+            }
+            else
+            {
+                context.DefaultReasonCode = MqttUnsubscribeReasonCode.Success;
+            }
+
+            var interceptor = _options.UnsubscriptionInterceptor;
+            if (interceptor == null)
+            {
+                return context;
+            }
+
             await interceptor.InterceptUnsubscriptionAsync(context).ConfigureAwait(false);
 
             return context;
         }
 
-        static MqttQualityOfServiceLevel GetEffectiveQoS(MqttQualityOfServiceLevel qosLevel, HashSet<MqttQualityOfServiceLevel> subscribedQoSLevels)
+        static MqttQualityOfServiceLevel GetEffectiveQoS(MqttQualityOfServiceLevel qosLevel,
+            HashSet<MqttQualityOfServiceLevel> subscribedQoSLevels)
         {
             MqttQualityOfServiceLevel effectiveQoS;
             if (subscribedQoSLevels.Contains(qosLevel))

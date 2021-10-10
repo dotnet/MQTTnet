@@ -9,7 +9,6 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using MQTTnet.Server.Internal;
 
@@ -201,9 +200,11 @@ namespace MQTTnet.Formatter.V3
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            var subscribePacket = new MqttSubscribePacket();
-            subscribePacket.TopicFilters.AddRange(options.TopicFilters);
-
+            var subscribePacket = new MqttSubscribePacket
+            {
+                TopicFilters = options.TopicFilters
+            };
+            
             return subscribePacket;
         }
 
@@ -214,11 +215,10 @@ namespace MQTTnet.Formatter.V3
 
             var subackPacket = new MqttSubAckPacket
             {
-                PacketIdentifier = subscribePacket.PacketIdentifier
+                PacketIdentifier = subscribePacket.PacketIdentifier,
+                ReturnCodes = subscribeResult.ReturnCodes
             };
-
-            subackPacket.ReturnCodes.AddRange(subscribeResult.ReturnCodes);
-
+            
             return subackPacket;
         }
 
@@ -226,21 +226,22 @@ namespace MQTTnet.Formatter.V3
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            var unsubscribePacket = new MqttUnsubscribePacket();
-            unsubscribePacket.TopicFilters.AddRange(options.TopicFilters);
+            var unsubscribePacket = new MqttUnsubscribePacket
+            {
+                TopicFilters = options.TopicFilters
+            };
 
             return unsubscribePacket;
         }
 
-        public MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, List<MqttUnsubscribeReasonCode> reasonCodes)
+        public MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, UnsubscribeResult _)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
-            if (reasonCodes == null) throw new ArgumentNullException(nameof(reasonCodes));
-
+            
+            // The UnsubscribeResult is not supported in protocol version 3.1.1!
             return new MqttUnsubAckPacket
             {
-                PacketIdentifier = unsubscribePacket.PacketIdentifier,
-                ReasonCodes = reasonCodes
+                PacketIdentifier = unsubscribePacket.PacketIdentifier
             };
         }
 

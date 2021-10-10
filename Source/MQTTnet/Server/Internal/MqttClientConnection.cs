@@ -379,10 +379,15 @@ namespace MQTTnet.Server.Internal
 
         async Task HandleIncomingUnsubscribePacket(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
-            var reasonCodes = await Session.SubscriptionsManager.Unsubscribe(unsubscribePacket).ConfigureAwait(false);
-            var unsubAckPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreateUnsubAckPacket(unsubscribePacket, reasonCodes);
+            var unsubscribeResult = await Session.SubscriptionsManager.Unsubscribe(unsubscribePacket).ConfigureAwait(false);
+            var unsubAckPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreateUnsubAckPacket(unsubscribePacket, unsubscribeResult);
 
             await SendPacketAsync(unsubAckPacket, cancellationToken).ConfigureAwait(false);
+            
+            if (unsubscribeResult.CloseConnection)
+            {
+                StopInternal();
+            }
         }
 
         Task HandleIncomingPublishPacket(MqttPublishPacket publishPacket, CancellationToken cancellationToken)

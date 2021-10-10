@@ -14,8 +14,15 @@ namespace MQTTnet.Server.Status
         {
             _session = session ?? throw new ArgumentNullException(nameof(session));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
+
+            session.Deleted += (_, __) => Deleted?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        /// Fired when this session is being deleted.
+        /// </summary>
+        public event EventHandler Deleted;
+        
         /// <summary>
         /// Gets or sets the client identifier.
         /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.

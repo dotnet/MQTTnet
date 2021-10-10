@@ -8,13 +8,15 @@ namespace MQTTnet.Packets
     {
         public ushort PacketIdentifier { get; set; }
 
-        #region Added in MQTTv5
+        /// <summary>
+        /// Added in MQTT V5.
+        /// </summary>
+        public MqttUnsubAckPacketProperties Properties { get; set; } = new MqttUnsubAckPacketProperties();
 
-        public MqttUnsubAckPacketProperties Properties { get; set; }
-
+        /// <summary>
+        /// Added in MQTT V5.
+        /// </summary>
         public List<MqttUnsubscribeReasonCode> ReasonCodes { get; set; } = new List<MqttUnsubscribeReasonCode>();
-
-        #endregion
 
         public override string ToString()
         {

@@ -22,6 +22,8 @@ namespace MQTTnet.Server.Internal
             ApplicationMessagesQueue = new MqttClientSessionApplicationMessagesQueue(serverOptions);
         }
 
+        public event EventHandler Deleted;
+        
         public string ClientId { get; }
 
         public bool IsCleanSession { get; set; } = true;
@@ -43,6 +45,11 @@ namespace MQTTnet.Server.Internal
             status.CreatedTimestamp = _createdTimestamp;
             status.PendingApplicationMessagesCount = ApplicationMessagesQueue.Count;
             status.Items = Items;
+        }
+
+        public void OnDeleted()
+        {
+            Deleted?.Invoke(this, EventArgs.Empty);
         }
     }
 }

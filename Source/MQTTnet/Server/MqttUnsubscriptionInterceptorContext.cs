@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
@@ -22,8 +24,32 @@ namespace MQTTnet.Server
         /// </summary>
         public IDictionary<object, object> SessionItems { get; internal set; }
 
-        public bool AcceptUnsubscription { get; set; } = true;
+        [Obsolete("Please use ReasonCode instead.")]
+        public bool AcceptUnsubscription
+        {
+            get => ReasonCode == MqttUnsubscribeReasonCode.Success;
+            set => ReasonCode = DefaultReasonCode;
+        }
 
+        // Gets removed together with "AcceptUnsubscription".
+        internal MqttUnsubscribeReasonCode DefaultReasonCode { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the reason code which will be sent to the client.
+        /// This value is not transmitted when using MQTT v3.1.1.
+        /// </summary>
+        public MqttUnsubscribeReasonCode ReasonCode { get; set; }
+        
+        /// <summary>
+        /// Gets or sets whether the broker should remove an internal subscription for the client.
+        /// The broker can also avoid this and return "success" to the client.
+        /// This feature allows using the MQTT Broker as the Frontend and another system as the backend.
+        /// </summary>
+        public bool ProcessUnsubscription { get; set; } = true;
+        
+        /// <summary>
+        /// Gets or sets whether the broker should close the client connection.
+        /// </summary>
         public bool CloseConnection { get; set; }
     }
 }

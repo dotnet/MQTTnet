@@ -249,12 +249,12 @@ namespace MQTTnet.Server
             return this;
         }
 
-        public MqttServerOptionsBuilder WithPersistentSessions()
+        public MqttServerOptionsBuilder WithPersistentSessions(bool value = true)
         {
-            _options.EnablePersistentSessions = true;
+            _options.EnablePersistentSessions = value;
             return this;
         }
-
+        
         /// <summary>
         /// Gets or sets the client ID which is used when publishing messages from the server directly.
         /// </summary>

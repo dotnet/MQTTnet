@@ -62,9 +62,11 @@ namespace MQTTnet.Server.Internal
 
                 if (interceptorContext.CloseConnection)
                 {
+                    // When any of the interceptor calls leads to a connection close the connection
+                    // must be closed. So do not revert to false!
                     result.CloseConnection = true;
                 }
-
+                
                 if (!acceptSubscription || string.IsNullOrEmpty(finalTopicFilter.Topic))
                 {
                     continue;
@@ -104,14 +106,17 @@ namespace MQTTnet.Server.Internal
                     var interceptorContext = await InterceptUnsubscribe(topicFilter, existingSubscription).ConfigureAwait(false);
                     var acceptUnsubscription = interceptorContext.ReasonCode == MqttUnsubscribeReasonCode.Success;
 
+                    result.ReasonCodes.Add(interceptorContext.ReasonCode);
+
                     if (interceptorContext.CloseConnection)
                     {
+                        // When any of the interceptor calls leads to a connection close the connection
+                        // must be closed. So do not revert to false!
                         result.CloseConnection = true;
                     }
-                    
+           
                     if (!acceptUnsubscription)
                     {
-                        result.ReasonCodes.Add(interceptorContext.ReasonCode);
                         continue;
                     }
 
@@ -128,8 +133,7 @@ namespace MQTTnet.Server.Internal
 
             foreach (var topicFilter in unsubscribePacket.TopicFilters)
             {
-                await _eventDispatcher.SafeNotifyClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter)
-                    .ConfigureAwait(false);
+                await _eventDispatcher.SafeNotifyClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
             }
 
             return result;

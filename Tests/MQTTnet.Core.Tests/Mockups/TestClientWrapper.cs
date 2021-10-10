@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
@@ -17,7 +18,7 @@ namespace MQTTnet.Tests.Mockups
     {
         public TestClientWrapper(IMqttClient implementation, TestContext testContext)
         {
-            Implementation = implementation;
+            Implementation = implementation ?? throw new ArgumentNullException(nameof(implementation));
             TestContext = testContext;
         }
 
@@ -56,7 +57,7 @@ namespace MQTTnet.Tests.Mockups
                 var existingClientId = clientOptions.ClientId;
                 if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
                 {
-                    clientOptions.ClientId = TestContext.TestName + existingClientId;
+                    clientOptions.ClientId = TestContext.TestName + "_" + existingClientId;
                 }
             }
 

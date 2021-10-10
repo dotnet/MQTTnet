@@ -46,7 +46,7 @@ namespace MQTTnet.Formatter
 
         MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options);
 
-        MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, List<MqttUnsubscribeReasonCode> reasonCodes);
+        MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, UnsubscribeResult unsubscribeResult);
 
         MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options);
     }

@@ -8,12 +8,11 @@ namespace MQTTnet.Packets
 
         public List<string> TopicFilters { get; set; } = new List<string>();
 
-        #region Added in MQTTv5
-
-        public MqttUnsubscribePacketProperties Properties { get; set; }
-
-        #endregion
-
+        /// <summary>
+        /// Added in MQTTv5.
+        /// </summary>
+        public MqttUnsubscribePacketProperties Properties { get; set; } = new MqttUnsubscribePacketProperties();
+        
         public override string ToString()
         {
             var topicFiltersText = string.Join(",", TopicFilters);

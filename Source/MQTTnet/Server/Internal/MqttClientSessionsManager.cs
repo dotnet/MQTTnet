@@ -265,6 +265,8 @@ namespace MQTTnet.Server.Internal
         public async Task DeleteSessionAsync(string clientId)
         {
             MqttClientConnection connection;
+            MqttClientSession session;
+            
             lock (_clientConnections)
             {
                 _clientConnections.TryGetValue(clientId, out connection);
@@ -272,6 +274,7 @@ namespace MQTTnet.Server.Internal
 
             lock (_clientSessions)
             {
+                _clientSessions.TryGetValue(clientId, out session);
                 _clientSessions.Remove(clientId);
             }
 
@@ -280,6 +283,8 @@ namespace MQTTnet.Server.Internal
                 await connection.StopAsync(MqttClientDisconnectReason.NormalDisconnection).ConfigureAwait(false);
             }
 
+            session?.OnDeleted();
+            
             _logger.Verbose("Session for client '{0}' deleted.", clientId);
         }
 

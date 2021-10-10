@@ -49,47 +49,51 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
+        public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket,
+            MqttApplicationMessageReceivedReasonCode reasonCode)
         {
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 
             return new MqttPubAckPacket
             {
                 PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubAckReasonCode)(int)reasonCode
+                ReasonCode = (MqttPubAckReasonCode) (int) reasonCode
             };
         }
 
-        public MqttPubRecPacket CreatePubRecPacket(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
+        public MqttPubRecPacket CreatePubRecPacket(MqttPublishPacket publishPacket,
+            MqttApplicationMessageReceivedReasonCode reasonCode)
         {
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 
             return new MqttPubRecPacket
             {
                 PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubRecReasonCode)(int)reasonCode
+                ReasonCode = (MqttPubRecReasonCode) (int) reasonCode
             };
         }
 
-        public MqttPubCompPacket CreatePubCompPacket(MqttPubRelPacket pubRelPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
+        public MqttPubCompPacket CreatePubCompPacket(MqttPubRelPacket pubRelPacket,
+            MqttApplicationMessageReceivedReasonCode reasonCode)
         {
             if (pubRelPacket == null) throw new ArgumentNullException(nameof(pubRelPacket));
 
             return new MqttPubCompPacket
             {
                 PacketIdentifier = pubRelPacket.PacketIdentifier,
-                ReasonCode = (MqttPubCompReasonCode)(int)reasonCode
+                ReasonCode = (MqttPubCompReasonCode) (int) reasonCode
             };
         }
 
-        public MqttPubRelPacket CreatePubRelPacket(MqttPubRecPacket pubRecPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
+        public MqttPubRelPacket CreatePubRelPacket(MqttPubRecPacket pubRecPacket,
+            MqttApplicationMessageReceivedReasonCode reasonCode)
         {
             if (pubRecPacket == null) throw new ArgumentNullException(nameof(pubRecPacket));
 
             return new MqttPubRelPacket
             {
                 PacketIdentifier = pubRecPacket.PacketIdentifier,
-                ReasonCode = (MqttPubRelReasonCode)(int)reasonCode
+                ReasonCode = (MqttPubRelReasonCode) (int) reasonCode
             };
         }
 
@@ -122,7 +126,7 @@ namespace MQTTnet.Formatter.V5
             return new MqttClientConnectResult
             {
                 IsSessionPresent = connAckPacket.IsSessionPresent,
-                ResultCode = (MqttClientConnectResultCode)(int)connAckPacket.ReasonCode,
+                ResultCode = (MqttClientConnectResultCode) (int) connAckPacket.ReasonCode,
                 WildcardSubscriptionAvailable = connAckPacket.Properties?.WildcardSubscriptionAvailable ?? true,
                 RetainAvailable = connAckPacket.Properties?.RetainAvailable ?? true,
                 AssignedClientIdentifier = connAckPacket.Properties?.AssignedClientIdentifier,
@@ -143,7 +147,8 @@ namespace MQTTnet.Formatter.V5
             };
         }
 
-        public MqttConnectPacket CreateConnectPacket(MqttApplicationMessage willApplicationMessage, IMqttClientOptions options)
+        public MqttConnectPacket CreateConnectPacket(MqttApplicationMessage willApplicationMessage,
+            IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -153,7 +158,7 @@ namespace MQTTnet.Formatter.V5
                 Username = options.Credentials?.Username,
                 Password = options.Credentials?.Password,
                 CleanSession = options.CleanSession,
-                KeepAlivePeriod = (ushort)options.KeepAlivePeriod.TotalSeconds,
+                KeepAlivePeriod = (ushort) options.KeepAlivePeriod.TotalSeconds,
                 WillMessage = willApplicationMessage,
                 Properties = new MqttConnectPacketProperties
                 {
@@ -185,7 +190,7 @@ namespace MQTTnet.Formatter.V5
                     SharedSubscriptionAvailable = false,
                     TopicAliasMaximum = ushort.MaxValue,
                     WildcardSubscriptionAvailable = true,
-                    
+
                     UserProperties = connectionValidatorContext.ResponseUserProperties,
                     AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
                     AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
@@ -196,38 +201,43 @@ namespace MQTTnet.Formatter.V5
             };
         }
 
-        public MqttClientSubscribeResult CreateClientSubscribeResult(MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket)
+        public MqttClientSubscribeResult CreateClientSubscribeResult(MqttSubscribePacket subscribePacket,
+            MqttSubAckPacket subAckPacket)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
             if (subAckPacket == null) throw new ArgumentNullException(nameof(subAckPacket));
 
             if (subAckPacket.ReasonCodes.Count != subscribePacket.TopicFilters.Count)
             {
-                throw new MqttProtocolViolationException("The reason codes are not matching the topic filters [MQTT-3.9.3-1].");
+                throw new MqttProtocolViolationException(
+                    "The reason codes are not matching the topic filters [MQTT-3.9.3-1].");
             }
 
             var result = new MqttClientSubscribeResult();
 
             result.Items.AddRange(subscribePacket.TopicFilters.Select((t, i) =>
-                new MqttClientSubscribeResultItem(t, (MqttClientSubscribeResultCode)subAckPacket.ReasonCodes[i])));
+                new MqttClientSubscribeResultItem(t, (MqttClientSubscribeResultCode) subAckPacket.ReasonCodes[i])));
 
             return result;
         }
 
-        public MqttClientUnsubscribeResult CreateClientUnsubscribeResult(MqttUnsubscribePacket unsubscribePacket, MqttUnsubAckPacket unsubAckPacket)
+        public MqttClientUnsubscribeResult CreateClientUnsubscribeResult(MqttUnsubscribePacket unsubscribePacket,
+            MqttUnsubAckPacket unsubAckPacket)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
             if (unsubAckPacket == null) throw new ArgumentNullException(nameof(unsubAckPacket));
 
             if (unsubAckPacket.ReasonCodes.Count != unsubscribePacket.TopicFilters.Count)
             {
-                throw new MqttProtocolViolationException("The return codes are not matching the topic filters [MQTT-3.9.3-1].");
+                throw new MqttProtocolViolationException(
+                    "The return codes are not matching the topic filters [MQTT-3.9.3-1].");
             }
 
             var result = new MqttClientUnsubscribeResult();
 
             result.Items.AddRange(unsubscribePacket.TopicFilters.Select((t, i) =>
-                new MqttClientUnsubscribeResultItem(t, (MqttClientUnsubscribeResultCode)unsubAckPacket.ReasonCodes[i])));
+                new MqttClientUnsubscribeResultItem(t,
+                    (MqttClientUnsubscribeResultCode) unsubAckPacket.ReasonCodes[i])));
 
             return result;
         }
@@ -255,10 +265,9 @@ namespace MQTTnet.Formatter.V5
 
             var subackPacket = new MqttSubAckPacket
             {
-                PacketIdentifier = subscribePacket.PacketIdentifier
+                PacketIdentifier = subscribePacket.PacketIdentifier,
+                ReasonCodes = subscribeResult.ReasonCodes
             };
-
-            subackPacket.ReasonCodes.AddRange(subscribeResult.ReasonCodes);
 
             return subackPacket;
         }
@@ -269,24 +278,26 @@ namespace MQTTnet.Formatter.V5
 
             var packet = new MqttUnsubscribePacket
             {
-                Properties = new MqttUnsubscribePacketProperties()
+                TopicFilters = options.TopicFilters,
+                Properties = new MqttUnsubscribePacketProperties
+                {
+                    UserProperties = options.UserProperties
+                }
             };
-
-            packet.TopicFilters.AddRange(options.TopicFilters);
-            packet.Properties.UserProperties = options.UserProperties;
 
             return packet;
         }
 
-        public MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, List<MqttUnsubscribeReasonCode> reasonCodes)
+        public MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket,
+            UnsubscribeResult unsubscribeResult)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
-            if (reasonCodes == null) throw new ArgumentNullException(nameof(reasonCodes));
+            if (unsubscribeResult == null) throw new ArgumentNullException(nameof(unsubscribeResult));
 
             return new MqttUnsubAckPacket
             {
                 PacketIdentifier = unsubscribePacket.PacketIdentifier,
-                ReasonCodes = reasonCodes
+                ReasonCodes = unsubscribeResult.ReasonCodes
             };
         }
 
@@ -300,7 +311,7 @@ namespace MQTTnet.Formatter.V5
             }
             else
             {
-                packet.ReasonCode = (MqttDisconnectReasonCode)options.ReasonCode;
+                packet.ReasonCode = (MqttDisconnectReasonCode) options.ReasonCode;
             }
 
             return packet;
@@ -319,7 +330,7 @@ namespace MQTTnet.Formatter.V5
             {
                 // QoS 0 has no response. So we treat it as a success always.
                 // Both enums have the same values. So it can be easily converted.
-                result.ReasonCode = (MqttClientPublishReasonCode)(int)(pubAckPacket.ReasonCode ?? 0);
+                result.ReasonCode = (MqttClientPublishReasonCode) (int) (pubAckPacket.ReasonCode ?? 0);
 
                 result.PacketIdentifier = pubAckPacket.PacketIdentifier;
             }
@@ -327,7 +338,8 @@ namespace MQTTnet.Formatter.V5
             return result;
         }
 
-        public MqttClientPublishResult CreateClientPublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
+        public MqttClientPublishResult CreateClientPublishResult(MqttPubRecPacket pubRecPacket,
+            MqttPubCompPacket pubCompPacket)
         {
             if (pubRecPacket == null || pubCompPacket == null)
             {
@@ -360,7 +372,7 @@ namespace MQTTnet.Formatter.V5
             if (pubRecPacket.ReasonCode.HasValue)
             {
                 // Both enums share the same values.
-                result.ReasonCode = (MqttClientPublishReasonCode)(pubRecPacket.ReasonCode ?? 0);
+                result.ReasonCode = (MqttClientPublishReasonCode) (pubRecPacket.ReasonCode ?? 0);
             }
 
             return result;

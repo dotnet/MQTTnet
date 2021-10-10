@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Internal;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Internal
 {
     [TestClass]
     public class AsyncLock_Tests

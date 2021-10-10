@@ -25,12 +25,13 @@ namespace MQTTnet.Server
 
         // Will be removed together with "AcceptSubscription". It only stores the default value when setting "AcceptSubscription" to true.
         internal MqttSubscribeReasonCode DefaultReasonCode { get; set; }
+        
         internal MqttSubscribeReturnCode DefaultReturnCode { get; set; }
 
         [Obsolete("Please use a proper value for 'ReasonCode' instead. This property will be removed in the future.")]
         public bool AcceptSubscription
         {
-            get => ReasonCode >= MqttSubscribeReasonCode.GrantedQoS0 && ReasonCode <= MqttSubscribeReasonCode.GrantedQoS2;
+            get => ReasonCode == MqttSubscribeReasonCode.GrantedQoS0 && ReasonCode <= MqttSubscribeReasonCode.GrantedQoS2;
             set
             {
                 if (value)
@@ -47,6 +48,13 @@ namespace MQTTnet.Server
         }
 
         /// <summary>
+        /// Gets or sets whether the broker should create an internal subscription for the client.
+        /// The broker can also avoid this and return "success" to the client.
+        /// This feature allows using the MQTT Broker as the Frontend and another system as the backend.
+        /// </summary>
+        public bool ProcessSubscription { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the reason code which is sent to the client.
         /// The subscription is skipped when the value is not GrantedQoS_.
         /// MQTTv5 only.
@@ -56,6 +64,9 @@ namespace MQTTnet.Server
         // MQTT < 5 only!
         internal MqttSubscribeReturnCode ReturnCode { get; set; }
 
+        /// <summary>
+        /// Gets or sets whether the broker should close the client connection.
+        /// </summary>
         public bool CloseConnection { get; set; }
     }
 }

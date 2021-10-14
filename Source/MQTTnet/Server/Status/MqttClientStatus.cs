@@ -19,33 +19,33 @@ namespace MQTTnet.Server.Status
         /// Gets or sets the client identifier.
         /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
-        public string ClientId { get; set; }
+        public string ClientId => _connection.ClientId;
 
-        public string Endpoint { get; set; }
+        public string Endpoint => _connection.Endpoint;
 
-        public MqttProtocolVersion ProtocolVersion { get; set; }
+        public MqttProtocolVersion ProtocolVersion => _connection.ChannelAdapter.PacketFormatterAdapter.ProtocolVersion;
 
-        public DateTime ConnectedTimestamp { get; set; }
-        
-        public DateTime LastPacketReceivedTimestamp { get; set; }
-        
-        public DateTime LastPacketSentTimestamp { get; set; }
+        public DateTime ConnectedTimestamp => _connection.Statistics.ConnectedTimestamp;
 
-        public DateTime LastNonKeepAlivePacketReceivedTimestamp { get; set; }
+        public DateTime LastPacketReceivedTimestamp => _connection.Statistics.LastPacketReceivedTimestamp;
 
-        public long ReceivedApplicationMessagesCount { get; set; }
+        public DateTime LastPacketSentTimestamp => _connection.Statistics.LastPacketSentTimestamp;
 
-        public long SentApplicationMessagesCount { get; set; }
+        public DateTime LastNonKeepAlivePacketReceivedTimestamp => _connection.Statistics.LastNonKeepAlivePacketReceivedTimestamp;
 
-        public long ReceivedPacketsCount { get; set; }
+        public long ReceivedApplicationMessagesCount => _connection.Statistics.ReceivedApplicationMessagesCount;
 
-        public long SentPacketsCount { get; set; }
+        public long SentApplicationMessagesCount => _connection.Statistics.SentApplicationMessagesCount;
+
+        public long ReceivedPacketsCount => _connection.Statistics.ReceivedPacketsCount;
+
+        public long SentPacketsCount => _connection.Statistics.SentPacketsCount;
 
         public IMqttSessionStatus Session { get; set; }
 
-        public long BytesSent { get; set; }
+        public long BytesSent => _connection.ChannelAdapter.BytesSent;
 
-        public long BytesReceived { get; set; }
+        public long BytesReceived => _connection.ChannelAdapter.BytesReceived;
         
         public Task DisconnectAsync()
         {

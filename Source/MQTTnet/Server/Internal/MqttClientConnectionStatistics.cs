@@ -7,12 +7,6 @@ namespace MQTTnet.Server.Internal
 {
     public sealed class MqttClientConnectionStatistics
     {
-        readonly DateTime _connectedTimestamp;
-
-        DateTime _lastNonKeepAlivePacketReceivedTimestamp;
-        DateTime _lastPacketReceivedTimestamp;
-        DateTime _lastPacketSentTimestamp;
-
         // Start with 1 because the CONNACK packet is not counted here.
         long _receivedPacketsCount = 1;
 
@@ -24,22 +18,36 @@ namespace MQTTnet.Server.Internal
 
         public MqttClientConnectionStatistics()
         {
-            _connectedTimestamp = DateTime.UtcNow;
+            ConnectedTimestamp = DateTime.UtcNow;
 
-            _lastPacketReceivedTimestamp = _connectedTimestamp;
-            _lastPacketSentTimestamp = _connectedTimestamp;
+            LastPacketReceivedTimestamp = ConnectedTimestamp;
+            LastPacketSentTimestamp = ConnectedTimestamp;
 
-            _lastNonKeepAlivePacketReceivedTimestamp = _connectedTimestamp;
+            LastNonKeepAlivePacketReceivedTimestamp = ConnectedTimestamp;
         }
 
-        public DateTime LastPacketReceivedTimestamp => _lastPacketReceivedTimestamp;
+        public DateTime ConnectedTimestamp { get; }
 
+        public DateTime LastPacketReceivedTimestamp { get; private set; }
+
+        public DateTime LastPacketSentTimestamp { get; private set; }
+        
+        public DateTime LastNonKeepAlivePacketReceivedTimestamp { get; private set; }
+
+        public long SentApplicationMessagesCount => Interlocked.Read(ref _sentApplicationMessagesCount);
+        
+        public long ReceivedApplicationMessagesCount => Interlocked.Read(ref _receivedApplicationMessagesCount);
+        
+        public long SentPacketsCount => Interlocked.Read(ref _sentPacketsCount);
+        
+        public long ReceivedPacketsCount => Interlocked.Read(ref _receivedPacketsCount);
+        
         public void HandleReceivedPacket(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
             
             // This class is tracking all values from Clients perspective!
-            _lastPacketSentTimestamp = DateTime.UtcNow;
+            LastPacketSentTimestamp = DateTime.UtcNow;
 
             Interlocked.Increment(ref _sentPacketsCount);
 
@@ -50,7 +58,7 @@ namespace MQTTnet.Server.Internal
 
             if (!(packet is MqttPingReqPacket || packet is MqttPingRespPacket))
             {
-                _lastNonKeepAlivePacketReceivedTimestamp = _lastPacketReceivedTimestamp;
+                LastNonKeepAlivePacketReceivedTimestamp = LastPacketReceivedTimestamp;
             }
         }
 
@@ -59,7 +67,7 @@ namespace MQTTnet.Server.Internal
             if (packet == null) throw new ArgumentNullException(nameof(packet));
             
             // This class is tracking all values from Clients perspective!
-            _lastPacketReceivedTimestamp = DateTime.UtcNow;
+            LastPacketReceivedTimestamp = DateTime.UtcNow;
 
             Interlocked.Increment(ref _receivedPacketsCount);
 
@@ -67,24 +75,6 @@ namespace MQTTnet.Server.Internal
             {
                 Interlocked.Increment(ref _receivedApplicationMessagesCount);
             }
-        }
-
-        public void FillClientStatus(MqttClientStatus clientStatus)
-        {
-            if (clientStatus == null) throw new ArgumentNullException(nameof(clientStatus));
-            
-            clientStatus.ConnectedTimestamp = _connectedTimestamp;
-
-            clientStatus.ReceivedPacketsCount = Interlocked.Read(ref _receivedPacketsCount);
-            clientStatus.SentPacketsCount = Interlocked.Read(ref _sentPacketsCount);
-
-            clientStatus.ReceivedApplicationMessagesCount = Interlocked.Read(ref _receivedApplicationMessagesCount);
-            clientStatus.SentApplicationMessagesCount = Interlocked.Read(ref _sentApplicationMessagesCount);
-
-            clientStatus.LastPacketReceivedTimestamp = _lastPacketReceivedTimestamp;
-            clientStatus.LastPacketSentTimestamp = _lastPacketSentTimestamp;
-
-            clientStatus.LastNonKeepAlivePacketReceivedTimestamp = _lastNonKeepAlivePacketReceivedTimestamp;
         }
     }
 }

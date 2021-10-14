@@ -9,25 +9,25 @@ namespace MQTTnet.Server.Status
     public sealed class MqttSessionStatus : IMqttSessionStatus
     {
         readonly MqttClientSession _session;
-        readonly MqttClientSessionsManager _sessionsManager;
 
-        public MqttSessionStatus(MqttClientSession session, MqttClientSessionsManager sessionsManager)
+        public MqttSessionStatus(MqttClientSession session)
         {
             _session = session ?? throw new ArgumentNullException(nameof(session));
-            _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
-
-            session.Deleted += (_, __) => Deleted?.Invoke(this, EventArgs.Empty);
         }
         
-        public event EventHandler Deleted;
-        
-        public string ClientId { get; set; }
+        public event EventHandler Deleted
+        {
+            add => _session.Deleted += value;
+            remove => _session.Deleted += value;
+        }
 
-        public long PendingApplicationMessagesCount { get; set; }
+        public string ClientId => _session.ClientId;
 
-        public DateTime CreatedTimestamp { get; set; }
-        
-        public IDictionary<object, object> Items { get; set; }
+        public long PendingApplicationMessagesCount => _session.ApplicationMessagesQueue.Count;
+
+        public DateTime CreatedTimestamp => _session.CreatedTimestamp;
+
+        public IDictionary<object, object> Items => _session.Items;
         
         public Task EnqueueApplicationMessageAsync(MqttApplicationMessage applicationMessage)
         {
@@ -53,7 +53,7 @@ namespace MQTTnet.Server.Status
 
         public Task DeleteAsync()
         {
-            return _sessionsManager.DeleteSessionAsync(ClientId);
+            return _session.DeleteAsync();
         }
         
         public Task ClearPendingApplicationMessagesAsync()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
 {
@@ -68,5 +69,10 @@ namespace MQTTnet.Server
         /// Gets or sets whether the broker should close the client connection.
         /// </summary>
         public bool CloseConnection { get; set; }
+        
+        /// <summary>
+        /// Gets the current client session.
+        /// </summary>
+        public IMqttSessionStatus Session { get; internal set; }
     }
 }

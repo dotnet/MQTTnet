@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Client.Disconnecting;
-using MQTTnet.Diagnostics;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
@@ -14,7 +13,6 @@ using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server.Internal
 {
@@ -25,12 +23,10 @@ namespace MQTTnet.Server.Internal
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         
         readonly MqttClientSessionsManager _sessionsManager;
-
-        readonly IMqttChannelAdapter _channelAdapter;
+        
         readonly MqttNetSourceLogger _logger;
         readonly IMqttServerOptions _serverOptions;
-
-        readonly string _endpoint;
+        
         readonly MqttConnectPacket _connectPacket;
 
         CancellationTokenSource _cancellationToken;
@@ -46,8 +42,8 @@ namespace MQTTnet.Server.Internal
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
             
-            _channelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
-            _endpoint = channelAdapter.Endpoint;
+            ChannelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
+            Endpoint = channelAdapter.Endpoint;
             
             Session = session ?? throw new ArgumentNullException(nameof(session));
             _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
@@ -58,16 +54,16 @@ namespace MQTTnet.Server.Internal
 
         public string ClientId => _connectPacket.ClientId;
 
-        public string Endpoint => _endpoint;
+        public string Endpoint {get;}
+        
+        public IMqttChannelAdapter ChannelAdapter { get; }
 
         public MqttClientConnectionStatistics Statistics { get; } = new MqttClientConnectionStatistics();
 
         public bool IsRunning { get; private set; }
 
         public ushort KeepAlivePeriod => _connectPacket.KeepAlivePeriod;
-
-        public bool IsReadingPacket => _channelAdapter.IsReadingPacket;
-
+        
         public MqttClientSession Session { get; }
 
         public bool IsTakenOver { get; set; }
@@ -92,21 +88,9 @@ namespace MQTTnet.Server.Internal
 
         public void ResetStatistics()
         {
-            _channelAdapter.ResetStatistics();
+            ChannelAdapter.ResetStatistics();
         }
-
-        public void FillClientStatus(MqttClientStatus clientStatus)
-        {
-            clientStatus.ClientId = ClientId;
-            clientStatus.Endpoint = _endpoint;
-
-            clientStatus.ProtocolVersion = _channelAdapter.PacketFormatterAdapter.ProtocolVersion;
-            clientStatus.BytesSent = _channelAdapter.BytesSent;
-            clientStatus.BytesReceived = _channelAdapter.BytesReceived;
-
-            Statistics.FillClientStatus(clientStatus);
-        }
-
+        
         public void Dispose()
         {
             _cancellationToken.Dispose();
@@ -154,7 +138,7 @@ namespace MQTTnet.Server.Internal
 
         Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            return _channelAdapter.SendPacketAsync(packet, cancellationToken).ContinueWith(task => { Statistics.HandleSentPacket(packet); }, cancellationToken);
+            return ChannelAdapter.SendPacketAsync(packet, cancellationToken).ContinueWith(task => { Statistics.HandleSentPacket(packet); }, cancellationToken);
         }
 
         async Task ReceivePackagesLoop(CancellationToken cancellationToken)
@@ -166,7 +150,7 @@ namespace MQTTnet.Server.Internal
                 // own exception in the reading loop!
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var packet = await _channelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+                    var packet = await ChannelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
                     if (packet == null)
                     {
                         // The client has closed the connection gracefully.
@@ -278,7 +262,7 @@ namespace MQTTnet.Server.Internal
                             await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
                             var pubRecPacket = await awaitableRec.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
 
-                            var pubRelPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePubRelPacket(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
+                            var pubRelPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePubRelPacket(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
                             await SendPacketAsync(pubRelPacket, cancellationToken).ConfigureAwait(false);
 
                             await awaitableComp.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
@@ -321,10 +305,10 @@ namespace MQTTnet.Server.Internal
 
         async Task<MqttPublishPacket> CreatePublishPacket(MqttQueuedApplicationMessage queuedApplicationMessage)
         {
-            var publishPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(queuedApplicationMessage.ApplicationMessage);
+            var publishPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(queuedApplicationMessage.ApplicationMessage);
             publishPacket.QualityOfServiceLevel = queuedApplicationMessage.SubscriptionQualityOfServiceLevel;
 
-            if (_channelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500)
+            if (ChannelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500)
             {
                 publishPacket.Properties.SubscriptionIdentifiers = queuedApplicationMessage.SubscriptionIdentifiers;
             }
@@ -354,14 +338,14 @@ namespace MQTTnet.Server.Internal
         
         Task HandleIncomingPubRelPacket(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
         {
-            var pubCompPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePubCompPacket(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            var pubCompPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePubCompPacket(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
             return SendPacketAsync(pubCompPacket, cancellationToken);
         }
 
         async Task HandleIncomingSubscribePacket(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
             var subscribeResult = await Session.SubscriptionsManager.Subscribe(subscribePacket).ConfigureAwait(false);
-            var subAckPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreateSubAckPacket(subscribePacket, subscribeResult);
+            var subAckPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreateSubAckPacket(subscribePacket, subscribeResult);
 
             await SendPacketAsync(subAckPacket, cancellationToken).ConfigureAwait(false);
 
@@ -380,7 +364,7 @@ namespace MQTTnet.Server.Internal
         async Task HandleIncomingUnsubscribePacket(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
             var unsubscribeResult = await Session.SubscriptionsManager.Unsubscribe(unsubscribePacket).ConfigureAwait(false);
-            var unsubAckPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreateUnsubAckPacket(unsubscribePacket, unsubscribeResult);
+            var unsubAckPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreateUnsubAckPacket(unsubscribePacket, unsubscribeResult);
 
             await SendPacketAsync(unsubAckPacket, cancellationToken).ConfigureAwait(false);
             
@@ -394,7 +378,7 @@ namespace MQTTnet.Server.Internal
         {
             HandleTopicAlias(publishPacket);
 
-            var applicationMessage = _channelAdapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket);
+            var applicationMessage = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket);
             _sessionsManager.DispatchApplicationMessage(applicationMessage, this);
 
             switch (publishPacket.QualityOfServiceLevel)
@@ -405,12 +389,12 @@ namespace MQTTnet.Server.Internal
                 }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                 {
-                    var pubAckPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePubAckPacket(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
+                    var pubAckPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePubAckPacket(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
                     return SendPacketAsync(pubAckPacket, cancellationToken);
                 }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                 {
-                    var pubRecPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePubRecPacket(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
+                    var pubRecPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePubRecPacket(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
                     return SendPacketAsync(pubRecPacket, cancellationToken);
                 }
                 default:
@@ -458,7 +442,7 @@ namespace MQTTnet.Server.Internal
                     ReasonString = reason.ToString()
                 };
 
-                var disconnectPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreateDisconnectPacket(disconnectOptions);
+                var disconnectPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreateDisconnectPacket(disconnectOptions);
 
                 using (var timeout = new CancellationTokenSource(_serverOptions.DefaultCommunicationTimeout))
                 {

@@ -10,15 +10,12 @@ using MQTTnet.Exceptions;
 using MQTTnet.LowLevelClient;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Client
 {
     [TestClass]
-    public class LowLevelMqttClient_Tests
+    public sealed class LowLevelMqttClient_Tests : BaseTestClass
     {
-        public TestContext TestContext { get; set; }
-
         [TestMethod]
         [ExpectedException(typeof(MqttCommunicationException))]
         public async Task Connect_To_Not_Existing_Server()
@@ -34,7 +31,7 @@ namespace MQTTnet.Tests.Client
         [TestMethod]
         public async Task Connect_And_Disconnect()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
@@ -50,7 +47,7 @@ namespace MQTTnet.Tests.Client
         [TestMethod]
         public async Task Authenticate()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
@@ -71,7 +68,7 @@ namespace MQTTnet.Tests.Client
         [TestMethod]
         public async Task Subscribe()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
@@ -94,21 +91,23 @@ namespace MQTTnet.Tests.Client
         [TestMethod]
         public async Task Loose_Connection()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 testEnvironment.ServerPort = 8364;
                 var server = await testEnvironment.StartServer();
+                
                 var client = await testEnvironment.ConnectLowLevelClient(o => o.WithCommunicationTimeout(TimeSpan.Zero));
 
                 await Authenticate(client).ConfigureAwait(false);
 
                 await server.StopAsync();
 
-                await Task.Delay(1000);
+                await Task.Delay(2000);
 
                 try
                 {
                     await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None).ConfigureAwait(false);
+                    await Task.Delay(1000);
                     await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None).ConfigureAwait(false);
                 }
                 catch (MqttCommunicationException exception)

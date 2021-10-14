@@ -10,7 +10,7 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public class MqttSubscriptionsManager_Tests
+    public class MqttSubscriptionsManager_Tests : BaseTestClass
     {
         [TestMethod]
         public async Task MqttSubscriptionsManager_SubscribeSingleSuccess()
@@ -102,12 +102,18 @@ namespace MQTTnet.Tests.Server
 
         MqttClientSession CreateSession()
         {
+            var logger = new TestLogger();
+            var options = new MqttServerOptions();
+            var retainedMessagesManager = new MqttRetainedMessagesManager();
+            var eventDispatcher = new MqttServerEventDispatcher(logger);
+            
             return new MqttClientSession(
                 "",
                 new ConcurrentDictionary<object, object>(),
-                new MqttServerEventDispatcher(new TestLogger()),
-                new MqttServerOptions(),
-                new MqttRetainedMessagesManager());
+                eventDispatcher,
+                options,
+                retainedMessagesManager,
+                new MqttClientSessionsManager(options, retainedMessagesManager, eventDispatcher, logger));
         }
     }
 }

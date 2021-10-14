@@ -83,7 +83,7 @@ namespace MQTTnet.Server.Internal
                     return;
                 }
 
-                if (connection.IsReadingPacket)
+                if (connection.ChannelAdapter.IsReadingPacket)
                 {
                     // The connection is currently reading a (large) packet. So it is obviously 
                     // doing something and thus "connected".

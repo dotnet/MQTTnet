@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server.Internal
 {
@@ -15,6 +16,7 @@ namespace MQTTnet.Server.Internal
         // completely by swapping references etc.
         readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim();
         readonly Dictionary<string, Subscription> _subscriptions = new Dictionary<string, Subscription>(4096);
+        
         readonly MqttClientSession _clientSession;
         readonly IMqttServerOptions _options;
         readonly MqttServerEventDispatcher _eventDispatcher;
@@ -29,8 +31,7 @@ namespace MQTTnet.Server.Internal
             _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));
             _options = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
-            _retainedMessagesManager = retainedMessagesManager ??
-                                       throw new ArgumentNullException(nameof(retainedMessagesManager));
+            _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
         }
 
         public async Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket)
@@ -297,7 +298,8 @@ namespace MQTTnet.Server.Internal
             {
                 ClientId = _clientSession.ClientId,
                 TopicFilter = topicFilter,
-                SessionItems = _clientSession.Items
+                SessionItems = _clientSession.Items,
+                Session = new MqttSessionStatus(_clientSession)
             };
 
             if (topicFilter.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)

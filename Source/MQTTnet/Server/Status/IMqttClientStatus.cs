@@ -16,11 +16,11 @@ namespace MQTTnet.Server.Status
 
         MqttProtocolVersion ProtocolVersion { get; }
 
-        DateTime ConnectedTimestamp { get; set; }
+        DateTime ConnectedTimestamp { get; }
         
         DateTime LastPacketReceivedTimestamp { get; }
 
-        DateTime LastPacketSentTimestamp { get; set; }
+        DateTime LastPacketSentTimestamp { get; }
         
         DateTime LastNonKeepAlivePacketReceivedTimestamp { get; }
 

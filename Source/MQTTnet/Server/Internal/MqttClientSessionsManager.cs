@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client.Disconnecting;
-using MQTTnet.Diagnostics;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
@@ -190,12 +189,10 @@ namespace MQTTnet.Server.Internal
             {
                 foreach (var connection in _clientConnections.Values)
                 {
-                    var clientStatus = new MqttClientStatus(connection);
-                    connection.FillClientStatus(clientStatus);
-
-                    var sessionStatus = new MqttSessionStatus(connection.Session, this);
-                    connection.Session.FillSessionStatus(sessionStatus);
-                    clientStatus.Session = sessionStatus;
+                    var clientStatus = new MqttClientStatus(connection)
+                    {
+                        Session = new MqttSessionStatus(connection.Session)
+                    };
 
                     result.Add(clientStatus);
                 }
@@ -212,9 +209,7 @@ namespace MQTTnet.Server.Internal
             {
                 foreach (var session in _clientSessions.Values)
                 {
-                    var sessionStatus = new MqttSessionStatus(session, this);
-                    session.FillSessionStatus(sessionStatus);
-
+                    var sessionStatus = new MqttSessionStatus(session);
                     result.Add(sessionStatus);
                 }
             }
@@ -571,7 +566,8 @@ namespace MQTTnet.Server.Internal
                 sessionItems,
                 _eventDispatcher,
                 _options,
-                _retainedMessagesManager);
+                _retainedMessagesManager,
+                this);
         }
     }
 }

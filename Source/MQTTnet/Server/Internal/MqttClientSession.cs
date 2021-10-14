@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using MQTTnet.Server.Status;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Server.Internal
 {
     public sealed class MqttClientSession
     {
-        readonly DateTime _createdTimestamp = DateTime.UtcNow;
+        readonly MqttClientSessionsManager _clientSessionsManager;
 
-        public MqttClientSession(
-            string clientId,
+        public MqttClientSession(string clientId,
             IDictionary<object, object> items,
             MqttServerEventDispatcher eventDispatcher,
             IMqttServerOptions serverOptions,
-            IMqttRetainedMessagesManager retainedMessagesManager)
+            IMqttRetainedMessagesManager retainedMessagesManager,
+            MqttClientSessionsManager clientSessionsManager)
         {
+            _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             Items = items ?? throw new ArgumentNullException(nameof(items));
 
@@ -26,27 +27,23 @@ namespace MQTTnet.Server.Internal
         
         public string ClientId { get; }
 
+        public DateTime CreatedTimestamp { get; } = DateTime.UtcNow;
+        
         public bool IsCleanSession { get; set; } = true;
 
         public MqttApplicationMessage WillMessage { get; set; }
 
         public MqttClientSubscriptionsManager SubscriptionsManager { get; }
-
+        
         public MqttClientSessionApplicationMessagesQueue ApplicationMessagesQueue { get; }
 
-        /// <summary>
-        /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
-        /// </summary>
         public IDictionary<object, object> Items { get; }
-        
-        public void FillSessionStatus(MqttSessionStatus status)
-        {
-            status.ClientId = ClientId;
-            status.CreatedTimestamp = _createdTimestamp;
-            status.PendingApplicationMessagesCount = ApplicationMessagesQueue.Count;
-            status.Items = Items;
-        }
 
+        public Task DeleteAsync()
+        {
+            return _clientSessionsManager.DeleteSessionAsync(ClientId);
+        }
+        
         public void OnDeleted()
         {
             Deleted?.Invoke(this, EventArgs.Empty);

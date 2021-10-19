@@ -81,7 +81,7 @@ namespace MQTTnet.Server.Internal
             _logger.Warning("Client '{0}': First received packet was no 'CONNECT' packet [MQTT-3.1.0-1].", channelAdapter.Endpoint);
             return null;
         }
-
+        
         public async Task HandleClientConnectionAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
         {
             MqttClientConnection clientConnection = null;
@@ -96,7 +96,7 @@ namespace MQTTnet.Server.Internal
                 }
 
                 MqttConnAckPacket connAckPacket;
-
+                
                 var connectionValidatorContext = await ValidateConnection(connectPacket, channelAdapter).ConfigureAwait(false);
                 if (connectionValidatorContext.ReasonCode != MqttConnectReasonCode.Success)
                 {
@@ -246,7 +246,7 @@ namespace MQTTnet.Server.Internal
             var clientSession = GetClientSession(clientId);
 
             var subscribeResult = await clientSession.SubscriptionsManager.Subscribe(fakeSubscribePacket).ConfigureAwait(false);
-
+            
             foreach (var retainedApplicationMessage in subscribeResult.RetainedApplicationMessages)
             {
                 clientSession.ApplicationMessagesQueue.Enqueue(retainedApplicationMessage);
@@ -262,7 +262,7 @@ namespace MQTTnet.Server.Internal
             {
                 TopicFilters = topicFilters.ToList()
             };
-
+            
             return GetClientSession(clientId).SubscriptionsManager.Unsubscribe(fakeUnsubscribePacket);
         }
 
@@ -373,10 +373,10 @@ namespace MQTTnet.Server.Internal
                 foreach (var clientSession in sessions)
                 {
                     var checkSubscriptionsResult = clientSession.SubscriptionsManager.CheckSubscriptions(
-                        applicationMessage.Topic,
+                        applicationMessage.Topic, 
                         applicationMessage.QualityOfServiceLevel,
                         senderClientId);
-
+                    
                     if (!checkSubscriptionsResult.IsSubscribed)
                     {
                         continue;
@@ -390,7 +390,7 @@ namespace MQTTnet.Server.Internal
                         SubscriptionQualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel,
                         SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers
                     };
-
+                    
                     if (checkSubscriptionsResult.RetainAsPublished)
                     {
                         // Transfer the original retain state from the publisher.
@@ -454,7 +454,7 @@ namespace MQTTnet.Server.Internal
         async Task<MqttClientConnection> CreateClientConnection(
             MqttConnectPacket connectPacket,
             MqttConnAckPacket connAckPacket,
-            IMqttChannelAdapter channelAdapter,
+            IMqttChannelAdapter channelAdapter, 
             IDictionary<object, object> sessionItems)
         {
             MqttClientConnection connection;

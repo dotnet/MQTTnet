@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
@@ -34,28 +34,29 @@ namespace MQTTnet.Tests.Server
                 var ex = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(async () => await client.ConnectAsync(clientOptions));
                 Assert.IsInstanceOfType(ex.InnerException, typeof(MqttProtocolViolationException));
                 Assert.AreEqual("Error while authenticating. If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].", ex.Message, false);
+                Assert.AreEqual(MqttClientConnectResultCode.UnspecifiedError, ex.ResultCode);
             }
         }
-        
+
         [TestMethod]
         public Task Handle_Wrong_UserName()
         {
             return TestCredentials("x", "Password1");
         }
-        
+
         [TestMethod]
         public Task Handle_Wrong_Password()
         {
             return TestCredentials("UserName", "x");
         }
-        
+
         [TestMethod]
         public Task Handle_Wrong_UserName_And_Password()
         {
             return TestCredentials("x", "x");
         }
 
-        async Task TestCredentials(string userName, string password)
+        private async Task TestCredentials(string userName, string password)
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
@@ -68,7 +69,7 @@ namespace MQTTnet.Tests.Server
                         {
                             c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                         }
-                        
+
                         if (c.Password != "Password1")
                         {
                             c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
@@ -83,7 +84,7 @@ namespace MQTTnet.Tests.Server
                     .Build();
 
                 var ex = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(async () => await client.ConnectAsync(clientOptions));
-                Assert.AreEqual(ex.Result.ResultCode, MqttClientConnectResultCode.BadUserNameOrPassword);
+                Assert.AreEqual(MqttClientConnectResultCode.BadUserNameOrPassword, ex.Result.ResultCode);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MQTTnet.Server
 {
@@ -17,7 +18,17 @@ namespace MQTTnet.Server
         /// </summary>
         public IDictionary<object, object> SessionItems { get; internal set; }
 
-        public bool AcceptPublish { get; set; } = true;
+        [Obsolete("Please use ProcessPublish instead.")]
+        public bool AcceptPublish 
+        { 
+            get => ProcessPublish;
+            set => ProcessPublish = value;
+        }
+        
+        /// <summary>
+        /// Gets or sets whether the publish should be processed internally.
+        /// </summary>
+        public bool ProcessPublish { get; set; } = true;
 
         public bool CloseConnection { get; set; }
     }

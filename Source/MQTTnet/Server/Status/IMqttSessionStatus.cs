@@ -35,6 +35,13 @@ namespace MQTTnet.Server.Status
         Task EnqueueApplicationMessageAsync(MqttApplicationMessage applicationMessage);
         
         /// <summary>
+        /// Delivers a new application message.
+        /// </summary>
+        /// <param name="applicationMessage">The application message.</param>
+        /// <returns>A task.</returns>
+        Task DeliverApplicationMessageAsync(MqttApplicationMessage applicationMessage);
+        
+        /// <summary>
         /// Clears the entire queue with pending application messages.
         /// </summary>
         /// <returns>A task.</returns>

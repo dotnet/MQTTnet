@@ -48,13 +48,6 @@ namespace MQTTnet.Internal
                 return _partitions[(int) partition].Select(i => i.Packet).ToList();
             }
         }
-
-        public MqttPacketBusItem Enqueue(MqttBasePacket packet, MqttPacketBusPartition partition)
-        {
-            var busItem = new MqttPacketBusItem(packet);
-            Enqueue(busItem, partition);
-            return busItem;
-        }
         
         public void Enqueue(MqttPacketBusItem item, MqttPacketBusPartition partition)
         {

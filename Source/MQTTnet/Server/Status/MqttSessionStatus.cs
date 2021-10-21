@@ -45,6 +45,13 @@ namespace MQTTnet.Server.Status
             return PlatformAbstractionLayer.CompletedTask;
         }
 
+        public Task DeliverApplicationMessageAsync(MqttApplicationMessage applicationMessage)
+        {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+            
+            throw new NotImplementedException();
+        }
+
         public Task ClearApplicationMessagesQueueAsync()
         {
             _session.ApplicationMessagesQueue.Clear();

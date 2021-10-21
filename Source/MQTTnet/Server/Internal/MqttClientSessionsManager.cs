@@ -290,7 +290,7 @@ namespace MQTTnet.Server.Internal
 
         async Task TryProcessQueuedApplicationMessagesAsync(CancellationToken cancellationToken)
         {
-            // Make sure all queued messages are proccessed befor server stops.
+            // Make sure all queued messages are processed before server stops.
             while (!cancellationToken.IsCancellationRequested || _messageQueue.Any())
             {
                 try
@@ -343,7 +343,7 @@ namespace MQTTnet.Server.Internal
                             }
                         }
 
-                        if (interceptorContext.ApplicationMessage == null || !interceptorContext.AcceptPublish)
+                        if (interceptorContext.ApplicationMessage == null || !interceptorContext.ProcessPublish)
                         {
                             return;
                         }

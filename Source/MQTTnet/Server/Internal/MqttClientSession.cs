@@ -38,7 +38,7 @@ namespace MQTTnet.Server.Internal
         public MqttClientSessionApplicationMessagesQueue ApplicationMessagesQueue { get; }
 
         public IDictionary<object, object> Items { get; }
-
+        
         public Task DeleteAsync()
         {
             return _clientSessionsManager.DeleteSessionAsync(ClientId);

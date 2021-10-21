@@ -83,13 +83,19 @@ namespace MQTTnet.Tests.Internal
             var bus = new MqttPacketBus();
 
             var delivered = false;
+
+            var item1 = new MqttPacketBusItem(new MqttPublishPacket());
+            var item2 = new MqttPacketBusItem(new MqttPublishPacket());
             
-            bus.Enqueue(new MqttPublishPacket(), MqttPacketBusPartition.Data);
-            bus.Enqueue(new MqttPublishPacket(), MqttPacketBusPartition.Data);
-            bus.Enqueue(new MqttPublishPacket(), MqttPacketBusPartition.Data).Delivered += (_, __) =>
+            var item3 = new MqttPacketBusItem(new MqttPublishPacket());
+            item3.Delivered += (_, __) =>
             {
                 delivered = true;
             };
+            
+            bus.Enqueue(item1, MqttPacketBusPartition.Data);
+            bus.Enqueue(item2, MqttPacketBusPartition.Data);
+            bus.Enqueue(item3, MqttPacketBusPartition.Data);
             
             Assert.IsFalse(delivered);
 

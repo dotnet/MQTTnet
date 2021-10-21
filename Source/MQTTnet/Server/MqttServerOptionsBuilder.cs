@@ -218,6 +218,12 @@ namespace MQTTnet.Server
             _options.SubscriptionInterceptor = value;
             return this;
         }
+        
+        public MqttServerOptionsBuilder WithSubscriptionInterceptor(Action<MqttSubscriptionInterceptorContext> value)
+        {
+            _options.SubscriptionInterceptor = new MqttServerSubscriptionInterceptorDelegate(value);
+            return this;
+        }
 
         public MqttServerOptionsBuilder WithUnsubscriptionInterceptor(IMqttServerUnsubscriptionInterceptor value)
         {
@@ -225,9 +231,9 @@ namespace MQTTnet.Server
             return this;
         }
 
-        public MqttServerOptionsBuilder WithSubscriptionInterceptor(Action<MqttSubscriptionInterceptorContext> value)
+        public MqttServerOptionsBuilder WithUnsubscriptionInterceptor(Action<MqttUnsubscriptionInterceptorContext> value)
         {
-            _options.SubscriptionInterceptor = new MqttServerSubscriptionInterceptorDelegate(value);
+            _options.UnsubscriptionInterceptor = new MqttServerUnsubscriptionInterceptorDelegate(value);
             return this;
         }
 

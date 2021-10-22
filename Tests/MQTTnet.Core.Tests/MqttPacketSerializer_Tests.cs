@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
@@ -278,12 +276,6 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void SerializeV500_MqttPublishPacket()
         {
-            var prop = new MqttPublishPacketProperties { UserProperties = new List<MqttUserProperty>() };
-
-            prop.ResponseTopic = "/Response";
-
-            prop.UserProperties.Add(new MqttUserProperty("Foo", "Bar"));
-
             var p = new MqttPublishPacket
             {
                 PacketIdentifier = 123,
@@ -292,12 +284,17 @@ namespace MQTTnet.Tests
                 Payload = Encoding.ASCII.GetBytes("HELLO"),
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
                 Topic = "A/B/C",
-                Properties = prop
+                Properties =
+                {
+                    ResponseTopic = "/Response"
+                }
             };
+
+            p.Properties.UserProperties.Add(new MqttUserProperty("Foo", "Bar"));
 
             var deserialized = Roundtrip(p, MqttProtocolVersion.V500);
 
-            Assert.AreEqual(prop.ResponseTopic, deserialized.Properties.ResponseTopic);
+            Assert.AreEqual(p.Properties.ResponseTopic, deserialized.Properties.ResponseTopic);
             Assert.IsTrue(deserialized.Properties.UserProperties.Any(x => x.Name == "Foo"));
         }
 
@@ -314,7 +311,7 @@ namespace MQTTnet.Tests
                       .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
                       .Build();
 
-            var p = new MqttV500DataConverter().CreatePublishPacket(req);
+            var p = new MqttPublishPacketFactory().Create(req);
 
             var deserialized = Roundtrip(p, MqttProtocolVersion.V500);
 

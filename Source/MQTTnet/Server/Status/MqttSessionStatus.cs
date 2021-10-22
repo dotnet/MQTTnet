@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
+using MQTTnet.Formatter.V5;
 using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server.Status
@@ -23,7 +26,8 @@ namespace MQTTnet.Server.Status
 
         public string ClientId => _session.ClientId;
 
-        public long PendingApplicationMessagesCount => _session.ApplicationMessagesQueue.Count;
+        // TODO: Fix!
+        public long PendingApplicationMessagesCount => 0; // _session.ApplicationMessagesQueue.Count;
 
         public DateTime CreatedTimestamp => _session.CreatedTimestamp;
 
@@ -33,15 +37,18 @@ namespace MQTTnet.Server.Status
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
             
-            _session.ApplicationMessagesQueue.Enqueue(new MqttQueuedApplicationMessage
-            {
-                ApplicationMessage = applicationMessage,
-                IsDuplicate = false,
-                IsRetainedMessage = false,
-                SubscriptionQualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
-                SenderClientId = null
-            });
+            // _session.ApplicationMessagesQueue.Enqueue(new MqttQueuedApplicationMessage
+            // {
+            //     ApplicationMessage = applicationMessage,
+            //     IsDuplicate = false,
+            //     IsRetainedMessage = false,
+            //     SubscriptionQualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
+            //     SenderClientId = null
+            // });
 
+            var publishPacketFactory = new MqttPublishPacketFactory();
+            _session.EnqueuePacket(new MqttPacketBusItem(publishPacketFactory.Create(applicationMessage)));
+            
             return PlatformAbstractionLayer.CompletedTask;
         }
 
@@ -49,12 +56,17 @@ namespace MQTTnet.Server.Status
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
             
-            throw new NotImplementedException();
+            var publishPacketFactory = new MqttPublishPacketFactory();
+            var packetBusItem = new MqttPacketBusItem(publishPacketFactory.Create(applicationMessage));
+            _session.EnqueuePacket(packetBusItem);
+
+            return packetBusItem.WaitForDeliveryAsync();
         }
 
         public Task ClearApplicationMessagesQueueAsync()
         {
-            _session.ApplicationMessagesQueue.Clear();
+            // TODO: Fix!
+            //_session.ApplicationMessagesQueue.Clear();
             return Task.FromResult(0);
         }
 

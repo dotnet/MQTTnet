@@ -955,23 +955,23 @@ namespace MQTTnet.Tests.Server
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var receivedMessagesCount = 0;
-
                 await testEnvironment.StartServer();
 
                 var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("receiver"));
-                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                var c1MessageHandler = testEnvironment.CreateApplicationMessageHandler(c1);
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topicFilter).WithQualityOfServiceLevel(filterQualityOfServiceLevel).Build());
 
                 var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("sender"));
                 await c2.PublishAsync(new MqttApplicationMessageBuilder().WithTopic(topic).WithPayload(new byte[0]).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
+                await Task.Delay(500);
+                
                 await c2.DisconnectAsync().ConfigureAwait(false);
 
                 await Task.Delay(500);
                 await c1.UnsubscribeAsync(topicFilter);
                 await Task.Delay(500);
 
-                Assert.AreEqual(expectedReceivedMessagesCount, receivedMessagesCount);
+                Assert.AreEqual(expectedReceivedMessagesCount, c1MessageHandler.ReceivedApplicationMessages.Count);
             }
         }
 

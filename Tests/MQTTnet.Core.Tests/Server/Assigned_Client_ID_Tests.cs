@@ -21,7 +21,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public Task Connect_With_Client_Id()
         {
-            return Connect_With_Client_Id("Connect_With_Client_Idtest_456", null, "test_456", null);
+            return Connect_With_Client_Id("Connect_With_Client_Id_test_456", null, "test_456", null);
         }
 
         async Task Connect_With_Client_Id(string expectedClientId, string expectedReturnedClientId, string usedClientId, string assignedClientId)

@@ -1,6 +1,4 @@
 ﻿using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
@@ -16,20 +14,6 @@ namespace MQTTnet.Formatter.V3
 {
     public class MqttV310DataConverter : IMqttDataConverter
     {
-        public MqttPublishPacket CreatePublishPacket(MqttApplicationMessage applicationMessage)
-        {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
-
-            return new MqttPublishPacket
-            {
-                Topic = applicationMessage.Topic,
-                Payload = applicationMessage.Payload,
-                QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
-                Retain = applicationMessage.Retain,
-                Dup = false
-            };
-        }
-
         public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
         {
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
@@ -69,21 +53,7 @@ namespace MQTTnet.Formatter.V3
                 PacketIdentifier = pubRecPacket.PacketIdentifier
             };
         }
-
-        public MqttApplicationMessage CreateApplicationMessage(MqttPublishPacket publishPacket)
-        {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
-
-            return new MqttApplicationMessage
-            {
-                Topic = publishPacket.Topic,
-                Payload = publishPacket.Payload,
-                QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
-                Retain = publishPacket.Retain,
-                Dup = publishPacket.Dup
-            };
-        }
-
+        
         public MqttClientConnectResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
         {
             if (connAckPacket == null) throw new ArgumentNullException(nameof(connAckPacket));
@@ -139,22 +109,7 @@ namespace MQTTnet.Formatter.V3
                 ResultCode = resultCode
             };
         }
-
-        public MqttConnectPacket CreateConnectPacket(MqttApplicationMessage willApplicationMessage, IMqttClientOptions options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            return new MqttConnectPacket
-            {
-                ClientId = options.ClientId,
-                Username = options.Credentials?.Username,
-                Password = options.Credentials?.Password,
-                CleanSession = options.CleanSession,
-                KeepAlivePeriod = (ushort)options.KeepAlivePeriod.TotalSeconds,
-                WillMessage = willApplicationMessage
-            };
-        }
-
+        
         public MqttConnAckPacket CreateConnAckPacket(MqttConnectionValidatorContext connectionValidatorContext)
         {
             if (connectionValidatorContext == null) throw new ArgumentNullException(nameof(connectionValidatorContext));
@@ -195,45 +150,22 @@ namespace MQTTnet.Formatter.V3
 
             return result;
         }
-
-        public MqttSubscribePacket CreateSubscribePacket(MqttClientSubscribeOptions options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            var subscribePacket = new MqttSubscribePacket
-            {
-                TopicFilters = options.TopicFilters
-            };
-            
-            return subscribePacket;
-        }
-
+        
         public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, SubscribeResult subscribeResult)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
             if (subscribeResult == null) throw new ArgumentNullException(nameof(subscribeResult));
 
-            var subackPacket = new MqttSubAckPacket
+            var subAckPacket = new MqttSubAckPacket
             {
-                PacketIdentifier = subscribePacket.PacketIdentifier,
-                ReturnCodes = subscribeResult.ReturnCodes
+                PacketIdentifier = subscribePacket.PacketIdentifier
             };
             
-            return subackPacket;
+            subAckPacket.ReturnCodes.AddRange(subscribeResult.ReturnCodes);
+            
+            return subAckPacket;
         }
-
-        public MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            var unsubscribePacket = new MqttUnsubscribePacket
-            {
-                TopicFilters = options.TopicFilters
-            };
-
-            return unsubscribePacket;
-        }
-
+        
         public MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, UnsubscribeResult _)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
@@ -244,12 +176,7 @@ namespace MQTTnet.Formatter.V3
                 PacketIdentifier = unsubscribePacket.PacketIdentifier
             };
         }
-
-        public MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options)
-        {
-            return new MqttDisconnectPacket();
-        }
-
+        
         public MqttClientPublishResult CreateClientPublishResult(MqttPubAckPacket pubAckPacket)
         {
             return new MqttClientPublishResult

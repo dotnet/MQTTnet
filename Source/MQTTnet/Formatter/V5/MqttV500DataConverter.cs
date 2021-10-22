@@ -1,6 +1,4 @@
 ﻿using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
@@ -17,38 +15,6 @@ namespace MQTTnet.Formatter.V5
 {
     public sealed class MqttV500DataConverter : IMqttDataConverter
     {
-        public MqttPublishPacket CreatePublishPacket(MqttApplicationMessage applicationMessage)
-        {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
-
-            var packet = new MqttPublishPacket
-            {
-                Topic = applicationMessage.Topic,
-                Payload = applicationMessage.Payload,
-                QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
-                Retain = applicationMessage.Retain,
-                Dup = applicationMessage.Dup,
-                Properties = new MqttPublishPacketProperties
-                {
-                    ContentType = applicationMessage.ContentType,
-                    CorrelationData = applicationMessage.CorrelationData,
-                    MessageExpiryInterval = applicationMessage.MessageExpiryInterval,
-                    PayloadFormatIndicator = applicationMessage.PayloadFormatIndicator,
-                    ResponseTopic = applicationMessage.ResponseTopic,
-                    SubscriptionIdentifiers = applicationMessage.SubscriptionIdentifiers,
-                    TopicAlias = applicationMessage.TopicAlias
-                }
-            };
-
-            if (applicationMessage.UserProperties != null)
-            {
-                packet.Properties.UserProperties = new List<MqttUserProperty>();
-                packet.Properties.UserProperties.AddRange(applicationMessage.UserProperties);
-            }
-
-            return packet;
-        }
-
         public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket,
             MqttApplicationMessageReceivedReasonCode reasonCode)
         {
@@ -97,28 +63,6 @@ namespace MQTTnet.Formatter.V5
             };
         }
 
-        public MqttApplicationMessage CreateApplicationMessage(MqttPublishPacket publishPacket)
-        {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
-
-            return new MqttApplicationMessage
-            {
-                Topic = publishPacket.Topic,
-                Payload = publishPacket.Payload,
-                QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
-                Retain = publishPacket.Retain,
-                Dup = publishPacket.Dup,
-                ResponseTopic = publishPacket.Properties?.ResponseTopic,
-                ContentType = publishPacket.Properties?.ContentType,
-                CorrelationData = publishPacket.Properties?.CorrelationData,
-                MessageExpiryInterval = publishPacket.Properties?.MessageExpiryInterval,
-                SubscriptionIdentifiers = publishPacket.Properties?.SubscriptionIdentifiers,
-                TopicAlias = publishPacket.Properties?.TopicAlias,
-                PayloadFormatIndicator = publishPacket.Properties?.PayloadFormatIndicator,
-                UserProperties = publishPacket.Properties?.UserProperties ?? new List<MqttUserProperty>()
-            };
-        }
-
         public MqttClientConnectResult CreateClientConnectResult(MqttConnAckPacket connAckPacket)
         {
             if (connAckPacket == null) throw new ArgumentNullException(nameof(connAckPacket));
@@ -146,52 +90,22 @@ namespace MQTTnet.Formatter.V5
                 UserProperties = connAckPacket.Properties?.UserProperties ?? new List<MqttUserProperty>()
             };
         }
-
-        public MqttConnectPacket CreateConnectPacket(MqttApplicationMessage willApplicationMessage,
-            IMqttClientOptions options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            return new MqttConnectPacket
-            {
-                ClientId = options.ClientId,
-                Username = options.Credentials?.Username,
-                Password = options.Credentials?.Password,
-                CleanSession = options.CleanSession,
-                KeepAlivePeriod = (ushort) options.KeepAlivePeriod.TotalSeconds,
-                WillMessage = willApplicationMessage,
-                Properties = new MqttConnectPacketProperties
-                {
-                    AuthenticationMethod = options.AuthenticationMethod,
-                    AuthenticationData = options.AuthenticationData,
-                    WillDelayInterval = options.WillDelayInterval,
-                    MaximumPacketSize = options.MaximumPacketSize,
-                    ReceiveMaximum = options.ReceiveMaximum,
-                    RequestProblemInformation = options.RequestProblemInformation,
-                    RequestResponseInformation = options.RequestResponseInformation,
-                    SessionExpiryInterval = options.SessionExpiryInterval,
-                    TopicAliasMaximum = options.TopicAliasMaximum,
-                    UserProperties = options.UserProperties
-                }
-            };
-        }
-
+        
         public MqttConnAckPacket CreateConnAckPacket(MqttConnectionValidatorContext connectionValidatorContext)
         {
             if (connectionValidatorContext == null) throw new ArgumentNullException(nameof(connectionValidatorContext));
 
-            return new MqttConnAckPacket
+            var connAckPacket = new MqttConnAckPacket
             {
                 ReasonCode = connectionValidatorContext.ReasonCode,
-                Properties = new MqttConnAckPacketProperties
+                Properties =
                 {
                     RetainAvailable = true,
                     SubscriptionIdentifiersAvailable = true,
                     SharedSubscriptionAvailable = false,
                     TopicAliasMaximum = ushort.MaxValue,
                     WildcardSubscriptionAvailable = true,
-
-                    UserProperties = connectionValidatorContext.ResponseUserProperties,
+                    
                     AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
                     AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
                     AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,
@@ -199,6 +113,13 @@ namespace MQTTnet.Formatter.V5
                     ServerReference = connectionValidatorContext.ServerReference
                 }
             };
+
+            if (connectionValidatorContext.ResponseUserProperties != null)
+            {
+                connAckPacket.Properties.UserProperties.AddRange(connectionValidatorContext.ResponseUserProperties);
+            }
+            
+            return connAckPacket;
         }
 
         public MqttClientSubscribeResult CreateClientSubscribeResult(MqttSubscribePacket subscribePacket,
@@ -241,82 +162,38 @@ namespace MQTTnet.Formatter.V5
 
             return result;
         }
-
-        public MqttSubscribePacket CreateSubscribePacket(MqttClientSubscribeOptions options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            var packet = new MqttSubscribePacket
-            {
-                Properties = new MqttSubscribePacketProperties()
-            };
-
-            packet.TopicFilters.AddRange(options.TopicFilters);
-            packet.Properties.SubscriptionIdentifier = options.SubscriptionIdentifier;
-            packet.Properties.UserProperties = options.UserProperties;
-
-            return packet;
-        }
-
+        
         public MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, SubscribeResult subscribeResult)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
             if (subscribeResult == null) throw new ArgumentNullException(nameof(subscribeResult));
 
-            var subackPacket = new MqttSubAckPacket
+            var subAckPacket = new MqttSubAckPacket
             {
-                PacketIdentifier = subscribePacket.PacketIdentifier,
-                ReasonCodes = subscribeResult.ReasonCodes
+                PacketIdentifier = subscribePacket.PacketIdentifier
             };
 
-            return subackPacket;
+            subAckPacket.ReasonCodes.AddRange(subscribeResult.ReasonCodes);
+            
+            return subAckPacket;
         }
-
-        public MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            var packet = new MqttUnsubscribePacket
-            {
-                TopicFilters = options.TopicFilters,
-                Properties = new MqttUnsubscribePacketProperties
-                {
-                    UserProperties = options.UserProperties
-                }
-            };
-
-            return packet;
-        }
-
+        
         public MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket,
             UnsubscribeResult unsubscribeResult)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
             if (unsubscribeResult == null) throw new ArgumentNullException(nameof(unsubscribeResult));
 
-            return new MqttUnsubAckPacket
+            var unsubAckPacket = new MqttUnsubAckPacket
             {
-                PacketIdentifier = unsubscribePacket.PacketIdentifier,
-                ReasonCodes = unsubscribeResult.ReasonCodes
+                PacketIdentifier = unsubscribePacket.PacketIdentifier
             };
+
+            unsubAckPacket.ReasonCodes.AddRange(unsubscribeResult.ReasonCodes);
+            
+            return unsubAckPacket;
         }
-
-        public MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options)
-        {
-            var packet = new MqttDisconnectPacket();
-
-            if (options == null)
-            {
-                packet.ReasonCode = MqttDisconnectReasonCode.NormalDisconnection;
-            }
-            else
-            {
-                packet.ReasonCode = (MqttDisconnectReasonCode) options.ReasonCode;
-            }
-
-            return packet;
-        }
-
+        
         public MqttClientPublishResult CreateClientPublishResult(MqttPubAckPacket pubAckPacket)
         {
             var result = new MqttClientPublishResult
@@ -330,7 +207,7 @@ namespace MQTTnet.Formatter.V5
             {
                 // QoS 0 has no response. So we treat it as a success always.
                 // Both enums have the same values. So it can be easily converted.
-                result.ReasonCode = (MqttClientPublishReasonCode) (int) (pubAckPacket.ReasonCode ?? 0);
+                result.ReasonCode = (MqttClientPublishReasonCode) (int) pubAckPacket.ReasonCode;
 
                 result.PacketIdentifier = pubAckPacket.PacketIdentifier;
             }
@@ -369,10 +246,10 @@ namespace MQTTnet.Formatter.V5
                 UserProperties = pubCompPacket.Properties?.UserProperties
             };
 
-            if (pubRecPacket.ReasonCode.HasValue)
+            if (pubRecPacket.ReasonCode != MqttPubRecReasonCode.Success)
             {
                 // Both enums share the same values.
-                result.ReasonCode = (MqttClientPublishReasonCode) (pubRecPacket.ReasonCode ?? 0);
+                result.ReasonCode = (MqttClientPublishReasonCode) pubRecPacket.ReasonCode;
             }
 
             return result;

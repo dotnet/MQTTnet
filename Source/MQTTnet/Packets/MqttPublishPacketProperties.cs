@@ -15,9 +15,9 @@ namespace MQTTnet.Packets
 
         public byte[] CorrelationData { get; set; }
 
-        public List<MqttUserProperty> UserProperties { get; set; }
+        public List<MqttUserProperty> UserProperties { get; } = new List<MqttUserProperty>();
 
-        public List<uint> SubscriptionIdentifiers { get; set; }
+        public List<uint> SubscriptionIdentifiers { get; } = new List<uint>();
 
         public string ContentType { get; set; }
     }

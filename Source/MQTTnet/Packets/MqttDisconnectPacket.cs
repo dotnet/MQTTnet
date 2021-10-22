@@ -4,13 +4,15 @@ namespace MQTTnet.Packets
 {
     public sealed class MqttDisconnectPacket : MqttBasePacket
     {
-        #region Added in MQTTv5
+        /// <summary>
+        /// Added in MQTTv5.
+        /// </summary>
+        public MqttDisconnectReasonCode ReasonCode { get; set; } = MqttDisconnectReasonCode.NormalDisconnection;
 
-        public MqttDisconnectReasonCode? ReasonCode { get; set; }
-
-        public MqttDisconnectPacketProperties Properties { get; set; }
-
-        #endregion
+        /// <summary>
+        /// Added in MQTTv5.
+        /// </summary>
+        public MqttDisconnectPacketProperties Properties { get; } = new MqttDisconnectPacketProperties();
 
         public override string ToString()
         {

@@ -6,12 +6,12 @@ namespace MQTTnet.Packets
     {
         public ushort PacketIdentifier { get; set; }
 
-        public List<string> TopicFilters { get; set; } = new List<string>();
+        public List<string> TopicFilters { get; } = new List<string>();
 
         /// <summary>
         /// Added in MQTTv5.
         /// </summary>
-        public MqttUnsubscribePacketProperties Properties { get; set; } = new MqttUnsubscribePacketProperties();
+        public MqttUnsubscribePacketProperties Properties { get; } = new MqttUnsubscribePacketProperties();
         
         public override string ToString()
         {

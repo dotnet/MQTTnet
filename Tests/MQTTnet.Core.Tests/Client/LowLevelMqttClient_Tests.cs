@@ -143,7 +143,7 @@ namespace MQTTnet.Tests.Client
             await client.SendAsync(new MqttSubscribePacket
             {
                 PacketIdentifier = 1,
-                TopicFilters = new List<MqttTopicFilter>
+                TopicFilters =
                 {
                     new MqttTopicFilter
                     {

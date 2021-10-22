@@ -9,6 +9,6 @@ namespace MQTTnet.Packets
         /// </summary>
         public uint SubscriptionIdentifier { get; set; }
 
-        public List<MqttUserProperty> UserProperties { get; set; } = new List<MqttUserProperty>();
+        public List<MqttUserProperty> UserProperties { get; } = new List<MqttUserProperty>();
     }
 }

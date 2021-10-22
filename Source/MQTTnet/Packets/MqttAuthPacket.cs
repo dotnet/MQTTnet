@@ -9,6 +9,6 @@ namespace MQTTnet.Packets
     {
         public MqttAuthenticateReasonCode ReasonCode { get; set; }
 
-        public MqttAuthPacketProperties Properties { get; set; }
+        public MqttAuthPacketProperties Properties { get; } = new MqttAuthPacketProperties();
     }
 }

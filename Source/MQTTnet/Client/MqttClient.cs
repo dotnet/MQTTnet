@@ -7,7 +7,6 @@ using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
-using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
@@ -17,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.Client
@@ -156,7 +156,8 @@ namespace MQTTnet.Client
 
                 if (clientWasConnected)
                 {
-                    var disconnectPacket = _adapter.PacketFormatterAdapter.DataConverter.CreateDisconnectPacket(options);
+                    var disconnectPacketFactory = new MqttDisconnectPacketFactory();
+                    var disconnectPacket = disconnectPacketFactory.Create(options);
                     await SendAsync(disconnectPacket, cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -178,17 +179,20 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
-            return SendAsync(new MqttAuthPacket
+            var authPacket = new MqttAuthPacket
             {
-                Properties = new MqttAuthPacketProperties
+                Properties =
                 {
                     // This must always be equal to the value from the CONNECT packet. So we use it here to ensure that.
                     AuthenticationMethod = Options.AuthenticationMethod,
                     AuthenticationData = data.AuthenticationData,
-                    ReasonString = data.ReasonString,
-                    UserProperties = data.UserProperties
+                    ReasonString = data.ReasonString
                 }
-            }, cancellationToken);
+            };
+            
+            authPacket.Properties.UserProperties.AddRange(data.UserProperties);
+            
+            return SendAsync(authPacket, cancellationToken);
         }
 
         public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken)
@@ -203,7 +207,8 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
-            var subscribePacket = _adapter.PacketFormatterAdapter.DataConverter.CreateSubscribePacket(options);
+            var subscribePacketFactory = new MqttSubscribePacketFactory();
+            var subscribePacket = subscribePacketFactory.Create(options);
             subscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
             var subAckPacket = await SendAndReceiveAsync<MqttSubAckPacket>(subscribePacket, cancellationToken).ConfigureAwait(false);
@@ -217,7 +222,8 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
-            var unsubscribePacket = _adapter.PacketFormatterAdapter.DataConverter.CreateUnsubscribePacket(options);
+            var unsubscribeFactory = new MqttUnsubscribePacketFactory();
+            var unsubscribePacket = unsubscribeFactory.Create(options);
             unsubscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
             var unsubAckPacket = await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, cancellationToken).ConfigureAwait(false);
@@ -233,7 +239,10 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
-            var publishPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(applicationMessage);
+            var publishPacketFactory = new MqttPublishPacketFactory();
+            var publishPacket = publishPacketFactory.Create(applicationMessage);
+            
+            //_adapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(applicationMessage);
 
             switch (applicationMessage.QualityOfServiceLevel)
             {
@@ -290,9 +299,8 @@ namespace MQTTnet.Client
 
             try
             {
-                var connectPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnectPacket(
-                    willApplicationMessage,
-                    Options);
+                var connectPacketFactory = new MqttConnectPacketFactory();
+                var connectPacket = connectPacketFactory.Create(Options);
 
                 var connAckPacket = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
                 result = channelAdapter.PacketFormatterAdapter.DataConverter.CreateClientConnectResult(connAckPacket);
@@ -713,7 +721,7 @@ namespace MQTTnet.Client
 
         Task ProcessReceivedDisconnectPacket(MqttDisconnectPacket disconnectPacket)
         {
-            _disconnectReason = (MqttClientDisconnectReason) (disconnectPacket.ReasonCode ?? MqttDisconnectReasonCode.NormalDisconnection);
+            _disconnectReason = (MqttClientDisconnectReason) disconnectPacket.ReasonCode;
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
             _packetDispatcher.FailAll(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));
@@ -763,7 +771,8 @@ namespace MQTTnet.Client
 
         async Task<MqttApplicationMessageReceivedEventArgs> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket)
         {
-            var applicationMessage = _adapter.PacketFormatterAdapter.DataConverter.CreateApplicationMessage(publishPacket);
+            var applicationMessageFactory = new MqttApplicationMessageFactory();
+            var applicationMessage = applicationMessageFactory.Create(publishPacket);
             var eventArgs = new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage, publishPacket, AcknowledgeReceivedPublishPacket);
 
             var handler = ApplicationMessageReceivedHandler;

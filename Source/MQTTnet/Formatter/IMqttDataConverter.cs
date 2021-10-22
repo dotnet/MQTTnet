@@ -1,12 +1,8 @@
-﻿using System.Collections.Generic;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Options;
+﻿using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Packets;
-using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Server.Internal;
 
@@ -14,8 +10,6 @@ namespace MQTTnet.Formatter
 {
     public interface IMqttDataConverter
     {
-        MqttApplicationMessage CreateApplicationMessage(MqttPublishPacket publishPacket);
-
         MqttClientConnectResult CreateClientConnectResult(MqttConnAckPacket connAckPacket);
 
         MqttClientPublishResult CreateClientPublishResult(MqttPubAckPacket pubAckPacket);
@@ -25,13 +19,9 @@ namespace MQTTnet.Formatter
         MqttClientSubscribeResult CreateClientSubscribeResult(MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket);
         
         MqttClientUnsubscribeResult CreateClientUnsubscribeResult(MqttUnsubscribePacket unsubscribePacket, MqttUnsubAckPacket unsubAckPacket);
-
-        MqttConnectPacket CreateConnectPacket(MqttApplicationMessage willApplicationMessage, IMqttClientOptions options);
-
+        
         MqttConnAckPacket CreateConnAckPacket(MqttConnectionValidatorContext connectionValidatorContext);
         
-        MqttPublishPacket CreatePublishPacket(MqttApplicationMessage applicationMessage);
-
         MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode reasonCode);
         
         MqttPubRecPacket CreatePubRecPacket(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode reasonCode);
@@ -40,14 +30,8 @@ namespace MQTTnet.Formatter
         
         MqttPubRelPacket CreatePubRelPacket(MqttPubRecPacket pubRecPacket, MqttApplicationMessageReceivedReasonCode reasonCode);
         
-        MqttSubscribePacket CreateSubscribePacket(MqttClientSubscribeOptions options);
-
         MqttSubAckPacket CreateSubAckPacket(MqttSubscribePacket subscribePacket, SubscribeResult subscribeResult);
-
-        MqttUnsubscribePacket CreateUnsubscribePacket(MqttClientUnsubscribeOptions options);
-
+        
         MqttUnsubAckPacket CreateUnsubAckPacket(MqttUnsubscribePacket unsubscribePacket, UnsubscribeResult unsubscribeResult);
-
-        MqttDisconnectPacket CreateDisconnectPacket(MqttClientDisconnectOptions options);
     }
 }

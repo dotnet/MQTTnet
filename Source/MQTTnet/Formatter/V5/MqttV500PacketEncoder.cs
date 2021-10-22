@@ -289,12 +289,7 @@ namespace MQTTnet.Formatter.V5
             {
                 throw new MqttProtocolViolationException("PubAck packet has no packet identifier.");
             }
-
-            if (!packet.ReasonCode.HasValue)
-            {
-                throw new MqttProtocolViolationException("PubAck packet must contain a reason code.");
-            }
-
+            
             packetWriter.Write(packet.PacketIdentifier);
             
             var propertiesWriter = new MqttV500PropertiesWriter();
@@ -304,9 +299,9 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            if (packetWriter.Length > 0 || packet.ReasonCode.Value != MqttPubAckReasonCode.Success)
+            if (packetWriter.Length > 0 || packet.ReasonCode != MqttPubAckReasonCode.Success)
             {
-                packetWriter.Write((byte)packet.ReasonCode.Value);
+                packetWriter.Write((byte)packet.ReasonCode);
                 propertiesWriter.WriteTo(packetWriter);
             }
             
@@ -316,12 +311,7 @@ namespace MQTTnet.Formatter.V5
         static byte EncodePubRecPacket(MqttPubRecPacket packet, IMqttPacketWriter packetWriter)
         {
             ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
-
-            if (!packet.ReasonCode.HasValue)
-            {
-                ThrowReasonCodeNotSetException();
-            }
-           
+            
             var propertiesWriter = new MqttV500PropertiesWriter();
             if (packet.Properties != null)
             {
@@ -331,9 +321,9 @@ namespace MQTTnet.Formatter.V5
 
             packetWriter.Write(packet.PacketIdentifier);
 
-            if (packetWriter.Length > 0 || packet.ReasonCode.Value != MqttPubRecReasonCode.Success)
+            if (packetWriter.Length > 0 || packet.ReasonCode != MqttPubRecReasonCode.Success)
             {
-                packetWriter.Write((byte)packet.ReasonCode.Value);
+                packetWriter.Write((byte)packet.ReasonCode);
                 propertiesWriter.WriteTo(packetWriter);
             }
 
@@ -343,12 +333,7 @@ namespace MQTTnet.Formatter.V5
         static byte EncodePubRelPacket(MqttPubRelPacket packet, IMqttPacketWriter packetWriter)
         {
             ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
-
-            if (!packet.ReasonCode.HasValue)
-            {
-                ThrowReasonCodeNotSetException();
-            }
-
+            
             var propertiesWriter = new MqttV500PropertiesWriter();
             if (packet.Properties != null)
             {
@@ -358,9 +343,9 @@ namespace MQTTnet.Formatter.V5
 
             packetWriter.Write(packet.PacketIdentifier);
             
-            if (propertiesWriter.Length > 0 || packet.ReasonCode.Value != MqttPubRelReasonCode.Success)
+            if (propertiesWriter.Length > 0 || packet.ReasonCode != MqttPubRelReasonCode.Success)
             {
-                packetWriter.Write((byte)packet.ReasonCode.Value);
+                packetWriter.Write((byte)packet.ReasonCode);
                 propertiesWriter.WriteTo(packetWriter);
             }
 
@@ -370,12 +355,7 @@ namespace MQTTnet.Formatter.V5
         static byte EncodePubCompPacket(MqttPubCompPacket packet, IMqttPacketWriter packetWriter)
         {
             ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
-
-            if (!packet.ReasonCode.HasValue)
-            {
-                ThrowReasonCodeNotSetException();
-            }
-
+            
             packetWriter.Write(packet.PacketIdentifier);
             
             var propertiesWriter = new MqttV500PropertiesWriter();
@@ -385,9 +365,9 @@ namespace MQTTnet.Formatter.V5
                 propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
             }
 
-            if (propertiesWriter.Length > 0 || packet.ReasonCode.Value != MqttPubCompReasonCode.Success)
+            if (propertiesWriter.Length > 0 || packet.ReasonCode != MqttPubCompReasonCode.Success)
             {
-                packetWriter.Write((byte)packet.ReasonCode.Value);
+                packetWriter.Write((byte)packet.ReasonCode);
                 propertiesWriter.WriteTo(packetWriter);
             }
 
@@ -521,12 +501,7 @@ namespace MQTTnet.Formatter.V5
 
         static byte EncodeDisconnectPacket(MqttDisconnectPacket packet, IMqttPacketWriter packetWriter)
         {
-            if (!packet.ReasonCode.HasValue)
-            {
-                ThrowReasonCodeNotSetException();
-            }
-
-            packetWriter.Write((byte)packet.ReasonCode.Value);
+            packetWriter.Write((byte)packet.ReasonCode);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
             if (packet.Properties != null)
@@ -569,12 +544,7 @@ namespace MQTTnet.Formatter.V5
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Auth);
         }
-
-        static void ThrowReasonCodeNotSetException()
-        {
-            throw new MqttProtocolViolationException("The ReasonCode must be set for MQTT version 5.");
-        }
-
+        
         static void ThrowIfPacketIdentifierIsInvalid(ushort packetIdentifier, MqttBasePacket packet)
         {
             // SUBSCRIBE, UNSUBSCRIBE, and PUBLISH(in cases where QoS > 0) Control Packets MUST contain a non-zero 16 - bit Packet Identifier[MQTT - 2.3.1 - 1]. 

@@ -6,13 +6,15 @@ namespace MQTTnet.Packets
     {
         public ushort PacketIdentifier { get; set; }
 
-        #region Added in MQTTv5
+        /// <summary>
+        /// Added in MQTTv5.
+        /// </summary>
+        public MqttPubRecReasonCode ReasonCode { get; set; } = MqttPubRecReasonCode.Success;
 
-        public MqttPubRecReasonCode? ReasonCode { get; set; }
-
-        public MqttPubRecPacketProperties Properties { get; set; }
-
-        #endregion
+        /// <summary>
+        /// Added in MQTTv5.
+        /// </summary>
+        public MqttPubRecPacketProperties Properties { get; } = new MqttPubRecPacketProperties();
 
         public override string ToString()
         {

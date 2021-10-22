@@ -11,12 +11,12 @@ namespace MQTTnet.Packets
         /// <summary>
         /// Added in MQTT V5.
         /// </summary>
-        public MqttUnsubAckPacketProperties Properties { get; set; } = new MqttUnsubAckPacketProperties();
+        public MqttUnsubAckPacketProperties Properties { get; } = new MqttUnsubAckPacketProperties();
 
         /// <summary>
         /// Added in MQTT V5.
         /// </summary>
-        public List<MqttUnsubscribeReasonCode> ReasonCodes { get; set; } = new List<MqttUnsubscribeReasonCode>();
+        public List<MqttUnsubscribeReasonCode> ReasonCodes { get; } = new List<MqttUnsubscribeReasonCode>();
 
         public override string ToString()
         {

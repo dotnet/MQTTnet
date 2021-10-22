@@ -19,7 +19,7 @@ namespace MQTTnet.Packets
         /// <summary>
         /// Added in MQTT 5.0.0.
         /// </summary>
-        public MqttConnAckPacketProperties Properties { get; set; } = new MqttConnAckPacketProperties();
+        public MqttConnAckPacketProperties Properties { get; } = new MqttConnAckPacketProperties();
         
         public override string ToString()
         {

@@ -9,6 +9,8 @@ using MQTTnet.Client.Disconnecting;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
+using MQTTnet.Formatter.V3;
+using MQTTnet.Formatter.V5;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -229,10 +231,8 @@ namespace MQTTnet.Server.Internal
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            var fakeSubscribePacket = new MqttSubscribePacket
-            {
-                TopicFilters = topicFilters.ToList()
-            };
+            var fakeSubscribePacket = new MqttSubscribePacket();
+            fakeSubscribePacket.TopicFilters.AddRange(topicFilters);
 
             var clientSession = GetClientSession(clientId);
 
@@ -240,7 +240,12 @@ namespace MQTTnet.Server.Internal
             
             foreach (var retainedApplicationMessage in subscribeResult.RetainedApplicationMessages)
             {
-                clientSession.ApplicationMessagesQueue.Enqueue(retainedApplicationMessage);
+                //clientSession.ApplicationMessagesQueue.Enqueue(retainedApplicationMessage);
+
+                // TODO: Review!
+                var publishPacketFactory = new MqttPublishPacketFactory();
+                var publishPacket = publishPacketFactory.Create(retainedApplicationMessage.ApplicationMessage);
+                clientSession.EnqueuePacket(new MqttPacketBusItem(publishPacket));
             }
         }
 
@@ -249,10 +254,8 @@ namespace MQTTnet.Server.Internal
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
             if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
 
-            var fakeUnsubscribePacket = new MqttUnsubscribePacket
-            {
-                TopicFilters = topicFilters.ToList()
-            };
+            var fakeUnsubscribePacket = new MqttUnsubscribePacket();
+            fakeUnsubscribePacket.TopicFilters.AddRange(topicFilters);
             
             return GetClientSession(clientId).SubscriptionsManager.Unsubscribe(fakeUnsubscribePacket);
         }
@@ -273,12 +276,28 @@ namespace MQTTnet.Server.Internal
                 _clientSessions.Remove(clientId);
             }
 
-            if (connection != null)
+            try
             {
-                await connection.StopAsync(MqttClientDisconnectReason.NormalDisconnection).ConfigureAwait(false);
+                if (connection != null)
+                {
+                    await connection.StopAsync(MqttClientDisconnectReason.NormalDisconnection).ConfigureAwait(false);
+                }
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, $"Error while deleting session '{clientId}'.");
             }
 
-            session?.OnDeleted();
+            try
+            {
+                session?.OnDeleted();
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, $"Error while executing session deleted event for session '{clientId}'.");
+            }
+            
+            session?.Dispose();
             
             _logger.Verbose("Session for client '{0}' deleted.", clientId);
         }
@@ -320,6 +339,10 @@ namespace MQTTnet.Server.Internal
                 {
                     return;
                 }
+                // catch (ThreadAbortException)
+                // {
+                //     return;
+                // }
                 catch (ObjectDisposedException)
                 {
                     return;
@@ -380,21 +403,39 @@ namespace MQTTnet.Server.Internal
 
                     _logger.Verbose("Client '{0}': Queued application message with topic '{1}'.", clientSession.ClientId, applicationMessage.Topic);
 
-                    var queuedApplicationMessage = new MqttQueuedApplicationMessage
+                    // var queuedApplicationMessage = new MqttQueuedApplicationMessage
+                    // {
+                    //     ApplicationMessage = applicationMessage,
+                    //     SubscriptionQualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel,
+                    //     SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers
+                    // };
+                    
+
+
+                    var publishPacketFactory = new MqttPublishPacketFactory();
+                    var publishPacket = publishPacketFactory.Create(applicationMessage);
+                    
+                    publishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
+                    publishPacket.Properties.SubscriptionIdentifiers.AddRange(checkSubscriptionsResult.SubscriptionIdentifiers);
+                    //clientSession.ApplicationMessagesQueue.Enqueue(queuedApplicationMessage);
+                    
+                    if (publishPacket.QualityOfServiceLevel > 0)
                     {
-                        ApplicationMessage = applicationMessage,
-                        SubscriptionQualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel,
-                        SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers
-                    };
+                        publishPacket.PacketIdentifier = clientSession.PacketIdentifierProvider.GetNextPacketIdentifier();
+                    }
                     
                     if (checkSubscriptionsResult.RetainAsPublished)
                     {
                         // Transfer the original retain state from the publisher.
                         // This is a MQTTv5 feature.
-                        queuedApplicationMessage.IsRetainedMessage = applicationMessage.Retain;
+                        publishPacket.Retain = applicationMessage.Retain;
                     }
-
-                    clientSession.ApplicationMessagesQueue.Enqueue(queuedApplicationMessage);
+                    else
+                    {
+                        publishPacket.Retain = false;
+                    }
+                    
+                    clientSession.EnqueuePacket(new MqttPacketBusItem(publishPacket));
                     deliveryCount++;
                 }
 
@@ -415,6 +456,34 @@ namespace MQTTnet.Server.Internal
                 _logger.Error(exception, "Unhandled exception while processing next queued application message.");
             }
         }
+        
+        // public async Task<MqttPublishPacket> CreatePublishPacket(MqttQueuedApplicationMessage queuedApplicationMessage)
+        // {
+        //     var publishPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(queuedApplicationMessage.ApplicationMessage);
+        //     publishPacket.QualityOfServiceLevel = queuedApplicationMessage.SubscriptionQualityOfServiceLevel;
+        //
+        //     if (ChannelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500)
+        //     {
+        //         publishPacket.Properties.SubscriptionIdentifiers.AddRange(queuedApplicationMessage.SubscriptionIdentifiers ?? new List<uint>());
+        //     }
+        //
+        //     // Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
+        //     publishPacket.Retain = queuedApplicationMessage.IsRetainedMessage;
+        //
+        //     publishPacket = await InvokeClientMessageQueueInterceptor(publishPacket, queuedApplicationMessage).ConfigureAwait(false);
+        //     if (publishPacket == null)
+        //     {
+        //         // The interceptor has decided that the message is not relevant and will be fully ignored.
+        //         return null;
+        //     }
+        //
+        //     if (publishPacket.QualityOfServiceLevel > 0)
+        //     {
+        //         publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
+        //     }
+        //
+        //     return publishPacket;
+        // }
 
         async Task<MqttConnectionValidatorContext> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter)
         {

@@ -10,17 +10,18 @@
 
         public ushort KeepAlivePeriod { get; set; }
 
-        // Also called "Clean Start" in MQTTv5.
+       /// <summary>
+       /// Also called "Clean Start" in MQTTv5.
+       /// </summary>
         public bool CleanSession { get; set; }
 
         public MqttApplicationMessage WillMessage { get; set; }
-
-        #region Added in MQTTv5.0.0
-
-        public MqttConnectPacketProperties Properties { get; set; }
-
-        #endregion
-
+        
+        /// <summary>
+        /// Added in MQTTv5.
+        /// </summary>
+        public MqttConnectPacketProperties Properties { get; } = new MqttConnectPacketProperties();
+        
         public override string ToString()
         {
             var passwordText = string.Empty;

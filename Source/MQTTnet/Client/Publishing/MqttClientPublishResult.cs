@@ -4,7 +4,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Client.Publishing
 {
-    public class MqttClientPublishResult
+    public sealed class MqttClientPublishResult
     {
         public ushort? PacketIdentifier { get; set; }
 
@@ -27,6 +27,6 @@ namespace MQTTnet.Client.Publishing
         /// The feature is very similar to the HTTP header concept.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public List<MqttUserProperty> UserProperties { get; set; }
+        public List<MqttUserProperty> UserProperties { get; } = new List<MqttUserProperty>();
     }
 }

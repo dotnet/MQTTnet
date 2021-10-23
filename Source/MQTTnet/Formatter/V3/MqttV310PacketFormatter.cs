@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
 using System.Runtime.CompilerServices;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
@@ -12,9 +11,7 @@ namespace MQTTnet.Formatter.V3
     public class MqttV310PacketFormatter : IMqttPacketFormatter
     {
         const int FixedHeaderSize = 1;
-
-        static readonly MqttPingReqPacket PingReqPacket = new MqttPingReqPacket();
-        static readonly MqttPingRespPacket PingRespPacket = new MqttPingRespPacket();
+        
         static readonly MqttDisconnectPacket DisconnectPacket = new MqttDisconnectPacket();
 
         readonly IMqttPacketWriter _packetWriter;
@@ -23,8 +20,6 @@ namespace MQTTnet.Formatter.V3
         {
             _packetWriter = packetWriter;
         }
-
-        public IMqttDataConverter DataConverter { get; } = new MqttV310DataConverter();
 
         public ArraySegment<byte> Encode(MqttBasePacket packet)
         {
@@ -72,8 +67,8 @@ namespace MQTTnet.Formatter.V3
                 case MqttControlPacketType.PubRec: return DecodePubRecPacket(receivedMqttPacket.BodyReader);
                 case MqttControlPacketType.PubRel: return DecodePubRelPacket(receivedMqttPacket.BodyReader);
                 case MqttControlPacketType.PubComp: return DecodePubCompPacket(receivedMqttPacket.BodyReader);
-                case MqttControlPacketType.PingReq: return PingReqPacket;
-                case MqttControlPacketType.PingResp: return PingRespPacket;
+                case MqttControlPacketType.PingReq: return MqttPingReqPacket.Instance;
+                case MqttControlPacketType.PingResp: return MqttPingRespPacket.Instance;
                 case MqttControlPacketType.Subscribe: return DecodeSubscribePacket(receivedMqttPacket.BodyReader);
                 case MqttControlPacketType.SubAck: return DecodeSubAckPacket(receivedMqttPacket.BodyReader);
                 case MqttControlPacketType.Unsubscibe: return DecodeUnsubscribePacket(receivedMqttPacket.BodyReader);

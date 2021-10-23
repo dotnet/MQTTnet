@@ -34,7 +34,7 @@ namespace MQTTnet.Server.Internal
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
         }
 
-        public async Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket)
+        public async Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
 
@@ -45,7 +45,7 @@ namespace MQTTnet.Server.Internal
             // lower one.
             foreach (var originalTopicFilter in subscribePacket.TopicFilters.OrderByDescending(f => f.QualityOfServiceLevel))
             {
-                var interceptorContext = await InterceptSubscribe(originalTopicFilter).ConfigureAwait(false);
+                var interceptorContext = await InterceptSubscribe(originalTopicFilter, cancellationToken).ConfigureAwait(false);
                 var finalTopicFilter = interceptorContext.TopicFilter;
                 var acceptSubscription = interceptorContext.ReasonCode <= MqttSubscribeReasonCode.GrantedQoS2;
 
@@ -91,7 +91,7 @@ namespace MQTTnet.Server.Internal
             return result;
         }
 
-        public async Task<UnsubscribeResult> Unsubscribe(MqttUnsubscribePacket unsubscribePacket)
+        public async Task<UnsubscribeResult> Unsubscribe(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
 
@@ -104,7 +104,7 @@ namespace MQTTnet.Server.Internal
                 {
                     _subscriptions.TryGetValue(topicFilter, out var existingSubscription);
                     
-                    var interceptorContext = await InterceptUnsubscribe(topicFilter, existingSubscription).ConfigureAwait(false);
+                    var interceptorContext = await InterceptUnsubscribe(topicFilter, existingSubscription, cancellationToken).ConfigureAwait(false);
                     var acceptUnsubscription = interceptorContext.ReasonCode == MqttUnsubscribeReasonCode.Success;
 
                     result.ReasonCodes.Add(interceptorContext.ReasonCode);
@@ -292,14 +292,15 @@ namespace MQTTnet.Server.Internal
             }
         }
 
-        async Task<MqttSubscriptionInterceptorContext> InterceptSubscribe(MqttTopicFilter topicFilter)
+        async Task<MqttSubscriptionInterceptorContext> InterceptSubscribe(MqttTopicFilter topicFilter, CancellationToken cancellationToken)
         {
             var context = new MqttSubscriptionInterceptorContext
             {
                 ClientId = _clientSession.ClientId,
                 TopicFilter = topicFilter,
                 SessionItems = _clientSession.Items,
-                Session = new MqttSessionStatus(_clientSession)
+                Session = new MqttSessionStatus(_clientSession),
+                CancellationToken = cancellationToken
             };
 
             if (topicFilter.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
@@ -338,13 +339,14 @@ namespace MQTTnet.Server.Internal
             return context;
         }
 
-        async Task<MqttUnsubscriptionInterceptorContext> InterceptUnsubscribe(string topicFilter, Subscription subscription)
+        async Task<MqttUnsubscriptionInterceptorContext> InterceptUnsubscribe(string topicFilter, Subscription subscription, CancellationToken cancellationToken)
         {
             var context = new MqttUnsubscriptionInterceptorContext
             {
                 ClientId = _clientSession.ClientId,
                 Topic = topicFilter,
-                SessionItems = _clientSession.Items
+                SessionItems = _clientSession.Items,
+                CancellationToken = cancellationToken
             };
 
             if (subscription == null)

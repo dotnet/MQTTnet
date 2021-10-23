@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
@@ -51,5 +52,10 @@ namespace MQTTnet.Server
         /// Gets or sets whether the broker should close the client connection.
         /// </summary>
         public bool CloseConnection { get; set; }
+        
+        /// <summary>
+        /// Gets the cancellation token which can indicate that the client connection gets down.
+        /// </summary>
+        public CancellationToken CancellationToken { get; internal set; }
     }
 }

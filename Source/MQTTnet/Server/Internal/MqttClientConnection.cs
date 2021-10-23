@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
-using MQTTnet.Client;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Formatter.V5;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
@@ -20,7 +18,6 @@ namespace MQTTnet.Server.Internal
     public sealed class MqttClientConnection : IDisposable
     {
         readonly Dictionary<ushort, string> _topicAlias = new Dictionary<ushort, string>();
-        readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         
         readonly MqttClientSessionsManager _sessionsManager;
@@ -162,7 +159,7 @@ namespace MQTTnet.Server.Internal
 
                     if (packet is MqttPublishPacket publishPacket)
                     {
-                        await HandleIncomingPublishPacket(publishPacket, cancellationToken).ConfigureAwait(false);
+                        HandleIncomingPublishPacket(publishPacket);
                     }
                     else if (packet is MqttPubAckPacket pubAckPacket)
                     {
@@ -176,7 +173,9 @@ namespace MQTTnet.Server.Internal
                     {
                         // TODO: Do anything!
                         // TODO: Send pub rel!
-                        Session.EnqueuePacket(new MqttPacketBusItem(ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePubRelPacket(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success)));
+                        var pubRelPacketFactory = new MqttPubRelPacketFactory();
+                        var pubRelPacket = pubRelPacketFactory.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
+                        Session.EnqueuePacket(new MqttPacketBusItem(pubRelPacket));
                     }
                     else if (packet is MqttPubRelPacket pubRelPacket)
                     {
@@ -390,16 +389,21 @@ namespace MQTTnet.Server.Internal
         
         Task HandleIncomingPubRelPacket(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
         {
-            var pubCompPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePubCompPacket(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
-            return SendPacketAsync(pubCompPacket, cancellationToken);
+            var pubCompPacketFactory = new MqttPubCompPacketFactory();
+            var pubCompPacket =pubCompPacketFactory.Create(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            Session.EnqueuePacket(new MqttPacketBusItem(pubCompPacket));
+            
+            //return SendPacketAsync(pubCompPacket, cancellationToken);
+            return PlatformAbstractionLayer.CompletedTask;
         }
 
         async Task HandleIncomingSubscribePacket(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
-            var subscribeResult = await Session.SubscriptionsManager.Subscribe(subscribePacket).ConfigureAwait(false);
-            var subAckPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreateSubAckPacket(subscribePacket, subscribeResult);
+            var subscribeResult = await Session.SubscriptionsManager.Subscribe(subscribePacket, cancellationToken).ConfigureAwait(false);
 
-            //await SendPacketAsync(subAckPacket, cancellationToken).ConfigureAwait(false);
+            var subAckPacketFactory = new MqttSubAckPacketFactory();
+            var subAckPacket = subAckPacketFactory.Create(subscribePacket, subscribeResult);
+
             Session.EnqueuePacket(new MqttPacketBusItem(subAckPacket));
             
             if (subscribeResult.CloseConnection)
@@ -411,26 +415,27 @@ namespace MQTTnet.Server.Internal
             var publishPacketFactory = new MqttPublishPacketFactory();
             foreach (var retainedApplicationMessage in subscribeResult.RetainedApplicationMessages)
             {
-                //var publishPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(retainedApplicationMessage.ApplicationMessage);
-                Session.EnqueuePacket(new MqttPacketBusItem(publishPacketFactory.Create(retainedApplicationMessage.ApplicationMessage)));
+                var publishPacket = publishPacketFactory.Create(retainedApplicationMessage.ApplicationMessage);
+                Session.EnqueuePacket(new MqttPacketBusItem(publishPacket));
             }
         }
 
         async Task HandleIncomingUnsubscribePacket(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
-            var unsubscribeResult = await Session.SubscriptionsManager.Unsubscribe(unsubscribePacket).ConfigureAwait(false);
-            var unsubAckPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreateUnsubAckPacket(unsubscribePacket, unsubscribeResult);
+            var unsubscribeResult = await Session.SubscriptionsManager.Unsubscribe(unsubscribePacket, cancellationToken).ConfigureAwait(false);
+
+            var unsubAckPacketFactory = new MqttUnsubAckPacketFactory();
+            var unsubAckPacket = unsubAckPacketFactory.Create(unsubscribePacket, unsubscribeResult);
             
             Session.EnqueuePacket(new MqttPacketBusItem(unsubAckPacket));
-            //await SendPacketAsync(unsubAckPacket, cancellationToken).ConfigureAwait(false);
-            
+
             if (unsubscribeResult.CloseConnection)
             {
                 StopInternal();
             }
         }
 
-        Task HandleIncomingPublishPacket(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
+        void HandleIncomingPublishPacket(MqttPublishPacket publishPacket)
         {
             HandleTopicAlias(publishPacket);
 
@@ -452,17 +457,13 @@ namespace MQTTnet.Server.Internal
                     var pubAckPacketFactory = new MqttPubAckPacketFactory();
                     var pubAckPacket = pubAckPacketFactory.Create(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
                     Session.EnqueuePacket(new MqttPacketBusItem(pubAckPacket));
-                    //return SendPacketAsync(pubAckPacket, cancellationToken);
                     break;
                 }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                 {
-                    // TODO: Migrate to packet bus.
                     var pubRecPacketFactory = new MqttPubRecPacketFactory();
                     var pubRecPacket = pubRecPacketFactory.Create(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
                     Session.EnqueuePacket(new MqttPacketBusItem(pubRecPacket));
-                    
-                    //return SendPacketAsync(pubRecPacket, cancellationToken);
                     break;
                 }
                 default:
@@ -470,8 +471,6 @@ namespace MQTTnet.Server.Internal
                     throw new MqttCommunicationException("Received a not supported QoS level.");
                 }
             }
-
-            return PlatformAbstractionLayer.CompletedTask;
         }
 
         void HandleTopicAlias(MqttPublishPacket publishPacket)

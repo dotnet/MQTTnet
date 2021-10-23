@@ -9,8 +9,6 @@ using MQTTnet.Client.Disconnecting;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Formatter.V3;
-using MQTTnet.Formatter.V5;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -28,6 +26,8 @@ namespace MQTTnet.Server.Internal
 
         readonly IDictionary<object, object> _serverSessionItems = new ConcurrentDictionary<object, object>();
 
+        readonly MqttConnAckPacketFactory _connAckPacketFactory = new MqttConnAckPacketFactory();
+        
         readonly MqttServerEventDispatcher _eventDispatcher;
 
         readonly IMqttRetainedMessagesManager _retainedMessagesManager;
@@ -102,14 +102,14 @@ namespace MQTTnet.Server.Internal
                 if (connectionValidatorContext.ReasonCode != MqttConnectReasonCode.Success)
                 {
                     // Send failure response here without preparing a session!
-                    connAckPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext);
+                    connAckPacket = _connAckPacketFactory.Create(connectionValidatorContext);
                     await channelAdapter.SendPacketAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
                     return;
                 }
 
                 clientConnection = await CreateClientConnection(connectPacket, channelAdapter, connectionValidatorContext.SessionItems).ConfigureAwait(false);
 
-                connAckPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext);
+                connAckPacket = _connAckPacketFactory.Create(connectionValidatorContext);
                 await channelAdapter.SendPacketAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
 
                 await _eventDispatcher.SafeNotifyClientConnectedAsync(connectPacket, channelAdapter).ConfigureAwait(false);

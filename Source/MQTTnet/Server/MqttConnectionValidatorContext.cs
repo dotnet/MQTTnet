@@ -136,8 +136,8 @@ namespace MQTTnet.Server
         [Obsolete("Use ReasonCode instead. It is MQTTv5 only but will be converted to a valid ReturnCode.")]
         public MqttConnectReturnCode ReturnCode
         {
-            get => new MqttConnectReasonCodeConverter().ToConnectReturnCode(ReasonCode);
-            set => ReasonCode = new MqttConnectReasonCodeConverter().ToConnectReasonCode(value);
+            get => MqttConnectReasonCodeConverter.ToConnectReturnCode(ReasonCode);
+            set => ReasonCode = MqttConnectReasonCodeConverter.ToConnectReasonCode(value);
         }
 
         /// <summary>

@@ -14,26 +14,6 @@ namespace MQTTnet.Formatter.V3
 {
     public class MqttV310DataConverter : IMqttDataConverter
     {
-        public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
-        {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
-            
-            return new MqttPubAckPacket
-            {
-                PacketIdentifier = publishPacket.PacketIdentifier
-            };
-        }
-
-        public MqttPubRecPacket CreatePubRecPacket(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
-        {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
-            
-            return new MqttPubRecPacket
-            {
-                PacketIdentifier = publishPacket.PacketIdentifier
-            };
-        }
-
         public MqttPubCompPacket CreatePubCompPacket(MqttPubRelPacket pubRelPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
         {
             if (pubRelPacket == null) throw new ArgumentNullException(nameof(pubRelPacket));
@@ -110,16 +90,6 @@ namespace MQTTnet.Formatter.V3
             };
         }
         
-        public MqttConnAckPacket CreateConnAckPacket(MqttConnectionValidatorContext connectionValidatorContext)
-        {
-            if (connectionValidatorContext == null) throw new ArgumentNullException(nameof(connectionValidatorContext));
-
-            return new MqttConnAckPacket
-            {
-                ReturnCode = new MqttConnectReasonCodeConverter().ToConnectReturnCode(connectionValidatorContext.ReasonCode)
-            };
-        }
-
         public MqttClientSubscribeResult CreateClientSubscribeResult(MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));

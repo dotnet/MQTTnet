@@ -1,10 +1,11 @@
 ﻿using MQTTnet.Exceptions;
+using MQTTnet.Protocol;
 
-namespace MQTTnet.Protocol
+namespace MQTTnet.Formatter
 {
-    public class MqttConnectReasonCodeConverter
+    public static class MqttConnectReasonCodeConverter
     {
-        public MqttConnectReturnCode ToConnectReturnCode(MqttConnectReasonCode reasonCode)
+        public static MqttConnectReturnCode ToConnectReturnCode(MqttConnectReasonCode reasonCode)
         {
             switch (reasonCode)
             {
@@ -47,7 +48,7 @@ namespace MQTTnet.Protocol
             }
         }
 
-        public MqttConnectReasonCode ToConnectReasonCode(MqttConnectReturnCode returnCode)
+        public static MqttConnectReasonCode ToConnectReasonCode(MqttConnectReturnCode returnCode)
         {
             switch (returnCode)
             {

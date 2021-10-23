@@ -106,9 +106,11 @@ namespace MQTTnet.Server.Internal
                     return;
                 }
 
-                clientConnection = await CreateClientConnection(connectPacket, channelAdapter, connectionValidatorContext.SessionItems).ConfigureAwait(false);
-
                 connAckPacket = channelAdapter.PacketFormatterAdapter.DataConverter.CreateConnAckPacket(connectionValidatorContext);
+
+                // Pass connAckPacket so that IsSessionPresent flag can be set if the client session already exists
+                clientConnection = await CreateClientConnection(connectPacket, connAckPacket, channelAdapter, connectionValidatorContext.SessionItems).ConfigureAwait(false);
+
                 await channelAdapter.SendPacketAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
 
                 await _eventDispatcher.SafeNotifyClientConnectedAsync(connectPacket, channelAdapter).ConfigureAwait(false);
@@ -450,7 +452,8 @@ namespace MQTTnet.Server.Internal
         }
 
         async Task<MqttClientConnection> CreateClientConnection(
-            MqttConnectPacket connectPacket, 
+            MqttConnectPacket connectPacket,
+            MqttConnAckPacket connAckPacket,
             IMqttChannelAdapter channelAdapter, 
             IDictionary<object, object> sessionItems)
         {
@@ -476,6 +479,7 @@ namespace MQTTnet.Server.Internal
                         else
                         {
                             _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
+                            connAckPacket.IsSessionPresent = true;
                         }
                     }
 

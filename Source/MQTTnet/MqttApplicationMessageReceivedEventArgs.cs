@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Packets;
@@ -36,7 +37,12 @@ namespace MQTTnet
         public bool ProcessingFailed { get; set; }
 
         public MqttApplicationMessageReceivedReasonCode ReasonCode { get; set; } = MqttApplicationMessageReceivedReasonCode.Success;
-        
+
+        /// <summary>
+        /// Gets or sets the user properties which being sent to the server in the ACK packet etc.
+        /// </summary>
+        public List<MqttUserProperty> ResponseUserProperties { get; } = new List<MqttUserProperty>();
+
         /// <summary>
         /// Gets or sets whether this message was handled.
         /// This value can be used in user code for custom control flow.

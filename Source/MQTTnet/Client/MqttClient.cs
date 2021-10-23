@@ -680,7 +680,8 @@ namespace MQTTnet.Client
             {
                 if (!eventArgs.ProcessingFailed)
                 {
-                    var pubAckPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubAckPacket(eventArgs.PublishPacket, eventArgs.ReasonCode);
+                    var pubAckPacketFactory = new MqttPubAckPacketFactory();
+                    var pubAckPacket = pubAckPacketFactory.Create(eventArgs);
                     return SendAsync(pubAckPacket, cancellationToken);
                 }
             }
@@ -688,7 +689,8 @@ namespace MQTTnet.Client
             {
                 if (!eventArgs.ProcessingFailed)
                 {
-                    var pubRecPacket = _adapter.PacketFormatterAdapter.DataConverter.CreatePubRecPacket(eventArgs.PublishPacket, eventArgs.ReasonCode);
+                    var pubRecPacketFactory = new MqttPubRecPacketFactory();
+                    var pubRecPacket = pubRecPacketFactory.Create(eventArgs);
                     return SendAsync(pubRecPacket, cancellationToken);
                 }
             }

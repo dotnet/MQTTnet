@@ -5,7 +5,6 @@ using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,30 +14,6 @@ namespace MQTTnet.Formatter.V5
 {
     public sealed class MqttV500DataConverter : IMqttDataConverter
     {
-        public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket,
-            MqttApplicationMessageReceivedReasonCode reasonCode)
-        {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
-
-            return new MqttPubAckPacket
-            {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubAckReasonCode) (int) reasonCode
-            };
-        }
-
-        public MqttPubRecPacket CreatePubRecPacket(MqttPublishPacket publishPacket,
-            MqttApplicationMessageReceivedReasonCode reasonCode)
-        {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
-
-            return new MqttPubRecPacket
-            {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubRecReasonCode) (int) reasonCode
-            };
-        }
-
         public MqttPubCompPacket CreatePubCompPacket(MqttPubRelPacket pubRelPacket,
             MqttApplicationMessageReceivedReasonCode reasonCode)
         {
@@ -91,37 +66,6 @@ namespace MQTTnet.Formatter.V5
             };
         }
         
-        public MqttConnAckPacket CreateConnAckPacket(MqttConnectionValidatorContext connectionValidatorContext)
-        {
-            if (connectionValidatorContext == null) throw new ArgumentNullException(nameof(connectionValidatorContext));
-
-            var connAckPacket = new MqttConnAckPacket
-            {
-                ReasonCode = connectionValidatorContext.ReasonCode,
-                Properties =
-                {
-                    RetainAvailable = true,
-                    SubscriptionIdentifiersAvailable = true,
-                    SharedSubscriptionAvailable = false,
-                    TopicAliasMaximum = ushort.MaxValue,
-                    WildcardSubscriptionAvailable = true,
-                    
-                    AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
-                    AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
-                    AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,
-                    ReasonString = connectionValidatorContext.ReasonString,
-                    ServerReference = connectionValidatorContext.ServerReference
-                }
-            };
-
-            if (connectionValidatorContext.ResponseUserProperties != null)
-            {
-                connAckPacket.Properties.UserProperties.AddRange(connectionValidatorContext.ResponseUserProperties);
-            }
-            
-            return connAckPacket;
-        }
-
         public MqttClientSubscribeResult CreateClientSubscribeResult(MqttSubscribePacket subscribePacket,
             MqttSubAckPacket subAckPacket)
         {

@@ -449,7 +449,8 @@ namespace MQTTnet.Server.Internal
                 }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                 {
-                    var pubAckPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePubAckPacket(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
+                    var pubAckPacketFactory = new MqttPubAckPacketFactory();
+                    var pubAckPacket = pubAckPacketFactory.Create(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
                     Session.EnqueuePacket(new MqttPacketBusItem(pubAckPacket));
                     //return SendPacketAsync(pubAckPacket, cancellationToken);
                     break;
@@ -457,7 +458,8 @@ namespace MQTTnet.Server.Internal
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                 {
                     // TODO: Migrate to packet bus.
-                    var pubRecPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePubRecPacket(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
+                    var pubRecPacketFactory = new MqttPubRecPacketFactory();
+                    var pubRecPacket = pubRecPacketFactory.Create(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
                     Session.EnqueuePacket(new MqttPacketBusItem(pubRecPacket));
                     
                     //return SendPacketAsync(pubRecPacket, cancellationToken);

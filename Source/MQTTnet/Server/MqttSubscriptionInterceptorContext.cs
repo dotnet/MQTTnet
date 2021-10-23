@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
 
@@ -74,5 +75,10 @@ namespace MQTTnet.Server
         /// Gets the current client session.
         /// </summary>
         public IMqttSessionStatus Session { get; internal set; }
+        
+        /// <summary>
+        /// Gets the cancellation token which can indicate that the client connection gets down.
+        /// </summary>
+        public CancellationToken CancellationToken { get; internal set; }
     }
 }

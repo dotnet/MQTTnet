@@ -3,7 +3,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Client.Unsubscribing
 {
-    public class MqttClientUnsubscribeOptions
+    public sealed class MqttClientUnsubscribeOptions
     {
         /// <summary>
         /// Gets or sets a list of topic filters the client wants to unsubscribe from.

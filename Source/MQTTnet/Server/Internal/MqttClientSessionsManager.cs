@@ -236,7 +236,7 @@ namespace MQTTnet.Server.Internal
 
             var clientSession = GetClientSession(clientId);
 
-            var subscribeResult = await clientSession.SubscriptionsManager.Subscribe(fakeSubscribePacket).ConfigureAwait(false);
+            var subscribeResult = await clientSession.SubscriptionsManager.Subscribe(fakeSubscribePacket, CancellationToken.None).ConfigureAwait(false);
             
             foreach (var retainedApplicationMessage in subscribeResult.RetainedApplicationMessages)
             {
@@ -257,7 +257,7 @@ namespace MQTTnet.Server.Internal
             var fakeUnsubscribePacket = new MqttUnsubscribePacket();
             fakeUnsubscribePacket.TopicFilters.AddRange(topicFilters);
             
-            return GetClientSession(clientId).SubscriptionsManager.Unsubscribe(fakeUnsubscribePacket);
+            return GetClientSession(clientId).SubscriptionsManager.Unsubscribe(fakeUnsubscribePacket, CancellationToken.None);
         }
 
         public async Task DeleteSessionAsync(string clientId)

@@ -29,17 +29,7 @@ namespace MQTTnet.Formatter
         }
 
         public MqttProtocolVersion ProtocolVersion { get; private set; } = MqttProtocolVersion.Unknown;
-
-        public IMqttDataConverter DataConverter
-        {
-            get
-            {
-                ThrowIfFormatterNotSet();
-
-                return _formatter.DataConverter;
-            }
-        }
-
+        
         public IMqttPacketWriter Writer { get; }
 
         public ArraySegment<byte> Encode(MqttBasePacket packet)

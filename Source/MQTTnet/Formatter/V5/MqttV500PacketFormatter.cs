@@ -13,8 +13,6 @@ namespace MQTTnet.Formatter.V5
         {
             _encoder = new MqttV500PacketEncoder(writer);
         }
-
-        public IMqttDataConverter DataConverter { get; } = new MqttV500DataConverter();
         
         public ArraySegment<byte> Encode(MqttBasePacket mqttPacket)
         {

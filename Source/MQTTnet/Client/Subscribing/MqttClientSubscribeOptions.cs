@@ -3,7 +3,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Client.Subscribing
 {
-    public class MqttClientSubscribeOptions
+    public sealed class MqttClientSubscribeOptions
     {
         /// <summary>
         /// Gets or sets a list of topic filters the client wants to subscribe to.

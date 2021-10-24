@@ -87,7 +87,7 @@ namespace MQTTnet
         /// When the retained=true option is set on the PUBLISH message, this interval also defines how long a message is retained on a topic.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        uint? _messageExpiryInterval;
+        uint _messageExpiryInterval;
 
         /// <summary>
         /// The payload format indicator.
@@ -97,7 +97,7 @@ namespace MQTTnet
         /// If no payload format indicator is provided, the default value is 0.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        MqttPayloadFormatIndicator? _payloadFormatIndicator;
+        MqttPayloadFormatIndicator _payloadFormatIndicator;
 
         /// <summary>
         /// The user properties.

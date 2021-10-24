@@ -51,7 +51,7 @@ namespace MQTTnet
         /// The feature is very similar to the HTTP header concept.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public List<MqttUserProperty> UserProperties { get; set; }
+        public List<MqttUserProperty> UserProperties { get; set; } = new List<MqttUserProperty>();
 
         /// <summary>
         /// Gets or sets the content type.
@@ -74,7 +74,7 @@ namespace MQTTnet
         /// If no payload format indicator is provided, the default value is 0.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public MqttPayloadFormatIndicator? PayloadFormatIndicator { get; set; }
+        public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
         /// <summary>
         /// Gets or sets the message expiry interval.
@@ -84,7 +84,7 @@ namespace MQTTnet
         /// When the retained=true option is set on the PUBLISH message, this interval also defines how long a message is retained on a topic.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public uint? MessageExpiryInterval { get; set; }
+        public uint MessageExpiryInterval { get; set; }
 
         /// <summary>
         /// Gets or sets the topic alias.

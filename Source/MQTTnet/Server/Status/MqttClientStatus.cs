@@ -19,7 +19,7 @@ namespace MQTTnet.Server.Status
         /// Gets or sets the client identifier.
         /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
-        public string ClientId => _connection.ClientId;
+        public string ClientId => _connection.Id;
 
         public string Endpoint => _connection.Endpoint;
 

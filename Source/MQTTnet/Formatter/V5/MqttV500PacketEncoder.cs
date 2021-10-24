@@ -88,12 +88,12 @@ namespace MQTTnet.Formatter.V5
                 connectFlags |= 0x2;
             }
 
-            if (packet.WillMessage != null)
+            if (packet.WillFlag)
             {
                 connectFlags |= 0x4;
-                connectFlags |= (byte)((byte)packet.WillMessage.QualityOfServiceLevel << 3);
+                connectFlags |= (byte)((byte)packet.WillQoS << 3);
 
-                if (packet.WillMessage.Retain)
+                if (packet.WillRetain)
                 {
                     connectFlags |= 0x20;
                 }
@@ -135,25 +135,23 @@ namespace MQTTnet.Formatter.V5
 
             packetWriter.WriteWithLengthPrefix(packet.ClientId);
             
-            if (packet.WillMessage != null)
+            if (packet.WillFlag)
             {
                 var willPropertiesWriter = new MqttV500PropertiesWriter();
-                willPropertiesWriter.WritePayloadFormatIndicator(packet.WillMessage.PayloadFormatIndicator);
-                willPropertiesWriter.WriteMessageExpiryInterval(packet.WillMessage.MessageExpiryInterval);
-                willPropertiesWriter.WriteTopicAlias(packet.WillMessage.TopicAlias);
-                willPropertiesWriter.WriteResponseTopic(packet.WillMessage.ResponseTopic);
-                willPropertiesWriter.WriteCorrelationData(packet.WillMessage.CorrelationData);
-                willPropertiesWriter.WriteSubscriptionIdentifiers(packet.WillMessage.SubscriptionIdentifiers);
-                willPropertiesWriter.WriteContentType(packet.WillMessage.ContentType);
-                willPropertiesWriter.WriteUserProperties(packet.WillMessage.UserProperties);
+                willPropertiesWriter.WritePayloadFormatIndicator(packet.WillProperties.PayloadFormatIndicator);
+                willPropertiesWriter.WriteMessageExpiryInterval(packet.WillProperties.MessageExpiryInterval);
+                willPropertiesWriter.WriteResponseTopic(packet.WillProperties.ResponseTopic);
+                willPropertiesWriter.WriteCorrelationData(packet.WillProperties.CorrelationData);
+                willPropertiesWriter.WriteContentType(packet.WillProperties.ContentType);
+                willPropertiesWriter.WriteUserProperties(packet.WillProperties.UserProperties);
                 
                 // This is a special case!
                 willPropertiesWriter.WriteWillDelayInterval(packet.Properties?.WillDelayInterval);
 
                 willPropertiesWriter.WriteTo(packetWriter);
 
-                packetWriter.WriteWithLengthPrefix(packet.WillMessage.Topic);
-                packetWriter.WriteWithLengthPrefix(packet.WillMessage.Payload);
+                packetWriter.WriteWithLengthPrefix(packet.WillTopic);
+                packetWriter.WriteWithLengthPrefix(packet.WillMessage);
             }
 
             if (packet.Username != null)

@@ -11,7 +11,7 @@ namespace MQTTnet.Formatter.V3
     public class MqttV310PacketFormatter : IMqttPacketFormatter
     {
         const int FixedHeaderSize = 1;
-        
+
         static readonly MqttDisconnectPacket DisconnectPacket = new MqttDisconnectPacket();
 
         readonly IMqttPacketWriter _packetWriter;
@@ -30,7 +30,7 @@ namespace MQTTnet.Formatter.V3
             _packetWriter.Seek(5);
 
             var fixedHeader = EncodePacket(packet, _packetWriter);
-            var remainingLength = (uint)(_packetWriter.Length - 5);
+            var remainingLength = (uint) (_packetWriter.Length - 5);
 
             var remainingLengthSize = MqttPacketWriter.GetLengthOfVariableInteger(remainingLength);
 
@@ -57,7 +57,7 @@ namespace MQTTnet.Formatter.V3
                 throw new MqttProtocolViolationException($"The packet type is invalid ({controlPacketType}).");
             }
 
-            switch ((MqttControlPacketType)controlPacketType)
+            switch ((MqttControlPacketType) controlPacketType)
             {
                 case MqttControlPacketType.Connect: return DecodeConnectPacket(receivedMqttPacket.BodyReader);
                 case MqttControlPacketType.ConnAck: return DecodeConnAckPacket(receivedMqttPacket.BodyReader);
@@ -187,7 +187,7 @@ namespace MQTTnet.Formatter.V3
                 var topicFilter = new MqttTopicFilter
                 {
                     Topic = body.ReadStringWithLengthPrefix(),
-                    QualityOfServiceLevel = (MqttQualityOfServiceLevel)body.ReadByte()
+                    QualityOfServiceLevel = (MqttQualityOfServiceLevel) body.ReadByte()
                 };
 
                 packet.TopicFilters.Add(topicFilter);
@@ -201,7 +201,7 @@ namespace MQTTnet.Formatter.V3
             ThrowIfBodyIsEmpty(receivedMqttPacket.BodyReader);
 
             var retain = (receivedMqttPacket.FixedHeader & 0x1) > 0;
-            var qualityOfServiceLevel = (MqttQualityOfServiceLevel)(receivedMqttPacket.FixedHeader >> 1 & 0x3);
+            var qualityOfServiceLevel = (MqttQualityOfServiceLevel) (receivedMqttPacket.FixedHeader >> 1 & 0x3);
             var dup = (receivedMqttPacket.FixedHeader & 0x8) > 0;
 
             var topic = receivedMqttPacket.BodyReader.ReadStringWithLengthPrefix();
@@ -267,13 +267,12 @@ namespace MQTTnet.Formatter.V3
 
             if (willFlag)
             {
-                packet.WillMessage = new MqttApplicationMessage
-                {
-                    Topic = body.ReadStringWithLengthPrefix(),
-                    Payload = body.ReadWithLengthPrefix(),
-                    QualityOfServiceLevel = (MqttQualityOfServiceLevel)willQoS,
-                    Retain = willRetain
-                };
+                packet.WillFlag = true;
+                packet.WillQoS = (MqttQualityOfServiceLevel) willQoS;
+                packet.WillRetain = willRetain;
+
+                packet.WillTopic = body.ReadStringWithLengthPrefix();
+                packet.WillMessage = body.ReadWithLengthPrefix();
             }
 
             if (usernameFlag)
@@ -301,7 +300,7 @@ namespace MQTTnet.Formatter.V3
 
             while (!body.EndOfStream)
             {
-                packet.ReturnCodes.Add((MqttSubscribeReturnCode)body.ReadByte());
+                packet.ReturnCodes.Add((MqttSubscribeReturnCode) body.ReadByte());
             }
 
             return packet;
@@ -314,7 +313,7 @@ namespace MQTTnet.Formatter.V3
             var packet = new MqttConnAckPacket();
 
             body.ReadByte(); // Reserved.
-            packet.ReturnCode = (MqttConnectReturnCode)body.ReadByte();
+            packet.ReturnCode = (MqttConnectReturnCode) body.ReadByte();
 
             return packet;
         }
@@ -351,12 +350,12 @@ namespace MQTTnet.Formatter.V3
                 connectFlags |= 0x2;
             }
 
-            if (packet.WillMessage != null)
+            if (packet.WillFlag)
             {
                 connectFlags |= 0x4;
-                connectFlags |= (byte)((byte)packet.WillMessage.QualityOfServiceLevel << 3);
+                connectFlags |= (byte) ((byte) packet.WillQoS << 3);
 
-                if (packet.WillMessage.Retain)
+                if (packet.WillRetain)
                 {
                     connectFlags |= 0x20;
                 }
@@ -381,10 +380,10 @@ namespace MQTTnet.Formatter.V3
             packetWriter.Write(packet.KeepAlivePeriod);
             packetWriter.WriteWithLengthPrefix(packet.ClientId);
 
-            if (packet.WillMessage != null)
+            if (packet.WillFlag)
             {
-                packetWriter.WriteWithLengthPrefix(packet.WillMessage.Topic);
-                packetWriter.WriteWithLengthPrefix(packet.WillMessage.Payload);
+                packetWriter.WriteWithLengthPrefix(packet.WillTopic);
+                packetWriter.WriteWithLengthPrefix(packet.WillMessage);
             }
 
             if (packet.Username != null)
@@ -403,7 +402,7 @@ namespace MQTTnet.Formatter.V3
         protected virtual byte EncodeConnAckPacket(MqttConnAckPacket packet, IMqttPacketWriter packetWriter)
         {
             packetWriter.Write(0); // Reserved.
-            packetWriter.Write((byte)packet.ReturnCode);
+            packetWriter.Write((byte) packet.ReturnCode);
 
             return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }
@@ -455,7 +454,7 @@ namespace MQTTnet.Formatter.V3
                 fixedHeader |= 0x01;
             }
 
-            fixedHeader |= (byte)((byte)packet.QualityOfServiceLevel << 1);
+            fixedHeader |= (byte) ((byte) packet.QualityOfServiceLevel << 1);
 
             if (packet.Dup)
             {
@@ -525,14 +524,14 @@ namespace MQTTnet.Formatter.V3
                     {
                         throw new MqttProtocolViolationException("RetainAsPublished is not supported in 3.1.1.");
                     }
-                    
+
                     if (topicFilter.RetainHandling != MqttRetainHandling.SendAtSubscribe)
                     {
                         throw new MqttProtocolViolationException("RetainHandling is not supported in 3.1.1.");
                     }
-                    
+
                     packetWriter.WriteWithLengthPrefix(topicFilter.Topic);
-                    packetWriter.Write((byte)topicFilter.QualityOfServiceLevel);
+                    packetWriter.Write((byte) topicFilter.QualityOfServiceLevel);
                 }
             }
 
@@ -552,7 +551,7 @@ namespace MQTTnet.Formatter.V3
             {
                 foreach (var packetSubscribeReturnCode in packet.ReturnCodes)
                 {
-                    packetWriter.Write((byte)packetSubscribeReturnCode);
+                    packetWriter.Write((byte) packetSubscribeReturnCode);
                 }
             }
 

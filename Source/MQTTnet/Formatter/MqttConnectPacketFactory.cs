@@ -17,7 +17,6 @@ namespace MQTTnet.Formatter
                 Password = clientOptions.Credentials?.Password,
                 CleanSession = clientOptions.CleanSession,
                 KeepAlivePeriod = (ushort) clientOptions.KeepAlivePeriod.TotalSeconds,
-                WillMessage = clientOptions.WillMessage,
                 Properties =
                 {
                     AuthenticationMethod = clientOptions.AuthenticationMethod,
@@ -31,6 +30,26 @@ namespace MQTTnet.Formatter
                     TopicAliasMaximum = clientOptions.TopicAliasMaximum
                 }
             };
+
+            if (clientOptions.WillMessage != null)
+            {
+                connectPacket.WillFlag = true;
+                connectPacket.WillTopic = clientOptions.WillMessage.Topic;
+                connectPacket.WillQoS = clientOptions.WillMessage.QualityOfServiceLevel;
+                connectPacket.WillMessage = clientOptions.WillMessage.Payload;
+                connectPacket.WillRetain = clientOptions.WillMessage.Retain;
+                connectPacket.WillProperties.ContentType = clientOptions.WillMessage.ContentType;
+                connectPacket.WillProperties.CorrelationData = clientOptions.WillMessage.CorrelationData;
+                connectPacket.WillProperties.ResponseTopic = clientOptions.WillMessage.ResponseTopic;
+                connectPacket.WillProperties.MessageExpiryInterval = clientOptions.WillMessage.MessageExpiryInterval;
+                connectPacket.WillProperties.PayloadFormatIndicator = clientOptions.WillMessage.PayloadFormatIndicator;
+                //connectPacket.WillProperties.WillDelayInterval = clientOptions.WillMessage.;
+
+                if (clientOptions.WillMessage.UserProperties != null)
+                {
+                    connectPacket.WillProperties.UserProperties.AddRange(clientOptions.WillMessage.UserProperties);
+                }
+            }
 
             if (clientOptions.UserProperties != null)
             {

@@ -37,7 +37,7 @@ namespace MQTTnet.Tests.Mockups
             return Task.FromResult(0);
         }
 
-        public Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public Task DisconnectAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(0);
         }

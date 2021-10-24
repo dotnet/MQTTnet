@@ -24,10 +24,9 @@ namespace MQTTnet.Server.Status
             remove => _session.Deleted += value;
         }
 
-        public string ClientId => _session.ClientId;
+        public string ClientId => _session.Id;
 
-        // TODO: Fix!
-        public long PendingApplicationMessagesCount => 0; // _session.ApplicationMessagesQueue.Count;
+        public long PendingApplicationMessagesCount => _session.PendingDataPacketsCount;
 
         public DateTime CreatedTimestamp => _session.CreatedTimestamp;
 

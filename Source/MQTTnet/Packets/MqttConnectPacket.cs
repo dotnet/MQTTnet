@@ -1,4 +1,6 @@
-﻿namespace MQTTnet.Packets
+﻿using MQTTnet.Protocol;
+
+namespace MQTTnet.Packets
 {
     public sealed class MqttConnectPacket : MqttBasePacket
     {
@@ -14,13 +16,23 @@
        /// Also called "Clean Start" in MQTTv5.
        /// </summary>
         public bool CleanSession { get; set; }
-
-        public MqttApplicationMessage WillMessage { get; set; }
         
         /// <summary>
         /// Added in MQTTv5.
         /// </summary>
         public MqttConnectPacketProperties Properties { get; } = new MqttConnectPacketProperties();
+
+        public bool WillFlag { get; set; }
+        
+        public string WillTopic { get; set; }
+        
+        public byte[] WillMessage { get; set; }
+        
+        public MqttQualityOfServiceLevel WillQoS { get; set; } = MqttQualityOfServiceLevel.AtMostOnce;
+        
+        public bool WillRetain { get; set; }
+
+        public MqttConnectPacketWillProperties WillProperties { get; } = new MqttConnectPacketWillProperties();
         
         public override string ToString()
         {

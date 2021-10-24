@@ -9,7 +9,6 @@ using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Formatter.V3;
-using MQTTnet.Formatter.V5;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -94,13 +93,11 @@ namespace MQTTnet.Tests
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true,
-                WillMessage = new MqttApplicationMessage
-                {
-                    Topic = "My/last/will",
-                    Payload = Encoding.UTF8.GetBytes("Good byte."),
-                    QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
-                    Retain = true
-                }
+                WillFlag = true,
+                WillTopic = "My/last/will",
+                WillMessage = Encoding.UTF8.GetBytes("Good byte."),
+                WillQoS =  MqttQualityOfServiceLevel.AtLeastOnce,
+                WillRetain = true
             };
 
             SerializeAndCompare(p, "EDUABE1RVFQE7gB7AANYWVoADE15L2xhc3Qvd2lsbAAKR29vZCBieXRlLgAEVVNFUgAEUEFTUw==");
@@ -131,13 +128,11 @@ namespace MQTTnet.Tests
                 Username = "USER",
                 KeepAlivePeriod = 123,
                 CleanSession = true,
-                WillMessage = new MqttApplicationMessage
-                {
-                    Topic = "My/last/will",
-                    Payload = Encoding.UTF8.GetBytes("Good byte."),
-                    QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
-                    Retain = true
-                }
+                WillFlag = true,
+                WillTopic = "My/last/will",
+                WillMessage = Encoding.UTF8.GetBytes("Good byte."),
+                WillQoS =  MqttQualityOfServiceLevel.AtLeastOnce,
+                WillRetain = true
             };
 
             DeserializeAndCompare(p, "EDUABE1RVFQE7gB7AANYWVoADE15L2xhc3Qvd2lsbAAKR29vZCBieXRlLgAEVVNFUgAEUEFTUw==");

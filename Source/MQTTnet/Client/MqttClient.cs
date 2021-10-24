@@ -23,6 +23,7 @@ namespace MQTTnet.Client
 {
     public class MqttClient : Disposable, IMqttClient
     {
+        readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         readonly object _disconnectLock = new object();
@@ -156,8 +157,7 @@ namespace MQTTnet.Client
 
                 if (clientWasConnected)
                 {
-                    var disconnectPacketFactory = new MqttDisconnectPacketFactory();
-                    var disconnectPacket = disconnectPacketFactory.Create(options);
+                    var disconnectPacket = _packetFactories.Disconnect.Create(options);
                     await SendAsync(disconnectPacket, cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -207,8 +207,7 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
-            var subscribePacketFactory = new MqttSubscribePacketFactory();
-            var subscribePacket = subscribePacketFactory.Create(options);
+            var subscribePacket = _packetFactories.Subscribe.Create(options);
             subscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
             var subAckPacket = await SendAndReceiveAsync<MqttSubAckPacket>(subscribePacket, cancellationToken).ConfigureAwait(false);
@@ -223,9 +222,8 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
             ThrowIfNotConnected();
-
-            var unsubscribeFactory = new MqttUnsubscribePacketFactory();
-            var unsubscribePacket = unsubscribeFactory.Create(options);
+            
+            var unsubscribePacket = _packetFactories.Unsubscribe.Create(options);
             unsubscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
             var unsubAckPacket = await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, cancellationToken).ConfigureAwait(false);
@@ -243,10 +241,7 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
-            var publishPacketFactory = new MqttPublishPacketFactory();
-            var publishPacket = publishPacketFactory.Create(applicationMessage);
-            
-            //_adapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(applicationMessage);
+            var publishPacket = _packetFactories.Publish.Create(applicationMessage);
 
             switch (applicationMessage.QualityOfServiceLevel)
             {
@@ -303,8 +298,7 @@ namespace MQTTnet.Client
 
             try
             {
-                var connectPacketFactory = new MqttConnectPacketFactory();
-                var connectPacket = connectPacketFactory.Create(options);
+                var connectPacket = _packetFactories.Connect.Create(options);
 
                 var connAckPacket = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
 
@@ -336,7 +330,10 @@ namespace MQTTnet.Client
 
         void ThrowIfConnected(string message)
         {
-            if (IsConnected) throw new MqttProtocolViolationException(message);
+            if (IsConnected)
+            {
+                throw new MqttProtocolViolationException(message);
+            }
         }
 
         Task DisconnectInternalAsync(Task sender, Exception exception, MqttClientConnectResult connectResult)
@@ -360,7 +357,11 @@ namespace MQTTnet.Client
                 if (_adapter != null)
                 {
                     _logger.Verbose("Disconnecting [Timeout={0}]", Options.CommunicationTimeout);
-                    await _adapter.DisconnectAsync(Options.CommunicationTimeout, CancellationToken.None).ConfigureAwait(false);
+
+                    using (var timeout = new CancellationTokenSource(Options.CommunicationTimeout))
+                    {
+                        await _adapter.DisconnectAsync(timeout.Token).ConfigureAwait(false);
+                    }
                 }
 
                 _logger.Verbose("Disconnected from adapter.");
@@ -434,7 +435,7 @@ namespace MQTTnet.Client
                 packetIdentifier = packetWithIdentifier.PacketIdentifier;
             }
 
-            using (var packetAwaiter = _packetDispatcher.AddAwaitable<TResponsePacket>(packetIdentifier))
+            using (var packetAwaitable = _packetDispatcher.AddAwaitable<TResponsePacket>(packetIdentifier))
             {
                 try
                 {
@@ -443,12 +444,12 @@ namespace MQTTnet.Client
                 catch (Exception exception)
                 {
                     _logger.Warning(exception, "Error when sending request packet ({0}).", requestPacket.GetType().Name);
-                    packetAwaiter.Fail(exception);
+                    packetAwaitable.Fail(exception);
                 }
 
                 try
                 {
-                    return await packetAwaiter.WaitOneAsync(Options.CommunicationTimeout).ConfigureAwait(false);
+                    return await packetAwaitable.WaitOneAsync(Options.CommunicationTimeout).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -686,8 +687,7 @@ namespace MQTTnet.Client
             {
                 if (!eventArgs.ProcessingFailed)
                 {
-                    var pubAckPacketFactory = new MqttPubAckPacketFactory();
-                    var pubAckPacket = pubAckPacketFactory.Create(eventArgs);
+                    var pubAckPacket = _packetFactories.PubAck.Create(eventArgs);
                     return SendAsync(pubAckPacket, cancellationToken);
                 }
             }
@@ -695,8 +695,7 @@ namespace MQTTnet.Client
             {
                 if (!eventArgs.ProcessingFailed)
                 {
-                    var pubRecPacketFactory = new MqttPubRecPacketFactory();
-                    var pubRecPacket = pubRecPacketFactory.Create(eventArgs);
+                    var pubRecPacket = _packetFactories.PubRec.Create(eventArgs);
                     return SendAsync(pubRecPacket, cancellationToken);
                 }
             }
@@ -714,8 +713,7 @@ namespace MQTTnet.Client
             {
                 // The packet is unknown. Probably due to a restart of the client.
                 // So wen send this to the server to trigger a full resend of the message.
-                var pubRelPacketFactory = new MqttPubRelPacketFactory();
-                var pubRelPacket = pubRelPacketFactory.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.PacketIdentifierNotFound);
+                var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.PacketIdentifierNotFound);
                 return SendAsync(pubRelPacket, cancellationToken);
             }
 
@@ -724,8 +722,7 @@ namespace MQTTnet.Client
 
         Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
         {
-            var pubCompPacketFactory = new MqttPubCompPacketFactory();
-            var pubCompPacket =pubCompPacketFactory.Create(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            var pubCompPacket = _packetFactories.PubComp.Create(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
             return SendAsync(pubCompPacket, cancellationToken);
         }
 
@@ -774,8 +771,7 @@ namespace MQTTnet.Client
 
             var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
 
-            var pubRelPacketFactory = new MqttPubRelPacketFactory();
-            var pubRelPacket = pubRelPacketFactory.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
 
             var pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
 

@@ -24,12 +24,12 @@ namespace MQTTnet.Formatter.V3
                 connectFlags |= 0x2;
             }
 
-            if (packet.WillMessage != null)
+            if (packet.WillFlag)
             {
                 connectFlags |= 0x4;
-                connectFlags |= (byte)((byte)packet.WillMessage.QualityOfServiceLevel << 3);
+                connectFlags |= (byte)((byte)packet.WillQoS << 3);
 
-                if (packet.WillMessage.Retain)
+                if (packet.WillRetain)
                 {
                     connectFlags |= 0x20;
                 }
@@ -54,10 +54,10 @@ namespace MQTTnet.Formatter.V3
             packetWriter.Write(packet.KeepAlivePeriod);
             packetWriter.WriteWithLengthPrefix(packet.ClientId);
 
-            if (packet.WillMessage != null)
+            if (packet.WillFlag)
             {
-                packetWriter.WriteWithLengthPrefix(packet.WillMessage.Topic);
-                packetWriter.WriteWithLengthPrefix(packet.WillMessage.Payload);
+                packetWriter.WriteWithLengthPrefix(packet.WillTopic);
+                packetWriter.WriteWithLengthPrefix(packet.WillMessage);
             }
 
             if (packet.Username != null)

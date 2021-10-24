@@ -14,7 +14,7 @@ namespace MQTTnet.Server.Internal
     {
         readonly MqttPacketBus _packetBus = new MqttPacketBus();
 
-        readonly Dictionary<ushort, MqttPublishPacket> _publishPacketsWithoutAcknowledge = new Dictionary<ushort, MqttPublishPacket>();
+        readonly Dictionary<ushort, MqttPublishPacket> _unacknowledgedPublishPackets = new Dictionary<ushort, MqttPublishPacket>();
 
         readonly IMqttServerOptions _serverOptions;
         readonly MqttClientSessionsManager _clientSessionsManager;
@@ -56,7 +56,7 @@ namespace MQTTnet.Server.Internal
 
         public void AcknowledgePublishPacket(ushort packetIdentifier)
         {
-            _publishPacketsWithoutAcknowledge.Remove(packetIdentifier);
+            _unacknowledgedPublishPackets.Remove(packetIdentifier);
         }
         
         public void EnqueuePacket(MqttPacketBusItem packetBusItem)
@@ -80,7 +80,7 @@ namespace MQTTnet.Server.Internal
             {
                 if (publishPacket.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
                 {
-                    _publishPacketsWithoutAcknowledge[publishPacket.PacketIdentifier] = publishPacket;
+                    _unacknowledgedPublishPackets[publishPacket.PacketIdentifier] = publishPacket;
                 }
                 
                 _packetBus.Enqueue(packetBusItem, MqttPacketBusPartition.Data);
@@ -116,7 +116,7 @@ namespace MQTTnet.Server.Internal
             // TODO: Check if packet identifier must be restarted or not.
             _packetBus.Clear();
 
-            foreach (var publishPacket in _publishPacketsWithoutAcknowledge.Values.ToList())
+            foreach (var publishPacket in _unacknowledgedPublishPackets.Values.ToList())
             {
                 EnqueuePacket(new MqttPacketBusItem(publishPacket));
             }

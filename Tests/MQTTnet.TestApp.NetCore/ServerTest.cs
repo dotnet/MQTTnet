@@ -64,7 +64,7 @@ namespace MQTTnet.TestApp.NetCore
 
                         if (context.ApplicationMessage.Topic == "not_allowed_topic")
                         {
-                            context.AcceptPublish = false;
+                            context.ProcessPublish = false;
                             context.CloseConnection = true;
                         }
                     }),

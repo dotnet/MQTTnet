@@ -118,7 +118,7 @@ namespace MQTTnet.Tests.MQTTv5
                 await client.DisconnectAsync();
 
                 Assert.AreEqual(1, result.Items.Count);
-                Assert.AreEqual(MqttClientUnsubscribeResultCode.Success, result.Items[0].ReasonCode);
+                Assert.AreEqual(MqttClientUnsubscribeResultCode.Success, result.Items[0].ResultCode);
             }
         }
 

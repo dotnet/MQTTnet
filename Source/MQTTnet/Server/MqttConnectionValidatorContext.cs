@@ -42,12 +42,6 @@ namespace MQTTnet.Server
         public string Password => Encoding.UTF8.GetString(RawPassword ?? PlatformAbstractionLayer.EmptyByteArray);
 
         /// <summary>
-        /// Gets or sets the will delay interval.
-        /// This is the time between the client disconnect and the time the will message will be sent.
-        /// </summary>
-        public MqttApplicationMessage WillMessage => _connectPacket.WillMessage;
-
-        /// <summary>
         /// Gets or sets a value indicating whether clean sessions are used or not.
         /// When a client connects to a broker it can connect using either a non persistent connection (clean session) or a persistent connection.
         /// With a non persistent connection the broker doesn't store any subscription information or undelivered messages for the client.
@@ -123,7 +117,7 @@ namespace MQTTnet.Server
         /// Gets or sets the will delay interval.
         /// This is the time between the client disconnect and the time the will message will be sent.
         /// </summary>
-        public uint? WillDelayInterval => _connectPacket.Properties?.WillDelayInterval;
+        public uint? WillDelayInterval => _connectPacket.WillProperties?.WillDelayInterval;
 
         /// <summary>
         /// Gets or sets a key/value collection that can be used to share data within the scope of this session.

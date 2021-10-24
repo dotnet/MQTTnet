@@ -205,25 +205,36 @@ namespace MQTTnet.Extensions.WebSocket4Net
                 _webSocket.Open();
 #pragma warning restore AsyncFixer02 // Long-running or blocking operations inside an async method
 
-                var exception = await MqttTaskTimeout.WaitAsync(c =>
+                using (var timeoutCts = new CancellationTokenSource(_clientOptions.CommunicationTimeout))
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken))
                 {
-                    c.Register(() => taskCompletionSource.TrySetCanceled());
-                    return taskCompletionSource.Task;
-                }, _clientOptions.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
-
-                if (exception != null)
-                {
-                    if (exception is AuthenticationException authenticationException)
+                    using (linkedCts.Token.Register(() => taskCompletionSource.TrySetCanceled()))
                     {
-                        throw new MqttCommunicationException(authenticationException.InnerException);
-                    }
+                        try
+                        {
+                            await taskCompletionSource.Task.ConfigureAwait(false);
+                        }
+                        catch (Exception exception)
+                        {
+                            var timeoutReached = timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested;
+                            if (timeoutReached)
+                            {
+                                throw new MqttCommunicationTimedOutException(exception);
+                            }
+                            
+                            if (exception is AuthenticationException authenticationException)
+                            {
+                                throw new MqttCommunicationException(authenticationException.InnerException);
+                            }
 
-                    if (exception is OperationCanceledException)
-                    {
-                        throw new MqttCommunicationTimedOutException();
-                    }
+                            if (exception is OperationCanceledException)
+                            {
+                                throw new MqttCommunicationTimedOutException();
+                            }
 
-                    throw new MqttCommunicationException(exception);
+                            throw new MqttCommunicationException(exception);
+                        }
+                    }
                 }
             }
             catch (OperationCanceledException)

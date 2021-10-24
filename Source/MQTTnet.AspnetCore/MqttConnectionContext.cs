@@ -84,7 +84,7 @@ namespace MQTTnet.AspNetCore
             _output = Connection.Transport.Output;
         }
 
-        public Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public Task DisconnectAsync(CancellationToken cancellationToken)
         {
             _input?.Complete();
             _output?.Complete();

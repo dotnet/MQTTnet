@@ -23,10 +23,8 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Tests.Client
 {
     [TestClass]
-    public class Client_Tests
+    public class Client_Tests : BaseTestClass
     {
-        public TestContext TestContext { get; set; }
-
         [TestMethod]
         public async Task Ensure_Queue_Drain()
         {
@@ -690,7 +688,7 @@ namespace MQTTnet.Tests.Client
         [TestMethod]
         public async Task Message_Send_Retry()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 testEnvironment.IgnoreClientLogErrors = true;
                 testEnvironment.IgnoreServerLogErrors = true;
@@ -912,41 +910,6 @@ namespace MQTTnet.Tests.Client
 
                 await publishes;
                 Assert.IsTrue(success);
-            }
-        }
-
-        [DataTestMethod]
-        [DataRow(MqttQualityOfServiceLevel.ExactlyOnce)]
-        [DataRow(MqttQualityOfServiceLevel.AtLeastOnce)]
-        public async Task Retry_If_Not_PubAck(MqttQualityOfServiceLevel qos)
-        {
-            long count = 0;
-            using (var testEnvironment = new TestEnvironment(TestContext))
-            {
-                await testEnvironment.StartServer();
-                var publisher = await testEnvironment.ConnectClient();
-                var subscriber = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId(qos.ToString()));
-                await subscriber.SubscribeAsync("#", qos);
-
-                subscriber.UseApplicationMessageReceivedHandler(c =>
-                {
-                    c.AutoAcknowledge = false;
-                    ++count;
-                    Console.WriteLine("process");
-                    return Task.CompletedTask;
-                });
-
-                var pub = publisher.PublishAsync("a", null, qos);
-
-                await Task.Delay(100);
-                await subscriber.DisconnectAsync();
-                await subscriber.ReconnectAsync();
-                await Task.Delay(100);
-
-                var res = await pub;
-
-                Assert.AreEqual(MqttClientPublishReasonCode.Success, res.ReasonCode);
-                Assert.AreEqual(2, count);
             }
         }
     }

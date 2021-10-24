@@ -1,4 +1,5 @@
 ﻿using System;
+using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Formatter
@@ -38,6 +39,37 @@ namespace MQTTnet.Formatter
             {
                 packet.Properties.UserProperties.AddRange(applicationMessage.UserProperties);
             }
+
+            return packet;
+        }
+
+        public MqttPublishPacket Create(MqttConnectPacket connectPacket)
+        {
+            if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
+
+            if (!connectPacket.WillFlag)
+            {
+                throw new MqttProtocolViolationException("The CONNECT packet contains no will message (WillFlag).");
+            }
+            
+            var packet = new MqttPublishPacket
+            {
+                Topic = connectPacket.WillTopic,
+                Payload = connectPacket.WillMessage,
+                QualityOfServiceLevel = connectPacket.WillQoS,
+                Retain = connectPacket.WillRetain,
+                Dup = false,
+                Properties =
+                {
+                    ContentType = connectPacket.WillProperties.ContentType,
+                    CorrelationData = connectPacket.WillProperties.CorrelationData,
+                    MessageExpiryInterval = connectPacket.WillProperties.MessageExpiryInterval,
+                    PayloadFormatIndicator = connectPacket.WillProperties.PayloadFormatIndicator,
+                    ResponseTopic = connectPacket.WillProperties.ResponseTopic
+                }
+            };
+            
+            packet.Properties.UserProperties.AddRange(connectPacket.WillProperties.UserProperties);
 
             return packet;
         }

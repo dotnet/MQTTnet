@@ -113,7 +113,7 @@ namespace MQTTnet.LowLevelClient
         {
             try
             {
-                await _adapter.DisconnectAsync(_options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
+                await _adapter.DisconnectAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {

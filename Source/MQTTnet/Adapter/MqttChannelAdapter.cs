@@ -76,40 +76,28 @@ namespace MQTTnet.Adapter
             }
             catch (Exception exception)
             {
-                if (IsWrappedException(exception))
+                if (!WrapAndThrowException(exception))
                 {
                     throw;
                 }
-
-                WrapAndThrowException(exception);
             }
         }
 
-        public async Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task DisconnectAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
 
             try
             {
-                if (timeout == TimeSpan.Zero)
-                {
-                    await _channel.DisconnectAsync(cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    await MqttTaskTimeout.WaitAsync(
-                        t => _channel.DisconnectAsync(t), timeout, cancellationToken).ConfigureAwait(false);
-                }
+                await _channel.DisconnectAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                if (IsWrappedException(exception))
+                if (!WrapAndThrowException(exception))
                 {
                     throw;
                 }
-
-                WrapAndThrowException(exception);
             }
         }
 
@@ -136,12 +124,10 @@ namespace MQTTnet.Adapter
                 }
                 catch (Exception exception)
                 {
-                    if (IsWrappedException(exception))
+                    if (!WrapAndThrowException(exception))
                     {
                         throw;
                     }
-
-                    WrapAndThrowException(exception);
                 }
                 finally
                 {
@@ -192,12 +178,10 @@ namespace MQTTnet.Adapter
             }
             catch (Exception exception)
             {
-                if (IsWrappedException(exception))
+                if (!WrapAndThrowException(exception))
                 {
                     throw;
                 }
-
-                WrapAndThrowException(exception);
             }
 
             return null;
@@ -386,17 +370,17 @@ namespace MQTTnet.Adapter
 
             return value;
         }
-
-        static bool IsWrappedException(Exception exception)
+        
+        static bool WrapAndThrowException(Exception exception)
         {
-            return exception is OperationCanceledException ||
-                   exception is MqttCommunicationTimedOutException ||
-                   exception is MqttCommunicationException ||
-                   exception is MqttProtocolViolationException;
-        }
-
-        static void WrapAndThrowException(Exception exception)
-        {
+            if (exception is OperationCanceledException ||
+                exception is MqttCommunicationTimedOutException ||
+                exception is MqttCommunicationException ||
+                exception is MqttProtocolViolationException)
+            {
+                return false;
+            }
+            
             if (exception is IOException && exception.InnerException is SocketException innerException)
             {
                 exception = innerException;

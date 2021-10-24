@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
+using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -163,6 +164,46 @@ namespace MQTTnet.Tests.Server
                 // Assert 
                 Assert.AreEqual(1, messageReceivedHandler.ReceivedApplicationMessages.Count);
                 Assert.AreEqual("injected_one", messageReceivedHandler.ReceivedApplicationMessages[0].Topic);
+            }
+        }
+        
+        [DataTestMethod]
+        [DataRow(MqttQualityOfServiceLevel.ExactlyOnce)]
+        [DataRow(MqttQualityOfServiceLevel.AtLeastOnce)]
+        public async Task Retry_If_Not_PubAck(MqttQualityOfServiceLevel qos)
+        {
+            long count = 0;
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer(o => o.WithPersistentSessions());
+                
+                var publisher = await testEnvironment.ConnectClient();
+                
+                var subscriber = await testEnvironment.ConnectClient(o => o
+                    .WithClientId(qos.ToString())
+                    .WithCleanSession(false));
+                
+                subscriber.UseApplicationMessageReceivedHandler(c =>
+                {
+                    c.AutoAcknowledge = false;
+                    ++count;
+                    Console.WriteLine("process");
+                    return Task.CompletedTask;
+                });
+                
+                await subscriber.SubscribeAsync("#", qos);
+
+                var pub = publisher.PublishAsync("a", null, qos);
+
+                await Task.Delay(100);
+                await subscriber.DisconnectAsync();
+                await subscriber.ReconnectAsync();
+                await Task.Delay(100);
+
+                var res = await pub;
+
+                Assert.AreEqual(MqttClientPublishReasonCode.Success, res.ReasonCode);
+                Assert.AreEqual(2, count);
             }
         }
 

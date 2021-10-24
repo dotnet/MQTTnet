@@ -11,11 +11,11 @@ namespace MQTTnet.Internal
     {
         readonly object _syncRoot = new object();
 
-        readonly Queue<MqttPacketBusItem>[] _partitions = new Queue<MqttPacketBusItem>[]
+        readonly LinkedList<MqttPacketBusItem>[] _partitions = new LinkedList<MqttPacketBusItem>[]
         {
-            new Queue<MqttPacketBusItem>(4096),
-            new Queue<MqttPacketBusItem>(1028),
-            new Queue<MqttPacketBusItem>(128)
+            new LinkedList<MqttPacketBusItem>(),
+            new LinkedList<MqttPacketBusItem>(),
+            new LinkedList<MqttPacketBusItem>()
         };
 
         readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
@@ -33,11 +33,14 @@ namespace MQTTnet.Internal
             }
         }
 
-        public int DataPacketsCount()
+        public int DataPacketsCount
         {
-            lock (_syncRoot)
+            get
             {
-                return _partitions[(int)MqttPacketBusPartition.Data].Count;
+                lock (_syncRoot)
+                {
+                    return _partitions[(int) MqttPacketBusPartition.Data].Count;
+                }
             }
         }
 
@@ -55,7 +58,7 @@ namespace MQTTnet.Internal
 
             lock (_syncRoot)
             {
-                _partitions[(int) partition].Enqueue(item);
+                _partitions[(int) partition].AddLast(item);
             }
 
             _semaphore.Release();
@@ -85,7 +88,9 @@ namespace MQTTnet.Internal
 
                         if (_partitions[_activePartition].Count > 0)
                         {
-                            return _partitions[_activePartition].Dequeue();
+                            var item = _partitions[_activePartition].First;
+                            _partitions[_activePartition].RemoveFirst();
+                            return item.Value;
                         }
                     }
                 }
@@ -101,6 +106,17 @@ namespace MQTTnet.Internal
         public void Dispose()
         {
             _semaphore?.Dispose();
+        }
+
+        public void Clear()
+        {
+            lock (_syncRoot)
+            {
+                foreach (var partition in _partitions)
+                {
+                    partition.Clear();
+                }
+            }
         }
     }
 }

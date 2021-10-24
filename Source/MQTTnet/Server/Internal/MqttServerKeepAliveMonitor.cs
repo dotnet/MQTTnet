@@ -101,7 +101,7 @@ namespace MQTTnet.Server.Internal
                     return;
                 }
 
-                _logger.Warning("Client '{0}': Did not receive any packet or keep alive signal.", connection.ClientId);
+                _logger.Warning("Client '{0}': Did not receive any packet or keep alive signal.", connection.Id);
 
                 // Execute the disconnection in background so that the keep alive monitor can continue
                 // with checking other connections.
@@ -112,7 +112,7 @@ namespace MQTTnet.Server.Internal
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Client {0}: Unhandled exception while checking keep alive timeouts.", connection.ClientId);
+                _logger.Error(exception, "Client {0}: Unhandled exception while checking keep alive timeouts.", connection.Id);
             }
         }
     }

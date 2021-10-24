@@ -27,16 +27,7 @@ namespace MQTTnet.Tests
                 ct => Task.Delay(TimeSpan.FromMilliseconds(500), ct).ContinueWith(t => 5, ct),
                 TimeSpan.FromMilliseconds(100), CancellationToken.None);
         }
-
-        [TestMethod]
-        public async Task TimeoutAfterCompleteInTime()
-        {
-            var result = await MqttTaskTimeout.WaitAsync(
-                ct => Task.Delay(TimeSpan.FromMilliseconds(100), ct).ContinueWith(t => 5, ct),
-                TimeSpan.FromMilliseconds(500), CancellationToken.None);
-            Assert.AreEqual(5, result);
-        }
-
+        
         [TestMethod]
         public async Task TimeoutAfterWithInnerException()
         {

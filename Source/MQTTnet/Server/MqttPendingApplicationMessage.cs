@@ -1,17 +1,18 @@
-﻿using MQTTnet.Server.Internal;
+﻿using MQTTnet.Packets;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {
     public sealed class MqttPendingApplicationMessage
     {
-        public MqttPendingApplicationMessage(MqttApplicationMessage applicationMessage, MqttClientConnection sender)
+        public MqttPendingApplicationMessage(MqttPublishPacket publishPacket, MqttClientConnection sender)
         {
             Sender = sender;
-            ApplicationMessage = applicationMessage;
+            PublishPacket = publishPacket;
         }
 
         public MqttClientConnection Sender { get; }
 
-        public MqttApplicationMessage ApplicationMessage { get; }
+        public MqttPublishPacket PublishPacket { get; }
     }
 }

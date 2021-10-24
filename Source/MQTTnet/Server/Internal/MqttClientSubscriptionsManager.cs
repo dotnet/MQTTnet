@@ -16,7 +16,7 @@ namespace MQTTnet.Server.Internal
         // completely by swapping references etc.
         readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim();
         readonly Dictionary<string, Subscription> _subscriptions = new Dictionary<string, Subscription>(4096);
-        
+
         readonly MqttClientSession _clientSession;
         readonly IMqttServerOptions _options;
         readonly MqttServerEventDispatcher _eventDispatcher;
@@ -67,7 +67,7 @@ namespace MQTTnet.Server.Internal
                     // must be closed. So do not revert to false!
                     result.CloseConnection = true;
                 }
-                
+
                 if (!acceptSubscription || string.IsNullOrEmpty(finalTopicFilter.Topic))
                 {
                     continue;
@@ -81,7 +81,7 @@ namespace MQTTnet.Server.Internal
                         interceptorContext.ReasonCode);
 
                     await _eventDispatcher
-                        .SafeNotifyClientSubscribedTopicAsync(_clientSession.ClientId, finalTopicFilter)
+                        .SafeNotifyClientSubscribedTopicAsync(_clientSession.Id, finalTopicFilter)
                         .ConfigureAwait(false);
 
                     FilterRetainedApplicationMessages(retainedApplicationMessages, subscription, result);
@@ -103,7 +103,7 @@ namespace MQTTnet.Server.Internal
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
                     _subscriptions.TryGetValue(topicFilter, out var existingSubscription);
-                    
+
                     var interceptorContext = await InterceptUnsubscribe(topicFilter, existingSubscription, cancellationToken).ConfigureAwait(false);
                     var acceptUnsubscription = interceptorContext.ReasonCode == MqttUnsubscribeReasonCode.Success;
 
@@ -115,7 +115,7 @@ namespace MQTTnet.Server.Internal
                         // must be closed. So do not revert to false!
                         result.CloseConnection = true;
                     }
-           
+
                     if (!acceptUnsubscription)
                     {
                         continue;
@@ -134,7 +134,7 @@ namespace MQTTnet.Server.Internal
 
             foreach (var topicFilter in unsubscribePacket.TopicFilters)
             {
-                await _eventDispatcher.SafeNotifyClientUnsubscribedTopicAsync(_clientSession.ClientId, topicFilter).ConfigureAwait(false);
+                await _eventDispatcher.SafeNotifyClientUnsubscribedTopicAsync(_clientSession.Id, topicFilter).ConfigureAwait(false);
             }
 
             return result;
@@ -154,7 +154,7 @@ namespace MQTTnet.Server.Internal
                 _subscriptionsLock.ExitReadLock();
             }
 
-            var senderIsReceiver = string.Equals(senderClientId, _clientSession.ClientId);
+            var senderIsReceiver = string.Equals(senderClientId, _clientSession.Id);
 
             var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
             var subscriptionIdentifiers = new HashSet<uint>();
@@ -296,7 +296,7 @@ namespace MQTTnet.Server.Internal
         {
             var context = new MqttSubscriptionInterceptorContext
             {
-                ClientId = _clientSession.ClientId,
+                ClientId = _clientSession.Id,
                 TopicFilter = topicFilter,
                 SessionItems = _clientSession.Items,
                 Session = new MqttSessionStatus(_clientSession),
@@ -343,7 +343,7 @@ namespace MQTTnet.Server.Internal
         {
             var context = new MqttUnsubscriptionInterceptorContext
             {
-                ClientId = _clientSession.ClientId,
+                ClientId = _clientSession.Id,
                 Topic = topicFilter,
                 SessionItems = _clientSession.Items,
                 CancellationToken = cancellationToken
@@ -369,8 +369,7 @@ namespace MQTTnet.Server.Internal
             return context;
         }
 
-        static MqttQualityOfServiceLevel GetEffectiveQoS(MqttQualityOfServiceLevel qosLevel,
-            HashSet<MqttQualityOfServiceLevel> subscribedQoSLevels)
+        static MqttQualityOfServiceLevel GetEffectiveQoS(MqttQualityOfServiceLevel qosLevel, ICollection<MqttQualityOfServiceLevel> subscribedQoSLevels)
         {
             MqttQualityOfServiceLevel effectiveQoS;
             if (subscribedQoSLevels.Contains(qosLevel))

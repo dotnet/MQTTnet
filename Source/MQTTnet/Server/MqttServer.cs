@@ -1,7 +1,6 @@
 ﻿using MQTTnet.Adapter;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
-using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
@@ -11,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.Server.Internal;
@@ -19,6 +19,7 @@ namespace MQTTnet.Server
 {
     public class MqttServer : Disposable, IMqttServer
     {
+        readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
         readonly MqttServerEventDispatcher _eventDispatcher;
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly IMqttNetLogger _rootLogger;
@@ -148,7 +149,8 @@ namespace MQTTnet.Server
 
             ThrowIfNotStarted();
 
-            _clientSessionsManager.DispatchApplicationMessage(applicationMessage, null);
+            var publishPacket = _packetFactories.Publish.Create(applicationMessage);
+            _clientSessionsManager.DispatchPublishPacket(publishPacket, null);
 
             return Task.FromResult(new MqttClientPublishResult());
         }

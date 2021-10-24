@@ -143,7 +143,7 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadVariableLengthInteger();
         }
 
-        public MqttPayloadFormatIndicator? ReadPayloadFormatIndicator()
+        public MqttPayloadFormatIndicator ReadPayloadFormatIndicator()
         {
             return (MqttPayloadFormatIndicator)_body.ReadByte();
         }

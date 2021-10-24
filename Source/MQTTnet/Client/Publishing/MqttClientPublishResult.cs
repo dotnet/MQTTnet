@@ -1,12 +1,14 @@
-﻿
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Client.Publishing
 {
     public sealed class MqttClientPublishResult
     {
-        public ushort? PacketIdentifier { get; set; }
+        /// <summary>
+        /// Gets the packet identifier which was used for this publish.
+        /// </summary>
+        public ushort PacketIdentifier { get; set; }
 
         /// <summary>
         /// Gets or sets the reason code.

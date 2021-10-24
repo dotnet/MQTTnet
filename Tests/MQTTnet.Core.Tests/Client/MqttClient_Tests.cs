@@ -684,51 +684,7 @@ namespace MQTTnet.Tests.Client
                 Assert.AreEqual("DA|18RS00SC00XI0000RV00R100R200R300R400L100L200L300L400Y100Y200AC0102031800BELK0000BM0000|", receivedMessages.First().ConvertPayloadToString());
             }
         }
-
-        [TestMethod]
-        public async Task Message_Send_Retry()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                testEnvironment.IgnoreClientLogErrors = true;
-                testEnvironment.IgnoreServerLogErrors = true;
-
-                await testEnvironment.StartServer(
-                    new MqttServerOptionsBuilder()
-                        .WithPersistentSessions()
-                        .WithDefaultCommunicationTimeout(TimeSpan.FromMilliseconds(250)));
-
-                var client1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithCleanSession(false));
-                await client1.SubscribeAsync("x", MqttQualityOfServiceLevel.AtLeastOnce);
-
-                var retries = 0;
-
-                async Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
-                {
-                    retries++;
-
-                    await Task.Delay(1000);
-                    throw new Exception("Broken!");
-                }
-
-                client1.UseApplicationMessageReceivedHandler(Handler1);
-
-                var client2 = await testEnvironment.ConnectClient();
-                await client2.PublishAsync("x");
-
-                await Task.Delay(3000);
-
-                // The server should disconnect clients which are not responding.
-                Assert.IsFalse(client1.IsConnected);
-
-                await client1.ReconnectAsync().ConfigureAwait(false);
-
-                await Task.Delay(1000);
-
-                Assert.AreEqual(2, retries);
-            }
-        }
-
+        
         [TestMethod]
         public async Task NoConnectedHandler_Connect_DoesNotThrowException()
         {

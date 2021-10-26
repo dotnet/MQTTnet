@@ -2,8 +2,8 @@ using System;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client.Receiving;
-using MQTTnet.Diagnostics;
 using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Server.Internal
@@ -19,6 +19,16 @@ namespace MQTTnet.Server.Internal
             _logger = logger.WithSource(nameof(MqttServerEventDispatcher));
         }
 
+        public AsyncEvent<MqttServerClientConnectedEventArgs> ClientConnectedEvent { get; } = new AsyncEvent<MqttServerClientConnectedEventArgs>();
+        
+        public AsyncEvent<MqttServerClientDisconnectedEventArgs> ClientDisconnectedEvent { get; } = new AsyncEvent<MqttServerClientDisconnectedEventArgs>();
+        
+        public AsyncEvent<MqttServerClientSubscribedTopicEventArgs> ClientSubscribedTopicEvent { get; } = new AsyncEvent<MqttServerClientSubscribedTopicEventArgs>();
+        
+        public AsyncEvent<MqttServerClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopicEvent { get; } = new AsyncEvent<MqttServerClientUnsubscribedTopicEventArgs>();
+        
+        public AsyncEvent<MqttApplicationMessageReceivedEventArgs> ApplicationMessageReceivedEvent { get; } = new AsyncEvent<MqttApplicationMessageReceivedEventArgs>();
+        
         public IMqttServerClientConnectedHandler ClientConnectedHandler { get; set; }
 
         public IMqttServerClientDisconnectedHandler ClientDisconnectedHandler { get; set; }
@@ -33,19 +43,21 @@ namespace MQTTnet.Server.Internal
         {
             try
             {
-                var handler = ClientConnectedHandler;
-                if (handler == null)
-                {
-                    return;
-                }
-
-                await handler.HandleClientConnectedAsync(new MqttServerClientConnectedEventArgs
+                var eventArgs = new MqttServerClientConnectedEventArgs
                 {
                     ClientId = connectPacket.ClientId,
                     UserName = connectPacket.Username,
                     ProtocolVersion = channelAdapter.PacketFormatterAdapter.ProtocolVersion,
                     Endpoint = channelAdapter.Endpoint
-                }).ConfigureAwait(false);
+                };
+                
+                var handler = ClientConnectedHandler;
+                if (handler != null)
+                {
+                    await handler.HandleClientConnectedAsync(eventArgs).ConfigureAwait(false);
+                }
+
+                await ClientConnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -57,18 +69,20 @@ namespace MQTTnet.Server.Internal
         {
             try
             {
-                var handler = ClientDisconnectedHandler;
-                if (handler == null)
-                {
-                    return;
-                }
-
-                await handler.HandleClientDisconnectedAsync(new MqttServerClientDisconnectedEventArgs
+                var eventArgs = new MqttServerClientDisconnectedEventArgs
                 {
                     ClientId = clientId,
                     DisconnectType = disconnectType,
                     Endpoint = endpoint
-                }).ConfigureAwait(false);
+                };
+                
+                var handler = ClientDisconnectedHandler;
+                if (handler != null)
+                {
+                    await handler.HandleClientDisconnectedAsync(eventArgs).ConfigureAwait(false);
+                }
+
+                await ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -80,17 +94,19 @@ namespace MQTTnet.Server.Internal
         {
             try
             {
-                var handler = ClientSubscribedTopicHandler;
-                if (handler == null)
-                {
-                    return;
-                }
-
-                await handler.HandleClientSubscribedTopicAsync(new MqttServerClientSubscribedTopicEventArgs
+                var eventArgs = new MqttServerClientSubscribedTopicEventArgs
                 {
                     ClientId = clientId,
                     TopicFilter = topicFilter
-                }).ConfigureAwait(false);
+                };
+                
+                var handler = ClientSubscribedTopicHandler;
+                if (handler != null)
+                {
+                    await handler.HandleClientSubscribedTopicAsync(eventArgs).ConfigureAwait(false);
+                }
+
+                await ClientSubscribedTopicEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -102,17 +118,19 @@ namespace MQTTnet.Server.Internal
         {
             try
             {
-                var handler = ClientUnsubscribedTopicHandler;
-                if (handler == null)
-                {
-                    return;
-                }
-
-                await handler.HandleClientUnsubscribedTopicAsync(new MqttServerClientUnsubscribedTopicEventArgs
+                var eventArgs = new MqttServerClientUnsubscribedTopicEventArgs
                 {
                     ClientId = clientId,
                     TopicFilter = topicFilter
-                }).ConfigureAwait(false);
+                };
+                
+                var handler = ClientUnsubscribedTopicHandler;
+                if (handler != null)
+                {
+                    await handler.HandleClientUnsubscribedTopicAsync(eventArgs).ConfigureAwait(false);
+                }
+
+                await ClientUnsubscribedTopicEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -124,13 +142,15 @@ namespace MQTTnet.Server.Internal
         {
             try
             {
+                var eventArgs = new MqttApplicationMessageReceivedEventArgs(senderClientId, applicationMessage, null, null);
+                
                 var handler = ApplicationMessageReceivedHandler;
-                if (handler == null)
+                if (handler != null)
                 {
-                    return;
+                    await handler.HandleApplicationMessageReceivedAsync(eventArgs).ConfigureAwait(false);
                 }
 
-                await handler.HandleApplicationMessageReceivedAsync(new MqttApplicationMessageReceivedEventArgs(senderClientId, applicationMessage, null, null)).ConfigureAwait(false);
+                await ApplicationMessageReceivedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
             }
             catch (Exception exception)
             {

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
@@ -25,21 +23,10 @@ namespace MQTTnet.Server
         /// </summary>
         public IDictionary<object, object> SessionItems { get; internal set; }
 
-        [Obsolete("Please use ReasonCode instead.")]
-        public bool AcceptUnsubscription
-        {
-            get => ReasonCode == MqttUnsubscribeReasonCode.Success;
-            set => ReasonCode = DefaultReasonCode;
-        }
-
-        // Gets removed together with "AcceptUnsubscription".
-        internal MqttUnsubscribeReasonCode DefaultReasonCode { get; set; }
-        
         /// <summary>
-        /// Gets or sets the reason code which will be sent to the client.
-        /// This value is not transmitted when using MQTT v3.1.1.
+        /// Gets the response which will be sent to the client via the UNSUBACK pocket.
         /// </summary>
-        public MqttUnsubscribeReasonCode ReasonCode { get; set; }
+        public MqttUnsubscribeResponse Response { get; } = new MqttUnsubscribeResponse();
         
         /// <summary>
         /// Gets or sets whether the broker should remove an internal subscription for the client.

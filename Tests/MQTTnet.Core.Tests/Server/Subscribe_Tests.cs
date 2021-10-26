@@ -265,7 +265,7 @@ namespace MQTTnet.Tests.Server
                     {
                         if (c.TopicFilter.Topic == "not_allowed_topic")
                         {
-                            c.ReasonCode = MqttSubscribeReasonCode.TopicFilterInvalid;
+                            c.Response.ReasonCode = MqttSubscribeReasonCode.TopicFilterInvalid;
                         }
                     }));
                 

@@ -40,9 +40,7 @@ namespace MQTTnet
         /// The broker stores the last retained message and the corresponding QoS for that topic.
         /// </summary>
         bool _retain;
-
-        bool _dup;
-
+        
         /// <summary>
         /// The content type.
         /// The content type must be a UTF-8 encoded string. The content type value identifies the kind of UTF-8 encoded payload.
@@ -198,13 +196,7 @@ namespace MQTTnet
             _retain = value;
             return this;
         }
-
-        public MqttApplicationMessageBuilder WithDupFlag(bool value = true)
-        {
-            _dup = value;
-            return this;
-        }
-
+        
         public MqttApplicationMessageBuilder WithAtLeastOnceQoS()
         {
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce;
@@ -340,19 +332,13 @@ namespace MQTTnet
             {
                 throw new MqttProtocolViolationException("A Topic Alias of 0 is not permitted. A sender MUST NOT send a PUBLISH packet containing a Topic Alias which has the value 0 [MQTT-3.3.2-8].");
             }
-
-            if (_qualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce && _dup)
-            {
-                throw new MqttProtocolViolationException("The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].");
-            }
-
+            
             var applicationMessage = new MqttApplicationMessage
             {
                 Topic = _topic,
                 Payload = _payload,
                 QualityOfServiceLevel = _qualityOfServiceLevel,
                 Retain = _retain,
-                Dup = _dup,
                 ContentType = _contentType,
                 ResponseTopic = _responseTopic,
                 CorrelationData = _correlationData,

@@ -1,4 +1,6 @@
-﻿using MQTTnet.Client.Receiving;
+﻿using System;
+using System.Threading.Tasks;
+using MQTTnet.Client.Receiving;
 
 namespace MQTTnet
 {
@@ -9,5 +11,10 @@ namespace MQTTnet
         /// Hint: Initialize handlers before you connect the client to avoid issues.
         /// </summary>
         IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
+
+        /// <summary>
+        /// Fired when an application message was received.
+        /// </summary>
+        event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync;
     }
 }

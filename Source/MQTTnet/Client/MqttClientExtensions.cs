@@ -149,8 +149,19 @@ namespace MQTTnet.Client
 
             return client.DisconnectAsync(options, CancellationToken.None);
         }
+        
+        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectReason reasonCode, string reasonString = null)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
 
-        public static Task DisconnectAsync(this IMqttClient client, CancellationToken cancellationToken)
+            return client.DisconnectAsync(new MqttClientDisconnectOptions
+            {
+                ReasonCode = reasonCode,
+                ReasonString = reasonString
+            }, CancellationToken.None);
+        }
+
+        public static Task DisconnectAsync(this IMqttClient client, CancellationToken cancellationToken = default)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 
@@ -194,43 +205,14 @@ namespace MQTTnet.Client
 
             return client.UnsubscribeAsync(options);
         }
-
-        public static Task<MqttClientConnectResult> ConnectAsync(this IMqttClient client, IMqttClientOptions options)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            return client.ConnectAsync(options, CancellationToken.None);
-        }
-
+        
         public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 
             return client.SendExtendedAuthenticationExchangeDataAsync(data, CancellationToken.None);
         }
-
-        public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, MqttClientSubscribeOptions options)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            return client.SubscribeAsync(options, CancellationToken.None);
-        }
-
-        public static Task<MqttClientUnsubscribeResult> UnsubscribeAsync(this IMqttClient client, MqttClientUnsubscribeOptions options)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            return client.UnsubscribeAsync(options, CancellationToken.None);
-        }
-
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, MqttApplicationMessage applicationMessage)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
-
-            return client.PublishAsync(applicationMessage, CancellationToken.None);
-        }
-
+        
         public static async Task PublishAsync(this IMqttClient client, IEnumerable<MqttApplicationMessage> applicationMessages)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));

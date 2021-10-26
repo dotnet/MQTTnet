@@ -7,7 +7,6 @@ using MQTTnet.Client.Disconnecting;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
@@ -20,16 +19,18 @@ namespace MQTTnet.Server.Internal
         readonly Dictionary<ushort, string> _topicAlias = new Dictionary<ushort, string>();
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
+        readonly MqttApplicationMessageFactory _applicationMessageFactory = new MqttApplicationMessageFactory();
         
         readonly MqttClientSessionsManager _sessionsManager;
-
         readonly MqttNetSourceLogger _logger;
+        
+        readonly MqttApplicationMessageInterceptorInvoker _applicationMessageInterceptorInvoker;
+        
         readonly IMqttServerOptions _serverOptions;
-
         readonly MqttConnectPacket _connectPacket;
 
         CancellationTokenSource _cancellationToken;
-
+        
         public MqttClientConnection(
             MqttConnectPacket connectPacket,
             IMqttChannelAdapter channelAdapter,
@@ -47,6 +48,8 @@ namespace MQTTnet.Server.Internal
             Session = session ?? throw new ArgumentNullException(nameof(session));
             _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
 
+            _applicationMessageInterceptorInvoker = new MqttApplicationMessageInterceptorInvoker(_serverOptions, Id, Session.Items);
+            
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttClientConnection));
         }
@@ -109,10 +112,7 @@ namespace MQTTnet.Server.Internal
                 try
                 {
                     Task.Run(() => SendPacketsLoop(cancellationToken.Token), cancellationToken.Token).RunInBackground(_logger);
-
-                    // TODO: Check!.
-                    //Session.IsCleanSession = false;
-
+                    
                     IsRunning = true;
 
                     await ReceivePackagesLoop(cancellationToken.Token).ConfigureAwait(false);
@@ -130,8 +130,9 @@ namespace MQTTnet.Server.Internal
 
             if (!IsTakenOver && !IsCleanDisconnect && Session.LatestConnectPacket.WillFlag && !Session.WillMessageSent)
             {
-                var publishPacket = _packetFactories.Publish.Create(Session.LatestConnectPacket);
-                _sessionsManager.DispatchPublishPacket(publishPacket, this);
+                var willPublishPacket = _packetFactories.Publish.Create(Session.LatestConnectPacket);
+                var willApplicationMessage = _applicationMessageFactory.Create(willPublishPacket);
+                _ = _sessionsManager.DispatchPublishPacket(willApplicationMessage, this);
                 Session.WillMessageSent = true;
             }
 
@@ -163,7 +164,7 @@ namespace MQTTnet.Server.Internal
 
                     if (packet is MqttPublishPacket publishPacket)
                     {
-                        HandleIncomingPublishPacket(publishPacket);
+                        await HandleIncomingPublishPacket(publishPacket, cancellationToken).ConfigureAwait(false);
                     }
                     else if (packet is MqttPubAckPacket pubAckPacket)
                     {
@@ -329,7 +330,7 @@ namespace MQTTnet.Server.Internal
                         Session.EnqueuePacket(new MqttPacketBusItem(publishPacket));
                     }
                 }
-                
+
                 StopInternal();
             }
         }
@@ -366,7 +367,7 @@ namespace MQTTnet.Server.Internal
         {
             _cancellationToken?.Cancel();
         }
-        
+
         void HandleIncomingPubRecPacket(MqttPubRecPacket pubRecPacket)
         {
             var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
@@ -413,12 +414,27 @@ namespace MQTTnet.Server.Internal
                 StopInternal();
             }
         }
-
-        void HandleIncomingPublishPacket(MqttPublishPacket publishPacket)
+       
+        async Task HandleIncomingPublishPacket(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             HandleTopicAlias(publishPacket);
 
-            _sessionsManager.DispatchPublishPacket(publishPacket, this);
+            var applicationMessage = new MqttApplicationMessageFactory().Create(publishPacket);
+
+            await _applicationMessageInterceptorInvoker.Invoke(applicationMessage, cancellationToken).ConfigureAwait(false);
+
+            applicationMessage = _applicationMessageInterceptorInvoker.ApplicationMessage;
+            
+            if (_applicationMessageInterceptorInvoker.CloseConnection)
+            {
+                await StopAsync(MqttClientDisconnectReason.UnspecifiedError);
+                return;
+            }
+
+            if (_applicationMessageInterceptorInvoker.ProcessPublish)
+            {
+                await _sessionsManager.DispatchPublishPacket(applicationMessage, this).ConfigureAwait(false);    
+            }
             
             switch (publishPacket.QualityOfServiceLevel)
             {
@@ -429,13 +445,13 @@ namespace MQTTnet.Server.Internal
                 }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                 {
-                    var pubAckPacket = _packetFactories.PubAck.Create(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
+                    var pubAckPacket = _packetFactories.PubAck.Create(publishPacket, _applicationMessageInterceptorInvoker.Response);
                     Session.EnqueuePacket(new MqttPacketBusItem(pubAckPacket));
                     break;
                 }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                 {
-                    var pubRecPacket = _packetFactories.PubRec.Create(publishPacket, MqttApplicationMessageReceivedReasonCode.Success);
+                    var pubRecPacket = _packetFactories.PubRec.Create(publishPacket, _applicationMessageInterceptorInvoker.Response);
                     Session.EnqueuePacket(new MqttPacketBusItem(pubRecPacket));
                     break;
                 }
@@ -497,37 +513,39 @@ namespace MQTTnet.Server.Internal
             }
         }
 
-        // TODO: Fix!
-        async Task<MqttPublishPacket> InvokeClientMessageQueueInterceptor(MqttPublishPacket publishPacket, MqttQueuedApplicationMessage queuedApplicationMessage)
-        {
-            if (_serverOptions.ClientMessageQueueInterceptor == null)
-            {
-                return publishPacket;
-            }
+        // // TODO: Fix!
+        // async Task<MqttPublishPacket> InvokeClientMessageQueueInterceptor(MqttPublishPacket publishPacket, MqttQueuedApplicationMessage queuedApplicationMessage)
+        // {
+        //     if (_serverOptions.ClientMessageQueueInterceptor == null)
+        //     {
+        //         return publishPacket;
+        //     }
+        //
+        //     var context = new MqttClientMessageQueueInterceptorContext
+        //     {
+        //         SenderClientId = queuedApplicationMessage.SenderClientId,
+        //         ReceiverClientId = Id,
+        //         ApplicationMessage = queuedApplicationMessage.ApplicationMessage,
+        //         SubscriptionQualityOfServiceLevel = queuedApplicationMessage.SubscriptionQualityOfServiceLevel
+        //     };
+        //
+        //     if (_serverOptions.ClientMessageQueueInterceptor != null)
+        //     {
+        //         await _serverOptions.ClientMessageQueueInterceptor.InterceptClientMessageQueueEnqueueAsync(context).ConfigureAwait(false);
+        //     }
+        //
+        //     if (!context.AcceptEnqueue || context.ApplicationMessage == null)
+        //     {
+        //         return null;
+        //     }
+        //
+        //     publishPacket.Topic = context.ApplicationMessage.Topic;
+        //     publishPacket.Payload = context.ApplicationMessage.Payload;
+        //     publishPacket.QualityOfServiceLevel = context.SubscriptionQualityOfServiceLevel;
+        //
+        //     return publishPacket;
+        // }
+        //
 
-            var context = new MqttClientMessageQueueInterceptorContext
-            {
-                SenderClientId = queuedApplicationMessage.SenderClientId,
-                ReceiverClientId = Id,
-                ApplicationMessage = queuedApplicationMessage.ApplicationMessage,
-                SubscriptionQualityOfServiceLevel = queuedApplicationMessage.SubscriptionQualityOfServiceLevel
-            };
-
-            if (_serverOptions.ClientMessageQueueInterceptor != null)
-            {
-                await _serverOptions.ClientMessageQueueInterceptor.InterceptClientMessageQueueEnqueueAsync(context).ConfigureAwait(false);
-            }
-
-            if (!context.AcceptEnqueue || context.ApplicationMessage == null)
-            {
-                return null;
-            }
-
-            publishPacket.Topic = context.ApplicationMessage.Topic;
-            publishPacket.Payload = context.ApplicationMessage.Payload;
-            publishPacket.QualityOfServiceLevel = context.SubscriptionQualityOfServiceLevel;
-
-            return publishPacket;
-        }
     }
 }

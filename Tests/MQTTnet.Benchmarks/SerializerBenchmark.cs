@@ -31,7 +31,7 @@ namespace MQTTnet.Benchmarks
             };
 
             _serializer = new MqttV311PacketFormatter(new MqttPacketWriter());
-            _serializedPacket = _serializer.Encode(_packet);
+            _serializedPacket = _serializer.Encode(_packet).ToArray();
         }
 
         [Benchmark]

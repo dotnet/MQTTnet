@@ -3,7 +3,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server.Internal
 {
-    public sealed class SubscribeResult
+    public sealed class MqttSubscribeResult
     {
         public List<MqttSubscribeReturnCode> ReturnCodes { get; } = new List<MqttSubscribeReturnCode>(128);
 

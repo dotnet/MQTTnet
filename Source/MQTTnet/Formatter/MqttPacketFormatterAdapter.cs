@@ -32,7 +32,7 @@ namespace MQTTnet.Formatter
         
         public IMqttPacketWriter Writer { get; }
 
-        public ArraySegment<byte> Encode(MqttBasePacket packet)
+        public MqttPacketBuffer Encode(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 

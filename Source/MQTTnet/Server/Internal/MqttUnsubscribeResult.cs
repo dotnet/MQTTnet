@@ -3,7 +3,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server.Internal
 {
-    public sealed class UnsubscribeResult
+    public sealed class MqttUnsubscribeResult
     {
         public List<MqttUnsubscribeReasonCode> ReasonCodes { get; } = new List<MqttUnsubscribeReasonCode>(128);
         

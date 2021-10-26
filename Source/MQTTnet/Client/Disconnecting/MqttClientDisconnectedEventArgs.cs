@@ -12,7 +12,9 @@ namespace MQTTnet.Client.Disconnecting
             ConnectResult = connectResult;
             Reason = reason;
 
+#pragma warning disable 618
             ReasonCode = reason;
+#pragma warning restore 618
         }
 
         public bool ClientWasConnected { get; }

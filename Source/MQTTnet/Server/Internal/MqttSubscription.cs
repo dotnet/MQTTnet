@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Server.Internal
 {
-    public sealed class Subscription
+    public sealed class MqttSubscription
     {
         public string Topic { get; set; }
         

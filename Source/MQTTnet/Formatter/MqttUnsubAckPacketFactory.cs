@@ -6,10 +6,10 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttUnsubAckPacketFactory
     {
-        public MqttUnsubAckPacket Create(MqttUnsubscribePacket unsubscribePacket, UnsubscribeResult unsubscribeResult)
+        public MqttUnsubAckPacket Create(MqttUnsubscribePacket unsubscribePacket, MqttUnsubscribeResult mqttUnsubscribeResult)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
-            if (unsubscribeResult == null) throw new ArgumentNullException(nameof(unsubscribeResult));
+            if (mqttUnsubscribeResult == null) throw new ArgumentNullException(nameof(mqttUnsubscribeResult));
 
             var unsubAckPacket = new MqttUnsubAckPacket
             {
@@ -17,7 +17,7 @@ namespace MQTTnet.Formatter
             };
 
             // MQTTv5.0.0 only.
-            unsubAckPacket.ReasonCodes.AddRange(unsubscribeResult.ReasonCodes);
+            unsubAckPacket.ReasonCodes.AddRange(mqttUnsubscribeResult.ReasonCodes);
             
             return unsubAckPacket;
         }

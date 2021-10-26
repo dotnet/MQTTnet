@@ -16,9 +16,9 @@ using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server.Internal
 {
-    public sealed class MqttClientSessionsManager : IDisposable
+    public sealed class MqttClientSessionsManager
     {
-        readonly BlockingCollection<MqttPendingApplicationMessage> _messageQueue = new BlockingCollection<MqttPendingApplicationMessage>();
+        //readonly BlockingCollection<MqttPendingApplicationMessage> _messageQueue = new BlockingCollection<MqttPendingApplicationMessage>();
         readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
         
         readonly AsyncLock _createConnectionSyncRoot = new AsyncLock();
@@ -51,10 +51,10 @@ namespace MQTTnet.Server.Internal
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
         }
 
-        public void Start(CancellationToken cancellationToken)
-        {
-            Task.Run(() => TryProcessQueuedApplicationMessagesAsync(cancellationToken), cancellationToken).RunInBackground(_logger);
-        }
+        // public void Start(CancellationToken cancellationToken)
+        // {
+        //     Task.Run(() => TryProcessQueuedApplicationMessagesAsync(cancellationToken), cancellationToken).RunInBackground(_logger);
+        // }
 
         async Task<MqttConnectPacket> ReceiveConnectPacket(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
         {
@@ -225,13 +225,13 @@ namespace MQTTnet.Server.Internal
             return Task.FromResult((IList<IMqttSessionStatus>)result);
         }
 
-        public void DispatchPublishPacket(MqttPublishPacket publishPacket, MqttClientConnection sender)
-        {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
-
-            _messageQueue.Add(new MqttPendingApplicationMessage(publishPacket, sender));
-        }
-
+        // public void DispatchPublishPacket(MqttPublishPacket publishPacket, MqttClientConnection sender)
+        // {
+        //     if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+        //
+        //     _messageQueue.Add(new MqttPendingApplicationMessage(publishPacket, sender));
+        // }
+        
         public async Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
         {
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
@@ -304,80 +304,82 @@ namespace MQTTnet.Server.Internal
             _logger.Verbose("Session for client '{0}' deleted.", clientId);
         }
 
-        public void Dispose()
-        {
-            _messageQueue?.Dispose();
-        }
+        // public void Dispose()
+        // {
+        //     _messageQueue?.Dispose();
+        // }
 
-        async Task TryProcessQueuedApplicationMessagesAsync(CancellationToken cancellationToken)
-        {
-            // Make sure all queued messages are processed before server stops.
-            while (!cancellationToken.IsCancellationRequested || _messageQueue.Any())
-            {
-                try
-                {
-                    await TryProcessNextQueuedApplicationMessage().ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                }
-                catch (Exception exception)
-                {
-                    _logger.Error(exception, "Unhandled exception while processing queued application messages.");
-                }
-            }
-        }
+        // async Task TryProcessQueuedApplicationMessagesAsync(CancellationToken cancellationToken)
+        // {
+        //     // Make sure all queued messages are processed before server stops.
+        //     while (!cancellationToken.IsCancellationRequested || _messageQueue.Any())
+        //     {
+        //         try
+        //         {
+        //             await TryProcessNextQueuedApplicationMessage().ConfigureAwait(false);
+        //         }
+        //         catch (OperationCanceledException)
+        //         {
+        //         }
+        //         catch (Exception exception)
+        //         {
+        //             _logger.Error(exception, "Unhandled exception while processing queued application messages.");
+        //         }
+        //     }
+        // }
 
-        async Task TryProcessNextQueuedApplicationMessage()
+        public async Task DispatchPublishPacket(MqttApplicationMessage applicationMessage, MqttClientConnection sender)
         {
             try
             {
-                MqttPendingApplicationMessage pendingApplicationMessage;
-                try
-                {
-                    pendingApplicationMessage = _messageQueue.Take();
-                }
-                catch (ArgumentNullException)
-                {
-                    return;
-                }
-                // catch (ThreadAbortException)
+                var senderClientId = sender?.Id ?? _options.ClientId;
+       
+                // MqttPendingApplicationMessage pendingApplicationMessage;
+                // try
+                // {
+                //     pendingApplicationMessage = _messageQueue.Take();
+                // }
+                // catch (ArgumentNullException)
                 // {
                 //     return;
                 // }
-                catch (ObjectDisposedException)
-                {
-                    return;
-                }
+                // // catch (ThreadAbortException)
+                // // {
+                // //     return;
+                // // }
+                // catch (ObjectDisposedException)
+                // {
+                //     return;
+                // }
 
-                var clientConnection = pendingApplicationMessage.Sender;
-                var senderClientId = clientConnection?.Id ?? _options.ClientId;
+                //var clientConnection = pendingApplicationMessage.Sender;
+                //var senderClientId = clientConnection?.Id ?? _options.ClientId;
                 
-                // TODO: Only use PUBLISH packets internally!
-                var applicationMessage = new MqttApplicationMessageFactory().Create(pendingApplicationMessage.PublishPacket);
-
-                var interceptor = _options.ApplicationMessageInterceptor;
-                if (interceptor != null)
-                {
-                    var interceptorContext = await InterceptApplicationMessageAsync(interceptor, clientConnection, applicationMessage).ConfigureAwait(false);
-                    if (interceptorContext != null)
-                    {
-                        if (interceptorContext.CloseConnection)
-                        {
-                            if (clientConnection != null)
-                            {
-                                await clientConnection.StopAsync(MqttClientDisconnectReason.NormalDisconnection).ConfigureAwait(false);
-                            }
-                        }
-
-                        if (interceptorContext.ApplicationMessage == null || !interceptorContext.ProcessPublish)
-                        {
-                            return;
-                        }
-
-                        applicationMessage = interceptorContext.ApplicationMessage;
-                    }
-                }
+                // // TODO: Only use PUBLISH packets internally!
+                // var applicationMessage = new MqttApplicationMessageFactory().Create(pendingApplicationMessage.PublishPacket);
+                //
+                // var interceptor = _options.ApplicationMessageInterceptor;
+                // if (interceptor != null)
+                // {
+                //     var interceptorContext = await InterceptApplicationMessageAsync(interceptor, clientConnection, applicationMessage).ConfigureAwait(false);
+                //     if (interceptorContext != null)
+                //     {
+                //         if (interceptorContext.CloseConnection)
+                //         {
+                //             if (clientConnection != null)
+                //             {
+                //                 await clientConnection.StopAsync(MqttClientDisconnectReason.NormalDisconnection).ConfigureAwait(false);
+                //             }
+                //         }
+                //
+                //         if (interceptorContext.ApplicationMessage == null || !interceptorContext.ProcessPublish)
+                //         {
+                //             return;
+                //         }
+                //
+                //         applicationMessage = interceptorContext.ApplicationMessage;
+                //     }
+                // }
 
                 await _eventDispatcher.SafeNotifyApplicationMessageReceivedAsync(senderClientId, applicationMessage).ConfigureAwait(false);
 
@@ -414,28 +416,27 @@ namespace MQTTnet.Server.Internal
                     //     SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers
                     // };
                    
-                    var publishPacket = _packetFactories.Publish.Create(applicationMessage);
-                    
-                    publishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
-                    publishPacket.Properties.SubscriptionIdentifiers.AddRange(checkSubscriptionsResult.SubscriptionIdentifiers);
+                    var newPublishPacket = _packetFactories.Publish.Create(applicationMessage);
+                    newPublishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
+                    newPublishPacket.Properties.SubscriptionIdentifiers.AddRange(checkSubscriptionsResult.SubscriptionIdentifiers);
 
-                    if (publishPacket.QualityOfServiceLevel > 0)
+                    if (newPublishPacket.QualityOfServiceLevel > 0)
                     {
-                        publishPacket.PacketIdentifier = clientSession.PacketIdentifierProvider.GetNextPacketIdentifier();
+                        newPublishPacket.PacketIdentifier = clientSession.PacketIdentifierProvider.GetNextPacketIdentifier();
                     }
                     
                     if (checkSubscriptionsResult.RetainAsPublished)
                     {
                         // Transfer the original retain state from the publisher.
                         // This is a MQTTv5 feature.
-                        publishPacket.Retain = applicationMessage.Retain;
+                        newPublishPacket.Retain = applicationMessage.Retain;
                     }
                     else
                     {
-                        publishPacket.Retain = false;
+                        newPublishPacket.Retain = false;
                     }
                     
-                    clientSession.EnqueuePacket(new MqttPacketBusItem(publishPacket));
+                    clientSession.EnqueuePacket(new MqttPacketBusItem(newPublishPacket));
                     deliveryCount++;
                 }
 
@@ -448,7 +449,7 @@ namespace MQTTnet.Server.Internal
                     }
 
                     // The delegate signature is the same as for regular message interceptor. So the call is fine and just uses a different interceptor.
-                    await InterceptApplicationMessageAsync(undeliveredMessageInterceptor, clientConnection, applicationMessage).ConfigureAwait(false);
+                    await InterceptApplicationMessageAsync(undeliveredMessageInterceptor, sender, applicationMessage).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

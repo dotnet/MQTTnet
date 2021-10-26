@@ -34,7 +34,7 @@ namespace MQTTnet.Tests.Server
                         {
                             if (context.SessionItems["can_subscribe_x"] as bool? == false)
                             {
-                                context.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
+                                context.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
                             }
                         }
                     })

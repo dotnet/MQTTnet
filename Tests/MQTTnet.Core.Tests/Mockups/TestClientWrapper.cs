@@ -36,16 +36,34 @@ namespace MQTTnet.Tests.Mockups
             set => Implementation.ConnectedHandler = value;
         }
 
+        public event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync
+        {
+            add => Implementation.ConnectedAsync += value;
+            remove => Implementation.ConnectedAsync -= value;
+        }
+
         public IMqttClientDisconnectedHandler DisconnectedHandler
         {
             get => Implementation.DisconnectedHandler;
             set => Implementation.DisconnectedHandler = value;
         }
 
+        public event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync
+        {
+            add => Implementation.DisconnectedAsync += value;
+            remove => Implementation.DisconnectedAsync -= value;
+        }
+
         public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
         {
             get => Implementation.ApplicationMessageReceivedHandler;
             set => Implementation.ApplicationMessageReceivedHandler = value;
+        }
+
+        public event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync
+        {
+            add => Implementation.ApplicationMessageReceivedAsync += value;
+            remove => Implementation.ApplicationMessageReceivedAsync -= value;
         }
 
         public Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)

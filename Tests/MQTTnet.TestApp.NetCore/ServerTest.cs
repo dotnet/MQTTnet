@@ -73,12 +73,12 @@ namespace MQTTnet.TestApp.NetCore
                     {
                         if (context.TopicFilter.Topic.StartsWith("admin/foo/bar") && context.ClientId != "theAdmin")
                         {
-                            context.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
+                            context.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
                         }
 
                         if (context.TopicFilter.Topic.StartsWith("the/secret/stuff") && context.ClientId != "Imperator")
                         {
-                            context.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
+                            context.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
                             context.CloseConnection = true;
                         }
                     })

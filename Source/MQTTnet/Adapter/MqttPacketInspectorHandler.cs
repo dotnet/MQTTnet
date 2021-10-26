@@ -4,6 +4,7 @@ using System.Linq;
 using MQTTnet.Diagnostics;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Diagnostics.PacketInspection;
+using MQTTnet.Formatter;
 
 namespace MQTTnet.Adapter
 {
@@ -44,7 +45,7 @@ namespace MQTTnet.Adapter
             InspectPacket(buffer, MqttPacketFlowDirection.Inbound);
         }
 
-        public void BeginSendPacket(ArraySegment<byte> buffer)
+        public void BeginSendPacket(MqttPacketBuffer buffer)
         {
             if (_packetInspector == null)
             {
@@ -56,7 +57,7 @@ namespace MQTTnet.Adapter
             // intended for debugging etc. so that this is OK.
             var bufferCopy = buffer.ToArray();
 
-            InspectPacket(bufferCopy, MqttPacketFlowDirection.Outbound);
+            InspectPacket(bufferCopy.ToArray(), MqttPacketFlowDirection.Outbound);
         }
 
         public void FillReceiveBuffer(byte[] buffer)

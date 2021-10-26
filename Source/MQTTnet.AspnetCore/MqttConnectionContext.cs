@@ -173,7 +173,7 @@ namespace MQTTnet.AspNetCore
             using (await _writerLock.WaitAsync(cancellationToken).ConfigureAwait(false))
             {
                 var buffer = formatter.Encode(packet);
-                var msg = buffer.AsMemory();
+                var msg = buffer.ToArray().AsMemory();
                 var output = _output;
                 var result = await output.WriteAsync(msg, cancellationToken).ConfigureAwait(false);
                 if (result.IsCompleted)

@@ -28,7 +28,7 @@ namespace MQTTnet.Benchmarks
 
             var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
             
-            var serializedPacket = Join(serializer.Encode(_packet));
+            var serializedPacket = Join(serializer.Encode(_packet).ToArray());
 
             _iterations = 10000;
 

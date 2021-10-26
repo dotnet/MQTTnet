@@ -14,7 +14,7 @@ namespace MQTTnet.Formatter.V5
             _encoder = new MqttV500PacketEncoder(writer);
         }
         
-        public ArraySegment<byte> Encode(MqttBasePacket mqttPacket)
+        public MqttPacketBuffer Encode(MqttBasePacket mqttPacket)
         {
             if (mqttPacket == null) throw new ArgumentNullException(nameof(mqttPacket));
 

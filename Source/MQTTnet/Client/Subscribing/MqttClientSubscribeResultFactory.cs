@@ -12,13 +12,6 @@ namespace MQTTnet.Client.Subscribing
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
             if (subAckPacket == null) throw new ArgumentNullException(nameof(subAckPacket));
             
-            // MQTTv3.1.1 handling.
-            if (subAckPacket.ReturnCodes.Any() && subAckPacket.ReturnCodes.Count != subscribePacket.TopicFilters.Count)
-            {
-                throw new MqttProtocolViolationException(
-                    "The return codes are not matching the topic filters [MQTT-3.9.3-1].");
-            }
-            
             // MQTTv5.0.0 handling.
             if (subAckPacket.ReasonCodes.Any() && subAckPacket.ReasonCodes.Count != subscribePacket.TopicFilters.Count)
             {
@@ -43,19 +36,8 @@ namespace MQTTnet.Client.Subscribing
 
         static MqttClientSubscribeResultItem CreateSubscribeResultItem(int index, MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket)
         {
-            MqttClientSubscribeResultCode resultCode;
-            
-            if (subAckPacket.ReturnCodes.Any())
-            {
-                // MQTTv3.1.1 handling.
-                resultCode = (MqttClientSubscribeResultCode) subAckPacket.ReturnCodes[index];
-            }
-            else
-            {
-                // MQTTv5.0.0 handling.
-                resultCode = (MqttClientSubscribeResultCode) subAckPacket.ReasonCodes[index];
-            }
-            
+            var resultCode = (MqttClientSubscribeResultCode) subAckPacket.ReasonCodes[index];
+
             return new MqttClientSubscribeResultItem
             {
                 TopicFilter = subscribePacket.TopicFilters[index],

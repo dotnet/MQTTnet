@@ -99,6 +99,8 @@ namespace MQTTnet.Internal
                 // the worker back to the thread pool.
                 await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
+            
+            cancellationToken.ThrowIfCancellationRequested();
 
             throw new InvalidOperationException("MqttPacketBus is broken.");
         }

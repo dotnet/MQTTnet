@@ -29,7 +29,7 @@ namespace MQTTnet.Formatter
                     TopicAlias = applicationMessage.TopicAlias
                 }
             };
-
+            
             if (applicationMessage.SubscriptionIdentifiers != null)
             {
                 packet.Properties.SubscriptionIdentifiers.AddRange(applicationMessage.SubscriptionIdentifiers);    
@@ -72,6 +72,19 @@ namespace MQTTnet.Formatter
             packet.Properties.UserProperties.AddRange(connectPacket.WillProperties.UserProperties);
 
             return packet;
+        }
+
+        public MqttPublishPacket Clone(MqttPublishPacket publishPacket)
+        {
+            return new MqttPublishPacket
+            {
+                Topic = publishPacket.Topic,
+                Payload = publishPacket.Payload,
+                Retain = publishPacket.Retain,
+                QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
+                Dup = publishPacket.Dup,
+                PacketIdentifier = publishPacket.PacketIdentifier
+            };
         }
     }
 }

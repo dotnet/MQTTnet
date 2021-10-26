@@ -15,7 +15,7 @@ namespace MQTTnet.AspNetCore.Tests
         {
             var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
 
-            var buffer = serializer.Encode(new MqttPublishPacket() {Topic = "a", Payload = new byte[5]});
+            var buffer = serializer.Encode(new MqttPublishPacket {Topic = "a", Payload = new byte[5]}).ToArray();
 
             var sequence = new ReadOnlySequence<byte>(buffer.Array, buffer.Offset, buffer.Count);
 

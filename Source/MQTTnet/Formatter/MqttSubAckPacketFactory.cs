@@ -6,21 +6,17 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttSubAckPacketFactory
     {
-        public MqttSubAckPacket Create(MqttSubscribePacket subscribePacket, SubscribeResult subscribeResult)
+        public MqttSubAckPacket Create(MqttSubscribePacket subscribePacket, MqttSubscribeResult mqttSubscribeResult)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
-            if (subscribeResult == null) throw new ArgumentNullException(nameof(subscribeResult));
+            if (mqttSubscribeResult == null) throw new ArgumentNullException(nameof(mqttSubscribeResult));
 
             var subAckPacket = new MqttSubAckPacket
             {
                 PacketIdentifier = subscribePacket.PacketIdentifier
             };
 
-            // MQTTv3.1.1
-            subAckPacket.ReturnCodes.AddRange(subscribeResult.ReturnCodes);
-            
-            // MQTTv5.0.0
-            subAckPacket.ReasonCodes.AddRange(subscribeResult.ReasonCodes);
+            subAckPacket.ReasonCodes.AddRange(mqttSubscribeResult.ReasonCodes);
             
             return subAckPacket;
         }

@@ -17,10 +17,10 @@ using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public class ManagedMqttClient : Disposable, IManagedMqttClient
+    public sealed class ManagedMqttClient : Disposable, IManagedMqttClient
     {
         readonly BlockingQueue<ManagedMqttApplicationMessage> _messageQueue = new BlockingQueue<ManagedMqttApplicationMessage>();
-
+        
         /// <summary>
         /// The subscriptions are managed in 2 separate buckets:
         /// <see cref="_subscriptions"/> and <see cref="_unsubscriptions"/> are processed during normal operation
@@ -29,7 +29,6 @@ namespace MQTTnet.Extensions.ManagedClient
         ///  at reconnect and are solely owned by <see cref="MaintainConnectionAsync"/>.
         /// </summary>
         readonly Dictionary<string, MqttQualityOfServiceLevel> _reconnectSubscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
-
         readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
         readonly HashSet<string> _unsubscriptions = new HashSet<string>();
         readonly SemaphoreSlim _subscriptionsQueuedSignal = new SemaphoreSlim(0);
@@ -78,6 +77,12 @@ namespace MQTTnet.Extensions.ManagedClient
         {
             get => InternalClient.ApplicationMessageReceivedHandler;
             set => InternalClient.ApplicationMessageReceivedHandler = value;
+        }
+
+        public event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync
+        {
+            add => InternalClient.ApplicationMessageReceivedAsync += value;
+            remove => InternalClient.ApplicationMessageReceivedAsync -= value;
         }
 
         public IApplicationMessageProcessedHandler ApplicationMessageProcessedHandler { get; set; }

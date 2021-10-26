@@ -878,7 +878,7 @@ namespace MQTTnet.Tests.Server
                     // This should lead to no subscriptions for "n" at all. So also no sending of retained messages.
                     if (c.TopicFilter.Topic == "n")
                     {
-                        c.ReasonCode = MqttSubscribeReasonCode.UnspecifiedError;
+                        c.Response.ReasonCode = MqttSubscribeReasonCode.UnspecifiedError;
                     }
                 }));
 

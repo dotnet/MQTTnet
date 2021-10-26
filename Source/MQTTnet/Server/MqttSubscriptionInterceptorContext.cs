@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
-using MQTTnet.Protocol;
 using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server
@@ -24,48 +22,14 @@ namespace MQTTnet.Server
         /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
         /// </summary>
         public IDictionary<object, object> SessionItems { get; internal set; }
-
-        // Will be removed together with "AcceptSubscription". It only stores the default value when setting "AcceptSubscription" to true.
-        internal MqttSubscribeReasonCode DefaultReasonCode { get; set; }
         
-        internal MqttSubscribeReturnCode DefaultReturnCode { get; set; }
-
-        [Obsolete("Please use a proper value for 'ReasonCode' instead. This property will be removed in the future.")]
-        public bool AcceptSubscription
-        {
-            get => ReasonCode == MqttSubscribeReasonCode.GrantedQoS0 && ReasonCode <= MqttSubscribeReasonCode.GrantedQoS2;
-            set
-            {
-                if (value)
-                {
-                    ReasonCode = DefaultReasonCode;
-                    ReturnCode = DefaultReturnCode;
-                }
-                else
-                {
-                    ReturnCode = MqttSubscribeReturnCode.Failure;
-                    ReasonCode = MqttSubscribeReasonCode.UnspecifiedError;
-                }
-            }
-        }
-
         /// <summary>
         /// Gets or sets whether the broker should create an internal subscription for the client.
         /// The broker can also avoid this and return "success" to the client.
         /// This feature allows using the MQTT Broker as the Frontend and another system as the backend.
         /// </summary>
         public bool ProcessSubscription { get; set; } = true;
-
-        /// <summary>
-        /// Gets or sets the reason code which is sent to the client.
-        /// The subscription is skipped when the value is not GrantedQoS_.
-        /// MQTTv5 only.
-        /// </summary>
-        public MqttSubscribeReasonCode ReasonCode { get; set; }
-
-        // MQTT < 5 only!
-        internal MqttSubscribeReturnCode ReturnCode { get; set; }
-
+       
         /// <summary>
         /// Gets or sets whether the broker should close the client connection.
         /// </summary>
@@ -75,6 +39,11 @@ namespace MQTTnet.Server
         /// Gets the current client session.
         /// </summary>
         public IMqttSessionStatus Session { get; internal set; }
+
+        /// <summary>
+        /// Gets the response which will be sent to the client via the SUBACK packet.
+        /// </summary>
+        public MqttSubscribeResponse Response { get; } = new MqttSubscribeResponse();
         
         /// <summary>
         /// Gets the cancellation token which can indicate that the client connection gets down.

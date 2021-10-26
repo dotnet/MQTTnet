@@ -84,7 +84,7 @@ namespace MQTTnet.Tests.Client
                 await lowLevelClient.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
 
                 Assert.IsNotNull(receivedPacket);
-                Assert.AreEqual(MqttSubscribeReturnCode.SuccessMaximumQoS0, receivedPacket.ReturnCodes[0]);
+                Assert.AreEqual(MqttSubscribeReasonCode.GrantedQoS0, receivedPacket.ReasonCodes[0]);
             }
         }
 

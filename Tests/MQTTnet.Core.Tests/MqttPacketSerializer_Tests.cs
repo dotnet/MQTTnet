@@ -513,10 +513,10 @@ namespace MQTTnet.Tests
                 PacketIdentifier = 123
             };
 
-            p.ReturnCodes.Add(MqttSubscribeReturnCode.SuccessMaximumQoS0);
-            p.ReturnCodes.Add(MqttSubscribeReturnCode.SuccessMaximumQoS1);
-            p.ReturnCodes.Add(MqttSubscribeReturnCode.SuccessMaximumQoS2);
-            p.ReturnCodes.Add(MqttSubscribeReturnCode.Failure);
+            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS0);
+            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS1);
+            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS2);
+            p.ReasonCodes.Add(MqttSubscribeReasonCode.UnspecifiedError);
 
             SerializeAndCompare(p, "kAYAewABAoA=");
         }
@@ -529,10 +529,10 @@ namespace MQTTnet.Tests
                 PacketIdentifier = 123
             };
 
-            p.ReturnCodes.Add(MqttSubscribeReturnCode.SuccessMaximumQoS0);
-            p.ReturnCodes.Add(MqttSubscribeReturnCode.SuccessMaximumQoS1);
-            p.ReturnCodes.Add(MqttSubscribeReturnCode.SuccessMaximumQoS2);
-            p.ReturnCodes.Add(MqttSubscribeReturnCode.Failure);
+            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS0);
+            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS1);
+            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS2);
+            p.ReasonCodes.Add(MqttSubscribeReasonCode.UnspecifiedError);
 
             DeserializeAndCompare(p, "kAYAewABAoA=");
         }
@@ -596,7 +596,7 @@ namespace MQTTnet.Tests
 
         byte[] Serialize(MqttBasePacket packet, MqttProtocolVersion protocolVersion)
         {
-            return MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, WriterFactory()).Encode(packet).ToArray();
+            return MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, WriterFactory()).Encode(packet).ToArray().ToArray();
         }
 
         protected virtual IMqttPacketWriter WriterFactory()
@@ -616,7 +616,7 @@ namespace MQTTnet.Tests
             var serializer = MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, writer);
             var buffer1 = serializer.Encode(packet);
 
-            using (var headerStream = new MemoryStream(buffer1.ToArray()))
+            using (var headerStream = new MemoryStream(buffer1.ToArray().ToArray()))
             {
                 var channel = new TestMqttChannel(headerStream);
                 var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, writer), null, new MqttNetEventLogger());
@@ -624,20 +624,7 @@ namespace MQTTnet.Tests
 
                 var buffer2 = serializer.Encode(receivedPacket);
 
-                Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(buffer2.ToArray()));
-
-                //adapter.ReceivePacketAsync(CancellationToken.None);
-                //var fixedHeader = new byte[2];
-                //var header = new MqttPacketReader(channel).ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult().FixedHeader;
-
-                //using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, header.RemainingLength))
-                //{
-                //    var reader = ReaderFactory(bodyStream.ToArray());
-                //    var deserializedPacket = serializer.Decode(new ReceivedMqttPacket(header.Flags, reader, 0));
-                //    var buffer2 = serializer.Encode(deserializedPacket);
-
-                //    Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(Join(buffer2)));
-                //}
+                Assert.AreEqual(expectedBase64Value, Convert.ToBase64String(buffer2.ToArray().ToArray()));
             }
         }
 
@@ -648,26 +635,9 @@ namespace MQTTnet.Tests
             var serializer = MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, writer);
             var buffer = serializer.Encode(packet);
             
-            var channel = new TestMqttChannel(buffer.ToArray());
+            var channel = new TestMqttChannel(buffer.ToArray().ToArray());
             var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, writer), null, new MqttNetEventLogger());
             return (TPacket)adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
-
-            //using (var headerStream = new MemoryStream(buffer1.ToArray()))
-            //{
-
-
-
-
-            //    //var fixedHeader = new byte[2];
-
-            //    //var header = new MqttPacketReader(channel).ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult().FixedHeader;
-
-            //    //using (var bodyStream = new MemoryStream(Join(buffer1), (int)headerStream.Position, (int)header.RemainingLength))
-            //    //{
-            //    //    var reader = ReaderFactory(bodyStream.ToArray());
-            //    //    return (T)serializer.Decode(new ReceivedMqttPacket(header.Flags, reader, 0));
-            //    //}
-            //}
         }
 
         MqttProtocolVersion DeserializeAndDetectVersion(MqttPacketFormatterAdapter packetFormatterAdapter, byte[] buffer)
@@ -677,24 +647,6 @@ namespace MQTTnet.Tests
 
             adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
             return packetFormatterAdapter.ProtocolVersion;
-
-            //using (var headerStream = new MemoryStream(buffer))
-            //{
-
-
-
-
-            //    //var fixedHeader = new byte[2];
-            //    //var header = new MqttPacketReader(channel).ReadFixedHeaderAsync(fixedHeader, CancellationToken.None).GetAwaiter().GetResult().FixedHeader;
-
-            //    //using (var bodyStream = new MemoryStream(buffer, (int)headerStream.Position, (int)header.RemainingLength))
-            //    //{
-            //    //    var reader = ReaderFactory(bodyStream.ToArray());
-            //    //    var packet = new ReceivedMqttPacket(header.Flags, reader, 0);
-            //    //    packetFormatterAdapter.DetectProtocolVersion(packet);
-            //    //    return adapter.ProtocolVersion;
-            //    //}
-            //}
         }
     }
 }

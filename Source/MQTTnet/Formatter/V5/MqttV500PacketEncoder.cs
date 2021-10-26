@@ -15,7 +15,7 @@ namespace MQTTnet.Formatter.V5
             _packetWriter = packetWriter ?? throw new ArgumentNullException(nameof(packetWriter));
         }
 
-        public ArraySegment<byte> Encode(MqttBasePacket packet)
+        public MqttPacketBuffer Encode(MqttBasePacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 
@@ -24,8 +24,14 @@ namespace MQTTnet.Formatter.V5
             _packetWriter.Seek(5);
 
             var fixedHeader = EncodePacket(packet, _packetWriter);
-            var remainingLength = (uint)(_packetWriter.Length - 5);
+            var remainingLength = (uint)_packetWriter.Length - 5;
 
+            var publishPacket = packet as MqttPublishPacket;
+            if (publishPacket?.Payload != null)
+            {
+                remainingLength += (uint)publishPacket.Payload.Length;
+            }
+            
             var remainingLengthSize = MqttPacketWriter.GetLengthOfVariableInteger(remainingLength);
             
             var headerSize = 1 + remainingLengthSize;
@@ -37,7 +43,16 @@ namespace MQTTnet.Formatter.V5
             _packetWriter.WriteVariableLengthInteger(remainingLength);
 
             var buffer = _packetWriter.GetBuffer();
-            return new ArraySegment<byte>(buffer, headerOffset, _packetWriter.Length - headerOffset);
+
+            var firstSegment = new ArraySegment<byte>(buffer, headerOffset, _packetWriter.Length - headerOffset);
+            
+            if (publishPacket?.Payload != null)
+            {
+                var payloadSegment = new ArraySegment<byte>(publishPacket.Payload, 0, publishPacket.Payload.Length);
+                return new MqttPacketBuffer(firstSegment, payloadSegment);   
+            }
+            
+            return new MqttPacketBuffer(firstSegment);
         }
 
         public void FreeBuffer()
@@ -256,10 +271,8 @@ namespace MQTTnet.Formatter.V5
 
             propertiesWriter.WriteTo(packetWriter);
 
-            if (packet.Payload?.Length > 0)
-            {
-                packetWriter.Write(packet.Payload, 0, packet.Payload.Length);
-            }
+            // The payload is the past part of the packet. But it is not added here in order to keep
+            // memory allocation low.
 
             byte fixedHeader = 0;
 

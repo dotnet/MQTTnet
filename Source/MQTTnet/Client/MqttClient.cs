@@ -21,12 +21,16 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet.Client
 {
-    public class MqttClient : Disposable, IMqttClient
+    public sealed class MqttClient : Disposable, IMqttClient
     {
         readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         readonly object _disconnectLock = new object();
+
+        readonly AsyncEvent<MqttClientConnectedEventArgs> _connectedEvent = new AsyncEvent<MqttClientConnectedEventArgs>();
+        readonly AsyncEvent<MqttClientDisconnectedEventArgs> _disconnectedEvent = new AsyncEvent<MqttClientDisconnectedEventArgs>();
+        readonly AsyncEvent<MqttApplicationMessageReceivedEventArgs> _applicationMessageReceivedEvent = new AsyncEvent<MqttApplicationMessageReceivedEventArgs>();
 
         readonly IMqttClientAdapterFactory _adapterFactory;
         readonly MqttNetSourceLogger _logger;
@@ -56,9 +60,27 @@ namespace MQTTnet.Client
 
         public IMqttClientConnectedHandler ConnectedHandler { get; set; }
 
+        public event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync
+        {
+            add => _connectedEvent.AddHandler(value);
+            remove => _connectedEvent.RemoveHandler(value);
+        }
+        
         public IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
 
+        public event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync
+        {
+            add => _disconnectedEvent.AddHandler(value);
+            remove => _disconnectedEvent.RemoveHandler(value);
+        }
+        
         public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
+
+        public event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync
+        {
+            add => _applicationMessageReceivedEvent.AddHandler(value);
+            remove => _applicationMessageReceivedEvent.RemoveHandler(value);
+        }
 
         public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
@@ -118,11 +140,14 @@ namespace MQTTnet.Client
 
                 _logger.Info("Connected.");
 
+                var eventArgs = new MqttClientConnectedEventArgs(connectResult);
                 var connectedHandler = ConnectedHandler;
                 if (connectedHandler != null)
                 {
                     await connectedHandler.HandleConnectedAsync(new MqttClientConnectedEventArgs(connectResult)).ConfigureAwait(false);
                 }
+
+                await _connectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
                 return connectResult;
             }
@@ -391,13 +416,17 @@ namespace MQTTnet.Client
 
                 _logger.Info("Disconnected.");
 
+                var eventArgs = new MqttClientDisconnectedEventArgs(clientWasConnected, exception, connectResult, _disconnectReason);
+                
                 var disconnectedHandler = DisconnectedHandler;
                 if (disconnectedHandler != null)
                 {
                     // This handler must be executed in a new thread because otherwise a dead lock may happen
                     // when trying to reconnect in that handler etc.
-                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, connectResult, _disconnectReason))).RunInBackground(_logger);
+                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(eventArgs)).RunInBackground(_logger);
                 }
+
+                Task.Run(() => _disconnectedEvent.InvokeAsync(eventArgs)).RunInBackground(_logger);
             }
         }
 
@@ -790,6 +819,8 @@ namespace MQTTnet.Client
             {
                 await handler.HandleApplicationMessageReceivedAsync(eventArgs).ConfigureAwait(false);
             }
+
+            await _applicationMessageReceivedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
             return eventArgs;
         }

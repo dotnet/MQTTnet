@@ -24,7 +24,7 @@ namespace MQTTnet
             _acknowledgeHandler = acknowledgeHandler;
         }
 
-        internal MqttPublishPacket PublishPacket { get; }
+        internal MqttPublishPacket PublishPacket { get; set; }
         
         /// <summary>
         /// Gets the client identifier.
@@ -36,13 +36,21 @@ namespace MQTTnet
 
         public bool ProcessingFailed { get; set; }
 
+        /// <summary>
+        /// Gets or sets the reason code which will be sent to the server.
+        /// </summary>
         public MqttApplicationMessageReceivedReasonCode ReasonCode { get; set; } = MqttApplicationMessageReceivedReasonCode.Success;
 
         /// <summary>
-        /// Gets or sets the user properties which being sent to the server in the ACK packet etc.
+        /// Gets or sets the user properties which will be sent to the server in the ACK packet etc.
         /// </summary>
         public List<MqttUserProperty> ResponseUserProperties { get; } = new List<MqttUserProperty>();
 
+        /// <summary>
+        /// Gets or sets the reason string which will be sent to the server in the ACK packet.
+        /// </summary>
+        public string ResponseReasonString { get; set; }
+        
         /// <summary>
         /// Gets or sets whether this message was handled.
         /// This value can be used in user code for custom control flow.

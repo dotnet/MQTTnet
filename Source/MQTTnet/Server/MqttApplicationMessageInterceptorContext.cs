@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace MQTTnet.Server
 {
@@ -18,18 +18,21 @@ namespace MQTTnet.Server
         /// </summary>
         public IDictionary<object, object> SessionItems { get; internal set; }
 
-        [Obsolete("Please use ProcessPublish instead.")]
-        public bool AcceptPublish 
-        { 
-            get => ProcessPublish;
-            set => ProcessPublish = value;
-        }
+        /// <summary>
+        /// Gets the response which will be sent to the client via the PUBACK etc. packets.
+        /// </summary>
+        public MqttApplicationMessageResponse Response { get; } = new MqttApplicationMessageResponse();
         
         /// <summary>
         /// Gets or sets whether the publish should be processed internally.
         /// </summary>
         public bool ProcessPublish { get; set; } = true;
-
+        
         public bool CloseConnection { get; set; }
+        
+        /// <summary>
+        /// Gets the cancellation token which can indicate that the client connection gets down.
+        /// </summary>
+        public CancellationToken CancellationToken { get; internal set; }
     }
 }

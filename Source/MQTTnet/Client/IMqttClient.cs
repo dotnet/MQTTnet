@@ -23,16 +23,26 @@ namespace MQTTnet.Client
         IMqttClientConnectedHandler ConnectedHandler { get; set; }
 
         /// <summary>
+        /// Fired when the client is connected.
+        /// </summary>
+        event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync;
+        
+        /// <summary>
         /// Gets or sets the disconnected handler that is fired after the client has disconnected from the server.
         /// Hint: Initialize handlers before you connect the client to avoid issues.
         /// </summary>
         IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
 
-        Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken);
+        /// <summary>
+        /// Fired when the client is disconnected.
+        /// </summary>
+        event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync;
+        
+        Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken = default);
 
-        Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken);
+        Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken = default);
 
-        Task PingAsync(CancellationToken cancellationToken);
+        Task PingAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Sends extended authentication data.
@@ -41,10 +51,10 @@ namespace MQTTnet.Client
         /// <param name="data">The extended data.</param>
         /// <param name="cancellationToken">A cancellation token to stop the task.</param>
         /// <returns>A <see cref="Task"/> representing any asynchronous operation.</returns>
-        Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken);
+        Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken = default);
 
-        Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken);
+        Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken = default);
 
-        Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken);
+        Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken = default);
     }
 }

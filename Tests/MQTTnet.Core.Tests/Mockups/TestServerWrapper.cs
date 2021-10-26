@@ -69,6 +69,12 @@ namespace MQTTnet.Tests.Mockups
             set => Implementation.ApplicationMessageReceivedHandler = value;
         }
 
+        public event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync
+        {
+            add => Implementation.ApplicationMessageReceivedAsync += value;
+            remove => Implementation.ApplicationMessageReceivedAsync -= value;
+        }
+
         public Task ClearRetainedApplicationMessagesAsync()
         {
             return Implementation.ClearRetainedApplicationMessagesAsync();

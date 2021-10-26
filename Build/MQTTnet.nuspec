@@ -14,6 +14,7 @@
     <releaseNotes>
 * [Core] Added all builders to the MQTT factory.
 * [Core] Removed global logger and refactored logging (BREAKING CHANGE!).
+* [Core] Improved memory management when working with large payloads.
 * [Client] Renamed _MqttClientConnectResult_ to _MqttClientConnectResult_ (BREAKING CHANGE!).
 * [Client] The OS will now choose the best TLS version to use. It is no longer fixed to 1.3 etc. (thanks to @patagonaa, #1271).
 * [Client] Exposed user properties and reason string in subscribe result.
@@ -35,6 +36,7 @@
 * [Server] Added support for returning individual subscription errors (#80 thanks to @jimch)
 * [Server] Improved topic filter comparisons (support for $).
 * [Server] Fixed wrong "IsSessionPresent" result (thanks to @logicaloud, #1268).
+* [Server] Added more MQTTv5 response information to all interceptors (BREAKING CHANGE!).
 * [MQTTnet.Server] Moved server project to a dedicated GitHub repository.
 Git commit: $gitCommit
     </releaseNotes>

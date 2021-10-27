@@ -31,10 +31,11 @@ namespace MQTTnet.Benchmarks
                 return Task.CompletedTask;
             };
 
-            _mqttServer = factory.CreateMqttServer(new[] { tcpServer }, new MqttNetEventLogger());
-
             var serverOptions = new MqttServerOptionsBuilder().Build();
-            _mqttServer.StartAsync(serverOptions).GetAwaiter().GetResult();
+            _mqttServer = factory.CreateMqttServer(serverOptions, new[] { tcpServer }, new MqttNetEventLogger());
+
+            
+            _mqttServer.StartAsync().GetAwaiter().GetResult();
 
             var clientOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer("localhost").Build();

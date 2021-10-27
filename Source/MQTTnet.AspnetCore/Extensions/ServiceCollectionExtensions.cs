@@ -11,7 +11,7 @@ namespace MQTTnet.AspNetCore.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, IMqttServerOptions options)
+        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, MqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -24,7 +24,7 @@ namespace MQTTnet.AspNetCore.Extensions
 
         public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<MqttServerOptionsBuilder> configure)
         {
-            services.AddSingleton<IMqttServerOptions>(s =>
+            services.AddSingleton<MqttServerOptions>(s =>
             {
                 var builder = new MqttServerOptionsBuilder();
                 configure(builder);
@@ -38,7 +38,7 @@ namespace MQTTnet.AspNetCore.Extensions
 
         public static IServiceCollection AddHostedMqttServerWithServices(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configure)
         {
-            services.AddSingleton<IMqttServerOptions>(s =>
+            services.AddSingleton<MqttServerOptions>(s =>
             {
                 var builder = new AspNetMqttServerOptionsBuilder(s);
                 configure(builder);
@@ -50,17 +50,17 @@ namespace MQTTnet.AspNetCore.Extensions
             return services;
         }
 
-        public static IServiceCollection AddHostedMqttServer<TOptions>(this IServiceCollection services)
-            where TOptions : class, IMqttServerOptions
-        {
-            services.AddSingleton<IMqttServerOptions, TOptions>();
+        // public static IServiceCollection AddHostedMqttServer<TOptions>(this IServiceCollection services)
+        //     where TOptions : MqttServerOptions
+        // {
+        //     services.AddSingleton<MqttServerOptions, TOptions>();
+        //
+        //     services.AddHostedMqttServer();
+        //
+        //     return services;
+        // }
 
-            services.AddHostedMqttServer();
-
-            return services;
-        }
-
-        private static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
+        static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
         {
             var logger = new MqttNetEventLogger();
 

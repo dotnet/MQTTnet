@@ -4,7 +4,7 @@ using MQTTnet.Client.Publishing;
 
 namespace MQTTnet
 {
-    public interface IApplicationMessagePublisher
+    public interface IMqttApplicationMessagePublisher
     {
         Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken = default);
     }

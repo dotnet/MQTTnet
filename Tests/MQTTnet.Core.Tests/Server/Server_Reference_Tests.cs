@@ -19,14 +19,15 @@ namespace MQTTnet.Tests.Server
             {
                 testEnvironment.IgnoreClientLogErrors = true;
                 
-                await testEnvironment.StartServer(o =>
+                var server = await testEnvironment.StartServer();
+
+                server.ValidatingClientConnectionAsync += e =>
                 {
-                    o.WithConnectionValidator(v =>
-                    {
-                        v.ReasonCode = MqttConnectReasonCode.ServerMoved;
-                        v.ServerReference = "new_server";
-                    });
-                });
+                    e.ReasonCode = MqttConnectReasonCode.ServerMoved;
+                    e.ServerReference = "new_server";
+                    
+                    return Task.CompletedTask;
+                };
 
                 try
                 {

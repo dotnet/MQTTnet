@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Client
 {
-    public interface IMqttClient : IApplicationMessageReceiver, IApplicationMessagePublisher, IDisposable
+    public interface IMqttClient : IMqttApplicationMessageReceiver, IMqttApplicationMessagePublisher, IDisposable
     {
         bool IsConnected { get; }
 

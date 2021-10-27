@@ -1,10 +1,10 @@
-﻿using MQTTnet.Formatter;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using MQTTnet.Client.Disconnecting;
+using MQTTnet.Formatter;
 using MQTTnet.Server.Internal;
 
-namespace MQTTnet.Server.Status
+namespace MQTTnet.Server
 {
     public sealed class MqttClientStatus : IMqttClientStatus
     {

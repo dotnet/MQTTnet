@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using MQTTnet.Client.Receiving;
-using MQTTnet.Diagnostics;
 using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Server.Internal;
@@ -14,8 +13,8 @@ namespace MQTTnet.TestApp.NetCore
     {
         public static void RunEmptyServer()
         {
-            var mqttServer = new MqttFactory().CreateMqttServer();
-            mqttServer.StartAsync(new MqttServerOptions()).GetAwaiter().GetResult();
+            var mqttServer = new MqttFactory().CreateMqttServer(new MqttServerOptions());
+            mqttServer.StartAsync().GetAwaiter().GetResult();
             
             Console.WriteLine("Press any key to exit.");
             Console.ReadLine();
@@ -27,8 +26,8 @@ namespace MQTTnet.TestApp.NetCore
             MqttNetConsoleLogger.ForwardToConsole(logger);
            
             var mqttFactory = new MqttFactory(logger);
-            var mqttServer = mqttFactory.CreateMqttServer();
-            mqttServer.StartAsync(new MqttServerOptions()).GetAwaiter().GetResult();
+            var mqttServer = mqttFactory.CreateMqttServer(new MqttServerOptions());
+            mqttServer.StartAsync().GetAwaiter().GetResult();
 
             Console.WriteLine("Press any key to exit.");
             Console.ReadLine();
@@ -40,48 +39,7 @@ namespace MQTTnet.TestApp.NetCore
             {
                 var options = new MqttServerOptions
                 {
-                    ConnectionValidator = new MqttServerConnectionValidatorDelegate(p =>
-                    {
-                        if (p.ClientId == "SpecialClient")
-                        {
-                            if (p.Username != "USER" || p.Password != "PASS")
-                            {
-                                p.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
-                            }
-                        }
-                    }),
-
-                    Storage = new RetainedMessageHandler(),
-
-                    ApplicationMessageInterceptor = new MqttServerApplicationMessageInterceptorDelegate(context =>
-                    {
-                        if (MqttTopicFilterComparer.Compare(context.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#") == MqttTopicFilterCompareResult.IsMatch)
-                        {
-                            // Replace the payload with the timestamp. But also extending a JSON 
-                            // based payload with the timestamp is a suitable use case.
-                            context.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
-                        }
-
-                        if (context.ApplicationMessage.Topic == "not_allowed_topic")
-                        {
-                            context.ProcessPublish = false;
-                            context.CloseConnection = true;
-                        }
-                    }),
-
-                    SubscriptionInterceptor = new MqttServerSubscriptionInterceptorDelegate(context =>
-                    {
-                        if (context.TopicFilter.Topic.StartsWith("admin/foo/bar") && context.ClientId != "theAdmin")
-                        {
-                            context.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
-                        }
-
-                        if (context.TopicFilter.Topic.StartsWith("the/secret/stuff") && context.ClientId != "Imperator")
-                        {
-                            context.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
-                            context.CloseConnection = true;
-                        }
-                    })
+                    Storage = new RetainedMessageHandler()
                 };
 
                 // Extend the timestamp for all messages from clients.
@@ -93,14 +51,63 @@ namespace MQTTnet.TestApp.NetCore
                 //options.DefaultEndpointOptions.IsEnabled = true;
                 //options.TlsEndpointOptions.IsEnabled = false;
 
-                var mqttServer = new MqttFactory().CreateMqttServer();
+                var mqttServer = new MqttFactory().CreateMqttServer(options);
 
-                mqttServer.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
+                mqttServer.InterceptingClientPublishAsync += e =>
+                {
+                    if (MqttTopicFilterComparer.Compare(e.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#") == MqttTopicFilterCompareResult.IsMatch)
+                    {
+                        // Replace the payload with the timestamp. But also extending a JSON 
+                        // based payload with the timestamp is a suitable use case.
+                        e.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
+                    }
+
+                    if (e.ApplicationMessage.Topic == "not_allowed_topic")
+                    {
+                        e.ProcessPublish = false;
+                        e.CloseConnection = true;
+                    }
+
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+                
+                mqttServer.ValidatingClientConnectionAsync += e =>
+                {
+                    if (e.ClientId == "SpecialClient")
+                    {
+                        if (e.Username != "USER" || e.Password != "PASS")
+                        {
+                            e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                        }
+                    }
+
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                mqttServer.InterceptingClientSubscriptionAsync += e =>
+                {
+                    if (e.TopicFilter.Topic.StartsWith("admin/foo/bar") && e.ClientId != "theAdmin")
+                    {
+                        e.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
+                    }
+
+                    if (e.TopicFilter.Topic.StartsWith("the/secret/stuff") && e.ClientId != "Imperator")
+                    {
+                        e.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
+                        e.CloseConnection = true;
+                    }
+
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+                
+                mqttServer.InterceptingClientPublishAsync += e =>
                 {
                     MqttNetConsoleLogger.PrintToConsole(
                         $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0])}'",
                         ConsoleColor.Magenta);
-                });
+                    
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
 
                 //options.ApplicationMessageInterceptor = c =>
                 //{
@@ -124,12 +131,13 @@ namespace MQTTnet.TestApp.NetCore
                 //    }
                 //};
 
-                mqttServer.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(e =>
+                mqttServer.ClientConnectedAsync += e =>
                 {
                     Console.Write("Client disconnected event fired.");
-                });
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
 
-                await mqttServer.StartAsync(options);
+                await mqttServer.StartAsync();
 
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();

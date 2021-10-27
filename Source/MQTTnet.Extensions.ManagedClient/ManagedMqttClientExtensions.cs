@@ -77,7 +77,7 @@ namespace MQTTnet.Extensions.ManagedClient
         }
 
         public static TReceiver UseApplicationMessageReceivedHandler<TReceiver>(this TReceiver receiver, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
-            where TReceiver : IApplicationMessageReceiver
+            where TReceiver : IMqttApplicationMessageReceiver
         {
             if (receiver == null) throw new ArgumentNullException(nameof(receiver));
 
@@ -90,7 +90,7 @@ namespace MQTTnet.Extensions.ManagedClient
         }
 
         public static TReceiver UseApplicationMessageReceivedHandler<TReceiver>(this TReceiver receiver, Action<MqttApplicationMessageReceivedEventArgs> handler)
-            where TReceiver : IApplicationMessageReceiver
+            where TReceiver : IMqttApplicationMessageReceiver
         {
             if (receiver == null) throw new ArgumentNullException(nameof(receiver));
 
@@ -103,7 +103,7 @@ namespace MQTTnet.Extensions.ManagedClient
         }
 
         public static TReceiver UseApplicationMessageReceivedHandler<TReceiver>(this TReceiver receiver, IMqttApplicationMessageReceivedHandler handler)
-            where TReceiver : IApplicationMessageReceiver
+            where TReceiver : IMqttApplicationMessageReceiver
         {
             if (receiver == null) throw new ArgumentNullException(nameof(receiver));
 
@@ -141,7 +141,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return client.UnsubscribeAsync(topicFilters);
         }
 
-        public static async Task PublishAsync(this IApplicationMessagePublisher publisher, IEnumerable<MqttApplicationMessage> applicationMessages)
+        public static async Task PublishAsync(this IMqttApplicationMessagePublisher publisher, IEnumerable<MqttApplicationMessage> applicationMessages)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
@@ -152,7 +152,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, MqttApplicationMessage applicationMessage)
+        public static Task<MqttClientPublishResult> PublishAsync(this IMqttApplicationMessagePublisher publisher, MqttApplicationMessage applicationMessage)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
@@ -160,7 +160,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return publisher.PublishAsync(applicationMessage, CancellationToken.None);
         }
 
-        public static async Task PublishAsync(this IApplicationMessagePublisher publisher, params MqttApplicationMessage[] applicationMessages)
+        public static async Task PublishAsync(this IMqttApplicationMessagePublisher publisher, params MqttApplicationMessage[] applicationMessages)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
@@ -171,7 +171,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic)
+        public static Task<MqttClientPublishResult> PublishAsync(this IMqttApplicationMessagePublisher publisher, string topic)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -180,7 +180,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 .WithTopic(topic));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload)
+        public static Task<MqttClientPublishResult> PublishAsync(this IMqttApplicationMessagePublisher publisher, string topic, string payload)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -190,7 +190,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 .WithPayload(payload));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static Task<MqttClientPublishResult> PublishAsync(this IMqttApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -201,7 +201,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 .WithQualityOfServiceLevel(qualityOfServiceLevel));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
+        public static Task<MqttClientPublishResult> PublishAsync(this IMqttApplicationMessagePublisher publisher, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
             if (topic == null) throw new ArgumentNullException(nameof(topic));
@@ -213,7 +213,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 .WithRetainFlag(retain));
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
+        public static Task<MqttClientPublishResult> PublishAsync(this IMqttApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder, CancellationToken cancellationToken)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
 
@@ -221,7 +221,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return publisher.PublishAsync(message, cancellationToken);
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
+        public static Task<MqttClientPublishResult> PublishAsync(this IMqttApplicationMessagePublisher publisher, Func<MqttApplicationMessageBuilder, MqttApplicationMessageBuilder> builder)
         {
             if (publisher == null) throw new ArgumentNullException(nameof(publisher));
 

@@ -26,7 +26,7 @@ namespace MQTTnet.Server.Internal
         
         readonly MqttApplicationMessageInterceptorInvoker _applicationMessageInterceptorInvoker;
         
-        readonly IMqttServerOptions _serverOptions;
+        readonly MqttServerOptions _serverOptions;
         readonly MqttConnectPacket _connectPacket;
 
         CancellationTokenSource _cancellationToken;
@@ -35,7 +35,8 @@ namespace MQTTnet.Server.Internal
             MqttConnectPacket connectPacket,
             IMqttChannelAdapter channelAdapter,
             MqttClientSession session,
-            IMqttServerOptions serverOptions,
+            MqttServerOptions serverOptions,
+            MqttServerEventContainer eventContainer,
             MqttClientSessionsManager sessionsManager,
             IMqttNetLogger logger)
         {
@@ -48,7 +49,7 @@ namespace MQTTnet.Server.Internal
             Session = session ?? throw new ArgumentNullException(nameof(session));
             _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
 
-            _applicationMessageInterceptorInvoker = new MqttApplicationMessageInterceptorInvoker(_serverOptions, Id, Session.Items);
+            _applicationMessageInterceptorInvoker = new MqttApplicationMessageInterceptorInvoker(eventContainer, Id, Session.Items);
             
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttClientConnection));
@@ -132,7 +133,7 @@ namespace MQTTnet.Server.Internal
             {
                 var willPublishPacket = _packetFactories.Publish.Create(Session.LatestConnectPacket);
                 var willApplicationMessage = _applicationMessageFactory.Create(willPublishPacket);
-                _ = _sessionsManager.DispatchPublishPacket(willApplicationMessage, this);
+                _ = _sessionsManager.DispatchPublishPacket(Id, willApplicationMessage);
                 Session.WillMessageSent = true;
             }
 
@@ -433,7 +434,7 @@ namespace MQTTnet.Server.Internal
 
             if (_applicationMessageInterceptorInvoker.ProcessPublish)
             {
-                await _sessionsManager.DispatchPublishPacket(applicationMessage, this).ConfigureAwait(false);    
+                await _sessionsManager.DispatchPublishPacket(Id, applicationMessage).ConfigureAwait(false);    
             }
             
             switch (publishPacket.QualityOfServiceLevel)
@@ -496,7 +497,7 @@ namespace MQTTnet.Server.Internal
             {
                 var disconnectOptions = new MqttClientDisconnectOptions
                 {
-                    ReasonCode = reason,
+                    Reason = reason,
                     ReasonString = reason.ToString()
                 };
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using MQTTnet.Packets;
-using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server.Internal
 {

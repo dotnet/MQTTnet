@@ -31,7 +31,7 @@ namespace MQTTnet.Implementations
 
         public bool TreatSocketOpeningErrorAsWarning { get; set; }
 
-        public Task StartAsync(IMqttServerOptions options)
+        public Task StartAsync(MqttServerOptions options)
         {
             if (_cancellationTokenSource != null) throw new InvalidOperationException("Server is already started.");
 

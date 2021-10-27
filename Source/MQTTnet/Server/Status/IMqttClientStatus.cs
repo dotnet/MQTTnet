@@ -1,8 +1,8 @@
-﻿using MQTTnet.Formatter;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
 
-namespace MQTTnet.Server.Status
+namespace MQTTnet.Server
 {
     public interface IMqttClientStatus
     {

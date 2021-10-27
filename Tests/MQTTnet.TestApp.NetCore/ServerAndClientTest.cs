@@ -15,11 +15,10 @@ namespace MQTTnet.TestApp.NetCore
             MqttNetConsoleLogger.ForwardToConsole(logger);
 
             var factory = new MqttFactory(logger);
-            var server = factory.CreateMqttServer();
+            var server = factory.CreateMqttServer( new MqttServerOptionsBuilder().Build());
             var client = factory.CreateMqttClient();
 
-            var serverOptions = new MqttServerOptionsBuilder().Build();
-            await server.StartAsync(serverOptions);
+            await server.StartAsync();
 
             var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
             await client.ConnectAsync(clientOptions);

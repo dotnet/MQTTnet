@@ -10,11 +10,11 @@ namespace MQTTnet.Server.Internal
 {
     public sealed class MqttServerKeepAliveMonitor
     {
-        readonly IMqttServerOptions _options;
+        readonly MqttServerOptions _options;
         readonly MqttClientSessionsManager _sessionsManager;
         readonly MqttNetSourceLogger _logger;
 
-        public MqttServerKeepAliveMonitor(IMqttServerOptions options, MqttClientSessionsManager sessionsManager, IMqttNetLogger logger)
+        public MqttServerKeepAliveMonitor(MqttServerOptions options, MqttClientSessionsManager sessionsManager, IMqttNetLogger logger)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));

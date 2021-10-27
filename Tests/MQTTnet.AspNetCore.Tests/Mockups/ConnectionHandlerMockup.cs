@@ -33,7 +33,7 @@ namespace MQTTnet.AspNetCore.Tests.Mockups
             }
         }
 
-        public Task StartAsync(IMqttServerOptions options)
+        public Task StartAsync(MqttServerOptions options)
         {
             return Task.CompletedTask;
         }

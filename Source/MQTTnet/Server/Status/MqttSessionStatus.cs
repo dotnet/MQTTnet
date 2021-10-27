@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Formatter;
-using MQTTnet.Formatter.V5;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.Server.Internal;
 
-namespace MQTTnet.Server.Status
+namespace MQTTnet.Server
 {
     public sealed class MqttSessionStatus : IMqttSessionStatus
     {

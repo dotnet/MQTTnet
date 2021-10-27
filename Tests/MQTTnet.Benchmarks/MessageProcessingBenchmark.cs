@@ -11,19 +11,20 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class MessageProcessingBenchmark
     {
-        IMqttServer _mqttServer;
+        MqttServer _mqttServer;
         IMqttClient _mqttClient;
         MqttApplicationMessage _message;
 
         [GlobalSetup]
         public void Setup()
         {
+            var serverOptions = new MqttServerOptionsBuilder().Build();
+            
             var factory = new MqttFactory();
-            _mqttServer = factory.CreateMqttServer();
+            _mqttServer = factory.CreateMqttServer(serverOptions);
             _mqttClient = factory.CreateMqttClient();
 
-            var serverOptions = new MqttServerOptionsBuilder().Build();
-            _mqttServer.StartAsync(serverOptions).GetAwaiter().GetResult();
+            _mqttServer.StartAsync().GetAwaiter().GetResult();
 
             var clientOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer("localhost").Build();

@@ -8,7 +8,7 @@ using MQTTnet.Client;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public interface IManagedMqttClient : IApplicationMessageReceiver, IApplicationMessagePublisher, IDisposable
+    public interface IManagedMqttClient : IMqttApplicationMessageReceiver, IMqttApplicationMessagePublisher, IDisposable
     {
         /// <summary>
         /// Gets the internally used MQTT client.

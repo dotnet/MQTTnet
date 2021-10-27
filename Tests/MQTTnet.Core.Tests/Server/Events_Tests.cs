@@ -20,10 +20,11 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
 
                 MqttServerClientConnectedEventArgs eventArgs = null;
-                server.ClientConnectedHandler = new MqttServerClientConnectedHandlerDelegate(e =>
+                server.ClientConnectedAsync += e =>
                 {
                     eventArgs = e;
-                });
+                    return Task.CompletedTask;
+                };
 
                 await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 
@@ -46,10 +47,11 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
 
                 MqttServerClientDisconnectedEventArgs eventArgs = null;
-                server.ClientDisconnectedHandler = new MqttServerClientDisconnectedHandlerDelegate(e =>
+                server.ClientDisconnectedAsync += e =>
                 {
                     eventArgs = e;
-                });
+                    return Task.CompletedTask;
+                };
 
                 var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 await client.DisconnectAsync();
@@ -72,10 +74,11 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
 
                 MqttServerClientSubscribedTopicEventArgs eventArgs = null;
-                server.ClientSubscribedTopicHandler = new MqttServerClientSubscribedTopicHandlerDelegate(e =>
+                server.ClientSubscribedTopicAsync += e =>
                 {
                     eventArgs = e;
-                });
+                    return Task.CompletedTask;
+                };
 
                 var client = await testEnvironment.ConnectClient();
                 await client.SubscribeAsync("The/Topic", MqttQualityOfServiceLevel.AtLeastOnce);
@@ -98,10 +101,11 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
         
                 MqttServerClientUnsubscribedTopicEventArgs eventArgs = null;
-                server.ClientUnsubscribedTopicHandler = new MqttServerClientUnsubscribedTopicHandlerDelegate(e =>
+                server.ClientUnsubscribedTopicAsync += e =>
                 {
                     eventArgs = e;
-                });
+                    return Task.CompletedTask;
+                };
         
                 var client = await testEnvironment.ConnectClient();
                 await client.UnsubscribeAsync("The/Topic");
@@ -122,11 +126,12 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
         
-                MqttApplicationMessageReceivedEventArgs eventArgs = null;
-                server.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
+                InterceptingMqttClientPublishEventArgs eventArgs = null;
+                server.InterceptingClientPublishAsync += e =>
                 {
                     eventArgs = e;
-                });
+                    return Task.CompletedTask;
+                };
         
                 var client = await testEnvironment.ConnectClient();
                 await client.PublishAsync("The_Topic", "The_Payload");
@@ -146,15 +151,16 @@ namespace MQTTnet.Tests.Server
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var server = testEnvironment.CreateServer();
-        
+                var server = testEnvironment.CreateServer(new MqttServerOptions());
+
                 EventArgs eventArgs = null;
-                server.StartedHandler = new MqttServerStartedHandlerDelegate(e =>
+                server.StartedAsync += e =>
                 {
                     eventArgs = e;
-                });
-
-                await server.StartAsync(new MqttServerOptionsBuilder().Build());
+                    return Task.CompletedTask;
+                };
+                
+                await server.StartAsync();
         
                 await LongTestDelay();
                 
@@ -170,10 +176,11 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
         
                 EventArgs eventArgs = null;
-                server.StoppedHandler = new MqttServerStoppedHandlerDelegate(e =>
+                server.StoppedAsync += e =>
                 {
                     eventArgs = e;
-                });
+                    return Task.CompletedTask;
+                };
 
                 await server.StopAsync();
         

@@ -21,7 +21,7 @@ namespace MQTTnet.AspNetCore
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
-        public Task StartAsync(IMqttServerOptions options)
+        public Task StartAsync(MqttServerOptions options)
         {
             return Task.CompletedTask;
         }

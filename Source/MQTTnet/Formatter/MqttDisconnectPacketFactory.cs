@@ -16,7 +16,7 @@ namespace MQTTnet.Formatter
             }
             else
             {
-                packet.ReasonCode = (MqttDisconnectReasonCode) clientDisconnectOptions.ReasonCode;
+                packet.ReasonCode = (MqttDisconnectReasonCode) clientDisconnectOptions.Reason;
             }
 
             return packet;

@@ -21,31 +21,38 @@ namespace MQTTnet.Tests.Server
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var serverOptions = new MqttServerOptionsBuilder()
-                    .WithConnectionValidator(delegate(MqttConnectionValidatorContext context)
-                    {
-                        // Don't validate anything. Just set some session items.
-                        context.SessionItems["can_subscribe_x"] = true;
-                        context.SessionItems["default_payload"] = "Hello World";
-                    })
-                    .WithSubscriptionInterceptor(delegate(MqttSubscriptionInterceptorContext context)
-                    {
-                        if (context.TopicFilter.Topic == "x")
-                        {
-                            if (context.SessionItems["can_subscribe_x"] as bool? == false)
-                            {
-                                context.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
-                            }
-                        }
-                    })
-                    .WithApplicationMessageInterceptor(delegate(MqttApplicationMessageInterceptorContext context)
-                    {
-                        context.ApplicationMessage.Payload =
-                            Encoding.UTF8.GetBytes(
-                                context.SessionItems["default_payload"] as string ?? String.Empty);
-                    });
+                var server = await testEnvironment.StartServer();
 
-                await testEnvironment.StartServer(serverOptions);
+                server.ValidatingClientConnectionAsync += e =>
+                {
+                    // Don't validate anything. Just set some session items.
+                    e.SessionItems["can_subscribe_x"] = true;
+                    e.SessionItems["default_payload"] = "Hello World";
+                    
+                    return Task.CompletedTask;
+                };
+                
+                server.InterceptingClientSubscriptionAsync += e =>
+                {
+                    if (e.TopicFilter.Topic == "x")
+                    {
+                        if (e.SessionItems["can_subscribe_x"] as bool? == false)
+                        {
+                            e.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
+                        }
+                    }
+                    
+                    return Task.CompletedTask;
+                };
+
+                server.InterceptingClientPublishAsync += e =>
+                {
+                    e.ApplicationMessage.Payload =
+                        Encoding.UTF8.GetBytes(
+                            e.SessionItems["default_payload"] as string ?? String.Empty);
+
+                    return Task.CompletedTask;
+                };
 
                 string receivedPayload = null;
 
@@ -73,15 +80,16 @@ namespace MQTTnet.Tests.Server
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var serverOptions = new MqttServerOptionsBuilder()
-                    .WithConnectionValidator(delegate(MqttConnectionValidatorContext context)
-                    {
-                        // Don't validate anything. Just set some session items.
-                        context.SessionItems["can_subscribe_x"] = true;
-                        context.SessionItems["default_payload"] = "Hello World";
-                    });
+                var server = await testEnvironment.StartServer();
 
-                await testEnvironment.StartServer(serverOptions);
+                server.ValidatingClientConnectionAsync += e =>
+                {
+                    // Don't validate anything. Just set some session items.
+                    e.SessionItems["can_subscribe_x"] = true;
+                    e.SessionItems["default_payload"] = "Hello World";
+                    
+                    return Task.CompletedTask;
+                };
 
                 await testEnvironment.ConnectClient();
 

@@ -14,7 +14,7 @@ using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {
-    public class MqttServer : Disposable, IMqttServer
+    public class MqttServer : Disposable
     {
         readonly MqttServerEventContainer _eventContainer;
         
@@ -69,6 +69,18 @@ namespace MQTTnet.Server
         {
             add => _eventContainer.ClientDisconnectedEvent.AddHandler(value);
             remove => _eventContainer.ClientDisconnectedEvent.RemoveHandler(value);
+        }
+        
+        public event Func<InterceptingPacketEventArgs, Task> InterceptInboundPacketAsync
+        {
+            add => _eventContainer.InterceptingInboundPacketEvent.AddHandler(value);
+            remove => _eventContainer.InterceptingInboundPacketEvent.RemoveHandler(value);
+        }
+        
+        public event Func<InterceptingPacketEventArgs, Task> InterceptingOutboundPacketAsync
+        {
+            add => _eventContainer.InterceptingOutboundPacketEvent.AddHandler(value);
+            remove => _eventContainer.InterceptingOutboundPacketEvent.RemoveHandler(value);
         }
         
         public event Func<InterceptingMqttClientSubscriptionEventArgs, Task> InterceptingClientSubscriptionAsync

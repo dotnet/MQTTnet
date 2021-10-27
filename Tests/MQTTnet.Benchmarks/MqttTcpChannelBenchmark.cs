@@ -12,7 +12,7 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public sealed class MqttTcpChannelBenchmark
     {
-        IMqttServer _mqttServer;
+        MqttServer _mqttServer;
         IMqttChannel _serverChannel;
         IMqttChannel _clientChannel;
 

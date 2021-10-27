@@ -1,5 +1,4 @@
-﻿using MQTTnet.Diagnostics;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics.Logger;
 

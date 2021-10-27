@@ -31,6 +31,10 @@ namespace MQTTnet.Server.Internal
         
         public AsyncEvent<MqttApplicationMessageNotConsumedEventArgs> ApplicationMessageNotConsumedEvent { get; } = new AsyncEvent<MqttApplicationMessageNotConsumedEventArgs>();
         
+        public AsyncEvent<InterceptingPacketEventArgs> InterceptingInboundPacketEvent { get; } = new AsyncEvent<InterceptingPacketEventArgs>();
+        
+        public AsyncEvent<InterceptingPacketEventArgs> InterceptingOutboundPacketEvent { get; } = new AsyncEvent<InterceptingPacketEventArgs>();
+        
         public AsyncEvent<EventArgs> StartedEvent { get; } = new AsyncEvent<EventArgs>();
         
         public AsyncEvent<EventArgs> StoppedEvent { get; } = new AsyncEvent<EventArgs>();

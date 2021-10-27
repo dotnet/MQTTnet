@@ -27,6 +27,7 @@ namespace MQTTnet.Server.Internal
         readonly MqttApplicationMessageInterceptorInvoker _applicationMessageInterceptorInvoker;
         
         readonly MqttServerOptions _serverOptions;
+        readonly MqttServerEventContainer _eventContainer;
         readonly MqttConnectPacket _connectPacket;
 
         CancellationTokenSource _cancellationToken;
@@ -41,6 +42,7 @@ namespace MQTTnet.Server.Internal
             IMqttNetLogger logger)
         {
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
+            _eventContainer = eventContainer;
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
 
             ChannelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
@@ -155,6 +157,18 @@ namespace MQTTnet.Server.Internal
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var packet = await ChannelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+
+                    var interceptingPacketEventArgs = new InterceptingPacketEventArgs
+                    {
+                        ClientId = Id,
+                        Endpoint = Endpoint,
+                        Packet = packet,
+                        CancellationToken = cancellationToken
+                    };
+                    
+                    await _eventContainer.InterceptingInboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
+                    packet = interceptingPacketEventArgs.Packet;
+                    
                     if (packet == null)
                     {
                         // The client has closed the connection gracefully.

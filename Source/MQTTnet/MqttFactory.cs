@@ -6,6 +6,7 @@ using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Subscribing;
 using MQTTnet.Client.Unsubscribing;
@@ -13,7 +14,7 @@ using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet
 {
-    public sealed class MqttFactory : IMqttFactory
+    public sealed class MqttFactory
     {
         IMqttClientAdapterFactory _clientAdapterFactory;
 
@@ -29,14 +30,14 @@ namespace MQTTnet
 
         public IMqttNetLogger DefaultLogger { get; }
 
-        public IList<Func<IMqttFactory, IMqttServerAdapter>> DefaultServerAdapters { get; } = new List<Func<IMqttFactory, IMqttServerAdapter>>
+        public IList<Func<MqttFactory, IMqttServerAdapter>> DefaultServerAdapters { get; } = new List<Func<MqttFactory, IMqttServerAdapter>>
         {
             factory => new MqttTcpServerAdapter(factory.DefaultLogger)
         };
 
         public IDictionary<object, object> Properties { get; } = new Dictionary<object, object>();
 
-        public IMqttFactory UseClientAdapterFactory(IMqttClientAdapterFactory clientAdapterFactory)
+        public MqttFactory UseClientAdapterFactory(IMqttClientAdapterFactory clientAdapterFactory)
         {
             _clientAdapterFactory = clientAdapterFactory ?? throw new ArgumentNullException(nameof(clientAdapterFactory));
             return this;
@@ -96,42 +97,47 @@ namespace MQTTnet
             return new MqttClient(clientAdapterFactory, logger);
         }
 
-        public IMqttServer CreateMqttServer()
+        public MqttServer CreateMqttServer(MqttServerOptions options)
         {
-            return CreateMqttServer(DefaultLogger);
+            return CreateMqttServer(options, DefaultLogger);
         }
 
-        public IMqttServer CreateMqttServer(IMqttNetLogger logger)
+        public MqttServer CreateMqttServer(MqttServerOptions options, IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             var serverAdapters = DefaultServerAdapters.Select(a => a.Invoke(this));
-            return CreateMqttServer(serverAdapters, logger);
+            return CreateMqttServer(options, serverAdapters, logger);
         }
 
-        public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> serverAdapters, IMqttNetLogger logger)
+        public MqttServer CreateMqttServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> serverAdapters, IMqttNetLogger logger)
         {
             if (serverAdapters == null) throw new ArgumentNullException(nameof(serverAdapters));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-            return new MqttServer(serverAdapters, logger);
+            return new MqttServer(options, serverAdapters, logger);
         }
 
-        public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> serverAdapters)
+        public MqttServer CreateMqttServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> serverAdapters)
         {
             if (serverAdapters == null) throw new ArgumentNullException(nameof(serverAdapters));
 
-            return new MqttServer(serverAdapters, DefaultLogger);
+            return new MqttServer(options, serverAdapters, DefaultLogger);
+        }
+        
+        public MqttServerOptionsBuilder CreateServerOptionsBuilder()
+        {
+            return new MqttServerOptionsBuilder();
         }
        
         public MqttClientOptionsBuilder CreateClientOptionsBuilder()
         {
             return new MqttClientOptionsBuilder();
         }
-        
-        public MqttServerOptionsBuilder CreateServerOptionsBuilder()
+
+        public MqttClientDisconnectOptionsBuilder CreateClientDisconnectOptionsBuilder()
         {
-            return new MqttServerOptionsBuilder();
+            return new MqttClientDisconnectOptionsBuilder();
         }
         
         public MqttClientSubscribeOptionsBuilder CreateSubscribeOptionsBuilder()

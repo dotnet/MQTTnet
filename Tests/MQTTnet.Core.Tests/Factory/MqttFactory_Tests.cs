@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Extensions.ManagedClient;
+using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Factory
 {
@@ -66,88 +67,88 @@ namespace MQTTnet.Tests.Factory
         {
             var factory = new MqttFactory();
             var builder = factory.CreateApplicationMessageBuilder();
-            
+
             Assert.IsNotNull(builder);
         }
-        
+
         [TestMethod]
         public void Create_ClientOptionsBuilder()
         {
             var factory = new MqttFactory();
             var builder = factory.CreateClientOptionsBuilder();
-            
+
             Assert.IsNotNull(builder);
         }
-        
+
         [TestMethod]
         public void Create_ServerOptionsBuilder()
         {
             var factory = new MqttFactory();
             var builder = factory.CreateServerOptionsBuilder();
-            
+
             Assert.IsNotNull(builder);
         }
-        
+
         [TestMethod]
         public void Create_SubscribeOptionsBuilder()
         {
             var factory = new MqttFactory();
             var builder = factory.CreateSubscribeOptionsBuilder();
-            
+
             Assert.IsNotNull(builder);
         }
-        
+
         [TestMethod]
         public void Create_UnsubscribeOptionsBuilder()
         {
             var factory = new MqttFactory();
             var builder = factory.CreateUnsubscribeOptionsBuilder();
-            
+
             Assert.IsNotNull(builder);
         }
-        
+
         [TestMethod]
         public void Create_TopicFilterBuilder()
         {
             var factory = new MqttFactory();
             var builder = factory.CreateTopicFilterBuilder();
-            
+
             Assert.IsNotNull(builder);
         }
-        
+
         [TestMethod]
         public void Create_MqttServer()
         {
             var factory = new MqttFactory();
-            var server = factory.CreateMqttServer();
-            
+            var server = factory.CreateMqttServer(new MqttServerOptionsBuilder().Build());
+
             Assert.IsNotNull(server);
         }
-        
+
         [TestMethod]
         public void Create_MqttClient()
         {
             var factory = new MqttFactory();
             var client = factory.CreateMqttClient();
-            
+
             Assert.IsNotNull(client);
         }
-        
+
         [TestMethod]
         public void Create_LowLevelMqttClient()
         {
             var factory = new MqttFactory();
             var client = factory.CreateLowLevelMqttClient();
-            
+
             Assert.IsNotNull(client);
         }
-        
+
         [TestMethod]
         public void Create_ManagedMqttClient()
         {
             var factory = new MqttFactory();
             var client = factory.CreateManagedMqttClient();
-            
+
             Assert.IsNotNull(client);
         }
     }

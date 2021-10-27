@@ -7,10 +7,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Logging;
 using MQTTnet.AspNetCore;
 using MQTTnet.AspNetCore.Extensions;
-using MQTTnet.Server;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {
@@ -44,7 +42,7 @@ namespace MQTTnet.TestApp.AspNetCore2
 
             app.UseMqttServer(server =>
             {
-                server.StartedHandler = new MqttServerStartedHandlerDelegate(async args =>
+                server.StartedAsync += async args =>
                 {
                     var frameworkName = GetType().Assembly.GetCustomAttribute<TargetFrameworkAttribute>()?
                         .FrameworkName;
@@ -57,7 +55,7 @@ namespace MQTTnet.TestApp.AspNetCore2
                     {
                         try
                         {
-                            await server.PublishAsync(msg.Build());
+                            await server.PublishAsync("server", msg.Build());
                             msg.WithPayload($"Mqtt hosted on {frameworkName} is still awesome at {DateTime.Now}");
                         }
                         catch (Exception e)
@@ -69,7 +67,7 @@ namespace MQTTnet.TestApp.AspNetCore2
                             await Task.Delay(TimeSpan.FromSeconds(2));
                         }
                     }
-                });
+                };
             });
 
             app.Use((context, next) =>

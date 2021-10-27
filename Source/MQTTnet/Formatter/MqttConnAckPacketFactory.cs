@@ -6,14 +6,14 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttConnAckPacketFactory
     {
-        public MqttConnAckPacket Create(MqttConnectionValidatorContext connectionValidatorContext)
+        public MqttConnAckPacket Create(ValidatingMqttClientConnectionEventArgs clientConnectionValidationEventArgs)
         {
-            if (connectionValidatorContext == null) throw new ArgumentNullException(nameof(connectionValidatorContext));
+            if (clientConnectionValidationEventArgs == null) throw new ArgumentNullException(nameof(clientConnectionValidationEventArgs));
 
             var connAckPacket = new MqttConnAckPacket
             {
-                ReturnCode = MqttConnectReasonCodeConverter.ToConnectReturnCode(connectionValidatorContext.ReasonCode),
-                ReasonCode = connectionValidatorContext.ReasonCode,
+                ReturnCode = MqttConnectReasonCodeConverter.ToConnectReturnCode(clientConnectionValidationEventArgs.ReasonCode),
+                ReasonCode = clientConnectionValidationEventArgs.ReasonCode,
                 Properties =
                 {
                     RetainAvailable = true,
@@ -22,17 +22,17 @@ namespace MQTTnet.Formatter
                     TopicAliasMaximum = ushort.MaxValue,
                     WildcardSubscriptionAvailable = true,
                     
-                    AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
-                    AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,
-                    AssignedClientIdentifier = connectionValidatorContext.AssignedClientIdentifier,
-                    ReasonString = connectionValidatorContext.ReasonString,
-                    ServerReference = connectionValidatorContext.ServerReference
+                    AuthenticationMethod = clientConnectionValidationEventArgs.AuthenticationMethod,
+                    AuthenticationData = clientConnectionValidationEventArgs.ResponseAuthenticationData,
+                    AssignedClientIdentifier = clientConnectionValidationEventArgs.AssignedClientIdentifier,
+                    ReasonString = clientConnectionValidationEventArgs.ReasonString,
+                    ServerReference = clientConnectionValidationEventArgs.ServerReference
                 }
             };
 
-            if (connectionValidatorContext.ResponseUserProperties != null)
+            if (clientConnectionValidationEventArgs.ResponseUserProperties != null)
             {
-                connAckPacket.Properties.UserProperties.AddRange(connectionValidatorContext.ResponseUserProperties);
+                connAckPacket.Properties.UserProperties.AddRange(clientConnectionValidationEventArgs.ResponseUserProperties);
             }
             
             return connAckPacket;

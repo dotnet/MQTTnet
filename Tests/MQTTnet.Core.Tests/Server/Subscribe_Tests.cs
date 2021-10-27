@@ -19,13 +19,16 @@ namespace MQTTnet.Tests.Server
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithSubscriptionInterceptor(
-                    c =>
-                    {
-                        // Set the topic to "a" regards what the client wants to subscribe.
-                        c.TopicFilter.Topic = "a";
-                    }));
+                var server = await testEnvironment.StartServer();
 
+                server.InterceptingClientSubscriptionAsync += e =>
+                {
+                    // Set the topic to "a" regards what the client wants to subscribe.
+                    e.TopicFilter.Topic = "a";
+                    
+                    return Task.CompletedTask;
+                };
+                
                 var topicAReceived = false;
                 var topicBReceived = false;
 
@@ -74,10 +77,11 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(0, receivedMessagesCount);
 
                 var subscribeEventCalled = false;
-                server.ClientSubscribedTopicHandler = new MqttServerClientSubscribedTopicHandlerDelegate(e =>
+                server.ClientSubscribedTopicAsync += e =>
                 {
                     subscribeEventCalled = e.TopicFilter.Topic == "a" && e.ClientId == c1.Options.ClientId;
-                });
+                    return Task.CompletedTask;
+                };
 
                 await c1.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
                 await Task.Delay(250);
@@ -88,10 +92,11 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(1, receivedMessagesCount);
 
                 var unsubscribeEventCalled = false;
-                server.ClientUnsubscribedTopicHandler = new MqttServerClientUnsubscribedTopicHandlerDelegate(e =>
+                server.ClientUnsubscribedTopicAsync += e =>
                 {
                     unsubscribeEventCalled = e.TopicFilter == "a" && e.ClientId == c1.Options.ClientId;
-                });
+                    return Task.CompletedTask;
+                };
 
                 await c1.UnsubscribeAsync("a");
                 await Task.Delay(250);
@@ -260,14 +265,17 @@ namespace MQTTnet.Tests.Server
         {
             using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
             {
-                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithSubscriptionInterceptor(
-                    c =>
+                var server = await testEnvironment.StartServer();
+
+                server.InterceptingClientSubscriptionAsync += e =>
+                {
+                    if (e.TopicFilter.Topic == "not_allowed_topic")
                     {
-                        if (c.TopicFilter.Topic == "not_allowed_topic")
-                        {
-                            c.Response.ReasonCode = MqttSubscribeReasonCode.TopicFilterInvalid;
-                        }
-                    }));
+                        e.Response.ReasonCode = MqttSubscribeReasonCode.TopicFilterInvalid;
+                    }
+                    
+                    return Task.CompletedTask;
+                };
                 
                 var client = await testEnvironment.ConnectClient();
                 

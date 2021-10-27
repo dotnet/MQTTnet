@@ -27,7 +27,7 @@ namespace MQTTnet.TestApp.NetCore
                 UseTls = true,
                 SslProtocol = SslProtocols.Tls13,
                 // Don't use this in production code. This handler simply allows any invalid certificate to work.
-                CertificateValidationHandler = (w) => true
+                CertificateValidationHandler = w => true
             };
 #endif
 
@@ -37,7 +37,7 @@ namespace MQTTnet.TestApp.NetCore
                 UseTls = true,
                 SslProtocol = SslProtocols.Tls12,
                 // Don't use this in production code. This handler simply allows any invalid certificate to work.
-                CertificateValidationHandler = (w) => true
+                CertificateValidationHandler = w => true
             };
 
             // mqtt.eclipseprojects.io

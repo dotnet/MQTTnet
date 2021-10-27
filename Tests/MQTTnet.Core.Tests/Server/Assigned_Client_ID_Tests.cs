@@ -5,7 +5,6 @@ using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
-using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Server
 {
@@ -34,27 +33,31 @@ namespace MQTTnet.Tests.Server
 
                 // Arrange server
                 var disconnectedMre = new ManualResetEventSlim();
-                var serverOptions = new MqttServerOptionsBuilder()
-                    .WithConnectionValidator(context =>
-                    {
-                        if (string.IsNullOrEmpty(context.ClientId))
-                        {
-                            context.AssignedClientIdentifier = assignedClientId;
-                            context.ReasonCode = MqttConnectReasonCode.Success;
-                        }
-                    });
 
-                await testEnvironment.StartServer(serverOptions);
-                testEnvironment.Server.UseClientConnectedHandler(args =>
+                var server = await testEnvironment.StartServer();
+                server.ValidatingClientConnectionAsync += e =>
+                {
+                    if (string.IsNullOrEmpty(e.ClientId))
+                    {
+                        e.AssignedClientIdentifier = assignedClientId;
+                        e.ReasonCode = MqttConnectReasonCode.Success;
+                    }
+                    
+                    return Task.CompletedTask;
+                };
+                
+                testEnvironment.Server.ClientConnectedAsync += args =>
                 {
                     serverConnectedClientId = args.ClientId;
-                });
+                    return Task.CompletedTask;
+                };
 
-                testEnvironment.Server.UseClientDisconnectedHandler(args =>
+                testEnvironment.Server.ClientDisconnectedAsync += args =>
                 {
                     serverDisconnectedClientId = args.ClientId;
                     disconnectedMre.Set();
-                });
+                    return Task.CompletedTask;
+                };
 
                 // Arrange client
                 var client = testEnvironment.CreateClient();

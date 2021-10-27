@@ -36,9 +36,9 @@ namespace MQTTnet.AspNetCore.Extensions
             return app;
         }
 
-        public static IApplicationBuilder UseMqttServer(this IApplicationBuilder app, Action<IMqttServer> configure)
+        public static IApplicationBuilder UseMqttServer(this IApplicationBuilder app, Action<MqttServer> configure)
         {
-            var server = app.ApplicationServices.GetRequiredService<IMqttServer>();
+            var server = app.ApplicationServices.GetRequiredService<MqttServer>();
 
             configure(server);
 

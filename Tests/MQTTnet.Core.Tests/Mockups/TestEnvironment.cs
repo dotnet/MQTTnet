@@ -28,7 +28,7 @@ namespace MQTTnet.Tests.Mockups
 
         public MqttFactory Factory { get; } = new MqttFactory();
         
-        public IMqttServer Server { get; private set; }
+        public MqttServer Server { get; private set; }
 
         public bool IgnoreClientLogErrors { get; set; }
 
@@ -173,46 +173,60 @@ namespace MQTTnet.Tests.Mockups
             return new MqttRpcClient(await ConnectClient(), options);
         }
 
-        public IMqttServer CreateServer()
+        public MqttServer CreateServer(MqttServerOptions options)
         {
             if (Server != null)
             {
                 throw new InvalidOperationException("Server already started.");
             }
 
-            Server = new TestServerWrapper(Factory.CreateMqttServer(ServerLogger), TestContext, this);
+            Server = Factory.CreateMqttServer(options, ServerLogger);
+
+            Server.ValidatingClientConnectionAsync += e =>
+            {
+                if (TestContext != null)
+                {
+                    // Null is used when the client id is assigned from the server!
+                    if (!string.IsNullOrEmpty(e.ClientId) && !e.ClientId.StartsWith(TestContext.TestName))
+                    {
+                        TrackException(new InvalidOperationException($"Invalid client ID used ({e.ClientId}). It must start with UnitTest name."));
+                        e.ReasonCode = Protocol.MqttConnectReasonCode.ClientIdentifierNotValid;
+                    }
+                }
+
+                return Task.CompletedTask;
+            };
+            
             return Server;
         }
         
-        public Task<IMqttServer> StartServer()
+        public Task<MqttServer> StartServer()
         {
             return StartServer(Factory.CreateServerOptionsBuilder());
         }
 
-        public async Task<IMqttServer> StartServer(MqttServerOptionsBuilder options)
+        public async Task<MqttServer> StartServer(MqttServerOptionsBuilder options)
         {
-            var server = CreateServer();
+            var server = CreateServer(options.Build());
             
             options.WithDefaultEndpointPort(ServerPort);
             options.WithMaxPendingMessagesPerClient(int.MaxValue);
             
-            await server.StartAsync(options.Build());
+            await server.StartAsync();
 
             return server;
         }
         
-        public async Task<IMqttServer> StartServer(Action<MqttServerOptionsBuilder> options)
+        public async Task<MqttServer> StartServer(Action<MqttServerOptionsBuilder> options)
         {
-            var server = CreateServer();
-
             var optionsBuilder = Factory.CreateServerOptionsBuilder();
             optionsBuilder.WithDefaultEndpointPort(ServerPort);
             optionsBuilder.WithMaxPendingMessagesPerClient(int.MaxValue);
             
-            options?.Invoke(optionsBuilder);
+            options.Invoke(optionsBuilder);
             
-            await server.StartAsync(optionsBuilder.Build());
-
+            var server = CreateServer(optionsBuilder.Build());
+            await server.StartAsync();
             return server;
         }
         

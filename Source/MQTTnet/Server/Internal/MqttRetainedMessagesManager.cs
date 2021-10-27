@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
@@ -16,10 +15,10 @@ namespace MQTTnet.Server.Internal
         readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>(4096);
 
         MqttNetSourceLogger _logger;
-        IMqttServerOptions _options;
+        MqttServerOptions _options;
         
         // TODO: Get rid of the logger here!
-        public Task Start(IMqttServerOptions options, IMqttNetLogger logger)
+        public Task Start(MqttServerOptions options, IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttRetainedMessagesManager));

@@ -34,10 +34,11 @@ namespace MQTTnet.Tests.Client
                 var client = await testEnvironment.ConnectLowLevelClient();
 
                 var i = 0;
-                server.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c =>
+                server.InterceptingClientPublishAsync += c =>
                 {
                     i++;
-                });
+                    return Task.CompletedTask;
+                };
 
                 await client.SendAsync(new MqttConnectPacket
                 {
@@ -223,7 +224,7 @@ namespace MQTTnet.Tests.Client
                 await Task.Delay(500);
                 Assert.IsFalse(client.IsConnected);
 
-                await server.StartAsync(new MqttServerOptionsBuilder().WithDefaultEndpointPort(testEnvironment.ServerPort).Build());
+                await server.StartAsync();
                 await Task.Delay(500);
 
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
@@ -260,7 +261,7 @@ namespace MQTTnet.Tests.Client
                     }
                 }
 
-                await server.StartAsync(new MqttServerOptionsBuilder().WithDefaultEndpointPort(testEnvironment.ServerPort).Build());
+                await server.StartAsync();
                 await Task.Delay(500);
 
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());

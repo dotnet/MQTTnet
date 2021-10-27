@@ -8,7 +8,7 @@ namespace MQTTnet.Adapter
     {
         Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
-        Task StartAsync(IMqttServerOptions options);
+        Task StartAsync(MqttServerOptions options);
         Task StopAsync();
     }
 }

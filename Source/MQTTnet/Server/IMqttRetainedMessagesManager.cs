@@ -7,7 +7,7 @@ namespace MQTTnet.Server
 {
     public interface IMqttRetainedMessagesManager
     {
-        Task Start(IMqttServerOptions options, IMqttNetLogger logger);
+        Task Start(MqttServerOptions options, IMqttNetLogger logger);
 
         Task LoadMessagesAsync();
 

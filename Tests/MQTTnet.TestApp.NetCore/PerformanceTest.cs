@@ -58,8 +58,8 @@ namespace MQTTnet.TestApp.NetCore
         {
             try
             {
-                var mqttServer = new MqttFactory().CreateMqttServer();
-                await mqttServer.StartAsync(new MqttServerOptions()).ConfigureAwait(false);
+                var mqttServer = new MqttFactory().CreateMqttServer(new MqttServerOptions());
+                await mqttServer.StartAsync().ConfigureAwait(false);
 
                 var options = new MqttClientOptions
                 {
@@ -202,8 +202,8 @@ namespace MQTTnet.TestApp.NetCore
         {
             try
             {
-                var mqttServer = new MqttFactory().CreateMqttServer();
-                await mqttServer.StartAsync(new MqttServerOptions());
+                var mqttServer = new MqttFactory().CreateMqttServer(new MqttServerOptions());
+                await mqttServer.StartAsync();
 
                 var options = new MqttClientOptions
                 {
@@ -253,8 +253,8 @@ namespace MQTTnet.TestApp.NetCore
         {
             try
             {
-                var mqttServer = new MqttFactory().CreateMqttServer();
-                await mqttServer.StartAsync(new MqttServerOptions());
+                var mqttServer = new MqttFactory().CreateMqttServer(new MqttServerOptions());
+                await mqttServer.StartAsync();
 
                 var options = new MqttClientOptions
                 {

@@ -150,13 +150,13 @@ namespace MQTTnet.Client
             return client.DisconnectAsync(options, CancellationToken.None);
         }
         
-        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectReason reasonCode, string reasonString = null)
+        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectReason reason, string reasonString = null)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 
             return client.DisconnectAsync(new MqttClientDisconnectOptions
             {
-                ReasonCode = reasonCode,
+                Reason = reason,
                 ReasonString = reasonString
             }, CancellationToken.None);
         }

@@ -36,19 +36,19 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual("Error while authenticating. If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].", ex.Message, false);
             }
         }
-        
+
         [TestMethod]
         public Task Handle_Wrong_UserName()
         {
             return TestCredentials("x", "Password1");
         }
-        
+
         [TestMethod]
         public Task Handle_Wrong_Password()
         {
             return TestCredentials("UserName", "x");
         }
-        
+
         [TestMethod]
         public Task Handle_Wrong_UserName_And_Password()
         {
@@ -61,19 +61,22 @@ namespace MQTTnet.Tests.Server
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
-                await testEnvironment.StartServer(testEnvironment.Factory.CreateServerOptionsBuilder()
-                    .WithConnectionValidator(c =>
+                var server = await testEnvironment.StartServer();
+
+                server.ValidatingClientConnectionAsync += e =>
+                {
+                    if (e.Username != "UserName1")
                     {
-                        if (c.Username != "UserName1")
-                        {
-                            c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
-                        }
-                        
-                        if (c.Password != "Password1")
-                        {
-                            c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
-                        }
-                    }));
+                        e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                    }
+
+                    if (e.Password != "Password1")
+                    {
+                        e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                    }
+
+                    return Task.CompletedTask;
+                };
 
                 var client = testEnvironment.CreateClient();
 

@@ -4,7 +4,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
 {
     public static class MqttFactoryExtensions
     {
-        public static IMqttFactory UseWebSocket4Net(this IMqttFactory mqttFactory)
+        public static MqttFactory UseWebSocket4Net(this MqttFactory mqttFactory)
         {
             if (mqttFactory == null) throw new ArgumentNullException(nameof(mqttFactory));
 

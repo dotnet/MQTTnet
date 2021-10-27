@@ -10,12 +10,12 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttConnectionValidatorContext
+    public sealed class ValidatingMqttClientConnectionEventArgs : EventArgs
     {
         readonly MqttConnectPacket _connectPacket;
         readonly IMqttChannelAdapter _clientAdapter;
 
-        public MqttConnectionValidatorContext(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
+        public ValidatingMqttClientConnectionEventArgs(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
         {
             _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
             _clientAdapter = clientAdapter ?? throw new ArgumentNullException(nameof(clientAdapter));

@@ -11,14 +11,14 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public class MqttSubscriptionsManager_Tests : BaseTestClass
+    public sealed class MqttSubscriptionsManager_Tests : BaseTestClass
     {
         [TestMethod]
         public async Task MqttSubscriptionsManager_SubscribeSingleSuccess()
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventDispatcher(new TestLogger()), new MqttRetainedMessagesManager());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(new TestLogger()), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
@@ -35,7 +35,7 @@ namespace MQTTnet.Tests.Server
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventDispatcher(new TestLogger()), new MqttRetainedMessagesManager());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(new TestLogger()), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
@@ -52,7 +52,7 @@ namespace MQTTnet.Tests.Server
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventDispatcher(new TestLogger()), new MqttRetainedMessagesManager());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(new TestLogger()), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilter { Topic = "#", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
@@ -70,7 +70,7 @@ namespace MQTTnet.Tests.Server
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventDispatcher(new TestLogger()), new MqttRetainedMessagesManager());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(new TestLogger()), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
@@ -85,7 +85,7 @@ namespace MQTTnet.Tests.Server
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventDispatcher(new TestLogger()), new MqttRetainedMessagesManager());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(new TestLogger()), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
@@ -106,15 +106,15 @@ namespace MQTTnet.Tests.Server
             var logger = new TestLogger();
             var options = new MqttServerOptions();
             var retainedMessagesManager = new MqttRetainedMessagesManager();
-            var eventDispatcher = new MqttServerEventDispatcher(logger);
-            
+            var eventContainer = new MqttServerEventContainer(logger);
+                
             return new MqttClientSession(
                 "",
                 new ConcurrentDictionary<object, object>(),
-                eventDispatcher,
                 options,
+                eventContainer,
                 retainedMessagesManager,
-                new MqttClientSessionsManager(options, retainedMessagesManager, eventDispatcher, logger));
+                new MqttClientSessionsManager(options, retainedMessagesManager, eventContainer, logger));
         }
     }
 }

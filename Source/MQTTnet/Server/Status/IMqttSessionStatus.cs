@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Server.Status
+namespace MQTTnet.Server
 {
     public interface IMqttSessionStatus
     {

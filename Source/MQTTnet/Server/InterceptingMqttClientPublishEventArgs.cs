@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttApplicationMessageInterceptorContext
+    public sealed class InterceptingMqttClientPublishEventArgs : EventArgs
     { 
         /// <summary>
         /// Gets the client identifier.

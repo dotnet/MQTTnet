@@ -4,7 +4,7 @@ using MQTTnet.Client.Receiving;
 
 namespace MQTTnet
 {
-    public interface IApplicationMessageReceiver
+    public interface IMqttApplicationMessageReceiver
     {
         /// <summary>
         /// Gets or sets the application message received handler that is fired every time a new message is received on the client's subscriptions.

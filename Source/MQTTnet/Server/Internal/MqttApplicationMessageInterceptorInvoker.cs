@@ -7,13 +7,13 @@ namespace MQTTnet.Server.Internal
 {
     public sealed class MqttApplicationMessageInterceptorInvoker
     {
-        readonly IMqttServerOptions _serverOptions;
+        readonly MqttServerEventContainer _eventContainer;
         readonly string _clientId;
         readonly IDictionary<object, object> _sessionItems;
         
-        public MqttApplicationMessageInterceptorInvoker(IMqttServerOptions serverOptions, string clientId, IDictionary<object, object> sessionItems)
+        public MqttApplicationMessageInterceptorInvoker(MqttServerEventContainer eventContainer, string clientId, IDictionary<object, object> sessionItems)
         {
-            _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
+            _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             _sessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
         }
@@ -35,13 +35,7 @@ namespace MQTTnet.Server.Internal
             ApplicationMessage = applicationMessage;
                 
             // Intercept.
-            var interceptor = _serverOptions.ApplicationMessageInterceptor;
-            if (interceptor == null)
-            {
-                return;
-            }
-            
-            var interceptorContext = new MqttApplicationMessageInterceptorContext
+            var eventArgs = new InterceptingMqttClientPublishEventArgs
             {
                 ClientId = _clientId,
                 ApplicationMessage = applicationMessage,
@@ -51,13 +45,13 @@ namespace MQTTnet.Server.Internal
                 CancellationToken = cancellationToken
             };
 
-            await interceptor.InterceptApplicationMessagePublishAsync(interceptorContext).ConfigureAwait(false);
+            await _eventContainer.InterceptingClientPublishEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
             // Expose results.
-            ProcessPublish = interceptorContext.ProcessPublish && interceptorContext.ApplicationMessage != null;
-            CloseConnection = interceptorContext.CloseConnection;
-            Response = interceptorContext.Response;
-            ApplicationMessage = interceptorContext.ApplicationMessage;
+            ProcessPublish = eventArgs.ProcessPublish && eventArgs.ApplicationMessage != null;
+            CloseConnection = eventArgs.CloseConnection;
+            Response = eventArgs.Response;
+            ApplicationMessage = eventArgs.ApplicationMessage;
         }
     }
 }

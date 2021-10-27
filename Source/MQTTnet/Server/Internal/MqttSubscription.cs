@@ -15,7 +15,5 @@ namespace MQTTnet.Server.Internal
         public MqttQualityOfServiceLevel GrantedQualityOfServiceLevel { get; set; }
         
         public uint Identifier { get; set; }
-        
-        public bool IsNewSubscription { get; set; }
     }
 }

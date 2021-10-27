@@ -4,7 +4,7 @@ using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server.Internal
 {
-    public sealed class MqttClientSession
+    public sealed class MqttClientSession : IDisposable
     {
         readonly DateTime _createdTimestamp = DateTime.UtcNow;
 
@@ -43,6 +43,11 @@ namespace MQTTnet.Server.Internal
             status.CreatedTimestamp = _createdTimestamp;
             status.PendingApplicationMessagesCount = ApplicationMessagesQueue.Count;
             status.Items = Items;
+        }
+
+        public void Dispose()
+        {
+            ApplicationMessagesQueue?.Dispose();
         }
     }
 }

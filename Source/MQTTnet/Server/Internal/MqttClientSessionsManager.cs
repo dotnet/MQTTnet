@@ -94,7 +94,7 @@ namespace MQTTnet.Server.Internal
                 var connectionValidatorContext = await ValidateConnection(connectPacket, channelAdapter).ConfigureAwait(false);
                 if (connectionValidatorContext.ReasonCode != MqttConnectReasonCode.Success)
                 {
-                    // Send failure response here without preparing a session!
+                    // Send failure response here without preparing a connection and session!
                     connAckPacket = _connAckPacketFactory.Create(connectionValidatorContext);
                     await channelAdapter.SendPacketAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
                     return;
@@ -105,7 +105,7 @@ namespace MQTTnet.Server.Internal
                 // Pass connAckPacket so that IsSessionPresent flag can be set if the client session already exists
                 clientConnection = await CreateClientConnection(connectPacket, connAckPacket, channelAdapter, connectionValidatorContext.SessionItems).ConfigureAwait(false);
 
-                await channelAdapter.SendPacketAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
+                await clientConnection.SendPacketAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
 
                 await _eventContainer.ClientConnectedEvent.InvokeAsync(() => new MqttServerClientConnectedEventArgs
                 {

@@ -42,8 +42,6 @@ namespace MQTTnet.Server.Internal
 
         public DateTime CreatedTimestamp { get; } = DateTime.UtcNow;
 
-        //public bool IsCleanSession { get; set; } = true;
-
         public MqttConnectPacket LatestConnectPacket { get; set; }
 
         public MqttClientSubscriptionsManager SubscriptionsManager { get; }
@@ -67,7 +65,6 @@ namespace MQTTnet.Server.Internal
             {
                 if (_serverOptions.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
                 {
-                    // TODO: Log!
                     return;
                 }
                 else

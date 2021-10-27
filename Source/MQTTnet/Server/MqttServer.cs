@@ -30,12 +30,13 @@ namespace MQTTnet.Server
 
         public MqttServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
         {
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            
             if (adapters == null) throw new ArgumentNullException(nameof(adapters));
             _adapters = adapters.ToList();
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttServer));
-            _options = options;
             _rootLogger = logger;
 
             _eventContainer = new MqttServerEventContainer(logger);
@@ -71,7 +72,7 @@ namespace MQTTnet.Server
             remove => _eventContainer.ClientDisconnectedEvent.RemoveHandler(value);
         }
         
-        public event Func<InterceptingPacketEventArgs, Task> InterceptInboundPacketAsync
+        public event Func<InterceptingPacketEventArgs, Task> InterceptingInboundPacketAsync
         {
             add => _eventContainer.InterceptingInboundPacketEvent.AddHandler(value);
             remove => _eventContainer.InterceptingInboundPacketEvent.RemoveHandler(value);

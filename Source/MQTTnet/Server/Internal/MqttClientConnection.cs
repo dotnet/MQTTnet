@@ -142,9 +142,21 @@ namespace MQTTnet.Server.Internal
             _logger.Info("Client '{0}': Connection stopped.", Id);
         }
 
-        Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            return ChannelAdapter.SendPacketAsync(packet, cancellationToken).ContinueWith(task => { Statistics.HandleSentPacket(packet); }, cancellationToken);
+            var interceptingPacketEventArgs = new InterceptingPacketEventArgs
+            {
+                ClientId = Id,
+                Endpoint = Endpoint,
+                Packet = packet,
+                CancellationToken = cancellationToken
+            };
+            
+            await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
+            packet = interceptingPacketEventArgs.Packet;
+
+            await ChannelAdapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
+            Statistics.HandleSentPacket(packet);
         }
 
         async Task ReceivePackagesLoop(CancellationToken cancellationToken)

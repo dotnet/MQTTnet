@@ -1027,22 +1027,22 @@ namespace MQTTnet.Tests.Server
             {
                 var undeliverd = string.Empty;
 
-                throw new NotImplementedException();
+                var server = await testEnvironment.StartServer();
+                server.ApplicationMessageNotConsumedAsync += e =>
+                {
+                    undeliverd = e.ApplicationMessage.Topic; 
+                    return Task.CompletedTask;
+                };
                 
-                // var options = new MqttServerOptionsBuilder().WithUndeliveredMessageInterceptor(
-                //     context => { undeliverd = context.ApplicationMessage.Topic; });
-                //
-                // await testEnvironment.StartServer(options);
-                //
-                // var client = await testEnvironment.ConnectClient();
-                //
-                // await client.SubscribeAsync("b");
-                //
-                // await client.PublishAsync("a", null, MqttQualityOfServiceLevel.ExactlyOnce);
-                //
-                // await Task.Delay(500);
-                //
-                // Assert.AreEqual("a", undeliverd);
+                var client = await testEnvironment.ConnectClient();
+                
+                await client.SubscribeAsync("b");
+                
+                await client.PublishAsync("a", null, MqttQualityOfServiceLevel.ExactlyOnce);
+                
+                await Task.Delay(500);
+                
+                Assert.AreEqual("a", undeliverd);
             }
         }
 

@@ -33,6 +33,7 @@
 * [Server] Processing all pending messages before stopping (thanks to @AblEdge, #1234).
 * [Server] Added support for a custom exception handler in _MqttServerMultiThreadedApplicationMessageInterceptorDelegate_.
 * [Server] Removed logger from _MqttServerMultiThreadedApplicationMessageInterceptorDelegate_ (BREAKING CHANGE!).
+* [Server] Fixed a memory leak when deleting sessions.
 * [Server] Added support for returning individual subscription errors (#80 thanks to @jimch)
 * [Server] Improved topic filter comparisons (support for $).
 * [Server] Fixed wrong "IsSessionPresent" result (thanks to @logicaloud, #1268).

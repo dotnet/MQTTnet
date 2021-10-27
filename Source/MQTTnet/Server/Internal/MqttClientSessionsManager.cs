@@ -407,14 +407,7 @@ namespace MQTTnet.Server.Internal
                     }
 
                     _logger.Verbose("Client '{0}': Queued application message with topic '{1}'.", clientSession.Id, applicationMessage.Topic);
-
-                    // var queuedApplicationMessage = new MqttQueuedApplicationMessage
-                    // {
-                    //     ApplicationMessage = applicationMessage,
-                    //     SubscriptionQualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel,
-                    //     SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers
-                    // };
-                   
+                    
                     var newPublishPacket = _packetFactories.Publish.Create(applicationMessage);
                     newPublishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
                     newPublishPacket.Properties.SubscriptionIdentifiers.AddRange(checkSubscriptionsResult.SubscriptionIdentifiers);
@@ -441,15 +434,11 @@ namespace MQTTnet.Server.Internal
 
                 if (deliveryCount == 0)
                 {
-                    // TODO: Addd event for not delivered publish packets.
-                    // var undeliveredMessageInterceptor = _options.UndeliveredMessageInterceptor;
-                    // if (undeliveredMessageInterceptor == null)
-                    // {
-                    //     return;
-                    // }
-                    //
-                    // // The delegate signature is the same as for regular message interceptor. So the call is fine and just uses a different interceptor.
-                    // await InterceptApplicationMessageAsync(undeliveredMessageInterceptor, sender, applicationMessage).ConfigureAwait(false);
+                    await _eventContainer.ApplicationMessageNotConsumedEvent.InvokeAsync(() => new MqttApplicationMessageNotConsumedEventArgs
+                    {
+                        ApplicationMessage = applicationMessage,
+                        SenderClientId = senderClientId
+                    }).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

@@ -28,6 +28,9 @@ namespace MQTTnet.Server.Internal
         public AsyncEvent<MqttServerClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopicEvent { get; } = new AsyncEvent<MqttServerClientUnsubscribedTopicEventArgs>();
         
         public AsyncEvent<PreparingMqttClientSessionEventArgs> PreparingClientSessionEvent { get; } = new AsyncEvent<PreparingMqttClientSessionEventArgs>();
+        
+        public AsyncEvent<MqttApplicationMessageNotConsumedEventArgs> ApplicationMessageNotConsumedEvent { get; } = new AsyncEvent<MqttApplicationMessageNotConsumedEventArgs>();
+        
         public AsyncEvent<EventArgs> StartedEvent { get; } = new AsyncEvent<EventArgs>();
         
         public AsyncEvent<EventArgs> StoppedEvent { get; } = new AsyncEvent<EventArgs>();

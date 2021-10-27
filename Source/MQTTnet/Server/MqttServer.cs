@@ -107,6 +107,12 @@ namespace MQTTnet.Server
             remove => _eventContainer.PreparingClientSessionEvent.RemoveHandler(value);
         }
 
+        public event Func<MqttApplicationMessageNotConsumedEventArgs, Task> ApplicationMessageNotConsumedAsync
+        {
+            add => _eventContainer.ApplicationMessageNotConsumedEvent.AddHandler(value);
+            remove => _eventContainer.ApplicationMessageNotConsumedEvent.RemoveHandler(value);
+        }
+        
         public bool IsStarted => _cancellationTokenSource != null;
         
         public Task<IList<IMqttClientStatus>> GetClientStatusAsync()

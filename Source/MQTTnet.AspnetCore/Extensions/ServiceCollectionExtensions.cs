@@ -67,7 +67,7 @@ namespace MQTTnet.AspNetCore.Extensions
             services.AddSingleton<IMqttNetLogger>(logger);
             services.AddSingleton<MqttHostedServer>();
             services.AddSingleton<IHostedService>(s => s.GetService<MqttHostedServer>());
-            services.AddSingleton<IMqttServer>(s => s.GetService<MqttHostedServer>());
+            services.AddSingleton<MqttServer>(s => s.GetService<MqttHostedServer>());
 
             return services;
         }

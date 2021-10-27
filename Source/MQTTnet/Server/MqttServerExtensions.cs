@@ -8,7 +8,7 @@ namespace MQTTnet.Server
 {
     public static class MqttServerExtensions
     {
-        public static Task SubscribeAsync(this IMqttServer server, string clientId, params MqttTopicFilter[] topicFilters)
+        public static Task SubscribeAsync(this MqttServer server, string clientId, params MqttTopicFilter[] topicFilters)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
@@ -17,7 +17,7 @@ namespace MQTTnet.Server
             return server.SubscribeAsync(clientId, topicFilters);
         }
 
-        public static Task SubscribeAsync(this IMqttServer server, string clientId, string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static Task SubscribeAsync(this MqttServer server, string clientId, string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
@@ -26,7 +26,7 @@ namespace MQTTnet.Server
             return server.SubscribeAsync(clientId, new MqttTopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
         }
 
-        public static Task SubscribeAsync(this IMqttServer server, string clientId, string topic)
+        public static Task SubscribeAsync(this MqttServer server, string clientId, string topic)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));
@@ -35,7 +35,7 @@ namespace MQTTnet.Server
             return server.SubscribeAsync(clientId, new MqttTopicFilterBuilder().WithTopic(topic).Build());
         }
 
-        public static Task UnsubscribeAsync(this IMqttServer server, string clientId, params string[] topicFilters)
+        public static Task UnsubscribeAsync(this MqttServer server, string clientId, params string[] topicFilters)
         {
             if (server == null) throw new ArgumentNullException(nameof(server));
             if (clientId == null) throw new ArgumentNullException(nameof(clientId));

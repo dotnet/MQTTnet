@@ -2,7 +2,6 @@
 {
     public enum MqttApplicationMessageResponseReasonCode
     {
-
         Success = 0,
         //NoMatchingSubscribers = 16,
         UnspecifiedError = 128,

@@ -648,6 +648,39 @@ namespace MQTTnet.Tests.Client
         }
 
         [TestMethod]
+        public async Task Publish_QoS_0_Over_Period_Exceeding_KeepAlive()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                const int KeepAlivePeriodSecs = 3;
+
+                await testEnvironment.StartServer();
+
+                var options = new MqttClientOptionsBuilder().WithKeepAlivePeriod(TimeSpan.FromSeconds(KeepAlivePeriodSecs));
+                var client = await testEnvironment.ConnectClient(options);
+                var message = new MqttApplicationMessageBuilder().WithTopic("a").Build();
+
+                try
+                {
+                    // Publish messages over a time period exceeding the keep alive period.
+                    // This should not cause an exception because of, i.e. "Client disconnected".
+
+                    for (var count = 0; count < KeepAlivePeriodSecs * 3; ++count)
+                    {
+                        // Send Publish requests well before the keep alive period expires
+                        await client.PublishAsync(message);
+                        await Task.Delay(1000);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail(ex.Message);
+                }
+            }
+        }
+
+
+        [TestMethod]
         public async Task Subscribe_In_Callback_Events()
         {
             using (var testEnvironment = new TestEnvironment(TestContext))

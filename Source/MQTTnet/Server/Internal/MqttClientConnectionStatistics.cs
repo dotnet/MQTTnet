@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using MQTTnet.Packets;
 using MQTTnet.Server.Status;
@@ -32,7 +32,13 @@ namespace MQTTnet.Server.Internal
             _lastNonKeepAlivePacketReceivedTimestamp = _connectedTimestamp;
         }
 
-        public DateTime LastPacketReceivedTimestamp => _lastPacketReceivedTimestamp;
+        // This class is tracking all values from the Client's perspective regarding the internal "received"/"sent" timestamps.
+        // "Sent" means, a package has been received from the client.
+        // "Received" means, a package has been sent by the server.
+        // The public property below makes it less ambiguous.
+
+        public DateTime LastPacketReceivedFromClientTimestamp => _lastPacketSentTimestamp;
+
 
         public void HandleReceivedPacket(MqttBasePacket packet)
         {

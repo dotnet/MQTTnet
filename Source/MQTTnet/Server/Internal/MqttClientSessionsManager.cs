@@ -518,15 +518,15 @@ namespace MQTTnet.Server
 
                 if (existingConnection != null)
                 {
+                    existingConnection.IsTakenOver = true;
+                    await existingConnection.StopAsync(MqttClientDisconnectReason.SessionTakenOver).ConfigureAwait(false);
+                    
                     await _eventContainer.ClientDisconnectedEvent.InvokeAsync(() => new MqttServerClientDisconnectedEventArgs
                     {
                         ClientId = existingConnection.Id,
                         DisconnectType = MqttClientDisconnectType.Takeover,
                         Endpoint = existingConnection.Endpoint
                     }).ConfigureAwait(false);
-
-                    existingConnection.IsTakenOver = true;
-                    await existingConnection.StopAsync(MqttClientDisconnectReason.SessionTakenOver).ConfigureAwait(false);
                 }
             }
 

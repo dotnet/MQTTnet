@@ -83,7 +83,7 @@ namespace MQTTnet.Tests.Mockups
             };
         }
 
-        public IMqttClient CreateClient()
+        public TestClientWrapper CreateClient()
         {
             lock (_clients)
             {
@@ -94,7 +94,7 @@ namespace MQTTnet.Tests.Mockups
             }
         }
 
-        public Task<IMqttClient> ConnectClient()
+        public Task<TestClientWrapper> ConnectClient()
         {
             return ConnectClient(Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion));
         }
@@ -115,7 +115,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
         
-        public async Task<IMqttClient> ConnectClient(MqttClientOptionsBuilder options)
+        public async Task<TestClientWrapper> ConnectClient(MqttClientOptionsBuilder options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -127,7 +127,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
 
-        public async Task<IMqttClient> ConnectClient(IMqttClientOptions options)
+        public async Task<TestClientWrapper> ConnectClient(IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -267,7 +267,7 @@ namespace MQTTnet.Tests.Mockups
             {
                 try
                 {
-                    mqttClient.DisconnectAsync().GetAwaiter().GetResult();
+                    //mqttClient.DisconnectAsync().GetAwaiter().GetResult();
                 }
                 catch
                 {

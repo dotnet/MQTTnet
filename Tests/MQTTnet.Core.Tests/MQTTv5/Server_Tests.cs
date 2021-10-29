@@ -8,17 +8,15 @@ using System.Threading.Tasks;
 namespace MQTTnet.Tests.MQTTv5
 {
     [TestClass]
-    public class Server_Tests
+    public class Server_Tests : BaseTestClass
     {
         public TestContext TestContext { get; set; }
 
         [TestMethod]
         public async Task Will_Message_Send()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
-                var receivedMessagesCount = 0;
-
                 await testEnvironment.StartServer();
 
                 var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").WithAtMostOnceQoS().Build();
@@ -27,6 +25,7 @@ namespace MQTTnet.Tests.MQTTv5
 
                 var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
                 
+                var receivedMessagesCount = 0;
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessagesCount);

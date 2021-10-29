@@ -138,6 +138,8 @@ namespace MQTTnet.Server
                 
                 _= _sessionsManager.DispatchPublishPacket(Id, willApplicationMessage);
                 Session.WillMessageSent = true;
+                
+                _logger.Info("Client '{0}': Published will message.", Id);
             }
 
             _logger.Info("Client '{0}': Connection stopped.", Id);
@@ -175,6 +177,11 @@ namespace MQTTnet.Server
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var packet = await ChannelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+
+                    if (packet == null)
+                    {
+                        return;
+                    }
                     
                     var interceptingPacketEventArgs = new InterceptingPacketEventArgs
                     {

@@ -190,7 +190,7 @@ namespace MQTTnet.Tests.Server
 
                 var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage);
 
-                var c1 = await testEnvironment.ConnectClient();
+                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder());
                 
                 var receivedMessagesCount = 0;
                 c1.ApplicationMessageReceivedAsync += e =>
@@ -200,10 +200,7 @@ namespace MQTTnet.Tests.Server
                 };
                 
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
-
-                // clientOptions.WithClientId("Client2");
-                // var c2 = await testEnvironment.ConnectClient(clientOptions);
-
+                
                 var c2 = await testEnvironment.ConnectClient(clientOptions);
                 c2.Dispose(); // Dispose will not send a DISCONNECT pattern first so the will message must be sent.
 
@@ -228,7 +225,7 @@ namespace MQTTnet.Tests.Server
                     Interlocked.Increment(ref receivedMessagesCount);
                     return Task.CompletedTask;
                 };
-
+         
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
                 await client.SubscribeAsync(new MqttTopicFilter {Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce});
 

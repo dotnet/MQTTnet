@@ -52,7 +52,7 @@ namespace MQTTnet.Tests.Mockups
             remove => Implementation.ApplicationMessageReceivedAsync -= value;
         }
 
-        public Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)
+        public Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken = default)
         {
             if (TestContext != null)
             {
@@ -68,7 +68,7 @@ namespace MQTTnet.Tests.Mockups
             return Implementation.ConnectAsync(options, cancellationToken);
         }
 
-        public Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken)
+        public Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken = default)
         {
             return Implementation.DisconnectAsync(options, cancellationToken);
         }
@@ -78,27 +78,27 @@ namespace MQTTnet.Tests.Mockups
             Implementation.Dispose();
         }
 
-        public Task PingAsync(CancellationToken cancellationToken)
+        public Task PingAsync(CancellationToken cancellationToken = default)
         {
             return Implementation.PingAsync(cancellationToken);
         }
 
-        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
+        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken = default)
         {
             return Implementation.PublishAsync(applicationMessage, cancellationToken);
         }
 
-        public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken)
+        public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken = default)
         {
             return Implementation.SendExtendedAuthenticationExchangeDataAsync(data, cancellationToken);
         }
 
-        public Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken)
+        public Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken = default)
         {
             return Implementation.SubscribeAsync(options, cancellationToken);
         }
 
-        public Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken)
+        public Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken = default)
         {
             return Implementation.UnsubscribeAsync(options, cancellationToken);
         }

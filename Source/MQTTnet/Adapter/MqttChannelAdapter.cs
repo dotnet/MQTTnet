@@ -114,11 +114,11 @@ namespace MQTTnet.Adapter
                     var packetData = PacketFormatterAdapter.Encode(packet);
                     _packetInspectorHandler.BeginSendPacket(packetData);
 
+                    _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Length, packet);
+                    
                     await packetData.WriteToAsync(_channel, cancellationToken).ConfigureAwait(false);
                     
                     Interlocked.Add(ref _bytesReceived, packetData.Length);
-
-                    _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Length, packet);
                 }
                 catch (Exception exception)
                 {

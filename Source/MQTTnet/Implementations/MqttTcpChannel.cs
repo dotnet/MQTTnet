@@ -24,7 +24,7 @@ namespace MQTTnet.Implementations
         public MqttTcpChannel(IMqttClientOptions clientOptions)
         {
             _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
-            _tcpOptions = (MqttClientTcpOptions)clientOptions.ChannelOptions;
+            _tcpOptions = (MqttClientTcpOptions) clientOptions.ChannelOptions;
 
             IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
         }
@@ -61,7 +61,7 @@ namespace MQTTnet.Implementations
 
                 socket.ReceiveBufferSize = _tcpOptions.BufferSize;
                 socket.SendBufferSize = _tcpOptions.BufferSize;
-                socket.SendTimeout = (int)_clientOptions.CommunicationTimeout.TotalMilliseconds;
+                socket.SendTimeout = (int) _clientOptions.CommunicationTimeout.TotalMilliseconds;
                 socket.NoDelay = _tcpOptions.NoDelay;
 
                 if (_tcpOptions.DualMode.HasValue)
@@ -95,7 +95,8 @@ namespace MQTTnet.Implementations
 
                         await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
 #else
-                        await sslStream.AuthenticateAsClientAsync(_tcpOptions.Server, LoadCertificates(), _tcpOptions.TlsOptions.SslProtocol, !_tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+                        await sslStream.AuthenticateAsClientAsync(_tcpOptions.Server, LoadCertificates(), _tcpOptions.TlsOptions.SslProtocol,
+                            !_tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
 #endif
                     }
                     catch
@@ -212,6 +213,9 @@ namespace MQTTnet.Implementations
             // https://stackoverflow.com/questions/3601521/should-i-manually-dispose-the-socket-after-closing-it
             try
             {
+#if !NETSTANDARD1_3
+                _stream?.Close();
+#endif
                 _stream?.Dispose();
             }
             catch (ObjectDisposedException)
@@ -220,8 +224,10 @@ namespace MQTTnet.Implementations
             catch (NullReferenceException)
             {
             }
-
-            _stream = null;
+            finally
+            {
+                _stream = null;
+            }
         }
 
         bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -235,6 +241,7 @@ namespace MQTTnet.Implementations
             {
                 return certificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _clientOptions);
             }
+
             #endregion
 
             var certificateValidationHandler = _tcpOptions?.TlsOptions?.CertificateValidationHandler;
@@ -256,7 +263,8 @@ namespace MQTTnet.Implementations
                 return true;
             }
 
-            if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.OfflineRevocation))
+            if (chain.ChainStatus.Any(c =>
+                c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.OfflineRevocation))
             {
                 if (_tcpOptions?.TlsOptions?.IgnoreCertificateRevocationErrors != true)
                 {

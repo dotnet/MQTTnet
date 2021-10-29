@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace MQTTnet.Client.Connecting
+namespace MQTTnet.Client
 {
     public interface IMqttClientConnectedHandler
     {

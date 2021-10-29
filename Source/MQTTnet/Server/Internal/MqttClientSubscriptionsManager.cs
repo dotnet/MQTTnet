@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server
 {
     public sealed class MqttClientSubscriptionsManager
     {

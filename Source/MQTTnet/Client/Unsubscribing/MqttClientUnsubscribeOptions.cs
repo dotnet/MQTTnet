@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Client.Unsubscribing
+namespace MQTTnet.Client
 {
     public sealed class MqttClientUnsubscribeOptions
     {

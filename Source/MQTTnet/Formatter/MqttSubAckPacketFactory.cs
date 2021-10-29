@@ -1,6 +1,6 @@
 ﻿using System;
 using MQTTnet.Packets;
-using MQTTnet.Server.Internal;
+using MQTTnet.Server;
 
 namespace MQTTnet.Formatter
 {

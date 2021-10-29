@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MQTTnet.Client.Unsubscribing
+namespace MQTTnet.Client
 {
     public sealed class MqttClientUnsubscribeResultItem
     {

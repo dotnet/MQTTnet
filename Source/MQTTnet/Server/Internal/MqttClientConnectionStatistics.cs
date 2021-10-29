@@ -2,7 +2,7 @@
 using System.Threading;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server
 {
     public sealed class MqttClientConnectionStatistics
     {

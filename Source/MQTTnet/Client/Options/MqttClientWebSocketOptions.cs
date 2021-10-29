@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 
-namespace MQTTnet.Client.Options
+namespace MQTTnet.Client
 {
     public class MqttClientWebSocketOptions : IMqttClientChannelOptions
     {

@@ -5,7 +5,7 @@ using MQTTnet.Packets;
 using System;
 using System.IO;
 using System.Threading;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Benchmarks

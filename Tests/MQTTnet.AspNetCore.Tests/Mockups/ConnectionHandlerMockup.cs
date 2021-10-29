@@ -4,6 +4,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Server;
 using System;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.AspNetCore.Tests.Mockups
 {
@@ -11,10 +12,6 @@ namespace MQTTnet.AspNetCore.Tests.Mockups
     {
         public TaskCompletionSource<MqttConnectionContext> Context { get; } = new TaskCompletionSource<MqttConnectionContext>();
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
-
-        public ConnectionHandlerMockup()
-        {
-        }
 
         public async Task OnConnectedAsync(ConnectionContext connection)
         {
@@ -33,7 +30,7 @@ namespace MQTTnet.AspNetCore.Tests.Mockups
             }
         }
 
-        public Task StartAsync(MqttServerOptions options)
+        public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
         {
             return Task.CompletedTask;
         }

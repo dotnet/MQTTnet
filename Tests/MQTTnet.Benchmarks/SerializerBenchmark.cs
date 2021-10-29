@@ -9,7 +9,7 @@ using MQTTnet.Channel;
 using MQTTnet.Formatter;
 using MQTTnet.Formatter.V3;
 using BenchmarkDotNet.Jobs;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Benchmarks
 {

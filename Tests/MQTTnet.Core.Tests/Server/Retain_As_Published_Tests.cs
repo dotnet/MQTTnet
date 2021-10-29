@@ -37,7 +37,7 @@ namespace MQTTnet.Tests.Server
                 await LongTestDelay();
 
                 applicationMessageHandler.AssertReceivedCountEquals(1);
-                Assert.AreEqual(retainAsPublished, applicationMessageHandler.ReceivedApplicationMessages[0].Retain);
+                Assert.AreEqual(retainAsPublished, applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.Retain);
             }
         }
     }

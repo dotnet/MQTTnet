@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Client.Subscribing
+namespace MQTTnet.Client
 {
     public sealed class MqttClientSubscribeOptions
     {

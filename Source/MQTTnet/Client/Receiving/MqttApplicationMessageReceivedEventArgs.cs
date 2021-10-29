@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Packets;
 
-namespace MQTTnet
+namespace MQTTnet.Client
 {
     public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     {

@@ -1,6 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Options;
 using MQTTnet.Formatter;
 using MQTTnet.Tests.Mockups;
 using System.Threading;
@@ -27,7 +26,13 @@ namespace MQTTnet.Tests.MQTTv5
                 var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage).WithProtocolVersion(MqttProtocolVersion.V500);
 
                 var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
-                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return Task.CompletedTask;
+                };
+                
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
                 var c2 = await testEnvironment.ConnectClient(clientOptions);

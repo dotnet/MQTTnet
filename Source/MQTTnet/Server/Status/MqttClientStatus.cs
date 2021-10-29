@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MQTTnet.Client.Disconnecting;
+using MQTTnet.Client;
 using MQTTnet.Formatter;
-using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {

@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Benchmarks
 {

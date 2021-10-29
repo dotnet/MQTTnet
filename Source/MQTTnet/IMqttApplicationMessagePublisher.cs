@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client.Publishing;
+using MQTTnet.Client;
 
 namespace MQTTnet
 {

@@ -1,5 +1,4 @@
-﻿using MQTTnet.Client.Options;
-using MQTTnet.Diagnostics;
+﻿using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 using Newtonsoft.Json;
 using System;
@@ -9,7 +8,7 @@ using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
-using MQTTnet.Diagnostics.Runtime;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -110,10 +109,11 @@ namespace MQTTnet.TestApp.NetCore
                 .Build();
 
             //mqttClient.ApplicationMessageReceived += (s, e) =>    // version 2.8.5
-            mqttClient.UseApplicationMessageReceivedHandler(e =>    // version 3.0.0+
+            mqttClient.ApplicationMessageReceivedAsync += e =>    // version 3.0.0+
             {
                 Interlocked.Increment(ref _count);
-            });
+                return PlatformAbstractionLayer.CompletedTask;
+            };
 
             //mqttClient.Connected += async (s, e) =>               // version 2.8.5
             mqttClient.UseConnectedHandler(async e =>               // version 3.0.0+

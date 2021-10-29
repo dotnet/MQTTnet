@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Options;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -141,7 +140,8 @@ namespace MQTTnet.Tests.Server
                     // At most once will send one packet to the client and the server will reply
                     // with an additional ACK packet.
                     await c1.PublishAsync("a", string.Empty, MqttQualityOfServiceLevel.AtLeastOnce);
-                    await Task.Delay(250);
+                    
+                    await Task.Delay(500);
 
                     var clientStatus = await server.GetClientStatusAsync();
 
@@ -150,8 +150,8 @@ namespace MQTTnet.Tests.Server
                     // + 1 because CONNECT is also counted.
                     Assert.AreEqual(i + 1, clientStatus.First().SentPacketsCount, "SPC invalid!");
 
-                    // +1 because ConnACK package is already counted.
-                    Assert.AreEqual(i + 1, clientStatus.First().ReceivedPacketsCount, "RPC invalid!");
+                    // +2 because ConnACK + PubAck package is already counted.
+                    Assert.AreEqual(i + 2, clientStatus.First().ReceivedPacketsCount, "RPC invalid!");
                 }
             }
         }

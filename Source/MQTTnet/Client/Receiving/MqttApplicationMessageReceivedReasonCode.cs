@@ -1,4 +1,4 @@
-﻿namespace MQTTnet
+﻿namespace MQTTnet.Client
 {
     public enum MqttApplicationMessageReceivedReasonCode
     {

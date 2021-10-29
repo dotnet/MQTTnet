@@ -1,12 +1,4 @@
 using MQTTnet.Adapter;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.ExtendedAuthenticationExchange;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Publishing;
-using MQTTnet.Client.Receiving;
-using MQTTnet.Client.Subscribing;
-using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
@@ -15,7 +7,7 @@ using MQTTnet.Protocol;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 
@@ -33,6 +25,7 @@ namespace MQTTnet.Client
         readonly AsyncEvent<MqttApplicationMessageReceivedEventArgs> _applicationMessageReceivedEvent = new AsyncEvent<MqttApplicationMessageReceivedEventArgs>();
 
         readonly IMqttClientAdapterFactory _adapterFactory;
+        readonly IMqttNetLogger _rootLogger;
         readonly MqttNetSourceLogger _logger;
 
         CancellationTokenSource _backgroundCancellationTokenSource;
@@ -49,12 +42,11 @@ namespace MQTTnet.Client
         MqttClientDisconnectReason _disconnectReason;
 
         DateTime _lastPacketSentTimestamp;
-
+        
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
-
             _adapterFactory = channelFactory ?? throw new ArgumentNullException(nameof(channelFactory));
+            _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttClient));
         }
 
@@ -74,8 +66,6 @@ namespace MQTTnet.Client
             remove => _disconnectedEvent.RemoveHandler(value);
         }
         
-        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler { get; set; }
-
         public event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync
         {
             add => _applicationMessageReceivedEvent.AddHandler(value);
@@ -112,7 +102,7 @@ namespace MQTTnet.Client
                 _backgroundCancellationTokenSource = new CancellationTokenSource();
                 var backgroundCancellationToken = _backgroundCancellationTokenSource.Token;
 
-                var adapter = _adapterFactory.CreateClientAdapter(options);
+                var adapter = _adapterFactory.CreateClientAdapter(options, _rootLogger);
                 _adapter = adapter;
 
                 using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))
@@ -813,13 +803,7 @@ namespace MQTTnet.Client
             var applicationMessageFactory = new MqttApplicationMessageFactory();
             var applicationMessage = applicationMessageFactory.Create(publishPacket);
             var eventArgs = new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage, publishPacket, AcknowledgeReceivedPublishPacket);
-
-            var handler = ApplicationMessageReceivedHandler;
-            if (handler != null)
-            {
-                await handler.HandleApplicationMessageReceivedAsync(eventArgs).ConfigureAwait(false);
-            }
-
+            
             await _applicationMessageReceivedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
             return eventArgs;

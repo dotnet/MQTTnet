@@ -1,6 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Options;
 using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
@@ -8,7 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Extensions.Rpc.Options;
 using MQTTnet.Formatter;
@@ -232,17 +231,7 @@ namespace MQTTnet.Tests.Mockups
         
         public TestApplicationMessageReceivedHandler CreateApplicationMessageHandler(IMqttClient mqttClient)
         {
-            if (mqttClient == null) throw new ArgumentNullException(nameof(mqttClient));
-
-            var handler = new TestApplicationMessageReceivedHandler();
-            if (mqttClient.ApplicationMessageReceivedHandler != null)
-            {
-                throw new InvalidOperationException("ApplicationMessageReceivedHandler is already set.");
-            }
-
-            mqttClient.ApplicationMessageReceivedHandler = handler;
-            
-            return handler;
+            return new TestApplicationMessageReceivedHandler(mqttClient);
         }
 
         public void ThrowIfLogErrors()

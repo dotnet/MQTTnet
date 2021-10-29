@@ -1,4 +1,5 @@
 ﻿using System;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {

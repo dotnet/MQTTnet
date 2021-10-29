@@ -1,13 +1,10 @@
 using MQTTnet.Client;
 using System;
-using System.IO;
-using System.Net;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Receiving;
 using MQTTnet.Formatter;
+using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore
@@ -129,7 +126,7 @@ namespace MQTTnet.TestApp.NetCore
             Console.ReadLine();
         }
 
-        private static async Task ExecuteTestAsync(string name, IMqttClientOptions options)
+        static async Task ExecuteTestAsync(string name, IMqttClientOptions options)
         {
             try
             {
@@ -140,7 +137,11 @@ namespace MQTTnet.TestApp.NetCore
                 var topic = Guid.NewGuid().ToString();
 
                 MqttApplicationMessage receivedMessage = null;
-                client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e => receivedMessage = e.ApplicationMessage);
+                client.ApplicationMessageReceivedAsync += e =>
+                {
+                    receivedMessage = e.ApplicationMessage;
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
 
                 await client.ConnectAsync(options);
                 await client.SubscribeAsync(topic, MqttQualityOfServiceLevel.AtLeastOnce);
@@ -164,7 +165,7 @@ namespace MQTTnet.TestApp.NetCore
             }
         }
 
-        private static void Write(string message, ConsoleColor color)
+        static void Write(string message, ConsoleColor color)
         {
             Console.ForegroundColor = color;
             Console.Write(message);

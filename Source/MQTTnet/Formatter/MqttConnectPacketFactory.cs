@@ -1,5 +1,5 @@
 ﻿using System;
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Formatter

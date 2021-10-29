@@ -1,4 +1,6 @@
-﻿namespace MQTTnet.Client.Subscribing
+﻿using MQTTnet.Packets;
+
+namespace MQTTnet.Client
 {
     public sealed class MqttClientSubscribeResultItem
     {

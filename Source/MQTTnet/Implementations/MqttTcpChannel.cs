@@ -1,6 +1,5 @@
 #if !WINDOWS_UWP
 using MQTTnet.Channel;
-using MQTTnet.Client.Options;
 using System;
 using System.IO;
 using System.Linq;
@@ -10,6 +9,7 @@ using System.Runtime.ExceptionServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client;
 using MQTTnet.Exceptions;
 
 namespace MQTTnet.Implementations

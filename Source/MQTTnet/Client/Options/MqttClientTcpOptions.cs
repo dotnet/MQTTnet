@@ -1,6 +1,6 @@
 ﻿using System.Net.Sockets;
 
-namespace MQTTnet.Client.Options
+namespace MQTTnet.Client
 {
     public class MqttClientTcpOptions : IMqttClientChannelOptions
     {

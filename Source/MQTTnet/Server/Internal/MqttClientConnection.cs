@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -12,7 +12,7 @@ using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server
 {
     public sealed class MqttClientConnection : IDisposable
     {
@@ -135,7 +135,8 @@ namespace MQTTnet.Server.Internal
             {
                 var willPublishPacket = _packetFactories.Publish.Create(Session.LatestConnectPacket);
                 var willApplicationMessage = _applicationMessageFactory.Create(willPublishPacket);
-                _ = _sessionsManager.DispatchPublishPacket(Id, willApplicationMessage);
+                
+                _= _sessionsManager.DispatchPublishPacket(Id, willApplicationMessage);
                 Session.WillMessageSent = true;
             }
 
@@ -155,6 +156,11 @@ namespace MQTTnet.Server.Internal
             await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
             packet = interceptingPacketEventArgs.Packet;
 
+            if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
+            {
+                return;
+            }
+
             await ChannelAdapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
             Statistics.HandleSentPacket(packet);
         }
@@ -169,7 +175,7 @@ namespace MQTTnet.Server.Internal
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var packet = await ChannelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
-
+                    
                     var interceptingPacketEventArgs = new InterceptingPacketEventArgs
                     {
                         ClientId = Id,
@@ -181,10 +187,10 @@ namespace MQTTnet.Server.Internal
                     await _eventContainer.InterceptingInboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
                     packet = interceptingPacketEventArgs.Packet;
                     
-                    if (packet == null)
+                    if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
                     {
-                        // The client has closed the connection gracefully.
-                        return;
+                        // Restart the receiving process to get the next packet ignoring the current one..
+                        continue;
                     }
 
                     Statistics.HandleReceivedPacket(packet);
@@ -277,8 +283,6 @@ namespace MQTTnet.Server.Internal
                     {
                         await SendPacketAsync(packetBusItem.Packet, cancellationToken).ConfigureAwait(false);
                         packetBusItem.MarkAsDelivered();
-
-                        _logger.Verbose("Sent packet '{0}'.", packetBusItem.Packet);
                     }
                     catch (OperationCanceledException)
                     {
@@ -288,47 +292,6 @@ namespace MQTTnet.Server.Internal
                     {
                         packetBusItem.MarkAsFailed(exception);
                     }
-
-                    // TODO: Move QoS 1 + 2 to other layer!
-                    // if (queuedApplicationMessage == null)
-                    // {
-                    //     continue;
-                    // }
-                    //
-                    // publishPacket = await CreatePublishPacket(queuedApplicationMessage).ConfigureAwait(false);
-                    // if (publishPacket == null)
-                    // {
-                    //     continue;
-                    // }
-                    //
-                    // if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
-                    // {
-                    //     await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-                    // }
-                    // else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
-                    // {
-                    //     using (var awaitable = _packetDispatcher.AddAwaitable<MqttPubAckPacket>(publishPacket.PacketIdentifier))
-                    //     {
-                    //         await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-                    //         await awaitable.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
-                    //     }
-                    // }
-                    // else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
-                    // {
-                    //     using (var awaitableRec = _packetDispatcher.AddAwaitable<MqttPubRecPacket>(publishPacket.PacketIdentifier))
-                    //     using (var awaitableComp = _packetDispatcher.AddAwaitable<MqttPubCompPacket>(publishPacket.PacketIdentifier))
-                    //     {
-                    //         await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-                    //         var pubRecPacket = await awaitableRec.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
-                    //
-                    //         var pubRelPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePubRelPacket(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
-                    //         await SendPacketAsync(pubRelPacket, cancellationToken).ConfigureAwait(false);
-                    //
-                    //         await awaitableComp.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
-                    //     }
-                    // }
-
-                    _logger.Verbose("Client '{0}': Queued application message sent.", Id);
                 }
             }
             catch (OperationCanceledException)
@@ -361,35 +324,7 @@ namespace MQTTnet.Server.Internal
                 StopInternal();
             }
         }
-
-        // public async Task<MqttPublishPacket> CreatePublishPacket(MqttQueuedApplicationMessage queuedApplicationMessage)
-        // {
-        //     var publishPacket = ChannelAdapter.PacketFormatterAdapter.DataConverter.CreatePublishPacket(queuedApplicationMessage.ApplicationMessage);
-        //     publishPacket.QualityOfServiceLevel = queuedApplicationMessage.SubscriptionQualityOfServiceLevel;
-        //
-        //     if (ChannelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500)
-        //     {
-        //         publishPacket.Properties.SubscriptionIdentifiers.AddRange(queuedApplicationMessage.SubscriptionIdentifiers ?? new List<uint>());
-        //     }
-        //
-        //     // Set the retain flag to true according to [MQTT-3.3.1-8] and [MQTT-3.3.1-9].
-        //     publishPacket.Retain = queuedApplicationMessage.IsRetainedMessage;
-        //
-        //     publishPacket = await InvokeClientMessageQueueInterceptor(publishPacket, queuedApplicationMessage).ConfigureAwait(false);
-        //     if (publishPacket == null)
-        //     {
-        //         // The interceptor has decided that the message is not relevant and will be fully ignored.
-        //         return null;
-        //     }
-        //
-        //     if (publishPacket.QualityOfServiceLevel > 0)
-        //     {
-        //         publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
-        //     }
-        //
-        //     return publishPacket;
-        // }
-
+        
         void StopInternal()
         {
             _cancellationToken?.Cancel();
@@ -512,6 +447,7 @@ namespace MQTTnet.Server.Internal
                     }
                     else
                     {
+                        _logger.Warning("Client '{0}': Received invalid topic alias ({1}).", Id, publishPacket.Properties.TopicAlias);
                     }
                 }
             }
@@ -536,43 +472,8 @@ namespace MQTTnet.Server.Internal
             }
             catch (Exception exception)
             {
-                _logger.Warning(exception, "Client '{{0}}': Error while sending DISCONNECT packet (Reason = {1}).", Id, reason);
+                _logger.Warning(exception, "Client '{0}': Error while sending DISCONNECT packet (Reason = {1}).", Id, reason);
             }
         }
-
-        // // TODO: Fix!
-        // async Task<MqttPublishPacket> InvokeClientMessageQueueInterceptor(MqttPublishPacket publishPacket, MqttQueuedApplicationMessage queuedApplicationMessage)
-        // {
-        //     if (_serverOptions.ClientMessageQueueInterceptor == null)
-        //     {
-        //         return publishPacket;
-        //     }
-        //
-        //     var context = new MqttClientMessageQueueInterceptorContext
-        //     {
-        //         SenderClientId = queuedApplicationMessage.SenderClientId,
-        //         ReceiverClientId = Id,
-        //         ApplicationMessage = queuedApplicationMessage.ApplicationMessage,
-        //         SubscriptionQualityOfServiceLevel = queuedApplicationMessage.SubscriptionQualityOfServiceLevel
-        //     };
-        //
-        //     if (_serverOptions.ClientMessageQueueInterceptor != null)
-        //     {
-        //         await _serverOptions.ClientMessageQueueInterceptor.InterceptClientMessageQueueEnqueueAsync(context).ConfigureAwait(false);
-        //     }
-        //
-        //     if (!context.AcceptEnqueue || context.ApplicationMessage == null)
-        //     {
-        //         return null;
-        //     }
-        //
-        //     publishPacket.Topic = context.ApplicationMessage.Topic;
-        //     publishPacket.Payload = context.ApplicationMessage.Payload;
-        //     publishPacket.QualityOfServiceLevel = context.SubscriptionQualityOfServiceLevel;
-        //
-        //     return publishPacket;
-        // }
-        //
-
     }
 }

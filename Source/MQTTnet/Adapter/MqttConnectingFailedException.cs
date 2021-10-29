@@ -1,5 +1,5 @@
 using System;
-using MQTTnet.Client.Connecting;
+using MQTTnet.Client;
 using MQTTnet.Exceptions;
 
 namespace MQTTnet.Adapter

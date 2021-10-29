@@ -1,5 +1,4 @@
 ﻿using MQTTnet.Adapter;
-using MQTTnet.Client.Publishing;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using System;
@@ -7,16 +6,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
-using MQTTnet.Server.Internal;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
     public class MqttServer : Disposable
     {
-        readonly MqttServerEventContainer _eventContainer;
+        readonly MqttServerEventContainer _eventContainer = new MqttServerEventContainer();
         
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttServerOptions _options;
@@ -38,8 +38,6 @@ namespace MQTTnet.Server
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttServer));
             _rootLogger = logger;
-
-            _eventContainer = new MqttServerEventContainer(logger);
         }
 
         public event Func<EventArgs, Task> StartedAsync
@@ -125,7 +123,19 @@ namespace MQTTnet.Server
             add => _eventContainer.ApplicationMessageNotConsumedEvent.AddHandler(value);
             remove => _eventContainer.ApplicationMessageNotConsumedEvent.RemoveHandler(value);
         }
+
+        public event Func<EventArgs, Task> RetainedApplicationMessageChangedAsync
+        {
+            add => _eventContainer.RetainedApplicationMessageChangedEvent.AddHandler(value);
+            remove => _eventContainer.RetainedApplicationMessageChangedEvent.RemoveHandler(value);
+        }
         
+        public event Func<EventArgs, Task> RetainedApplicationMessagesClearedAsync
+        {
+            add => _eventContainer.RetainedApplicationMessageClearedEvent.AddHandler(value);
+            remove => _eventContainer.RetainedApplicationMessageClearedEvent.RemoveHandler(value);
+        }
+
         public bool IsStarted => _cancellationTokenSource != null;
         
         public Task<IList<IMqttClientStatus>> GetClientStatusAsync()
@@ -223,7 +233,7 @@ namespace MQTTnet.Server
             foreach (var adapter in _adapters)
             {
                 adapter.ClientHandler = c => OnHandleClient(c, cancellationToken);
-                await adapter.StartAsync(_options).ConfigureAwait(false);
+                await adapter.StartAsync(_options, _rootLogger).ConfigureAwait(false);
             }
 
             _logger.Info("Started.");

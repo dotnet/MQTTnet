@@ -1,27 +1,26 @@
 ﻿using MQTTnet.Adapter;
-using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Packets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Client;
 
 namespace MQTTnet.LowLevelClient
 {
     public sealed class LowLevelMqttClient : ILowLevelMqttClient
     {
+        readonly IMqttNetLogger _rootLogger;
         readonly MqttNetSourceLogger _logger;
         readonly IMqttClientAdapterFactory _clientAdapterFactory;
 
         IMqttChannelAdapter _adapter;
-        IMqttClientOptions _options;
-
+        
         public LowLevelMqttClient(IMqttClientAdapterFactory clientAdapterFactory, IMqttNetLogger logger)
         {
             _clientAdapterFactory = clientAdapterFactory ?? throw new ArgumentNullException(nameof(clientAdapterFactory));
 
-            if (logger is null) throw new ArgumentNullException(nameof(logger));
+            _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(LowLevelMqttClient));
         }
 
@@ -36,15 +35,13 @@ namespace MQTTnet.LowLevelClient
                 throw new InvalidOperationException("Low level MQTT client is already connected. Disconnect first before connecting again.");
             }
 
-            var newAdapter = _clientAdapterFactory.CreateClientAdapter(options);
+            var newAdapter = _clientAdapterFactory.CreateClientAdapter(options, _rootLogger);
 
             try
             {
                 _logger.Verbose("Trying to connect with server '{0}' (Timeout={1}).", options.ChannelOptions, options.CommunicationTimeout);
                 await newAdapter.ConnectAsync(options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
                 _logger.Verbose("Connection with server established.");
-
-                _options = options;
             }
             catch (Exception)
             {

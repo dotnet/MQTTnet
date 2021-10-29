@@ -1,5 +1,4 @@
 ﻿using MQTTnet.Channel;
-using MQTTnet.Client.Options;
 using MQTTnet.Internal;
 using System;
 using System.Net;
@@ -7,6 +6,7 @@ using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client;
 
 namespace MQTTnet.Implementations
 {

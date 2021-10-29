@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Client.Publishing
+﻿namespace MQTTnet.Client
 {
     public enum MqttClientPublishReasonCode
     {

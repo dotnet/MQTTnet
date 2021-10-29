@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MQTTnet.Diagnostics.Logger
+namespace MQTTnet.Diagnostics
 {
     /// <summary>
     /// This logger does nothing with the messages.

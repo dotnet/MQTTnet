@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Client.Unsubscribing
+﻿namespace MQTTnet.Client
 {
     public enum MqttClientUnsubscribeResultCode
     {

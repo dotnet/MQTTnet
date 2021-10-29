@@ -1,23 +1,15 @@
 ﻿using MQTTnet.Adapter;
-using MQTTnet.Client.Options;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using System;
 using MQTTnet.Channel;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Client;
 
 namespace MQTTnet.Implementations
 {
-    public class MqttClientAdapterFactory : IMqttClientAdapterFactory
+    public sealed class MqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        readonly IMqttNetLogger _logger;
-
-        public MqttClientAdapterFactory(IMqttNetLogger logger)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -43,7 +35,7 @@ namespace MQTTnet.Implementations
             }
 
             var packetFormatterAdapter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttPacketWriter());
-            return new MqttChannelAdapter(channel, packetFormatterAdapter, options.PacketInspector, _logger);
+            return new MqttChannelAdapter(channel, packetFormatterAdapter, options.PacketInspector, logger);
         }
     }
 }

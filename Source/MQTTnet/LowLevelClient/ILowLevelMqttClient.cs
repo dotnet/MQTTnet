@@ -1,8 +1,8 @@
-﻿using MQTTnet.Client.Options;
-using MQTTnet.Packets;
+﻿using MQTTnet.Packets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client;
 
 namespace MQTTnet.LowLevelClient
 {

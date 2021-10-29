@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MQTTnet.Client.Options
+namespace MQTTnet.Client
 {
     public static class MqttClientTcpOptionsExtensions
     {

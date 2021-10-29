@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Client.Options
+﻿namespace MQTTnet.Client
 {
     public interface IMqttClientChannelOptions
     {

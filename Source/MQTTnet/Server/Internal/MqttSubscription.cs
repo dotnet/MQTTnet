@@ -1,6 +1,6 @@
 ﻿using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server
 {
     public sealed class MqttSubscription
     {

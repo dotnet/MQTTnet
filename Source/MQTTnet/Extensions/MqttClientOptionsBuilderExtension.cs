@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 
 namespace MQTTnet.Extensions
 {

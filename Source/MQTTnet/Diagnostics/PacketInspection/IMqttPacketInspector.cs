@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Diagnostics.PacketInspection
+﻿namespace MQTTnet.Diagnostics
 {
     public interface IMqttPacketInspector
     {

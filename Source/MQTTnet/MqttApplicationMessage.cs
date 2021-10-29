@@ -107,6 +107,6 @@ namespace MQTTnet
         /// The broker will return the subscription identifier associated with this PUBLISH packet and the PUBLISH packet to the client when need to forward PUBLISH packets matching this subscription to this client.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public List<uint> SubscriptionIdentifiers { get; set; }
+        public List<uint> SubscriptionIdentifiers { get; set; } = new List<uint>();
     }
 }

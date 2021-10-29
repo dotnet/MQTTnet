@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using MQTTnet.Server.Internal;
 
 namespace MQTTnet.TestApp.NetCore
 {

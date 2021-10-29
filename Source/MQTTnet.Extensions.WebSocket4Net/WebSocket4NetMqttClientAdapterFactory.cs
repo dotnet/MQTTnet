@@ -1,23 +1,15 @@
 ﻿using MQTTnet.Adapter;
-using MQTTnet.Client.Options;
-using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using System;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Extensions.WebSocket4Net
 {
     public sealed class WebSocket4NetMqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        readonly IMqttNetLogger _logger;
-
-        public WebSocket4NetMqttClientAdapterFactory(IMqttNetLogger logger)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -29,7 +21,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
                         new MqttTcpChannel(options),
                         new MqttPacketFormatterAdapter(options.ProtocolVersion),
                         options.PacketInspector,
-                        _logger);
+                        logger);
                 }
 
                 case MqttClientWebSocketOptions webSocketOptions:
@@ -38,7 +30,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
                         new WebSocket4NetMqttChannel(options, webSocketOptions),
                         new MqttPacketFormatterAdapter(options.ProtocolVersion), 
                         options.PacketInspector,
-                        _logger);
+                        logger);
                 }
 
                 default:

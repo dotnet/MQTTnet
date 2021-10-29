@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
-using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {

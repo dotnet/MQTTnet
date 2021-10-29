@@ -1,15 +1,8 @@
 ﻿using MQTTnet.Protocol;
-using System;
 
-namespace MQTTnet
+namespace MQTTnet.Packets
 {
-    [Obsolete("Use MqttTopicFilter instead. It is just a renamed version to align with general namings in this lib.")]
-    public class TopicFilter : MqttTopicFilter
-    {
-    }
-
-    // TODO: Consider using struct instead.
-    public class MqttTopicFilter
+    public sealed class MqttTopicFilter
     {
         /// <summary>
         /// Gets or sets the MQTT topic.

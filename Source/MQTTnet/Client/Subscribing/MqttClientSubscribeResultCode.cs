@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Client.Subscribing
+﻿namespace MQTTnet.Client
 {
     public enum MqttClientSubscribeResultCode
     {

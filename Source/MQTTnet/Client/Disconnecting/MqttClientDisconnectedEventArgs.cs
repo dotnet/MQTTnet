@@ -1,7 +1,6 @@
 ﻿using System;
-using MQTTnet.Client.Connecting;
 
-namespace MQTTnet.Client.Disconnecting
+namespace MQTTnet.Client
 {
     public sealed class MqttClientDisconnectedEventArgs : EventArgs
     {

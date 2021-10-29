@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Client.Connecting
+﻿namespace MQTTnet.Client
 {
     public enum MqttClientConnectResultCode
     {

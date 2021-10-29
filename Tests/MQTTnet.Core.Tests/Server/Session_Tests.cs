@@ -4,9 +4,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Publishing;
-using MQTTnet.Client.Subscribing;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -57,10 +54,11 @@ namespace MQTTnet.Tests.Server
                 string receivedPayload = null;
 
                 var client = await testEnvironment.ConnectClient();
-                client.UseApplicationMessageReceivedHandler(delegate(MqttApplicationMessageReceivedEventArgs args)
+                client.ApplicationMessageReceivedAsync += e =>
                 {
-                    receivedPayload = args.ApplicationMessage.ConvertPayloadToString();
-                });
+                    receivedPayload = e.ApplicationMessage.ConvertPayloadToString();
+                    return Task.CompletedTask;
+                };
 
                 var subscribeResult = await client.SubscribeAsync("x");
 
@@ -170,8 +168,8 @@ namespace MQTTnet.Tests.Server
                 await LongTestDelay();
                 
                 // Assert 
-                Assert.AreEqual(1, messageReceivedHandler.ReceivedApplicationMessages.Count);
-                Assert.AreEqual("injected_one", messageReceivedHandler.ReceivedApplicationMessages[0].Topic);
+                Assert.AreEqual(1, messageReceivedHandler.ReceivedEventArgs.Count);
+                Assert.AreEqual("injected_one", messageReceivedHandler.ReceivedEventArgs[0].ApplicationMessage.Topic);
             }
         }
         
@@ -191,13 +189,13 @@ namespace MQTTnet.Tests.Server
                     .WithClientId(qos.ToString())
                     .WithCleanSession(false));
                 
-                subscriber.UseApplicationMessageReceivedHandler(c =>
+                subscriber.ApplicationMessageReceivedAsync += c =>
                 {
                     c.AutoAcknowledge = false;
                     ++count;
                     Console.WriteLine("process");
                     return Task.CompletedTask;
-                });
+                };
                 
                 await subscriber.SubscribeAsync("#", qos);
 

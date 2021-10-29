@@ -1,5 +1,6 @@
 ﻿using MQTTnet.Adapter;
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Tests.Mockups
 {
@@ -12,7 +13,7 @@ namespace MQTTnet.Tests.Mockups
             _adapter = adapter;
         }
 
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
         {
             return _adapter;
         }

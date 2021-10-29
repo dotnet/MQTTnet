@@ -32,12 +32,15 @@ namespace MQTTnet.Server.Internal
             _lastNonKeepAlivePacketReceivedTimestamp = _connectedTimestamp;
         }
 
-        // This class is tracking all values from the Client's perspective regarding the internal "received"/"sent" timestamps.
-        // "Sent" means, a package has been received from the client.
-        // "Received" means, a package has been sent by the server.
-        // The public property below makes it less ambiguous.
+        /// <summary>
+        /// Timestamp of the last package that has been received from the client ("sent" from the client's perspective)
+        /// </summary>
+        public DateTime LastPacketSentTimestamp => _lastPacketSentTimestamp;
 
-        public DateTime LastPacketReceivedFromClientTimestamp => _lastPacketSentTimestamp;
+        /// <summary>
+        /// Timestamp of the last package that has been sent by the client ("received" from the client's perspective)
+        /// </summary>
+        public DateTime LastPacketReceivedTimestamp => _lastPacketReceivedTimestamp;
 
 
         public void HandleReceivedPacket(MqttBasePacket packet)

@@ -95,7 +95,7 @@ namespace MQTTnet.Server.Internal
                 // If the client sends 1 sec. the server will allow up to 1.5 seconds.
                 var maxDurationWithoutPacket = connection.KeepAlivePeriod * 1.5D;
 
-                var secondsWithoutPackage = (now - connection.Statistics.LastPacketReceivedFromClientTimestamp).TotalSeconds;
+                var secondsWithoutPackage = (now - connection.Statistics.LastPacketSentTimestamp).TotalSeconds;
                 if (secondsWithoutPackage < maxDurationWithoutPacket)
                 {
                     // A packet was received before the timeout is affected.

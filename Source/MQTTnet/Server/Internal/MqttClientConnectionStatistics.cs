@@ -38,7 +38,7 @@ namespace MQTTnet.Server.Internal
         public DateTime LastPacketSentTimestamp => _lastPacketSentTimestamp;
 
         /// <summary>
-        /// Timestamp of the last package that has been sent by the client ("received" from the client's perspective)
+        /// Timestamp of the last package that has been sent to the client ("received" from the client's perspective)
         /// </summary>
         public DateTime LastPacketReceivedTimestamp => _lastPacketReceivedTimestamp;
 

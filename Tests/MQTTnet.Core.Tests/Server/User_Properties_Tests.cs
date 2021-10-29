@@ -3,9 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Subscribing;
 using MQTTnet.Formatter;
+using MQTTnet.Packets;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Server
@@ -41,7 +40,11 @@ namespace MQTTnet.Tests.Server
                 }, CancellationToken.None);
 
                 MqttApplicationMessage receivedMessage = null;
-                receiver.UseApplicationMessageReceivedHandler(e => receivedMessage = e.ApplicationMessage);
+                receiver.ApplicationMessageReceivedAsync += e =>
+                {
+                    receivedMessage = e.ApplicationMessage;
+                    return Task.CompletedTask;
+                };
 
                 await sender.PublishAsync(message.Build(), CancellationToken.None);
 

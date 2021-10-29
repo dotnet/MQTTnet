@@ -58,7 +58,6 @@ namespace MQTTnet.Formatter
                 Payload = connectPacket.WillMessage,
                 QualityOfServiceLevel = connectPacket.WillQoS,
                 Retain = connectPacket.WillRetain,
-                Dup = false,
                 Properties =
                 {
                     ContentType = connectPacket.WillProperties.ContentType,

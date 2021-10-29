@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server
 {
     public sealed class MqttSubscribeResult
     {

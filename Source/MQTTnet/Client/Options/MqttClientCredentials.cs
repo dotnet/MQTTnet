@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Client.Options
+﻿namespace MQTTnet.Client
 {
     public class MqttClientCredentials : IMqttClientCredentials
     {

@@ -4,11 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Tests.Mockups;
 using MQTTnet.Client;
-using MQTTnet.Client.Receiving;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Protocol;
-using MQTTnet.Client.Options;
 using MQTTnet.Formatter;
 using MQTTnet.Extensions.Rpc.Options;
 using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
@@ -95,10 +93,7 @@ namespace MQTTnet.Tests
                 var responseSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(protocolVersion));
                 await responseSender.SubscribeAsync("MQTTnet.RPC/+/ping", qosLevel);
 
-                responseSender.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(async e =>
-                {
-                    await responseSender.PublishAsync(e.ApplicationMessage.Topic + "/response", "pong");
-                });
+                responseSender.ApplicationMessageReceivedAsync += e => responseSender.PublishAsync(e.ApplicationMessage.Topic + "/response", "pong");
 
                 var requestSender = await testEnvironment.ConnectClient();
 

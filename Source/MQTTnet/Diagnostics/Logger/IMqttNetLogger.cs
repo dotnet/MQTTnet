@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MQTTnet.Diagnostics.Logger
+namespace MQTTnet.Diagnostics
 {
     public interface IMqttNetLogger
     {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using MQTTnet.Packets;
-using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {

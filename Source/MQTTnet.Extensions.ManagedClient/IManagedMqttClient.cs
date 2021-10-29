@@ -1,10 +1,9 @@
-﻿using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Extensions.ManagedClient
 {

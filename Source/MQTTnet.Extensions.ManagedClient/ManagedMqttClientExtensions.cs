@@ -1,12 +1,10 @@
-﻿using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Publishing;
-using MQTTnet.Client.Receiving;
-using MQTTnet.Protocol;
+﻿using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -75,42 +73,7 @@ namespace MQTTnet.Extensions.ManagedClient
             client.DisconnectedHandler = handler;
             return client;
         }
-
-        public static TReceiver UseApplicationMessageReceivedHandler<TReceiver>(this TReceiver receiver, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
-            where TReceiver : IMqttApplicationMessageReceiver
-        {
-            if (receiver == null) throw new ArgumentNullException(nameof(receiver));
-
-            if (handler == null)
-            {
-                return receiver.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
-            }
-
-            return receiver.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
-        }
-
-        public static TReceiver UseApplicationMessageReceivedHandler<TReceiver>(this TReceiver receiver, Action<MqttApplicationMessageReceivedEventArgs> handler)
-            where TReceiver : IMqttApplicationMessageReceiver
-        {
-            if (receiver == null) throw new ArgumentNullException(nameof(receiver));
-
-            if (handler == null)
-            {
-                return receiver.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
-            }
-
-            return receiver.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
-        }
-
-        public static TReceiver UseApplicationMessageReceivedHandler<TReceiver>(this TReceiver receiver, IMqttApplicationMessageReceivedHandler handler)
-            where TReceiver : IMqttApplicationMessageReceiver
-        {
-            if (receiver == null) throw new ArgumentNullException(nameof(receiver));
-
-            receiver.ApplicationMessageReceivedHandler = handler;
-            return receiver;
-        }
-
+        
         public static Task SubscribeAsync(this IManagedMqttClient client, params MqttTopicFilter[] topicFilters)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));

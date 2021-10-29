@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 using MQTTnet.Extensions;
 
 namespace MQTTnet.Tests.Client
@@ -15,6 +15,7 @@ namespace MQTTnet.Tests.Client
             var options = new MqttClientOptionsBuilder()
                 .WithConnectionUri("mqtt://user:password@127.0.0.1")
                 .Build();
+            
             Assert.AreEqual("user", options.Credentials.Username);
             Assert.IsTrue(Encoding.UTF8.GetBytes("password").SequenceEqual(options.Credentials.Password));
         }

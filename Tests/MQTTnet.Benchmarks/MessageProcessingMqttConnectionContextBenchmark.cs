@@ -4,8 +4,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using MQTTnet.AspNetCore.Client;
 using MQTTnet.AspNetCore.Extensions;
-using MQTTnet.Client.Options;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Benchmarks
 {

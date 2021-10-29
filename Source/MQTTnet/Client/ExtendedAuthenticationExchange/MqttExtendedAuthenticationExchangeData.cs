@@ -2,7 +2,7 @@
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Client.ExtendedAuthenticationExchange
+namespace MQTTnet.Client
 {
     public class MqttExtendedAuthenticationExchangeData
     {

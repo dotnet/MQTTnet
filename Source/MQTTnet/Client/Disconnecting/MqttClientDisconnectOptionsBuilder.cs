@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Client.Disconnecting
+﻿namespace MQTTnet.Client
 {
     public sealed class MqttClientDisconnectOptionsBuilder
     {

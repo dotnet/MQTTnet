@@ -1,4 +1,5 @@
 ﻿using System;
+using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;

@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Server.Internal
+﻿namespace MQTTnet.Server
 {
     public static class MqttTopicFilterComparer
     {

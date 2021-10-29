@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server
 {
     public sealed class MqttApplicationMessageInterceptorInvoker
     {
@@ -45,6 +45,14 @@ namespace MQTTnet.Server.Internal
                 CancellationToken = cancellationToken
             };
 
+            if (string.IsNullOrEmpty(eventArgs.ApplicationMessage.Topic))
+            {
+                // This can happen if a topic alias us used but the topic is
+                // unknown to the server.
+                eventArgs.Response.ReasonCode = MqttApplicationMessageResponseReasonCode.TopicNameInvalid;
+                eventArgs.ProcessPublish = false;
+            }
+            
             await _eventContainer.InterceptingClientPublishEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
             // Expose results.

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.LowLevelClient;
 using MQTTnet.Packets;

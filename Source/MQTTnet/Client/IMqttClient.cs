@@ -1,10 +1,4 @@
-﻿using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.ExtendedAuthenticationExchange;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Subscribing;
-using MQTTnet.Client.Unsubscribing;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 

@@ -1,7 +1,7 @@
 ﻿using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Client.Publishing
+namespace MQTTnet.Client
 {
     public sealed class MqttClientPublishResultFactory
     {

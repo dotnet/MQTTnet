@@ -3,9 +3,10 @@ using System.Threading.Tasks;
 using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Receiving;
+using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
+using MQTTnet.Implementations;
+using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore
@@ -35,10 +36,11 @@ namespace MQTTnet.TestApp.NetCore
             try
             {
                 var managedClient = new MqttFactory().CreateManagedMqttClient();
-                managedClient.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
+                managedClient.ApplicationMessageReceivedAsync += e =>
                 {
                     Console.WriteLine(">> RECEIVED: " + e.ApplicationMessage.Topic);
-                });
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
 
                 await managedClient.StartAsync(options);
 
@@ -69,7 +71,7 @@ namespace MQTTnet.TestApp.NetCore
 
         public class ClientRetainedMessageHandler : IManagedMqttClientStorage
         {
-            private const string Filename = @"RetainedMessages.json";
+            const string Filename = @"RetainedMessages.json";
 
             public Task SaveQueuedMessagesAsync(IList<ManagedMqttApplicationMessage> messages)
             {

@@ -1,15 +1,11 @@
 ﻿using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using System;
+using MQTTnet.Packets;
 
 namespace MQTTnet
 {
-    [Obsolete("Use MqttTopicFilterBuilder instead. It is just a renamed version to align with general namings in this lib.")]
-    public class TopicFilterBuilder : MqttTopicFilterBuilder
-    {
-    }
-
-    public class MqttTopicFilterBuilder
+    public sealed class MqttTopicFilterBuilder
     {
         /// <summary>
         /// The quality of service level.

@@ -7,17 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Publishing;
-using MQTTnet.Client.Receiving;
-using MQTTnet.Client.Subscribing;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Client
@@ -142,9 +135,9 @@ namespace MQTTnet.Tests.Client
 
                 var replyReceived = false;
 
-                client.UseApplicationMessageReceivedHandler(c =>
+                client.ApplicationMessageReceivedAsync += e =>
                 {
-                    if (c.ApplicationMessage.Topic == "request")
+                    if (e.ApplicationMessage.Topic == "request")
                     {
 #pragma warning disable 4014
                         Task.Run(() => client.PublishAsync("reply", null, MqttQualityOfServiceLevel.AtLeastOnce));
@@ -154,7 +147,9 @@ namespace MQTTnet.Tests.Client
                     {
                         replyReceived = true;
                     }
-                });
+                    
+                    return Task.CompletedTask;
+                };
 
                 await client.PublishAsync("request", null, MqttQualityOfServiceLevel.AtLeastOnce);
 
@@ -178,24 +173,26 @@ namespace MQTTnet.Tests.Client
 
                 var replyReceived = false;
 
-                client1.UseApplicationMessageReceivedHandler(c =>
+                client1.ApplicationMessageReceivedAsync += e =>
                 {
-                    if (c.ApplicationMessage.Topic == "reply")
+                    if (e.ApplicationMessage.Topic == "reply")
                     {
                         replyReceived = true;
                     }
-                });
+                    
+                    return Task.CompletedTask;
+                };
 
-                client2.UseApplicationMessageReceivedHandler(async c =>
+                client2.ApplicationMessageReceivedAsync += async e =>
                 {
-                    if (c.ApplicationMessage.Topic == "request")
+                    if (e.ApplicationMessage.Topic == "request")
                     {
                         // Use AtMostOnce here because with QoS 1 or even QoS 2 the process waits for 
                         // the ACK etc. The problem is that the SpinUntil below only waits until the 
                         // flag is set. It does not wait until the client has sent the ACK
                         await client2.PublishAsync("reply", null, MqttQualityOfServiceLevel.AtMostOnce);
                     }
-                });
+                };
 
                 await client1.PublishAsync("request", null, MqttQualityOfServiceLevel.AtLeastOnce);
 
@@ -463,7 +460,7 @@ namespace MQTTnet.Tests.Client
                     }
                 }
 
-                client1.UseApplicationMessageReceivedHandler(Handler1);
+                client1.ApplicationMessageReceivedAsync += Handler1;
 
                 var client2 = await testEnvironment.ConnectClient();
                 for (var i = MessagesCount; i > 0; i--)
@@ -512,7 +509,7 @@ namespace MQTTnet.Tests.Client
                     return Task.CompletedTask;
                 }
 
-                client1.UseApplicationMessageReceivedHandler(Handler1);
+                client1.ApplicationMessageReceivedAsync += Handler1;
 
                 var client2 = await testEnvironment.ConnectClient();
                 for (var i = MessagesCount; i > 0; i--)
@@ -544,22 +541,24 @@ namespace MQTTnet.Tests.Client
                     await client1.PublishAsync($"reply/{eventArgs.ApplicationMessage.Topic}");
                 }
 
-                client1.UseApplicationMessageReceivedHandler(Handler1);
+                client1.ApplicationMessageReceivedAsync += Handler1;
 
                 var client2 = await testEnvironment.ConnectClient();
                 await client2.SubscribeAsync("reply/#");
 
                 var replies = new List<string>();
 
-                void Handler2(MqttApplicationMessageReceivedEventArgs eventArgs)
+                Task Handler2(MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
                     lock (replies)
                     {
                         replies.Add(eventArgs.ApplicationMessage.Topic);
                     }
+
+                    return Task.CompletedTask;
                 }
 
-                client2.UseApplicationMessageReceivedHandler((Action<MqttApplicationMessageReceivedEventArgs>)Handler2);
+                client2.ApplicationMessageReceivedAsync += Handler2;
 
                 await Task.Delay(500);
 
@@ -583,13 +582,15 @@ namespace MQTTnet.Tests.Client
                 var receivedMessages = new List<MqttApplicationMessage>();
 
                 var client1 = await testEnvironment.ConnectClient();
-                client1.UseApplicationMessageReceivedHandler(c =>
+                client1.ApplicationMessageReceivedAsync += e =>
                 {
                     lock (receivedMessages)
                     {
-                        receivedMessages.Add(c.ApplicationMessage);
+                        receivedMessages.Add(e.ApplicationMessage);
                     }
-                });
+                    
+                    return Task.CompletedTask;
+                };
 
                 await client1.SubscribeAsync("a");
 
@@ -616,10 +617,10 @@ namespace MQTTnet.Tests.Client
                 const string expectedClient2Message = "hello client2";
 
                 var client1 = await testEnvironment.ConnectClient();
-                client1.UseApplicationMessageReceivedHandler(async c =>
+                client1.ApplicationMessageReceivedAsync += async e =>
                 {
                     await client1.PublishAsync(client2Topic, expectedClient2Message, MqttQualityOfServiceLevel.AtLeastOnce);
-                });
+                };
 
                 await client1.SubscribeAsync(client1Topic, MqttQualityOfServiceLevel.AtLeastOnce);
 
@@ -627,10 +628,11 @@ namespace MQTTnet.Tests.Client
 
                 var client2TopicResults = new List<string>();
 
-                client2.UseApplicationMessageReceivedHandler(c =>
+                client2.ApplicationMessageReceivedAsync += e =>
                 {
-                    client2TopicResults.Add(Encoding.UTF8.GetString(c.ApplicationMessage.Payload));
-                });
+                    client2TopicResults.Add(Encoding.UTF8.GetString(e.ApplicationMessage.Payload));
+                    return Task.CompletedTask;
+                };
 
                 await client2.SubscribeAsync(client2Topic);
 
@@ -669,13 +671,15 @@ namespace MQTTnet.Tests.Client
                     await client.PublishAsync(msg.Build());
                 });
 
-                client.UseApplicationMessageReceivedHandler(c =>
+                client.ApplicationMessageReceivedAsync += e =>
                 {
                     lock (receivedMessages)
                     {
-                        receivedMessages.Add(c.ApplicationMessage);
+                        receivedMessages.Add(e.ApplicationMessage);
                     }
-                });
+                    
+                    return Task.CompletedTask;
+                };
 
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost", testEnvironment.ServerPort).Build());
 
@@ -744,10 +748,11 @@ namespace MQTTnet.Tests.Client
 
                 var receiveClient = clients[99];
                 object receivedPayload = null;
-                receiveClient.UseApplicationMessageReceivedHandler(e =>
+                receiveClient.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedPayload = e.ApplicationMessage.ConvertPayloadToString();
-                });
+                    return Task.CompletedTask;
+                };
 
                 await receiveClient.SubscribeAsync("x");
 
@@ -779,7 +784,11 @@ namespace MQTTnet.Tests.Client
                 }, CancellationToken.None);
 
                 MqttApplicationMessage receivedMessage = null;
-                receiver.UseApplicationMessageReceivedHandler(e => receivedMessage = e.ApplicationMessage);
+                receiver.ApplicationMessageReceivedAsync += e =>
+                {
+                    receivedMessage = e.ApplicationMessage;
+                    return Task.CompletedTask;
+                };
 
                 await sender.PublishAsync(message.Build(), CancellationToken.None);
 
@@ -807,10 +816,11 @@ namespace MQTTnet.Tests.Client
                 });
 
                 var messageReceived = false;
-                client1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(c =>
+                client1.ApplicationMessageReceivedAsync += e =>
                 {
                     messageReceived = true;
-                });
+                    return Task.CompletedTask;
+                };
 
                 await client1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("topic1").WithExactlyOnceQoS().Build());
 
@@ -843,9 +853,9 @@ namespace MQTTnet.Tests.Client
                 var subscriber = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId(qos.ToString()));
                 await subscriber.SubscribeAsync("#", qos);
 
-                subscriber.UseApplicationMessageReceivedHandler(c =>
+                subscriber.ApplicationMessageReceivedAsync += e =>
                 {
-                    c.AutoAcknowledge = false;
+                    e.AutoAcknowledge = false;
 
                     async Task InvokeInternal()
                     {
@@ -856,7 +866,7 @@ namespace MQTTnet.Tests.Client
 
                     _ = InvokeInternal();
                     return Task.CompletedTask;
-                });
+                };
 
                 var publishes = Task.WhenAll(
                     publisher.PublishAsync("a", null, qos),

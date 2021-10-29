@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace MQTTnet.Client.ExtendedAuthenticationExchange
+namespace MQTTnet.Client
 {
     public interface IMqttExtendedAuthenticationExchangeHandler
     {

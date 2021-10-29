@@ -20,6 +20,11 @@ namespace MQTTnet.Server
         /// Gets or sets the MQTT packet which was received or will be sent.
         /// </summary>
         public MqttBasePacket Packet { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the packet should be processed or not.
+        /// </summary>
+        public bool ProcessPacket { get; set; } = true;
         
         /// <summary>
         /// Gets the cancellation token from the connection managing thread.

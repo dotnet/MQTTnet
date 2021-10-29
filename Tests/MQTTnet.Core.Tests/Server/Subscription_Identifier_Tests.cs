@@ -47,7 +47,7 @@ namespace MQTTnet.Tests.Server
 
                 applicationMessageHandler.AssertReceivedCountEquals(1);
 
-                applicationMessageHandler.ReceivedApplicationMessages[0].SubscriptionIdentifiers.Contains(456);
+                applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.SubscriptionIdentifiers.Contains(456);
             }
         }
         
@@ -81,8 +81,8 @@ namespace MQTTnet.Tests.Server
 
                 applicationMessageHandler.AssertReceivedCountEquals(1);
 
-                applicationMessageHandler.ReceivedApplicationMessages[0].SubscriptionIdentifiers.Contains(456);
-                applicationMessageHandler.ReceivedApplicationMessages[0].SubscriptionIdentifiers.Contains(789);
+                applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.SubscriptionIdentifiers.Contains(456);
+                applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.SubscriptionIdentifiers.Contains(789);
             }
         }
     }

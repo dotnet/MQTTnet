@@ -2,13 +2,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Publishing;
-using MQTTnet.Client.Receiving;
-using MQTTnet.Client.Subscribing;
-using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Formatter;
+using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.MQTTv5
 {
@@ -37,7 +34,11 @@ namespace MQTTnet.Tests.MQTTv5
                 MqttApplicationMessage receivedMessage = null;
 
                 await client.SubscribeAsync("a");
-                client.UseApplicationMessageReceivedHandler(context => { receivedMessage = context.ApplicationMessage; });
+                client.ApplicationMessageReceivedAsync += e =>
+                {
+                    receivedMessage = e.ApplicationMessage;
+                    return Task.CompletedTask;
+                };
 
                 await client.PublishAsync(new MqttApplicationMessageBuilder()
                     .WithTopic("a")
@@ -202,17 +203,10 @@ namespace MQTTnet.Tests.MQTTv5
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
-
-                var receivedMessages = new List<MqttApplicationMessageReceivedEventArgs>();
-
+                
                 var client1 = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client1"));
-                client1.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
-                {
-                    lock (receivedMessages)
-                    {
-                        receivedMessages.Add(e);
-                    }
-                });
+
+                var testMessageHandler = new TestApplicationMessageReceivedHandler(client1);
 
                 await client1.SubscribeAsync("a");
 
@@ -224,10 +218,10 @@ namespace MQTTnet.Tests.MQTTv5
                 await client2.DisconnectAsync();
                 await client1.DisconnectAsync();
 
-                Assert.AreEqual(1, receivedMessages.Count);
-                Assert.AreEqual("Subscribe_And_Publish_client1", receivedMessages[0].ClientId);
-                Assert.AreEqual("a", receivedMessages[0].ApplicationMessage.Topic);
-                Assert.AreEqual("b", receivedMessages[0].ApplicationMessage.ConvertPayloadToString());
+                Assert.AreEqual(1, testMessageHandler.ReceivedEventArgs.Count);
+                Assert.AreEqual("Subscribe_And_Publish_client1", testMessageHandler.ReceivedEventArgs[0].ClientId);
+                Assert.AreEqual("a", testMessageHandler.ReceivedEventArgs[0].ApplicationMessage.Topic);
+                Assert.AreEqual("b", testMessageHandler.ReceivedEventArgs[0].ApplicationMessage.ConvertPayloadToString());
             }
         }
 
@@ -242,10 +236,11 @@ namespace MQTTnet.Tests.MQTTv5
                 await receiver.SubscribeAsync("#");
 
                 MqttApplicationMessage receivedMessage = null;
-                receiver.UseApplicationMessageReceivedHandler(c =>
+                receiver.ApplicationMessageReceivedAsync += e =>
                 {
-                    receivedMessage = c.ApplicationMessage;
-                });
+                    receivedMessage = e.ApplicationMessage;
+                    return Task.CompletedTask;
+                };
 
                 var sender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
 

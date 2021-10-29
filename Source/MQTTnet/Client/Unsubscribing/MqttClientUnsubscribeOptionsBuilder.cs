@@ -1,8 +1,8 @@
-﻿using MQTTnet.Packets;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using MQTTnet.Packets;
 
-namespace MQTTnet.Client.Unsubscribing
+namespace MQTTnet.Client
 {
     public class MqttClientUnsubscribeOptionsBuilder
     {

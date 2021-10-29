@@ -1,13 +1,11 @@
 ﻿using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Receiving;
 using MQTTnet.Protocol;
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
+using MQTTnet.Implementations;
+using MQTTnet.Packets;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -30,7 +28,7 @@ namespace MQTTnet.TestApp.NetCore
                     }
                 };
 
-                client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
+                client.ApplicationMessageReceivedAsync += e =>
                 {
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
                     Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
@@ -38,7 +36,9 @@ namespace MQTTnet.TestApp.NetCore
                     Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
                     Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
                     Console.WriteLine();
-                });
+                    
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
 
                 client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(async e =>
                 {

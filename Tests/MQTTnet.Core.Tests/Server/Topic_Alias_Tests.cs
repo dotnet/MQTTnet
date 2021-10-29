@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Options;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Tests.Server
@@ -39,13 +38,15 @@ namespace MQTTnet.Tests.Server
                 var receivedTopics = new List<string>();
 
                 var c1 = await testEnvironment.ConnectClient(options => options.WithProtocolVersion(MqttProtocolVersion.V500));
-                c1.UseApplicationMessageReceivedHandler(e =>
+                c1.ApplicationMessageReceivedAsync += e =>
                 {
                     lock (receivedTopics)
                     {
                         receivedTopics.Add(e.ApplicationMessage.Topic);
                     }
-                });
+                    
+                    return Task.CompletedTask;
+                };
 
                 await c1.SubscribeAsync("#");
 

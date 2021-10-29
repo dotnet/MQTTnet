@@ -1,16 +1,9 @@
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.ExtendedAuthenticationExchange;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Publishing;
-using MQTTnet.Client.Receiving;
-using MQTTnet.Client.Subscribing;
-using MQTTnet.Client.Unsubscribing;
 using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Client
 {
@@ -79,39 +72,7 @@ namespace MQTTnet.Client
             client.DisconnectedHandler = handler;
             return client;
         }
-
-        public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, Func<MqttApplicationMessageReceivedEventArgs, Task> handler)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            if (handler == null)
-            {
-                return client.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
-            }
-
-            return client.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
-        }
-
-        public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, Action<MqttApplicationMessageReceivedEventArgs> handler)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            if (handler == null)
-            {
-                return client.UseApplicationMessageReceivedHandler((IMqttApplicationMessageReceivedHandler)null);
-            }
-
-            return client.UseApplicationMessageReceivedHandler(new MqttApplicationMessageReceivedHandlerDelegate(handler));
-        }
-
-        public static IMqttClient UseApplicationMessageReceivedHandler(this IMqttClient client, IMqttApplicationMessageReceivedHandler handler)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            client.ApplicationMessageReceivedHandler = handler;
-            return client;
-        }
-
+        
         public static Task<MqttClientConnectResult> ReconnectAsync(this IMqttClient client)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));

@@ -4,7 +4,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Client.Connecting
+namespace MQTTnet.Client
 {
     public sealed class MqttClientConnectResultFactory
     {

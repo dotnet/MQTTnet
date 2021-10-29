@@ -3,7 +3,7 @@ using System.Linq;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Client.Subscribing
+namespace MQTTnet.Client
 {
     public sealed class MqttClientSubscribeResultFactory
     {

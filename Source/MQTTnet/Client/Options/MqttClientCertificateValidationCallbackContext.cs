@@ -1,7 +1,7 @@
 ﻿using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
-namespace MQTTnet.Client.Options
+namespace MQTTnet.Client
 {
     public class MqttClientCertificateValidationCallbackContext
     {

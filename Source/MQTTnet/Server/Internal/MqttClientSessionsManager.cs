@@ -5,15 +5,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server
 {
     public sealed class MqttClientSessionsManager : IDisposable
     {
@@ -406,8 +406,6 @@ namespace MQTTnet.Server.Internal
                         continue;
                     }
 
-                    _logger.Verbose("Client '{0}': Queued application message with topic '{1}'.", clientSession.Id, applicationMessage.Topic);
-                    
                     var newPublishPacket = _packetFactories.Publish.Create(applicationMessage);
                     newPublishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
                     newPublishPacket.Properties.SubscriptionIdentifiers.AddRange(checkSubscriptionsResult.SubscriptionIdentifiers);
@@ -430,6 +428,8 @@ namespace MQTTnet.Server.Internal
                     
                     clientSession.EnqueuePacket(new MqttPacketBusItem(newPublishPacket));
                     deliveryCount++;
+                    
+                    _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'.", clientSession.Id, applicationMessage.Topic);
                 }
 
                 if (deliveryCount == 0)

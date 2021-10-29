@@ -3,9 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Subscribing;
 using MQTTnet.Formatter;
+using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
@@ -33,17 +32,19 @@ namespace MQTTnet.Tests.Server
                 var topicBReceived = false;
 
                 var client = await testEnvironment.ConnectClient();
-                client.UseApplicationMessageReceivedHandler(c =>
+                client.ApplicationMessageReceivedAsync += e =>
                 {
-                    if (c.ApplicationMessage.Topic == "a")
+                    if (e.ApplicationMessage.Topic == "a")
                     {
                         topicAReceived = true;
                     }
-                    else if (c.ApplicationMessage.Topic == "b")
+                    else if (e.ApplicationMessage.Topic == "b")
                     {
                         topicBReceived = true;
                     }
-                });
+                    
+                    return Task.CompletedTask;
+                };
 
                 await client.SubscribeAsync("b");
 
@@ -66,7 +67,11 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
 
                 var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("c1"));
-                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return Task.CompletedTask;
+                };
 
                 var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("c2"));
 
@@ -122,7 +127,12 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var c1 = await testEnvironment.ConnectClient();
-                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return Task.CompletedTask;
+                };
+                
                 await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
                     .WithTopicFilter("a")
                     .WithTopicFilter("b")
@@ -155,7 +165,11 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var c1 = await testEnvironment.ConnectClient();
-                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return Task.CompletedTask;
+                };
 
                 var optionsBuilder = new MqttClientSubscribeOptionsBuilder();
                 for (var i = 0; i < 500; i++)
@@ -191,7 +205,11 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var c1 = await testEnvironment.ConnectClient();
-                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return Task.CompletedTask;
+                };
 
                 for (var i = 0; i < 500; i++)
                 {
@@ -231,7 +249,12 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var c1 = await testEnvironment.ConnectClient();
-                c1.UseApplicationMessageReceivedHandler(c => Interlocked.Increment(ref receivedMessagesCount));
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return Task.CompletedTask;
+                };
+                
                 await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
                     .WithTopicFilter("a")
                     .Build());

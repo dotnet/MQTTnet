@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Diagnostics.Logger
+﻿namespace MQTTnet.Diagnostics
 {
     public enum MqttNetLogLevel
     {

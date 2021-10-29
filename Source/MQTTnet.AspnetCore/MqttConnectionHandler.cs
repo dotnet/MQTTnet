@@ -4,6 +4,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Server;
 using System;
 using System.Threading.Tasks;
+using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.AspNetCore
@@ -33,7 +34,7 @@ namespace MQTTnet.AspNetCore
             }
         }
 
-        public Task StartAsync(MqttServerOptions options)
+        public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
         {
             return Task.CompletedTask;
         }

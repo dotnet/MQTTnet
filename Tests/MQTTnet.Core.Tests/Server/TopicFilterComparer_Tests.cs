@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Server.Internal;
+using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Server
 {

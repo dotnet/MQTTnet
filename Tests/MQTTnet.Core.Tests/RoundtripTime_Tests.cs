@@ -26,10 +26,11 @@ namespace MQTTnet.Tests
                 
                 TaskCompletionSource<string> response = null;
 
-                receiverClient.UseApplicationMessageReceivedHandler(e => 
+                receiverClient.ApplicationMessageReceivedAsync += e => 
                 {
                     response?.SetResult(e.ApplicationMessage.ConvertPayloadToString());
-                });
+                    return Task.CompletedTask;
+                };
 
                 var times = new List<TimeSpan>();
                 var stopwatch = Stopwatch.StartNew();

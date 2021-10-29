@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Client.Connecting
+namespace MQTTnet.Client
 {
     public class MqttClientConnectedHandlerDelegate : IMqttClientConnectedHandler
     {

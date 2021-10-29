@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace MQTTnet.Client.Disconnecting
+namespace MQTTnet.Client
 {
     public interface IMqttClientDisconnectedHandler
     {

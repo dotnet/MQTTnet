@@ -6,11 +6,7 @@ using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Subscribing;
-using MQTTnet.Client.Unsubscribing;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet
 {
@@ -25,14 +21,15 @@ namespace MQTTnet
         public MqttFactory(IMqttNetLogger logger)
         {
             DefaultLogger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _clientAdapterFactory = new MqttClientAdapterFactory(logger);
+            
+            _clientAdapterFactory = new MqttClientAdapterFactory();
         }
 
         public IMqttNetLogger DefaultLogger { get; }
 
         public IList<Func<MqttFactory, IMqttServerAdapter>> DefaultServerAdapters { get; } = new List<Func<MqttFactory, IMqttServerAdapter>>
         {
-            factory => new MqttTcpServerAdapter(factory.DefaultLogger)
+            factory => new MqttTcpServerAdapter()
         };
 
         public IDictionary<object, object> Properties { get; } = new Dictionary<object, object>();

@@ -1,13 +1,12 @@
-﻿using MQTTnet.Client.ExtendedAuthenticationExchange;
-using MQTTnet.Formatter;
-using MQTTnet.Packets;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using MQTTnet.Diagnostics.PacketInspection;
+using MQTTnet.Diagnostics;
+using MQTTnet.Formatter;
+using MQTTnet.Packets;
 
-namespace MQTTnet.Client.Options
+namespace MQTTnet.Client
 {
     public class MqttClientOptionsBuilder
     {

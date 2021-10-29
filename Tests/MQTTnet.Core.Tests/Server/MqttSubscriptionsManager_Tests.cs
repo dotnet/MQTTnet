@@ -5,7 +5,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using MQTTnet.Server.Internal;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Server
@@ -18,7 +17,7 @@ namespace MQTTnet.Tests.Server
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(new TestLogger()), new MqttRetainedMessagesManager());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
@@ -35,7 +34,7 @@ namespace MQTTnet.Tests.Server
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(new TestLogger()), new MqttRetainedMessagesManager());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilter { Topic = "A/B/C", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
@@ -52,7 +51,7 @@ namespace MQTTnet.Tests.Server
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(new TestLogger()), new MqttRetainedMessagesManager());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilter { Topic = "#", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
@@ -70,7 +69,7 @@ namespace MQTTnet.Tests.Server
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(new TestLogger()), new MqttRetainedMessagesManager());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
@@ -85,7 +84,7 @@ namespace MQTTnet.Tests.Server
         {
             var s = CreateSession();
 
-            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(new TestLogger()), new MqttRetainedMessagesManager());
+            var sm = new MqttClientSubscriptionsManager(s, new MqttServerOptions(), new MqttServerEventContainer(), new MqttRetainedMessagesManager());
 
             var sp = new MqttSubscribePacket();
             sp.TopicFilters.Add(new MqttTopicFilterBuilder().WithTopic("A/B/C").Build());
@@ -106,7 +105,7 @@ namespace MQTTnet.Tests.Server
             var logger = new TestLogger();
             var options = new MqttServerOptions();
             var retainedMessagesManager = new MqttRetainedMessagesManager();
-            var eventContainer = new MqttServerEventContainer(logger);
+            var eventContainer = new MqttServerEventContainer();
                 
             return new MqttClientSession(
                 "",

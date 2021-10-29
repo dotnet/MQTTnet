@@ -1,14 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.ExtendedAuthenticationExchange;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Publishing;
-using MQTTnet.Client.Receiving;
-using MQTTnet.Client.Subscribing;
-using MQTTnet.Client.Unsubscribing;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,13 +45,7 @@ namespace MQTTnet.Tests.Mockups
             add => Implementation.DisconnectedAsync += value;
             remove => Implementation.DisconnectedAsync -= value;
         }
-
-        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
-        {
-            get => Implementation.ApplicationMessageReceivedHandler;
-            set => Implementation.ApplicationMessageReceivedHandler = value;
-        }
-
+        
         public event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync
         {
             add => Implementation.ApplicationMessageReceivedAsync += value;

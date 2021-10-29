@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MQTTnet.Client.Connecting
+namespace MQTTnet.Client
 {
     public class MqttClientConnectedEventArgs : EventArgs
     {

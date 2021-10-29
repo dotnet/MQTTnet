@@ -5,17 +5,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using System;
-using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Tests.Mockups;
-using MQTTnet.Client.Options;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
-using System.Net;
 using MQTTnet.AspNetCore.Extensions;
+using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Tests.Extensions;
 

@@ -1,8 +1,8 @@
-﻿using MQTTnet.Client.Publishing;
-using MQTTnet.Protocol;
+﻿using MQTTnet.Protocol;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {

@@ -1,10 +1,10 @@
-﻿using MQTTnet.Packets;
-using MQTTnet.Protocol;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MQTTnet.Exceptions;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
-namespace MQTTnet.Client.Subscribing
+namespace MQTTnet.Client
 {
     public sealed class MqttClientSubscribeOptionsBuilder
     {

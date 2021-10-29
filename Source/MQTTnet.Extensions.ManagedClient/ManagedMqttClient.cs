@@ -1,9 +1,4 @@
 using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Publishing;
-using MQTTnet.Client.Receiving;
-using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
@@ -13,7 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
@@ -72,13 +68,7 @@ namespace MQTTnet.Extensions.ManagedClient
             get => InternalClient.DisconnectedHandler;
             set => InternalClient.DisconnectedHandler = value;
         }
-
-        public IMqttApplicationMessageReceivedHandler ApplicationMessageReceivedHandler
-        {
-            get => InternalClient.ApplicationMessageReceivedHandler;
-            set => InternalClient.ApplicationMessageReceivedHandler = value;
-        }
-
+        
         public event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync
         {
             add => InternalClient.ApplicationMessageReceivedAsync += value;

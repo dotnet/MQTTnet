@@ -30,6 +30,7 @@
 * [Server] Added support for a custom exception handler in _MqttServerMultiThreadedApplicationMessageInterceptorDelegate_.
 * [Server] Removed logger from _MqttServerMultiThreadedApplicationMessageInterceptorDelegate_ (BREAKING CHANGE!).
 * [Server] Fixed a memory leak when deleting sessions.
+* [Server] Fixed timestamp check in server keep-alive monitor (thanks to @logicaloud, #1277).
 * [MQTTnet.Server] Moved server project to a dedicated GitHub repository.
 Git commit: $gitCommit
     </releaseNotes>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using MQTTnet.Packets;
 
@@ -24,11 +24,17 @@ namespace MQTTnet.Server
 
             LastNonKeepAlivePacketReceivedTimestamp = ConnectedTimestamp;
         }
-
+        
         public DateTime ConnectedTimestamp { get; }
 
+        /// <summary>
+        /// Timestamp of the last package that has been sent to the client ("received" from the client's perspective)
+        /// </summary>
         public DateTime LastPacketReceivedTimestamp { get; private set; }
-
+                
+        /// <summary>
+        /// Timestamp of the last package that has been received from the client ("sent" from the client's perspective)
+        /// </summary>
         public DateTime LastPacketSentTimestamp { get; private set; }
         
         public DateTime LastNonKeepAlivePacketReceivedTimestamp { get; private set; }

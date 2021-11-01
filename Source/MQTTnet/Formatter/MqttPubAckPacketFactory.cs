@@ -8,7 +8,7 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttPubAckPacketFactory
     {
-        public MqttPubAckPacket Create(MqttPublishPacket publishPacket, MqttApplicationMessageResponse applicationMessageResponse)
+        public MqttPubAckPacket Create(MqttPublishPacket publishPacket, PublishResponse applicationMessageResponse)
         {
             if (applicationMessageResponse == null) throw new ArgumentNullException(nameof(applicationMessageResponse));
 

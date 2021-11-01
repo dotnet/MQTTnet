@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace MQTTnet.Server
 {
-    public sealed class InterceptingMqttClientPublishEventArgs : EventArgs
+    public sealed class InterceptingPublishEventArgs : EventArgs
     { 
         /// <summary>
         /// Gets the client identifier.
@@ -22,7 +22,7 @@ namespace MQTTnet.Server
         /// <summary>
         /// Gets the response which will be sent to the client via the PUBACK etc. packets.
         /// </summary>
-        public MqttApplicationMessageResponse Response { get; } = new MqttApplicationMessageResponse();
+        public PublishResponse Response { get; } = new PublishResponse();
         
         /// <summary>
         /// Gets or sets whether the publish should be processed internally.

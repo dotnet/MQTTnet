@@ -512,7 +512,7 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(1000);
 
-                var retainedMessages = await server.GetRetainedApplicationMessagesAsync();
+                var retainedMessages = await server.GetRetainedMessagesAsync();
 
                 Assert.AreEqual(ClientCount, retainedMessages.Count);
 
@@ -530,7 +530,7 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
 
-                server.InterceptingClientPublishAsync += e =>
+                server.InterceptingPublishAsync += e =>
                 {
                     e.ApplicationMessage = new MqttApplicationMessage {Topic = "new_topic"};
 
@@ -557,19 +557,24 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Persist_Retained_Message()
         {
-            var serverStorage = new TestServerStorage();
-
             using (var testEnvironment = CreateTestEnvironment())
             {
-                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithStorage(serverStorage));
+                List<MqttApplicationMessage> savedRetainedMessages = null;
+                
+                var s = await testEnvironment.StartServer();
+                s.RetainedMessageChangedAsync += e =>
+                {
+                    savedRetainedMessages = e.StoredRetainedMessages;
+                    return Task.CompletedTask;
+                };
 
                 var c1 = await testEnvironment.ConnectClient();
-
+                
                 await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
 
                 await Task.Delay(500);
 
-                Assert.AreEqual(1, serverStorage.Messages.Count);
+                Assert.AreEqual(1, savedRetainedMessages?.Count);
             }
         }
 
@@ -617,7 +622,7 @@ namespace MQTTnet.Tests.Server
             using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer();
-                server.InterceptingClientPublishAsync += e =>
+                server.InterceptingPublishAsync += e =>
                 {
                     e.ApplicationMessage.Payload = Encoding.ASCII.GetBytes("extended");
                     return Task.CompletedTask;
@@ -698,7 +703,7 @@ namespace MQTTnet.Tests.Server
 
                 var server = await testEnvironment.StartServer();
 
-                server.ValidatingClientConnectionAsync += e =>
+                server.ValidatingConnectionAsync += e =>
                 {
                     e.ReasonCode = MqttConnectReasonCode.NotAuthorized;
                     return Task.CompletedTask;
@@ -711,7 +716,7 @@ namespace MQTTnet.Tests.Server
 
         Dictionary<string, bool> _connected;
 
-        void ConnectionValidationHandler(ValidatingMqttClientConnectionEventArgs eventArgs)
+        void ConnectionValidationHandler(ValidatingConnectionEventArgs eventArgs)
         {
             if (_connected.ContainsKey(eventArgs.ClientId))
             {
@@ -734,7 +739,7 @@ namespace MQTTnet.Tests.Server
 
                 var server = await testEnvironment.StartServer();
 
-                server.ValidatingClientConnectionAsync += e =>
+                server.ValidatingConnectionAsync += e =>
                 {
                     ConnectionValidationHandler(e);
                     return Task.CompletedTask;
@@ -923,12 +928,12 @@ namespace MQTTnet.Tests.Server
                 var clientOptions = new MqttClientOptionsBuilder();
                 var c1 = await testEnvironment.ConnectClient(clientOptions);
                 await Task.Delay(500);
-                Assert.AreEqual(1, (await server.GetClientStatusAsync()).Count);
+                Assert.AreEqual(1, (await server.GetClientsAsync()).Count);
 
                 await c1.DisconnectAsync();
                 await Task.Delay(500);
 
-                Assert.AreEqual(0, (await server.GetClientStatusAsync()).Count);
+                Assert.AreEqual(0, (await server.GetClientsAsync()).Count);
             }
         }
 
@@ -965,7 +970,7 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
 
-                server.InterceptingClientSubscriptionAsync += e =>
+                server.InterceptingSubscriptionAsync += e =>
                 {
                     // This should lead to no subscriptions for "n" at all. So also no sending of retained messages.
                     if (e.TopicFilter.Topic == "n")
@@ -1021,7 +1026,7 @@ namespace MQTTnet.Tests.Server
                 await client1.DisconnectAsync();
                 await Task.Delay(500);
 
-                var clientStatus = await server.GetClientStatusAsync();
+                var clientStatus = await server.GetClientsAsync();
                 Assert.AreEqual(0, clientStatus.Count);
 
                 var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b"));
@@ -1032,8 +1037,8 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                clientStatus = await server.GetClientStatusAsync();
-                var sessionStatus = await server.GetSessionStatusAsync();
+                clientStatus = await server.GetClientsAsync();
+                var sessionStatus = await server.GetSessionsAsync();
 
                 Assert.AreEqual(0, clientStatus.Count);
                 Assert.AreEqual(2, sessionStatus.Count);

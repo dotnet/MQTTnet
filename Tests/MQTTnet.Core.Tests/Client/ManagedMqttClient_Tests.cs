@@ -110,7 +110,7 @@ namespace MQTTnet.Tests.Client
 
                 await Task.Delay(500);
 
-                Assert.AreEqual(0, (await server.GetClientStatusAsync()).Count);
+                Assert.AreEqual(0, (await server.GetClientsAsync()).Count);
             }
         }
 

@@ -9,9 +9,9 @@ namespace MQTTnet.Server
 {
     public sealed class MqttSessionStatus : IMqttSessionStatus
     {
-        readonly MqttClientSession _session;
+        readonly MqttSession _session;
 
-        public MqttSessionStatus(MqttClientSession session)
+        public MqttSessionStatus(MqttSession session)
         {
             _session = session ?? throw new ArgumentNullException(nameof(session));
         }

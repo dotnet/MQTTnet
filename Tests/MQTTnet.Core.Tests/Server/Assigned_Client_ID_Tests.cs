@@ -34,7 +34,7 @@ namespace MQTTnet.Tests.Server
                 var disconnectedMre = new ManualResetEventSlim();
 
                 var server = await testEnvironment.StartServer();
-                server.ValidatingClientConnectionAsync += e =>
+                server.ValidatingConnectionAsync += e =>
                 {
                     if (string.IsNullOrEmpty(e.ClientId))
                     {

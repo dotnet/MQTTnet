@@ -4,13 +4,14 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttUnsubscribeResponse
+    public sealed class SubscribeResponse
     {
         /// <summary>
         /// Gets or sets the reason code which is sent to the client.
+        /// The subscription is skipped when the value is not GrantedQoS_.
         /// MQTTv5 only.
         /// </summary>
-        public MqttUnsubscribeReasonCode ReasonCode { get; set; }
+        public MqttSubscribeReasonCode ReasonCode { get; set; }
         
         public List<MqttUserProperty> UserProperties { get; } = new List<MqttUserProperty>();
         

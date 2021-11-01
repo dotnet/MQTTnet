@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttServerClientUnsubscribedTopicEventArgs : EventArgs
+    public sealed class ClientDisconnectedEventArgs : EventArgs
     {
         /// <summary>
         /// Gets the client identifier.
@@ -10,10 +10,8 @@ namespace MQTTnet.Server
         /// </summary>
         public string ClientId { get; internal set; }
 
-        /// <summary>
-        /// Gets or sets the topic filter.
-        /// The topic filter can contain topics and wildcards.
-        /// </summary>
-        public string TopicFilter { get; internal set; }
+        public MqttClientDisconnectType DisconnectType { get; internal set; }
+
+        public string Endpoint { get; internal set; }
     }
 }

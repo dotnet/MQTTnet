@@ -61,7 +61,7 @@ namespace MQTTnet.Tests.Server
 
                 var server = await testEnvironment.StartServer();
 
-                server.ValidatingClientConnectionAsync += e =>
+                server.ValidatingConnectionAsync += e =>
                 {
                     if (e.Username != "UserName1")
                     {

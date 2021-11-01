@@ -1,5 +1,4 @@
 ﻿using MQTTnet.Adapter;
-using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
@@ -24,7 +23,7 @@ namespace MQTTnet.Server
         readonly MqttNetSourceLogger _logger;
 
         MqttClientSessionsManager _clientSessionsManager;
-        IMqttRetainedMessagesManager _retainedMessagesManager;
+        MqttRetainedMessagesManager _retainedMessagesManager;
         MqttServerKeepAliveMonitor _keepAliveMonitor;
         CancellationTokenSource _cancellationTokenSource;
 
@@ -52,19 +51,19 @@ namespace MQTTnet.Server
             remove => _eventContainer.StoppedEvent.RemoveHandler(value);
         }
         
-        public event Func<ValidatingMqttClientConnectionEventArgs, Task> ValidatingClientConnectionAsync
+        public event Func<ValidatingConnectionEventArgs, Task> ValidatingConnectionAsync
         {
-            add => _eventContainer.ValidatingClientConnectionEvent.AddHandler(value);
-            remove => _eventContainer.ValidatingClientConnectionEvent.RemoveHandler(value);
+            add => _eventContainer.ValidatingConnectionEvent.AddHandler(value);
+            remove => _eventContainer.ValidatingConnectionEvent.RemoveHandler(value);
         }
         
-        public event Func<MqttServerClientConnectedEventArgs, Task> ClientConnectedAsync
+        public event Func<ClientConnectedEventArgs, Task> ClientConnectedAsync
         {
             add => _eventContainer.ClientConnectedEvent.AddHandler(value);
             remove => _eventContainer.ClientConnectedEvent.RemoveHandler(value);
         }
         
-        public event Func<MqttServerClientDisconnectedEventArgs, Task> ClientDisconnectedAsync
+        public event Func<ClientDisconnectedEventArgs, Task> ClientDisconnectedAsync
         {
             add => _eventContainer.ClientDisconnectedEvent.AddHandler(value);
             remove => _eventContainer.ClientDisconnectedEvent.RemoveHandler(value);
@@ -82,63 +81,69 @@ namespace MQTTnet.Server
             remove => _eventContainer.InterceptingOutboundPacketEvent.RemoveHandler(value);
         }
         
-        public event Func<InterceptingMqttClientSubscriptionEventArgs, Task> InterceptingClientSubscriptionAsync
+        public event Func<InterceptingSubscriptionEventArgs, Task> InterceptingSubscriptionAsync
         {
-            add => _eventContainer.InterceptingClientSubscriptionEvent.AddHandler(value);
-            remove => _eventContainer.InterceptingClientSubscriptionEvent.RemoveHandler(value);
+            add => _eventContainer.InterceptingSubscriptionEvent.AddHandler(value);
+            remove => _eventContainer.InterceptingSubscriptionEvent.RemoveHandler(value);
         }
         
-        public event Func<InterceptingMqttClientUnsubscriptionEventArgs, Task> InterceptingClientUnsubscriptionAsync
+        public event Func<InterceptingUnsubscriptionEventArgs, Task> InterceptingUnsubscriptionAsync
         {
-            add => _eventContainer.InterceptingClientUnsubscriptionEvent.AddHandler(value);
-            remove => _eventContainer.InterceptingClientUnsubscriptionEvent.RemoveHandler(value);
+            add => _eventContainer.InterceptingUnsubscriptionEvent.AddHandler(value);
+            remove => _eventContainer.InterceptingUnsubscriptionEvent.RemoveHandler(value);
         }
         
-        public event Func<InterceptingMqttClientPublishEventArgs, Task> InterceptingClientPublishAsync
+        public event Func<InterceptingPublishEventArgs, Task> InterceptingPublishAsync
         {
-            add => _eventContainer.InterceptingClientPublishEvent.AddHandler(value);
-            remove => _eventContainer.InterceptingClientPublishEvent.RemoveHandler(value);
+            add => _eventContainer.InterceptingPublishEvent.AddHandler(value);
+            remove => _eventContainer.InterceptingPublishEvent.RemoveHandler(value);
         }
         
-        public event Func<MqttServerClientSubscribedTopicEventArgs, Task> ClientSubscribedTopicAsync
+        public event Func<ClientSubscribedTopicEventArgs, Task> ClientSubscribedTopicAsync
         {
             add => _eventContainer.ClientSubscribedTopicEvent.AddHandler(value);
             remove => _eventContainer.ClientSubscribedTopicEvent.RemoveHandler(value);
         }
         
-        public event Func<MqttServerClientUnsubscribedTopicEventArgs, Task> ClientUnsubscribedTopicAsync
+        public event Func<ClientUnsubscribedTopicEventArgs, Task> ClientUnsubscribedTopicAsync
         {
             add => _eventContainer.ClientUnsubscribedTopicEvent.AddHandler(value);
             remove => _eventContainer.ClientUnsubscribedTopicEvent.RemoveHandler(value);
         }
         
-        public event Func<PreparingMqttClientSessionEventArgs, Task> PreparingClientSessionAsync
+        public event Func<PreparingSessionEventArgs, Task> PreparingSessionAsync
         {
-            add => _eventContainer.PreparingClientSessionEvent.AddHandler(value);
-            remove => _eventContainer.PreparingClientSessionEvent.RemoveHandler(value);
+            add => _eventContainer.PreparingSessionEvent.AddHandler(value);
+            remove => _eventContainer.PreparingSessionEvent.RemoveHandler(value);
         }
 
-        public event Func<MqttApplicationMessageNotConsumedEventArgs, Task> ApplicationMessageNotConsumedAsync
+        public event Func<ApplicationMessageNotConsumedEventArgs, Task> ApplicationMessageNotConsumedAsync
         {
             add => _eventContainer.ApplicationMessageNotConsumedEvent.AddHandler(value);
             remove => _eventContainer.ApplicationMessageNotConsumedEvent.RemoveHandler(value);
         }
 
-        public event Func<EventArgs, Task> RetainedApplicationMessageChangedAsync
+        public event Func<RetainedMessageChangedEventArgs, Task> RetainedMessageChangedAsync
         {
-            add => _eventContainer.RetainedApplicationMessageChangedEvent.AddHandler(value);
-            remove => _eventContainer.RetainedApplicationMessageChangedEvent.RemoveHandler(value);
+            add => _eventContainer.RetainedMessageChangedEvent.AddHandler(value);
+            remove => _eventContainer.RetainedMessageChangedEvent.RemoveHandler(value);
         }
         
-        public event Func<EventArgs, Task> RetainedApplicationMessagesClearedAsync
+        public event Func<LoadingRetainedMessagesEventArgs, Task> LoadingRetainedMessageAsync
         {
-            add => _eventContainer.RetainedApplicationMessageClearedEvent.AddHandler(value);
-            remove => _eventContainer.RetainedApplicationMessageClearedEvent.RemoveHandler(value);
+            add => _eventContainer.LoadingRetainedMessagesEvent.AddHandler(value);
+            remove => _eventContainer.LoadingRetainedMessagesEvent.RemoveHandler(value);
+        }
+        
+        public event Func<EventArgs, Task> RetainedMessagesClearedAsync
+        {
+            add => _eventContainer.RetainedMessagesClearedEvent.AddHandler(value);
+            remove => _eventContainer.RetainedMessagesClearedEvent.RemoveHandler(value);
         }
 
         public bool IsStarted => _cancellationTokenSource != null;
         
-        public Task<IList<IMqttClientStatus>> GetClientStatusAsync()
+        public Task<IList<IMqttClientStatus>> GetClientsAsync()
         {
             ThrowIfDisposed();
             ThrowIfNotStarted();
@@ -146,7 +151,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.GetClientStatusAsync();
         }
 
-        public Task<IList<IMqttSessionStatus>> GetSessionStatusAsync()
+        public Task<IList<IMqttSessionStatus>> GetSessionsAsync()
         {
             ThrowIfDisposed();
             ThrowIfNotStarted();
@@ -154,20 +159,44 @@ namespace MQTTnet.Server
             return _clientSessionsManager.GetSessionStatusAsync();
         }
 
-        public Task<IList<MqttApplicationMessage>> GetRetainedApplicationMessagesAsync()
+        /// <summary>
+        /// Gets all currently cached retained messages.
+        /// </summary>
+        /// <returns>A list of retained messages.</returns>
+        public Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync()
         {
             ThrowIfDisposed();
             ThrowIfNotStarted();
 
-            return _retainedMessagesManager.GetMessagesAsync();
+            return _retainedMessagesManager.GetMessages();
         }
 
-        public Task ClearRetainedApplicationMessagesAsync()
+        /// <summary>
+        /// Deletes all retained messages.
+        /// </summary>
+        /// <returns>A task.</returns>
+        public Task DeleteRetainedMessagesAsync()
         {
             ThrowIfDisposed();
             ThrowIfNotStarted();
 
-            return _retainedMessagesManager?.ClearMessagesAsync() ?? PlatformAbstractionLayer.CompletedTask;
+            return _retainedMessagesManager?.ClearMessages() ?? PlatformAbstractionLayer.CompletedTask;
+        }
+
+        /// <summary>
+        /// Updates the specified retained message.
+        /// Setting the payload to null or empty will delete the retained message.
+        /// </summary>
+        /// <param name="retainedMessage">The retained message.</param>
+        /// <returns>A task.</returns>
+        public Task UpdateRetainedMessageAsync(MqttApplicationMessage retainedMessage)
+        {
+            if (retainedMessage == null) throw new ArgumentNullException(nameof(retainedMessage));
+            
+            ThrowIfDisposed();
+            ThrowIfNotStarted();
+
+            return _retainedMessagesManager?.UpdateMessage(null, retainedMessage);
         }
 
         public Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
@@ -220,10 +249,8 @@ namespace MQTTnet.Server
             _cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = _cancellationTokenSource.Token;
 
-            _retainedMessagesManager = _options.RetainedMessagesManager ?? throw new MqttConfigurationException("options.RetainedMessagesManager should not be null.");
-
-            await _retainedMessagesManager.Start(_options, _rootLogger).ConfigureAwait(false);
-            await _retainedMessagesManager.LoadMessagesAsync().ConfigureAwait(false);
+            _retainedMessagesManager = new MqttRetainedMessagesManager(_eventContainer, _rootLogger);
+            await _retainedMessagesManager.LoadMessages().ConfigureAwait(false);
 
             _clientSessionsManager = new MqttClientSessionsManager(_options, _retainedMessagesManager, _eventContainer, _rootLogger);
             

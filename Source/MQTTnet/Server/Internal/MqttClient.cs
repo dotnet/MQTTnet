@@ -14,7 +14,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientConnection : IDisposable
+    public sealed class MqttClient : IDisposable
     {
         readonly Dictionary<ushort, string> _topicAlias = new Dictionary<ushort, string>();
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
@@ -32,10 +32,10 @@ namespace MQTTnet.Server
 
         CancellationTokenSource _cancellationToken;
         
-        public MqttClientConnection(
+        public MqttClient(
             MqttConnectPacket connectPacket,
             IMqttChannelAdapter channelAdapter,
-            MqttClientSession session,
+            MqttSession session,
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
             MqttClientSessionsManager sessionsManager,
@@ -54,7 +54,7 @@ namespace MQTTnet.Server
             _applicationMessageInterceptorInvoker = new MqttApplicationMessageInterceptorInvoker(eventContainer, Id, Session.Items);
             
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.WithSource(nameof(MqttClientConnection));
+            _logger = logger.WithSource(nameof(MqttClient));
         }
 
         public string Id => _connectPacket.ClientId;
@@ -63,13 +63,13 @@ namespace MQTTnet.Server
 
         public IMqttChannelAdapter ChannelAdapter { get; }
 
-        public MqttClientConnectionStatistics Statistics { get; } = new MqttClientConnectionStatistics();
+        public MqttClientStatistics Statistics { get; } = new MqttClientStatistics();
 
         public bool IsRunning { get; private set; }
 
         public ushort KeepAlivePeriod => _connectPacket.KeepAlivePeriod;
 
-        public MqttClientSession Session { get; }
+        public MqttSession Session { get; }
 
         public bool IsTakenOver { get; set; }
 

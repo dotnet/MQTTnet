@@ -2,7 +2,7 @@
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttApplicationMessageNotConsumedEventArgs : EventArgs
+    public sealed class ApplicationMessageNotConsumedEventArgs : EventArgs
     {
         /// <summary>
         /// Gets the application message which was not consumed by any client.

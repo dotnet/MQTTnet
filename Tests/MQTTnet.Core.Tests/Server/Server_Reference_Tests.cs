@@ -19,7 +19,7 @@ namespace MQTTnet.Tests.Server
                 
                 var server = await testEnvironment.StartServer();
 
-                server.ValidatingClientConnectionAsync += e =>
+                server.ValidatingConnectionAsync += e =>
                 {
                     e.ReasonCode = MqttConnectReasonCode.ServerMoved;
                     e.ServerReference = "new_server";

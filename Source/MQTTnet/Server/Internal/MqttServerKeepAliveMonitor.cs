@@ -66,7 +66,7 @@ namespace MQTTnet.Server
             }
         }
 
-        void TryMaintainConnection(MqttClientConnection connection, DateTime now)
+        void TryMaintainConnection(MqttClient connection, DateTime now)
         {
             try
             {

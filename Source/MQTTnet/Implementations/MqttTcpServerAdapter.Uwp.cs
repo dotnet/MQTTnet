@@ -1,7 +1,7 @@
 #if WINDOWS_UWP
 using Windows.Networking.Sockets;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 using MQTTnet.Server;
 using System;
@@ -13,7 +13,7 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpServerAdapter : IMqttServerAdapter
     {
-        readonly IMqttNetScopedLogger _logger;
+        readonly MqttNetSourceLogger _logger;
         readonly IMqttNetLogger _rootLogger;
 
         IMqttServerOptions _options;
@@ -22,7 +22,7 @@ namespace MQTTnet.Implementations
         public MqttTcpServerAdapter(IMqttNetLogger logger)
         {
             _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _logger = logger.CreateScopedLogger(nameof(MqttTcpServerAdapter));
+            _logger = logger.WithSource(nameof(MqttTcpServerAdapter));
         }
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }

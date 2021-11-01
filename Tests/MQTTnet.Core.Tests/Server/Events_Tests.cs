@@ -18,7 +18,7 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
 
-                MqttServerClientConnectedEventArgs eventArgs = null;
+                ClientConnectedEventArgs eventArgs = null;
                 server.ClientConnectedAsync += e =>
                 {
                     eventArgs = e;
@@ -45,7 +45,7 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
 
-                MqttServerClientDisconnectedEventArgs eventArgs = null;
+                ClientDisconnectedEventArgs eventArgs = null;
                 server.ClientDisconnectedAsync += e =>
                 {
                     eventArgs = e;
@@ -72,7 +72,7 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
 
-                MqttServerClientSubscribedTopicEventArgs eventArgs = null;
+                ClientSubscribedTopicEventArgs eventArgs = null;
                 server.ClientSubscribedTopicAsync += e =>
                 {
                     eventArgs = e;
@@ -99,7 +99,7 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
         
-                MqttServerClientUnsubscribedTopicEventArgs eventArgs = null;
+                ClientUnsubscribedTopicEventArgs eventArgs = null;
                 server.ClientUnsubscribedTopicAsync += e =>
                 {
                     eventArgs = e;
@@ -125,8 +125,8 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
         
-                InterceptingMqttClientPublishEventArgs eventArgs = null;
-                server.InterceptingClientPublishAsync += e =>
+                InterceptingPublishEventArgs eventArgs = null;
+                server.InterceptingPublishAsync += e =>
                 {
                     eventArgs = e;
                     return Task.CompletedTask;

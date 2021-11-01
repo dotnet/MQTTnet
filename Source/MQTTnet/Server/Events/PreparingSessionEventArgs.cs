@@ -4,9 +4,9 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
-    public sealed class PreparingMqttClientSessionEventArgs : EventArgs
+    public sealed class PreparingSessionEventArgs : EventArgs
     {
-        public string ClientId { get; internal set; }
+        public string Id { get; internal set; }
         
         // TODO: Allow adding of packets to the queue etc.
         
@@ -25,5 +25,21 @@ namespace MQTTnet.Server
         public List<MqttSubscription> Subscriptions { get; } = new List<MqttSubscription>();
 
         public List<MqttPublishPacket> PublishPackets { get; } = new List<MqttPublishPacket>();
+        
+        IDictionary<object, object> Items { get; set; }
+
+        /// <summary>
+        /// Gets the last will message.
+        /// In MQTT, you use the last will message feature to notify other clients about an ungracefully disconnected client.
+        /// </summary>
+        MqttApplicationMessage WillMessage { get; set; }
+
+        /// <summary>
+        /// Gets the will delay interval.
+        /// This is the time between the client disconnect and the time the will message will be sent.
+        /// </summary>
+        uint? WillDelayInterval { get; set; }
+
+        DateTime? SessionExpiryTimestamp { get; set; }
     }
 }

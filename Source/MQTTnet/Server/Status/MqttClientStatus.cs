@@ -7,9 +7,9 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientStatus : IMqttClientStatus
     {
-        readonly MqttClientConnection _connection;
+        readonly MqttClient _connection;
 
-        public MqttClientStatus(MqttClientConnection connection)
+        public MqttClientStatus(MqttClient connection)
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }

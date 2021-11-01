@@ -20,7 +20,7 @@ namespace MQTTnet.Server
 
         public MqttApplicationMessage ApplicationMessage { get; private set; }
         
-        public MqttApplicationMessageResponse Response { get; private set; } = new MqttApplicationMessageResponse();
+        public PublishResponse Response { get; private set; } = new PublishResponse();
             
         public bool ProcessPublish { get; private set; } = true;
 
@@ -29,13 +29,13 @@ namespace MQTTnet.Server
         public async Task Invoke(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
             // Reset to defaults.
-            Response = new MqttApplicationMessageResponse();
+            Response = new PublishResponse();
             ProcessPublish = true;
             CloseConnection = false;
             ApplicationMessage = applicationMessage;
                 
             // Intercept.
-            var eventArgs = new InterceptingMqttClientPublishEventArgs
+            var eventArgs = new InterceptingPublishEventArgs
             {
                 ClientId = _clientId,
                 ApplicationMessage = applicationMessage,
@@ -53,7 +53,7 @@ namespace MQTTnet.Server
                 eventArgs.ProcessPublish = false;
             }
             
-            await _eventContainer.InterceptingClientPublishEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+            await _eventContainer.InterceptingPublishEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
             // Expose results.
             ProcessPublish = eventArgs.ProcessPublish && eventArgs.ApplicationMessage != null;

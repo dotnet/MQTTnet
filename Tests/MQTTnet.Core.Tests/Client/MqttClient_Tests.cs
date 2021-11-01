@@ -27,7 +27,7 @@ namespace MQTTnet.Tests.Client
                 var client = await testEnvironment.ConnectLowLevelClient();
 
                 var i = 0;
-                server.InterceptingClientPublishAsync += c =>
+                server.InterceptingPublishAsync += c =>
                 {
                     i++;
                     return Task.CompletedTask;
@@ -766,8 +766,8 @@ namespace MQTTnet.Tests.Client
 
                 await Task.Delay(500);
 
-                var clientStatus = await testEnvironment.Server.GetClientStatusAsync();
-                var sessionStatus = await testEnvironment.Server.GetSessionStatusAsync();
+                var clientStatus = await testEnvironment.Server.GetClientsAsync();
+                var sessionStatus = await testEnvironment.Server.GetSessionsAsync();
 
                 for (var i = 0; i < 98; i++)
                 {

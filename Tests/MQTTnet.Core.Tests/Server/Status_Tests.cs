@@ -23,8 +23,8 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                var clientStatus = await server.GetClientStatusAsync();
-                var sessionStatus = await server.GetSessionStatusAsync();
+                var clientStatus = await server.GetClientsAsync();
+                var sessionStatus = await server.GetSessionsAsync();
 
                 Assert.AreEqual(2, clientStatus.Count);
                 Assert.AreEqual(2, sessionStatus.Count);
@@ -37,8 +37,8 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                clientStatus = await server.GetClientStatusAsync();
-                sessionStatus = await server.GetSessionStatusAsync();
+                clientStatus = await server.GetClientsAsync();
+                sessionStatus = await server.GetSessionsAsync();
 
                 Assert.AreEqual(0, clientStatus.Count);
                 Assert.AreEqual(0, sessionStatus.Count);
@@ -56,7 +56,7 @@ namespace MQTTnet.Tests.Server
                 
                 await Task.Delay(1000);
 
-                var clientStatus = await server.GetClientStatusAsync();
+                var clientStatus = await server.GetClientsAsync();
 
                 Assert.AreEqual(1, clientStatus.Count);
                 Assert.IsTrue(clientStatus.Any(s => s.ClientId == c1.Options.ClientId));
@@ -67,7 +67,7 @@ namespace MQTTnet.Tests.Server
 
                 Assert.IsFalse(c1.IsConnected);
 
-                clientStatus = await server.GetClientStatusAsync();
+                clientStatus = await server.GetClientsAsync();
 
                 Assert.AreEqual(0, clientStatus.Count);
             }
@@ -87,8 +87,8 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                var clientStatus = await server.GetClientStatusAsync();
-                var sessionStatus = await server.GetSessionStatusAsync();
+                var clientStatus = await server.GetClientsAsync();
+                var sessionStatus = await server.GetSessionsAsync();
 
                 Assert.AreEqual(1, clientStatus.Count);
                 Assert.AreEqual(2, sessionStatus.Count);
@@ -97,8 +97,8 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                clientStatus = await server.GetClientStatusAsync();
-                sessionStatus = await server.GetSessionStatusAsync();
+                clientStatus = await server.GetClientsAsync();
+                sessionStatus = await server.GetSessionsAsync();
 
                 Assert.AreEqual(0, clientStatus.Count);
                 Assert.AreEqual(2, sessionStatus.Count);
@@ -119,7 +119,7 @@ namespace MQTTnet.Tests.Server
                     await c1.PublishAsync("a");
                     await Task.Delay(50);
 
-                    var clientStatus = await server.GetClientStatusAsync();
+                    var clientStatus = await server.GetClientsAsync();
                     Assert.AreEqual(i, clientStatus.First().SentApplicationMessagesCount);
                     Assert.AreEqual(0, clientStatus.First().ReceivedApplicationMessagesCount);
                 }
@@ -143,7 +143,7 @@ namespace MQTTnet.Tests.Server
                     
                     await Task.Delay(500);
 
-                    var clientStatus = await server.GetClientStatusAsync();
+                    var clientStatus = await server.GetClientsAsync();
 
                     Assert.AreEqual(i, clientStatus.First().SentApplicationMessagesCount, "SAMC invalid!");
 

@@ -20,7 +20,7 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
 
-                server.InterceptingClientSubscriptionAsync += e =>
+                server.InterceptingSubscriptionAsync += e =>
                 {
                     // Set the topic to "a" regards what the client wants to subscribe.
                     e.TopicFilter.Topic = "a";
@@ -290,7 +290,7 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
 
-                server.InterceptingClientSubscriptionAsync += e =>
+                server.InterceptingSubscriptionAsync += e =>
                 {
                     if (e.TopicFilter.Topic == "not_allowed_topic")
                     {

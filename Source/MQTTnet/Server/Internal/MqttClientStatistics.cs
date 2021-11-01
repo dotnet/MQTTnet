@@ -4,7 +4,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientConnectionStatistics
+    public sealed class MqttClientStatistics
     {
         // Start with 1 because the CONNACK packet is not counted here.
         long _receivedPacketsCount = 1;
@@ -15,7 +15,7 @@ namespace MQTTnet.Server
         long _receivedApplicationMessagesCount;
         long _sentApplicationMessagesCount;
 
-        public MqttClientConnectionStatistics()
+        public MqttClientStatistics()
         {
             ConnectedTimestamp = DateTime.UtcNow;
 

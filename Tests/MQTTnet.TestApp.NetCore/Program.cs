@@ -134,39 +134,6 @@ namespace MQTTnet.TestApp.NetCore
         }
     }
     
-    public class RetainedMessageHandler : IMqttServerStorage
-    {
-        const string Filename = "C:\\MQTT\\RetainedMessages.json";
-
-        public Task SaveRetainedMessagesAsync(IList<MqttApplicationMessage> messages)
-        {
-            var directory = Path.GetDirectoryName(Filename);
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            File.WriteAllText(Filename, JsonConvert.SerializeObject(messages));
-            return Task.FromResult(0);
-        }
-
-        public Task<IList<MqttApplicationMessage>> LoadRetainedMessagesAsync()
-        {
-            IList<MqttApplicationMessage> retainedMessages;
-            if (File.Exists(Filename))
-            {
-                var json = File.ReadAllText(Filename);
-                retainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(json);
-            }
-            else
-            {
-                retainedMessages = new List<MqttApplicationMessage>();
-            }
-
-            return Task.FromResult(retainedMessages);
-        }
-    }
-
     public class WikiCode
     {
         public void Code()

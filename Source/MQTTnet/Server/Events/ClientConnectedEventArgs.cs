@@ -3,7 +3,7 @@ using MQTTnet.Formatter;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttServerClientConnectedEventArgs : EventArgs
+    public sealed class ClientConnectedEventArgs : EventArgs
     {
         /// <summary>
         /// Gets the client identifier of the connected client.

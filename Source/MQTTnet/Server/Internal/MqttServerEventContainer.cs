@@ -5,29 +5,31 @@ namespace MQTTnet.Server
 {
     public sealed class MqttServerEventContainer
     {
-        public AsyncEvent<InterceptingMqttClientSubscriptionEventArgs> InterceptingClientSubscriptionEvent { get; } = new AsyncEvent<InterceptingMqttClientSubscriptionEventArgs>();
+        public AsyncEvent<InterceptingSubscriptionEventArgs> InterceptingSubscriptionEvent { get; } = new AsyncEvent<InterceptingSubscriptionEventArgs>();
         
-        public AsyncEvent<InterceptingMqttClientUnsubscriptionEventArgs> InterceptingClientUnsubscriptionEvent { get; } = new AsyncEvent<InterceptingMqttClientUnsubscriptionEventArgs>();
+        public AsyncEvent<InterceptingUnsubscriptionEventArgs> InterceptingUnsubscriptionEvent { get; } = new AsyncEvent<InterceptingUnsubscriptionEventArgs>();
         
-        public AsyncEvent<InterceptingMqttClientPublishEventArgs> InterceptingClientPublishEvent { get; } = new AsyncEvent<InterceptingMqttClientPublishEventArgs>();
+        public AsyncEvent<InterceptingPublishEventArgs> InterceptingPublishEvent { get; } = new AsyncEvent<InterceptingPublishEventArgs>();
         
-        public AsyncEvent<ValidatingMqttClientConnectionEventArgs> ValidatingClientConnectionEvent { get; } = new AsyncEvent<ValidatingMqttClientConnectionEventArgs>();
+        public AsyncEvent<ValidatingConnectionEventArgs> ValidatingConnectionEvent { get; } = new AsyncEvent<ValidatingConnectionEventArgs>();
         
-        public AsyncEvent<MqttServerClientConnectedEventArgs> ClientConnectedEvent { get; } = new AsyncEvent<MqttServerClientConnectedEventArgs>();
+        public AsyncEvent<ClientConnectedEventArgs> ClientConnectedEvent { get; } = new AsyncEvent<ClientConnectedEventArgs>();
         
-        public AsyncEvent<MqttServerClientDisconnectedEventArgs> ClientDisconnectedEvent { get; } = new AsyncEvent<MqttServerClientDisconnectedEventArgs>();
+        public AsyncEvent<ClientDisconnectedEventArgs> ClientDisconnectedEvent { get; } = new AsyncEvent<ClientDisconnectedEventArgs>();
         
-        public AsyncEvent<MqttServerClientSubscribedTopicEventArgs> ClientSubscribedTopicEvent { get; } = new AsyncEvent<MqttServerClientSubscribedTopicEventArgs>();
+        public AsyncEvent<ClientSubscribedTopicEventArgs> ClientSubscribedTopicEvent { get; } = new AsyncEvent<ClientSubscribedTopicEventArgs>();
         
-        public AsyncEvent<MqttServerClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopicEvent { get; } = new AsyncEvent<MqttServerClientUnsubscribedTopicEventArgs>();
+        public AsyncEvent<ClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopicEvent { get; } = new AsyncEvent<ClientUnsubscribedTopicEventArgs>();
         
-        public AsyncEvent<PreparingMqttClientSessionEventArgs> PreparingClientSessionEvent { get; } = new AsyncEvent<PreparingMqttClientSessionEventArgs>();
+        public AsyncEvent<PreparingSessionEventArgs> PreparingSessionEvent { get; } = new AsyncEvent<PreparingSessionEventArgs>();
         
-        public AsyncEvent<MqttApplicationMessageNotConsumedEventArgs> ApplicationMessageNotConsumedEvent { get; } = new AsyncEvent<MqttApplicationMessageNotConsumedEventArgs>();
+        public AsyncEvent<ApplicationMessageNotConsumedEventArgs> ApplicationMessageNotConsumedEvent { get; } = new AsyncEvent<ApplicationMessageNotConsumedEventArgs>();
         
-        public AsyncEvent<EventArgs> RetainedApplicationMessageChangedEvent { get; } = new AsyncEvent<EventArgs>();
+        public AsyncEvent<RetainedMessageChangedEventArgs> RetainedMessageChangedEvent { get; } = new AsyncEvent<RetainedMessageChangedEventArgs>();
         
-        public AsyncEvent<EventArgs> RetainedApplicationMessageClearedEvent { get; } = new AsyncEvent<EventArgs>();
+        public AsyncEvent<LoadingRetainedMessagesEventArgs> LoadingRetainedMessagesEvent { get; } = new AsyncEvent<LoadingRetainedMessagesEventArgs>();
+        
+        public AsyncEvent<EventArgs> RetainedMessagesClearedEvent { get; } = new AsyncEvent<EventArgs>();
         
         public AsyncEvent<InterceptingPacketEventArgs> InterceptingInboundPacketEvent { get; } = new AsyncEvent<InterceptingPacketEventArgs>();
         

@@ -3,7 +3,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttApplicationMessageResponse
+    public sealed class PublishResponse
     {
         public MqttApplicationMessageResponseReasonCode ReasonCode { get; set; } = MqttApplicationMessageResponseReasonCode.Success;
         

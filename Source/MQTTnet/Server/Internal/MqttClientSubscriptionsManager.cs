@@ -16,29 +16,29 @@ namespace MQTTnet.Server
         readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim();
         readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>(4096);
 
-        readonly MqttClientSession _clientSession;
+        readonly MqttSession _session;
         readonly MqttServerOptions _options;
         readonly MqttServerEventContainer _eventContainer;
-        readonly IMqttRetainedMessagesManager _retainedMessagesManager;
+        readonly MqttRetainedMessagesManager _retainedMessagesManager;
 
         public MqttClientSubscriptionsManager(
-            MqttClientSession clientSession,
+            MqttSession session,
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
-            IMqttRetainedMessagesManager retainedMessagesManager)
+            MqttRetainedMessagesManager retainedMessagesManager)
         {
-            _clientSession = clientSession ?? throw new ArgumentNullException(nameof(clientSession));
+            _session = session ?? throw new ArgumentNullException(nameof(session));
             _options = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
         }
 
-        public async Task<MqttSubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
+        public async Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
 
-            var retainedApplicationMessages = await _retainedMessagesManager.GetMessagesAsync().ConfigureAwait(false);
-            var result = new MqttSubscribeResult();
+            var retainedApplicationMessages = await _retainedMessagesManager.GetMessages().ConfigureAwait(false);
+            var result = new SubscribeResult();
 
             // The topic filters are order by its QoS so that the higher QoS will win over a
             // lower one.
@@ -79,9 +79,9 @@ namespace MQTTnet.Server
                         subscribePacket.Properties?.SubscriptionIdentifier ?? 0,
                         interceptorContext.Response.ReasonCode);
 
-                    await _eventContainer.ClientSubscribedTopicEvent.InvokeAsync(() => new MqttServerClientSubscribedTopicEventArgs
+                    await _eventContainer.ClientSubscribedTopicEvent.InvokeAsync(() => new ClientSubscribedTopicEventArgs
                     {
-                        ClientId = _clientSession.Id,
+                        ClientId = _session.Id,
                         TopicFilter = finalTopicFilter
                     }).ConfigureAwait(false);
 
@@ -135,9 +135,9 @@ namespace MQTTnet.Server
 
             foreach (var topicFilter in unsubscribePacket.TopicFilters)
             {
-                await _eventContainer.ClientUnsubscribedTopicEvent.InvokeAsync(() => new MqttServerClientUnsubscribedTopicEventArgs
+                await _eventContainer.ClientUnsubscribedTopicEvent.InvokeAsync(() => new ClientUnsubscribedTopicEventArgs
                 {
-                    ClientId = _clientSession.Id,
+                    ClientId = _session.Id,
                     TopicFilter = topicFilter
                 }).ConfigureAwait(false);
             }
@@ -159,7 +159,7 @@ namespace MQTTnet.Server
                 _subscriptionsLock.ExitReadLock();
             }
 
-            var senderIsReceiver = string.Equals(senderClientId, _clientSession.Id);
+            var senderIsReceiver = string.Equals(senderClientId, _session.Id);
 
             var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
             var subscriptionIdentifiers = new HashSet<uint>();
@@ -262,7 +262,7 @@ namespace MQTTnet.Server
         }
 
         static void FilterRetainedApplicationMessages(IList<MqttApplicationMessage> retainedApplicationMessages, CreateSubscriptionResult createSubscriptionResult,
-            MqttSubscribeResult subscribeResult)
+            SubscribeResult subscribeResult)
         {
             for (var i = retainedApplicationMessages.Count - 1; i >= 0; i--)
             {
@@ -294,14 +294,13 @@ namespace MQTTnet.Server
                 var queuedApplicationMessage = new MqttQueuedApplicationMessage
                 {
                     ApplicationMessage = retainedApplicationMessage,
-                    IsRetainedMessage = true,
                     SubscriptionQualityOfServiceLevel = createSubscriptionResult.Subscription.GrantedQualityOfServiceLevel
                 };
 
-                if (createSubscriptionResult.Subscription.Identifier > 0)
-                {
-                    queuedApplicationMessage.SubscriptionIdentifiers = new List<uint> {createSubscriptionResult.Subscription.Identifier};
-                }
+                // if (createSubscriptionResult.Subscription.Identifier > 0)
+                // {
+                //     queuedApplicationMessage.SubscriptionIdentifiers = new List<uint> {createSubscriptionResult.Subscription.Identifier};
+                // }
 
                 subscribeResult.RetainedApplicationMessages.Add(queuedApplicationMessage);
 
@@ -309,14 +308,14 @@ namespace MQTTnet.Server
             }
         }
 
-        async Task<InterceptingMqttClientSubscriptionEventArgs> InterceptSubscribe(MqttTopicFilter topicFilter, CancellationToken cancellationToken)
+        async Task<InterceptingSubscriptionEventArgs> InterceptSubscribe(MqttTopicFilter topicFilter, CancellationToken cancellationToken)
         {
-            var subscriptionReceivedEventArgs = new InterceptingMqttClientSubscriptionEventArgs
+            var subscriptionReceivedEventArgs = new InterceptingSubscriptionEventArgs
             {
-                ClientId = _clientSession.Id,
+                ClientId = _session.Id,
                 TopicFilter = topicFilter,
-                SessionItems = _clientSession.Items,
-                Session = new MqttSessionStatus(_clientSession),
+                SessionItems = _session.Items,
+                Session = new MqttSessionStatus(_session),
                 CancellationToken = cancellationToken
             };
 
@@ -339,19 +338,19 @@ namespace MQTTnet.Server
             }
             else
             {
-                await _eventContainer.InterceptingClientSubscriptionEvent.InvokeAsync(subscriptionReceivedEventArgs).ConfigureAwait(false);
+                await _eventContainer.InterceptingSubscriptionEvent.InvokeAsync(subscriptionReceivedEventArgs).ConfigureAwait(false);
             }
 
             return subscriptionReceivedEventArgs;
         }
 
-        async Task<InterceptingMqttClientUnsubscriptionEventArgs> InterceptUnsubscribe(string topicFilter, MqttSubscription mqttSubscription, CancellationToken cancellationToken)
+        async Task<InterceptingUnsubscriptionEventArgs> InterceptUnsubscribe(string topicFilter, MqttSubscription mqttSubscription, CancellationToken cancellationToken)
         {
-            var clientUnsubscribingTopicEventArgs = new InterceptingMqttClientUnsubscriptionEventArgs
+            var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs
             {
-                ClientId = _clientSession.Id,
+                ClientId = _session.Id,
                 Topic = topicFilter,
-                SessionItems = _clientSession.Items,
+                SessionItems = _session.Items,
                 CancellationToken = cancellationToken
             };
 
@@ -364,7 +363,7 @@ namespace MQTTnet.Server
                 clientUnsubscribingTopicEventArgs.Response.ReasonCode = MqttUnsubscribeReasonCode.Success;
             }
 
-            await _eventContainer.InterceptingClientUnsubscriptionEvent.InvokeAsync(clientUnsubscribingTopicEventArgs).ConfigureAwait(false);
+            await _eventContainer.InterceptingUnsubscriptionEvent.InvokeAsync(clientUnsubscribingTopicEventArgs).ConfigureAwait(false);
 
             return clientUnsubscribingTopicEventArgs;
         }

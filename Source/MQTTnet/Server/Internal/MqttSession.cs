@@ -10,7 +10,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientSession : IDisposable
+    public sealed class MqttSession : IDisposable
     {
         readonly MqttPacketBus _packetBus = new MqttPacketBus();
 
@@ -19,11 +19,11 @@ namespace MQTTnet.Server
         readonly MqttServerOptions _serverOptions;
         readonly MqttClientSessionsManager _clientSessionsManager;
 
-        public MqttClientSession(string clientId,
+        public MqttSession(string clientId,
             IDictionary<object, object> items,
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
-            IMqttRetainedMessagesManager retainedMessagesManager,
+            MqttRetainedMessagesManager retainedMessagesManager,
             MqttClientSessionsManager clientSessionsManager)
         {
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));

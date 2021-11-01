@@ -18,7 +18,7 @@ namespace MQTTnet.Formatter
             return pubRecPacket;
         }
 
-        public MqttBasePacket Create(MqttPublishPacket publishPacket, MqttApplicationMessageResponse applicationMessageResponse)
+        public MqttBasePacket Create(MqttPublishPacket publishPacket, PublishResponse applicationMessageResponse)
         {
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 

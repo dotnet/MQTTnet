@@ -6,7 +6,7 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttConnAckPacketFactory
     {
-        public MqttConnAckPacket Create(ValidatingMqttClientConnectionEventArgs clientConnectionValidationEventArgs)
+        public MqttConnAckPacket Create(ValidatingConnectionEventArgs clientConnectionValidationEventArgs)
         {
             if (clientConnectionValidationEventArgs == null) throw new ArgumentNullException(nameof(clientConnectionValidationEventArgs));
 

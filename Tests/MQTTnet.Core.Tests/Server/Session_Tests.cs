@@ -20,7 +20,7 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
 
-                server.ValidatingClientConnectionAsync += e =>
+                server.ValidatingConnectionAsync += e =>
                 {
                     // Don't validate anything. Just set some session items.
                     e.SessionItems["can_subscribe_x"] = true;
@@ -29,7 +29,7 @@ namespace MQTTnet.Tests.Server
                     return Task.CompletedTask;
                 };
                 
-                server.InterceptingClientSubscriptionAsync += e =>
+                server.InterceptingSubscriptionAsync += e =>
                 {
                     if (e.TopicFilter.Topic == "x")
                     {
@@ -42,7 +42,7 @@ namespace MQTTnet.Tests.Server
                     return Task.CompletedTask;
                 };
 
-                server.InterceptingClientPublishAsync += e =>
+                server.InterceptingPublishAsync += e =>
                 {
                     e.ApplicationMessage.Payload =
                         Encoding.UTF8.GetBytes(
@@ -80,7 +80,7 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer();
 
-                server.ValidatingClientConnectionAsync += e =>
+                server.ValidatingConnectionAsync += e =>
                 {
                     // Don't validate anything. Just set some session items.
                     e.SessionItems["can_subscribe_x"] = true;
@@ -91,7 +91,7 @@ namespace MQTTnet.Tests.Server
 
                 await testEnvironment.ConnectClient();
 
-                var sessionStatus = await testEnvironment.Server.GetSessionStatusAsync();
+                var sessionStatus = await testEnvironment.Server.GetSessionsAsync();
                 var session = sessionStatus.First();
 
                 Assert.AreEqual(true, session.Items["can_subscribe_x"]);
@@ -128,7 +128,7 @@ namespace MQTTnet.Tests.Server
                 var client = await testEnvironment.ConnectClient();
 
                 // Arrange session status tracking.
-                var status = await server.GetSessionStatusAsync();
+                var status = await server.GetSessionsAsync();
                 var clientStatus = status[0];
 
                 var deletedEventFired = false;
@@ -158,7 +158,7 @@ namespace MQTTnet.Tests.Server
                 var messageReceivedHandler = testEnvironment.CreateApplicationMessageHandler(client);
                 
                 // Arrange session status tracking.
-                var status = await server.GetSessionStatusAsync();
+                var status = await server.GetSessionsAsync();
                 var clientStatus = status[0];
 
                 // Act: Inject the application message.

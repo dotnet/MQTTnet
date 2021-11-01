@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
+using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using Newtonsoft.Json;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -36,10 +40,7 @@ namespace MQTTnet.TestApp.NetCore
         {
             try
             {
-                var options = new MqttServerOptions
-                {
-                    Storage = new RetainedMessageHandler()
-                };
+                var options = new MqttServerOptions();
 
                 // Extend the timestamp for all messages from clients.
                 // Protect several topics from being subscribed from every client.
@@ -52,7 +53,45 @@ namespace MQTTnet.TestApp.NetCore
 
                 var mqttServer = new MqttFactory().CreateMqttServer(options);
 
-                mqttServer.InterceptingClientPublishAsync += e =>
+                const string Filename = "C:\\MQTT\\RetainedMessages.json";
+                
+                mqttServer.RetainedMessageChangedAsync += e =>
+                {
+                    var directory = Path.GetDirectoryName(Filename);
+                    if (!Directory.Exists(directory))
+                    {
+                        Directory.CreateDirectory(directory);
+                    }
+
+                    File.WriteAllText(Filename, JsonConvert.SerializeObject(e.StoredRetainedMessages));
+                    return Task.FromResult(0);
+                };
+                
+                mqttServer.RetainedMessagesClearedAsync += e =>
+                {
+                    File.Delete(Filename);
+                    return Task.FromResult(0);
+                };
+                
+                mqttServer.LoadingRetainedMessageAsync += e =>
+                {
+                    List<MqttApplicationMessage> retainedMessages;
+                    if (File.Exists(Filename))
+                    {
+                        var json = File.ReadAllText(Filename);
+                        retainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(json);
+                    }
+                    else
+                    {
+                        retainedMessages = new List<MqttApplicationMessage>();
+                    }
+
+                    e.StoredRetainedMessages = retainedMessages;
+
+                    return Task.FromResult(0);
+                };
+
+                mqttServer.InterceptingPublishAsync += e =>
                 {
                     if (MqttTopicFilterComparer.Compare(e.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#") == MqttTopicFilterCompareResult.IsMatch)
                     {
@@ -70,7 +109,7 @@ namespace MQTTnet.TestApp.NetCore
                     return PlatformAbstractionLayer.CompletedTask;
                 };
                 
-                mqttServer.ValidatingClientConnectionAsync += e =>
+                mqttServer.ValidatingConnectionAsync += e =>
                 {
                     if (e.ClientId == "SpecialClient")
                     {
@@ -83,7 +122,7 @@ namespace MQTTnet.TestApp.NetCore
                     return PlatformAbstractionLayer.CompletedTask;
                 };
 
-                mqttServer.InterceptingClientSubscriptionAsync += e =>
+                mqttServer.InterceptingSubscriptionAsync += e =>
                 {
                     if (e.TopicFilter.Topic.StartsWith("admin/foo/bar") && e.ClientId != "theAdmin")
                     {
@@ -99,7 +138,7 @@ namespace MQTTnet.TestApp.NetCore
                     return PlatformAbstractionLayer.CompletedTask;
                 };
                 
-                mqttServer.InterceptingClientPublishAsync += e =>
+                mqttServer.InterceptingPublishAsync += e =>
                 {
                     MqttNetConsoleLogger.PrintToConsole(
                         $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0])}'",

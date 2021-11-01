@@ -6,14 +6,6 @@ namespace MQTTnet.Server
     public sealed class MqttQueuedApplicationMessage
     {
         public MqttApplicationMessage ApplicationMessage { get; set; }
-
-        public string SenderClientId { get; set; }
-
-        public bool IsRetainedMessage { get; set; }
-
-        public List<uint> SubscriptionIdentifiers { get; set; }
-        
-        public bool IsDuplicate { get; set; }
         
         /// <summary>
         /// Gets or sets the subscription quality of service level.

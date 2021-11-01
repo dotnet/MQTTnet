@@ -1,17 +1,14 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
-using MQTTnet.Tests.Mockups;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Tests.MQTTv5
 {
     [TestClass]
-    public class Server_Tests : BaseTestClass
+    public sealed class Server_Tests : BaseTestClass
     {
-        public TestContext TestContext { get; set; }
-
         [TestMethod]
         public async Task Will_Message_Send()
         {
@@ -46,7 +43,7 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Validate_IsSessionPresent()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 // Create server with persistent sessions enabled
 
@@ -83,7 +80,6 @@ namespace MQTTnet.Tests.MQTTv5
                     .WithCleanSession(false)
                     .WithClientId(ClientId)
                     .Build();
-
 
                 var result = await client2.ConnectAsync(options).ConfigureAwait(false);
 

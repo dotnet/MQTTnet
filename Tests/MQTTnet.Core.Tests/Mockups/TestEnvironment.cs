@@ -181,7 +181,7 @@ namespace MQTTnet.Tests.Mockups
 
             Server = Factory.CreateMqttServer(options, ServerLogger);
 
-            Server.ValidatingClientConnectionAsync += e =>
+            Server.ValidatingConnectionAsync += e =>
             {
                 if (TestContext != null)
                 {

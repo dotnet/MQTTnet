@@ -3,7 +3,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttServerClientSubscribedTopicEventArgs : EventArgs
+    public sealed class ClientSubscribedTopicEventArgs : EventArgs
     {
         /// <summary>
         /// Gets the client identifier.

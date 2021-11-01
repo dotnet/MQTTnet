@@ -140,18 +140,6 @@ namespace MQTTnet.Server
             return this;
         }
 #endif
-
-        public MqttServerOptionsBuilder WithStorage(IMqttServerStorage value)
-        {
-            _options.Storage = value;
-            return this;
-        }
-
-        public MqttServerOptionsBuilder WithRetainedMessagesManager(IMqttRetainedMessagesManager value)
-        {
-            _options.RetainedMessagesManager = value;
-            return this;
-        }
         
         // public MqttServerOptionsBuilder WithApplicationMessageInterceptor(IMqttServerApplicationMessageInterceptor value)
         // {

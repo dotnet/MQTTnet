@@ -303,7 +303,7 @@ namespace MQTTnet.TestApp.NetCore
             stopWatch.Stop();
 
             System.Console.Write(string.Format("{0} messages published and received in {1:0.000} seconds, ", totalNumMessagesReceived, stopWatch.ElapsedMilliseconds / 1000.0));
-            ConsoleWriteLineSuccess(string.Format("messages per second: {0:0.000}", totalNumMessagesReceived / (stopWatch.ElapsedMilliseconds / 1000.0)));
+            ConsoleWriteLineSuccess(string.Format("messages per second: {0}", (int)(totalNumMessagesReceived / (stopWatch.ElapsedMilliseconds / 1000.0))));
         }
 
         int CountTopics(Dictionary<string, List<string>> topicsByPublisher)

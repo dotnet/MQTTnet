@@ -15,13 +15,14 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientSessionsManager : IDisposable
+    public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification, IDisposable
     {
         readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
         
         readonly AsyncLock _createConnectionSyncRoot = new AsyncLock();
         readonly Dictionary<string, MqttClient> _clients = new Dictionary<string, MqttClient>(4096);
         readonly Dictionary<string, MqttSession> _sessions = new Dictionary<string, MqttSession>(4096);
+        readonly HashSet<MqttSession> _subscriberSessions = new HashSet<MqttSession>();
 
         readonly IDictionary<object, object> _serverSessionItems = new ConcurrentDictionary<object, object>();
 
@@ -275,6 +276,10 @@ namespace MQTTnet.Server
             {
                 _sessions.TryGetValue(clientId, out session);
                 _sessions.Remove(clientId);
+                if (session != null)
+                {
+                    _subscriberSessions.Remove(session);
+                }
             }
 
             try
@@ -340,13 +345,22 @@ namespace MQTTnet.Server
                 List<MqttSession> sessions;
                 lock (_sessions)
                 {
-                    sessions = _sessions.Values.ToList();
+                    // only subscriber clients are of interest here
+                    sessions = _subscriberSessions.ToList();
                 }
+
+                // Calculate application message topic hash once for subscription checks
+                ulong topicHash;
+                ulong topicHashMask; // not needed
+                bool topicHasWildcard; // not needed
+                MqttSubscription.CalcTopicHash(applicationMessage.Topic, out topicHash, out topicHashMask, out topicHasWildcard);
+
 
                 foreach (var clientSession in sessions)
                 {
                     var checkSubscriptionsResult = clientSession.SubscriptionsManager.CheckSubscriptions(
                         applicationMessage.Topic, 
+                        topicHash,
                         applicationMessage.QualityOfServiceLevel,
                         senderClientId);
                     
@@ -559,6 +573,38 @@ namespace MQTTnet.Server
                 _eventContainer,
                 _retainedMessagesManager,
                 this);
+        }
+
+        public void OnSubscriptionsAdded(MqttSession clientSession, List<string> subscriptionTopics)
+        {
+            lock (_sessions)
+            {
+                foreach (var subscriptionTopic in subscriptionTopics)
+                {
+                    if (!clientSession.HasSubscribedTopics)
+                    {
+                        // first subscribed topic
+                        _subscriberSessions.Add(clientSession);
+                    }
+                    clientSession.AddSubscribedTopic(subscriptionTopic);
+                }
+            }
+        }
+
+        public void OnSubscriptionsRemoved(MqttSession clientSession, List<string> subscriptionTopics)
+        {
+            lock (_sessions)
+            {
+                foreach (var subscriptionTopic in subscriptionTopics)
+                {
+                    clientSession.RemoveSubscribedTopic(subscriptionTopic);
+                    if (!clientSession.HasSubscribedTopics)
+                    {
+                        // last subscription removed
+                        _subscriberSessions.Remove(clientSession);
+                    }
+                }
+            }
         }
 
         public void Dispose()

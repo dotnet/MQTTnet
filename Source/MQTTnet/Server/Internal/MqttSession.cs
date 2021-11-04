@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -19,19 +19,24 @@ namespace MQTTnet.Server
         readonly MqttServerOptions _serverOptions;
         readonly MqttClientSessionsManager _clientSessionsManager;
 
+        // Bookkeeping to know if this is a subscribing client; lazy intialize later.
+        HashSet<string> _subscribedTopics;
+
+
         public MqttSession(string clientId,
             IDictionary<object, object> items,
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
             MqttRetainedMessagesManager retainedMessagesManager,
-            MqttClientSessionsManager clientSessionsManager)
+            MqttClientSessionsManager clientSessionsManager
+            )
         {
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
             Id = clientId ?? throw new ArgumentNullException(nameof(clientId));
             Items = items ?? throw new ArgumentNullException(nameof(items));
 
-            SubscriptionsManager = new MqttClientSubscriptionsManager(this, serverOptions, eventContainer, retainedMessagesManager);
+            SubscriptionsManager = new MqttClientSubscriptionsManager(this, serverOptions, eventContainer, retainedMessagesManager, clientSessionsManager);
         }
 
         public event EventHandler Deleted;
@@ -118,6 +123,26 @@ namespace MQTTnet.Server
                 EnqueuePacket(new MqttPacketBusItem(publishPacket));
             }
         }
+
+        public void AddSubscribedTopic(string topic)
+        {
+            if (_subscribedTopics == null)
+            {
+                _subscribedTopics = new HashSet<string>();
+            }
+            _subscribedTopics.Add(topic);
+        }
+
+        public void RemoveSubscribedTopic(string topic)
+        {
+            if (_subscribedTopics != null)
+            {
+                _subscribedTopics.Remove(topic);
+            }
+        }
+
+        public bool HasSubscribedTopics { get { return _subscribedTopics != null && _subscribedTopics.Count > 0; } }
+
 
         public void Dispose()
         {

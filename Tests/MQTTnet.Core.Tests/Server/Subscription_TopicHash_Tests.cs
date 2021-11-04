@@ -477,6 +477,34 @@ namespace MQTTnet.Tests.Server
         }
 
 
+        [TestMethod]
+        public void Check_Selected_Topic_Hashes()
+        {
+            CheckTopicHash("client1/building1/level1/sensor1", 0x655D4AF100000000, 0xFFFFFFFFFFFFFFFF);
+            CheckTopicHash("client1/building1/+/sensor1", 0x655D00F100000000, 0xFFFF00FFFFFFFFFF);
+            CheckTopicHash("client1/+/level1/+", 0x65004A0000000000, 0xFF00FF00FFFFFFFF);
+            CheckTopicHash("client1/building1/level1/#", 0x655D4A0000000000, 0xFFFFFF0000000000);
+            CheckTopicHash("client1/+/level1/#", 0x65004A0000000000, 0xFF00FF0000000000);
+        }
+
+        void CheckTopicHash(string topic, ulong expectedHash, ulong expectedHashMask)
+        {
+            ulong topicHash;
+            ulong hashMask;
+            bool hasWildcard;
+
+            MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out hashMask, out hasWildcard);
+
+            Console.WriteLine();
+            Console.WriteLine("Topic: " + topic);
+            Console.WriteLine(string.Format("Hash: {0:X8}", topicHash));
+            Console.WriteLine(string.Format("Hash Mask: {0:X8}", hashMask));
+
+            Assert.AreEqual(expectedHash, topicHash, "Topic hash not as expected. Has the hash function changed?");
+            Assert.AreEqual(expectedHashMask, hashMask, "Topic hash mask not as expected");
+        }
+
+
         async Task<List<string>> PrepareTopicHashSubscriptions(TopicHashSelector selector)
         {
             Dictionary<string, List<string>> topicsByPublisher;

@@ -109,7 +109,7 @@ namespace MQTTnet.Server.Internal
 
         public void Dispose()
         {
-            _cancellationToken.Dispose();
+            _cancellationToken?.Dispose();
         }
 
         public async Task RunAsync()

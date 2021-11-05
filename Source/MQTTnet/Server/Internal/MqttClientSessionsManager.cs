@@ -579,13 +579,13 @@ namespace MQTTnet.Server
         {
             lock (_sessions)
             {
+                if (!clientSession.HasSubscribedTopics)
+                {
+                    // first subscribed topic
+                    _subscriberSessions.Add(clientSession);
+                }
                 foreach (var subscriptionTopic in subscriptionTopics)
                 {
-                    if (!clientSession.HasSubscribedTopics)
-                    {
-                        // first subscribed topic
-                        _subscriberSessions.Add(clientSession);
-                    }
                     clientSession.AddSubscribedTopic(subscriptionTopic);
                 }
             }
@@ -598,11 +598,11 @@ namespace MQTTnet.Server
                 foreach (var subscriptionTopic in subscriptionTopics)
                 {
                     clientSession.RemoveSubscribedTopic(subscriptionTopic);
-                    if (!clientSession.HasSubscribedTopics)
-                    {
-                        // last subscription removed
-                        _subscriberSessions.Remove(clientSession);
-                    }
+                }
+                if (!clientSession.HasSubscribedTopics)
+                {
+                    // last subscription removed
+                    _subscriberSessions.Remove(clientSession);
                 }
             }
         }

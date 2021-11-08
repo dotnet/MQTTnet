@@ -12,26 +12,7 @@
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</description>
     <releaseNotes>
-* [Core] Added all builders to the MQTT factory.
-* [Core] Removed global logger and refactored logging (BREAKING CHANGE!).
-* [Client] Renamed _MqttClientConnectResult_ to _MqttClientConnectResult_ (BREAKING CHANGE!).
-* [ManagedClient] Extended ReconnectAsync (thanks to @nvsnkv, #1202).
-* [ManagedClient] Improved Amazon AWS support (thanks to @scottbrogden-iheartmedia, #1209). 
-* [ManagedClient] Fixed bug that allowed invalid subscriptions (Thanks to @marcelwinh).
-* [Server] Added support for _RetainHandling_ (MQTTv5, BREAKING CHANGE!).
-* [Server] Added support for _NoLocal_ (MQTTv5, BREAKING CHANGE!).
-* [Server] Added support for _SubscriptionIdentifier_ (MQTTv5, BREAKING CHANGE!).
-* [Server] Server now reports supported features properly after successful connection (MQTTv5, BREAKING CHANGE!).
-* [Server] Fixed a memory/performance leak when using QoS Level 1.
-* [Server] Exposed connection timestamp in client status. 
-* [Server] Refactored connection management code. 
-* [Server] Exposed more details in _MqttServerClientConnectedEventArgs_. 
-* [Server] Processing all pending messages before stopping (thanks to @AblEdge, #1234).
-* [Server] Added support for a custom exception handler in _MqttServerMultiThreadedApplicationMessageInterceptorDelegate_.
-* [Server] Removed logger from _MqttServerMultiThreadedApplicationMessageInterceptorDelegate_ (BREAKING CHANGE!).
-* [Server] Fixed a memory leak when deleting sessions.
-* [Server] Fixed timestamp check in server keep-alive monitor (thanks to @logicaloud, #1277).
-* [MQTTnet.Server] Moved server project to a dedicated GitHub repository.
+* [Core] Removed IDisposable from MqttClientConnection.cs (Fixes #1284).
 Git commit: $gitCommit
     </releaseNotes>
     <copyright>Copyright Christian Kratky 2016-2021</copyright>

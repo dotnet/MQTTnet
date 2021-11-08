@@ -183,12 +183,10 @@ namespace MQTTnet.Server
 
         public CheckSubscriptionsResult CheckSubscriptions(string topic, ulong topicHash, MqttQualityOfServiceLevel qosLevel, string senderClientId)
         {
-            List<MqttSubscription> subscriptions;
+            List<MqttSubscription> subscriptions = new List<MqttSubscription>();
             _subscriptionsLock.EnterReadLock();
             try
             {
-                subscriptions = new List<MqttSubscription>();
-
                 if (_noWildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var noWildcardSubs))
                 {
                     subscriptions.AddRange(noWildcardSubs.ToList());

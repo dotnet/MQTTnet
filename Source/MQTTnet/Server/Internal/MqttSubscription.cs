@@ -91,7 +91,7 @@ namespace MQTTnet.Server
                 }
                 else
                 {
-                    // The checksum should designed to reduce the hash bucket depth for the expected
+                    // The checksum should be designed to reduce the hash bucket depth for the expected
                     // fairly regularly named MQTT topics that don't differ much,
                     // i.e. "room1/sensor1"
                     //      "room1/sensor2"

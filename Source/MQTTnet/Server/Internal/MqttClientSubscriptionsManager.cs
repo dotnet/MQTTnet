@@ -143,6 +143,31 @@ namespace MQTTnet.Server
                     {
                         _subscriptions.Remove(topicFilter);
 
+                        // must remove subscription object from topic hash dictionary also
+                        
+                        if (existingSubscription.TopicHasWildcard)
+                        {
+                            if (_wildcardSubscriptionsByTopicHash.TryGetValue(existingSubscription.TopicHash, out var subs))
+                            {
+                                subs.Remove(existingSubscription);
+                                if (subs.Count == 0)
+                                {
+                                    _wildcardSubscriptionsByTopicHash.Remove(existingSubscription.TopicHash);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (_noWildcardSubscriptionsByTopicHash.TryGetValue(existingSubscription.TopicHash, out var subs))
+                            {
+                                subs.Remove(existingSubscription);
+                                if (subs.Count == 0)
+                                {
+                                    _wildcardSubscriptionsByTopicHash.Remove(existingSubscription.TopicHash);
+                                }
+                            }
+                        }
+
                         removedSubscriptions.Add(topicFilter);
                     }
                 }

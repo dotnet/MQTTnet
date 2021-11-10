@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MQTTnet.Server.Status;
 
@@ -8,23 +8,33 @@ namespace MQTTnet.Server.Internal
     {
         readonly DateTime _createdTimestamp = DateTime.UtcNow;
 
+        /// <summary>
+        /// Session should persist if CleanSession was set to false (Mqtt3) or if SessionExpiryInterval != 0 (Mqtt5)
+        /// </summary>
+        readonly bool _isPersistent;
+
         public MqttClientSession(
             string clientId,
             IDictionary<object, object> items,
             MqttServerEventDispatcher eventDispatcher,
             IMqttServerOptions serverOptions,
-            IMqttRetainedMessagesManager retainedMessagesManager)
+            IMqttRetainedMessagesManager retainedMessagesManager,
+            bool isPersistent
+            )
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             Items = items ?? throw new ArgumentNullException(nameof(items));
 
             SubscriptionsManager = new MqttClientSubscriptionsManager(this, serverOptions, eventDispatcher, retainedMessagesManager);
             ApplicationMessagesQueue = new MqttClientSessionApplicationMessagesQueue(serverOptions);
+            _isPersistent = isPersistent;
         }
 
         public string ClientId { get; }
 
         public bool IsCleanSession { get; set; } = true;
+
+        public bool IsPersistent => _isPersistent;
 
         public MqttApplicationMessage WillMessage { get; set; }
 

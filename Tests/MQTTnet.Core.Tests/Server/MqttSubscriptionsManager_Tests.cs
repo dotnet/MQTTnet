@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Packets;
@@ -107,7 +107,8 @@ namespace MQTTnet.Tests.Server
                 new ConcurrentDictionary<object, object>(),
                 new MqttServerEventDispatcher(new TestLogger()),
                 new MqttServerOptions(),
-                new MqttRetainedMessagesManager());
+                new MqttRetainedMessagesManager(),
+                false);
         }
     }
 }

@@ -177,8 +177,6 @@ namespace MQTTnet.Server.Internal
                     }
                 }
 
-                clientConnection?.Dispose();
-
                 await channelAdapter.DisconnectAsync(_options.DefaultCommunicationTimeout, CancellationToken.None)
                     .ConfigureAwait(false);
             }

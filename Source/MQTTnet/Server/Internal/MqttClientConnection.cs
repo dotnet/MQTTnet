@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Client.Disconnecting;
-using MQTTnet.Diagnostics;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
@@ -18,7 +17,7 @@ using MQTTnet.Server.Status;
 
 namespace MQTTnet.Server.Internal
 {
-    public sealed class MqttClientConnection : IDisposable
+    public sealed class MqttClientConnection
     {
         readonly Dictionary<ushort, string> _topicAlias = new Dictionary<ushort, string>();
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
@@ -105,11 +104,6 @@ namespace MQTTnet.Server.Internal
             clientStatus.BytesReceived = _channelAdapter.BytesReceived;
 
             Statistics.FillClientStatus(clientStatus);
-        }
-
-        public void Dispose()
-        {
-            _cancellationToken.Dispose();
         }
 
         public async Task RunAsync()

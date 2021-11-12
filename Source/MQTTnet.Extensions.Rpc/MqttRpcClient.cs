@@ -87,17 +87,12 @@ namespace MQTTnet.Extensions.Rpc
                 throw new MqttProtocolViolationException("RPC response topic is empty.");
             }
 
-            var requestMessageBuilder = new MqttApplicationMessageBuilder()
+            var requestMessage = new MqttApplicationMessageBuilder()
                 .WithTopic(requestTopic)
                 .WithPayload(payload)
-                .WithQualityOfServiceLevel(qualityOfServiceLevel);
-
-            if (_mqttClient.Options.ProtocolVersion == MqttProtocolVersion.V500)
-            {
-                requestMessageBuilder = requestMessageBuilder.WithResponseTopic(responseTopic);
-            }
-
-            var requestMessage = requestMessageBuilder.Build();
+                .WithQualityOfServiceLevel(qualityOfServiceLevel)
+                .WithResponseTopic(responseTopic)
+                .Build();
 
             try
             {

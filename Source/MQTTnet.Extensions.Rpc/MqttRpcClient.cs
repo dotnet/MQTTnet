@@ -8,7 +8,6 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client.Subscribing;
-using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.Extensions.Rpc

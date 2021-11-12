@@ -1,4 +1,4 @@
-﻿using MQTTnet.Client;
+using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.Rpc.Options;
 using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client.Subscribing;
+using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.Extensions.Rpc
@@ -86,11 +87,17 @@ namespace MQTTnet.Extensions.Rpc
                 throw new MqttProtocolViolationException("RPC response topic is empty.");
             }
 
-            var requestMessage = new MqttApplicationMessageBuilder()
+            var requestMessageBuilder = new MqttApplicationMessageBuilder()
                 .WithTopic(requestTopic)
                 .WithPayload(payload)
-                .WithQualityOfServiceLevel(qualityOfServiceLevel)
-                .Build();
+                .WithQualityOfServiceLevel(qualityOfServiceLevel);
+
+            if (_mqttClient.Options.ProtocolVersion == MqttProtocolVersion.V500)
+            {
+                requestMessageBuilder = requestMessageBuilder.WithResponseTopic(responseTopic);
+            }
+
+            var requestMessage = requestMessageBuilder.Build();
 
             try
             {
@@ -99,7 +106,7 @@ namespace MQTTnet.Extensions.Rpc
 #else
                 var awaitable = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
 #endif
-                
+
                 if (!_waitingCalls.TryAdd(responseTopic, awaitable))
                 {
                     throw new InvalidOperationException();

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
@@ -80,8 +80,8 @@ namespace MQTTnet.Tests.Server
             {
                 var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 
-                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client1"));
-                var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client2"));
+                var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client1").WithCleanSession(false));
+                var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client2").WithCleanSession(false));
 
                 await c1.DisconnectAsync();
 

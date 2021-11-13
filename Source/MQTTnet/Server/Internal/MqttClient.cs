@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -94,11 +94,6 @@ namespace MQTTnet.Server
         public void ResetStatistics()
         {
             ChannelAdapter.ResetStatistics();
-        }
-
-        public void Dispose()
-        {
-            _cancellationToken.Dispose();
         }
 
         public async Task RunAsync()

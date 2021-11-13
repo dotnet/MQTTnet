@@ -20,23 +20,31 @@ namespace MQTTnet.Server
         readonly MqttClientSessionsManager _clientSessionsManager;
 
         public MqttSession(string clientId,
+            bool isPersistent,
             IDictionary<object, object> items,
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
             MqttRetainedMessagesManager retainedMessagesManager,
             MqttClientSessionsManager clientSessionsManager)
         {
+            Id = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            IsPersistent = isPersistent;
+            Items = items ?? throw new ArgumentNullException(nameof(items));
+            
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
-            Id = clientId ?? throw new ArgumentNullException(nameof(clientId));
-            Items = items ?? throw new ArgumentNullException(nameof(items));
-
+            
             SubscriptionsManager = new MqttClientSubscriptionsManager(this, serverOptions, eventContainer, retainedMessagesManager);
         }
 
         public event EventHandler Deleted;
 
         public string Id { get; }
+        
+        /// <summary>
+        /// Session should persist if CleanSession was set to false (Mqtt3) or if SessionExpiryInterval != 0 (Mqtt5)
+        /// </summary>
+        public bool IsPersistent { get; }
 
         public MqttPacketIdentifierProvider PacketIdentifierProvider { get; } = new MqttPacketIdentifierProvider();
 

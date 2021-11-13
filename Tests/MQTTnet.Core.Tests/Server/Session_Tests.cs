@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -45,7 +45,7 @@ namespace MQTTnet.Tests.Server
                 {
                     e.ApplicationMessage.Payload =
                         Encoding.UTF8.GetBytes(
-                            e.SessionItems["default_payload"] as string ?? String.Empty);
+                            e.SessionItems["default_payload"] as string ?? string.Empty);
 
                     return Task.CompletedTask;
                 };
@@ -192,7 +192,7 @@ namespace MQTTnet.Tests.Server
                 {
                     c.AutoAcknowledge = false;
                     ++count;
-                    Console.WriteLine("process");
+                    System.Console.WriteLine("process");
                     return Task.CompletedTask;
                 };
                 

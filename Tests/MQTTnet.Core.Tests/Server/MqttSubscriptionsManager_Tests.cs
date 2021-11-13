@@ -25,6 +25,7 @@ namespace MQTTnet.Tests.Server
 
             var session = new MqttSession(
                 "",
+                false,
                 new ConcurrentDictionary<object, object>(),
                 options,
                 eventContainer,

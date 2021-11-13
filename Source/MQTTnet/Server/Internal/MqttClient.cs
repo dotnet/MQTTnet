@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +14,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClient : IDisposable
+    public sealed class MqttClient
     {
         readonly Dictionary<ushort, string> _topicAlias = new Dictionary<ushort, string>();
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();

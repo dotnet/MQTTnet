@@ -138,7 +138,7 @@ namespace MQTTnet.Server
                                 _clients.Remove(client.Id);
                             }
 
-                            if ((!_options.EnablePersistentSessions) || (!clientConnection.Session.IsPersistent))
+                            if ((!_options.EnablePersistentSessions) || !client.Session.IsPersistent)
                             {
                                 await DeleteSessionAsync(client.Id).ConfigureAwait(false);
                             }
@@ -423,13 +423,13 @@ namespace MQTTnet.Server
             MqttConnectPacket connectPacket,
             MqttConnAckPacket connAckPacket,
             IMqttChannelAdapter channelAdapter,
-            MqttConnectionValidatorContext context)
+            ValidatingConnectionEventArgs validatingConnectionEventArgs)
         {
             MqttClient connection;
 
             bool sessionShouldPersist;
 
-            if (context.ProtocolVersion == MqttProtocolVersion.V500)
+            if (validatingConnectionEventArgs.ProtocolVersion == MqttProtocolVersion.V500)
             {
                 // MQTT 5.0 section 3.1.2.11.2
                 // The Client and Server MUST store the Session State after the Network Connection is closed if the Session Expiry Interval is greater than 0 [MQTT-3.1.2-23].
@@ -439,7 +439,7 @@ namespace MQTTnet.Server
                 // in each time it connects.
 
                 // Persist if SessionExpiryInterval != 0, but may start with a clean session
-                sessionShouldPersist = context.SessionExpiryInterval != 0;
+                sessionShouldPersist = validatingConnectionEventArgs.SessionExpiryInterval != 0;
             }
             else
             {
@@ -459,14 +459,14 @@ namespace MQTTnet.Server
                 {
                     if (!_sessions.TryGetValue(connectPacket.ClientId, out session))
                     {
-                        session = CreateSession(connectPacket.ClientId, sessionItems, context.SessionItems, sessionShouldPersist);
+                        session = CreateSession(connectPacket.ClientId, validatingConnectionEventArgs.SessionItems, sessionShouldPersist);
                     }
                     else
                     {
                         if (connectPacket.CleanSession)
                         {
                             _logger.Verbose("Deleting existing session of client '{0}'.", connectPacket.ClientId);
-                            session = CreateSession(connectPacket.ClientId, context.SessionItems, sessionShouldPersist);
+                            session = CreateSession(connectPacket.ClientId, validatingConnectionEventArgs.SessionItems, sessionShouldPersist);
                         }
                         else
                         {
@@ -573,12 +573,13 @@ namespace MQTTnet.Server
                 _rootLogger);
         }
 
-        MqttClientSession CreateSession(string clientId, IDictionary<object, object> sessionItems, bool isPersistent)
+        MqttSession CreateSession(string clientId, IDictionary<object, object> sessionItems, bool isPersistent)
         {
             _logger.Verbose("Created a new session for client '{0}'.", clientId);
             
             return new MqttSession(
                 clientId,
+                isPersistent,
                 sessionItems,
                 _options,
                 _eventContainer,
@@ -589,11 +590,6 @@ namespace MQTTnet.Server
         public void Dispose()
         {
             _createConnectionSyncRoot?.Dispose();
-
-            foreach (var clientConnection in _clients.Values)
-            {
-                clientConnection.Dispose();
-            }
 
             foreach (var session in _sessions.Values)
             {

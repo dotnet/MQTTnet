@@ -1021,7 +1021,7 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 
                 // Create the session including the subscription.
-                var client1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("a"));
+                var client1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("a").WithCleanSession(false));
                 await client1.SubscribeAsync("x");
                 await client1.DisconnectAsync();
                 await Task.Delay(500);
@@ -1029,7 +1029,7 @@ namespace MQTTnet.Tests.Server
                 var clientStatus = await server.GetClientsAsync();
                 Assert.AreEqual(0, clientStatus.Count);
 
-                var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b"));
+                var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b").WithCleanSession(false));
                 await client2.PublishAsync("x", "1");
                 await client2.PublishAsync("x", "2");
                 await client2.PublishAsync("x", "3");

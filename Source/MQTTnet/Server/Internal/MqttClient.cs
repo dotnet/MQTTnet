@@ -14,7 +14,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClient : IDisposable
+    public sealed class MqttClient
     {
         readonly Dictionary<ushort, string> _topicAlias = new Dictionary<ushort, string>();
         readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
@@ -94,11 +94,6 @@ namespace MQTTnet.Server
         public void ResetStatistics()
         {
             ChannelAdapter.ResetStatistics();
-        }
-
-        public void Dispose()
-        {
-            _cancellationToken.Dispose();
         }
 
         public async Task RunAsync()

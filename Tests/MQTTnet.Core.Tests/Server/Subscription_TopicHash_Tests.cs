@@ -528,6 +528,7 @@ namespace MQTTnet.Tests.Server
             var sessionManager = new MqttClientSessionsManager(serverOptions, retainedMessagesManager, eventContainer, logger);
             _clientSession = new MQTTnet.Server.MqttSession(
                         ClientId,
+                        false,
                         new Dictionary<object, object>(),
                         serverOptions,
                         eventContainer,

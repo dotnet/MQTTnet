@@ -29,7 +29,7 @@ namespace MQTTnet.Server
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
             MqttRetainedMessagesManager retainedMessagesManager,
-            ISubscriptionChangedNotification subscriptionChangedNotification = null
+            ISubscriptionChangedNotification subscriptionChangedNotification
             )
         {
             _session = session ?? throw new ArgumentNullException(nameof(session));

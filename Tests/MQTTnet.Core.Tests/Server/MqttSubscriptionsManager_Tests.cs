@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -22,17 +22,19 @@ namespace MQTTnet.Tests.Server
             var options = new MqttServerOptions();
             var retainedMessagesManager = new MqttRetainedMessagesManager(new MqttServerEventContainer(), logger);
             var eventContainer = new MqttServerEventContainer();
+            var clientSessionManager = new MqttClientSessionsManager(options, retainedMessagesManager, eventContainer, logger);
 
             var session = new MqttSession(
                 "",
+                false,
                 new ConcurrentDictionary<object, object>(),
                 options,
                 eventContainer,
                 retainedMessagesManager,
-                new MqttClientSessionsManager(options, retainedMessagesManager, eventContainer, logger));
+                clientSessionManager);
 
             _subscriptionsManager = new MqttClientSubscriptionsManager(session, new MqttServerOptions(), new MqttServerEventContainer(),
-                new MqttRetainedMessagesManager(new MqttServerEventContainer(), new MqttNetNullLogger()));
+                new MqttRetainedMessagesManager(new MqttServerEventContainer(), new MqttNetNullLogger()), clientSessionManager);
         }
 
         [TestMethod]

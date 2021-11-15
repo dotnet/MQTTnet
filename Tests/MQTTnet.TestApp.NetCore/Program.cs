@@ -1,4 +1,4 @@
-﻿using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics;
 using MQTTnet.Server;
 using Newtonsoft.Json;
 using System;
@@ -32,6 +32,7 @@ namespace MQTTnet.TestApp.NetCore
             Console.WriteLine("b = Start QoS 1 benchmark");
             Console.WriteLine("c = Start QoS 0 benchmark");
             Console.WriteLine("d = Start server with logging");
+            Console.WriteLine("e = Start Message Throughput Test");
 
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.KeyChar == '1')
@@ -87,6 +88,10 @@ namespace MQTTnet.TestApp.NetCore
             else if (pressedKey.KeyChar == 'd')
             {
                 Task.Run(ServerTest.RunEmptyServerWithLogging);
+            }
+            else if (pressedKey.KeyChar == 'e')
+            {
+                Task.Run(new MessageThroughputTest().Run);
             }
 
             Thread.Sleep(Timeout.Infinite);

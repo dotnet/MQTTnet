@@ -27,6 +27,10 @@
       <group targetFramework="net5.0">
         <dependency id="MQTTnet" version="$nugetVersion" />
       </group>
+	  
+	  <group targetFramework="net6.0">
+        <dependency id="MQTTnet" version="$nugetVersion" />
+      </group>
     </dependencies>
   </metadata>
 
@@ -39,6 +43,9 @@
 
     <!-- .NET 5.0 -->
     <file src="..\Source\MQTTnet.AspNetCore\bin\Release\net5.0\MQTTnet.AspNetCore.*" target="lib\net5.0\" />
+
+    <!-- .NET 6.0 -->
+    <file src="..\Source\MQTTnet.AspNetCore\bin\Release\net6.0\MQTTnet.AspNetCore.*" target="lib\net6.0\" />
 
     <!-- .NET Standard 2.0 -->
     <file src="..\Source\MQTTnet.AspNetCore\bin\Release\netstandard2.0\MQTTnet.AspNetCore.*" target="lib\netstandard2.0\" />

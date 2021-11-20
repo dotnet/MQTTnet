@@ -32,7 +32,7 @@ namespace MQTTnet.Tests.Server
                 retainedMessagesManager,
                 new MqttClientSessionsManager(options, retainedMessagesManager, eventContainer, logger));
 
-            _subscriptionsManager = new MqttClientSubscriptionsManager(session, new MqttServerOptions(), new MqttServerEventContainer(),
+            _subscriptionsManager = new MqttClientSubscriptionsManager(session, new MqttServerEventContainer(),
                 new MqttRetainedMessagesManager(new MqttServerEventContainer(), new MqttNetNullLogger()));
         }
 

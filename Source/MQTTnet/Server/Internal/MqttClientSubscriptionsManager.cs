@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -13,22 +14,22 @@ namespace MQTTnet.Server
         // We use a reader writer lock because the subscriptions are only read most of the time.
         // Since writing is done by multiple threads (server API or connection thread), we cannot avoid locking
         // completely by swapping references etc.
-        readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim();
-        readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>(4096);
+        readonly SemaphoreSlim _subscriptionsLock = new SemaphoreSlim(1);
+        
+        // The subscriptions are stored as a ConcurrentDictionary in order ensure that reading the data is save.
+        // The additional lock is important to coordinate complex update logic with multiple steps, checks and interceptors.
+        readonly ConcurrentDictionary<string, MqttSubscription> _subscriptions = new ConcurrentDictionary<string, MqttSubscription>();
 
         readonly MqttSession _session;
-        readonly MqttServerOptions _options;
         readonly MqttServerEventContainer _eventContainer;
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
 
         public MqttClientSubscriptionsManager(
             MqttSession session,
-            MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
             MqttRetainedMessagesManager retainedMessagesManager)
         {
             _session = session ?? throw new ArgumentNullException(nameof(session));
-            _options = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
         }
@@ -98,7 +99,7 @@ namespace MQTTnet.Server
 
             var result = new MqttUnsubscribeResult();
 
-            _subscriptionsLock.EnterWriteLock();
+            await _subscriptionsLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
@@ -124,13 +125,13 @@ namespace MQTTnet.Server
 
                     if (interceptorContext.ProcessUnsubscription)
                     {
-                        _subscriptions.Remove(topicFilter);
+                        _subscriptions.TryRemove(topicFilter, out _);
                     }
                 }
             }
             finally
             {
-                _subscriptionsLock.ExitWriteLock();
+                _subscriptionsLock.Release();
             }
 
             foreach (var topicFilter in unsubscribePacket.TopicFilters)
@@ -148,17 +149,7 @@ namespace MQTTnet.Server
         public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel,
             string senderClientId)
         {
-            List<MqttSubscription> subscriptions;
-            _subscriptionsLock.EnterReadLock();
-            try
-            {
-                subscriptions = _subscriptions.Values.ToList();
-            }
-            finally
-            {
-                _subscriptionsLock.ExitReadLock();
-            }
-
+            var subscriptions = _subscriptions.Values.ToList();
             var senderIsReceiver = string.Equals(senderClientId, _session.Id);
 
             var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
@@ -243,7 +234,7 @@ namespace MQTTnet.Server
 
             bool isNewSubscription;
 
-            _subscriptionsLock.EnterWriteLock();
+            _subscriptionsLock.Wait();
             try
             {
                 isNewSubscription = !_subscriptions.ContainsKey(topicFilter.Topic);
@@ -251,7 +242,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _subscriptionsLock.ExitWriteLock();
+                _subscriptionsLock.Release();
             }
 
             return new CreateSubscriptionResult

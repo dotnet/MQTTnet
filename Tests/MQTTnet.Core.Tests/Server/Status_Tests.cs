@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
@@ -29,8 +29,8 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(2, clientStatus.Count);
                 Assert.AreEqual(2, sessionStatus.Count);
 
-                Assert.IsTrue(clientStatus.Any(s => s.ClientId == c1.Options.ClientId));
-                Assert.IsTrue(clientStatus.Any(s => s.ClientId == c2.Options.ClientId));
+                Assert.IsTrue(clientStatus.Any(s => s.Id == c1.Options.ClientId));
+                Assert.IsTrue(clientStatus.Any(s => s.Id == c2.Options.ClientId));
 
                 await c1.DisconnectAsync();
                 await c2.DisconnectAsync();
@@ -59,7 +59,7 @@ namespace MQTTnet.Tests.Server
                 var clientStatus = await server.GetClientsAsync();
 
                 Assert.AreEqual(1, clientStatus.Count);
-                Assert.IsTrue(clientStatus.Any(s => s.ClientId == c1.Options.ClientId));
+                Assert.IsTrue(clientStatus.Any(s => s.Id == c1.Options.ClientId));
 
                 await clientStatus.First().DisconnectAsync();
 

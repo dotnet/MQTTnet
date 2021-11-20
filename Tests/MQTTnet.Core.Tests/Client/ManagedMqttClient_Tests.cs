@@ -9,6 +9,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
+using IMqttClient = MQTTnet.Client.IMqttClient;
 
 namespace MQTTnet.Tests.Client
 {

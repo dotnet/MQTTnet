@@ -12,6 +12,7 @@ using MQTTnet.Extensions.Rpc;
 using MQTTnet.Extensions.Rpc.Options;
 using MQTTnet.Formatter;
 using MQTTnet.LowLevelClient;
+using IMqttClient = MQTTnet.Client.IMqttClient;
 
 namespace MQTTnet.Tests.Mockups
 {

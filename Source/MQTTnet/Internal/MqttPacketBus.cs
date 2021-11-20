@@ -9,9 +9,7 @@ namespace MQTTnet.Internal
 {
     public sealed class MqttPacketBus : IDisposable
     {
-        readonly object _syncRoot = new object();
-
-        readonly LinkedList<MqttPacketBusItem>[] _partitions = new LinkedList<MqttPacketBusItem>[]
+        readonly LinkedList<MqttPacketBusItem>[] _partitions =
         {
             new LinkedList<MqttPacketBusItem>(),
             new LinkedList<MqttPacketBusItem>(),
@@ -19,10 +17,11 @@ namespace MQTTnet.Internal
         };
 
         readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        readonly object _syncRoot = new object();
 
         int _activePartition = (int) MqttPacketBusPartition.Health;
 
-        public int PacketsCount
+        public int ItemsCount
         {
             get
             {
@@ -33,50 +32,18 @@ namespace MQTTnet.Internal
             }
         }
 
-        public int DataPacketsCount
+        public void Clear()
         {
-            get
+            lock (_syncRoot)
             {
-                lock (_syncRoot)
+                foreach (var partition in _partitions)
                 {
-                    return _partitions[(int) MqttPacketBusPartition.Data].Count;
+                    partition.Clear();
                 }
             }
         }
 
-        public List<MqttBasePacket> ExportPackets(MqttPacketBusPartition partition)
-        {
-            lock (_syncRoot)
-            {
-                return _partitions[(int) partition].Select(i => i.Packet).ToList();
-            }
-        }
-        
-        public void Enqueue(MqttPacketBusItem item, MqttPacketBusPartition partition)
-        {
-            if (item == null) throw new ArgumentNullException(nameof(item));
-
-            lock (_syncRoot)
-            {
-                _partitions[(int) partition].AddLast(item);
-            }
-
-            _semaphore.Release();
-        }
-
-        void MoveActivePartition()
-        {
-            if (_activePartition >= _partitions.Length - 1)
-            {
-                _activePartition = 0;
-            }
-            else
-            {
-                _activePartition++;
-            }
-        }
-
-        public async Task<MqttPacketBusItem> DequeueAsync(CancellationToken cancellationToken)
+        public async Task<MqttPacketBusItem> DequeueItemAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -99,7 +66,7 @@ namespace MQTTnet.Internal
                 // the worker back to the thread pool.
                 await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
-            
+
             cancellationToken.ThrowIfCancellationRequested();
 
             throw new InvalidOperationException("MqttPacketBus is broken.");
@@ -110,14 +77,59 @@ namespace MQTTnet.Internal
             _semaphore?.Dispose();
         }
 
-        public void Clear()
+        public void DropFirstItem(MqttPacketBusPartition partition)
         {
             lock (_syncRoot)
             {
-                foreach (var partition in _partitions)
+                var partitionInstance = _partitions[(int) partition];
+
+                if (partitionInstance.Any())
                 {
-                    partition.Clear();
+                    partitionInstance.RemoveFirst();
                 }
+            }
+        }
+
+        public void EnqueueItem(MqttPacketBusItem item, MqttPacketBusPartition partition)
+        {
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+
+            lock (_syncRoot)
+            {
+                _partitions[(int) partition].AddLast(item);
+            }
+
+            _semaphore.Release();
+        }
+
+        public List<MqttBasePacket> ExportPackets(MqttPacketBusPartition partition)
+        {
+            lock (_syncRoot)
+            {
+                return _partitions[(int) partition].Select(i => i.Packet).ToList();
+            }
+        }
+
+        void MoveActivePartition()
+        {
+            if (_activePartition >= _partitions.Length - 1)
+            {
+                _activePartition = 0;
+            }
+            else
+            {
+                _activePartition++;
+            }
+        }
+
+        public int PartitionItemsCount(MqttPacketBusPartition partition)
+        {
+            lock (_syncRoot)
+            {
+                return _partitions[(int) partition].Count;
             }
         }
     }

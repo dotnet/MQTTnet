@@ -26,7 +26,7 @@ namespace MQTTnet.Server
 
         public List<MqttPublishPacket> PublishPackets { get; } = new List<MqttPublishPacket>();
         
-        IDictionary<object, object> Items { get; set; }
+        public IDictionary<object, object> Items { get; set; }
 
         /// <summary>
         /// Gets the last will message.

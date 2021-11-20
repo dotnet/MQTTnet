@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -22,7 +23,7 @@ namespace MQTTnet.Server
         /// <summary>
         /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
         /// </summary>
-        public IDictionary<object, object> SessionItems { get; internal set; }
+        public IDictionary SessionItems { get; internal set; }
 
         /// <summary>
         /// Gets the response which will be sent to the client via the UNSUBACK pocket.

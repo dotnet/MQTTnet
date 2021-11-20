@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MQTTnet.Diagnostics;
+using IMqttClient = MQTTnet.Client.IMqttClient;
 using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet

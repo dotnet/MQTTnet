@@ -6,6 +6,7 @@ using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
+using IMqttClient = MQTTnet.Client.IMqttClient;
 
 namespace MQTTnet.Tests.Server
 {
@@ -124,17 +125,15 @@ namespace MQTTnet.Tests.Server
             {
                 // Arrange client and server.
                 var server = await testEnvironment.StartServer(o => o.WithPersistentSessions(false));
-                var client = await testEnvironment.ConnectClient();
-
-                // Arrange session status tracking.
-                var status = await server.GetSessionsAsync();
-                var clientStatus = status[0];
-
+                
                 var deletedEventFired = false;
-                clientStatus.Deleted += (_, __) =>
+                server.SessionDeletedAsync += e =>
                 {
                     deletedEventFired = true;
+                    return Task.CompletedTask;
                 };
+                
+                var client = await testEnvironment.ConnectClient();
                 
                 // Act: Disconnect the client -> Event must be fired.
                 await client.DisconnectAsync();

@@ -364,7 +364,7 @@ namespace MQTTnet.Tests.Server
             var topics = await PrepareTopicHashSubscriptions(TopicHashSelector.NoWildcard);
 
             // all match lookup
-            var matchCount = await CheckTopicSubscriptions(_clientSession, topics, "No Wildcard All Match");
+            var matchCount = CheckTopicSubscriptions(_clientSession, topics, "No Wildcard All Match");
 
             Assert.AreEqual(topics.Count, matchCount, "Not all topics matched");
 
@@ -377,7 +377,7 @@ namespace MQTTnet.Tests.Server
                         topicsToFind.Add(t + "x");
                     }
 
-                    matchCount = await CheckTopicSubscriptions(_clientSession, topicsToFind, "No Wildcard No Match (Append X)");
+                    matchCount = CheckTopicSubscriptions(_clientSession, topicsToFind, "No Wildcard No Match (Append X)");
 
                     Assert.AreEqual(0, matchCount, "Topic match count not zero");
                 }
@@ -390,7 +390,7 @@ namespace MQTTnet.Tests.Server
                         topicsToFind.Add(t.Substring(0, t.Length - 1) + "x");
                     }
 
-                    matchCount = await CheckTopicSubscriptions(_clientSession, topicsToFind, "No Wildcard No Match (Replace X)");
+                    matchCount = CheckTopicSubscriptions(_clientSession, topicsToFind, "No Wildcard No Match (Replace X)");
 
                     Assert.AreEqual(0, matchCount, "Topic match count not zero");
                 }
@@ -401,7 +401,7 @@ namespace MQTTnet.Tests.Server
         public async Task Match_Hash_Test_Search_SingleWildcard()
         {
             var topics = await PrepareTopicHashSubscriptions(TopicHashSelector.SingleWildcard);
-            var matchCount = await CheckTopicSubscriptions(_clientSession, topics, "Single Wildcard");
+            var matchCount = CheckTopicSubscriptions(_clientSession, topics, "Single Wildcard");
             // Should match all topics
             Assert.AreEqual(topics.Count, matchCount, "Topics not matched");
         }
@@ -410,7 +410,7 @@ namespace MQTTnet.Tests.Server
         public async Task Match_Hash_Test_Search_MultiWildcard()
         {
             var topics = await PrepareTopicHashSubscriptions(TopicHashSelector.MultiWildcard);
-            var matchCount = await CheckTopicSubscriptions(_clientSession, topics, "Multi Wildcard");
+            var matchCount = CheckTopicSubscriptions(_clientSession, topics, "Multi Wildcard");
             // Should match all topics
             Assert.AreEqual(topics.Count, matchCount, "Topics not matched");
         }
@@ -562,7 +562,7 @@ namespace MQTTnet.Tests.Server
             return topics;
         }
 
-        async Task<int> CheckTopicSubscriptions(MQTTnet.Server.MqttSession clientSession, List<string> topicsToFind, string subject)
+        int CheckTopicSubscriptions(MQTTnet.Server.MqttSession clientSession, List<string> topicsToFind, string subject)
         {
             var matchCount = 0;
 

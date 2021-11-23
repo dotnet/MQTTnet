@@ -23,6 +23,8 @@ namespace MQTTnet.Server
         
         public AsyncEvent<PreparingSessionEventArgs> PreparingSessionEvent { get; } = new AsyncEvent<PreparingSessionEventArgs>();
         
+        public AsyncEvent<SessionDeletedEventArgs> SessionDeletedEvent { get; } = new AsyncEvent<SessionDeletedEventArgs>();
+        
         public AsyncEvent<ApplicationMessageNotConsumedEventArgs> ApplicationMessageNotConsumedEvent { get; } = new AsyncEvent<ApplicationMessageNotConsumedEventArgs>();
         
         public AsyncEvent<RetainedMessageChangedEventArgs> RetainedMessageChangedEvent { get; } = new AsyncEvent<RetainedMessageChangedEventArgs>();

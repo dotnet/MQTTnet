@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
 using MQTTnet.Packets;
+using IMqttClient = MQTTnet.Client.IMqttClient;
 
 namespace MQTTnet.Extensions.ManagedClient
 {

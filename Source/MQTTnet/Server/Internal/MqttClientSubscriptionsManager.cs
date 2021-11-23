@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -13,27 +14,27 @@ namespace MQTTnet.Server
         // We use a reader writer lock because the subscriptions are only read most of the time.
         // Since writing is done by multiple threads (server API or connection thread), we cannot avoid locking
         // completely by swapping references etc.
-        readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim();
-        readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>(4096);
+        readonly SemaphoreSlim _subscriptionsLock = new SemaphoreSlim(1);
+        
+        // The subscriptions are stored as a ConcurrentDictionary in order ensure that reading the data is save.
+        // The additional lock is important to coordinate complex update logic with multiple steps, checks and interceptors.
+        readonly ConcurrentDictionary<string, MqttSubscription> _subscriptions = new ConcurrentDictionary<string, MqttSubscription>();
         readonly Dictionary<ulong, HashSet<MqttSubscription>> _noWildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();
         readonly Dictionary<ulong, HashSet<MqttSubscription>> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();
 
         readonly MqttSession _session;
-        readonly MqttServerOptions _options;
         readonly MqttServerEventContainer _eventContainer;
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
         readonly ISubscriptionChangedNotification _subscriptionChangedNotification;
 
         public MqttClientSubscriptionsManager(
             MqttSession session,
-            MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
             MqttRetainedMessagesManager retainedMessagesManager,
             ISubscriptionChangedNotification subscriptionChangedNotification
             )
         {
             _session = session ?? throw new ArgumentNullException(nameof(session));
-            _options = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
             _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
             _subscriptionChangedNotification = subscriptionChangedNotification;
@@ -115,7 +116,7 @@ namespace MQTTnet.Server
 
             var removedSubscriptions = new List<string>();
 
-            _subscriptionsLock.EnterWriteLock();
+            await _subscriptionsLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
@@ -141,7 +142,7 @@ namespace MQTTnet.Server
 
                     if (interceptorContext.ProcessUnsubscription)
                     {
-                        _subscriptions.Remove(topicFilter);
+                        _subscriptions.TryRemove(topicFilter, out _);
 
                         // must remove subscription object from topic hash dictionary also
                         
@@ -174,7 +175,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _subscriptionsLock.ExitWriteLock();
+                _subscriptionsLock.Release();
 
                 if (_subscriptionChangedNotification != null)
                 {
@@ -209,7 +210,8 @@ namespace MQTTnet.Server
         public CheckSubscriptionsResult CheckSubscriptions(string topic, ulong topicHash, MqttQualityOfServiceLevel qosLevel, string senderClientId)
         {
             List<MqttSubscription> subscriptions = new List<MqttSubscription>();
-            _subscriptionsLock.EnterReadLock();
+
+            _subscriptionsLock.Wait();
             try
             {
                 if (_noWildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var noWildcardSubs))
@@ -249,7 +251,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _subscriptionsLock.ExitReadLock();
+                _subscriptionsLock.Release();
             }
 
             var senderIsReceiver = string.Equals(senderClientId, _session.Id);
@@ -338,7 +340,7 @@ namespace MQTTnet.Server
 
             bool isNewSubscription;
 
-            _subscriptionsLock.EnterWriteLock();
+            _subscriptionsLock.Wait();
             try
             {
                 ulong topicHash;
@@ -392,7 +394,7 @@ namespace MQTTnet.Server
             }
             finally
             {
-                _subscriptionsLock.ExitWriteLock();
+                _subscriptionsLock.Release();
             }
 
             return new CreateSubscriptionResult

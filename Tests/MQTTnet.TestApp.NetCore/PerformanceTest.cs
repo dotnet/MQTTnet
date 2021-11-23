@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using IMqttClient = MQTTnet.Client.IMqttClient;
 
 namespace MQTTnet.TestApp.NetCore
 {

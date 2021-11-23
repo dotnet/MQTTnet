@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -122,7 +123,7 @@ namespace MQTTnet.Server
         /// <summary>
         /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
         /// </summary>
-        public IDictionary<object, object> SessionItems { get; internal set; }
+        public IDictionary SessionItems { get; internal set; }
 
         /// <summary>
         /// This is used for MQTTv3 only.

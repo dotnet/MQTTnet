@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using MQTTnet.AspNetCore;
 using MQTTnet.AspNetCore.Extensions;
+using MQTTnet.Server;
 
 namespace MQTTnet.TestApp.AspNetCore2
 {
@@ -55,7 +56,12 @@ namespace MQTTnet.TestApp.AspNetCore2
                     {
                         try
                         {
-                            await server.PublishAsync("server", msg.Build());
+                            await server.InjectApplicationMessage(new MqttServer.MqttInjectedApplicationMessage
+                            {
+                                SenderClientId = "server",
+                                ApplicationMessage = msg.Build()
+                            });
+                            
                             msg.WithPayload($"Mqtt hosted on {frameworkName} is still awesome at {DateTime.Now}");
                         }
                         catch (Exception e)

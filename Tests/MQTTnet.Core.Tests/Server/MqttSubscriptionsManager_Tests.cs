@@ -33,8 +33,8 @@ namespace MQTTnet.Tests.Server
                 retainedMessagesManager,
                 clientSessionManager);
 
-            _subscriptionsManager = new MqttClientSubscriptionsManager(session, new MqttServerOptions(), new MqttServerEventContainer(),
-                new MqttRetainedMessagesManager(new MqttServerEventContainer(), new MqttNetNullLogger()), clientSessionManager);
+            _subscriptionsManager = new MqttClientSubscriptionsManager(session, new MqttServerEventContainer(),
+                retainedMessagesManager, clientSessionManager);
         }
 
         [TestMethod]

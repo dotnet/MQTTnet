@@ -1,10 +1,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
@@ -40,7 +40,7 @@ namespace MQTTnet.Server
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    TryMaintainConnections();
+                    TryProcessClients();
                     PlatformAbstractionLayer.Sleep(_options.KeepAliveMonitorInterval);
                 }
             }
@@ -57,16 +57,16 @@ namespace MQTTnet.Server
             }
         }
 
-        void TryMaintainConnections()
+        void TryProcessClients()
         {
             var now = DateTime.UtcNow;
-            foreach (var connection in _sessionsManager.GetConnections())
+            foreach (var client in _sessionsManager.GetClients())
             {
-                TryMaintainConnection(connection, now);
+                TryProcessClient(client, now);
             }
         }
 
-        void TryMaintainConnection(MqttClient connection, DateTime now)
+        void TryProcessClient(MqttClient connection, DateTime now)
         {
             try
             {
@@ -108,7 +108,7 @@ namespace MQTTnet.Server
                 // We do not need to wait for the task so no await is needed.
                 // Also the internal state of the connection must be swapped to "Finalizing" because the
                 // next iteration of the keep alive timer happens.
-                var _ = connection.StopAsync(MqttClientDisconnectReason.KeepAliveTimeout);
+                var _ = connection.StopAsync(MqttDisconnectReasonCode.KeepAliveTimeout);
             }
             catch (Exception exception)
             {

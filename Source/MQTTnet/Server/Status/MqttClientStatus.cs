@@ -1,59 +1,59 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientStatus : IMqttClientStatus
+    public sealed class MqttClientStatus
     {
-        readonly MqttClient _connection;
+        readonly MqttClient _client;
 
-        public MqttClientStatus(MqttClient connection)
+        public MqttClientStatus(MqttClient client)
         {
-            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
         /// <summary>
         /// Gets or sets the client identifier.
         /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
-        public string ClientId => _connection.Id;
+        public string Id => _client.Id;
 
-        public string Endpoint => _connection.Endpoint;
+        public string Endpoint => _client.Endpoint;
 
-        public MqttProtocolVersion ProtocolVersion => _connection.ChannelAdapter.PacketFormatterAdapter.ProtocolVersion;
+        public MqttProtocolVersion ProtocolVersion => _client.ChannelAdapter.PacketFormatterAdapter.ProtocolVersion;
 
-        public DateTime ConnectedTimestamp => _connection.Statistics.ConnectedTimestamp;
+        public DateTime ConnectedTimestamp => _client.Statistics.ConnectedTimestamp;
 
-        public DateTime LastPacketReceivedTimestamp => _connection.Statistics.LastPacketReceivedTimestamp;
+        public DateTime LastPacketReceivedTimestamp => _client.Statistics.LastPacketReceivedTimestamp;
 
-        public DateTime LastPacketSentTimestamp => _connection.Statistics.LastPacketSentTimestamp;
+        public DateTime LastPacketSentTimestamp => _client.Statistics.LastPacketSentTimestamp;
 
-        public DateTime LastNonKeepAlivePacketReceivedTimestamp => _connection.Statistics.LastNonKeepAlivePacketReceivedTimestamp;
+        public DateTime LastNonKeepAlivePacketReceivedTimestamp => _client.Statistics.LastNonKeepAlivePacketReceivedTimestamp;
 
-        public long ReceivedApplicationMessagesCount => _connection.Statistics.ReceivedApplicationMessagesCount;
+        public long ReceivedApplicationMessagesCount => _client.Statistics.ReceivedApplicationMessagesCount;
 
-        public long SentApplicationMessagesCount => _connection.Statistics.SentApplicationMessagesCount;
+        public long SentApplicationMessagesCount => _client.Statistics.SentApplicationMessagesCount;
 
-        public long ReceivedPacketsCount => _connection.Statistics.ReceivedPacketsCount;
+        public long ReceivedPacketsCount => _client.Statistics.ReceivedPacketsCount;
 
-        public long SentPacketsCount => _connection.Statistics.SentPacketsCount;
+        public long SentPacketsCount => _client.Statistics.SentPacketsCount;
 
-        public IMqttSessionStatus Session { get; set; }
+        public MqttSessionStatus Session { get; set; }
 
-        public long BytesSent => _connection.ChannelAdapter.BytesSent;
+        public long BytesSent => _client.ChannelAdapter.BytesSent;
 
-        public long BytesReceived => _connection.ChannelAdapter.BytesReceived;
+        public long BytesReceived => _client.ChannelAdapter.BytesReceived;
         
         public Task DisconnectAsync()
         {
-            return _connection.StopAsync(MqttClientDisconnectReason.NormalDisconnection);
+            return _client.StopAsync(MqttDisconnectReasonCode.NormalDisconnection);
         }
 
         public void ResetStatistics()
         {
-            _connection.ResetStatistics();
+            _client.ResetStatistics();
         }
     }
 }

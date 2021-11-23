@@ -18,7 +18,7 @@ namespace MQTTnet.Tests.Internal
 
             using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
             {
-                await bus.DequeueAsync(timeout.Token);
+                await bus.DequeueItemAsync(timeout.Token);
             }
         }
         
@@ -27,31 +27,31 @@ namespace MQTTnet.Tests.Internal
         {
             var bus = new MqttPacketBus();
             
-            bus.Enqueue(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
-            bus.Enqueue(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
-            bus.Enqueue(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
             
-            bus.Enqueue(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
-            bus.Enqueue(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
-            bus.Enqueue(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
             
-            bus.Enqueue(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
-            bus.Enqueue(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
-            bus.Enqueue(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
 
-            Assert.AreEqual(9, bus.PacketsCount);
+            Assert.AreEqual(9, bus.ItemsCount);
             
-            Assert.IsInstanceOfType(bus.DequeueAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
-            Assert.IsInstanceOfType(bus.DequeueAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
-            Assert.IsInstanceOfType(bus.DequeueAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
-            Assert.IsInstanceOfType(bus.DequeueAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
-            Assert.IsInstanceOfType(bus.DequeueAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
-            Assert.IsInstanceOfType(bus.DequeueAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
-            Assert.IsInstanceOfType(bus.DequeueAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
-            Assert.IsInstanceOfType(bus.DequeueAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
-            Assert.IsInstanceOfType(bus.DequeueAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
+            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
+            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
+            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
+            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
+            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
+            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
+            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
+            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
+            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
             
-            Assert.AreEqual(0, bus.PacketsCount);
+            Assert.AreEqual(0, bus.ItemsCount);
         }
         
         [TestMethod]
@@ -59,11 +59,11 @@ namespace MQTTnet.Tests.Internal
         {
             var bus = new MqttPacketBus();
 
-            bus.Enqueue(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
-            bus.Enqueue(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
-            bus.Enqueue(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
             
-            Assert.AreEqual(3, bus.PacketsCount);
+            Assert.AreEqual(3, bus.ItemsCount);
 
             var exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Control);
             Assert.AreEqual(0, exportedPackets.Count);
@@ -74,7 +74,7 @@ namespace MQTTnet.Tests.Internal
             exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Data);
             Assert.AreEqual(3, exportedPackets.Count);
             
-            Assert.AreEqual(3, bus.PacketsCount);
+            Assert.AreEqual(3, bus.ItemsCount);
         }
         
         [TestMethod]
@@ -93,21 +93,21 @@ namespace MQTTnet.Tests.Internal
                 delivered = true;
             };
             
-            bus.Enqueue(item1, MqttPacketBusPartition.Data);
-            bus.Enqueue(item2, MqttPacketBusPartition.Data);
-            bus.Enqueue(item3, MqttPacketBusPartition.Data);
+            bus.EnqueueItem(item1, MqttPacketBusPartition.Data);
+            bus.EnqueueItem(item2, MqttPacketBusPartition.Data);
+            bus.EnqueueItem(item3, MqttPacketBusPartition.Data);
             
             Assert.IsFalse(delivered);
 
-            bus.DequeueAsync(CancellationToken.None).Result.MarkAsDelivered();
+            bus.DequeueItemAsync(CancellationToken.None).Result.MarkAsDelivered();
             
             Assert.IsFalse(delivered);
             
-            bus.DequeueAsync(CancellationToken.None).Result.MarkAsDelivered();
+            bus.DequeueItemAsync(CancellationToken.None).Result.MarkAsDelivered();
             
             Assert.IsFalse(delivered);
             
-            bus.DequeueAsync(CancellationToken.None).Result.MarkAsDelivered();
+            bus.DequeueItemAsync(CancellationToken.None).Result.MarkAsDelivered();
             
             // The third packet has the event attached.
             Assert.IsTrue(delivered);

@@ -6,6 +6,14 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttDisconnectPacketFactory
     {
+        public MqttDisconnectPacket Create(MqttDisconnectReasonCode reasonCode)
+        {
+            return new MqttDisconnectPacket
+            {
+                ReasonCode = reasonCode
+            };
+        }
+        
         public MqttDisconnectPacket Create(MqttClientDisconnectOptions clientDisconnectOptions)
         {
             var packet = new MqttDisconnectPacket();

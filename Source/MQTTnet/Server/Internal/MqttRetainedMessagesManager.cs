@@ -36,7 +36,7 @@ namespace MQTTnet.Server
                 {
                     _messages.Clear();
 
-                    foreach (var retainedMessage in eventArgs.StoredRetainedMessages ?? new List<MqttApplicationMessage>())
+                    foreach (var retainedMessage in eventArgs.LoadedRetainedMessages ?? new List<MqttApplicationMessage>())
                     {
                         _messages[retainedMessage.Topic] = retainedMessage;
                     }

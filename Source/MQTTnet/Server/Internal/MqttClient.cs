@@ -75,11 +75,11 @@ namespace MQTTnet.Server
 
         public bool IsCleanDisconnect { get; private set; }
 
-        public async Task StopAsync(MqttClientDisconnectReason reason)
+        public async Task StopAsync(MqttDisconnectReasonCode reason)
         {
             IsRunning = false;
 
-            if (reason == MqttClientDisconnectReason.SessionTakenOver || reason == MqttClientDisconnectReason.KeepAliveTimeout)
+            if (reason == MqttDisconnectReasonCode.SessionTakenOver || reason == MqttDisconnectReasonCode.KeepAliveTimeout)
             {
                 // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
                 // token because the entire connection is closed (disposed) as soon as the cancellation
@@ -391,7 +391,7 @@ namespace MQTTnet.Server
             
             if (_applicationMessageInterceptorInvoker.CloseConnection)
             {
-                await StopAsync(MqttClientDisconnectReason.UnspecifiedError);
+                await StopAsync(MqttDisconnectReasonCode.UnspecifiedError);
                 return;
             }
 
@@ -455,18 +455,12 @@ namespace MQTTnet.Server
             }
         }
 
-        async Task TrySendDisconnectPacket(MqttClientDisconnectReason reason)
+        async Task TrySendDisconnectPacket(MqttDisconnectReasonCode reasonCode)
         {
             try
             {
-                var disconnectOptions = new MqttClientDisconnectOptions
-                {
-                    Reason = reason,
-                    ReasonString = reason.ToString()
-                };
-
-                var disconnectPacket = _packetFactories.Disconnect.Create(disconnectOptions);
-
+                var disconnectPacket = _packetFactories.Disconnect.Create(reasonCode);
+                
                 using (var timeout = new CancellationTokenSource(_serverOptions.DefaultCommunicationTimeout))
                 {
                     await SendPacketAsync(disconnectPacket, timeout.Token).ConfigureAwait(false);
@@ -474,7 +468,7 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Warning(exception, "Client '{0}': Error while sending DISCONNECT packet (Reason = {1}).", Id, reason);
+                _logger.Warning(exception, "Client '{0}': Error while sending DISCONNECT packet (ReasonCode = {1}).", Id, reasonCode);
             }
         }
     }

@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
     public sealed class PublishResponse
     {
-        public MqttApplicationMessageResponseReasonCode ReasonCode { get; set; } = MqttApplicationMessageResponseReasonCode.Success;
+        public MqttPubAckReasonCode ReasonCode { get; set; } = MqttPubAckReasonCode.Success;
         
         public string ReasonString { get; set; }
 

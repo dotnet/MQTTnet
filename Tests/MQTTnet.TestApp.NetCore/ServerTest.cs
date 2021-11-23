@@ -86,7 +86,7 @@ namespace MQTTnet.TestApp.NetCore
                         retainedMessages = new List<MqttApplicationMessage>();
                     }
 
-                    e.StoredRetainedMessages = retainedMessages;
+                    e.LoadedRetainedMessages = retainedMessages;
 
                     return Task.FromResult(0);
                 };

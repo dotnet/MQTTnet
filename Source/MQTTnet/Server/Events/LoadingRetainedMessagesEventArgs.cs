@@ -5,6 +5,6 @@ namespace MQTTnet.Server
 {
     public sealed class LoadingRetainedMessagesEventArgs : EventArgs
     {
-        public List<MqttApplicationMessage> StoredRetainedMessages { get; set; } = new List<MqttApplicationMessage>();
+        public List<MqttApplicationMessage> LoadedRetainedMessages { get; set; } = new List<MqttApplicationMessage>();
     }
 }

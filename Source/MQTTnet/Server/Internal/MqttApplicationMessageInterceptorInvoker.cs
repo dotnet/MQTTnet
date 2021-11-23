@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
@@ -9,9 +10,9 @@ namespace MQTTnet.Server
     {
         readonly MqttServerEventContainer _eventContainer;
         readonly string _clientId;
-        readonly IDictionary<object, object> _sessionItems;
+        readonly IDictionary _sessionItems;
         
-        public MqttApplicationMessageInterceptorInvoker(MqttServerEventContainer eventContainer, string clientId, IDictionary<object, object> sessionItems)
+        public MqttApplicationMessageInterceptorInvoker(MqttServerEventContainer eventContainer, string clientId, IDictionary sessionItems)
         {
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
@@ -49,7 +50,7 @@ namespace MQTTnet.Server
             {
                 // This can happen if a topic alias us used but the topic is
                 // unknown to the server.
-                eventArgs.Response.ReasonCode = MqttApplicationMessageResponseReasonCode.TopicNameInvalid;
+                eventArgs.Response.ReasonCode = MqttPubAckReasonCode.TopicNameInvalid;
                 eventArgs.ProcessPublish = false;
             }
             

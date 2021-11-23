@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -25,7 +26,7 @@ namespace MQTTnet.Server
 
         public MqttSession(string clientId,
             bool isPersistent,
-            IDictionary<object, object> items,
+            IDictionary items,
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
             MqttRetainedMessagesManager retainedMessagesManager,
@@ -39,11 +40,9 @@ namespace MQTTnet.Server
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
             
-            SubscriptionsManager = new MqttClientSubscriptionsManager(this, serverOptions, eventContainer, retainedMessagesManager, clientSessionsManager);
+            SubscriptionsManager = new MqttClientSubscriptionsManager(this, eventContainer, retainedMessagesManager, clientSessionsManager);
         }
-
-        public event EventHandler Deleted;
-
+        
         public string Id { get; }
         
         /// <summary>
@@ -59,11 +58,11 @@ namespace MQTTnet.Server
 
         public MqttClientSubscriptionsManager SubscriptionsManager { get; }
 
-        public IDictionary<object, object> Items { get; }
+        public IDictionary Items { get; }
 
         public bool WillMessageSent { get; set; }
 
-        public long PendingDataPacketsCount => _packetBus.DataPacketsCount;
+        public long PendingDataPacketsCount => _packetBus.PartitionItemsCount(MqttPacketBusPartition.Data);
 
         public void AcknowledgePublishPacket(ushort packetIdentifier)
         {
@@ -74,14 +73,16 @@ namespace MQTTnet.Server
         {
             if (packetBusItem == null) throw new ArgumentNullException(nameof(packetBusItem));
 
-            if (_packetBus.PacketsCount >= _serverOptions.MaxPendingMessagesPerClient)
+            if (_packetBus.ItemsCount >= _serverOptions.MaxPendingMessagesPerClient)
             {
                 if (_serverOptions.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
                 {
                     return;
                 }
-                else
+                if (_serverOptions.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
                 {
+                    _packetBus.DropFirstItem(MqttPacketBusPartition.Data);
+
                     // TODO: Implement.
                 }
             }
@@ -93,33 +94,28 @@ namespace MQTTnet.Server
                     _unacknowledgedPublishPackets[publishPacket.PacketIdentifier] = publishPacket;
                 }
 
-                _packetBus.Enqueue(packetBusItem, MqttPacketBusPartition.Data);
+                _packetBus.EnqueueItem(packetBusItem, MqttPacketBusPartition.Data);
             }
             else if (packetBusItem.Packet is MqttPingReqPacket || packetBusItem.Packet is MqttPingRespPacket)
             {
-                _packetBus.Enqueue(packetBusItem, MqttPacketBusPartition.Health);
+                _packetBus.EnqueueItem(packetBusItem, MqttPacketBusPartition.Health);
             }
             else
             {
-                _packetBus.Enqueue(packetBusItem, MqttPacketBusPartition.Control);
+                _packetBus.EnqueueItem(packetBusItem, MqttPacketBusPartition.Control);
             }
         }
 
         public Task<MqttPacketBusItem> DequeuePacketAsync(CancellationToken cancellationToken)
         {
-            return _packetBus.DequeueAsync(cancellationToken);
+            return _packetBus.DequeueItemAsync(cancellationToken);
         }
 
         public Task DeleteAsync()
         {
             return _clientSessionsManager.DeleteSessionAsync(Id);
         }
-
-        public void OnDeleted()
-        {
-            Deleted?.Invoke(this, EventArgs.Empty);
-        }
-
+        
         public void Recover()
         {
             // TODO: Keep the bus and only insert pending items again.

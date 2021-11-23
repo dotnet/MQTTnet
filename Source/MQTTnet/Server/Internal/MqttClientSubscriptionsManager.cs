@@ -18,7 +18,7 @@ namespace MQTTnet.Server
         
         // The subscriptions are stored as a ConcurrentDictionary in order ensure that reading the data is save.
         // The additional lock is important to coordinate complex update logic with multiple steps, checks and interceptors.
-        readonly ConcurrentDictionary<string, MqttSubscription> _subscriptions = new ConcurrentDictionary<string, MqttSubscription>();
+        readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>();
         readonly Dictionary<ulong, HashSet<MqttSubscription>> _noWildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();
         readonly Dictionary<ulong, HashSet<MqttSubscription>> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();
 
@@ -142,7 +142,7 @@ namespace MQTTnet.Server
 
                     if (interceptorContext.ProcessUnsubscription)
                     {
-                        _subscriptions.TryRemove(topicFilter, out _);
+                        _subscriptions.Remove(topicFilter);
 
                         // must remove subscription object from topic hash dictionary also
                         

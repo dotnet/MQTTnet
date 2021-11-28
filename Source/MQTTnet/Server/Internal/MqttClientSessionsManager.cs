@@ -507,7 +507,7 @@ namespace MQTTnet.Server.Internal
                 // in each time it connects.
 
                 // Persist if SessionExpiryInterval != 0, but may start with a clean session
-                sessionShouldPersist = context.SessionExpiryInterval != 0;
+                sessionShouldPersist = context.SessionExpiryInterval.GetValueOrDefault() != 0;
             }
             else
             {
@@ -540,6 +540,8 @@ namespace MQTTnet.Server.Internal
                         else
                         {
                             _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
+                            // Session persistence could change for MQTT 5 clients that reconnect with different SessionExpiryInterval
+                            session.IsPersistent = sessionShouldPersist;
                             connAckPacket.IsSessionPresent = true;
                         }
                     }

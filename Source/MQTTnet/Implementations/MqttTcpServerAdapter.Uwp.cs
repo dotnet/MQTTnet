@@ -13,6 +13,7 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpServerAdapter : IMqttServerAdapter
     {
+        IMqttNetLogger _rootLogger;
         MqttNetSourceLogger _logger;
  
         MqttServerOptions _options;
@@ -25,6 +26,7 @@ namespace MQTTnet.Implementations
             if (_listener != null) throw new InvalidOperationException("Server is already started.");
 
             if (logger is null) throw new ArgumentNullException(nameof(logger));
+            _rootLogger = logger;
             _logger = logger.WithSource(nameof(MqttTcpServerAdapter));
 
             _options = options ?? throw new ArgumentNullException(nameof(options));

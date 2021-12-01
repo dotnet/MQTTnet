@@ -1,4 +1,4 @@
-﻿#if !WINDOWS_UWP
+#if !WINDOWS_UWP
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;

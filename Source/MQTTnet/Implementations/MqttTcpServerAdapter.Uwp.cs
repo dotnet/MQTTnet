@@ -13,9 +13,8 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpServerAdapter : IMqttServerAdapter
     {
-        readonly MqttNetSourceLogger _logger;
-        readonly IMqttNetLogger _rootLogger;
-
+        MqttNetSourceLogger _logger;
+ 
         MqttServerOptions _options;
         StreamSocketListener _listener;
 
@@ -25,8 +24,11 @@ namespace MQTTnet.Implementations
         {
             if (_listener != null) throw new InvalidOperationException("Server is already started.");
 
+            if (logger is null) throw new ArgumentNullException(nameof(logger));
+            _logger = logger.WithSource(nameof(MqttTcpServerAdapter));
+
             _options = options ?? throw new ArgumentNullException(nameof(options));
-                        
+
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _listener = new StreamSocketListener();
@@ -36,7 +38,7 @@ namespace MQTTnet.Implementations
                 _listener.Control.KeepAlive = true;
                 _listener.Control.QualityOfService = SocketQualityOfService.LowLatency;
                 _listener.ConnectionReceived += OnConnectionReceivedAsync;
-                
+
                 await _listener.BindServiceNameAsync(options.DefaultEndpointOptions.Port.ToString(), SocketProtectionLevel.PlainSocket);
             }
 
@@ -82,7 +84,7 @@ namespace MQTTnet.Implementations
                             _logger.Warning(exception, "Unable to convert UWP certificate to X509Certificate2.");
                         }
                     }
-                    
+
                     using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, clientCertificate, _options), new MqttPacketFormatterAdapter(new MqttPacketWriter()), null, _rootLogger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
@@ -106,7 +108,7 @@ namespace MQTTnet.Implementations
                     args.Socket.Dispose();
                 }
                 catch (Exception exception)
-                { 
+                {
                     _logger.Error(exception, "Error while cleaning up client connection.");
                 }
             }

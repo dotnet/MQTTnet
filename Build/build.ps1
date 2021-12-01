@@ -13,8 +13,7 @@ Write-Host "MSBuild path     = $msbuild"
 Write-Host
 
 # Cleanup
-Remove-Item -Path ".\..\" -Filter "*.nupkg"
-Remove-Item -Path ".\..\" -Filter "*.snupkg"
+Get-ChildItem -Path ".\..\" -Filter "*.nupkg" -Recurse | Remove-Item
 
 # Build and execute tests
 &$msbuild ..\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:TargetFramework="net5.0" /verbosity:m

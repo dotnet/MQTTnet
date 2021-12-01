@@ -79,13 +79,13 @@ namespace MQTTnet.Client
         /// Gets or sets the request problem information.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public bool? RequestProblemInformation { get; set; }
+        public bool RequestProblemInformation { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the request response information.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public bool? RequestResponseInformation { get; set; }
+        public bool RequestResponseInformation { get; set; }
 
         /// <summary>
         /// Gets or sets the session expiry interval.
@@ -97,7 +97,7 @@ namespace MQTTnet.Client
         /// Gets or sets the topic alias maximum.
         /// This gives the maximum length of the topic alias.
         /// </summary>
-        public ushort? TopicAliasMaximum { get; set; }
+        public ushort TopicAliasMaximum { get; set; }
 
         /// <summary>
         /// Gets or sets the user properties.

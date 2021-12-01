@@ -12,9 +12,9 @@ namespace MQTTnet.Packets
 
         public byte[] AuthenticationData { get; set; }
 
-        public bool? RequestProblemInformation { get; set; }
+        public bool RequestProblemInformation { get; set; } = true;
 
-        public bool? RequestResponseInformation { get; set; }
+        public bool RequestResponseInformation { get; set; }
 
         public ushort? ReceiveMaximum { get; set; }
 

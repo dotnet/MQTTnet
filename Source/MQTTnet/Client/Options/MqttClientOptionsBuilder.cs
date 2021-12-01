@@ -82,7 +82,7 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithTopicAliasMaximum(ushort? topicAliasMaximum)
+        public MqttClientOptionsBuilder WithTopicAliasMaximum(ushort topicAliasMaximum)
         {
             _options.TopicAliasMaximum = topicAliasMaximum;
             return this;
@@ -100,13 +100,13 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithRequestProblemInformation(bool? requestProblemInformation = true)
+        public MqttClientOptionsBuilder WithRequestProblemInformation(bool requestProblemInformation = true)
         {
             _options.RequestProblemInformation = requestProblemInformation;
             return this;
         }
 
-        public MqttClientOptionsBuilder WithRequestResponseInformation(bool? requestResponseInformation = true)
+        public MqttClientOptionsBuilder WithRequestResponseInformation(bool requestResponseInformation = true)
         {
             _options.RequestResponseInformation = requestResponseInformation;
             return this;

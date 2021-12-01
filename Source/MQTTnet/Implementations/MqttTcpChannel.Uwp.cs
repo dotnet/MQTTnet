@@ -12,7 +12,7 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography.Certificates;
 using MQTTnet.Channel;
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
@@ -32,7 +32,7 @@ namespace MQTTnet.Implementations
             _bufferSize = _options.BufferSize;
         }
 
-        public MqttTcpChannel(StreamSocket socket, X509Certificate2 clientCertificate, IMqttServerOptions serverOptions)
+        public MqttTcpChannel(StreamSocket socket, X509Certificate2 clientCertificate, MqttServerOptions serverOptions)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _bufferSize = serverOptions.DefaultEndpointOptions.BufferSize;

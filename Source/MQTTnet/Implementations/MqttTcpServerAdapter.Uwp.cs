@@ -1,13 +1,13 @@
 #if WINDOWS_UWP
 using Windows.Networking.Sockets;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
-using MQTTnet.Server;
 using System;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using MQTTnet.Server;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Implementations
 {
@@ -16,23 +16,17 @@ namespace MQTTnet.Implementations
         readonly MqttNetSourceLogger _logger;
         readonly IMqttNetLogger _rootLogger;
 
-        IMqttServerOptions _options;
+        MqttServerOptions _options;
         StreamSocketListener _listener;
-
-        public MqttTcpServerAdapter(IMqttNetLogger logger)
-        {
-            _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _logger = logger.WithSource(nameof(MqttTcpServerAdapter));
-        }
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
-        public async Task StartAsync(IMqttServerOptions options)
+        public async Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-
             if (_listener != null) throw new InvalidOperationException("Server is already started.");
 
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+                        
             if (options.DefaultEndpointOptions.IsEnabled)
             {
                 _listener = new StreamSocketListener();

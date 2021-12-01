@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
+using MQTTnet.Tests.Mockups;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -80,7 +81,7 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Connect_with_Undefined_SessionExpiryInterval()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 // Create server with persistent sessions enabled
 
@@ -91,7 +92,7 @@ namespace MQTTnet.Tests.MQTTv5
                 // Create client without clean session and NO session expiry interval,
                 // that means, the session should not persist
 
-                var options1 = CreateClientOptions(testEnvironment, ClientId, false, null);
+                var options1 = CreateClientOptions(testEnvironment, ClientId, false, 0);
                 var client1 = await testEnvironment.ConnectClient(options1);
 
                 // Disconnect; no session should remain on server because the session expiry interval was undefined
@@ -120,7 +121,7 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Reconnect_with_different_SessionExpiryInterval()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using (var testEnvironment = CreateTestEnvironment())
             {
                 // Create server with persistent sessions enabled
 
@@ -137,16 +138,13 @@ namespace MQTTnet.Tests.MQTTv5
 
                 await client1.DisconnectAsync();
 
-                var result = await client2.ConnectAsync(options).ConfigureAwait(false);
-                // Simulate some time delay between connections
-
                 await Task.Delay(1000);
 
                 // Reconnect the same client ID to the existing session but leave session expiry interval undefined this time.
                 // Session should be present because the client1 connection had SessionExpiryInterval > 0
 
                 var client2 = testEnvironment.CreateClient();
-                var options2 = CreateClientOptions(testEnvironment, ClientId, false, null);
+                var options2 = CreateClientOptions(testEnvironment, ClientId, false, 0);
                 var result2 = await client2.ConnectAsync(options2).ConfigureAwait(false);
 
                 await client2.DisconnectAsync();
@@ -161,7 +159,7 @@ namespace MQTTnet.Tests.MQTTv5
                 // No session should be present because the previous session expiry interval was undefined for the client2 connection
 
                 var client3 = testEnvironment.CreateClient();
-                var options3 = CreateClientOptions(testEnvironment, ClientId, false, null);
+                var options3 = CreateClientOptions(testEnvironment, ClientId, false, 0);
                 var result3 = await client2.ConnectAsync(options3).ConfigureAwait(false);
 
                 await client3.DisconnectAsync();
@@ -173,7 +171,7 @@ namespace MQTTnet.Tests.MQTTv5
             }
         }
 
-        IMqttClientOptions CreateClientOptions(TestEnvironment testEnvironment, string clientId, bool cleanSession, uint? sessionExpiryInterval)
+        IMqttClientOptions CreateClientOptions(TestEnvironment testEnvironment, string clientId, bool cleanSession, uint sessionExpiryInterval)
         {
             return testEnvironment.Factory.CreateClientOptionsBuilder()
                 .WithProtocolVersion(MqttProtocolVersion.V500)

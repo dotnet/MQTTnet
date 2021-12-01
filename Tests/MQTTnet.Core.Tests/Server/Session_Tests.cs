@@ -263,58 +263,6 @@ namespace MQTTnet.Tests.Server
             }
         }
 
-        [TestMethod]
-        public async Task Clean_Session_Persistence()
-        {
-            using (var testEnvironment = new TestEnvironment(TestContext))
-            {
-                // Create server with persistent sessions enabled
-
-                await testEnvironment.StartServer(o => o.WithPersistentSessions());
-
-                const string ClientId = "Client1";
-
-                // Create client with clean session and long session expiry interval
-
-                var client1 = await testEnvironment.ConnectClient(o => o
-                    .WithProtocolVersion(Formatter.MqttProtocolVersion.V311)
-                    .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
-                    .WithSessionExpiryInterval(9999) // not relevant for v311 but testing impact
-                    .WithCleanSession(true) // start and end with clean session
-                    .WithClientId(ClientId)
-                    .Build()
-                );
-
-                // Disconnect; empty session should be removed from server
-
-                await client1.DisconnectAsync();
-
-                // Simulate some time delay between connections
-
-                await Task.Delay(1000);
-
-                // Reconnect the same client ID without clean session
-
-                var client2 = testEnvironment.CreateClient();
-                var options = testEnvironment.Factory.CreateClientOptionsBuilder()
-                    .WithProtocolVersion(Formatter.MqttProtocolVersion.V311)
-                    .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
-                    .WithSessionExpiryInterval(9999) // not relevant for v311 but testing impact
-                    .WithCleanSession(false) // see if there is a session
-                    .WithClientId(ClientId)
-                    .Build();
-
-
-                var result = await client2.ConnectAsync(options).ConfigureAwait(false);
-
-                await client2.DisconnectAsync();
-
-                // Session should NOT be present for MQTT v311 and initial CleanSession == true
-
-                Assert.IsTrue(!result.IsSessionPresent, "Session present");
-            }
-        }
-
         async Task<IMqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
         {
             try

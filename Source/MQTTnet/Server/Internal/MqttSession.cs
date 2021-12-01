@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,7 +43,7 @@ namespace MQTTnet.Server
         /// <summary>
         /// Session should persist if CleanSession was set to false (Mqtt3) or if SessionExpiryInterval != 0 (Mqtt5)
         /// </summary>
-        public bool IsPersistent { get; }
+        public bool IsPersistent { get; set; }
 
         public MqttPacketIdentifierProvider PacketIdentifierProvider { get; } = new MqttPacketIdentifierProvider();
 

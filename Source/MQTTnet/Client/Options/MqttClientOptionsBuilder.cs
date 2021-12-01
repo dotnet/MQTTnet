@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -112,7 +112,7 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithSessionExpiryInterval(uint? sessionExpiryInterval)
+        public MqttClientOptionsBuilder WithSessionExpiryInterval(uint sessionExpiryInterval)
         {
             _options.SessionExpiryInterval = sessionExpiryInterval;
             return this;

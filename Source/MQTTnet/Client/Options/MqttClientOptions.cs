@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
@@ -91,7 +91,7 @@ namespace MQTTnet.Client
         /// Gets or sets the session expiry interval.
         /// The time after a session expires when it's not actively used.
         /// </summary>
-        public uint? SessionExpiryInterval { get; set; }
+        public uint SessionExpiryInterval { get; set; }
 
         /// <summary>
         /// Gets or sets the topic alias maximum.

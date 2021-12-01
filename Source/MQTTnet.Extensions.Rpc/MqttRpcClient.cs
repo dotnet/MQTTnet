@@ -1,4 +1,4 @@
-﻿using MQTTnet.Client;
+using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.Rpc.Options;
 using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
@@ -74,6 +74,7 @@ namespace MQTTnet.Extensions.Rpc
                 .WithTopic(requestTopic)
                 .WithPayload(payload)
                 .WithQualityOfServiceLevel(qualityOfServiceLevel)
+                .WithResponseTopic(responseTopic)
                 .Build();
 
             try
@@ -83,7 +84,7 @@ namespace MQTTnet.Extensions.Rpc
 #else
                 var awaitable = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
 #endif
-                
+
                 if (!_waitingCalls.TryAdd(responseTopic, awaitable))
                 {
                     throw new InvalidOperationException();

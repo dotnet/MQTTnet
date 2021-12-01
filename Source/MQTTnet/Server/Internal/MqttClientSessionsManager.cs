@@ -431,6 +431,31 @@ namespace MQTTnet.Server
                 sessionShouldPersist = !connectPacket.CleanSession;
             }
 
+            bool sessionShouldPersist;
+
+            if (context.ProtocolVersion == MqttProtocolVersion.V500)
+            {
+                // MQTT 5.0 section 3.1.2.11.2
+                // The Client and Server MUST store the Session State after the Network Connection is closed if the Session Expiry Interval is greater than 0 [MQTT-3.1.2-23].
+                //
+                // A Client that only wants to process messages while connected will set the Clean Start to 1 and set the Session Expiry Interval to 0.
+                // It will not receive Application Messages published before it connected and has to subscribe afresh to any topics that it is interested
+                // in each time it connects.
+
+                // Persist if SessionExpiryInterval != 0, but may start with a clean session
+                sessionShouldPersist = context.SessionExpiryInterval.GetValueOrDefault() != 0;
+            }
+            else
+            {
+                // MQTT 3.1.1 section 3.1.2.4: persist only if 'not CleanSession'
+                //
+                // If CleanSession is set to 1, the Client and Server MUST discard any previous Session and start a new one.
+                // This Session lasts as long as the Network Connection. State data associated with this Session MUST NOT be
+                // reused in any subsequent Session [MQTT-3.1.2-6].
+
+                sessionShouldPersist = !connectPacket.CleanSession;
+            }
+
             using (await _createConnectionSyncRoot.WaitAsync(CancellationToken.None).ConfigureAwait(false))
             {
                 MqttSession session;
@@ -450,6 +475,8 @@ namespace MQTTnet.Server
                         else
                         {
                             _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
+                            // Session persistence could change for MQTT 5 clients that reconnect with different SessionExpiryInterval
+                            session.IsPersistent = sessionShouldPersist;
                             connAckPacket.IsSessionPresent = true;
                             session.Recover();
                         }

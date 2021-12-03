@@ -83,7 +83,7 @@ namespace MQTTnet.Implementations
                     var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                     try
                     {
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
                         var sslOptions = new SslClientAuthenticationOptions
                         {
                             ApplicationProtocols = _tcpOptions.TlsOptions.ApplicationProtocols,
@@ -101,7 +101,7 @@ namespace MQTTnet.Implementations
                     }
                     catch
                     {
-#if NETSTANDARD2_1 || NETCOREAPP3_1 || NET5_0
+#if NETSTANDARD2_1 || NETCOREAPP3_1 || NET5_0_OR_GREATER
                         await sslStream.DisposeAsync().ConfigureAwait(false);
 #else
                         sslStream.Dispose();

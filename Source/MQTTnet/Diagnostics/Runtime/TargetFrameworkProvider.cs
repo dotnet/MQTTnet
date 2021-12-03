@@ -1,4 +1,4 @@
-﻿namespace MQTTnet.Diagnostics
+namespace MQTTnet.Diagnostics
 {
     public static class TargetFrameworkProvider
     {
@@ -24,6 +24,8 @@
                 return "netcoreapp3.1";
 #elif NET5_0
                 return "net5.0";
+#elif NET6_0
+                return "net6.0";
 #endif
             }
         }

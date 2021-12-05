@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace MQTTnet.Packets
 {
@@ -6,15 +6,15 @@ namespace MQTTnet.Packets
     {
         public uint? WillDelayInterval { get; set; }
 
-        public uint? SessionExpiryInterval { get; set; }
+        public uint SessionExpiryInterval { get; set; }
 
         public string AuthenticationMethod { get; set; }
 
         public byte[] AuthenticationData { get; set; }
 
-        public bool? RequestProblemInformation { get; set; }
+        public bool RequestProblemInformation { get; set; } = true;
 
-        public bool? RequestResponseInformation { get; set; }
+        public bool RequestResponseInformation { get; set; }
 
         public ushort? ReceiveMaximum { get; set; }
 

@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# Check if systemctl exists, does not exist in docker containers
-SCTL=$(which systemctl >/dev/null; echo $?)
-if [ "$SCTL" -eq "0" ]; then
-    # Reload systemd because of new service file
-    systemctl daemon-reload
-fi

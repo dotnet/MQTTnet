@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -82,7 +82,7 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithTopicAliasMaximum(ushort? topicAliasMaximum)
+        public MqttClientOptionsBuilder WithTopicAliasMaximum(ushort topicAliasMaximum)
         {
             _options.TopicAliasMaximum = topicAliasMaximum;
             return this;
@@ -100,19 +100,19 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithRequestProblemInformation(bool? requestProblemInformation = true)
+        public MqttClientOptionsBuilder WithRequestProblemInformation(bool requestProblemInformation = true)
         {
             _options.RequestProblemInformation = requestProblemInformation;
             return this;
         }
 
-        public MqttClientOptionsBuilder WithRequestResponseInformation(bool? requestResponseInformation = true)
+        public MqttClientOptionsBuilder WithRequestResponseInformation(bool requestResponseInformation = true)
         {
             _options.RequestResponseInformation = requestResponseInformation;
             return this;
         }
 
-        public MqttClientOptionsBuilder WithSessionExpiryInterval(uint? sessionExpiryInterval)
+        public MqttClientOptionsBuilder WithSessionExpiryInterval(uint sessionExpiryInterval)
         {
             _options.SessionExpiryInterval = sessionExpiryInterval;
             return this;
@@ -300,7 +300,7 @@ namespace MQTTnet.Client
 #pragma warning disable CS0618 // Type or member is obsolete
                         CertificateValidationCallback = _tlsParameters.CertificateValidationCallback,
 #pragma warning restore CS0618 // Type or member is obsolete
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
                         ApplicationProtocols = _tlsParameters.ApplicationProtocols,
 #endif
                         CertificateValidationHandler = _tlsParameters.CertificateValidationHandler,

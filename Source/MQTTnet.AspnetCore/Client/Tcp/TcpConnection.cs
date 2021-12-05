@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Features;
 using MQTTnet.Exceptions;
 using System;
@@ -40,7 +40,7 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             _sender = new SocketSender(_socket, PipeScheduler.ThreadPool);
             _receiver = new SocketReceiver(_socket, PipeScheduler.ThreadPool);
         }
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
         public override ValueTask DisposeAsync()
 #else
         public Task DisposeAsync()
@@ -53,7 +53,7 @@ namespace MQTTnet.AspNetCore.Client.Tcp
 
             _socket?.Dispose();
 
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
 
             return base.DisposeAsync();
         }

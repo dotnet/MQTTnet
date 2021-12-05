@@ -8,7 +8,7 @@ namespace MQTTnet.Exceptions
         {
         }
 
-        public MqttCommunicationTimedOutException(Exception innerException) : base(innerException)
+        public MqttCommunicationTimedOutException(Exception innerException) : base("The operation has timed out.", innerException)
         {
         }
     }

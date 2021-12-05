@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
@@ -79,25 +79,25 @@ namespace MQTTnet.Client
         /// Gets the request problem information.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        bool? RequestProblemInformation { get; }
+        bool RequestProblemInformation { get; }
 
         /// <summary>
         /// Gets the request response information.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        bool? RequestResponseInformation { get; }
+        bool RequestResponseInformation { get; }
 
         /// <summary>
         /// Gets the session expiry interval.
         /// The time after a session expires when it's not actively used.
         /// </summary>
-        uint? SessionExpiryInterval { get; }
+        uint SessionExpiryInterval { get; }
 
         /// <summary>
         /// Gets the topic alias maximum.
         /// This gives the maximum length of the topic alias.
         /// </summary>
-        ushort? TopicAliasMaximum { get; }
+        ushort TopicAliasMaximum { get; }
 
         /// <summary>
         /// Gets or sets the user properties.

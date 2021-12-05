@@ -1,37 +1,35 @@
 #if WINDOWS_UWP
 using Windows.Networking.Sockets;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
-using MQTTnet.Server;
 using System;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using MQTTnet.Server;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpServerAdapter : IMqttServerAdapter
     {
-        readonly MqttNetSourceLogger _logger;
-        readonly IMqttNetLogger _rootLogger;
-
-        IMqttServerOptions _options;
+        IMqttNetLogger _rootLogger;
+        MqttNetSourceLogger _logger;
+ 
+        MqttServerOptions _options;
         StreamSocketListener _listener;
-
-        public MqttTcpServerAdapter(IMqttNetLogger logger)
-        {
-            _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _logger = logger.WithSource(nameof(MqttTcpServerAdapter));
-        }
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
-        public async Task StartAsync(IMqttServerOptions options)
+        public async Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-
             if (_listener != null) throw new InvalidOperationException("Server is already started.");
+
+            if (logger is null) throw new ArgumentNullException(nameof(logger));
+            _rootLogger = logger;
+            _logger = logger.WithSource(nameof(MqttTcpServerAdapter));
+
+            _options = options ?? throw new ArgumentNullException(nameof(options));
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
@@ -42,7 +40,7 @@ namespace MQTTnet.Implementations
                 _listener.Control.KeepAlive = true;
                 _listener.Control.QualityOfService = SocketQualityOfService.LowLatency;
                 _listener.ConnectionReceived += OnConnectionReceivedAsync;
-                
+
                 await _listener.BindServiceNameAsync(options.DefaultEndpointOptions.Port.ToString(), SocketProtectionLevel.PlainSocket);
             }
 
@@ -88,7 +86,7 @@ namespace MQTTnet.Implementations
                             _logger.Warning(exception, "Unable to convert UWP certificate to X509Certificate2.");
                         }
                     }
-                    
+
                     using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, clientCertificate, _options), new MqttPacketFormatterAdapter(new MqttPacketWriter()), null, _rootLogger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
@@ -112,7 +110,7 @@ namespace MQTTnet.Implementations
                     args.Socket.Dispose();
                 }
                 catch (Exception exception)
-                { 
+                {
                     _logger.Error(exception, "Error while cleaning up client connection.");
                 }
             }

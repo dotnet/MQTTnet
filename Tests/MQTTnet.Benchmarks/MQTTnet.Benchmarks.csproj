@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <DebugType>Full</DebugType>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net461;netcoreapp2.1;net5.0</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net461;netcoreapp2.1;net5.0;net6.0</TargetFrameworks>
     <TargetFramework Condition=" '$(OS)' != 'Windows_NT' ">netcoreapp2.1</TargetFramework>
     <LangVersion>7.2</LangVersion>
   </PropertyGroup>
@@ -20,6 +20,10 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
     <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
   </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+        <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
+    </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />

@@ -941,6 +941,12 @@ namespace MQTTnet.Tests.Server
 
                 var client = testEnvironment.CreateClient();
                 var connectResult = await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost", testEnvironment.ServerPort).WithCleanSession().Build());
+                
+                // Create the session including the subscription.
+                var client1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("a").WithCleanSession(false));
+                await client1.SubscribeAsync("x");
+                await client1.DisconnectAsync();
+                await Task.Delay(500);
 
                 Assert.IsFalse(connectResult.IsSessionPresent);
             }
@@ -952,6 +958,11 @@ namespace MQTTnet.Tests.Server
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
+                var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b").WithCleanSession(false));
+                await client2.PublishAsync("x", "1");
+                await client2.PublishAsync("x", "2");
+                await client2.PublishAsync("x", "3");
+                await client2.DisconnectAsync();
 
                 var client = testEnvironment.CreateClient();
 

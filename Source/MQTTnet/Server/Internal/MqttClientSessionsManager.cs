@@ -25,11 +25,6 @@ namespace MQTTnet.Server
         readonly Dictionary<string, MqttSession> _sessions = new Dictionary<string, MqttSession>(4096);
         readonly HashSet<MqttSession> _subscriberSessions = new HashSet<MqttSession>();
 
-        readonly IDictionary<object, object> _serverSessionItems = new ConcurrentDictionary<object, object>();
-
-        readonly MqttConnAckPacketFactory _connAckPacketFactory = new MqttConnAckPacketFactory();
-        
-       
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
         readonly MqttServerEventContainer _eventContainer;
         readonly MqttServerOptions _options;

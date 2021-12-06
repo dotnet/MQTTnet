@@ -7,7 +7,7 @@ foreach ($file in $files)
 {
 	Write-Host "Uploading: " $file
 
-	#.\nuget.exe push $file.Fullname $apiKey -Source https://api.nuget.org/v3/index.json
+	.\nuget.exe push $file.Fullname $apiKey -Source https://api.nuget.org/v3/index.json
 }
 
 Remove-Item "nuget.exe" -Force -Recurse -ErrorAction SilentlyContinue

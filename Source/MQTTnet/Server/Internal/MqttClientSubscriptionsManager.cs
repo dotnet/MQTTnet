@@ -164,7 +164,7 @@ namespace MQTTnet.Server
                                 subs.Remove(existingSubscription);
                                 if (subs.Count == 0)
                                 {
-                                    _wildcardSubscriptionsByTopicHash.Remove(existingSubscription.TopicHash);
+                                    _noWildcardSubscriptionsByTopicHash.Remove(existingSubscription.TopicHash);
                                 }
                             }
                         }

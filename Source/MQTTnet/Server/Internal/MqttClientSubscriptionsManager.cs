@@ -20,7 +20,7 @@ namespace MQTTnet.Server
         // The additional lock is important to coordinate complex update logic with multiple steps, checks and interceptors.
         readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>();
         readonly Dictionary<ulong, HashSet<MqttSubscription>> _noWildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();
-        readonly Dictionary<ulong, HashSet<MqttSubscription>> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();
+        readonly Dictionary<ulong, TopicHashMaskSubscriptions> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, TopicHashMaskSubscriptions>();
 
         readonly MqttSession _session;
         readonly MqttServerEventContainer _eventContainer;
@@ -150,8 +150,8 @@ namespace MQTTnet.Server
                         {
                             if (_wildcardSubscriptionsByTopicHash.TryGetValue(existingSubscription.TopicHash, out var subs))
                             {
-                                subs.Remove(existingSubscription);
-                                if (subs.Count == 0)
+                                subs.Subscriptions.Remove(existingSubscription);
+                                if (subs.Subscriptions.Count == 0)
                                 {
                                     _wildcardSubscriptionsByTopicHash.Remove(existingSubscription.TopicHash);
                                 }
@@ -219,28 +219,14 @@ namespace MQTTnet.Server
                     subscriptions.AddRange(noWildcardSubs.ToList());
                 }
 
-                if (_wildcardSubscriptionsByTopicHash.Count > 0)
+                foreach (var wcs in _wildcardSubscriptionsByTopicHash)
                 {
-                    // Later improvement:
-                    // Implement a binary tree to hold wildcard topics, lookup the first key (subscribed topic hash)
-                    // that is greater or equal than the application message topic hash, then traverse through tree nodes
-                    // until first non-matching topic hash is found.
-                    foreach (var wcs in _wildcardSubscriptionsByTopicHash)
+                    var wildcardSubs = wcs.Value;
+                    var subscriptionHash = wcs.Key;
+                    var subscriptionHashMask = wildcardSubs.HashMask;
+                    if ((topicHash & subscriptionHashMask) == subscriptionHash)
                     {
-                        var subscriptionHash = wcs.Key;
-                        var wildcardSubs = wcs.Value;
-                        // All subscription with the same topic hash have the same topic hash mask; take the first one.
-                        // Note: empty hash sets are removed and the wildcardsSubs contains at least one element.
-                        // Note: Using First() via Linq seems to be slower than entering the loop and existing after first check.
-                        foreach (var wc in wildcardSubs)
-                        {
-                            var subscriptionHashMask = wc.TopicHashMask;
-                            if ((topicHash & subscriptionHashMask) == subscriptionHash)
-                            {
-                                subscriptions.AddRange(wildcardSubs.ToList());
-                            }
-                            break;
-                        }
+                        subscriptions.AddRange(wildcardSubs.Subscriptions.ToList());
                     }
                 }
 
@@ -355,7 +341,7 @@ namespace MQTTnet.Server
                     {
                         if (_wildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var subs))
                         {
-                            subs.Remove(existingSubscription);
+                            subs.Subscriptions.Remove(existingSubscription);
                             // no need to remove empty entry because we'll be adding subscription again below
                         }
                     }
@@ -377,10 +363,10 @@ namespace MQTTnet.Server
                 {
                     if (!_wildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var subs))
                     {
-                        subs = new HashSet<MqttSubscription>();
+                        subs = new TopicHashMaskSubscriptions(topicHashMask);
                         _wildcardSubscriptionsByTopicHash.Add(topicHash, subs);
                     }
-                    subs.Add(subscription);
+                    subs.Subscriptions.Add(subscription);
                 }
                 else
                 {

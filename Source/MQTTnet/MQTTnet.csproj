@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <Target Name="ImportReleaseNotes" BeforeTargets="GenerateNuspec">
-        <ReadLinesFromFile File="..\..\ReleaseNotes.md">
+        <ReadLinesFromFile File="..\..\Build\ReleaseNotes.md">
             <Output TaskParameter="Lines" ItemName="ReleaseNotes" />
         </ReadLinesFromFile>
         <PropertyGroup>
@@ -85,6 +85,5 @@
     <ItemGroup Condition="'$(TargetFramework)'=='uap10.0'">
         <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.10" />
     </ItemGroup>
-
 
 </Project>

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +13,6 @@ using MQTTnet.AspNetCore.Tests.Mockups;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
-using MQTTnet.AspNetCore.Extensions;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Tests.Extensions;

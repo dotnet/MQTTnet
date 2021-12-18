@@ -402,7 +402,7 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
                 server.ClientConnectedAsync += async e =>
                 {
-                    await server.InjectApplicationMessage(new MqttServer.MqttInjectedApplicationMessage
+                    await server.InjectApplicationMessage(new MqttInjectedApplicationMessage
                     {
                         SenderClientId = "server", ApplicationMessage = new MqttApplicationMessage
                         {
@@ -487,7 +487,7 @@ namespace MQTTnet.Tests.Server
                 var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
                 await client.SubscribeAsync(new MqttTopicFilter {Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce});
 
-                await server.InjectApplicationMessage(new MqttServer.MqttInjectedApplicationMessage
+                await server.InjectApplicationMessage(new MqttInjectedApplicationMessage
                 {
                     SenderClientId = "server",
                     ApplicationMessage = message

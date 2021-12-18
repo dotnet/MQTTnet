@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using MQTTnet.Adapter;
 using MQTTnet.Server;
@@ -9,7 +9,7 @@ using MQTTnet.Formatter;
 
 namespace MQTTnet.AspNetCore
 {
-    public class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
+    public sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
     {
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -119,9 +119,29 @@ namespace MQTTnet.Implementations
 #if NET452 || NET461
                     await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, host, port, null).ConfigureAwait(false);
 #else
-                    await _socket.ConnectAsync(host, port).ConfigureAwait(false);
+                    Task socketAwait = Task.Run(() =>
+                    {
+                        try
+                        {
+                            _socket.Connect(host, port);
+                        }
+                        catch (SocketException)
+                        {
+                        }
+                    });
+
+                    if (socketAwait.Wait(TimeSpan.FromSeconds(10)))
+                    {
+                        _networkStream = new NetworkStream(_socket, true);
+                    }
+                    else
+                    {
+                        _socket.Dispose();
+                        socketAwait.Wait(); // proves we aren't leaking Task
+
+                        throw new TimeoutException();
+                    }
 #endif
-                    _networkStream = new NetworkStream(_socket, true);
                 }
             }
             catch (SocketException socketException)

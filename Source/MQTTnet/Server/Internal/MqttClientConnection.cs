@@ -279,7 +279,10 @@ namespace MQTTnet.Server.Internal
                         }
                     }
 
-                    _logger.Verbose("Client '{0}': Queued application message sent.", ClientId);
+                    if (_logger.IsEnabled)
+                    {
+                        _logger.Verbose("Client '{0}': Queued application message sent.", ClientId);
+                    }
                 }
             }
             catch (OperationCanceledException)

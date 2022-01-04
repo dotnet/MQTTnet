@@ -311,7 +311,10 @@ namespace MQTTnet.Server.Internal
 
             session?.Dispose();
 
-            _logger.Verbose("Session for client '{0}' deleted.", clientId);
+            if (_logger.IsEnabled)
+            {
+                _logger.Verbose("Session for client '{0}' deleted.", clientId);
+            }
         }
 
         public void Dispose()
@@ -414,8 +417,11 @@ namespace MQTTnet.Server.Internal
                         continue;
                     }
 
-                    _logger.Verbose("Client '{0}': Queued application message with topic '{1}'.",
-                        clientSession.ClientId, applicationMessage.Topic);
+                    if (_logger.IsEnabled)
+                    {
+                        _logger.Verbose("Client '{0}': Queued application message with topic '{1}'.",
+                            clientSession.ClientId, applicationMessage.Topic);
+                    }
 
                     var queuedApplicationMessage = new MqttQueuedApplicationMessage
                     {
@@ -527,19 +533,28 @@ namespace MQTTnet.Server.Internal
                 {
                     if (!_clientSessions.TryGetValue(connectPacket.ClientId, out session))
                     {
-                        _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);
+                        if (_logger.IsEnabled)
+                        {
+                            _logger.Verbose("Created a new session for client '{0}'.", connectPacket.ClientId);
+                        }
                         session = CreateSession(connectPacket.ClientId, context.SessionItems, sessionShouldPersist);
                     }
                     else
                     {
                         if (connectPacket.CleanSession)
                         {
-                            _logger.Verbose("Deleting existing session of client '{0}'.", connectPacket.ClientId);
+                            if (_logger.IsEnabled)
+                            {
+                                _logger.Verbose("Deleting existing session of client '{0}'.", connectPacket.ClientId);
+                            }
                             session = CreateSession(connectPacket.ClientId, context.SessionItems, sessionShouldPersist);
                         }
                         else
                         {
-                            _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
+                            if (_logger.IsEnabled)
+                            {
+                                _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
+                            }
                             // Session persistence could change for MQTT 5 clients that reconnect with different SessionExpiryInterval
                             session.IsPersistent = sessionShouldPersist;
                             connAckPacket.IsSessionPresent = true;

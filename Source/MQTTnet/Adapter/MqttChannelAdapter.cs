@@ -132,7 +132,10 @@ namespace MQTTnet.Adapter
 
                     Interlocked.Add(ref _bytesReceived, packetData.Count);
 
-                    _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Count, packet);
+                    if (_logger.IsEnabled)
+                    {
+                        _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Count, packet);
+                    }
                 }
                 catch (Exception exception)
                 {
@@ -180,7 +183,10 @@ namespace MQTTnet.Adapter
                     throw new MqttProtocolViolationException("Received malformed packet.");
                 }
 
-                _logger.Verbose("RX ({0} bytes) <<< {1}", receivedPacket.TotalLength, packet);
+                if (_logger.IsEnabled)
+                {
+                    _logger.Verbose("RX ({0} bytes) <<< {1}", receivedPacket.TotalLength, packet);
+                }
 
                 return packet;
             }

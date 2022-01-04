@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -74,7 +74,10 @@ namespace MQTTnet.Server.Internal
                     if (!hasPayload)
                     {
                         saveIsRequired = _messages.Remove(applicationMessage.Topic);
-                        _logger.Verbose("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                        if (_logger.IsEnabled)
+                        {
+                            _logger.Verbose("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                        }
                     }
                     else
                     {
@@ -92,7 +95,10 @@ namespace MQTTnet.Server.Internal
                             }
                         }
 
-                        _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                        if (_logger.IsEnabled)
+                        {
+                            _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                        }
                     }
 
                     if (saveIsRequired)

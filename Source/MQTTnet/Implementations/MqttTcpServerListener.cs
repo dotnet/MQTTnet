@@ -1,4 +1,4 @@
-﻿#if !WINDOWS_UWP
+#if !WINDOWS_UWP
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
@@ -147,10 +147,13 @@ namespace MQTTnet.Implementations
             {
                 remoteEndPoint = clientSocket.RemoteEndPoint.ToString();
 
-                _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
-                    remoteEndPoint,
-                    _localEndPoint,
-                    _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
+                if (_logger.IsEnabled)
+                {
+                    _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
+                        remoteEndPoint,
+                        _localEndPoint,
+                        _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
+                }
 
                 clientSocket.NoDelay = _options.NoDelay;
                 stream = clientSocket.GetStream();
@@ -218,10 +221,13 @@ namespace MQTTnet.Implementations
                 }
             }
 
-            _logger.Verbose("Client '{0}' disconnected at TCP listener '{1}, {2}'.",
-                remoteEndPoint,
-                _localEndPoint,
-                _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
+            if (_logger.IsEnabled)
+            {
+                _logger.Verbose("Client '{0}' disconnected at TCP listener '{1}, {2}'.",
+                    remoteEndPoint,
+                    _localEndPoint,
+                    _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
+            }
         }
     }
 }

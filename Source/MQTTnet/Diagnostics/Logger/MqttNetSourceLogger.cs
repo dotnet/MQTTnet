@@ -6,12 +6,16 @@ namespace MQTTnet.Diagnostics.Logger
     {
         readonly IMqttNetLogger _logger;
         readonly string _source;
+        readonly bool _isEnabled;
 
         public MqttNetSourceLogger(IMqttNetLogger logger, string source)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _source = source;
+            _isEnabled = logger is not MqttNetNullLogger;
         }
+
+        public bool IsEnabled => _isEnabled;
 
         public void Publish(MqttNetLogLevel logLevel, string message, object[] parameters, Exception exception)
         {

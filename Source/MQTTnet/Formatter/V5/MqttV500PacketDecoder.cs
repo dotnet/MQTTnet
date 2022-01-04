@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
@@ -225,7 +225,7 @@ namespace MQTTnet.Formatter.V5
                 IsSessionPresent = (acknowledgeFlags & 0x1) > 0,
                 ReasonCode = (MqttConnectReasonCode)body.ReadByte()
             };
-
+            
             // Set all default values according to specification. When they are missing the often
             // indicate that a feature is available.
             packet.Properties.RetainAvailable = true;
@@ -572,11 +572,13 @@ namespace MQTTnet.Formatter.V5
             var qos = (MqttQualityOfServiceLevel)(header >> 1 & 3);
             var dup = (header >> 3 & 1) > 0;
 
-            var packet = MqttPublishPacket.GetInstance();
-            packet.Topic = body.ReadStringWithLengthPrefix();
-            packet.Retain = retain;
-            packet.QualityOfServiceLevel = qos;
-            packet.Dup = dup;
+            var packet = new MqttPublishPacket
+            {
+                Topic = body.ReadStringWithLengthPrefix(),
+                Retain = retain,
+                QualityOfServiceLevel = qos,
+                Dup = dup
+            };
 
             if (qos > 0)
             {

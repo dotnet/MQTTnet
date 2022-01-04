@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -217,12 +217,14 @@ namespace MQTTnet.Formatter.V3
                 packetIdentifier = receivedMqttPacket.BodyReader.ReadTwoByteInteger();
             }
 
-            var packet = MqttPublishPacket.GetInstance();
-            packet.PacketIdentifier = packetIdentifier;
-            packet.Retain = retain;
-            packet.Topic = topic;
-            packet.QualityOfServiceLevel = qualityOfServiceLevel;
-            packet.Dup = dup;
+            var packet = new MqttPublishPacket
+            {
+                PacketIdentifier = packetIdentifier,
+                Retain = retain,
+                Topic = topic,
+                QualityOfServiceLevel = qualityOfServiceLevel,
+                Dup = dup
+            };
 
             if (!receivedMqttPacket.BodyReader.EndOfStream)
             {
@@ -528,12 +530,12 @@ namespace MQTTnet.Formatter.V3
                     {
                         throw new MqttProtocolViolationException("RetainAsPublished is not supported in 3.1.1.");
                     }
-
+                    
                     if (topicFilter.RetainHandling != MqttRetainHandling.SendAtSubscribe)
                     {
                         throw new MqttProtocolViolationException("RetainHandling is not supported in 3.1.1.");
                     }
-
+                    
                     packetWriter.WriteWithLengthPrefix(topicFilter.Topic);
                     packetWriter.Write((byte)topicFilter.QualityOfServiceLevel);
                 }

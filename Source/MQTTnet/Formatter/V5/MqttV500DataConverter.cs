@@ -1,4 +1,4 @@
-﻿using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
@@ -308,12 +308,10 @@ namespace MQTTnet.Formatter.V5
 
         public MqttClientPublishResult CreateClientPublishResult(MqttPubAckPacket pubAckPacket)
         {
-            var result = new MqttClientPublishResult
-            {
-                ReasonCode = MqttClientPublishReasonCode.Success,
-                ReasonString = pubAckPacket?.Properties?.ReasonString,
-                UserProperties = pubAckPacket?.Properties?.UserProperties
-            };
+            var result = MqttClientPublishResult.GetInstance();
+            result.ReasonCode = MqttClientPublishReasonCode.Success;
+            result.ReasonString = pubAckPacket?.Properties?.ReasonString;
+            result.UserProperties = pubAckPacket?.Properties?.UserProperties;
 
             if (pubAckPacket != null)
             {
@@ -329,33 +327,29 @@ namespace MQTTnet.Formatter.V5
 
         public MqttClientPublishResult CreateClientPublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
         {
+            var result = MqttClientPublishResult.GetInstance();
+
             if (pubRecPacket == null || pubCompPacket == null)
             {
-                return new MqttClientPublishResult
-                {
-                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError
-                };
+                result.ReasonCode = MqttClientPublishReasonCode.UnspecifiedError;
+                return result;
             }
 
             // The PUBCOMP is the last packet in QoS 2. So we use the results from that instead of PUBREC.
             if (pubCompPacket.ReasonCode == MqttPubCompReasonCode.PacketIdentifierNotFound)
             {
-                return new MqttClientPublishResult
-                {
-                    PacketIdentifier = pubCompPacket.PacketIdentifier,
-                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError,
-                    ReasonString = pubCompPacket.Properties?.ReasonString,
-                    UserProperties = pubCompPacket.Properties?.UserProperties
-                };
+                result.PacketIdentifier = pubCompPacket.PacketIdentifier;
+                result.ReasonCode = MqttClientPublishReasonCode.UnspecifiedError;
+                result.ReasonString = pubCompPacket.Properties?.ReasonString;
+                result.UserProperties = pubCompPacket.Properties?.UserProperties;
+
+                return result;
             }
 
-            var result = new MqttClientPublishResult
-            {
-                PacketIdentifier = pubCompPacket.PacketIdentifier,
-                ReasonCode = MqttClientPublishReasonCode.Success,
-                ReasonString = pubCompPacket.Properties?.ReasonString,
-                UserProperties = pubCompPacket.Properties?.UserProperties
-            };
+            result.PacketIdentifier = pubCompPacket.PacketIdentifier;
+            result.ReasonCode = MqttClientPublishReasonCode.Success;
+            result.ReasonString = pubCompPacket.Properties?.ReasonString;
+            result.UserProperties = pubCompPacket.Properties?.UserProperties;
 
             if (pubRecPacket.ReasonCode.HasValue)
             {

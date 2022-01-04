@@ -1,11 +1,15 @@
-﻿
+
+using System;
 using System.Collections.Generic;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Client.Publishing
 {
-    public class MqttClientPublishResult
+    public sealed class MqttClientPublishResult : IDisposable
     {
+        [ThreadStatic]
+        private static MqttClientPublishResult t_cache;
+
         public ushort? PacketIdentifier { get; set; }
 
         /// <summary>
@@ -28,5 +32,20 @@ namespace MQTTnet.Client.Publishing
         /// Hint: MQTT 5 feature only.
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
+
+        void IDisposable.Dispose()
+        {
+            PacketIdentifier = null;
+            ReasonCode = default;
+            ReasonString = null;
+            UserProperties = null;
+
+            t_cache = this;
+        }
+
+        internal static MqttClientPublishResult GetInstance()
+        {
+            return t_cache ?? new MqttClientPublishResult();
+        }
     }
 }

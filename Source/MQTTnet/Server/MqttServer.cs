@@ -1,4 +1,4 @@
-﻿using MQTTnet.Adapter;
+using MQTTnet.Adapter;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Client.Receiving;
 using MQTTnet.Diagnostics;
@@ -19,6 +19,8 @@ namespace MQTTnet.Server
 {
     public class MqttServer : Disposable, IMqttServer
     {
+        static readonly Task<MqttClientPublishResult> s_completedClientPublishResult = Task.FromResult(new MqttClientPublishResult());
+
         readonly MqttServerEventDispatcher _eventDispatcher;
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly IMqttNetLogger _rootLogger;
@@ -150,7 +152,7 @@ namespace MQTTnet.Server
 
             _clientSessionsManager.DispatchApplicationMessage(applicationMessage, null);
 
-            return Task.FromResult(new MqttClientPublishResult());
+            return s_completedClientPublishResult;
         }
 
         public async Task StartAsync(IMqttServerOptions options)

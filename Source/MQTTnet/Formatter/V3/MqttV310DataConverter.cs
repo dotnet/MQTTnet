@@ -1,4 +1,4 @@
-﻿using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
@@ -251,28 +251,28 @@ namespace MQTTnet.Formatter.V3
 
         public MqttClientPublishResult CreateClientPublishResult(MqttPubAckPacket pubAckPacket)
         {
-            return new MqttClientPublishResult
-            {
-                PacketIdentifier = pubAckPacket?.PacketIdentifier,
-                ReasonCode = MqttClientPublishReasonCode.Success
-            };
+            var mqttClientPublishResult = MqttClientPublishResult.GetInstance();
+            mqttClientPublishResult.PacketIdentifier = pubAckPacket?.PacketIdentifier;
+            mqttClientPublishResult.ReasonCode = MqttClientPublishReasonCode.Success;
+
+            return mqttClientPublishResult;
         }
 
         public MqttClientPublishResult CreateClientPublishResult(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
         {
+            var mqttClientPublishResult = MqttClientPublishResult.GetInstance();
+
             if (pubRecPacket == null || pubCompPacket == null)
             {
-                return new MqttClientPublishResult
-                {
-                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError
-                };
+                mqttClientPublishResult.ReasonCode = MqttClientPublishReasonCode.UnspecifiedError;
+            }
+            else
+            {
+                mqttClientPublishResult.PacketIdentifier = pubCompPacket.PacketIdentifier;
+                mqttClientPublishResult.ReasonCode = MqttClientPublishReasonCode.Success;
             }
 
-            return new MqttClientPublishResult
-            {
-                PacketIdentifier = pubCompPacket.PacketIdentifier,
-                ReasonCode = MqttClientPublishReasonCode.Success
-            };
+            return mqttClientPublishResult;
         }
     }
 }

@@ -159,7 +159,18 @@ namespace MQTTnet
             else
             {
                 _payload = new byte[length];
-                payload.Read(_payload, 0, _payload.Length);
+
+                var totalRead = 0;
+                do
+                {
+                    var bytesRead = payload.Read(_payload, totalRead, _payload.Length - totalRead);
+                    if (bytesRead == 0)
+                    {
+                        break;
+                    }
+                    totalRead += bytesRead;
+                }
+                while (totalRead < length);
             }
 
             return this;

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
@@ -8,9 +11,6 @@ using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Formatter.V5
@@ -21,24 +21,23 @@ namespace MQTTnet.Formatter.V5
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            var packet = new MqttPublishPacket
-            {
-                Topic = applicationMessage.Topic,
-                Payload = applicationMessage.Payload,
-                QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
-                Retain = applicationMessage.Retain,
-                Dup = applicationMessage.Dup,
-                Properties = new MqttPublishPacketProperties
-                {
-                    ContentType = applicationMessage.ContentType,
-                    CorrelationData = applicationMessage.CorrelationData,
-                    MessageExpiryInterval = applicationMessage.MessageExpiryInterval,
-                    PayloadFormatIndicator = applicationMessage.PayloadFormatIndicator,
-                    ResponseTopic = applicationMessage.ResponseTopic,
-                    SubscriptionIdentifiers = applicationMessage.SubscriptionIdentifiers,
-                    TopicAlias = applicationMessage.TopicAlias
-                }
-            };
+            var packet = MqttPublishPacket.GetInstance();
+            var properties = MqttPublishPacketProperties.GetInstance();
+
+            packet.Topic = applicationMessage.Topic;
+            packet.Payload = applicationMessage.Payload;
+            packet.QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel;
+            packet.Retain = applicationMessage.Retain;
+            packet.Dup = applicationMessage.Dup;
+            packet.Properties = properties;
+
+            properties.ContentType = applicationMessage.ContentType;
+            properties.CorrelationData = applicationMessage.CorrelationData;
+            properties.MessageExpiryInterval = applicationMessage.MessageExpiryInterval;
+            properties.PayloadFormatIndicator = applicationMessage.PayloadFormatIndicator;
+            properties.ResponseTopic = applicationMessage.ResponseTopic;
+            properties.SubscriptionIdentifiers = applicationMessage.SubscriptionIdentifiers;
+            properties.TopicAlias = applicationMessage.TopicAlias;
 
             if (applicationMessage.UserProperties != null)
             {
@@ -185,7 +184,7 @@ namespace MQTTnet.Formatter.V5
                     SharedSubscriptionAvailable = false,
                     TopicAliasMaximum = ushort.MaxValue,
                     WildcardSubscriptionAvailable = true,
-                    
+
                     UserProperties = connectionValidatorContext.ResponseUserProperties,
                     AuthenticationMethod = connectionValidatorContext.AuthenticationMethod,
                     AuthenticationData = connectionValidatorContext.ResponseAuthenticationData,

@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttPublishPacketProperties
+    public sealed class MqttPublishPacketProperties : IDisposable
     {
+        [ThreadStatic]
+        private static MqttPublishPacketProperties t_cache;
+
         public MqttPayloadFormatIndicator? PayloadFormatIndicator { get; set; }
 
         public uint? MessageExpiryInterval { get; set; }
@@ -20,5 +24,22 @@ namespace MQTTnet.Packets
         public List<uint> SubscriptionIdentifiers { get; set; }
 
         public string ContentType { get; set; }
+
+        void IDisposable.Dispose()
+        {
+            PayloadFormatIndicator = null;
+            MessageExpiryInterval = null;
+            TopicAlias = null;
+            ResponseTopic = null;
+            CorrelationData = null;
+            UserProperties = null;
+            SubscriptionIdentifiers = null;
+            ContentType = null;
+        }
+
+        internal static MqttPublishPacketProperties GetInstance()
+        {
+            return t_cache ?? new MqttPublishPacketProperties();
+        }
     }
 }

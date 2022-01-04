@@ -21,14 +21,15 @@ namespace MQTTnet.Formatter.V3
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            return new MqttPublishPacket
-            {
-                Topic = applicationMessage.Topic,
-                Payload = applicationMessage.Payload,
-                QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
-                Retain = applicationMessage.Retain,
-                Dup = false
-            };
+            var packet = MqttPublishPacket.GetInstance();
+
+            packet.Topic = applicationMessage.Topic;
+            packet.Payload = applicationMessage.Payload;
+            packet.QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel;
+            packet.Retain = applicationMessage.Retain;
+            packet.Dup = false;
+
+            return packet;
         }
 
         public MqttPubAckPacket CreatePubAckPacket(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode reasonCode)

@@ -17,6 +17,7 @@ namespace MQTTnet.Implementations
         public CrossPlatformSocket(AddressFamily addressFamily)
         {
             _socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
+            ConnectTimeout = TimeSpan.FromSeconds(10); 
         }
 
         public CrossPlatformSocket()
@@ -24,12 +25,14 @@ namespace MQTTnet.Implementations
             // Having this constructor is important because avoiding the address family as parameter
             // will make use of dual mode in the .net framework.
             _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            ConnectTimeout = TimeSpan.FromSeconds(10);
         }
 
         public CrossPlatformSocket(Socket socket)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _networkStream = new NetworkStream(socket, true);
+            ConnectTimeout = TimeSpan.FromSeconds(10);
         }
 
         public bool NoDelay
@@ -64,6 +67,8 @@ namespace MQTTnet.Implementations
             get => _socket.SendTimeout;
             set => _socket.SendTimeout = value;
         }
+
+        public TimeSpan ConnectTimeout { get; set; }
 
         public EndPoint RemoteEndPoint => _socket.RemoteEndPoint;
 
@@ -119,25 +124,26 @@ namespace MQTTnet.Implementations
 #if NET452 || NET461
                     await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, host, port, null).ConfigureAwait(false);
 #else
-                    Task socketAwait = Task.Run(() =>
+                    Task<bool> socketAwait = Task.Run(() =>
                     {
                         try
                         {
                             _socket.Connect(host, port);
+                            return true; 
                         }
-                        catch (SocketException)
+                        catch (SocketException ex)
                         {
+                            return false; 
                         }
                     });
 
-                    if (socketAwait.Wait(TimeSpan.FromSeconds(10)))
+                    if(await Task.WhenAny(socketAwait, Task.Delay(ConnectTimeout)) == socketAwait && socketAwait.Result)
                     {
                         _networkStream = new NetworkStream(_socket, true);
                     }
                     else
                     {
                         _socket.Dispose();
-                        socketAwait.Wait(); // proves we aren't leaking Task
 
                         throw new TimeoutException();
                     }

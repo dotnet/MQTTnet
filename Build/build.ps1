@@ -5,6 +5,7 @@ if ([string]::IsNullOrEmpty($nugetVersion)) {$nugetVersion = "0.0.1"}
 
 $vswhere = ${Env:\ProgramFiles(x86)} + '\Microsoft Visual Studio\Installer\vswhere'
 $msbuild = &$vswhere -products * -requires Microsoft.Component.MSBuild -latest -find MSBuild\**\Bin\MSBuild.exe
+$vstest = &$vswhere -products * -latest -find **\TestWindow\**\vstest.console.exe
 
 Write-Host
 Write-Host "Assembly version = $assemblyVersion"
@@ -20,8 +21,8 @@ Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.
 &$msbuild ..\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp3.1" /verbosity:m
 &$msbuild ..\Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="netcoreapp3.1" /verbosity:m
 
-vstest.console.exe ..\Tests\MQTTnet.Core.Tests\bin\Release\netcoreapp3.1\MQTTnet.Tests.dll
-vstest.console.exe ..\Tests\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
+&$vstest ..\Tests\MQTTnet.Core.Tests\bin\Release\netcoreapp3.1\MQTTnet.Tests.dll
+&$vstest ..\Tests\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
 
 # Build the core library
 &$msbuild ..\Source\MQTTnet\MQTTnet.csproj /t:Build /p:Configuration="Release" /p:TargetFramework="net452" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /verbosity:m /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=".\..\..\Build\codeSigningKey.pfx"

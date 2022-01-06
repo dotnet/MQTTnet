@@ -18,9 +18,9 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
 
       - name: Build
-          shell: pwsh
-          run: |
-            .\Build\build.ps1 1.2.3 4.5.6-rc1
+        shell: pwsh
+        run: |
+          .\Build\build.ps1 1.2.3 4.5.6-rc1
 
 
 #      - name: Install dependencies

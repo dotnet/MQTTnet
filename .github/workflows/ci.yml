@@ -21,7 +21,7 @@ jobs:
         shell: pwsh
         run: |
           Set-Location -Path "Build"
-          .\Build\build.ps1 1.2.3 4.5.6-rc1
+          .\build.ps1 1.2.3 4.5.6-rc1
 
 
 #      - name: Install dependencies

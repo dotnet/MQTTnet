@@ -20,5 +20,7 @@ jobs:
         run: dotnet restore MQTTnet.sln
       - name: Build
         run: dotnet build --configuration Release --no-restore MQTTnet.sln
-      - name: Test
-        run: dotnet test --no-restore --verbosity normal MQTTnet.sln
+      - name: Test MQTTnet
+        run: dotnet test --no-restore --verbosity normal Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
+      - name: Test AspNetCore
+        run: dotnet test --no-restore --verbosity normal Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj

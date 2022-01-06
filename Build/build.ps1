@@ -5,6 +5,7 @@ if ([string]::IsNullOrEmpty($nugetVersion)) {$nugetVersion = "0.0.1"}
 
 $vswhere = ${Env:\ProgramFiles(x86)} + '\Microsoft Visual Studio\Installer\vswhere'
 $msbuild = &$vswhere -products * -requires Microsoft.Component.MSBuild -latest -find MSBuild\**\Bin\MSBuild.exe
+$vstest = &$vswhere -products * -latest -find **\TestWindow\**\vstest.console.exe
 
 Write-Host
 Write-Host "Assembly version = $assemblyVersion"
@@ -37,5 +38,5 @@ $certificate = ".\..\..\Build\codeSigningKey.pfx"
 &$msbuild ..\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:TargetFramework="net5.0" /verbosity:m
 &$msbuild ..\Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:TargetFramework="net5.0" /verbosity:m
 
-vstest.console.exe ..\Tests\MQTTnet.Core.Tests\bin\Release\net5.0\MQTTnet.Tests.dll
-vstest.console.exe ..\Tests\MQTTnet.AspNetCore.Tests\bin\Release\net5.0\MQTTnet.AspNetCore.Tests.dll
+&$vstest ..\Tests\MQTTnet.Core.Tests\bin\Release\net5.0\MQTTnet.Tests.dll
+&$vstest ..\Tests\MQTTnet.AspNetCore.Tests\bin\Release\net5.0\MQTTnet.AspNetCore.Tests.dll

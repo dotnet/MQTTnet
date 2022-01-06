@@ -32,6 +32,13 @@ public static class Client_Connection_Samples
             Console.WriteLine("The MQTT client is connected.");
 
             response.DumpToConsole();
+            
+            // Send a clean disconnect to the server by calling _DisconnectAsync_. Without this the TCP connection
+            // gets dropped and the server will handle this as a non clean disconnect (see MQTT spec for details).
+            var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
+                .Build();
+            
+            await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
         }
     }
 

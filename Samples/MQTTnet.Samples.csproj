@@ -17,7 +17,6 @@
 
     <ItemGroup>
       <Folder Include="ManagedClient" />
-      <Folder Include="Trace" />
     </ItemGroup>
 
 </Project>

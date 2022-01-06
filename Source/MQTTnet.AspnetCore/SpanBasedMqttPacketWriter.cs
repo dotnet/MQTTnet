@@ -1,4 +1,4 @@
-﻿using MQTTnet.Formatter;
+using MQTTnet.Formatter;
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
@@ -6,17 +6,17 @@ using System.Text;
 
 namespace MQTTnet.AspNetCore
 {
-    public class SpanBasedMqttPacketWriter : IMqttPacketWriter
+    public sealed class SpanBasedMqttPacketWriter : IMqttPacketWriter
     {
         readonly ArrayPool<byte> _pool = ArrayPool<byte>.Create();
+
+        byte[] _buffer;
+        int _position;
 
         public SpanBasedMqttPacketWriter()
         {
             Reset(0);
         }
-
-        byte[] _buffer;
-        int _position;
 
         public int Length { get; set; }
 
@@ -33,18 +33,20 @@ namespace MQTTnet.AspNetCore
         public void Reset(int v)
         {
             _buffer = _pool.Rent(1500);
+
             Length = v;
             _position = v;
         }
-
-        public void Seek(int v)
+        
+        public void Seek(int position)
         {
-            _position = v;
+            _position = position;
         }
 
         public void Write(byte value)
         {
             GrowIfNeeded(1);
+
             _buffer[_position] = value;
             Commit(1);
         }
@@ -104,6 +106,11 @@ namespace MQTTnet.AspNetCore
 
         public void WriteWithLengthPrefix(byte[] payload)
         {
+            if (payload is null)
+            {
+                throw new ArgumentNullException(nameof(payload));
+            }
+
             GrowIfNeeded(payload.Length + 2);
             
             Write((ushort)payload.Length);

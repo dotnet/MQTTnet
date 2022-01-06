@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,7 +12,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public class MqttServer : Disposable
+    public partial class MqttServer : Disposable
     {
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttServerEventContainer _eventContainer = new MqttServerEventContainer();
@@ -205,13 +205,6 @@ namespace MQTTnet.Server
             ThrowIfNotStarted();
 
             return _clientSessionsManager.GetSessionStatusAsync();
-        }
-
-        public sealed class MqttInjectedApplicationMessage
-        {
-            public string SenderClientId { get; set; }
-            
-            public MqttApplicationMessage ApplicationMessage { get; set; }
         }
         
         public Task InjectApplicationMessage(MqttInjectedApplicationMessage injectedApplicationMessage, CancellationToken cancellationToken = default)

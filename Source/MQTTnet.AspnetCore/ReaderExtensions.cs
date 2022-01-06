@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Buffers;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
-namespace MQTTnet.AspNetCore.Extensions
+namespace MQTTnet.AspNetCore
 {
     public static class ReaderExtensions
     {
@@ -88,6 +88,7 @@ namespace MQTTnet.AspNetCore.Extensions
                 {
                     return false;
                 }
+
                 encodedByte = temp[index];
                 index++;
 

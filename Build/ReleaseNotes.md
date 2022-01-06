@@ -12,3 +12,4 @@
 * [Server] Removed all interceptor and event interfaces including the delegate implementations etc. (BREAKING CHANGE!).
 * [Server] Renamed a lot of classes and adjsuted namespaces (BREAKING CHANGE!).
 * [Server] Introduced a new queueing approach for internal message process (packet bus).
+* [Server] For security reasons the default endpoint (1883) is no longer enabled by default (BREAKING CHANGE!).

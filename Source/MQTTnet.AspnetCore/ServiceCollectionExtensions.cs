@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
@@ -6,10 +6,23 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
 
-namespace MQTTnet.AspNetCore.Extensions
+namespace MQTTnet.AspNetCore
 {
     public static class ServiceCollectionExtensions
     {
+        public static IServiceCollection AddMqttServer(this IServiceCollection serviceCollection, Action<MqttServerOptionsBuilder> configure = null)
+        {
+            if (serviceCollection is null)
+            {
+                throw new ArgumentNullException(nameof(serviceCollection));
+            }
+
+            serviceCollection.AddMqttConnectionHandler();
+            serviceCollection.AddHostedMqttServer(configure);
+            
+            return serviceCollection;
+        }
+
         public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, MqttServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
@@ -21,13 +34,13 @@ namespace MQTTnet.AspNetCore.Extensions
             return services;
         }
 
-        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<MqttServerOptionsBuilder> configure)
+        public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<MqttServerOptionsBuilder> configure = null)
         {
             services.AddSingleton<MqttServerOptions>(s =>
             {
-                var builder = new MqttServerOptionsBuilder();
-                configure(builder);
-                return builder.Build();
+                var serverOptionsBuilder = new MqttServerOptionsBuilder();
+                configure?.Invoke(serverOptionsBuilder);
+                return serverOptionsBuilder.Build();
             });
 
             services.AddHostedMqttServer();

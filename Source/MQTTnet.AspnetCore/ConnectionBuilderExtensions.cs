@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Connections;
 
-namespace MQTTnet.AspNetCore.Extensions
+namespace MQTTnet.AspNetCore
 {
     public static class ConnectionBuilderExtensions
     {

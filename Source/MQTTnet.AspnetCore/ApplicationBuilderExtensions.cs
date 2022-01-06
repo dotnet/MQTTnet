@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Server;
 
-namespace MQTTnet.AspNetCore.Extensions
+namespace MQTTnet.AspNetCore
 {
     public static class ApplicationBuilderExtensions
     {

@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Server;
 using System;
@@ -208,7 +208,8 @@ namespace MQTTnet.Tests.Mockups
         public async Task<MqttServer> StartServer(MqttServerOptionsBuilder options)
         {
             var server = CreateServer(options.Build());
-            
+
+            options.WithDefaultEndpoint();
             options.WithDefaultEndpointPort(ServerPort);
             options.WithMaxPendingMessagesPerClient(int.MaxValue);
             
@@ -217,13 +218,15 @@ namespace MQTTnet.Tests.Mockups
             return server;
         }
         
-        public async Task<MqttServer> StartServer(Action<MqttServerOptionsBuilder> options)
+        public async Task<MqttServer> StartServer(Action<MqttServerOptionsBuilder> configure)
         {
             var optionsBuilder = Factory.CreateServerOptionsBuilder();
+            
+            optionsBuilder.WithDefaultEndpoint();
             optionsBuilder.WithDefaultEndpointPort(ServerPort);
             optionsBuilder.WithMaxPendingMessagesPerClient(int.MaxValue);
-            
-            options.Invoke(optionsBuilder);
+
+            configure?.Invoke(optionsBuilder);
             
             var server = CreateServer(optionsBuilder.Build());
             await server.StartAsync();

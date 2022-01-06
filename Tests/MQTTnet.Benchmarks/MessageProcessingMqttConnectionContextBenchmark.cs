@@ -1,9 +1,9 @@
-﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Attributes;
 using MQTTnet.Client;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using MQTTnet.AspNetCore.Client;
-using MQTTnet.AspNetCore.Extensions;
+using MQTTnet.AspNetCore;
 using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Benchmarks

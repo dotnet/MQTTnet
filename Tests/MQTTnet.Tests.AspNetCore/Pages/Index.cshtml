@@ -1,0 +1,34 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div>
+    <h1>MQTTnet ASP.NET Core Test App</h1>
+</div>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<script>
+    const options = {
+      clean: true,
+      connectTimeout: 4000,
+      clientId: 'mqttnet_web_client'
+    }
+
+    const client  = mqtt.connect('ws://localhost:5049/mqtt')
+
+    client.on('connect', function () {
+      console.log('Connected')
+      client.subscribe('#', function (err) {
+        if (!err) {
+          client.publish('test', 'Hello mqtt')
+        }
+      })
+    })
+
+    client.on('message', function (topic, message) {
+      console.log(message.toString())
+    })
+</script>

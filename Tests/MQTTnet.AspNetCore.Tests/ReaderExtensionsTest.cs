@@ -1,7 +1,7 @@
 #if NETCOREAPP3_1
 using System.Buffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.AspNetCore.Extensions;
+using MQTTnet.AspNetCore;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 

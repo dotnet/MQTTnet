@@ -1,3 +1,4 @@
+using System.Security.Authentication;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Samples.Helpers;
@@ -65,6 +66,32 @@ public static class Client_Connection_Samples
             Console.WriteLine("The MQTT client is connected.");
 
             response.DumpToConsole();
+        }
+    }
+    
+    public static async Task Connect_Client_Using_TLS_1_2()
+    {
+        /*
+         * This sample creates a simple MQTT client and connects to a public broker using TLS 1.2 encryption.
+         * 
+         * This is a modified version of the sample _Connect_Client_! See other sample for more details.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("broker.hivemq.com")
+                .WithTls(o =>
+                {
+                    o.SslProtocol = SslProtocols.Tls12;
+                })
+                .Build();
+            
+            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            Console.WriteLine("The MQTT client is connected.");
         }
     }
 

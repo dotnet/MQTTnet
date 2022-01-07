@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net461;net5.0;net6.0</TargetFrameworks>
@@ -22,6 +22,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
     <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
     <ProjectReference Include="..\MQTTnet.Core.Tests\MQTTnet.Tests.csproj" />
   </ItemGroup>

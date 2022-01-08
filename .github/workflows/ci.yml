@@ -18,7 +18,7 @@ jobs:
         with:
           dotnet-version: '6.0.x'
 
-      - name: Setup Code
+      - name: Checkout Code
         uses: actions/checkout@v2
 
       - name: Build

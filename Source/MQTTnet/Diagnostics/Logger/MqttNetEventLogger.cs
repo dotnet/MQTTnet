@@ -16,6 +16,8 @@ namespace MQTTnet.Diagnostics.Logger
 
         public string LogId { get; }
 
+        public bool IsEnabled { get; set; } = true;
+
         public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
         {
             var eventHandler = LogMessagePublished;

@@ -190,7 +190,7 @@ namespace MQTTnet.Tests
                 var responseSender = await testEnvironment.ConnectClient();
                 await responseSender.SubscribeAsync("MQTTnet.RPC/+/ping", MqttQualityOfServiceLevel.AtMostOnce);
 
-                responseSender.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(async e =>
+                responseSender.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(e =>
                 {
                     Assert.IsNull(e.ApplicationMessage.ResponseTopic);
                 });

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -11,12 +11,14 @@ namespace MQTTnet.Implementations
     public sealed class CrossPlatformSocket : IDisposable
     {
         readonly Socket _socket;
+        readonly Action _socketDisposeAction;
 
         NetworkStream _networkStream;
 
         public CrossPlatformSocket(AddressFamily addressFamily)
         {
             _socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _socketDisposeAction = _socket.Dispose;
         }
 
         public CrossPlatformSocket()
@@ -24,12 +26,16 @@ namespace MQTTnet.Implementations
             // Having this constructor is important because avoiding the address family as parameter
             // will make use of dual mode in the .net framework.
             _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+
+            _socketDisposeAction = _socket.Dispose;
         }
 
         public CrossPlatformSocket(Socket socket)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _networkStream = new NetworkStream(socket, true);
+
+            _socketDisposeAction = _socket.Dispose;
         }
 
         public bool NoDelay
@@ -112,7 +118,7 @@ namespace MQTTnet.Implementations
                 _networkStream?.Dispose();
 
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
-                using (cancellationToken.Register(() => _socket.Dispose()))
+                using (cancellationToken.Register(_socketDisposeAction))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 

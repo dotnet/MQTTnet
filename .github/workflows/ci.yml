@@ -24,8 +24,16 @@ jobs:
         with:
           name: nuget Packages
           path: |
-            **\*.nupkg
-            **\*.snupkg
+            Source\MQTTnet\bin\Release\*.nupkg
+            Source\MQTTnet\bin\Release\*.snupkg
+            Source\MQTTnet.AspnetCore\bin\Release\*.nupkg
+            Source\MQTTnet.AspnetCore\bin\Release\*.snupkg
+            Source\MQTTnet.Extensions.ManagedClient\bin\Release\*.nupkg
+            Source\MQTTnet.Extensions.ManagedClient\bin\Release\*.snupkg
+            Source\MQTTnet.Extensions.Rpc\bin\Release\*.nupkg
+            Source\MQTTnet.Extensions.Rpc\bin\Release\*.snupkg
+            Source\MQTTnet.Extensions.WebSocket4Net\bin\Release\*.nupkg
+            Source\MQTTnet.Extensions.WebSocket4Net\bin\Release\*.snupkg
 
 #      - name: Install dependencies
 #        run: dotnet restore MQTTnet.sln

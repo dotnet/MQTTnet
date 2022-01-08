@@ -14,6 +14,8 @@
 
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
+        <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />
     </ItemGroup>
 
     <ItemGroup>

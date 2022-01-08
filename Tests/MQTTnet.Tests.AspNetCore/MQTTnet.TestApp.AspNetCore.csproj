@@ -9,6 +9,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj"/>
+
+        <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
+        <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />
     </ItemGroup>
 
     <ItemGroup>

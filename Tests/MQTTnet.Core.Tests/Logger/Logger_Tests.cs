@@ -35,7 +35,7 @@ namespace MQTTnet.Tests.Logger
 
             childLogger.Verbose("Verbose");
             childLogger.Info("Info");
-            childLogger.Warning(null, "Warning");
+            childLogger.Warning((Exception)null, "Warning");
             childLogger.Error(null, "Error");
 
             Assert.AreEqual(4, logMessagesCount);
@@ -55,7 +55,7 @@ namespace MQTTnet.Tests.Logger
             
             childLogger.Verbose("Verbose");
             childLogger.Info("Info");
-            childLogger.Warning(null, "Warning");
+            childLogger.Warning((Exception)null, "Warning");
             childLogger.Error(null, "Error");
         }
     }

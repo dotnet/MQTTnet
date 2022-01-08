@@ -6,7 +6,9 @@ namespace MQTTnet.Tests.Mockups
     public sealed class TestLogger : IMqttNetLogger
     {
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
-        
+
+        public bool IsEnabled { get; } = true;
+
         public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
         {
             LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(new MqttNetLogMessage

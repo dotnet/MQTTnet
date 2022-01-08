@@ -18,7 +18,7 @@ namespace MQTTnet.Tests.Logger
             };
             
             var sourceLogger = logger.WithSource("The_Source");
-            sourceLogger.Info("MESSAGE", null, null);
+            sourceLogger.Info("MESSAGE", (object)null, (object)null);
          
             Assert.AreEqual("The_Source", logMessage.Source);
         }

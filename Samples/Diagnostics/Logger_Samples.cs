@@ -7,7 +7,14 @@ public static class Logger_Samples
 {
     public static async Task Use_Custom_Logger()
     {
-        var mqttEventLogger = new MqttNetEventLogger();
+        /*
+         * This sample shows how to get logs from the library.
+         *
+         * ATTENTION: Only use the logger for debugging etc. The performance is heavily decreased when a logger is used.
+         */
+        
+        // The logger ID is optional but can be set do distinguish different logger instances.
+        var mqttEventLogger = new MqttNetEventLogger("MyCustomLogger");
 
         mqttEventLogger.LogMessagePublished += (sender, args) =>
         {

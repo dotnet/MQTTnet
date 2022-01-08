@@ -20,6 +20,12 @@ jobs:
           Set-Location -Path "Build"
           .\build.ps1 1.2.3 4.5.6-rc1
 
+      - uses: actions/upload-artifact@v2
+        with:
+          name: nuget Packages
+          path: |
+            **\*.nupkg
+            **\*.snupkg
 
 #      - name: Install dependencies
 #        run: dotnet restore MQTTnet.sln

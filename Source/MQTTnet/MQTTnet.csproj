@@ -75,7 +75,8 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
         <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
-        <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />        
+        <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />
+        <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)'=='netstandard1.3'">

@@ -455,7 +455,7 @@ namespace MQTTnet.Client
                 _logger.Verbose("Start sending keep alive packets.");
 
                 var keepAlivePeriod = Options.KeepAlivePeriod;
-
+     
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     // Values described here: [MQTT-3.1.2-24].
@@ -470,7 +470,7 @@ namespace MQTTnet.Client
                     // due to some edge cases and was buggy in the past. Now we wait several ms because the
                     // min keep alive value is one second so that the server will wait 1.5 seconds for a PING
                     // packet.
-                    await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(250, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

@@ -8,11 +8,18 @@ jobs:
     runs-on: windows-2022
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Setup Windows SDK
+        uses: GuillaumeFalourd/setup-windows10-sdk-action@v1
+        with:
+          sdk-version: 18362
+
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v1.7.2
+        uses: actions/setup-dotnet@v1.9.0
         with:
           dotnet-version: '6.0.x'
+
+      - name: Setup Code
+        uses: actions/checkout@v2
 
       - name: Build
         shell: pwsh
@@ -20,7 +27,8 @@ jobs:
           Set-Location -Path "Build"
           .\build.ps1 1.2.3 4.5.6-rc1
 
-      - uses: actions/upload-artifact@v2
+      - name: Collect nuget Packages
+        uses: actions/upload-artifact@v2
         with:
           name: nuget Packages
           path: |

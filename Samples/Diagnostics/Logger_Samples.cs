@@ -75,6 +75,8 @@ public static class Logger_Samples
 
     sealed class MyLogger : IMqttNetLogger
     {
+        public bool IsEnabled { get; set; } = true;
+
         public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
         {
             // Forward the log message to other loggers.

@@ -43,7 +43,7 @@ namespace MQTTnet.Implementations
             // We cannot use the _NoDelay_ property from the socket because there is an issue in .NET 4.5.2, 4.6.
             // The decompiled code is: this.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.Debug, value ? 1 : 0);
             // Which is wrong because the "NoDelay" should be set and not "Debug".
-            get => (int)_socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay) > 0;
+            get => (int) _socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay) > 0;
             set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, value ? 1 : 0);
         }
 
@@ -58,7 +58,7 @@ namespace MQTTnet.Implementations
             get => _socket.ReceiveBufferSize;
             set => _socket.ReceiveBufferSize = value;
         }
-        
+
         public int SendBufferSize
         {
             get => _socket.SendBufferSize;
@@ -75,7 +75,7 @@ namespace MQTTnet.Implementations
 
         public bool ReuseAddress
         {
-            get => (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
+            get => (int) _socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
             set => _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, value ? 1 : 0);
         }
 
@@ -117,6 +117,9 @@ namespace MQTTnet.Implementations
             {
                 _networkStream?.Dispose();
 
+#if NET5_0_OR_GREATER
+                await _socket.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+#else
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(_socketDisposeAction))
                 {
@@ -127,8 +130,9 @@ namespace MQTTnet.Implementations
 #else
                     await _socket.ConnectAsync(host, port).ConfigureAwait(false);
 #endif
-                    _networkStream = new NetworkStream(_socket, true);
                 }
+#endif
+                _networkStream = new NetworkStream(_socket, true);
             }
             catch (SocketException socketException)
             {

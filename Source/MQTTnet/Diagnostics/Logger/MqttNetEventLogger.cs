@@ -16,7 +16,7 @@ namespace MQTTnet.Diagnostics
 
         public string LogId { get; }
 
-        public bool IsEnabled { get; set; } = true;
+        public bool IsEnabled => LogMessagePublished != null;
 
         public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
         {

@@ -126,6 +126,16 @@ namespace MQTTnet.Diagnostics
             logger.Publish(MqttNetLogLevel.Warning, message, new object[] {parameter1}, null);
         }
         
+        public static void Warning<TParameter1, TParameter2>(this MqttNetSourceLogger logger, string message, TParameter1 parameter1, TParameter2 parameter2)
+        {
+            if (!logger.IsEnabled)
+            {
+                return;
+            }
+            
+            logger.Publish(MqttNetLogLevel.Warning, message, new object[] {parameter1, parameter2}, null);
+        }
+        
         public static void Warning(this MqttNetSourceLogger logger, string message)
         {
             if (!logger.IsEnabled)

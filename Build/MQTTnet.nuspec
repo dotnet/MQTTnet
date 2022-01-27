@@ -14,6 +14,7 @@
     <releaseNotes>
 * [Client] Increased delay for keep alive checks do decrease CPU load.
 * [Core] Decreased object allocations (#1324, thanks to @gfoidl).
+* [Core] Decreased object allocations when logging is not active (thanks to @gfoidl, @Tymoniden).
 * [Client] Fixed issue in _MqttApplicationMessageBuilder.WithPayload_ (#1322, thanks to @gfoidl).
 
 Git commit: $gitCommit

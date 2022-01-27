@@ -28,7 +28,7 @@
         <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
         <PackageIcon>nuget.png</PackageIcon>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReleaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</PackageReleaseNotes>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
@@ -48,7 +48,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <SourceRoot Include="$(MSBuildThisFileDirectory)\..\..\"/>
         <None Include="..\..\Images\nuget.png">
             <Pack>True</Pack>
             <PackagePath>\</PackagePath>

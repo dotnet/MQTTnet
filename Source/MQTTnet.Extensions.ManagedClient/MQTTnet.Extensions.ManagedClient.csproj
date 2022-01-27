@@ -48,6 +48,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <SourceRoot Include="$(MSBuildThisFileDirectory)\..\..\"/>
         <None Include="..\..\Images\nuget.png">
             <Pack>True</Pack>
             <PackagePath>\</PackagePath>

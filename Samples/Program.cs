@@ -14,7 +14,7 @@ foreach (var sampleClass in sampleClasses)
 
 Console.Write("Please choose sample class (press Enter to continue): ");
 var input = Console.ReadLine();
-var selectedIndex = int.Parse(input);
+var selectedIndex = int.Parse(input ?? "0");
 var selectedSampleClass = sampleClasses[selectedIndex];
 var sampleMethods = selectedSampleClass.GetMethods(BindingFlags.Static | BindingFlags.Public).OrderBy(m => m.Name).ToList();
 
@@ -27,7 +27,7 @@ foreach (var sampleMethod in sampleMethods)
 
 Console.Write("Please choose sample (press Enter to continue): ");
 input = Console.ReadLine();
-selectedIndex = int.Parse(input);
+selectedIndex = int.Parse(input ?? "0");
 var selectedSampleMethod = sampleMethods[selectedIndex];
 
 Console.WriteLine("Executing sample...");

@@ -91,12 +91,12 @@ namespace MQTTnet.TestApp.NetCore
                      .WithProtocolVersion(MqttProtocolVersion.V311).Build());
 
             await ExecuteTestAsync("broker.emqx.io TCP TLS12",
-                new MqttClientOptionsBuilder().WithTcpServer("broker.emqx.io", 8083)
+                new MqttClientOptionsBuilder().WithTcpServer("broker.emqx.io", 8883)
                     .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build());
 
 #if NET5_0_OR_GREATER
             await ExecuteTestAsync("broker.emqx.io TCP TLS13",
-                new MqttClientOptionsBuilder().WithTcpServer("broker.emqx.io", 8083)
+                new MqttClientOptionsBuilder().WithTcpServer("broker.emqx.io", 8883)
                     .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls13).Build());
 #endif
 

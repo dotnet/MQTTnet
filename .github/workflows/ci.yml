@@ -19,9 +19,9 @@ jobs:
           dotnet-version: '6.0.x'
 
       - name: Setup MSBuild
-        uses: warrenbuckley/Setup-MSBuild@v1
+        uses: microsoft/setup-msbuild@v1.1
 
-      - name: Setup VSTest Path
+      - name: Setup VSTest
         uses: darenm/Setup-VSTest@v1
 
       - name: Setup NuGet
@@ -33,7 +33,7 @@ jobs:
       - name: MSBuild
         #working-directory: Source
         #run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /p:PackageVersion=$nugetVersion /verbosity:m
-        run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /verbosity:m
+        run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /verbosity:diag
 
       - name: Core Tests
         run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj

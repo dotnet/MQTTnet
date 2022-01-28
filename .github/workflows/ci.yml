@@ -38,6 +38,16 @@ jobs:
         #run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /p:PackageVersion=$nugetVersion /verbosity:m
         run: msbuild .\Source\MQTTnet\MQTTnet.csproj /t:Clean /t:Restore /t:Build /p:Configuration="Release" /verbosity:m
 
+      - name: MSBuild
+        #working-directory: Source
+        #run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /p:PackageVersion=$nugetVersion /verbosity:m
+        run: msbuild .\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj /t:Clean /t:Restore /t:Build /p:Configuration="Release" /verbosity:m
+
+      - name: MSBuild
+        #working-directory: Source
+        #run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /p:PackageVersion=$nugetVersion /verbosity:m
+        run: msbuild .\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj /t:Clean /t:Restore /t:Build /p:Configuration="Release" /verbosity:m
+
       #- name: Core Tests
       #  run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
 

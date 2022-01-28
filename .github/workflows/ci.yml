@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
 
-    runs-on: windows-latest #windows-2022
+    runs-on: windows-2022
 
     steps:
       - name: Setup Windows SDK
@@ -19,7 +19,7 @@ jobs:
           dotnet-version: '6.0.x'
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v1.1.1
 
       - name: Setup VSTest
         uses: darenm/Setup-VSTest@v1
@@ -36,13 +36,13 @@ jobs:
       - name: MSBuild
         #working-directory: Source
         #run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /p:PackageVersion=$nugetVersion /verbosity:m
-        run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /verbosity:m
+        run: msbuild .\Source\MQTTnet\MQTTnet.csproj /t:Clean /t:Restore /t:Build /p:Configuration="Release" /verbosity:m
 
-      - name: Core Tests
-        run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
+      #- name: Core Tests
+      #  run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
 
-      - name: ASP.NET Tests
-        run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj
+      #- name: ASP.NET Tests
+      #  run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj
 
     #  - name: Build
     #    shell: pwsh

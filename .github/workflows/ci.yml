@@ -18,14 +18,34 @@ jobs:
         with:
           dotnet-version: '6.0.x'
 
+      - name: Setup MSBuild
+        uses: warrenbuckley/Setup-MSBuild@v1
+
+      - name: Setup VSTest Path
+        uses: darenm/Setup-VSTest@v1
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.2
+
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Build
-        shell: pwsh
-        run: |
-          Set-Location -Path "Build"
-          .\build.ps1 1.2.3 4.5.6-rc1
+      - name: MSBuild
+        #working-directory: Source
+        #run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /p:PackageVersion=$nugetVersion /verbosity:m
+        run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /verbosity:m
+
+      - name: Core Tests
+        run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
+
+      - name: ASP.NET Tests
+        run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj
+
+    #  - name: Build
+    #    shell: pwsh
+    #    run: |
+    #      Set-Location -Path "Build"
+    #      .\build.ps1 1.2.3 4.5.6-rc1
 
       - name: Collect nuget Packages
         uses: actions/upload-artifact@v2

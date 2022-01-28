@@ -54,6 +54,16 @@ jobs:
         #run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /p:PackageVersion=$nugetVersion /verbosity:m
         run: msbuild .\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj /t:Build /p:Configuration="Release" /verbosity:m
 
+      - name: Build WebSocket4Net extension library
+        #working-directory: Source
+        #run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /p:PackageVersion=$nugetVersion /verbosity:m
+        run: msbuild .\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj /t:Build /p:Configuration="Release" /verbosity:m
+
+      - name: Build ASP.NET Core extension library
+        #working-directory: Source
+        #run: msbuild MQTTnet.sln /t:Clean /t:Restore /t:Build /p:Configuration="Release" /p:FileVersion=$assemblyVersion /p:AssemblyVersion=$assemblyVersion /p:PackageVersion=$nugetVersion /verbosity:m
+        run: msbuild .\Source\MQTTnet.AspNetCore\MQTTnet.AspNetCore.csproj /t:Build /p:Configuration="Release" /verbosity:m
+
       #- name: Core Tests
       #  run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
 
@@ -71,8 +81,12 @@ jobs:
         with:
           name: nuget Packages
           path: |
-            Source\**\bin\Release\*.nupkg
-            Source\**\bin\Release\*.snupkg
+            D:\a\MQTTnet\MQTTnet\Source\MQTTnet\bin\Release\MQTTnet.*.nupkg
+            D:\a\MQTTnet\MQTTnet\Source\MQTTnet\bin\Release\MQTTnet.*.snupkg
+            D:\a\MQTTnet\MQTTnet\Source\MQTTnet.Extensions.ManagedClient\bin\Release\MQTTnet.Extensions.ManagedClient.*.nupkg
+            D:\a\MQTTnet\MQTTnet\Source\MQTTnet.Extensions.ManagedClient\bin\Release\MQTTnet.Extensions.ManagedClient.*.snupkg
+            D:\a\MQTTnet\MQTTnet\Source\MQTTnet.Extensions.RPC\bin\Release\MQTTnet.Extensions.Rpc.*.nupkg
+            D:\a\MQTTnet\MQTTnet\Source\MQTTnet.Extensions.RPC\bin\Release\MQTTnet.Extensions.Rpc.*.snupkg
 
 #      - name: Install dependencies
 #        run: dotnet restore MQTTnet.sln

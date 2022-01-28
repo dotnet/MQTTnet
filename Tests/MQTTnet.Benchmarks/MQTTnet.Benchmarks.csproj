@@ -3,7 +3,7 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <DebugType>Full</DebugType>
-        <TargetFrameworks>net461;netcoreapp2.1</TargetFrameworks>
+        <TargetFramework>net6.0</TargetFramework>
         <LangVersion>7.2</LangVersion>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
     </PropertyGroup>

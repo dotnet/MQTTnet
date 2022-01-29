@@ -25,9 +25,6 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.1
 
-      - name: Setup VSTest
-        uses: darenm/Setup-VSTest@v1
-
       - name: Checkout Code
         uses: actions/checkout@v2
 
@@ -48,7 +45,7 @@ jobs:
         run: msbuild .\MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
 
       - name: Build solution
-        run: msbuild .\MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }} /p:PublicSign=true /p:KeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
+        run: msbuild .\MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }} /p:PublicSign=true /p:AssemblyOriginatorKeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
         ## /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
 
       #
@@ -65,8 +62,11 @@ jobs:
       #- name: Build ASP.NET Core extension library
       #  run: msbuild .\Source\MQTTnet.AspNetCore\MQTTnet.AspNetCore.csproj /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
 
-      #- name: Core Tests
-      #  run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
+      - name: Setup VSTest
+        uses: darenm/Setup-VSTest@v1
+
+      - name: Core Tests
+        run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
 
       #- name: ASP.NET Tests
       #  run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj

@@ -11,7 +11,7 @@
 
 # MQTTnet
 
-MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker). The implementation is based on the documentation from <http://mqtt.org/>.
+MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports the MQTT protocol up to version 5.
 
 ## Features
 
@@ -53,22 +53,18 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 
 ## Supported frameworks
 
-* .NET 5.0+
-* .NET Standard 1.3+
-* .NET Core 1.1+
-* .NET Core App 1.1+
-* .NET Framework 4.5.2+
-* Mono 5.2+
-* Universal Windows Platform (UWP) 10.0.10240+ (Windows 10 IoT Core)
-* Xamarin.Android 7.5+
-* Xamarin.iOS 10.14+
-* Blazor WebAssembly 3.2.0+
-
-## Supported MQTT versions
-
-* 5.0.0
-* 3.1.1
-* 3.1.0
+| Framwork           | Version     |
+| ------------------ | ----------- |
+|.NET                | 5.0+        |
+|.NET Framework      | 4.5.2+      |
+|.NET Standard       | 1.3+        |
+|.NET Core           | 1.1+        |
+|.NET Core App       | 1.1+        |
+| Mono               | 5.2+        |
+| UWP                | 10.0.10240+ |
+| Xamarin.Android    | 7.5+        |
+| Xamarin.iOS        | 10.14+      |
+| Blazor WebAssembly | 3.2.0+      |
 
 ## Contributions
 

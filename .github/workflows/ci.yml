@@ -49,34 +49,14 @@ jobs:
         # /p:PublicSign=true /p:AssemblyOriginatorKeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
         ## /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
 
-      #
-
-      #- name: Build Managed Client extension library
-      #  run: msbuild .\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
-
-      #- name: Build RPC extension library
-      #  run: msbuild .\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
-
-      #- name: Build WebSocket4Net extension library
-      #  run: msbuild .\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
-
-      #- name: Build ASP.NET Core extension library
-      #  run: msbuild .\Source\MQTTnet.AspNetCore\MQTTnet.AspNetCore.csproj /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
-
       - name: Setup VSTest
         uses: darenm/Setup-VSTest@v1
 
       - name: Core Tests
-        run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
+        run: vstest.console.exe .\Tests\MQTTnet.Core.Tests\bin\Release\net6.0\MQTTnet.Tests.dll
 
-      #- name: ASP.NET Tests
-      #  run: vstest.console.exe /Platform:x64 .\Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj
-
-    #  - name: Build
-    #    shell: pwsh
-    #    run: |
-    #      Set-Location -Path "Build"
-    #      .\build.ps1 1.2.3 4.5.6-rc1
+      - name: ASP.NET Tests
+        run: vstest.console.exe .\Tests\MQTTnet.AspNetCore.Tests\bin\Release\net6.0\MQTTnet.AspNetCore.Tests.dll
 
       - name: Collect nuget Packages
         uses: actions/upload-artifact@v2

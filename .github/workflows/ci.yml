@@ -31,13 +31,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-     # - name: Setup Signing Certificate
-     #   run: |
-     #     Write-Host (Get-Item .).FullName
-     #     Set-Content -Path certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
-     #     certutil -decode certificate.txt certificate.pfx
-     #     sn.exe -i certificate.pfx VS_KEY_76473915F9AAC2EF
-
+      - name: Setup Signing Certificate
+        run: |
+          Write-Host (Get-Item .).FullName
+          Set-Content -Path certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
+          certutil -decode certificate.txt certificate.pfx
+      
  #     - name : Setup nuget
  #       uses: nuget/setup-nuget@v1
  #         with:

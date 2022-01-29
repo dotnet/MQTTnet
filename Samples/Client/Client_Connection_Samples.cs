@@ -69,6 +69,35 @@ public static class Client_Connection_Samples
         }
     }
     
+    public static async Task Connect_Client_With_TLS_Encryption()
+    {
+        /*
+         * This sample creates a simple MQTT client and connects to a public broker with enabled TLS encryption.
+         * 
+         * This is a modified version of the sample _Connect_Client_! See other sample for more details.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("test.mosquitto.org", 8883)
+                .WithTls(o =>
+                {
+                    o.SslProtocol = SslProtocols.Tls12; // The default value is determined by the OS. Set manually to force version.
+                })
+                .Build();
+
+            // In MQTTv5 the response contains much more information.
+            var response = await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            Console.WriteLine("The MQTT client is connected.");
+
+            response.DumpToConsole();
+        }
+    }
+    
     public static async Task Connect_Client_Using_TLS_1_2()
     {
         /*
@@ -82,7 +111,7 @@ public static class Client_Connection_Samples
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
             var mqttClientOptions = new MqttClientOptionsBuilder()
-                .WithTcpServer("broker.hivemq.com")
+                .WithTcpServer("mqtt.fluux.io")
                 .WithTls(o =>
                 {
                     o.SslProtocol = SslProtocols.Tls12;

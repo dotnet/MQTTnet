@@ -5,8 +5,9 @@
 </p>
 
 [![NuGet Badge](https://buildstats.info/nuget/MQTTnet)](https://www.nuget.org/packages/MQTTnet)
+[![CI](https://github.com/dotnet/MQTTnet/actions/workflows/ci.yml/badge.svg)](https://github.com/dotnet/MQTTnet/actions/workflows/ci.yml)
 [![Join the chat at https://gitter.im/MQTTnet/community](https://badges.gitter.im/MQTTnet/community.svg)](https://gitter.im/MQTTnet/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://raw.githubusercontent.com/chkr1011/MQTTnet/master/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://raw.githubusercontent.com/dotnet/MQTTnet/master/LICENSE)
 
 # MQTTnet
 
@@ -50,16 +51,6 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Validate subscriptions and deny subscribing of certain topics depending on requesting clients
 * Connect clients with different protocol versions at the same time.
 
-## MQTTnet Server
-
-_MQTTnet Server_ is a standalone cross platform MQTT server (like mosquitto) basing on this library. It has the following features.
-* Running portable (no installation required)
-* Runs under Windows, Linux, macOS, Raspberry Pi
-* Python scripting support for manipulating messages, validation of clients, building business logic etc.
-* Supports WebSocket and TCP (with and without TLS) connections
-* Provides a HTTP based API (including Swagger endpoint)
-* Extensive configuration parameters and customization supported
-
 ## Supported frameworks
 
 * .NET 5.0+
@@ -73,35 +64,11 @@ _MQTTnet Server_ is a standalone cross platform MQTT server (like mosquitto) bas
 * Xamarin.iOS 10.14+
 * Blazor WebAssembly 3.2.0+
 
-## Supported platforms
-
-* x86
-* x64
-* AnyCPU
-* ARM
-
-## Supported OS
-
-* Windows
-* Windows 10 IoT Core
-* Linux (Ubuntu, Raspbian etc.)
-* macOS
-* Android
-* iOS
-
 ## Supported MQTT versions
 
 * 5.0.0
 * 3.1.1
 * 3.1.0
-
-## Nuget
-
-This library is available as a nuget package: <https://www.nuget.org/packages/MQTTnet/>
-
-## Examples
-
-Please find examples and the documentation at the Wiki of this repository (<https://github.com/chkr1011/MQTTnet/wiki>).
 
 ## Contributions
 
@@ -122,30 +89,6 @@ This library is used in the following projects:
 * SparkplugNet (Sparkplug library for .Net, <https://github.com/SeppPenner/SparkplugNet>)
 * Silverback (Framework to build event-driven applications - support for MQTT, Kafka & RabbitMQ) <https://github.com/BEagle1984/silverback>
 
-Further projects using this project can be found under https://github.com/chkr1011/MQTTnet/network/dependents.
+Further projects using this project can be found under https://github.com/dotnet/MQTTnet/network/dependents.
 
 If you use this library and want to see your project here please create a pull request.
-
-## License
-
-MIT License
-
-MQTTnet Copyright (c) 2016-2021 Christian Kratky
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.

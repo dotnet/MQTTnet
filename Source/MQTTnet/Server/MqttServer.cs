@@ -12,7 +12,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public partial class MqttServer : Disposable
+    public class MqttServer : Disposable
     {
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttServerEventContainer _eventContainer = new MqttServerEventContainer();

@@ -2,6 +2,13 @@ name: CI
 
 on: [push, pull_request]
 
+  workflow_dispatch:
+    inputs:
+      push_nugets:
+        description: 'Push nugets?'     
+        required: true
+        default: false
+
 env:
   ASSEMBLY_VERSION: "4.0.0"
   NUGET_VERSION: "4.0.0-preview2"
@@ -42,21 +49,12 @@ jobs:
 
 
       - name: Restore nuget packages
-        run: msbuild .\MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
+        run: msbuild MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
 
       - name: Build solution
-        run: msbuild .\MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
+        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
         # /p:PublicSign=true /p:AssemblyOriginatorKeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
         ## /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
-
-      - name: Setup VSTest
-        uses: darenm/Setup-VSTest@v1
-
-      - name: Core Tests
-        run: vstest.console.exe .\Tests\MQTTnet.Core.Tests\bin\Release\net6.0\MQTTnet.Tests.dll
-
-      - name: ASP.NET Tests
-        run: vstest.console.exe .\Tests\MQTTnet.AspNetCore.Tests\bin\Release\net6.0\MQTTnet.AspNetCore.Tests.dll
 
       - name: Collect nuget Packages
         uses: actions/upload-artifact@v2
@@ -65,6 +63,15 @@ jobs:
           path: |
             **\*.nupkg
             **\*.snupkg
+
+      - name: Setup VSTest
+        uses: darenm/Setup-VSTest@v1
+
+      - name: Core Tests
+        run: vstest.console.exe Tests\MQTTnet.Core.Tests\bin\Release\net6.0\MQTTnet.Tests.dll
+
+      - name: ASP.NET Tests
+        run: vstest.console.exe Tests\MQTTnet.AspNetCore.Tests\bin\Release\net6.0\MQTTnet.AspNetCore.Tests.dll
 
       - name: Create Release
         id: create_release
@@ -77,6 +84,8 @@ jobs:
           draft: true
           prerelease: false
 
+      - name: Publish Nuget to GitHub registry
+        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate
 
 #  pull_request_ci:
 #    runs-on: windows-2022

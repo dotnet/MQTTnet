@@ -14,11 +14,6 @@ jobs:
     runs-on: windows-2022
 
     steps:
-      - name: Setup Environment Variables
-        uses: falti/dotenv-action@v0.2.7
-        with:
-          path: Build\.env
-
       - name: Setup Windows SDK
         uses: GuillaumeFalourd/setup-windows10-sdk-action@v1
         with:
@@ -47,6 +42,10 @@ jobs:
  #           nuget-api-key: ${{ secrets.NUGET_API_KEY }}
  #           nuget-version: '5.x'
 
+      - name: Setup Environment Variables
+        uses: falti/dotenv-action@v0.2.7
+        with:
+          path: Build\.env
 
       - name: Restore nuget packages
         run: msbuild MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m

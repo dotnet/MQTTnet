@@ -4,9 +4,9 @@ on:
   - push
   - pull_request
 
-env:
-  ASSEMBLY_VERSION: "4.0.0"
-  NUGET_VERSION: "4.0.0-preview2"
+#env:
+  #ASSEMBLY_VERSION: "4.0.0"
+  #NUGET_VERSION: "4.0.0-preview2"
 
 jobs:
   build:
@@ -38,12 +38,6 @@ jobs:
    #       Set-Content -Path certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
    #       certutil -decode certificate.txt certificate.pfx
       
- #     - name : Setup nuget
- #       uses: nuget/setup-nuget@v1
- #         with:
- #           nuget-api-key: ${{ secrets.NUGET_API_KEY }}
- #           nuget-version: '5.x'
-
       - name: Setup Environment Variables
         uses: falti/dotenv-action@v0.2.7
         with:
@@ -87,9 +81,6 @@ jobs:
 
       - name: Publish nugets
         run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
-
-      - name: Publish debug symbol nugets
-        run: dotnet nuget push **/*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
 
 #  pull_request_ci:
 #    runs-on: windows-2022

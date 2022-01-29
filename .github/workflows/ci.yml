@@ -74,19 +74,19 @@ jobs:
       - name: ASP.NET Tests
         run: vstest.console.exe Tests\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ env.ASSEMBLY_VERSION }}
-          release_name: v${{ env.ASSEMBLY_VERSION }}
-          draft: true
-          prerelease: false
+      #- name: Create Release
+      #  id: create_release
+      #  uses: actions/create-release@v1
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  with:
+      #    tag_name: v${{ env.ASSEMBLY_VERSION }}
+      #    release_name: v${{ env.ASSEMBLY_VERSION }}
+      #    draft: true
+      #    prerelease: false
 
       - name: Publish Nuget to GitHub registry
-        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
 
 #  pull_request_ci:
 #    runs-on: windows-2022

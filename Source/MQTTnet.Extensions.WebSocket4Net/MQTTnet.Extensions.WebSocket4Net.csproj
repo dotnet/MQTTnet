@@ -18,7 +18,7 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <Copyright>Christian Kratky 2016-2021</Copyright>
+        <Copyright>Christian Kratky 2016-2022</Copyright>
         <PackageProjectUrl>https://github.com/chkr1011/MQTTnet</PackageProjectUrl>
         <RepositoryUrl>https://github.com/chkr1011/MQTTnet.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>

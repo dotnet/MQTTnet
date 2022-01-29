@@ -1,11 +1,9 @@
 ﻿using MQTTnet.Client;
-using MQTTnet.Protocol;
 using System;
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
-using MQTTnet.Packets;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -40,16 +38,16 @@ namespace MQTTnet.TestApp.NetCore
                     return PlatformAbstractionLayer.CompletedTask;
                 };
 
-                client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(async e =>
+                client.ConnectedAsync += async e =>
                 {
                     Console.WriteLine("### CONNECTED WITH SERVER ###");
 
-                    await client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
+                    await client.SubscribeAsync("#");
 
                     Console.WriteLine("### SUBSCRIBED ###");
-                });
+                };
 
-                client.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(async e =>
+                client.DisconnectedAsync += async e =>
                 {
                     Console.WriteLine("### DISCONNECTED FROM SERVER ###");
                     await Task.Delay(TimeSpan.FromSeconds(5));
@@ -62,7 +60,7 @@ namespace MQTTnet.TestApp.NetCore
                     {
                         Console.WriteLine("### RECONNECTING FAILED ###");
                     }
-                });
+                };
 
                 try
                 {
@@ -79,7 +77,7 @@ namespace MQTTnet.TestApp.NetCore
                 {
                     Console.ReadLine();
 
-                    await client.SubscribeAsync(new MqttTopicFilter { Topic = "test", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                    await client.SubscribeAsync("test");
 
                     var applicationMessage = new MqttApplicationMessageBuilder()
                         .WithTopic("A/B/C")

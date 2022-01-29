@@ -17,7 +17,7 @@ namespace MQTTnet.Extensions.Rpc.Options.TopicGeneration
         /// </summary>
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
 
-        public IMqttClient MqttClient { get; set; }
+        public MqttClient MqttClient { get; set; }
 
         public IMqttRpcClientOptions Options { get; set; }
     }

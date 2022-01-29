@@ -38,7 +38,7 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var client1 = await testEnvironment.ConnectClient();
-                await client1.PublishAsync("Topic", "Payload", true);
+                await client1.PublishStringAsync("Topic", "Payload", retain: true);
 
                 await LongTestDelay();
                 
@@ -51,7 +51,7 @@ namespace MQTTnet.Tests.Server
 
                 applicationMessageHandler.AssertReceivedCountEquals(expectedCountAfterSubscribe);
                 
-                await client1.PublishAsync("Topic", "Payload", true);
+                await client1.PublishStringAsync("Topic", "Payload", retain: true);
                 await LongTestDelay();
                 
                 applicationMessageHandler.AssertReceivedCountEquals(expectedCountAfterSecondPublish);

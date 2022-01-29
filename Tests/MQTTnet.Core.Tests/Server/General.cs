@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
+using MQTTnet.Implementations;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -65,9 +66,9 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(0, clientStatus.Count);
 
                 var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b").WithCleanSession(false));
-                await client2.PublishAsync("x", "1");
-                await client2.PublishAsync("x", "2");
-                await client2.PublishAsync("x", "3");
+                await client2.PublishStringAsync("x", "1");
+                await client2.PublishStringAsync("x", "2");
+                await client2.PublishStringAsync("x", "3");
                 await client2.DisconnectAsync();
 
                 await Task.Delay(500);
@@ -144,8 +145,9 @@ namespace MQTTnet.Tests.Server
                     return Task.CompletedTask;
                 };
 
-                await client2.SubscribeAsync(new MqttTopicFilter {Topic = "y"}, new MqttTopicFilter {Topic = "n"});
-
+                await client2.SubscribeAsync("y");
+                await client2.SubscribeAsync("n");
+ 
                 await Task.Delay(500);
 
                 Assert.AreEqual("y", buffer.ToString());
@@ -330,7 +332,7 @@ namespace MQTTnet.Tests.Server
 
                 await client.SubscribeAsync("b");
 
-                await client.PublishAsync("a", null, MqttQualityOfServiceLevel.ExactlyOnce);
+                await client.PublishStringAsync("a", null, MqttQualityOfServiceLevel.ExactlyOnce);
 
                 await Task.Delay(500);
 
@@ -348,7 +350,7 @@ namespace MQTTnet.Tests.Server
                 var client = await testEnvironment.ConnectClient();
                 var receivedMessages = new List<MqttApplicationMessage>();
 
-                client.ConnectedHandler = new MqttClientConnectedHandlerDelegate(async e => { await client.PublishAsync("Connected"); });
+                client.ConnectedAsync += async e => { await client.PublishStringAsync("Connected"); };
 
                 client.ApplicationMessageReceivedAsync += e =>
                 {
@@ -362,7 +364,7 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                await client.PublishAsync("Hello");
+                await client.PublishStringAsync("Hello");
 
                 await Task.Delay(500);
 
@@ -622,7 +624,7 @@ namespace MQTTnet.Tests.Server
                 await c2.SubscribeAsync("topic");
 
                 // r
-                await c2.PublishAsync("topic");
+                await c2.PublishStringAsync("topic");
 
                 await Task.Delay(500);
 
@@ -695,15 +697,16 @@ namespace MQTTnet.Tests.Server
                 // c
                 var c1 = await testEnvironment.ConnectClient(clientOptions);
 
-                c1.UseDisconnectedHandler(_ =>
+                c1.DisconnectedAsync += _ =>
                 {
                     lock (events)
                     {
                         events.Add("x");
                     }
-                });
 
-
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+                
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
                     lock (events)
@@ -718,7 +721,7 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                c1.PublishAsync("topic").Wait();
+                c1.PublishStringAsync("topic").Wait();
 
                 await Task.Delay(500);
 
@@ -740,7 +743,7 @@ namespace MQTTnet.Tests.Server
                 flow = string.Join(string.Empty, events);
                 Assert.AreEqual("cr", flow);
 
-                c1.PublishAsync("topic").Wait();
+                c1.PublishStringAsync("topic").Wait();
 
                 await Task.Delay(500);
 
@@ -786,7 +789,7 @@ namespace MQTTnet.Tests.Server
                 await client1.SubscribeAsync("string");
 
                 var client2 = await testEnvironment.ConnectClient();
-                await client2.PublishAsync("string", longBody);
+                await client2.PublishBinaryAsync("string", longBody);
 
                 await Task.Delay(TimeSpan.FromSeconds(5));
 
@@ -810,7 +813,11 @@ namespace MQTTnet.Tests.Server
                 await Task.Delay(500);
 
                 var disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
-                client1.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(c => { disconnectReason = c.Reason; });
+                client1.DisconnectedAsync += c =>
+                {
+                    disconnectReason = c.Reason;
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
 
                 var client2 = await testEnvironment.ConnectClient(options);
                 await Task.Delay(500);
@@ -850,11 +857,11 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                await client.PublishAsync("Hello");
+                await client.PublishStringAsync("Hello");
                 await Task.Delay(100);
                 Assert.AreEqual(0, receivedMessages.Count);
 
-                await client.PublishAsync("topic1");
+                await client.PublishStringAsync("topic1");
                 await Task.Delay(100);
                 Assert.AreEqual(1, receivedMessages.Count);
             }
@@ -870,7 +877,11 @@ namespace MQTTnet.Tests.Server
                 var disconnectCalled = 0;
 
                 var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder());
-                c1.DisconnectedHandler = new MqttClientDisconnectedHandlerDelegate(e => disconnectCalled++);
+                c1.DisconnectedAsync += e =>
+                {
+                    disconnectCalled++;
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
 
                 await Task.Delay(100);
 
@@ -959,9 +970,9 @@ namespace MQTTnet.Tests.Server
             {
                 await testEnvironment.StartServer();
                 var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b").WithCleanSession(false));
-                await client2.PublishAsync("x", "1");
-                await client2.PublishAsync("x", "2");
-                await client2.PublishAsync("x", "3");
+                await client2.PublishStringAsync("x", "1");
+                await client2.PublishStringAsync("x", "2");
+                await client2.PublishStringAsync("x", "3");
                 await client2.DisconnectAsync();
 
                 var client = testEnvironment.CreateClient();

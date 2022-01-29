@@ -11,13 +11,13 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet.Extensions.Rpc
 {
-    public sealed class MqttRpcClient : IMqttRpcClient
+    public sealed class MqttRpcClient : IDisposable
     {
         readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
-        readonly IMqttClient _mqttClient;
+        readonly MqttClient _mqttClient;
         readonly IMqttRpcClientOptions _options;
         
-        public MqttRpcClient(IMqttClient mqttClient, IMqttRpcClientOptions options)
+        public MqttRpcClient(MqttClient mqttClient, IMqttRpcClientOptions options)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -105,7 +105,7 @@ namespace MQTTnet.Extensions.Rpc
             finally
             {
                 _waitingCalls.TryRemove(responseTopic, out _);
-
+                
                 await _mqttClient.UnsubscribeAsync(responseTopic).ConfigureAwait(false);
             }
         }

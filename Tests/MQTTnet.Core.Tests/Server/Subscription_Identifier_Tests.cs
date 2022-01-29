@@ -42,7 +42,7 @@ namespace MQTTnet.Tests.Server
                 applicationMessageHandler.AssertReceivedCountEquals(0);
                 
                 // The client will publish a message where it is itself subscribing to.
-                await client1.PublishAsync("Topic", "Payload", true);
+                await client1.PublishStringAsync("Topic", "Payload", retain: true);
                 await LongTestDelay();
 
                 applicationMessageHandler.AssertReceivedCountEquals(1);
@@ -76,7 +76,7 @@ namespace MQTTnet.Tests.Server
                 applicationMessageHandler.AssertReceivedCountEquals(0);
                 
                 // The client will publish a message where it is itself subscribing to.
-                await client1.PublishAsync("Topic/A", "Payload", true);
+                await client1.PublishStringAsync("Topic/A", "Payload", retain: true);
                 await LongTestDelay();
 
                 applicationMessageHandler.AssertReceivedCountEquals(1);

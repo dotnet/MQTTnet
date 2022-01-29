@@ -111,7 +111,7 @@ namespace MQTTnet.Tests
                 var responseSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(protocolVersion));
                 await responseSender.SubscribeAsync("MQTTnet.RPC/+/ping", qosLevel);
 
-                responseSender.ApplicationMessageReceivedAsync += e => responseSender.PublishAsync(e.ApplicationMessage.Topic + "/response", "pong");
+                responseSender.ApplicationMessageReceivedAsync += e => responseSender.PublishStringAsync(e.ApplicationMessage.Topic + "/response", "pong");
 
                 var requestSender = await testEnvironment.ConnectClient();
 
@@ -134,7 +134,7 @@ namespace MQTTnet.Tests
 
                 responseSender.ApplicationMessageReceivedAsync += async e =>
                 {
-                    await responseSender.PublishAsync(e.ApplicationMessage.ResponseTopic, "pong");
+                    await responseSender.PublishStringAsync(e.ApplicationMessage.ResponseTopic, "pong");
                 };
 
                 var requestSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
@@ -160,7 +160,7 @@ namespace MQTTnet.Tests
                 responseSender.ApplicationMessageReceivedAsync += async e =>
                 {
                     Assert.IsNull(e.ApplicationMessage.ResponseTopic);
-                    await responseSender.PublishAsync(e.ApplicationMessage.Topic + "/response", "pong");
+                    await responseSender.PublishStringAsync(e.ApplicationMessage.Topic + "/response", "pong");
                 };
 
                 var requestSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));

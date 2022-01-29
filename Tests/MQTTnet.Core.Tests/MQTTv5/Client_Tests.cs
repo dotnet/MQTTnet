@@ -132,7 +132,7 @@ namespace MQTTnet.Tests.MQTTv5
                 await testEnvironment.StartServer();
 
                 var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
-                var result = await client.PublishAsync("a", "b");
+                var result = await client.PublishStringAsync("a", "b");
                 await client.DisconnectAsync();
 
                 Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
@@ -147,7 +147,7 @@ namespace MQTTnet.Tests.MQTTv5
                 await testEnvironment.StartServer();
 
                 var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
-                var result = await client.PublishAsync("a", "b", MqttQualityOfServiceLevel.AtLeastOnce);
+                var result = await client.PublishStringAsync("a", "b", MqttQualityOfServiceLevel.AtLeastOnce);
                 await client.DisconnectAsync();
 
                 Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
@@ -162,7 +162,7 @@ namespace MQTTnet.Tests.MQTTv5
                 await testEnvironment.StartServer();
 
                 var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
-                var result = await client.PublishAsync("a", "b", MqttQualityOfServiceLevel.ExactlyOnce);
+                var result = await client.PublishStringAsync("a", "b", MqttQualityOfServiceLevel.ExactlyOnce);
                 await client.DisconnectAsync();
 
                 Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
@@ -212,7 +212,7 @@ namespace MQTTnet.Tests.MQTTv5
                 await client1.SubscribeAsync("a");
 
                 var client2 = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client2"));
-                await client2.PublishAsync("a", "b");
+                await client2.PublishStringAsync("a", "b");
 
                 await Task.Delay(500);
 

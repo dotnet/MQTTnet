@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
+using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests.Server
@@ -60,10 +61,11 @@ namespace MQTTnet.Tests.Server
 
                 // Arrange client
                 var client = testEnvironment.CreateClient();
-                client.UseConnectedHandler(args =>
+                client.ConnectedAsync += args =>
                 {
                     clientAssignedClientId = args.ConnectResult.AssignedClientIdentifier;
-                });
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
 
                 // Act
                 await client.ConnectAsync(new MqttClientOptionsBuilder()

@@ -31,7 +31,7 @@ namespace MQTTnet.TestApp.NetCore
                 Console.WriteLine("AFTER SUBSCRIBE");
 
                 Console.WriteLine("BEFORE PUBLISH");
-                await client.PublishAsync("test/topic", "payload");
+                await client.PublishStringAsync("test/topic", "payload");
                 Console.WriteLine("AFTER PUBLISH");
 
                 await Task.Delay(1000);

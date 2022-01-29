@@ -7,9 +7,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
+using MQTTnet.Implementations;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
-using IMqttClient = MQTTnet.Client.IMqttClient;
+using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.Tests.Client
 {
@@ -33,15 +34,14 @@ namespace MQTTnet.Tests.Client
 
                 await managedClient.StartAsync(clientOptions.Build());
 
-                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "1" });
-                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "2" });
-                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "3" });
-                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "4" });
-                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "5" });
-
-                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "6" });
-                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "7" });
-                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "8" });
+                await managedClient.PublishAsync("1");
+                await managedClient.PublishAsync("2");
+                await managedClient.PublishAsync("3");
+                await managedClient.PublishAsync("4");
+                await managedClient.PublishAsync("5");
+                await managedClient.PublishAsync("6");
+                await managedClient.PublishAsync("7");
+                await managedClient.PublishAsync("8");
 
                 Assert.AreEqual(5, managedClient.PendingApplicationMessagesCount);
             }
@@ -142,7 +142,7 @@ namespace MQTTnet.Tests.Client
 
                 await testEnvironment.Server.StopAsync();
 
-                await managedClient.PublishAsync(new MqttApplicationMessage { Topic = "1" });
+                await managedClient.PublishAsync("1");
 
                 //Message should have been added to the storage queue in PublishAsync,
                 //and we are awaiting PublishAsync, so the message should already be
@@ -191,9 +191,9 @@ namespace MQTTnet.Tests.Client
 
                 async Task PublishMessages()
                 {
-                    await sendingClient.PublishAsync("keptSubscribed", new byte[] { 1 });
-                    await sendingClient.PublishAsync("subscribedThenUnsubscribed", new byte[] { 1 });
-                    await sendingClient.PublishAsync("unsubscribedThenSubscribed", new byte[] { 1 });
+                    await sendingClient.PublishBinaryAsync("keptSubscribed", new byte[] { 1 });
+                    await sendingClient.PublishBinaryAsync("subscribedThenUnsubscribed", new byte[] { 1 });
+                    await sendingClient.PublishBinaryAsync("unsubscribedThenSubscribed", new byte[] { 1 });
                 }
 
                 await PublishMessages();
@@ -388,7 +388,7 @@ namespace MQTTnet.Tests.Client
 
                 var option2 = new MqttClientOptionsBuilder().WithClientId("2").WithKeepAlivePeriod(TimeSpan.FromSeconds(10));
                 var sendClient = await testEnvironment.ConnectClient(option2);
-                await sendClient.PublishAsync("aaa", "1");
+                await sendClient.PublishStringAsync("aaa", "1");
                 
                 await Task.Delay(3000);
 
@@ -396,7 +396,7 @@ namespace MQTTnet.Tests.Client
             }
         }
 
-        private async Task<IMqttClient> TryConnect_Subscribe(TestEnvironment testEnvironment, MqttClientOptionsBuilder options, Action onReceive)
+        private async Task<MqttClient> TryConnect_Subscribe(TestEnvironment testEnvironment, MqttClientOptionsBuilder options, Action onReceive)
         {
 
             try
@@ -419,7 +419,7 @@ namespace MQTTnet.Tests.Client
 
         async Task<ManagedMqttClient> CreateManagedClientAsync(
             TestEnvironment testEnvironment,
-            IMqttClient underlyingClient = null,
+            MqttClient underlyingClient = null,
             TimeSpan? connectionCheckInterval = null)
         {
             await testEnvironment.StartServer();
@@ -453,11 +453,13 @@ namespace MQTTnet.Tests.Client
         Task GetConnectedTask(ManagedMqttClient managedClient)
         {
             TaskCompletionSource<bool> connected = new TaskCompletionSource<bool>();
-            managedClient.ConnectedHandler = new MqttClientConnectedHandlerDelegate(e =>
+            
+            managedClient.ConnectedAsync += e =>
             {
-                managedClient.ConnectedHandler = null;
-                connected.SetResult(true);
-            });
+                connected.TrySetResult(true);
+                return PlatformAbstractionLayer.CompletedTask;
+            };
+            
             return connected.Task;
         }
 

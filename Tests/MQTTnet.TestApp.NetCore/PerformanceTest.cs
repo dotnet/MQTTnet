@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using IMqttClient = MQTTnet.Client.IMqttClient;
+using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.TestApp.NetCore
 {
@@ -156,9 +156,12 @@ namespace MQTTnet.TestApp.NetCore
                     }
                     else
                     {
-                        await client.PublishAsync(msgs);
-                        msgCount += msgs.Count;
-                        //send multiple
+                        foreach (var msg in msgs)
+                        {
+                            await client.PublishAsync(msg);
+                            msgCount += msgs.Count;
+                            //send multiple
+                        }
                     }
 
                     var now = DateTime.Now;
@@ -192,7 +195,7 @@ namespace MQTTnet.TestApp.NetCore
             };
         }
 
-        static Task PublishSingleMessage(IMqttClient client, MqttApplicationMessage applicationMessage, ref int count)
+        static Task PublishSingleMessage(MqttClient client, MqttApplicationMessage applicationMessage, ref int count)
         {
             Interlocked.Increment(ref count);
             return Task.Run(() => client.PublishAsync(applicationMessage));

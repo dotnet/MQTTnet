@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Implementations;
-using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp.NetCore
@@ -44,13 +43,13 @@ namespace MQTTnet.TestApp.NetCore
 
                 await managedClient.StartAsync(options);
 
-                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("1"));
-                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("2").WithAtLeastOnceQoS());
+                await managedClient.PublishAsync(topic: "Step", payload: "1");
+                await managedClient.PublishAsync(topic: "Step", payload: "2", MqttQualityOfServiceLevel.AtLeastOnce);
                 
-                await managedClient.SubscribeAsync(new MqttTopicFilter { Topic = "xyz", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
-                await managedClient.SubscribeAsync(new MqttTopicFilter { Topic = "abc", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                await managedClient.SubscribeAsync(topic: "xyz", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtMostOnce);
+                await managedClient.SubscribeAsync(topic: "abc", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtMostOnce);
 
-                await managedClient.PublishAsync(builder => builder.WithTopic("Step").WithPayload("3"));
+                await managedClient.PublishAsync(topic: "Step", payload: "3");
 
                 Console.WriteLine("Managed client started.");
                 Console.ReadLine();

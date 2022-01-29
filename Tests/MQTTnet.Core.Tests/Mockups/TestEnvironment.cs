@@ -11,16 +11,17 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Extensions.Rpc.Options;
 using MQTTnet.Formatter;
+using MQTTnet.Implementations;
 using MQTTnet.LowLevelClient;
-using IMqttClient = MQTTnet.Client.IMqttClient;
+using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.Tests.Mockups
 {
     public sealed class TestEnvironment : IDisposable
     {
         readonly MqttProtocolVersion _protocolVersion;
-        readonly List<ILowLevelMqttClient> _lowLevelClients = new List<ILowLevelMqttClient>();
-        readonly List<IMqttClient> _clients = new List<IMqttClient>();
+        readonly List<LowLevelMqttClient> _lowLevelClients = new List<LowLevelMqttClient>();
+        readonly List<MqttClient> _clients = new List<MqttClient>();
         readonly List<string> _serverErrors = new List<string>();
         readonly List<string> _clientErrors = new List<string>();
 
@@ -84,23 +85,39 @@ namespace MQTTnet.Tests.Mockups
             };
         }
 
-        public TestClientWrapper CreateClient()
+        public MqttClient CreateClient()
         {
             lock (_clients)
             {
                 var client = Factory.CreateMqttClient(ClientLogger);
                 _clients.Add(client);
 
-                return new TestClientWrapper(client, TestContext);
+                client.ConnectingAsync += e =>
+                {
+                    if (TestContext != null)
+                    {
+                        var clientOptions = (MqttClientOptions)e.ClientOptions;
+
+                        var existingClientId = clientOptions.ClientId;
+                        if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
+                        {
+                            clientOptions.ClientId = TestContext.TestName + "_" + existingClientId;
+                        }
+                    }
+
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                return client;
             }
         }
 
-        public Task<TestClientWrapper> ConnectClient()
+        public Task<MqttClient> ConnectClient()
         {
             return ConnectClient(Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion));
         }
 
-        public async Task<IMqttClient> ConnectClient(Action<MqttClientOptionsBuilder> optionsBuilder)
+        public async Task<MqttClient> ConnectClient(Action<MqttClientOptionsBuilder> optionsBuilder)
         {
             if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
 
@@ -116,7 +133,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
         
-        public async Task<TestClientWrapper> ConnectClient(MqttClientOptionsBuilder options)
+        public async Task<MqttClient> ConnectClient(MqttClientOptionsBuilder options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -128,7 +145,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
 
-        public async Task<TestClientWrapper> ConnectClient(IMqttClientOptions options)
+        public async Task<MqttClient> ConnectClient(IMqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -138,7 +155,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
         
-        public ILowLevelMqttClient CreateLowLevelClient()
+        public LowLevelMqttClient CreateLowLevelClient()
         {
             lock (_clients)
             {
@@ -149,12 +166,12 @@ namespace MQTTnet.Tests.Mockups
             }
         }
         
-        public Task<ILowLevelMqttClient> ConnectLowLevelClient()
+        public Task<LowLevelMqttClient> ConnectLowLevelClient()
         {
             return ConnectLowLevelClient(o => { });
         }
 
-        public async Task<ILowLevelMqttClient> ConnectLowLevelClient(Action<MqttClientOptionsBuilder> optionsBuilder)
+        public async Task<LowLevelMqttClient> ConnectLowLevelClient(Action<MqttClientOptionsBuilder> optionsBuilder)
         {
             if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
 
@@ -168,7 +185,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
         
-        public async Task<IMqttRpcClient> ConnectRpcClient(IMqttRpcClientOptions options)
+        public async Task<MqttRpcClient> ConnectRpcClient(IMqttRpcClientOptions options)
         {
             return new MqttRpcClient(await ConnectClient(), options);
         }
@@ -233,7 +250,7 @@ namespace MQTTnet.Tests.Mockups
             return server;
         }
         
-        public TestApplicationMessageReceivedHandler CreateApplicationMessageHandler(IMqttClient mqttClient)
+        public TestApplicationMessageReceivedHandler CreateApplicationMessageHandler(MqttClient mqttClient)
         {
             return new TestApplicationMessageReceivedHandler(mqttClient);
         }

@@ -11,21 +11,11 @@ namespace MQTTnet.Tests.Mockups
     {
         readonly List<MqttApplicationMessageReceivedEventArgs> _receivedEventArgs = new List<MqttApplicationMessageReceivedEventArgs>();
 
-        public TestApplicationMessageReceivedHandler(IMqttClient mqttClient)
+        public TestApplicationMessageReceivedHandler(MqttClient mqttClient)
         {
             mqttClient.ApplicationMessageReceivedAsync += MqttClientOnApplicationMessageReceivedAsync;
         }
 
-        Task MqttClientOnApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
-        {
-            lock (_receivedEventArgs)
-            {
-                _receivedEventArgs.Add(eventArgs);
-            }
-            
-            return PlatformAbstractionLayer.CompletedTask;
-        }
-        
         public List<MqttApplicationMessageReceivedEventArgs> ReceivedEventArgs
         {
             get
@@ -43,6 +33,16 @@ namespace MQTTnet.Tests.Mockups
             {
                 Assert.AreEqual(expectedCount, _receivedEventArgs.Count);
             }
+        }
+
+        Task MqttClientOnApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
+        {
+            lock (_receivedEventArgs)
+            {
+                _receivedEventArgs.Add(eventArgs);
+            }
+
+            return PlatformAbstractionLayer.CompletedTask;
         }
     }
 }

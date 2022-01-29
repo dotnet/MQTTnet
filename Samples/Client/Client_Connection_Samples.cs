@@ -193,7 +193,8 @@ public static class Client_Connection_Samples
             {
                 if (e.ClientWasConnected)
                 {
-                    await mqttClient.ReconnectAsync();
+                    // Use the current options as the new options.
+                    await mqttClient.ConnectAsync(mqttClient.Options);
                 }
             };
 

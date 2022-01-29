@@ -133,7 +133,7 @@ namespace MQTTnet.Tests.Server
                 };
         
                 var client = await testEnvironment.ConnectClient();
-                await client.PublishAsync("The_Topic", "The_Payload");
+                await client.PublishStringAsync("The_Topic", "The_Payload");
                 
                 await LongTestDelay();
                 

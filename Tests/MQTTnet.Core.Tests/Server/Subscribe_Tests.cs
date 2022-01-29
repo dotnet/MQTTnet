@@ -48,7 +48,7 @@ namespace MQTTnet.Tests.Server
 
                 await client.SubscribeAsync("b");
 
-                await client.PublishAsync("a");
+                await client.PublishStringAsync("a");
 
                 await Task.Delay(500);
 
@@ -141,15 +141,15 @@ namespace MQTTnet.Tests.Server
 
                 var c2 = await testEnvironment.ConnectClient();
 
-                await c2.PublishAsync("a");
+                await c2.PublishStringAsync("a");
                 await Task.Delay(100);
                 Assert.AreEqual(receivedMessagesCount, 1);
 
-                await c2.PublishAsync("b");
+                await c2.PublishStringAsync("b");
                 await Task.Delay(100);
                 Assert.AreEqual(receivedMessagesCount, 2);
 
-                await c2.PublishAsync("c");
+                await c2.PublishStringAsync("c");
                 await Task.Delay(100);
                 Assert.AreEqual(receivedMessagesCount, 3);
             }
@@ -269,15 +269,15 @@ namespace MQTTnet.Tests.Server
 
                 var c2 = await testEnvironment.ConnectClient();
 
-                await c2.PublishAsync("a");
+                await c2.PublishStringAsync("a");
                 await Task.Delay(100);
                 Assert.AreEqual(receivedMessagesCount, 1);
 
-                await c2.PublishAsync("b");
+                await c2.PublishStringAsync("b");
                 await Task.Delay(100);
                 Assert.AreEqual(receivedMessagesCount, 2);
 
-                await c2.PublishAsync("c");
+                await c2.PublishStringAsync("c");
                 await Task.Delay(100);
                 Assert.AreEqual(receivedMessagesCount, 3);
             }

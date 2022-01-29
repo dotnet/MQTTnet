@@ -33,7 +33,7 @@ namespace MQTTnet.Tests.Server
                 await LongTestDelay();
 
                 // The client will publish a message where it is itself subscribing to.
-                await client1.PublishAsync("Topic", "Payload", true);
+                await client1.PublishStringAsync("Topic", "Payload", retain: true);
                 await LongTestDelay();
 
                 applicationMessageHandler.AssertReceivedCountEquals(1);

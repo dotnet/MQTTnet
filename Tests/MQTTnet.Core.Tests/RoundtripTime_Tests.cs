@@ -40,7 +40,7 @@ namespace MQTTnet.Tests
                 for (var i = 0; i < 100; i++)
                 {
                     response = new TaskCompletionSource<string>();
-                    await senderClient.PublishAsync("test", DateTime.UtcNow.Ticks.ToString());
+                    await senderClient.PublishStringAsync("test", DateTime.UtcNow.Ticks.ToString());
                     response.Task.GetAwaiter().GetResult();
 
                     stopwatch.Stop();

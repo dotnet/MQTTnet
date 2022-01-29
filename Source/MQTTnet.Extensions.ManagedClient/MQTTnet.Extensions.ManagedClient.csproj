@@ -62,13 +62,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
         <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
         <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
     </ItemGroup>
 
 </Project>

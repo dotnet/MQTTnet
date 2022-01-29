@@ -145,7 +145,7 @@ namespace MQTTnet.TestApp.NetCore
 
                 await client.ConnectAsync(options);
                 await client.SubscribeAsync(topic, MqttQualityOfServiceLevel.AtLeastOnce);
-                await client.PublishAsync(topic, "Hello_World", MqttQualityOfServiceLevel.AtLeastOnce);
+                await client.PublishStringAsync(topic, "Hello_World", MqttQualityOfServiceLevel.AtLeastOnce);
 
                 SpinWait.SpinUntil(() => receivedMessage != null, 5000);
 

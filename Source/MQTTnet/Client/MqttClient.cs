@@ -13,7 +13,7 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet.Client
 {
-    public sealed class MqttClient : Disposable, IMqttClient
+    public sealed class MqttClient : Disposable
     {
         readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
@@ -21,6 +21,7 @@ namespace MQTTnet.Client
         readonly object _disconnectLock = new object();
 
         readonly AsyncEvent<MqttClientConnectedEventArgs> _connectedEvent = new AsyncEvent<MqttClientConnectedEventArgs>();
+        readonly AsyncEvent<MqttClientConnectingEventArgs> _connectingEvent = new AsyncEvent<MqttClientConnectingEventArgs>();
         readonly AsyncEvent<MqttClientDisconnectedEventArgs> _disconnectedEvent = new AsyncEvent<MqttClientDisconnectedEventArgs>();
         readonly AsyncEvent<MqttApplicationMessageReceivedEventArgs> _applicationMessageReceivedEvent = new AsyncEvent<MqttApplicationMessageReceivedEventArgs>();
 
@@ -49,17 +50,19 @@ namespace MQTTnet.Client
             _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttClient));
         }
-
-        public IMqttClientConnectedHandler ConnectedHandler { get; set; }
-
+        
         public event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync
         {
             add => _connectedEvent.AddHandler(value);
             remove => _connectedEvent.RemoveHandler(value);
         }
         
-        public IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
-
+        public event Func<MqttClientConnectingEventArgs, Task> ConnectingAsync
+        {
+            add => _connectingEvent.AddHandler(value);
+            remove => _connectingEvent.RemoveHandler(value);
+        }
+        
         public event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync
         {
             add => _disconnectedEvent.AddHandler(value);
@@ -76,7 +79,7 @@ namespace MQTTnet.Client
 
         public IMqttClientOptions Options { get; private set; }
 
-        public async Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)
+        public async Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken = default)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (options.ChannelOptions == null) throw new ArgumentException("ChannelOptions are not set.");
@@ -95,7 +98,8 @@ namespace MQTTnet.Client
             try
             {
                 Options = options;
-
+                await _connectingEvent.InvokeAsync(() => new MqttClientConnectingEventArgs(options));
+                
                 _packetIdentifierProvider.Reset();
                 _packetDispatcher.CancelAll();
 
@@ -131,13 +135,7 @@ namespace MQTTnet.Client
                 _logger.Info("Connected.");
 
                 var eventArgs = new MqttClientConnectedEventArgs(connectResult);
-                var connectedHandler = ConnectedHandler;
-                if (connectedHandler != null)
-                {
-                    await connectedHandler.HandleConnectedAsync(new MqttClientConnectedEventArgs(connectResult)).ConfigureAwait(false);
-                }
-
-                await _connectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+               await _connectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
                 return connectResult;
             }
@@ -153,7 +151,7 @@ namespace MQTTnet.Client
             }
         }
 
-        public async Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken)
+        public async Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken = default)
         {
             if (options is null) throw new ArgumentNullException(nameof(options));
 
@@ -182,12 +180,12 @@ namespace MQTTnet.Client
             }
         }
 
-        public Task PingAsync(CancellationToken cancellationToken)
+        public Task PingAsync(CancellationToken cancellationToken = default)
         {
             return SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken);
         }
 
-        public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken)
+        public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken = default)
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
 
@@ -210,7 +208,7 @@ namespace MQTTnet.Client
             return SendAsync(authPacket, cancellationToken);
         }
 
-        public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken)
+        public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken = default)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -231,7 +229,7 @@ namespace MQTTnet.Client
             return clientSubscribeResultFactory.Create(subscribePacket, subAckPacket);
         }
 
-        public async Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken)
+        public async Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken = default)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -247,7 +245,7 @@ namespace MQTTnet.Client
             return clientUnsubscribeResultFactory.Create(unsubscribePacket, unsubAckPacket);
         }
 
-        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
+        public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -407,15 +405,9 @@ namespace MQTTnet.Client
                 _logger.Info("Disconnected.");
 
                 var eventArgs = new MqttClientDisconnectedEventArgs(clientWasConnected, exception, connectResult, _disconnectReason);
-                
-                var disconnectedHandler = DisconnectedHandler;
-                if (disconnectedHandler != null)
-                {
-                    // This handler must be executed in a new thread because otherwise a dead lock may happen
-                    // when trying to reconnect in that handler etc.
-                    Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(eventArgs)).RunInBackground(_logger);
-                }
 
+                // This handler must be executed in a new thread because otherwise a dead lock may happen
+                // when trying to reconnect in that handler etc.
                 Task.Run(() => _disconnectedEvent.InvokeAsync(eventArgs)).RunInBackground(_logger);
             }
         }

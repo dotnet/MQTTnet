@@ -6,7 +6,7 @@ using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
-using IMqttClient = MQTTnet.Client.IMqttClient;
+using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.Tests.Server
 {
@@ -65,7 +65,7 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(MqttClientSubscribeResultCode.GrantedQoS0, subscribeResult.Items[0].ResultCode);
 
                 var client2 = await testEnvironment.ConnectClient();
-                await client2.PublishAsync("x");
+                await client2.PublishStringAsync("x");
 
                 await Task.Delay(1000);
 
@@ -197,11 +197,11 @@ namespace MQTTnet.Tests.Server
                 
                 await subscriber.SubscribeAsync("#", qos);
 
-                var pub = publisher.PublishAsync("a", null, qos);
+                var pub = publisher.PublishStringAsync("a", null, qos);
 
                 await Task.Delay(100);
                 await subscriber.DisconnectAsync();
-                await subscriber.ReconnectAsync();
+                await subscriber.ConnectAsync(subscriber.Options);
                 await Task.Delay(100);
 
                 var res = await pub;
@@ -263,7 +263,7 @@ namespace MQTTnet.Tests.Server
             }
         }
 
-        async Task<IMqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
+        async Task<MqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
         {
             try
             {

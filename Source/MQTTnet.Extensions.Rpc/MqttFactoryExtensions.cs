@@ -7,7 +7,7 @@ namespace MQTTnet.Extensions.Rpc
 {
     public static class MqttFactoryExtensions
     {
-        public static IMqttRpcClient CreateMqttRpcClient(this MqttFactory factory, IMqttClient mqttClient)
+        public static MqttRpcClient CreateMqttRpcClient(this MqttFactory factory, MqttClient mqttClient)
         {
             return factory.CreateMqttRpcClient(mqttClient, new MqttRpcClientOptions
             {
@@ -15,7 +15,7 @@ namespace MQTTnet.Extensions.Rpc
             });
         }
 
-        public static IMqttRpcClient CreateMqttRpcClient(this MqttFactory factory, IMqttClient mqttClient, IMqttRpcClientOptions rpcClientOptions)
+        public static MqttRpcClient CreateMqttRpcClient(this MqttFactory factory, MqttClient mqttClient, IMqttRpcClientOptions rpcClientOptions)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             

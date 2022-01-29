@@ -107,21 +107,19 @@ namespace MQTTnet.TestApp.NetCore
                 .WithCredentials("#username#", "#password#")
                 .WithCleanSession()
                 .Build();
-
-            //mqttClient.ApplicationMessageReceived += (s, e) =>    // version 2.8.5
+            
             mqttClient.ApplicationMessageReceivedAsync += e =>    // version 3.0.0+
             {
                 Interlocked.Increment(ref _count);
                 return PlatformAbstractionLayer.CompletedTask;
             };
-
-            //mqttClient.Connected += async (s, e) =>               // version 2.8.5
-            mqttClient.UseConnectedHandler(async e =>               // version 3.0.0+
+            
+            mqttClient.ConnectedAsync += async e =>               // version 3.0.0+
             {
                 Console.WriteLine("### CONNECTED WITH SERVER ###");
                 await mqttClient.SubscribeAsync("topic/+", MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce);
                 Console.WriteLine("### SUBSCRIBED ###");
-            });
+            };
 
             await mqttClient.ConnectAsync(options);
 

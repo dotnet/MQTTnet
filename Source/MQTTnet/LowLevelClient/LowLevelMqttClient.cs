@@ -8,7 +8,7 @@ using MQTTnet.Client;
 
 namespace MQTTnet.LowLevelClient
 {
-    public sealed class LowLevelMqttClient : ILowLevelMqttClient
+    public sealed class LowLevelMqttClient : IDisposable
     {
         readonly IMqttNetLogger _rootLogger;
         readonly MqttNetSourceLogger _logger;

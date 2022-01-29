@@ -116,7 +116,7 @@ namespace MQTTnet.Tests.Server
 
                 for (var i = 1; i < 25; i++)
                 {
-                    await c1.PublishAsync("a");
+                    await c1.PublishStringAsync("a");
                     await Task.Delay(50);
 
                     var clientStatus = await server.GetClientsAsync();
@@ -139,7 +139,7 @@ namespace MQTTnet.Tests.Server
                 {
                     // At most once will send one packet to the client and the server will reply
                     // with an additional ACK packet.
-                    await c1.PublishAsync("a", string.Empty, MqttQualityOfServiceLevel.AtLeastOnce);
+                    await c1.PublishStringAsync("a", string.Empty, MqttQualityOfServiceLevel.AtLeastOnce);
                     
                     await Task.Delay(500);
 

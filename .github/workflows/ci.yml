@@ -31,12 +31,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Setup Signing Certificate
-        run: |
-          Write-Host (Get-Item .).FullName
-          Set-Content -Path certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
-          certutil -decode certificate.txt certificate.pfx
-          sn.exe -i certificate.pfx VS_KEY_76473915F9AAC2EF
+     # - name: Setup Signing Certificate
+     #   run: |
+     #     Write-Host (Get-Item .).FullName
+     #     Set-Content -Path certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
+     #     certutil -decode certificate.txt certificate.pfx
+     #     sn.exe -i certificate.pfx VS_KEY_76473915F9AAC2EF
 
  #     - name : Setup nuget
  #       uses: nuget/setup-nuget@v1
@@ -49,7 +49,8 @@ jobs:
         run: msbuild .\MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
 
       - name: Build solution
-        run: msbuild .\MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
+        run: msbuild .\MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }} /p:PublicSign=true /p:KeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
+        ## /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
 
       #
 

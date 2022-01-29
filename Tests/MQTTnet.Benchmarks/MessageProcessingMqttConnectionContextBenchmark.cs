@@ -12,7 +12,7 @@ namespace MQTTnet.Benchmarks
     public class MessageProcessingMqttConnectionContextBenchmark
     {
         IWebHost _host;
-        IMqttClient _mqttClient;
+        MqttClient _mqttClient;
         MqttApplicationMessage _message;
 
         [GlobalSetup]

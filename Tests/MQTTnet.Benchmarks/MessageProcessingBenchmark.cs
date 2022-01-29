@@ -2,7 +2,7 @@
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Client;
 using MQTTnet.Server;
-using IMqttClient = MQTTnet.Client.IMqttClient;
+using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.Benchmarks
 {
@@ -12,7 +12,7 @@ namespace MQTTnet.Benchmarks
     public class MessageProcessingBenchmark
     {
         MqttServer _mqttServer;
-        IMqttClient _mqttClient;
+        MqttClient _mqttClient;
         MqttApplicationMessage _message;
 
         [GlobalSetup]

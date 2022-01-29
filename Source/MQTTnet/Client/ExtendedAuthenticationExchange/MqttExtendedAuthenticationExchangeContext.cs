@@ -7,7 +7,7 @@ namespace MQTTnet.Client
 {
     public class MqttExtendedAuthenticationExchangeContext
     {
-        public MqttExtendedAuthenticationExchangeContext(MqttAuthPacket authPacket, IMqttClient client)
+        public MqttExtendedAuthenticationExchangeContext(MqttAuthPacket authPacket, MqttClient client)
         {
             if (authPacket == null) throw new ArgumentNullException(nameof(authPacket));
 
@@ -53,6 +53,6 @@ namespace MQTTnet.Client
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; }
 
-        public IMqttClient Client { get; }
+        public MqttClient Client { get; }
     }
 }

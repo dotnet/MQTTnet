@@ -28,13 +28,13 @@ jobs:
       - name: Setup VSTest
         uses: darenm/Setup-VSTest@v1
 
-      - name: Setup Signing Certificate
-        run: |
-          Set-Content -Path certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
-          certutil -decode certificate.txt certificate.pfx
-
       - name: Checkout Code
         uses: actions/checkout@v2
+
+      - name: Setup Signing Certificate
+        run: |
+          Set-Content -Path .\certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
+          certutil -decode .\certificate.txt .\certificate.pfx
 
  #     - name : Setup nuget
  #       uses: nuget/setup-nuget@v1

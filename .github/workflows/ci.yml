@@ -33,8 +33,9 @@ jobs:
 
       - name: Setup Signing Certificate
         run: |
-          Set-Content -Path .\certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
-          certutil -decode .\certificate.txt .\certificate.pfx
+          Write-Host (Get-Item .).FullName
+          Set-Content -Path certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
+          certutil -decode certificate.txt certificate.pfx
 
  #     - name : Setup nuget
  #       uses: nuget/setup-nuget@v1
@@ -48,7 +49,6 @@ jobs:
 
       - name: Build solution
         run: msbuild .\MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=.\certificate.pfx
-
 
       #
 
@@ -83,6 +83,17 @@ jobs:
           path: |
             **\*.nupkg
             **\*.snupkg
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.ASSEMBLY_VERSION }}
+          release_name: v${{ env.ASSEMBLY_VERSION }}
+          draft: true
+          prerelease: false
 
 
 #  pull_request_ci:

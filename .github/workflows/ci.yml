@@ -85,8 +85,11 @@ jobs:
       #    draft: true
       #    prerelease: false
 
-      - name: Publish Nuget to GitHub registry
+      - name: Publish nugets
         run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Publish debug symbol nugets
+        run: dotnet nuget push **/*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
 
 #  pull_request_ci:
 #    runs-on: windows-2022

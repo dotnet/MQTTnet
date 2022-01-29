@@ -22,7 +22,9 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v1.9.0
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: |
+            3.1.x
+            6.0.x
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.1

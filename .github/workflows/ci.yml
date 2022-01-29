@@ -41,8 +41,11 @@ jobs:
       - name: Restore nuget packages
         run: msbuild .\MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
 
-      - name: Build MQTTnet core library
-        run: msbuild .\Source\MQTTnet\MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
+      - name: Build solution
+        run: msbuild .\Source\MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
+
+
+      #/p:SignAssembly=true /p:AssemblyOriginatorKeyFile=$certificate
 
       #- name: Build Managed Client extension library
       #  run: msbuild .\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
@@ -75,6 +78,15 @@ jobs:
           path: |
             **\*.nupkg
             **\*.snupkg
+
+
+#  pull_request_ci:
+#    runs-on: windows-2022
+#    if: ${{ github.event_name == 'pull_request' }}
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Run PR CI
+#        run: ./run-additional-pr-ci
 
 #      - name: Install dependencies
 #        run: dotnet restore MQTTnet.sln

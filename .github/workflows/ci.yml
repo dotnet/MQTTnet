@@ -39,6 +39,7 @@ jobs:
    #       certutil -decode certificate.txt certificate.pfx
       
       - name: Setup Environment Variables
+        id: dotenv
         uses: falti/dotenv-action@v0.2.7
         with:
           path: Build\.env

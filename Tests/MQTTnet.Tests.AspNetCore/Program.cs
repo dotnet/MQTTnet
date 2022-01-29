@@ -46,10 +46,9 @@ app.UseMqttServer(server =>
             {
                 try
                 {
-                    await server.InjectApplicationMessage(new MqttInjectedApplicationMessage
+                    await server.InjectApplicationMessage(new MqttInjectedApplicationMessage(mqttApplicationMessage)
                     {
-                        SenderClientId = "server",
-                        ApplicationMessage = mqttApplicationMessage
+                        SenderClientId = "server"
                     });
                 }
                 catch (Exception e)

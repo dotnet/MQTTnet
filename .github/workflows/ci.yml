@@ -1,12 +1,8 @@
 name: CI
 
-on: [push, pull_request]
-  workflow_dispatch:
-    inputs:
-      push_nugets:
-        description: 'Push nugets?'     
-        required: true
-        default: false
+on:
+  - push
+  - pull_request
 
 env:
   ASSEMBLY_VERSION: "4.0.0"

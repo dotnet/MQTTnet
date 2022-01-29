@@ -14,6 +14,11 @@ jobs:
     runs-on: windows-2022
 
     steps:
+      - name: Setup Environment Variables
+        uses: falti/dotenv-action@v0.2.7
+        with:
+          path: Build\.env
+
       - name: Setup Windows SDK
         uses: GuillaumeFalourd/setup-windows10-sdk-action@v1
         with:

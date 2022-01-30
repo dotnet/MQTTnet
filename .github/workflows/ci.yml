@@ -82,6 +82,7 @@ jobs:
       #    prerelease: false
 
       - name: Publish nugets
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
         run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
 
 #  pull_request_ci:

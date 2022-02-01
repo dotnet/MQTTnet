@@ -10,6 +10,8 @@ namespace MQTTnet.Internal
     {
         readonly List<AsyncEventInvocator<TEventArgs>> _handlers = new List<AsyncEventInvocator<TEventArgs>>();
 
+        public bool HasHandlers => _handlers.Count > 0;
+        
         public void AddHandler(Func<TEventArgs, Task> handler)
         {
             if (handler == null)

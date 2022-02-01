@@ -24,6 +24,7 @@ namespace MQTTnet.Client
         readonly AsyncEvent<MqttClientConnectingEventArgs> _connectingEvent = new AsyncEvent<MqttClientConnectingEventArgs>();
         readonly AsyncEvent<MqttClientDisconnectedEventArgs> _disconnectedEvent = new AsyncEvent<MqttClientDisconnectedEventArgs>();
         readonly AsyncEvent<MqttApplicationMessageReceivedEventArgs> _applicationMessageReceivedEvent = new AsyncEvent<MqttApplicationMessageReceivedEventArgs>();
+        readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();
 
         readonly IMqttClientAdapterFactory _adapterFactory;
         readonly IMqttNetLogger _rootLogger;
@@ -74,7 +75,13 @@ namespace MQTTnet.Client
             add => _applicationMessageReceivedEvent.AddHandler(value);
             remove => _applicationMessageReceivedEvent.RemoveHandler(value);
         }
-
+        
+        public event Func<InspectMqttPacketEventArgs, Task> InspectPackage
+        {
+            add => _inspectPacketEvent.AddHandler(value);
+            remove => _inspectPacketEvent.RemoveHandler(value);
+        }
+        
         public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
         public IMqttClientOptions Options { get; private set; }
@@ -106,7 +113,7 @@ namespace MQTTnet.Client
                 _backgroundCancellationTokenSource = new CancellationTokenSource();
                 var backgroundCancellationToken = _backgroundCancellationTokenSource.Token;
 
-                var adapter = _adapterFactory.CreateClientAdapter(options, _rootLogger);
+                var adapter = _adapterFactory.CreateClientAdapter(options, new MqttPacketInspectorHandler(_inspectPacketEvent, _rootLogger), _rootLogger);
                 _adapter = adapter;
 
                 using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))

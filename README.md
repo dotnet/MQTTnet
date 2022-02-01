@@ -25,7 +25,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * Uniform API across all supported versions of the MQTT protocol
 * Interfaces included for mocking and testing
 * Access to internal trace messages
-* Unit tested (~250 tests)
+* Unit tested (~636 tests)
 * No external dependencies
 
 \* Tested on local machine (Intel i7 8700K) with MQTTnet client and server running in the same process using the TCP channel. The app for verification is part of this repository and stored in _/Tests/MQTTnet.TestApp.NetCore_.
@@ -65,11 +65,6 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 | Xamarin.Android    | 7.5+        |
 | Xamarin.iOS        | 10.14+      |
 | Blazor WebAssembly | 3.2.0+      |
-
-## Contributions
-
-If you want to contribute to this project just create a pull request. But only pull requests which are matching the code style of this library will be accepted. Before creating a pull request please have a look at the library to get an overview of the required style.
-Also additions and updates in the Wiki are welcome.
 
 ## References
 

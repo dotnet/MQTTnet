@@ -10,10 +10,6 @@ namespace MQTTnet.Client
             Exception = exception;
             ConnectResult = connectResult;
             Reason = reason;
-
-#pragma warning disable 618
-            ReasonCode = reason;
-#pragma warning restore 618
         }
 
         public bool ClientWasConnected { get; }
@@ -31,8 +27,5 @@ namespace MQTTnet.Client
         /// Hint: MQTT 5 feature only.
         /// </summary>
         public MqttClientDisconnectReason Reason { get; set; }
-
-        [Obsolete("Please use 'Reason' instead. This property will be removed in the future!")]
-        public MqttClientDisconnectReason ReasonCode { get; set; }
     }
 }

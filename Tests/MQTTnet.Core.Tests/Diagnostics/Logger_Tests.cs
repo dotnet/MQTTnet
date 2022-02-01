@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Diagnostics;
 
-namespace MQTTnet.Tests.Logger
+namespace MQTTnet.Tests.Diagnostics
 {
     [TestClass]
     public sealed class Logger_Tests : BaseTestClass

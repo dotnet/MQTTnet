@@ -107,7 +107,5 @@ namespace MQTTnet.Client
         /// Hint: MQTT 5 feature only.
         /// </summary>
         List<MqttUserProperty> UserProperties { get; set; }
-
-        IMqttPacketInspector PacketInspector { get; set; }
     }
 }

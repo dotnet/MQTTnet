@@ -8,9 +8,9 @@ using MQTTnet.Diagnostics;
 
 namespace MQTTnet.AspNetCore.Client
 {
-    public class MqttClientConnectionContextFactory : IMqttClientAdapterFactory
+    public sealed class MqttClientConnectionContextFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttPacketInspectorHandler packetInspectorHandler, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

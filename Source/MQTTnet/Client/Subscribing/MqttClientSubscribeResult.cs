@@ -18,5 +18,10 @@ namespace MQTTnet.Client
         /// MQTTv5 only.
         /// </summary>
         public string ReasonString { get; internal set; }
+
+        /// <summary>
+        /// Gets the packet identifier which was used.
+        /// </summary>
+        public ushort PacketIdentifier { get; internal set; }
     }
 }

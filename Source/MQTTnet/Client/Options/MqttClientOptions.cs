@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Client
 {
-    public class MqttClientOptions : IMqttClientOptions
+    public sealed class MqttClientOptions : IMqttClientOptions
     {
         /// <summary>
         /// Gets the client identifier.
@@ -107,7 +106,5 @@ namespace MQTTnet.Client
         /// Hint: MQTT 5 feature only.
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
-
-        public IMqttPacketInspector PacketInspector { get; set; }
     }
 }

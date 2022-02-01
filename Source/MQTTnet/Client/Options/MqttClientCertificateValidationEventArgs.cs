@@ -1,9 +1,10 @@
-﻿using System.Net.Security;
+﻿using System;
+using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
 namespace MQTTnet.Client
 {
-    public class MqttClientCertificateValidationCallbackContext
+    public sealed class MqttClientCertificateValidationEventArgs : EventArgs
     {
         public X509Certificate Certificate { get; set; }
 

@@ -11,16 +11,17 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
         <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />
+        <PackageReference Include="MSTest.TestFramework" Version="2.1.2" />
         
-        <ProjectReference Include="..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj"/>
-        <ProjectReference Include="..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj"/>
-        <ProjectReference Include="..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj"/>
-        <ProjectReference Include="..\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj"/>
-        <ProjectReference Include="..\Source\MQTTnet\MQTTnet.csproj"/>
+        <ProjectReference Include="..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
+        <ProjectReference Include="..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
+        <ProjectReference Include="..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj" />
+        <ProjectReference Include="..\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj" />
+        <ProjectReference Include="..\Source\MQTTnet\MQTTnet.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="ManagedClient"/>
+        <Folder Include="ManagedClient" />
     </ItemGroup>
 
 </Project>

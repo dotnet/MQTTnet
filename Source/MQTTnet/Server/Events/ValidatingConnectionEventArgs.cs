@@ -124,17 +124,7 @@ namespace MQTTnet.Server
         /// Gets or sets a key/value collection that can be used to share data within the scope of this session.
         /// </summary>
         public IDictionary SessionItems { get; internal set; }
-
-        /// <summary>
-        /// This is used for MQTTv3 only.
-        /// </summary>
-        [Obsolete("Use ReasonCode instead. It is MQTTv5 only but will be converted to a valid ReturnCode.")]
-        public MqttConnectReturnCode ReturnCode
-        {
-            get => MqttConnectReasonCodeConverter.ToConnectReturnCode(ReasonCode);
-            set => ReasonCode = MqttConnectReasonCodeConverter.ToConnectReasonCode(value);
-        }
-
+        
         /// <summary>
         /// Gets or sets the reason code. When a MQTTv3 client connects the enum value must be one which is
         /// also supported in MQTTv3. Otherwise the connection attempt will fail because not all codes can be

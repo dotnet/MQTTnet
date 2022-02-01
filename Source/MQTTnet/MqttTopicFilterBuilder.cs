@@ -56,37 +56,16 @@ namespace MQTTnet
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce;
             return this;
         }
-
-        [Obsolete("Please use overload with _bool_ instead.")]
-        public MqttTopicFilterBuilder WithNoLocal(bool? value = true)
-        {
-            _noLocal = value == true;
-            return this;
-        }
         
         public MqttTopicFilterBuilder WithNoLocal(bool value = true)
         {
             _noLocal = value;
             return this;
         }
-
-        [Obsolete("Please use overload with _bool_ instead.")]
-        public MqttTopicFilterBuilder WithRetainAsPublished(bool? value = true)
-        {
-            _retainAsPublished = value == true;
-            return this;
-        }
         
         public MqttTopicFilterBuilder WithRetainAsPublished(bool value = true)
         {
             _retainAsPublished = value;
-            return this;
-        }
-
-        [Obsolete("Please use overload with _MqttRetainHandling_ instead.")]
-        public MqttTopicFilterBuilder WithRetainHandling(MqttRetainHandling? value)
-        {
-            _retainHandling = value ?? MqttRetainHandling.SendAtSubscribe;
             return this;
         }
         

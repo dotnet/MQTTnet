@@ -4,10 +4,6 @@ on:
   - push
   - pull_request
 
-#env:
-  #ASSEMBLY_VERSION: "4.0.0"
-  #NUGET_VERSION: "4.0.0-preview2"
-
 jobs:
   build:
 

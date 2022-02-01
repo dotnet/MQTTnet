@@ -13,7 +13,8 @@
         <TargetFrameworks>netstandard1.3;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
         <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net461</TargetFrameworks>
         <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">$(TargetFrameworks);uap10.0</TargetFrameworks>
-
+        <LangVersion>7.3</LangVersion>
+        
         <AssemblyName>MQTTnet</AssemblyName>
         <RootNamespace>MQTTnet</RootNamespace>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -85,6 +86,10 @@
 
     <ItemGroup Condition="'$(TargetFramework)'=='uap10.0'">
         <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.10" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Client\Diagnostics" />
     </ItemGroup>
 
 </Project>

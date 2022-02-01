@@ -2,7 +2,6 @@
 using MQTTnet.Channel;
 using System;
 using System.IO;
-using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
@@ -246,22 +245,10 @@ namespace MQTTnet.Implementations
 
         bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            #region OBSOLETE
-
-#pragma warning disable CS0618 // Type or member is obsolete
-            var certificateValidationCallback = _tcpOptions?.TlsOptions?.CertificateValidationCallback;
-#pragma warning restore CS0618 // Type or member is obsolete
-            if (certificateValidationCallback != null)
-            {
-                return certificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _clientOptions);
-            }
-
-            #endregion
-
             var certificateValidationHandler = _tcpOptions?.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)
             {
-                var context = new MqttClientCertificateValidationCallbackContext
+                var eventArgs = new MqttClientCertificateValidationEventArgs
                 {
                     Certificate = x509Certificate,
                     Chain = chain,
@@ -269,32 +256,10 @@ namespace MQTTnet.Implementations
                     ClientOptions = _tcpOptions
                 };
 
-                return certificateValidationHandler(context);
+                return certificateValidationHandler(eventArgs);
             }
 
-            if (sslPolicyErrors == SslPolicyErrors.None)
-            {
-                return true;
-            }
-
-            if (chain.ChainStatus.Any(c =>
-                c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.OfflineRevocation))
-            {
-                if (_tcpOptions?.TlsOptions?.IgnoreCertificateRevocationErrors != true)
-                {
-                    return false;
-                }
-            }
-
-            if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.PartialChain))
-            {
-                if (_tcpOptions?.TlsOptions?.IgnoreCertificateChainErrors != true)
-                {
-                    return false;
-                }
-            }
-
-            return _tcpOptions?.TlsOptions?.AllowUntrustedCertificates == true;
+            return sslPolicyErrors == SslPolicyErrors.None;
         }
 
         X509CertificateCollection LoadCertificates()

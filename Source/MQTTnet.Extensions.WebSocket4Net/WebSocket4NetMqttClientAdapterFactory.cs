@@ -9,7 +9,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
 {
     public sealed class WebSocket4NetMqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttPacketInspectorHandler packetInspectorHandler, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -20,7 +20,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
                     return new MqttChannelAdapter(
                         new MqttTcpChannel(options),
                         new MqttPacketFormatterAdapter(options.ProtocolVersion),
-                        options.PacketInspector,
+                        packetInspectorHandler,
                         logger);
                 }
 
@@ -29,7 +29,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
                     return new MqttChannelAdapter(
                         new WebSocket4NetMqttChannel(options, webSocketOptions),
                         new MqttPacketFormatterAdapter(options.ProtocolVersion), 
-                        options.PacketInspector,
+                        packetInspectorHandler,
                         logger);
                 }
 

@@ -9,7 +9,7 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttPacketInspectorHandler packetInspectorHandler, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -35,7 +35,7 @@ namespace MQTTnet.Implementations
             }
 
             var packetFormatterAdapter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttPacketWriter());
-            return new MqttChannelAdapter(channel, packetFormatterAdapter, options.PacketInspector, logger);
+            return new MqttChannelAdapter(channel, packetFormatterAdapter, packetInspectorHandler, logger);
         }
     }
 }

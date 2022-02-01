@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.Adapter
 {
@@ -22,7 +23,7 @@ namespace MQTTnet.Adapter
         readonly byte[] _singleByteBuffer = new byte[1];
         readonly byte[] _fixedHeaderBuffer = new byte[2];
 
-        readonly MqttPacketInspectorHandler _packetInspectorHandler;
+        readonly IMqttPacketInspectorHandler _packetInspectorHandler;
         readonly MqttNetSourceLogger _logger;
         readonly IMqttChannel _channel;
 
@@ -31,12 +32,12 @@ namespace MQTTnet.Adapter
         long _bytesReceived;
         long _bytesSent;
 
-        public MqttChannelAdapter(IMqttChannel channel, MqttPacketFormatterAdapter packetFormatterAdapter, IMqttPacketInspector packetInspector, IMqttNetLogger logger)
+        public MqttChannelAdapter(IMqttChannel channel, MqttPacketFormatterAdapter packetFormatterAdapter, IMqttPacketInspectorHandler packetInspector, IMqttNetLogger logger)
         {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+            _packetInspectorHandler = packetInspector;
+            
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
-
-            _packetInspectorHandler = new MqttPacketInspectorHandler(packetInspector, logger);
 
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttChannelAdapter));
@@ -112,7 +113,7 @@ namespace MQTTnet.Adapter
                 try
                 {
                     var packetData = PacketFormatterAdapter.Encode(packet);
-                    _packetInspectorHandler.BeginSendPacket(packetData);
+                    _packetInspectorHandler?.BeginSendPacket(packetData);
 
                     _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Length, packet);
                     
@@ -141,7 +142,7 @@ namespace MQTTnet.Adapter
 
             try
             {
-                _packetInspectorHandler.BeginReceivePacket();
+                _packetInspectorHandler?.BeginReceivePacket();
 
                 var receivedPacket = await ReceiveAsync(cancellationToken).ConfigureAwait(false);
                 if (receivedPacket == null || cancellationToken.IsCancellationRequested)
@@ -149,7 +150,7 @@ namespace MQTTnet.Adapter
                     return null;
                 }
 
-                _packetInspectorHandler.EndReceivePacket();
+                _packetInspectorHandler?.EndReceivePacket();
 
                 Interlocked.Add(ref _bytesSent, receivedPacket.TotalLength);
 
@@ -228,7 +229,7 @@ namespace MQTTnet.Adapter
                 var fixedHeader = readFixedHeaderResult.FixedHeader;
                 if (fixedHeader.RemainingLength == 0)
                 {
-                    return new ReceivedMqttPacket(fixedHeader.Flags, new MqttPacketBodyReader(new byte[0], 0, 0), 2);
+                    return new ReceivedMqttPacket(fixedHeader.Flags, new MqttPacketBodyReader(PlatformAbstractionLayer.EmptyByteArray, 0, 0), 2);
                 }
 
                 var bodyLength = fixedHeader.RemainingLength;
@@ -260,7 +261,7 @@ namespace MQTTnet.Adapter
                     bodyOffset += readBytes;
                 } while (bodyOffset < bodyLength);
 
-                _packetInspectorHandler.FillReceiveBuffer(body);
+                _packetInspectorHandler?.FillReceiveBuffer(body);
 
                 var bodyReader = new MqttPacketBodyReader(body, 0, bodyLength);
                 return new ReceivedMqttPacket(fixedHeader.Flags, bodyReader, fixedHeader.TotalLength);
@@ -298,7 +299,7 @@ namespace MQTTnet.Adapter
                 totalBytesRead += bytesRead;
             }
 
-            _packetInspectorHandler.FillReceiveBuffer(buffer);
+            _packetInspectorHandler?.FillReceiveBuffer(buffer);
 
             var hasRemainingLength = buffer[1] != 0;
             if (!hasRemainingLength)
@@ -358,7 +359,7 @@ namespace MQTTnet.Adapter
                     return null;
                 }
 
-                _packetInspectorHandler.FillReceiveBuffer(_singleByteBuffer);
+                _packetInspectorHandler?.FillReceiveBuffer(_singleByteBuffer);
 
                 encodedByte = _singleByteBuffer[0];
 

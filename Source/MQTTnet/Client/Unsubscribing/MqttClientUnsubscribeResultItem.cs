@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MQTTnet.Client
+﻿namespace MQTTnet.Client
 {
     public sealed class MqttClientUnsubscribeResultItem
     {
@@ -9,10 +7,7 @@ namespace MQTTnet.Client
         /// The topic filter can contain topics and wildcards.
         /// </summary>
         public string TopicFilter { get; internal set; }
-
-        [Obsolete("Use ResultCode instead. This property will be removed soon.")]
-        public MqttClientUnsubscribeResultCode ReasonCode => ResultCode;
-
+        
         /// <summary>
         /// Gets or sets the result code.
         /// Hint: MQTT 5 feature only.

@@ -21,6 +21,7 @@ namespace MQTTnet.Client
 
             var result = new MqttClientUnsubscribeResult
             {
+                PacketIdentifier = unsubAckPacket.PacketIdentifier,
                 ReasonString = unsubAckPacket.Properties.ReasonString
             };
 

@@ -21,6 +21,7 @@ namespace MQTTnet.Client
             
             var result = new MqttClientSubscribeResult
             {
+                PacketIdentifier = subAckPacket.PacketIdentifier,
                 ReasonString = subAckPacket.Properties.ReasonString
             };
 

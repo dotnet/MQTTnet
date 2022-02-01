@@ -1,11 +1,11 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Implementations;
-using System;
+﻿using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Implementations;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Internal
 {
     [TestClass]
     public class CrossPlatformSocket_Tests

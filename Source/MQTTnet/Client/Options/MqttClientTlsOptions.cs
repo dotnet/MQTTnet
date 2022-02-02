@@ -26,7 +26,11 @@ namespace MQTTnet.Client.Options
         public List<SslApplicationProtocol> ApplicationProtocols { get; set; }
 #endif
 
+#if NET452 || NET46 || NET461 || NET462
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+#else
         public SslProtocols SslProtocol { get; set; } = SslProtocols.None;
+#endif
 
         [Obsolete("This property will be removed soon. Use CertificateValidationHandler instead.")]
         public Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> CertificateValidationCallback { get; set; }

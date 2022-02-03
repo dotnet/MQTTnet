@@ -26,8 +26,8 @@ namespace MQTTnet.Client.Options
         public List<SslApplicationProtocol> ApplicationProtocols { get; set; }
 #endif
 
-#if NET452 || NET46 || NET461 || NET462
-        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+#if NET452 || NET46 || NET461 || NET462 || NET47
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
 #else
         public SslProtocols SslProtocol { get; set; } = SslProtocols.None;
 #endif

@@ -29,6 +29,6 @@ namespace MQTTnet.Client
         /// The feature is very similar to the HTTP header concept.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public List<MqttUserProperty> UserProperties { get; } = new List<MqttUserProperty>();
+        public List<MqttUserProperty> UserProperties { get; internal set; }
     }
 }

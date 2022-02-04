@@ -15,7 +15,7 @@ namespace MQTTnet.Client
             if (pubAckPacket != null)
             {
                 result.ReasonString = pubAckPacket.Properties.ReasonString;
-                result.UserProperties.AddRange(pubAckPacket.Properties.UserProperties);
+                result.UserProperties = pubAckPacket.Properties.UserProperties;
                 
                 // QoS 0 has no response. So we treat it as a success always.
                 // Both enums have the same values. So it can be easily converted.
@@ -46,10 +46,10 @@ namespace MQTTnet.Client
                 {
                     PacketIdentifier = pubCompPacket.PacketIdentifier,
                     ReasonCode = MqttClientPublishReasonCode.UnspecifiedError,
-                    ReasonString = pubCompPacket.Properties.ReasonString
+                    ReasonString = pubCompPacket.Properties.ReasonString,
+                    UserProperties = pubCompPacket.Properties.UserProperties
                 };
-                
-                result.UserProperties.AddRange(pubCompPacket.Properties.UserProperties);
+
                 return result;
             }
 
@@ -60,7 +60,7 @@ namespace MQTTnet.Client
                 ReasonString = pubCompPacket.Properties.ReasonString
             };
             
-            result.UserProperties.AddRange(pubCompPacket.Properties.UserProperties);
+            result.UserProperties = pubCompPacket.Properties.UserProperties;
 
             if (pubRecPacket.ReasonCode != MqttPubRecReasonCode.Success)
             {

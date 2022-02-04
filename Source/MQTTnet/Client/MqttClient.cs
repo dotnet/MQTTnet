@@ -44,7 +44,8 @@ namespace MQTTnet.Client
         MqttClientDisconnectReason _disconnectReason;
 
         DateTime _lastPacketSentTimestamp;
-        
+        string _disconnectReasonString;
+
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
             _adapterFactory = channelFactory ?? throw new ArgumentNullException(nameof(channelFactory));
@@ -411,7 +412,14 @@ namespace MQTTnet.Client
 
                 _logger.Info("Disconnected.");
 
-                var eventArgs = new MqttClientDisconnectedEventArgs(clientWasConnected, exception, connectResult, _disconnectReason);
+                var eventArgs = new MqttClientDisconnectedEventArgs
+                {
+                    ClientWasConnected = clientWasConnected,
+                    Exception = exception,
+                    ConnectResult = connectResult,
+                    Reason = _disconnectReason,
+                    ReasonString = _disconnectReasonString
+                };
 
                 // This handler must be executed in a new thread because otherwise a dead lock may happen
                 // when trying to reconnect in that handler etc.
@@ -747,7 +755,8 @@ namespace MQTTnet.Client
         Task ProcessReceivedDisconnectPacket(MqttDisconnectPacket disconnectPacket)
         {
             _disconnectReason = (MqttClientDisconnectReason) disconnectPacket.ReasonCode;
-
+            _disconnectReasonString = disconnectPacket.Properties.ReasonString;
+            
             // Also dispatch disconnect to waiting threads to generate a proper exception.
             _packetDispatcher.FailAll(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));
 

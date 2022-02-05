@@ -4,6 +4,7 @@
 * [Client] The OS will now choose the best TLS version to use. It is no longer fixed to 1.3 etc. (thanks to @patagonaa, #1271).
 * [Client] Exposed user properties and reason string in subscribe result.
 * [Client] Exposed user properties and reason string in unsubscribe result.
+* [Client] Migrated application message handler to a regular .NET event (BREAKING CHANGE!).
 * [Server] Added support for returning individual subscription errors (#80 thanks to @jimch)
 * [Server] Improved topic filter comparisons (support for $).
 * [Server] Added more MQTTv5 response information to all interceptors (BREAKING CHANGE!).

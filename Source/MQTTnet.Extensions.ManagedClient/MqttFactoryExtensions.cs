@@ -3,19 +3,25 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
     public static class MqttFactoryExtensions
     {
-        public static ManagedMqttClient CreateManagedMqttClient(this MqttFactory factory)
+        public static ManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, MqttClient mqttClient = null)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
 
-            return new ManagedMqttClient(factory.CreateMqttClient(), factory.DefaultLogger);
+            if (mqttClient == null)
+            {
+                return new ManagedMqttClient(factory.CreateMqttClient(), factory.DefaultLogger);    
+            }
+            
+            return new ManagedMqttClient(mqttClient, factory.DefaultLogger);
         }
-
+        
         public static ManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttNetLogger logger)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));

@@ -33,8 +33,8 @@ jobs:
 
       - name: Setup Signing Certificate
         run: |
-          $e = '${{ secrets.SNC_BASE64 }}'
-          $decoded = [System.Convert]::FromBase64CharArray($e, 0, $e.Length)
+          $secret = '${{ secrets.SNC_BASE64 }}'
+          $decoded = [System.Convert]::FromBase64CharArray($secret, 0, $secret.Length)
           Set-Content -Path ${{ github.workspace }}\certificate.snk -Value $decoded -AsByteStream
       
       - name: Setup Environment Variables

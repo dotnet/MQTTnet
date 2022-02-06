@@ -12,8 +12,6 @@ using MQTTnet.Exceptions;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Protocol;
 using MQTTnet.Formatter;
-using MQTTnet.Extensions.Rpc.Options;
-using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.Tests

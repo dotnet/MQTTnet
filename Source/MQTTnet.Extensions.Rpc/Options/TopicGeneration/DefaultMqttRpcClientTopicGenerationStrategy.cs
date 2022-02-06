@@ -4,7 +4,7 @@
 
 using System;
 
-namespace MQTTnet.Extensions.Rpc.Options.TopicGeneration
+namespace MQTTnet.Extensions.Rpc
 {
     public sealed class DefaultMqttRpcClientTopicGenerationStrategy : IMqttRpcClientTopicGenerationStrategy
     {

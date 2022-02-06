@@ -6,7 +6,7 @@ using System;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public class ApplicationMessageProcessedEventArgs : EventArgs
+    public sealed class ApplicationMessageProcessedEventArgs : EventArgs
     {
         public ApplicationMessageProcessedEventArgs(ManagedMqttApplicationMessage applicationMessage, Exception exception)
         {
@@ -15,9 +15,10 @@ namespace MQTTnet.Extensions.ManagedClient
         }
 
         public ManagedMqttApplicationMessage ApplicationMessage { get; }
+        
+        /// <summary>
+        /// Then this is _null_ the message was processed successfully without any error.
+        /// </summary>
         public Exception Exception { get; }
-
-        public bool HasFailed => Exception != null;
-        public bool HasSucceeded => Exception == null;
     }
 }

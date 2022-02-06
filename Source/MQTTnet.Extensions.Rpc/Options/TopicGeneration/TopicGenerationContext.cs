@@ -5,7 +5,7 @@
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Extensions.Rpc.Options.TopicGeneration
+namespace MQTTnet.Extensions.Rpc
 {
     public sealed class TopicGenerationContext
     {
@@ -23,6 +23,6 @@ namespace MQTTnet.Extensions.Rpc.Options.TopicGeneration
 
         public MqttClient MqttClient { get; set; }
 
-        public IMqttRpcClientOptions Options { get; set; }
+        public MqttRpcClientOptions Options { get; set; }
     }
 }

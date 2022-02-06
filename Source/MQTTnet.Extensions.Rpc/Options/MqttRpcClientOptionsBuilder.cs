@@ -2,10 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
 using System;
 
-namespace MQTTnet.Extensions.Rpc.Options
+namespace MQTTnet.Extensions.Rpc
 {
     public sealed class MqttRpcClientOptionsBuilder
     {
@@ -18,7 +17,7 @@ namespace MQTTnet.Extensions.Rpc.Options
             return this;
         }
 
-        public IMqttRpcClientOptions Build()
+        public MqttRpcClientOptions Build()
         {
             return new MqttRpcClientOptions
             {

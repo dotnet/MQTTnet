@@ -4,9 +4,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -14,13 +12,12 @@ namespace MQTTnet.Extensions.ManagedClient
 {
     public static class ManagedMqttClientExtensions
     {
-        public static Task<MqttClientPublishResult> PublishAsync(
+        public static Task EnqueueAsync(
             this ManagedMqttClient managedMqttClient,
             string topic,
             string payload = null,
             MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
-            bool retain = false,
-            CancellationToken cancellationToken = default)
+            bool retain = false)
         {
             if (managedMqttClient == null)
             {
@@ -38,7 +35,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 .WithQualityOfServiceLevel(qualityOfServiceLevel)
                 .Build();
 
-            return managedMqttClient.PublishAsync(applicationMessage, cancellationToken);
+            return managedMqttClient.EnqueueAsync(applicationMessage);
         }
 
         public static Task SubscribeAsync(

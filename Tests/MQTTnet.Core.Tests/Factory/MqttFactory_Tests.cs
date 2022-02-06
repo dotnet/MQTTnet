@@ -52,7 +52,12 @@ namespace MQTTnet.Tests.Factory
 
                 // wait at least connect timeout or we have some log messages
                 var tcs = new TaskCompletionSource<object>();
-                managedClient.ConnectingFailedHandler = new ConnectingFailedHandlerDelegate(e => tcs.TrySetResult(null));
+                managedClient.ConnectingFailedAsync += e =>
+                {
+                    tcs.TrySetResult(null);
+                    return Task.CompletedTask;
+                };
+                
                 await Task.WhenAny(Task.Delay(managedClient.Options.ClientOptions.CommunicationTimeout), tcs.Task);
             }
             finally

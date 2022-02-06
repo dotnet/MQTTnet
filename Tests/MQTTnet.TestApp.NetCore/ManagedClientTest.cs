@@ -47,13 +47,13 @@ namespace MQTTnet.TestApp.NetCore
 
                 await managedClient.StartAsync(options);
 
-                await managedClient.PublishAsync(topic: "Step", payload: "1");
-                await managedClient.PublishAsync(topic: "Step", payload: "2", MqttQualityOfServiceLevel.AtLeastOnce);
+                await managedClient.EnqueueAsync(topic: "Step", payload: "1");
+                await managedClient.EnqueueAsync(topic: "Step", payload: "2", MqttQualityOfServiceLevel.AtLeastOnce);
                 
                 await managedClient.SubscribeAsync(topic: "xyz", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtMostOnce);
                 await managedClient.SubscribeAsync(topic: "abc", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtMostOnce);
 
-                await managedClient.PublishAsync(topic: "Step", payload: "3");
+                await managedClient.EnqueueAsync(topic: "Step", payload: "3");
 
                 Console.WriteLine("Managed client started.");
                 Console.ReadLine();

@@ -20,8 +20,4 @@
         <ProjectReference Include="..\Source\MQTTnet\MQTTnet.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Folder Include="ManagedClient" />
-    </ItemGroup>
-
 </Project>

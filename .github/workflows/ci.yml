@@ -1,8 +1,11 @@
 name: CI
 
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - feature/Reason_Code_In_Subscription_Interceptor
+      #- master
+  #pull_request
 
 jobs:
   build:
@@ -28,11 +31,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-   #   - name: Setup Signing Certificate
-   #     run: |
-   #       Write-Host (Get-Item .).FullName
-   #       Set-Content -Path certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
-   #       certutil -decode certificate.txt certificate.pfx
+      - name: Setup Signing Certificate
+        run: |
+          Write-Host (Get-Item .).FullName
+          Set-Content -Path ${{ github.workspace }}\certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
+          certutil -decode ${{ github.workspace }}\certificate.txt ${{ github.workspace }}\certificate.pfx
       
       - name: Setup Environment Variables
         id: dotenv
@@ -45,9 +48,7 @@ jobs:
         run: msbuild MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
 
       - name: Build solution
-        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ steps.dotenv.outputs.assembly_version }} /p:AssemblyVersion=${{ steps.dotenv.outputs.assembly_version }} /p:PackageVersion=${{ steps.dotenv.outputs.nuget_version }}
-        # /p:PublicSign=true /p:AssemblyOriginatorKeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
-        ## /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=D:\a\MQTTnet\MQTTnet\certificate.pfx
+        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ steps.dotenv.outputs.assembly_version }} /p:AssemblyVersion=${{ steps.dotenv.outputs.assembly_version }} /p:PackageVersion=${{ steps.dotenv.outputs.nuget_version }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.pfx
 
       - name: Collect nuget Packages
         uses: actions/upload-artifact@v2

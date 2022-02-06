@@ -83,3 +83,12 @@ This library is used in the following projects:
 Further projects using this project can be found under https://github.com/dotnet/MQTTnet/network/dependents.
 
 If you use this library and want to see your project here please create a pull request.
+
+## Code of Conduct
+
+This project has adopted the code of conduct defined by the Contributor Covenant to clarify expected behavior in our community.
+For more information see the [.NET Foundation Code of Conduct](https://dotnetfoundation.org/code-of-conduct).
+
+## .NET Foundation
+
+This project is supported by the [.NET Foundation](https://dotnetfoundation.org).

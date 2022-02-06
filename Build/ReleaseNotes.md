@@ -1,3 +1,5 @@
+We have joined the .NET Foundation!
+
 * [Core] Improved memory management when working with large payloads.
 * [Core] Added support for .NET 6.0.
 * [Core] nuget packages are now created by MSBuild including more information (i.e. commit hash).

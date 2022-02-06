@@ -33,8 +33,11 @@ jobs:
 
       - name: Setup Signing Certificate
         run: |
-          Set-Content -Path ${{ github.workspace }}\certificate.txt -Value ${{ secrets.STRONG_NAME_CERTIFICATE_SNK }}
-          certutil -decode ${{ github.workspace }}\certificate.txt ${{ github.workspace }}\certificate.snk
+          $e = '${{ secrets.SNC_BASE64 }}'
+          $decoded = [System.Convert]::FromBase64CharArray($e, 0, $e.Length)
+          Set-Content ${{ github.workspace }}\certificate.snk -Value $decoded -Encoding Byte
+          #Set-Content -Path ${{ github.workspace }}\certificate.txt -Value ${{ secrets.STRONG_NAME_CERTIFICATE_SNK }}
+          #certutil -decode ${{ github.workspace }}\certificate.txt ${{ github.workspace }}\certificate.snk
           #Import-PfxCertificate -FilePath ${{ github.workspace }}\certificate.pfx -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String ${{ secrets.STRONG_NAME_PASSWORD }} -Force -AsPlainText)
       
       - name: Setup Environment Variables

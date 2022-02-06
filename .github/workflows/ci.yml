@@ -35,7 +35,7 @@ jobs:
         run: |
           $e = '${{ secrets.SNC_BASE64 }}'
           $decoded = [System.Convert]::FromBase64CharArray($e, 0, $e.Length)
-          Set-Content ${{ github.workspace }}\certificate.snk -Value $decoded -Encoding Byte
+          Set-Content -Path ${{ github.workspace }}\certificate.snk -Value $decoded -AsByteStream
       
       - name: Setup Environment Variables
         id: dotenv

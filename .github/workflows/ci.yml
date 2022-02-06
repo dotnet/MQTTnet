@@ -33,10 +33,9 @@ jobs:
 
       - name: Setup Signing Certificate
         run: |
-          Write-Host (Get-Item .).FullName
-          Set-Content -Path ${{ github.workspace }}\certificate.txt -Value '${{ secrets.CODE_SIGNING_CERTIFICATE }}'
+          Set-Content -Path ${{ github.workspace }}\certificate.txt -Value ${{ secrets.STRONG_NAME_CERTIFICATE }}
           certutil -decode ${{ github.workspace }}\certificate.txt ${{ github.workspace }}\certificate.pfx
-          Import-PfxCertificate -FilePath ${{ github.workspace }}\certificate.pfx -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String ${{ secrets.CODE_SIGNING_PASSWORD }} -Force -AsPlainText)
+          Import-PfxCertificate -FilePath ${{ github.workspace }}\certificate.pfx -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String ${{ secrets.STRONG_NAME_PASSWORD }} -Force -AsPlainText)
       
       - name: Setup Environment Variables
         id: dotenv

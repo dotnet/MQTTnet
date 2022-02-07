@@ -153,14 +153,13 @@ namespace MQTTnet.Server
         public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel,
             string senderClientId)
         {
-            var subscriptions = _subscriptions.Values.ToList();
             var senderIsReceiver = string.Equals(senderClientId, _session.Id);
 
             var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
             var subscriptionIdentifiers = new HashSet<uint>();
             var retainAsPublished = false;
 
-            foreach (var subscription in subscriptions)
+            foreach (var subscription in _subscriptions.Values)
             {
                 if (subscription.NoLocal && senderIsReceiver)
                 {

@@ -3,13 +3,9 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <DebugType>Full</DebugType>
-        <TargetFramework>net6.0</TargetFramework>
-        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net461</TargetFrameworks>
+        <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFramework);net452;net461</TargetFrameworks>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp2.1|AnyCPU'">
-        <DefineConstants>RELEASE;NETCOREAPP2_1</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>

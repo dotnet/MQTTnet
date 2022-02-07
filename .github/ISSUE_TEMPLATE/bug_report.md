@@ -7,16 +7,24 @@ assignees: ''
 
 ---
 
+### Verification
+
+Before opening a bug make sure that the following conditions are met.
+<!-- Remove this chapter when all conditions are met. -->
+
+1. Performance issues are also appearing in RELEASE mode of your application.
+2. An increased memory consumption or high CPU load also happens when your application runs in RELEASE mode AND logging is DISABLED.
+3. Client issues with not received messages, connection drops etc. can be reproduced via another client application like "MQTTnetApp" (https://github.com/chkr1011/MQTTnetApp) or similar.
+
 ### Describe the bug
 A clear and concise description of what the bug is.
 
-### Which project is your bug related to?
-<!-- Remove the items which don't apply from the following list -->
+### Which component is your bug related to?
+<!-- Remove the items which don't apply from the following list. -->
 - Client
 - ManagedClient
-- MQTTnet.Server standalone
+- RcpClient
 - Server
-- Generic
 
 ### To Reproduce
 Steps to reproduce the behavior:

@@ -14,10 +14,10 @@ namespace MQTTnet.Exceptions
             : base($"Unexpected DISCONNECT (Reason code={disconnectPacket.ReasonCode}) received.")
         {
             ReasonCode = disconnectPacket.ReasonCode;
-            SessionExpiryInterval = disconnectPacket.Properties?.SessionExpiryInterval;
-            ReasonString = disconnectPacket.Properties?.ReasonString;
-            ServerReference = disconnectPacket.Properties?.ServerReference;
-            UserProperties = disconnectPacket.Properties?.UserProperties;
+            SessionExpiryInterval = disconnectPacket.SessionExpiryInterval;
+            ReasonString = disconnectPacket.ReasonString;
+            ServerReference = disconnectPacket.ServerReference;
+            UserProperties = disconnectPacket.UserProperties;
         }
 
         public MqttDisconnectReasonCode? ReasonCode { get; }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
@@ -11,6 +12,8 @@ namespace MQTTnet.Client
 {
     public sealed class MqttClientSubscribeResultFactory
     {
+        static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = new List<MqttUserProperty>();
+
         public MqttClientSubscribeResult Create(MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket)
         {
             if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
@@ -23,18 +26,19 @@ namespace MQTTnet.Client
                     "The reason codes are not matching the topic filters [MQTT-3.9.3-1].");
             }
             
+            var items = new List<MqttClientSubscribeResultItem>();
+            for (var i = 0; i < subscribePacket.TopicFilters.Count; i++)
+            {
+                items.Add(CreateSubscribeResultItem(i, subscribePacket, subAckPacket));
+            }
+            
             var result = new MqttClientSubscribeResult
             {
                 PacketIdentifier = subAckPacket.PacketIdentifier,
-                ReasonString = subAckPacket.Properties.ReasonString
+                ReasonString = subAckPacket.ReasonString,
+                UserProperties = subAckPacket.UserProperties ?? EmptyUserProperties,
+                Items = items
             };
-
-            result.UserProperties.AddRange(subAckPacket.Properties.UserProperties);
-            
-            for (var i = 0; i < subscribePacket.TopicFilters.Count; i++)
-            {
-                result.Items.Add(CreateSubscribeResultItem(i, subscribePacket, subAckPacket));
-            }
             
             return result;
         }
@@ -46,7 +50,7 @@ namespace MQTTnet.Client
             return new MqttClientSubscribeResultItem
             {
                 TopicFilter = subscribePacket.TopicFilters[index],
-                ResultCode = resultCode
+                ResultCode = resultCode,
             };
         }
     }

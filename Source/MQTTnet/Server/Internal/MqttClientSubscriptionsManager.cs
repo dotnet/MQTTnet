@@ -81,7 +81,7 @@ namespace MQTTnet.Server
                 {
                     var createSubscriptionResult = CreateSubscription(
                         finalTopicFilter,
-                        subscribePacket.Properties?.SubscriptionIdentifier ?? 0,
+                        subscribePacket.SubscriptionIdentifier,
                         interceptorContext.Response.ReasonCode);
 
                     await _eventContainer.ClientSubscribedTopicEvent.InvokeAsync(() => new ClientSubscribedTopicEventArgs

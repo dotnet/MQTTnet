@@ -23,25 +23,22 @@ namespace MQTTnet.Formatter
                 QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
                 Retain = applicationMessage.Retain,
                 Dup = applicationMessage.Dup,
-                Properties =
-                {
-                    ContentType = applicationMessage.ContentType,
-                    CorrelationData = applicationMessage.CorrelationData,
-                    MessageExpiryInterval = applicationMessage.MessageExpiryInterval,
-                    PayloadFormatIndicator = applicationMessage.PayloadFormatIndicator,
-                    ResponseTopic = applicationMessage.ResponseTopic,
-                    TopicAlias = applicationMessage.TopicAlias
-                }
+                ContentType = applicationMessage.ContentType,
+                CorrelationData = applicationMessage.CorrelationData,
+                MessageExpiryInterval = applicationMessage.MessageExpiryInterval,
+                PayloadFormatIndicator = applicationMessage.PayloadFormatIndicator,
+                ResponseTopic = applicationMessage.ResponseTopic,
+                TopicAlias = applicationMessage.TopicAlias
             };
             
             if (applicationMessage.SubscriptionIdentifiers != null)
             {
-                packet.Properties.SubscriptionIdentifiers.AddRange(applicationMessage.SubscriptionIdentifiers);    
+                packet.SubscriptionIdentifiers = applicationMessage.SubscriptionIdentifiers;    
             }
             
             if (applicationMessage.UserProperties != null)
             {
-                packet.Properties.UserProperties.AddRange(applicationMessage.UserProperties);
+                packet.UserProperties = applicationMessage.UserProperties;
             }
 
             return packet;
@@ -62,17 +59,14 @@ namespace MQTTnet.Formatter
                 Payload = connectPacket.WillMessage,
                 QualityOfServiceLevel = connectPacket.WillQoS,
                 Retain = connectPacket.WillRetain,
-                Properties =
-                {
-                    ContentType = connectPacket.WillProperties.ContentType,
-                    CorrelationData = connectPacket.WillProperties.CorrelationData,
-                    MessageExpiryInterval = connectPacket.WillProperties.MessageExpiryInterval,
-                    PayloadFormatIndicator = connectPacket.WillProperties.PayloadFormatIndicator,
-                    ResponseTopic = connectPacket.WillProperties.ResponseTopic
-                }
+                ContentType = connectPacket.WillProperties.ContentType,
+                CorrelationData = connectPacket.WillProperties.CorrelationData,
+                MessageExpiryInterval = connectPacket.WillProperties.MessageExpiryInterval,
+                PayloadFormatIndicator = connectPacket.WillProperties.PayloadFormatIndicator,
+                ResponseTopic = connectPacket.WillProperties.ResponseTopic
             };
             
-            packet.Properties.UserProperties.AddRange(connectPacket.WillProperties.UserProperties);
+            packet.UserProperties = connectPacket.WillProperties.UserProperties;
 
             return packet;
         }

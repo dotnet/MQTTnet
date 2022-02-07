@@ -12,7 +12,7 @@ namespace MQTTnet.Server
 
         public int Port { get; set; }
 
-        public int ConnectionBacklog { get; set; } = 10;
+        public int ConnectionBacklog { get; set; } = 100;
 
         public bool NoDelay { get; set; } = true;
 

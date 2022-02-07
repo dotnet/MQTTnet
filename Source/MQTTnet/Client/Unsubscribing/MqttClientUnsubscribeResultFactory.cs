@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
@@ -11,6 +12,8 @@ namespace MQTTnet.Client
 {
     public sealed class MqttClientUnsubscribeResultFactory
     {
+        static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = new List<MqttUserProperty>();
+        
         public MqttClientUnsubscribeResult Create(MqttUnsubscribePacket unsubscribePacket, MqttUnsubAckPacket unsubAckPacket)
         {
             if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
@@ -23,19 +26,20 @@ namespace MQTTnet.Client
                     "The return codes are not matching the topic filters [MQTT-3.9.3-1].");
             }
 
+            var items = new List<MqttClientUnsubscribeResultItem>();
+            for (var i = 0; i < unsubscribePacket.TopicFilters.Count; i++)
+            {
+                items.Add(CreateUnsubscribeResultItem(i, unsubscribePacket, unsubAckPacket));
+            }
+            
             var result = new MqttClientUnsubscribeResult
             {
                 PacketIdentifier = unsubAckPacket.PacketIdentifier,
-                ReasonString = unsubAckPacket.Properties.ReasonString
+                ReasonString = unsubAckPacket.ReasonString,
+                UserProperties = unsubAckPacket.UserProperties ?? EmptyUserProperties,
+                Items = items
             };
-
-            result.UserProperties.AddRange(unsubAckPacket.Properties.UserProperties);
             
-            for (var i = 0; i < unsubscribePacket.TopicFilters.Count; i++)
-            {
-                result.Items.Add(CreateUnsubscribeResultItem(i, unsubscribePacket, unsubAckPacket));
-            }
-
             return result;
         }
         

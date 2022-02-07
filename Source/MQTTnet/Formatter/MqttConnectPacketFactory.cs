@@ -47,18 +47,11 @@ namespace MQTTnet.Formatter
                 connectPacket.WillProperties.ResponseTopic = clientOptions.WillMessage.ResponseTopic;
                 connectPacket.WillProperties.MessageExpiryInterval = clientOptions.WillMessage.MessageExpiryInterval;
                 connectPacket.WillProperties.PayloadFormatIndicator = clientOptions.WillMessage.PayloadFormatIndicator;
-                //connectPacket.WillProperties.WillDelayInterval = clientOptions.WillMessage.;
-
-                if (clientOptions.WillMessage.UserProperties != null)
-                {
-                    connectPacket.WillProperties.UserProperties.AddRange(clientOptions.WillMessage.UserProperties);
-                }
+                //TODO: connectPacket.WillProperties.WillDelayInterval = clientOptions.WillMessage.;
+                connectPacket.WillProperties.UserProperties = clientOptions.WillMessage.UserProperties;
             }
 
-            if (clientOptions.UserProperties != null)
-            {
-                connectPacket.Properties.UserProperties.AddRange(clientOptions.UserProperties);
-            }
+            connectPacket.Properties.UserProperties = clientOptions.UserProperties;
 
             return connectPacket;
         }

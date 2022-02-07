@@ -36,7 +36,7 @@ namespace MQTTnet.Formatter
 
             if (validatingConnectionEventArgs.ResponseUserProperties != null)
             {
-                connAckPacket.Properties.UserProperties.AddRange(validatingConnectionEventArgs.ResponseUserProperties);
+                connAckPacket.Properties.UserProperties = validatingConnectionEventArgs.ResponseUserProperties;
             }
             
             return connAckPacket;

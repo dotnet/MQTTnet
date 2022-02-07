@@ -16,10 +16,10 @@ namespace MQTTnet.Client
             if (authPacket == null) throw new ArgumentNullException(nameof(authPacket));
 
             ReasonCode = authPacket.ReasonCode;
-            ReasonString = authPacket.Properties?.ReasonString;
-            AuthenticationMethod = authPacket.Properties?.AuthenticationMethod;
-            AuthenticationData = authPacket.Properties?.AuthenticationData;
-            UserProperties = authPacket.Properties?.UserProperties;
+            ReasonString = authPacket.ReasonString;
+            AuthenticationMethod = authPacket.AuthenticationMethod;
+            AuthenticationData = authPacket.AuthenticationData;
+            UserProperties = authPacket.UserProperties;
 
             Client = client ?? throw new ArgumentNullException(nameof(client));
         }

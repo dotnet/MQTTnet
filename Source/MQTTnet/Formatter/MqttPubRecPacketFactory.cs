@@ -17,7 +17,7 @@ namespace MQTTnet.Formatter
             if (applicationMessageReceivedEventArgs == null) throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
 
             var pubRecPacket = Create(applicationMessageReceivedEventArgs.PublishPacket, applicationMessageReceivedEventArgs.ReasonCode);
-            pubRecPacket.Properties.UserProperties.AddRange(applicationMessageReceivedEventArgs.ResponseUserProperties);
+            pubRecPacket.UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties;
 
             return pubRecPacket;
         }
@@ -30,13 +30,10 @@ namespace MQTTnet.Formatter
             {
                 PacketIdentifier = publishPacket.PacketIdentifier,
                 ReasonCode = (MqttPubRecReasonCode) (int) applicationMessageResponse.ReasonCode,
-                Properties =
-                {
-                    ReasonString = applicationMessageResponse.ReasonString
-                }
+                ReasonString = applicationMessageResponse.ReasonString,
+                UserProperties = applicationMessageResponse.UserProperties
             };
 
-            pubRecPacket.Properties.UserProperties.AddRange(applicationMessageResponse.UserProperties);
             return pubRecPacket;
         }
 

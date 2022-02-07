@@ -387,7 +387,7 @@ namespace MQTTnet.Server
         {
             HandleTopicAlias(publishPacket);
 
-            var applicationMessage = new MqttApplicationMessageFactory().Create(publishPacket);
+            var applicationMessage = _applicationMessageFactory.Create(publishPacket);
 
             await _applicationMessageInterceptorInvoker.Invoke(applicationMessage, cancellationToken).ConfigureAwait(false);
 
@@ -432,12 +432,12 @@ namespace MQTTnet.Server
 
         void HandleTopicAlias(MqttPublishPacket publishPacket)
         {
-            if (publishPacket.Properties?.TopicAlias == null)
+            if (publishPacket?.TopicAlias == null)
             {
                 return;
             }
 
-            var topicAlias = publishPacket.Properties.TopicAlias.Value;
+            var topicAlias = publishPacket.TopicAlias.Value;
 
             lock (_topicAlias)
             {
@@ -453,7 +453,7 @@ namespace MQTTnet.Server
                     }
                     else
                     {
-                        _logger.Warning("Client '{0}': Received invalid topic alias ({1}).", Id, publishPacket.Properties.TopicAlias);
+                        _logger.Warning("Client '{0}': Received invalid topic alias ({1}).", Id, publishPacket.TopicAlias);
                     }
                 }
             }

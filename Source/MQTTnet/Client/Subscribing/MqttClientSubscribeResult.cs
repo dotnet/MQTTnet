@@ -9,13 +9,13 @@ namespace MQTTnet.Client
 {
     public sealed class MqttClientSubscribeResult
     {
-        public List<MqttClientSubscribeResultItem> Items { get; } = new List<MqttClientSubscribeResultItem>();
+        public IReadOnlyCollection<MqttClientSubscribeResultItem> Items { get; internal set; }
         
         /// <summary>
         /// Gets the user properties which were part of the SUBACK packet.
         /// MQTTv5 only.
         /// </summary>
-        public List<MqttUserProperty> UserProperties { get; } = new List<MqttUserProperty>();
+        public IReadOnlyCollection<MqttUserProperty> UserProperties { get; internal set; }
         
         /// <summary>
         /// Gets the reason string.

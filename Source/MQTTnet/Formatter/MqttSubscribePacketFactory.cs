@@ -14,14 +14,12 @@ namespace MQTTnet.Formatter
         {
             if (clientSubscribeOptions == null) throw new ArgumentNullException(nameof(clientSubscribeOptions));
 
-            var packet = new MqttSubscribePacket();
-            packet.TopicFilters.AddRange(clientSubscribeOptions.TopicFilters);
-            packet.Properties.SubscriptionIdentifier = clientSubscribeOptions.SubscriptionIdentifier;
-
-            if (clientSubscribeOptions.UserProperties != null)
+            var packet = new MqttSubscribePacket
             {
-                packet.Properties.UserProperties.AddRange(clientSubscribeOptions.UserProperties);
-            }
+                TopicFilters = clientSubscribeOptions.TopicFilters,
+                SubscriptionIdentifier = clientSubscribeOptions.SubscriptionIdentifier,
+                UserProperties = clientSubscribeOptions.UserProperties
+            };
 
             return packet;
         }

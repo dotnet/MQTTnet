@@ -11,13 +11,14 @@ namespace MQTTnet.Packets
     {
         public ushort PacketIdentifier { get; set; }
 
-        public List<MqttTopicFilter> TopicFilters { get; } = new List<MqttTopicFilter>();
+        /// <summary>It is a Protocol Error if the Subscription Identifier has a value of 0.</summary>
+        public uint SubscriptionIdentifier { get; set; }
 
-        /// <summary>
-        /// Added in MQTT V5.
-        /// </summary>
-        public MqttSubscribePacketProperties Properties { get; } = new MqttSubscribePacketProperties();
-        
+        public List<MqttTopicFilter> TopicFilters { get; set; } = new List<MqttTopicFilter>();
+
+        /// <summary>Added in MQTTv5.</summary>
+        public List<MqttUserProperty> UserProperties { get; set; }
+
         public override string ToString()
         {
             var topicFiltersText = string.Join(",", TopicFilters.Select(f => f.Topic + "@" + f.QualityOfServiceLevel));

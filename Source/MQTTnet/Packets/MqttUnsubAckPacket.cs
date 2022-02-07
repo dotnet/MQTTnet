@@ -11,16 +11,14 @@ namespace MQTTnet.Packets
     public sealed class MqttUnsubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
         public ushort PacketIdentifier { get; set; }
-
-        /// <summary>
-        /// Added in MQTT V5.
-        /// </summary>
-        public MqttUnsubAckPacketProperties Properties { get; } = new MqttUnsubAckPacketProperties();
-
-        /// <summary>
-        /// Added in MQTT V5.
-        /// </summary>
+        
         public List<MqttUnsubscribeReasonCode> ReasonCodes { get; } = new List<MqttUnsubscribeReasonCode>();
+
+        // MQTTv5+
+        public string ReasonString { get; set; }
+
+        // MQTTv5+
+        public List<MqttUserProperty> UserProperties { get; set; }
 
         public override string ToString()
         {

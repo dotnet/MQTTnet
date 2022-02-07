@@ -41,7 +41,7 @@ jobs:
         id: dotenv
         uses: falti/dotenv-action@v0.2.7
         with:
-          path: Build\.env
+          path: .github\workflows\.env
           log-variables: true
 
       - name: Restore nuget packages
@@ -62,10 +62,10 @@ jobs:
         uses: darenm/Setup-VSTest@v1
 
       - name: Core Tests
-        run: vstest.console.exe Tests\MQTTnet.Core.Tests\bin\Release\net6.0\MQTTnet.Tests.dll
+        run: vstest.console.exe Source\MQTTnet.Tests\bin\Release\net6.0\MQTTnet.Tests.dll
 
       - name: ASP.NET Tests
-        run: vstest.console.exe Tests\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
+        run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
 
       #- name: Create Release
       #  id: create_release

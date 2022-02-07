@@ -15,8 +15,8 @@ namespace MQTTnet.Packets
         /// <summary>
         /// Added in MQTTv5.
         /// </summary>
-        public MqttUnsubscribePacketProperties Properties { get; } = new MqttUnsubscribePacketProperties();
-        
+        public List<MqttUserProperty> UserProperties { get; set; }
+
         public override string ToString()
         {
             var topicFiltersText = string.Join(",", TopicFilters);

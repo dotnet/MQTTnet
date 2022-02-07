@@ -14,18 +14,16 @@ namespace MQTTnet.Formatter
         {
             if (clientUnsubscribeOptions == null) throw new ArgumentNullException(nameof(clientUnsubscribeOptions));
 
-            var packet = new MqttUnsubscribePacket();
+            var packet = new MqttUnsubscribePacket
+            {
+                UserProperties = clientUnsubscribeOptions.UserProperties
+            };
 
             if (clientUnsubscribeOptions.TopicFilters != null)
             {
                 packet.TopicFilters.AddRange(clientUnsubscribeOptions.TopicFilters);
             }
-
-            if (clientUnsubscribeOptions.UserProperties != null)
-            {
-                packet.Properties.UserProperties.AddRange(clientUnsubscribeOptions.UserProperties);
-            }
-
+            
             return packet;
         }
     }

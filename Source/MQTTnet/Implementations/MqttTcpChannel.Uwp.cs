@@ -30,7 +30,7 @@ namespace MQTTnet.Implementations
         Stream _readStream;
         Stream _writeStream;
 
-        public MqttTcpChannel(IMqttClientOptions clientOptions)
+        public MqttTcpChannel(MqttClientOptions clientOptions)
         {
             _options = (MqttClientTcpOptions)clientOptions.ChannelOptions;
             _bufferSize = _options.BufferSize;

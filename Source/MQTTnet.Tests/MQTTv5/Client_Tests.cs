@@ -32,7 +32,7 @@ namespace MQTTnet.Tests.MQTTv5
                         .WithProtocolVersion(MqttProtocolVersion.V500)
                         .WithTopicAliasMaximum(20)
                         .WithReceiveMaximum(20)
-                        .WithWillMessage(new MqttApplicationMessageBuilder().WithTopic("abc").Build())
+                        .WithWillTopic("abc")
                         .WithWillDelayInterval(20)
                         .Build());
 
@@ -51,7 +51,7 @@ namespace MQTTnet.Tests.MQTTv5
                     .WithUserProperty("a", "1")
                     .WithUserProperty("b", "2")
                     .WithPayloadFormatIndicator(MqttPayloadFormatIndicator.CharacterData)
-                    .WithAtLeastOnceQoS()
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                     .Build());
 
                 await Task.Delay(500);
@@ -185,7 +185,7 @@ namespace MQTTnet.Tests.MQTTv5
                 var applicationMessage = new MqttApplicationMessageBuilder()
                     .WithTopic("Hello")
                     .WithPayload("World")
-                    .WithAtMostOnceQoS()
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
                     .WithUserProperty("x", "1")
                     .WithUserProperty("y", "2")
                     .WithResponseTopic("response")
@@ -252,7 +252,7 @@ namespace MQTTnet.Tests.MQTTv5
                 var applicationMessage = new MqttApplicationMessageBuilder()
                     .WithTopic("Hello")
                     .WithPayload("World")
-                    .WithAtMostOnceQoS()
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
                     .WithUserProperty("x", "1")
                     .WithUserProperty("y", "2")
                     .WithResponseTopic("response")

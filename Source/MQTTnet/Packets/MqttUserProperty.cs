@@ -18,11 +18,6 @@ namespace MQTTnet.Packets
 
         public string Value { get; }
 
-        public override int GetHashCode()
-        {
-            return Name.GetHashCode() ^ Value.GetHashCode();
-        }
-
         public override bool Equals(object other)
         {
             return Equals(other as MqttUserProperty);
@@ -40,8 +35,17 @@ namespace MQTTnet.Packets
                 return true;
             }
 
-            return string.Equals(Name, other.Name, StringComparison.Ordinal) &&
-                string.Equals(Value, other.Value, StringComparison.Ordinal);
+            return string.Equals(Name, other.Name, StringComparison.Ordinal) && string.Equals(Value, other.Value, StringComparison.Ordinal);
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode() ^ Value.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return $"{Name} = {Value}";
         }
     }
 }

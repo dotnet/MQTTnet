@@ -8,9 +8,9 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public sealed class ManagedMqttClientOptions : IManagedMqttClientOptions
+    public sealed class ManagedMqttClientOptions
     {
-        public IMqttClientOptions ClientOptions { get; set; }
+        public MqttClientOptions ClientOptions { get; set; }
 
         public TimeSpan AutoReconnectDelay { get; set; } = TimeSpan.FromSeconds(5);
 
@@ -22,6 +22,10 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropNewMessage;
 
+        /// <summary>
+        /// Defines the maximum amount of topic filters which will be sent in a SUBSCRIBE/UNSUBSCRIBE packet.
+        /// Amazon AWS limits this number to 8. The default is int.MaxValue.
+        /// </summary>
         public int MaxTopicFiltersInSubscribeUnsubscribePackets { get; set; } = int.MaxValue;
     }
 }

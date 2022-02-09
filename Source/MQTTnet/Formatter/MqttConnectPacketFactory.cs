@@ -10,7 +10,7 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttConnectPacketFactory
     {
-        public MqttConnectPacket Create(IMqttClientOptions clientOptions)
+        public MqttConnectPacket Create(MqttClientOptions clientOptions)
         {
             if (clientOptions == null) throw new ArgumentNullException(nameof(clientOptions));
             
@@ -21,37 +21,33 @@ namespace MQTTnet.Formatter
                 Password = clientOptions.Credentials?.Password,
                 CleanSession = clientOptions.CleanSession,
                 KeepAlivePeriod = (ushort) clientOptions.KeepAlivePeriod.TotalSeconds,
-                Properties =
-                {
-                    AuthenticationMethod = clientOptions.AuthenticationMethod,
-                    AuthenticationData = clientOptions.AuthenticationData,
-                    WillDelayInterval = clientOptions.WillDelayInterval,
-                    MaximumPacketSize = clientOptions.MaximumPacketSize,
-                    ReceiveMaximum = clientOptions.ReceiveMaximum,
-                    RequestProblemInformation = clientOptions.RequestProblemInformation,
-                    RequestResponseInformation = clientOptions.RequestResponseInformation,
-                    SessionExpiryInterval = clientOptions.SessionExpiryInterval,
-                    TopicAliasMaximum = clientOptions.TopicAliasMaximum
-                }
+                AuthenticationMethod = clientOptions.AuthenticationMethod,
+                AuthenticationData = clientOptions.AuthenticationData,
+                WillDelayInterval = clientOptions.WillDelayInterval,
+                MaximumPacketSize = clientOptions.MaximumPacketSize,
+                ReceiveMaximum = clientOptions.ReceiveMaximum,
+                RequestProblemInformation = clientOptions.RequestProblemInformation,
+                RequestResponseInformation = clientOptions.RequestResponseInformation,
+                SessionExpiryInterval = clientOptions.SessionExpiryInterval,
+                TopicAliasMaximum = clientOptions.TopicAliasMaximum,
+                UserProperties = clientOptions.UserProperties
             };
 
-            if (clientOptions.WillMessage != null)
+            if (!string.IsNullOrEmpty(clientOptions.WillTopic))
             {
                 connectPacket.WillFlag = true;
-                connectPacket.WillTopic = clientOptions.WillMessage.Topic;
-                connectPacket.WillQoS = clientOptions.WillMessage.QualityOfServiceLevel;
-                connectPacket.WillMessage = clientOptions.WillMessage.Payload;
-                connectPacket.WillRetain = clientOptions.WillMessage.Retain;
-                connectPacket.WillProperties.ContentType = clientOptions.WillMessage.ContentType;
-                connectPacket.WillProperties.CorrelationData = clientOptions.WillMessage.CorrelationData;
-                connectPacket.WillProperties.ResponseTopic = clientOptions.WillMessage.ResponseTopic;
-                connectPacket.WillProperties.MessageExpiryInterval = clientOptions.WillMessage.MessageExpiryInterval;
-                connectPacket.WillProperties.PayloadFormatIndicator = clientOptions.WillMessage.PayloadFormatIndicator;
-                //TODO: connectPacket.WillProperties.WillDelayInterval = clientOptions.WillMessage.;
-                connectPacket.WillProperties.UserProperties = clientOptions.WillMessage.UserProperties;
+                connectPacket.WillTopic = clientOptions.WillTopic;
+                connectPacket.WillQoS = clientOptions.WillQualityOfServiceLevel;
+                connectPacket.WillMessage = clientOptions.WillPayload;
+                connectPacket.WillRetain = clientOptions.WillRetain;
+                connectPacket.WillDelayInterval = clientOptions.WillDelayInterval;
+                connectPacket.WillContentType = clientOptions.WillContentType;
+                connectPacket.WillCorrelationData = clientOptions.WillCorrelationData;
+                connectPacket.WillResponseTopic = clientOptions.WillResponseTopic;
+                connectPacket.WillMessageExpiryInterval = clientOptions.WillMessageExpiryInterval;
+                connectPacket.WillPayloadFormatIndicator = clientOptions.WillPayloadFormatIndicator;
+                connectPacket.WillUserProperties = clientOptions.WillUserProperties;
             }
-
-            connectPacket.Properties.UserProperties = clientOptions.UserProperties;
 
             return connectPacket;
         }

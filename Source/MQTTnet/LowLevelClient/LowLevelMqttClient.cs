@@ -39,7 +39,7 @@ namespace MQTTnet.LowLevelClient
             remove => _inspectPacketEvent.RemoveHandler(value);
         }
         
-        public async Task ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)
+        public async Task ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken)
         {
             if (options is null) throw new ArgumentNullException(nameof(options));
 

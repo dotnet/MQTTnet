@@ -9,12 +9,12 @@ namespace MQTTnet.Server
     public sealed class ApplicationMessageNotConsumedEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets the application message which was not consumed by any client.
+        ///     Gets the application message which was not consumed by any client.
         /// </summary>
         public MqttApplicationMessage ApplicationMessage { get; internal set; }
 
         /// <summary>
-        /// Gets the ID of the client which has sent the affected application message.
+        ///     Gets the ID of the client which has sent the affected application message.
         /// </summary>
         public string SenderClientId { get; internal set; }
     }

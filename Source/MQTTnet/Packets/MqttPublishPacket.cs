@@ -22,7 +22,7 @@ namespace MQTTnet.Packets
 
         public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
-        public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
+        public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; } = MqttQualityOfServiceLevel.AtMostOnce;
 
         public string ResponseTopic { get; set; }
 
@@ -32,26 +32,14 @@ namespace MQTTnet.Packets
 
         public string Topic { get; set; }
 
-        public ushort? TopicAlias { get; set; }
+        public ushort TopicAlias { get; set; }
 
         public List<MqttUserProperty> UserProperties { get; set; }
 
         public override string ToString()
         {
-            return string.Concat(
-                "Publish: [Topic=",
-                Topic,
-                "] [Payload.Length=",
-                Payload?.Length,
-                "] [QoSLevel=",
-                QualityOfServiceLevel,
-                "] [Dup=",
-                Dup,
-                "] [Retain=",
-                Retain,
-                "] [PacketIdentifier=",
-                PacketIdentifier,
-                "]");
+            return
+                $"Publish: [Topic={Topic}] [Payload.Length={Payload?.Length}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
         }
     }
 }

@@ -23,12 +23,12 @@ namespace MQTTnet.Extensions.WebSocket4Net
     {
         readonly BlockingCollection<byte> _receiveBuffer = new BlockingCollection<byte>();
 
-        readonly IMqttClientOptions _clientOptions;
+        readonly MqttClientOptions _clientOptions;
         readonly MqttClientWebSocketOptions _webSocketOptions;
 
         WebSocket _webSocket;
 
-        public WebSocket4NetMqttChannel(IMqttClientOptions clientOptions, MqttClientWebSocketOptions webSocketOptions)
+        public WebSocket4NetMqttChannel(MqttClientOptions clientOptions, MqttClientWebSocketOptions webSocketOptions)
         {
             _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
             _webSocketOptions = webSocketOptions ?? throw new ArgumentNullException(nameof(webSocketOptions));

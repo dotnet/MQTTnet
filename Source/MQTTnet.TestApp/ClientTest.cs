@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp
 {
@@ -86,7 +87,7 @@ namespace MQTTnet.TestApp
                     var applicationMessage = new MqttApplicationMessageBuilder()
                         .WithTopic("A/B/C")
                         .WithPayload("Hello World")
-                        .WithAtLeastOnceQoS()
+                        .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                         .Build();
 
                     await client.PublishAsync(applicationMessage);

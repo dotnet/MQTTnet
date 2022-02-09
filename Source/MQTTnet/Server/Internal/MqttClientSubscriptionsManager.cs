@@ -15,6 +15,8 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientSubscriptionsManager
     {
+        static readonly List<uint> EmptySubscriptionIdentifiers = new List<uint>();
+
         // We use a reader writer lock because the subscriptions are only read most of the time.
         // Since writing is done by multiple threads (server API or connection thread), we cannot avoid locking
         // completely by swapping references etc.
@@ -150,20 +152,26 @@ namespace MQTTnet.Server
             return result;
         }
 
-        public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel,
-            string senderClientId)
+        public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel applicationMessageQoSLevel, string senderClientId)
         {
             var senderIsReceiver = string.Equals(senderClientId, _session.Id);
+            var maxQoSLevel = -1; // Not subscribed.
 
-            var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
-            var subscriptionIdentifiers = new HashSet<uint>();
+            HashSet<uint> subscriptionIdentifiers = null;
             var retainAsPublished = false;
 
-            foreach (var subscription in _subscriptions.Values)
+            foreach (var subscriptionItem in _subscriptions)
             {
+                var subscription = subscriptionItem.Value;
+                
                 if (subscription.NoLocal && senderIsReceiver)
                 {
                     // This is a MQTTv5 feature!
+                    continue;
+                }
+
+                if (MqttTopicFilterComparer.Compare(topic, subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
+                {
                     continue;
                 }
 
@@ -173,31 +181,52 @@ namespace MQTTnet.Server
                     retainAsPublished = true;
                 }
 
-                if (MqttTopicFilterComparer.Compare(topic, subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
+                if ((int)subscription.GrantedQualityOfServiceLevel > maxQoSLevel)
                 {
-                    continue;
+                    maxQoSLevel = (int)subscription.GrantedQualityOfServiceLevel;
                 }
-
-                qosLevels.Add(subscription.GrantedQualityOfServiceLevel);
-
+                
                 if (subscription.Identifier > 0)
                 {
+                    if (subscriptionIdentifiers == null)
+                    {
+                        subscriptionIdentifiers = new HashSet<uint>();
+                    }
+                    
                     subscriptionIdentifiers.Add(subscription.Identifier);
                 }
             }
 
-            if (qosLevels.Count == 0)
+            if (maxQoSLevel == -1)
             {
                 return CheckSubscriptionsResult.NotSubscribed;
             }
-
-            return new CheckSubscriptionsResult
+ 
+            var result = new CheckSubscriptionsResult
             {
                 IsSubscribed = true,
                 RetainAsPublished = retainAsPublished,
-                SubscriptionIdentifiers = subscriptionIdentifiers.ToList(),
-                QualityOfServiceLevel = GetEffectiveQoS(qosLevel, qosLevels)
+                SubscriptionIdentifiers = subscriptionIdentifiers?.ToList() ?? EmptySubscriptionIdentifiers,
+                
+                // Start with the same QoS as the publisher.
+                QualityOfServiceLevel = applicationMessageQoSLevel
             };
+
+            // Now downgrade if required.
+            //
+            // If a subscribing Client has been granted maximum QoS 1 for a particular Topic Filter, then a QoS 0 Application Message matching the filter is delivered
+            // to the Client at QoS 0. This means that at most one copy of the message is received by the Client. On the other hand, a QoS 2 Message published to
+            // the same topic is downgraded by the Server to QoS 1 for delivery to the Client, so that Client might receive duplicate copies of the Message.
+            
+            // Subscribing to a Topic Filter at QoS 2 is equivalent to saying "I would like to receive Messages matching this filter at the QoS with which they were published".
+            // This means a publisher is responsible for determining the maximum QoS a Message can be delivered at, but a subscriber is able to require that the Server
+            // downgrades the QoS to one more suitable for its usage.
+            if (maxQoSLevel < (int)applicationMessageQoSLevel)
+            {
+                result.QualityOfServiceLevel = (MqttQualityOfServiceLevel)maxQoSLevel;
+            }
+
+            return result;
         }
 
         public sealed class CreateSubscriptionResult
@@ -362,12 +391,12 @@ namespace MQTTnet.Server
             return clientUnsubscribingTopicEventArgs;
         }
 
-        static MqttQualityOfServiceLevel GetEffectiveQoS(MqttQualityOfServiceLevel qosLevel, ICollection<MqttQualityOfServiceLevel> subscribedQoSLevels)
+        static MqttQualityOfServiceLevel GetEffectiveQoS(MqttQualityOfServiceLevel applicationQoSLevel, ICollection<MqttQualityOfServiceLevel> subscribedQoSLevels)
         {
             MqttQualityOfServiceLevel effectiveQoS;
-            if (subscribedQoSLevels.Contains(qosLevel))
+            if (subscribedQoSLevels.Contains(applicationQoSLevel))
             {
-                effectiveQoS = qosLevel;
+                effectiveQoS = applicationQoSLevel;
             }
             else if (subscribedQoSLevels.Count == 1)
             {

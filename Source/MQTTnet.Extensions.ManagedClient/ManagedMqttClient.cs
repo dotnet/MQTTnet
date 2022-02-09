@@ -104,7 +104,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public bool IsStarted => _connectionCancellationToken != null;
 
-        public IManagedMqttClientOptions Options { get; private set; }
+        public ManagedMqttClientOptions Options { get; private set; }
 
         public int PendingApplicationMessagesCount => _messageQueue.Count;
 
@@ -198,7 +198,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        public async Task StartAsync(IManagedMqttClientOptions options)
+        public async Task StartAsync(ManagedMqttClientOptions options)
         {
             ThrowIfDisposed();
 

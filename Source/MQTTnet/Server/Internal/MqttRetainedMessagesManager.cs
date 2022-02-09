@@ -54,7 +54,10 @@ namespace MQTTnet.Server
 
         public async Task UpdateMessage(string clientId, MqttApplicationMessage applicationMessage)
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+            if (applicationMessage == null)
+            {
+                throw new ArgumentNullException(nameof(applicationMessage));
+            }
 
             try
             {

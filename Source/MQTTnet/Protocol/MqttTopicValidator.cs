@@ -13,16 +13,9 @@ namespace MQTTnet.Protocol
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            if (!applicationMessage.TopicAlias.HasValue)
+            if (applicationMessage.TopicAlias == 0)
             {
                 ThrowIfInvalid(applicationMessage.Topic);
-            }
-            else
-            {
-                if (applicationMessage.TopicAlias.Value == 0)
-                {
-                    throw new MqttProtocolViolationException("The topic alias cannot be 0.");
-                }
             }
         }
 
@@ -54,7 +47,11 @@ namespace MQTTnet.Protocol
                 throw new MqttProtocolViolationException("Topic should not be empty.");
             }
 
-            if (topic.IndexOf("#") != -1 && topic.IndexOf("#") != topic.Length - 1) throw new MqttProtocolViolationException("The character '#' is only allowed as last character");
+            var indexOfHash = topic.IndexOf("#", StringComparison.Ordinal);
+            if (indexOfHash != -1 && indexOfHash != topic.Length - 1)
+            {
+                throw new MqttProtocolViolationException("The character '#' is only allowed as last character");
+            }
         }
     }
 }

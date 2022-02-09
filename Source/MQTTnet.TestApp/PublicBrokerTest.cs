@@ -130,7 +130,7 @@ namespace MQTTnet.TestApp
             Console.ReadLine();
         }
 
-        static async Task ExecuteTestAsync(string name, IMqttClientOptions options)
+        static async Task ExecuteTestAsync(string name, MqttClientOptions options)
         {
             try
             {

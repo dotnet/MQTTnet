@@ -95,9 +95,9 @@ namespace MQTTnet.Client
         
         public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
-        public IMqttClientOptions Options { get; private set; }
+        public MqttClientOptions Options { get; private set; }
 
-        public async Task<MqttClientConnectResult> ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken = default)
+        public async Task<MqttClientConnectResult> ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken = default)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (options.ChannelOptions == null) throw new ArgumentException("ChannelOptions are not set.");
@@ -143,7 +143,14 @@ namespace MQTTnet.Client
 
                 _lastPacketSentTimestamp = DateTime.UtcNow;
 
-                if (Options.KeepAlivePeriod != TimeSpan.Zero)
+                var keepAliveInterval = Options.KeepAlivePeriod;
+                if (connectResult.ServerKeepAlive > 0)
+                {
+                    _logger.Info($"Using keep alive value ({connectResult.ServerKeepAlive}) sent from the server.");
+                    keepAliveInterval = TimeSpan.FromSeconds(connectResult.ServerKeepAlive);
+                }
+                
+                if (keepAliveInterval != TimeSpan.Zero)
                 {
                     _keepAlivePacketsSenderTask = Task.Run(() => TrySendKeepAliveMessagesAsync(backgroundCancellationToken), backgroundCancellationToken);
                 }
@@ -317,7 +324,7 @@ namespace MQTTnet.Client
             base.Dispose(disposing);
         }
 
-        async Task<MqttClientConnectResult> AuthenticateAsync(IMqttClientOptions options, CancellationToken cancellationToken)
+        async Task<MqttClientConnectResult> AuthenticateAsync(MqttClientOptions options, CancellationToken cancellationToken)
         {
             MqttClientConnectResult result;
 
@@ -781,8 +788,9 @@ namespace MQTTnet.Client
         async Task<MqttClientPublishResult> PublishAtMostOnce(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
             // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
-            await SendAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-            
+            await SendAsync(publishPacket, cancellationToken)
+                .ConfigureAwait(false);
+
             return _clientPublishResultFactory.Create(null);
         }
 

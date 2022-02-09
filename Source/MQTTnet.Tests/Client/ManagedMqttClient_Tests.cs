@@ -12,6 +12,7 @@ using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Implementations;
+using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
 using MqttClient = MQTTnet.Client.MqttClient;
@@ -58,16 +59,19 @@ namespace MQTTnet.Tests.Client
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var receivedMessagesCount = 0;
-
                 await testEnvironment.StartServer();
 
-                var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").WithAtMostOnceQoS().Build();
+                var receivedMessagesCount = 0;
+                
                 var clientOptions = new MqttClientOptionsBuilder()
                     .WithTcpServer("localhost", testEnvironment.ServerPort)
-                    .WithWillMessage(willMessage);
+                    .WithWillTopic("My/last/will")
+                    .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                    .Build();
+                
                 var dyingClient = testEnvironment.CreateClient();
                 var dyingManagedClient = new ManagedMqttClient(dyingClient, testEnvironment.ClientLogger);
+                
                 await dyingManagedClient.StartAsync(new ManagedMqttClientOptionsBuilder()
                     .WithClientOptions(clientOptions)
                     .Build());
@@ -84,7 +88,7 @@ namespace MQTTnet.Tests.Client
 
                 dyingManagedClient.Dispose();
 
-                await Task.Delay(1000);
+                await Task.Delay(5000);
 
                 Assert.AreEqual(1, receivedMessagesCount);
             }

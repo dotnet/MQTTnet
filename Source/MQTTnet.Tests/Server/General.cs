@@ -221,11 +221,11 @@ namespace MQTTnet.Tests.Server
                             {
                                 // Clear retained message.
                                 await client.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("r" + i2)
-                                    .WithPayload(new byte[0]).WithRetainFlag().WithQualityOfServiceLevel(1).Build());
+                                    .WithPayload(Array.Empty<byte>()).WithRetainFlag().WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce).Build());
 
                                 // Set retained message.
                                 await client.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("r" + i2)
-                                    .WithPayload("value").WithRetainFlag().WithQualityOfServiceLevel(1).Build());
+                                    .WithPayload("value").WithRetainFlag().WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce).Build());
 
                                 await client.DisconnectAsync();
                             }
@@ -490,7 +490,7 @@ namespace MQTTnet.Tests.Server
                     return Task.CompletedTask;
                 };
 
-                var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
+                var message = new MqttApplicationMessageBuilder().WithTopic("a").WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce).Build();
                 await client.SubscribeAsync(new MqttTopicFilter {Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce});
 
                 await server.InjectApplicationMessage(new MqttInjectedApplicationMessage(message)
@@ -532,7 +532,7 @@ namespace MQTTnet.Tests.Server
                 await c2.SubscribeAsync(new MqttTopicFilter {Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}).ConfigureAwait(false);
                 await c3.SubscribeAsync(new MqttTopicFilter {Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce}).ConfigureAwait(false);
 
-                var message = new MqttApplicationMessageBuilder().WithTopic("a").WithAtLeastOnceQoS().Build();
+                var message = new MqttApplicationMessageBuilder().WithTopic("a").WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce).Build();
 
                 for (var i = 0; i < 500; i++)
                 {
@@ -1001,9 +1001,7 @@ namespace MQTTnet.Tests.Server
 
                 await testEnvironment.StartServer();
 
-                var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").Build();
-
-                var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage);
+                var clientOptions = new MqttClientOptionsBuilder().WithWillTopic("My/last/will");
 
                 var c1 = await testEnvironment.ConnectClient();
 
@@ -1044,10 +1042,8 @@ namespace MQTTnet.Tests.Server
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
                 // C2 has the last will defined.
-                var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").Build();
-
                 var clientOptions = new MqttClientOptionsBuilder()
-                    .WithWillMessage(willMessage)
+                    .WithWillTopic("My/last/will")
                     .WithClientId("WillOwner");
 
                 var c2 = await testEnvironment.ConnectClient(clientOptions);
@@ -1067,11 +1063,7 @@ namespace MQTTnet.Tests.Server
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
-
-                var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").WithAtMostOnceQoS().Build();
-
-                var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage);
-
+                
                 var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder());
 
                 var receivedMessagesCount = 0;
@@ -1083,6 +1075,7 @@ namespace MQTTnet.Tests.Server
 
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
+                var clientOptions = new MqttClientOptionsBuilder().WithWillTopic("My/last/will").WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce);
                 var c2 = await testEnvironment.ConnectClient(clientOptions);
                 c2.Dispose(); // Dispose will not send a DISCONNECT pattern first so the will message must be sent.
 

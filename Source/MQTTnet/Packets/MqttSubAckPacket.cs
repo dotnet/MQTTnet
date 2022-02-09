@@ -12,20 +12,26 @@ namespace MQTTnet.Packets
     {
         public ushort PacketIdentifier { get; set; }
 
-        /// <summary>Reason Code is used in MQTTv5.0.0 and backward compatible to v.3.1.1. Return Code is used in MQTTv3.1.1</summary>
+        /// <summary>
+        ///     Reason Code is used in MQTTv5.0.0 and backward compatible to v.3.1.1. Return Code is used in MQTTv3.1.1
+        /// </summary>
         public List<MqttSubscribeReasonCode> ReasonCodes { get; } = new List<MqttSubscribeReasonCode>();
 
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public string ReasonString { get; set; }
 
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
 
         public override string ToString()
         {
             var reasonCodesText = string.Join(",", ReasonCodes.Select(f => f.ToString()));
 
-            return string.Concat("SubAck: [PacketIdentifier=", PacketIdentifier, "] [ReasonCode=", reasonCodesText, "]");
+            return $"SubAck: [PacketIdentifier={PacketIdentifier}] [ReasonCode={reasonCodesText}]";
         }
     }
 }

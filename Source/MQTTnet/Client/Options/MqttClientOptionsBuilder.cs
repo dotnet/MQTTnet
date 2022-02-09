@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
 {
@@ -61,12 +61,24 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithWillMessage(MqttApplicationMessage value)
+        public MqttClientOptionsBuilder WithWillTopic(string willTopic)
         {
-            _options.WillMessage = value;
+            _options.WillTopic = willTopic;
             return this;
         }
 
+        public MqttClientOptionsBuilder WithWillPayload(byte[] willPayload)
+        {
+            _options.WillPayload = willPayload;
+            return this;
+        }
+        
+        public MqttClientOptionsBuilder WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel willQualityOfServiceLevel)
+        {
+            _options.WillQualityOfServiceLevel = willQualityOfServiceLevel;
+            return this;
+        }
+        
         public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data)
         {
             _options.AuthenticationMethod = method;
@@ -74,7 +86,7 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithWillDelayInterval(uint? willDelayInterval)
+        public MqttClientOptionsBuilder WithWillDelayInterval(uint willDelayInterval)
         {
             _options.WillDelayInterval = willDelayInterval;
             return this;
@@ -86,13 +98,13 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithMaximumPacketSize(uint? maximumPacketSize)
+        public MqttClientOptionsBuilder WithMaximumPacketSize(uint maximumPacketSize)
         {
             _options.MaximumPacketSize = maximumPacketSize;
             return this;
         }
 
-        public MqttClientOptionsBuilder WithReceiveMaximum(ushort? receiveMaximum)
+        public MqttClientOptionsBuilder WithReceiveMaximum(ushort receiveMaximum)
         {
             _options.ReceiveMaximum = receiveMaximum;
             return this;
@@ -268,7 +280,7 @@ namespace MQTTnet.Client
             return this;
         }
         
-        public IMqttClientOptions Build()
+        public MqttClientOptions Build()
         {
             if (_tcpOptions == null && _webSocketOptions == null)
             {

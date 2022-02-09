@@ -8,6 +8,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Tests.Mockups;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests.MQTTv5
 {
@@ -20,10 +21,8 @@ namespace MQTTnet.Tests.MQTTv5
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
-
-                var willMessage = new MqttApplicationMessageBuilder().WithTopic("My/last/will").WithAtMostOnceQoS().Build();
-
-                var clientOptions = new MqttClientOptionsBuilder().WithWillMessage(willMessage).WithProtocolVersion(MqttProtocolVersion.V500);
+                
+                var clientOptions = new MqttClientOptionsBuilder().WithWillTopic("My/last/will").WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce).WithProtocolVersion(MqttProtocolVersion.V500);
 
                 var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
                 
@@ -175,7 +174,7 @@ namespace MQTTnet.Tests.MQTTv5
             }
         }
 
-        IMqttClientOptions CreateClientOptions(TestEnvironment testEnvironment, string clientId, bool cleanSession, uint sessionExpiryInterval)
+        MqttClientOptions CreateClientOptions(TestEnvironment testEnvironment, string clientId, bool cleanSession, uint sessionExpiryInterval)
         {
             return testEnvironment.Factory.CreateClientOptionsBuilder()
                 .WithProtocolVersion(MqttProtocolVersion.V500)

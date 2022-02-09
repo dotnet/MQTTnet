@@ -13,16 +13,20 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void Encode_Four_Byte_Integer()
         {
-            for (uint i = 0; i < 268435455; i++)
+            var writer = new MqttPacketWriter();
+            
+            for (uint value = 0; value < 268435455; value++)
             {
-                var writer = new MqttPacketWriter();
-                writer.WriteVariableLengthInteger(i);
+                writer.WriteVariableLengthInteger(value);
+                
                 var buffer = writer.GetBuffer();
-
+                
                 var reader = new MqttPacketBodyReader(buffer, 0, writer.Length);
                 var checkValue = reader.ReadVariableLengthInteger();
 
-                Assert.AreEqual(i, checkValue);
+                Assert.AreEqual(value, checkValue);
+                
+                writer.Reset(0);
             }
         }
     }

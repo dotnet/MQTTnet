@@ -82,7 +82,7 @@ namespace MQTTnet.Tests.Server
                             using (var client = await testEnvironment.ConnectClient())
                             {
                                 var applicationMessageBuilder = new MqttApplicationMessageBuilder();
-
+                                
                                 for (var j = 0; j < 1000; j++)
                                 {
                                     var message = applicationMessageBuilder.WithTopic(j.ToString())

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
+using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -229,7 +230,7 @@ namespace MQTTnet.Tests.Server
                 // Create client with clean session and long session expiry interval
 
                 var client1 = await testEnvironment.ConnectClient(o => o
-                    .WithProtocolVersion(Formatter.MqttProtocolVersion.V311)
+                    .WithProtocolVersion(MqttProtocolVersion.V311)
                     .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                     .WithSessionExpiryInterval(9999) // not relevant for v311 but testing impact
                     .WithCleanSession(true) // start and end with clean session
@@ -249,7 +250,7 @@ namespace MQTTnet.Tests.Server
 
                 var client2 = testEnvironment.CreateClient();
                 var options = testEnvironment.Factory.CreateClientOptionsBuilder()
-                    .WithProtocolVersion(Formatter.MqttProtocolVersion.V311)
+                    .WithProtocolVersion(MqttProtocolVersion.V311)
                     .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                     .WithSessionExpiryInterval(9999) // not relevant for v311 but testing impact
                     .WithCleanSession(false) // see if there is a session

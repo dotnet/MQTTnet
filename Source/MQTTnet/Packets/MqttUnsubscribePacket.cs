@@ -13,14 +13,14 @@ namespace MQTTnet.Packets
         public List<string> TopicFilters { get; } = new List<string>();
 
         /// <summary>
-        /// Added in MQTTv5.
+        ///     Added in MQTTv5.
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
 
         public override string ToString()
         {
             var topicFiltersText = string.Join(",", TopicFilters);
-            return string.Concat("Unsubscribe: [PacketIdentifier=", PacketIdentifier, "] [TopicFilters=", topicFiltersText, "]");
+            return $"Unsubscribe: [PacketIdentifier={PacketIdentifier}] [TopicFilters={topicFiltersText}]";
         }
     }
 }

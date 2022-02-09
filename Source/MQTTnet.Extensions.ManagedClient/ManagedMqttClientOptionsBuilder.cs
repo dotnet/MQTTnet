@@ -37,7 +37,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return this;
         }
 
-        public ManagedMqttClientOptionsBuilder WithClientOptions(IMqttClientOptions value)
+        public ManagedMqttClientOptionsBuilder WithClientOptions(MqttClientOptions value)
         {
             if (_clientOptionsBuilder != null)
             {

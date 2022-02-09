@@ -6,7 +6,7 @@ using System;
 
 namespace MQTTnet.Server
 {
-    public class MqttServerOptions
+    public sealed class MqttServerOptions
     {
         public MqttServerTcpEndpointOptions DefaultEndpointOptions { get; } = new MqttServerTcpEndpointOptions();
 

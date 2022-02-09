@@ -11,18 +11,24 @@ namespace MQTTnet.Packets
     {
         public ushort PacketIdentifier { get; set; }
 
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public MqttPubRecReasonCode ReasonCode { get; set; } = MqttPubRecReasonCode.Success;
 
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public string ReasonString { get; set; }
 
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
 
         public override string ToString()
         {
-            return string.Concat("PubRec: [PacketIdentifier=", PacketIdentifier, "] [ReasonCode=", ReasonCode, "]");
+            return $"PubRec: [PacketIdentifier={PacketIdentifier}] [ReasonCode={ReasonCode}]";
         }
     }
 }

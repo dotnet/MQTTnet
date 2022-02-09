@@ -18,26 +18,19 @@ namespace MQTTnet.Formatter
             {
                 ReturnCode = MqttConnectReasonCodeConverter.ToConnectReturnCode(validatingConnectionEventArgs.ReasonCode),
                 ReasonCode = validatingConnectionEventArgs.ReasonCode,
-                Properties =
-                {
-                    RetainAvailable = true,
-                    SubscriptionIdentifiersAvailable = true,
-                    SharedSubscriptionAvailable = false,
-                    TopicAliasMaximum = ushort.MaxValue,
-                    WildcardSubscriptionAvailable = true,
+                RetainAvailable = true,
+                SubscriptionIdentifiersAvailable = true,
+                SharedSubscriptionAvailable = false,
+                TopicAliasMaximum = ushort.MaxValue,
+                WildcardSubscriptionAvailable = true,
                     
-                    AuthenticationMethod = validatingConnectionEventArgs.AuthenticationMethod,
-                    AuthenticationData = validatingConnectionEventArgs.ResponseAuthenticationData,
-                    AssignedClientIdentifier = validatingConnectionEventArgs.AssignedClientIdentifier,
-                    ReasonString = validatingConnectionEventArgs.ReasonString,
-                    ServerReference = validatingConnectionEventArgs.ServerReference
-                }
+                AuthenticationMethod = validatingConnectionEventArgs.AuthenticationMethod,
+                AuthenticationData = validatingConnectionEventArgs.ResponseAuthenticationData,
+                AssignedClientIdentifier = validatingConnectionEventArgs.AssignedClientIdentifier,
+                ReasonString = validatingConnectionEventArgs.ReasonString,
+                ServerReference = validatingConnectionEventArgs.ServerReference,
+                UserProperties = validatingConnectionEventArgs.ResponseUserProperties
             };
-
-            if (validatingConnectionEventArgs.ResponseUserProperties != null)
-            {
-                connAckPacket.Properties.UserProperties = validatingConnectionEventArgs.ResponseUserProperties;
-            }
             
             return connAckPacket;
         }

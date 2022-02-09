@@ -137,18 +137,15 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write(packet.KeepAlivePeriod);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteSessionExpiryInterval(packet.Properties.SessionExpiryInterval);
-                propertiesWriter.WriteAuthenticationMethod(packet.Properties.AuthenticationMethod);
-                propertiesWriter.WriteAuthenticationData(packet.Properties.AuthenticationData);
-                propertiesWriter.WriteRequestProblemInformation(packet.Properties.RequestProblemInformation);
-                propertiesWriter.WriteRequestResponseInformation(packet.Properties.RequestResponseInformation);
-                propertiesWriter.WriteReceiveMaximum(packet.Properties.ReceiveMaximum);
-                propertiesWriter.WriteTopicAliasMaximum(packet.Properties.TopicAliasMaximum);
-                propertiesWriter.WriteMaximumPacketSize(packet.Properties.MaximumPacketSize);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
+            propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
+            propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+            propertiesWriter.WriteRequestProblemInformation(packet.RequestProblemInformation);
+            propertiesWriter.WriteRequestResponseInformation(packet.RequestResponseInformation);
+            propertiesWriter.WriteReceiveMaximum(packet.ReceiveMaximum);
+            propertiesWriter.WriteTopicAliasMaximum(packet.TopicAliasMaximum);
+            propertiesWriter.WriteMaximumPacketSize(packet.MaximumPacketSize);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             propertiesWriter.WriteTo(packetWriter);
 
@@ -157,15 +154,13 @@ namespace MQTTnet.Formatter.V5
             if (packet.WillFlag)
             {
                 var willPropertiesWriter = new MqttV500PropertiesWriter();
-                willPropertiesWriter.WritePayloadFormatIndicator(packet.WillProperties.PayloadFormatIndicator);
-                willPropertiesWriter.WriteMessageExpiryInterval(packet.WillProperties.MessageExpiryInterval);
-                willPropertiesWriter.WriteResponseTopic(packet.WillProperties.ResponseTopic);
-                willPropertiesWriter.WriteCorrelationData(packet.WillProperties.CorrelationData);
-                willPropertiesWriter.WriteContentType(packet.WillProperties.ContentType);
-                willPropertiesWriter.WriteUserProperties(packet.WillProperties.UserProperties);
-                
-                // This is a special case!
-                willPropertiesWriter.WriteWillDelayInterval(packet.Properties?.WillDelayInterval);
+                willPropertiesWriter.WritePayloadFormatIndicator(packet.WillPayloadFormatIndicator);
+                willPropertiesWriter.WriteMessageExpiryInterval(packet.WillMessageExpiryInterval);
+                willPropertiesWriter.WriteResponseTopic(packet.WillResponseTopic);
+                willPropertiesWriter.WriteCorrelationData(packet.WillCorrelationData);
+                willPropertiesWriter.WriteContentType(packet.WillContentType);
+                willPropertiesWriter.WriteUserProperties(packet.WillUserProperties);
+                willPropertiesWriter.WriteWillDelayInterval(packet.WillDelayInterval);
 
                 willPropertiesWriter.WriteTo(packetWriter);
 
@@ -201,26 +196,23 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write((byte)packet.ReasonCode);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteSessionExpiryInterval(packet.Properties.SessionExpiryInterval);
-                propertiesWriter.WriteAuthenticationMethod(packet.Properties.AuthenticationMethod);
-                propertiesWriter.WriteAuthenticationData(packet.Properties.AuthenticationData);
-                propertiesWriter.WriteRetainAvailable(packet.Properties.RetainAvailable);
-                propertiesWriter.WriteReceiveMaximum(packet.Properties.ReceiveMaximum);
-                propertiesWriter.WriteMaximumQoS(packet.Properties.MaximumQoS);
-                propertiesWriter.WriteAssignedClientIdentifier(packet.Properties.AssignedClientIdentifier);
-                propertiesWriter.WriteTopicAliasMaximum(packet.Properties.TopicAliasMaximum);
-                propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
-                propertiesWriter.WriteMaximumPacketSize(packet.Properties.MaximumPacketSize);
-                propertiesWriter.WriteWildcardSubscriptionAvailable(packet.Properties.WildcardSubscriptionAvailable);
-                propertiesWriter.WriteSubscriptionIdentifiersAvailable(packet.Properties.SubscriptionIdentifiersAvailable);
-                propertiesWriter.WriteSharedSubscriptionAvailable(packet.Properties.SharedSubscriptionAvailable);
-                propertiesWriter.WriteServerKeepAlive(packet.Properties.ServerKeepAlive);
-                propertiesWriter.WriteResponseInformation(packet.Properties.ResponseInformation);
-                propertiesWriter.WriteServerReference(packet.Properties.ServerReference);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
+            propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
+            propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+            propertiesWriter.WriteRetainAvailable(packet.RetainAvailable);
+            propertiesWriter.WriteReceiveMaximum(packet.ReceiveMaximum);
+            propertiesWriter.WriteMaximumQoS(packet.MaximumQoS);
+            propertiesWriter.WriteAssignedClientIdentifier(packet.AssignedClientIdentifier);
+            propertiesWriter.WriteTopicAliasMaximum(packet.TopicAliasMaximum);
+            propertiesWriter.WriteReasonString(packet.ReasonString);
+            propertiesWriter.WriteMaximumPacketSize(packet.MaximumPacketSize);
+            propertiesWriter.WriteWildcardSubscriptionAvailable(packet.WildcardSubscriptionAvailable);
+            propertiesWriter.WriteSubscriptionIdentifiersAvailable(packet.SubscriptionIdentifiersAvailable);
+            propertiesWriter.WriteSharedSubscriptionAvailable(packet.SharedSubscriptionAvailable);
+            propertiesWriter.WriteServerKeepAlive(packet.ServerKeepAlive);
+            propertiesWriter.WriteResponseInformation(packet.ResponseInformation);
+            propertiesWriter.WriteServerReference(packet.ServerReference);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             propertiesWriter.WriteTo(packetWriter);
 
@@ -264,11 +256,7 @@ namespace MQTTnet.Formatter.V5
             propertiesWriter.WriteResponseTopic(packet.ResponseTopic);
             propertiesWriter.WriteSubscriptionIdentifiers(packet.SubscriptionIdentifiers);
             propertiesWriter.WriteUserProperties(packet.UserProperties);
-
-            if (packet.TopicAlias > 0)
-            {
-                propertiesWriter.WriteTopicAlias(packet.TopicAlias);
-            }
+            propertiesWriter.WriteTopicAlias(packet.TopicAlias);
 
             propertiesWriter.WriteTo(packetWriter);
 

@@ -432,22 +432,20 @@ namespace MQTTnet.Server
 
         void HandleTopicAlias(MqttPublishPacket publishPacket)
         {
-            if (publishPacket?.TopicAlias == null)
+            if (publishPacket.TopicAlias == 0)
             {
                 return;
             }
-
-            var topicAlias = publishPacket.TopicAlias.Value;
-
+            
             lock (_topicAlias)
             {
                 if (!string.IsNullOrEmpty(publishPacket.Topic))
                 {
-                    _topicAlias[topicAlias] = publishPacket.Topic;
+                    _topicAlias[publishPacket.TopicAlias] = publishPacket.Topic;
                 }
                 else
                 {
-                    if (_topicAlias.TryGetValue(topicAlias, out var topic))
+                    if (_topicAlias.TryGetValue(publishPacket.TopicAlias, out var topic))
                     {
                         publishPacket.Topic = topic;
                     }

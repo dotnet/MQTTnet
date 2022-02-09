@@ -22,7 +22,7 @@ namespace MQTTnet.Packets
 
         public override string ToString()
         {
-            return string.Concat("PubAck: [PacketIdentifier=", PacketIdentifier, "] [ReasonCode=", ReasonCode, "]");
+            return $"PubAck: [PacketIdentifier={PacketIdentifier}] [ReasonCode={ReasonCode}]";
         }
     }
 }

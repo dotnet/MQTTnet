@@ -28,19 +28,11 @@ namespace MQTTnet.Formatter
                 MessageExpiryInterval = applicationMessage.MessageExpiryInterval,
                 PayloadFormatIndicator = applicationMessage.PayloadFormatIndicator,
                 ResponseTopic = applicationMessage.ResponseTopic,
-                TopicAlias = applicationMessage.TopicAlias
+                TopicAlias = applicationMessage.TopicAlias,
+                SubscriptionIdentifiers = applicationMessage.SubscriptionIdentifiers,
+                UserProperties = applicationMessage.UserProperties
             };
             
-            if (applicationMessage.SubscriptionIdentifiers != null)
-            {
-                packet.SubscriptionIdentifiers = applicationMessage.SubscriptionIdentifiers;    
-            }
-            
-            if (applicationMessage.UserProperties != null)
-            {
-                packet.UserProperties = applicationMessage.UserProperties;
-            }
-
             return packet;
         }
 
@@ -59,14 +51,13 @@ namespace MQTTnet.Formatter
                 Payload = connectPacket.WillMessage,
                 QualityOfServiceLevel = connectPacket.WillQoS,
                 Retain = connectPacket.WillRetain,
-                ContentType = connectPacket.WillProperties.ContentType,
-                CorrelationData = connectPacket.WillProperties.CorrelationData,
-                MessageExpiryInterval = connectPacket.WillProperties.MessageExpiryInterval,
-                PayloadFormatIndicator = connectPacket.WillProperties.PayloadFormatIndicator,
-                ResponseTopic = connectPacket.WillProperties.ResponseTopic
+                ContentType = connectPacket.WillContentType,
+                CorrelationData = connectPacket.WillCorrelationData,
+                MessageExpiryInterval = connectPacket.WillMessageExpiryInterval,
+                PayloadFormatIndicator = connectPacket.WillPayloadFormatIndicator,
+                ResponseTopic = connectPacket.WillResponseTopic,
+                UserProperties = connectPacket.WillUserProperties
             };
-            
-            packet.UserProperties = connectPacket.WillProperties.UserProperties;
 
             return packet;
         }

@@ -103,8 +103,7 @@ namespace MQTTnet.Tests.Mockups
                 {
                     if (TestContext != null)
                     {
-                        var clientOptions = (MqttClientOptions)e.ClientOptions;
-
+                        var clientOptions = e.ClientOptions;
                         var existingClientId = clientOptions.ClientId;
                         if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
                         {
@@ -152,7 +151,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
 
-        public async Task<MqttClient> ConnectClient(IMqttClientOptions options)
+        public async Task<MqttClient> ConnectClient(MqttClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

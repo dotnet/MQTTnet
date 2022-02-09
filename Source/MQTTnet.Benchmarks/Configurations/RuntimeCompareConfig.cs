@@ -15,6 +15,5 @@ namespace MQTTnet.Benchmarks.Configurations
             AddJob(Job.Default.WithRuntime(ClrRuntime.Net48));
             AddJob(Job.Default.WithRuntime(CoreRuntime.Core50).WithToolchain(CsProjCoreToolchain.NetCoreApp50));
         }
-
     }
 }

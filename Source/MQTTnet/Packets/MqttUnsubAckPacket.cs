@@ -11,7 +11,7 @@ namespace MQTTnet.Packets
     public sealed class MqttUnsubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
         public ushort PacketIdentifier { get; set; }
-        
+
         public List<MqttUnsubscribeReasonCode> ReasonCodes { get; } = new List<MqttUnsubscribeReasonCode>();
 
         // MQTTv5+
@@ -24,7 +24,7 @@ namespace MQTTnet.Packets
         {
             var reasonCodesText = string.Join(",", ReasonCodes.Select(f => f.ToString()));
 
-            return string.Concat("UnsubAck: [PacketIdentifier=", PacketIdentifier, "] [ReasonCodes=", reasonCodesText, "]");
+            return $"UnsubAck: [PacketIdentifier={PacketIdentifier}] [ReasonCodes={reasonCodesText}]";
         }
     }
 }

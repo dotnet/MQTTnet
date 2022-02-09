@@ -879,7 +879,7 @@ namespace MQTTnet.Tests.Client
 
                 await Task.Delay(500);
 
-                var message = new MqttApplicationMessageBuilder().WithTopic("topic1").WithPayload("Hello World").WithExactlyOnceQoS().WithRetainFlag().Build();
+                var message = new MqttApplicationMessageBuilder().WithTopic("topic1").WithPayload("Hello World").WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce).WithRetainFlag().Build();
                 
                 await client2.PublishAsync(message);
                 await Task.Delay(500);

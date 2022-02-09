@@ -19,7 +19,7 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttChannel
     {
-        readonly IMqttClientOptions _clientOptions;
+        readonly MqttClientOptions _clientOptions;
         readonly MqttClientTcpOptions _tcpOptions;
         readonly Action _disposeAction;
 
@@ -30,7 +30,7 @@ namespace MQTTnet.Implementations
             _disposeAction = Dispose;
         }
 
-        public MqttTcpChannel(IMqttClientOptions clientOptions) : this()
+        public MqttTcpChannel(MqttClientOptions clientOptions) : this()
         {
             _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
             _tcpOptions = (MqttClientTcpOptions) clientOptions.ChannelOptions;

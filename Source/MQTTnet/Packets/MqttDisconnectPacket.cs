@@ -9,24 +9,34 @@ namespace MQTTnet.Packets
 {
     public sealed class MqttDisconnectPacket : MqttBasePacket
     {
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public MqttDisconnectReasonCode ReasonCode { get; set; } = MqttDisconnectReasonCode.NormalDisconnection;
 
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public string ReasonString { get; set; }
 
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public string ServerReference { get; set; }
 
-        // MQTTv5+
-        public uint? SessionExpiryInterval { get; set; }
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
+        public uint SessionExpiryInterval { get; set; }
 
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
 
         public override string ToString()
         {
-            return string.Concat("Disconnect: [ReasonCode=", ReasonCode, "]");
+            return $"Disconnect: [ReasonCode={ReasonCode}]";
         }
     }
 }

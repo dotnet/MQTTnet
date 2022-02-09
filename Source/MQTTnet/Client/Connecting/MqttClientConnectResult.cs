@@ -87,11 +87,12 @@ namespace MQTTnet.Client
         public string ServerReference { get; internal set; }
 
         /// <summary>
+        /// MQTTv5 only.
         /// Gets the keep alive interval which was chosen by the server instead of the
         /// keep alive interval from the client CONNECT packet.
-        /// MQTTv5 only.
+        /// A value of 0 indicates that the feature is not used.
         /// </summary>
-        public ushort? ServerKeepAlive { get; internal set; }
+        public ushort ServerKeepAlive { get; internal set; }
 
         public uint? SessionExpiryInterval { get; internal set; }
 

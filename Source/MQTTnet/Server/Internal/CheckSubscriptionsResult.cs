@@ -7,7 +7,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public struct CheckSubscriptionsResult
+    public sealed class CheckSubscriptionsResult
     {
         public static CheckSubscriptionsResult NotSubscribed = new CheckSubscriptionsResult();
 

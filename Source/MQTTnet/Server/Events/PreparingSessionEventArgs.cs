@@ -36,6 +36,7 @@ namespace MQTTnet.Server
         /// Gets the last will message.
         /// In MQTT, you use the last will message feature to notify other clients about an ungracefully disconnected client.
         /// </summary>
+        // TODO: Use single properties. No entire will message.
         MqttApplicationMessage WillMessage { get; set; }
 
         /// <summary>

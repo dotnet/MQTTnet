@@ -4,10 +4,10 @@
 
 namespace MQTTnet.Client
 {
-    public interface IMqttClientCredentials
+    public interface IMqttClientCredentialsProvider
     {
-        string Username { get; }
-        
-        byte[] Password { get; }
+        string GetUserName(MqttClientOptions clientOptions);
+
+        byte[] GetPassword(MqttClientOptions clientOptions);
     }
 }

@@ -101,7 +101,7 @@ namespace MQTTnet.Formatter.V5
 
         public MqttQualityOfServiceLevel ReadMaximumQoS()
         {
-            byte value = _body.ReadByte();
+            var value = _body.ReadByte();
             if (value > 1)
             {
                 throw new MqttProtocolViolationException($"Unexpected Maximum QoS value: {value}");

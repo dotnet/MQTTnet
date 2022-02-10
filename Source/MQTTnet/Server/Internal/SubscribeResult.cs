@@ -9,11 +9,9 @@ namespace MQTTnet.Server
 {
     public sealed class SubscribeResult
     {
-        public List<MqttSubscribeReturnCode> ReturnCodes { get; } = new List<MqttSubscribeReturnCode>(128);
-
         public List<MqttSubscribeReasonCode> ReasonCodes { get; } = new List<MqttSubscribeReasonCode>(128);
 
-        public List<MqttQueuedApplicationMessage> RetainedApplicationMessages { get; } = new List<MqttQueuedApplicationMessage>(1024);
+        public List<MqttQueuedApplicationMessage> RetainedApplicationMessages { get; set; }
         
         public bool CloseConnection { get; set; }
     }

@@ -47,7 +47,7 @@ namespace MQTTnet.Client
 
         public TimeSpan CommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
-        public IMqttClientCredentials Credentials { get; set; }
+        public IMqttClientCredentialsProvider Credentials { get; set; }
 
         public IMqttExtendedAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
 

@@ -17,8 +17,8 @@ namespace MQTTnet.Formatter
             var connectPacket = new MqttConnectPacket
             {
                 ClientId = clientOptions.ClientId,
-                Username = clientOptions.Credentials?.Username,
-                Password = clientOptions.Credentials?.Password,
+                Username = clientOptions.Credentials?.GetUserName(clientOptions),
+                Password = clientOptions.Credentials?.GetPassword(clientOptions),
                 CleanSession = clientOptions.CleanSession,
                 KeepAlivePeriod = (ushort) clientOptions.KeepAlivePeriod.TotalSeconds,
                 AuthenticationMethod = clientOptions.AuthenticationMethod,

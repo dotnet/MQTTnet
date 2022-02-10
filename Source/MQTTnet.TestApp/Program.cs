@@ -3,16 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Diagnostics;
-using MQTTnet.Server;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client;
-using MQTTnet.Implementations;
 
 namespace MQTTnet.TestApp
 {
@@ -20,8 +13,6 @@ namespace MQTTnet.TestApp
     {
         public static void Main()
         {
-            //MqttNetConsoleLogger.ForwardToConsole();
-
             Console.WriteLine($"MQTTnet - TestApp.{TargetFrameworkProvider.TargetFramework}");
             Console.WriteLine("1 = Start client");
             Console.WriteLine("2 = Start server");
@@ -94,68 +85,6 @@ namespace MQTTnet.TestApp
             }
 
             Thread.Sleep(Timeout.Infinite);
-        }
-
-        static int _count;
-
-        static async Task ClientTestWithHandlers()
-        {
-            //private static int _count = 0;
-
-            var factory = new MqttFactory();
-            var mqttClient = factory.CreateMqttClient();
-
-            var options = new MqttClientOptionsBuilder()
-                .WithClientId("mqttnetspeed")
-                .WithTcpServer("#serveraddress#")
-                .WithCredentials("#username#", "#password#")
-                .WithCleanSession()
-                .Build();
-            
-            mqttClient.ApplicationMessageReceivedAsync += e =>    // version 3.0.0+
-            {
-                Interlocked.Increment(ref _count);
-                return PlatformAbstractionLayer.CompletedTask;
-            };
-            
-            mqttClient.ConnectedAsync += async e =>               // version 3.0.0+
-            {
-                Console.WriteLine("### CONNECTED WITH SERVER ###");
-                await mqttClient.SubscribeAsync("topic/+", MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce);
-                Console.WriteLine("### SUBSCRIBED ###");
-            };
-
-            await mqttClient.ConnectAsync(options);
-
-            while (true)
-            {
-                Console.WriteLine($"{Interlocked.Exchange(ref _count, 0)}/s");
-                await Task.Delay(TimeSpan.FromSeconds(1));
-            }
-
-        }
-    }
-    
-    public class WikiCode
-    {
-        public void Code()
-        {
-            //Validate certificate.
-            var options = new MqttClientOptionsBuilder()
-                .WithTls(new MqttClientOptionsBuilderTlsParameters
-                {
-                    CertificateValidationHandler = context =>
-                        {
-                            // TODO: Check conditions of certificate by using above context.
-                            if (context.SslPolicyErrors == SslPolicyErrors.None)
-                            {
-                                return true;
-                            }
-
-                            return false;
-                        }
-                })
-                .Build();
         }
     }
 }

@@ -8,7 +8,7 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet.Internal
 {
-    public sealed class AsyncEventInvocator<TEventArgs>
+    public readonly struct AsyncEventInvocator<TEventArgs>
     {
         readonly Action<TEventArgs> _handler;
         readonly Func<TEventArgs, Task> _asyncHandler;

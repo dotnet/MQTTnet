@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
@@ -11,15 +10,14 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5
 {
-    public class MqttV500PacketDecoder
+    public sealed class MqttV500PacketDecoder
     {
-        static readonly MqttPingReqPacket PingReqPacket = new MqttPingReqPacket();
-
-        static readonly MqttPingRespPacket PingRespPacket = new MqttPingRespPacket();
-
         public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
-            if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
+            if (receivedMqttPacket.TotalLength == 0)
+            {
+                return null;
+            }
 
             var controlPacketType = receivedMqttPacket.FixedHeader >> 4;
             if (controlPacketType < 1)
@@ -453,12 +451,12 @@ namespace MQTTnet.Formatter.V5
 
         static MqttBasePacket DecodePingReqPacket()
         {
-            return PingReqPacket;
+            return MqttPingReqPacket.Instance;
         }
 
         static MqttBasePacket DecodePingRespPacket()
         {
-            return PingRespPacket;
+            return MqttPingRespPacket.Instance;
         }
 
         static MqttBasePacket DecodePublishPacket(byte header, IMqttPacketBodyReader body)

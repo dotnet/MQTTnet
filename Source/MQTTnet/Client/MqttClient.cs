@@ -116,8 +116,12 @@ namespace MQTTnet.Client
             try
             {
                 Options = options;
-                await _connectingEvent.InvokeAsync(() => new MqttClientConnectingEventArgs(options));
-                
+
+                if (_connectingEvent.HasHandlers)
+                {
+                    await _connectingEvent.InvokeAsync(new MqttClientConnectingEventArgs(options));
+                }
+
                 _packetIdentifierProvider.Reset();
                 _packetDispatcher.CancelAll();
 
@@ -133,6 +137,7 @@ namespace MQTTnet.Client
                     await adapter.ConnectAsync(options.CommunicationTimeout, effectiveCancellationToken.Token).ConfigureAwait(false);
                     _logger.Verbose("Connection with server established.");
 
+                    _publishPacketReceiverQueue?.Dispose();
                     _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
                     _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
 
@@ -159,8 +164,11 @@ namespace MQTTnet.Client
 
                 _logger.Info("Connected.");
 
-                var eventArgs = new MqttClientConnectedEventArgs(connectResult);
-               await _connectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                if (_connectedEvent.HasHandlers)
+                {
+                    var eventArgs = new MqttClientConnectedEventArgs(connectResult);
+                    await _connectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                }
 
                 return connectResult;
             }
@@ -561,7 +569,17 @@ namespace MQTTnet.Client
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var packet = await _adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+                    MqttBasePacket packet;
+                    var packetTask = _adapter.ReceivePacketAsync(cancellationToken);
+
+                    if (packetTask.IsCompleted)
+                    {
+                        packet = packetTask.Result;
+                    }
+                    else
+                    {
+                        packet = await packetTask.ConfigureAwait(false);
+                    }
 
                     if (cancellationToken.IsCancellationRequested)
                     {

@@ -148,8 +148,18 @@ namespace MQTTnet.Adapter
             {
                 _packetInspectorHandler?.BeginReceivePacket();
 
-                var receivedPacket = await ReceiveAsync(cancellationToken).ConfigureAwait(false);
-                if (receivedPacket == null || cancellationToken.IsCancellationRequested)
+                ReceivedMqttPacket receivedPacket;
+                var receivedPacketTask = ReceiveAsync(cancellationToken);
+                if (receivedPacketTask.IsCompleted)
+                {
+                    receivedPacket = receivedPacketTask.Result;
+                }
+                else
+                {
+                    receivedPacket = await receivedPacketTask.ConfigureAwait(false);
+                }
+                
+                if (receivedPacket.TotalLength == 0 || cancellationToken.IsCancellationRequested)
                 {
                     return null;
                 }
@@ -211,19 +221,19 @@ namespace MQTTnet.Adapter
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                return null;
+                return ReceivedMqttPacket.Empty;
             }
 
             var readFixedHeaderResult = await ReadFixedHeaderAsync(cancellationToken).ConfigureAwait(false);
 
             if (cancellationToken.IsCancellationRequested)
             {
-                return null;
+                return ReceivedMqttPacket.Empty;
             }
 
             if (readFixedHeaderResult.ConnectionClosed)
             {
-                return null;
+                return ReceivedMqttPacket.Empty;
             }
 
             try
@@ -254,12 +264,12 @@ namespace MQTTnet.Adapter
 
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        return null;
+                        return ReceivedMqttPacket.Empty;;
                     }
 
                     if (readBytes == 0)
                     {
-                        return null;
+                        return ReceivedMqttPacket.Empty;
                     }
 
                     bodyOffset += readBytes;

@@ -13,7 +13,8 @@ namespace MQTTnet.Benchmarks
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine($"MQTTnet - BenchmarkApp.{TargetFrameworkProvider.TargetFramework}");
+            Console.WriteLine($"MQTTnet - Benchmarks ({TargetFrameworkProvider.TargetFramework})");
+            Console.WriteLine("--------------------------------------------------------");
             Console.WriteLine("1 = MessageProcessingBenchmark");
             Console.WriteLine("2 = SerializerBenchmark");
             Console.WriteLine("3 = LoggerBenchmark");
@@ -23,6 +24,8 @@ namespace MQTTnet.Benchmarks
             Console.WriteLine("7 = TcpPipesBenchmark");
             Console.WriteLine("8 = MessageProcessingMqttConnectionContextBenchmark");
             Console.WriteLine("9 = ServerProcessingBenchmark");
+            Console.WriteLine("a = MqttPacketWriterBenchmark");
+            Console.WriteLine("b = RoundtripBenchmark");
 
             var pressedKey = Console.ReadKey(true);
             switch (pressedKey.KeyChar)
@@ -53,6 +56,12 @@ namespace MQTTnet.Benchmarks
                     break;
                 case '9':
                     BenchmarkRunner.Run<ServerProcessingBenchmark>();
+                    break;
+                case 'a':
+                    BenchmarkRunner.Run<MqttPacketWriterBenchmark>();
+                    break;
+                case 'b':
+                    BenchmarkRunner.Run<RoundtripProcessingBenchmark>();
                     break;
             }
 

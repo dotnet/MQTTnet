@@ -12,26 +12,35 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttPubAckPacketFactory
     {
-        public MqttPubAckPacket Create(MqttPublishPacket publishPacket, PublishResponse applicationMessageResponse)
+        public MqttPubAckPacket Create(MqttPublishPacket publishPacket, InterceptingPublishEventArgs interceptingPublishEventArgs)
         {
-            if (applicationMessageResponse == null) throw new ArgumentNullException(nameof(applicationMessageResponse));
-
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+            if (publishPacket == null)
+            {
+                throw new ArgumentNullException(nameof(publishPacket));
+            }
 
             var pubAckPacket = new MqttPubAckPacket
             {
                 PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubAckReasonCode) (int) applicationMessageResponse.ReasonCode,
-                ReasonString = applicationMessageResponse.ReasonString,
-                UserProperties = applicationMessageResponse.UserProperties
+                ReasonCode = MqttPubAckReasonCode.Success
             };
 
+            if (interceptingPublishEventArgs != null)
+            {
+                pubAckPacket.ReasonCode = (MqttPubAckReasonCode)(int)interceptingPublishEventArgs.Response.ReasonCode;
+                pubAckPacket.ReasonString = interceptingPublishEventArgs.Response.ReasonString;
+                pubAckPacket.UserProperties = interceptingPublishEventArgs.Response.UserProperties;
+            }
+            
             return pubAckPacket;
         }
         
         public MqttPubAckPacket Create(MqttApplicationMessageReceivedEventArgs applicationMessageReceivedEventArgs)
         {
-            if (applicationMessageReceivedEventArgs == null) throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
+            if (applicationMessageReceivedEventArgs == null)
+            {
+                throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
+            }
 
             var pubAckPacket = Create(applicationMessageReceivedEventArgs.PublishPacket, applicationMessageReceivedEventArgs.ReasonCode);
             pubAckPacket.UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties;

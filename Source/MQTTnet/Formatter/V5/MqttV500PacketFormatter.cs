@@ -27,8 +27,6 @@ namespace MQTTnet.Formatter.V5
 
         public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
-            if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
-
             return _decoder.Decode(receivedMqttPacket);
         }
         

@@ -67,8 +67,11 @@ namespace MQTTnet.Formatter.V3
 
         public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
-            if (receivedMqttPacket == null) throw new ArgumentNullException(nameof(receivedMqttPacket));
-
+            if (receivedMqttPacket.TotalLength == 0)
+            {
+                return null;
+            }
+            
             var controlPacketType = receivedMqttPacket.FixedHeader >> 4;
             if (controlPacketType < 1 || controlPacketType > 14)
             {

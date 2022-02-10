@@ -7,8 +7,10 @@ using MQTTnet.Formatter;
 
 namespace MQTTnet.Adapter
 {
-    public sealed class ReceivedMqttPacket
+    public readonly struct ReceivedMqttPacket
     {
+        public static readonly ReceivedMqttPacket Empty = new ReceivedMqttPacket();
+        
         public ReceivedMqttPacket(byte fixedHeader, IMqttPacketBodyReader bodyReader, int totalLength)
         {
             FixedHeader = fixedHeader;

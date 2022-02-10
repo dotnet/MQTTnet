@@ -20,8 +20,8 @@ namespace MQTTnet.Tests.Client
                 .WithConnectionUri("mqtt://user:password@127.0.0.1")
                 .Build();
             
-            Assert.AreEqual("user", options.Credentials.Username);
-            Assert.IsTrue(Encoding.UTF8.GetBytes("password").SequenceEqual(options.Credentials.Password));
+            Assert.AreEqual("user", options.Credentials.GetUserName(null));
+            Assert.IsTrue(Encoding.UTF8.GetBytes("password").SequenceEqual(options.Credentials.GetPassword(null)));
         }
     }
 }

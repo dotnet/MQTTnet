@@ -181,19 +181,25 @@ namespace MQTTnet.Server
                     {
                         return;
                     }
+
+                    var processPacket = true;
                     
-                    var interceptingPacketEventArgs = new InterceptingPacketEventArgs
+                    if (_eventContainer.InterceptingInboundPacketEvent.HasHandlers)
                     {
-                        ClientId = Id,
-                        Endpoint = Endpoint,
-                        Packet = packet,
-                        CancellationToken = cancellationToken
-                    };
+                        var interceptingPacketEventArgs = new InterceptingPacketEventArgs
+                        {
+                            ClientId = Id,
+                            Endpoint = Endpoint,
+                            Packet = packet,
+                            CancellationToken = cancellationToken
+                        };
                     
-                    await _eventContainer.InterceptingInboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
-                    packet = interceptingPacketEventArgs.Packet;
+                        await _eventContainer.InterceptingInboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
+                        packet = interceptingPacketEventArgs.Packet;
+                        processPacket = interceptingPacketEventArgs.ProcessPacket;
+                    }
                     
-                    if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
+                    if (!processPacket || packet == null)
                     {
                         // Restart the receiving process to get the next packet ignoring the current one..
                         continue;
@@ -362,10 +368,13 @@ namespace MQTTnet.Server
                 return;
             }
 
-            foreach (var retainedApplicationMessage in subscribeResult.RetainedApplicationMessages)
+            if (subscribeResult.RetainedApplicationMessages != null)
             {
-                var publishPacket = _packetFactories.Publish.Create(retainedApplicationMessage.ApplicationMessage);
-                Session.EnqueuePacket(new MqttPacketBusItem(publishPacket));
+                foreach (var retainedApplicationMessage in subscribeResult.RetainedApplicationMessages)
+                {
+                    var publishPacket = _packetFactories.Publish.Create(retainedApplicationMessage.ApplicationMessage);
+                    Session.EnqueuePacket(new MqttPacketBusItem(publishPacket));
+                }
             }
         }
 
@@ -387,19 +396,26 @@ namespace MQTTnet.Server
         {
             HandleTopicAlias(publishPacket);
 
+            InterceptingPublishEventArgs interceptingPublishEventArgs = null;
             var applicationMessage = _applicationMessageFactory.Create(publishPacket);
-
-            await _applicationMessageInterceptorInvoker.Invoke(applicationMessage, cancellationToken).ConfigureAwait(false);
-
-            applicationMessage = _applicationMessageInterceptorInvoker.ApplicationMessage;
+            var closeConnection = false;
+            var processPublish = true;
             
-            if (_applicationMessageInterceptorInvoker.CloseConnection)
+            if (_eventContainer.InterceptingPublishEvent.HasHandlers)
+            {
+                interceptingPublishEventArgs = await _applicationMessageInterceptorInvoker.Invoke(applicationMessage, cancellationToken).ConfigureAwait(false);
+                applicationMessage = interceptingPublishEventArgs.ApplicationMessage;
+                closeConnection = interceptingPublishEventArgs.CloseConnection;
+                processPublish = interceptingPublishEventArgs.ProcessPublish;
+            }
+
+            if (closeConnection)
             {
                 await StopAsync(MqttDisconnectReasonCode.UnspecifiedError);
                 return;
             }
 
-            if (_applicationMessageInterceptorInvoker.ProcessPublish)
+            if (processPublish && applicationMessage != null)
             {
                 await _sessionsManager.DispatchPublishPacket(Id, applicationMessage).ConfigureAwait(false);    
             }
@@ -413,13 +429,13 @@ namespace MQTTnet.Server
                 }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                 {
-                    var pubAckPacket = _packetFactories.PubAck.Create(publishPacket, _applicationMessageInterceptorInvoker.Response);
+                    var pubAckPacket = _packetFactories.PubAck.Create(publishPacket, interceptingPublishEventArgs);
                     Session.EnqueuePacket(new MqttPacketBusItem(pubAckPacket));
                     break;
                 }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                 {
-                    var pubRecPacket = _packetFactories.PubRec.Create(publishPacket, _applicationMessageInterceptorInvoker.Response);
+                    var pubRecPacket = _packetFactories.PubRec.Create(publishPacket, interceptingPublishEventArgs);
                     Session.EnqueuePacket(new MqttPacketBusItem(pubRecPacket));
                     break;
                 }

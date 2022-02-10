@@ -9,15 +9,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
+        <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
         <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
         <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj"/>
-        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj"/>
-        <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj"/>
+        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
+        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj" />
+        <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
     </ItemGroup>
 
     <ItemGroup>

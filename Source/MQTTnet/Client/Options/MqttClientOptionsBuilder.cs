@@ -12,274 +12,15 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
 {
-    public class MqttClientOptionsBuilder
+    public sealed class MqttClientOptionsBuilder
     {
         readonly MqttClientOptions _options = new MqttClientOptions();
-
-        MqttClientTcpOptions _tcpOptions;
-        MqttClientWebSocketOptions _webSocketOptions;
-        MqttClientOptionsBuilderTlsParameters _tlsParameters;
         MqttClientWebSocketProxyOptions _proxyOptions;
 
-        public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion value)
-        {
-            if (value == MqttProtocolVersion.Unknown)
-            {
-                throw new ArgumentException("Protocol version is invalid.");
-            }
+        MqttClientTcpOptions _tcpOptions;
+        MqttClientOptionsBuilderTlsParameters _tlsParameters;
+        MqttClientWebSocketOptions _webSocketOptions;
 
-            _options.ProtocolVersion = value;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithCommunicationTimeout(TimeSpan value)
-        {
-            _options.CommunicationTimeout = value;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithCleanSession(bool value = true)
-        {
-            _options.CleanSession = value;
-            return this;
-        }
-        
-        public MqttClientOptionsBuilder WithNoKeepAlive()
-        {
-            return WithKeepAlivePeriod(TimeSpan.Zero);
-        }
-
-        public MqttClientOptionsBuilder WithKeepAlivePeriod(TimeSpan value)
-        {
-            _options.KeepAlivePeriod = value;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithClientId(string value)
-        {
-            _options.ClientId = value;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithWillTopic(string willTopic)
-        {
-            _options.WillTopic = willTopic;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithWillPayload(byte[] willPayload)
-        {
-            _options.WillPayload = willPayload;
-            return this;
-        }
-        
-        public MqttClientOptionsBuilder WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel willQualityOfServiceLevel)
-        {
-            _options.WillQualityOfServiceLevel = willQualityOfServiceLevel;
-            return this;
-        }
-        
-        public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data)
-        {
-            _options.AuthenticationMethod = method;
-            _options.AuthenticationData = data;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithWillDelayInterval(uint willDelayInterval)
-        {
-            _options.WillDelayInterval = willDelayInterval;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithTopicAliasMaximum(ushort topicAliasMaximum)
-        {
-            _options.TopicAliasMaximum = topicAliasMaximum;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithMaximumPacketSize(uint maximumPacketSize)
-        {
-            _options.MaximumPacketSize = maximumPacketSize;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithReceiveMaximum(ushort receiveMaximum)
-        {
-            _options.ReceiveMaximum = receiveMaximum;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithRequestProblemInformation(bool requestProblemInformation = true)
-        {
-            _options.RequestProblemInformation = requestProblemInformation;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithRequestResponseInformation(bool requestResponseInformation = true)
-        {
-            _options.RequestResponseInformation = requestResponseInformation;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithSessionExpiryInterval(uint sessionExpiryInterval)
-        {
-            _options.SessionExpiryInterval = sessionExpiryInterval;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithUserProperty(string name, string value)
-        {
-            if (name is null) throw new ArgumentNullException(nameof(name));
-            if (value is null) throw new ArgumentNullException(nameof(value));
-
-            if (_options.UserProperties == null)
-            {
-                _options.UserProperties = new List<MqttUserProperty>();
-            }
-
-            _options.UserProperties.Add(new MqttUserProperty(name, value));
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithCredentials(string username, string password)
-        {
-            byte[] passwordBuffer = null;
-
-            if (password != null)
-            {
-                passwordBuffer = Encoding.UTF8.GetBytes(password);
-            }
-
-            return WithCredentials(username, passwordBuffer);
-        }
-
-        public MqttClientOptionsBuilder WithCredentials(string username, byte[] password)
-        {
-            _options.Credentials = new MqttClientCredentials
-            {
-                Username = username,
-                Password = password
-            };
-
-            return this;
-        }
-        
-        public MqttClientOptionsBuilder WithCredentials(string username)
-        {
-            _options.Credentials = new MqttClientCredentials
-            {
-                Username = username
-            };
-
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithCredentials(IMqttClientCredentials credentials)
-        {
-            _options.Credentials = credentials;
-
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedAuthenticationExchangeHandler handler)
-        {
-            _options.ExtendedAuthenticationExchangeHandler = handler;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithTcpServer(string server, int? port = null)
-        {
-            _tcpOptions = new MqttClientTcpOptions
-            {
-                Server = server,
-                Port = port
-            };
-
-            return this;
-        }
-
-        // TODO: Consider creating _MqttClientTcpOptionsBuilder_ as overload.
-        public MqttClientOptionsBuilder WithTcpServer(Action<MqttClientTcpOptions> optionsBuilder)
-        {
-            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
-
-            _tcpOptions = new MqttClientTcpOptions();
-            optionsBuilder.Invoke(_tcpOptions);
-
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithProxy(string address, string username = null, string password = null, string domain = null, bool bypassOnLocal = false, string[] bypassList = null)
-        {
-            _proxyOptions = new MqttClientWebSocketProxyOptions
-            {
-                Address = address,
-                Username = username,
-                Password = password,
-                Domain = domain,
-                BypassOnLocal = bypassOnLocal,
-                BypassList = bypassList
-            };
-
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithProxy(Action<MqttClientWebSocketProxyOptions> optionsBuilder)
-        {
-            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
-
-            _proxyOptions = new MqttClientWebSocketProxyOptions();
-            optionsBuilder(_proxyOptions);
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithWebSocketServer(string uri, MqttClientOptionsBuilderWebSocketParameters parameters = null)
-        {
-            _webSocketOptions = new MqttClientWebSocketOptions
-            {
-                Uri = uri,
-                RequestHeaders = parameters?.RequestHeaders,
-                CookieContainer = parameters?.CookieContainer
-            };
-
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithWebSocketServer(Action<MqttClientWebSocketOptions> optionsBuilder)
-        {
-            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
-
-            _webSocketOptions = new MqttClientWebSocketOptions();
-            optionsBuilder.Invoke(_webSocketOptions);
-
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithTls(MqttClientOptionsBuilderTlsParameters parameters)
-        {
-            _tlsParameters = parameters;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithTls()
-        {
-            return WithTls(new MqttClientOptionsBuilderTlsParameters { UseTls = true });
-        }
-
-        public MqttClientOptionsBuilder WithTls(Action<MqttClientOptionsBuilderTlsParameters> optionsBuilder)
-        {
-            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
-
-            _tlsParameters = new MqttClientOptionsBuilderTlsParameters
-            {
-                UseTls = true
-            };
-            
-            optionsBuilder(_tlsParameters);
-            return this;
-        }
-        
         public MqttClientOptions Build()
         {
             if (_tcpOptions == null && _webSocketOptions == null)
@@ -304,7 +45,7 @@ namespace MQTTnet.Client
 #else
                         Certificates = _tlsParameters.Certificates?.ToList(),
 #endif
-                        
+
 #if NETCOREAPP3_1 || NET5_0_OR_GREATER
                         ApplicationProtocols = _tlsParameters.ApplicationProtocols,
 #endif
@@ -334,6 +75,317 @@ namespace MQTTnet.Client
             _options.ChannelOptions = (IMqttClientChannelOptions)_tcpOptions ?? _webSocketOptions;
 
             return _options;
+        }
+
+        public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data)
+        {
+            _options.AuthenticationMethod = method;
+            _options.AuthenticationData = data;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithCleanSession(bool value = true)
+        {
+            _options.CleanSession = value;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithClientId(string value)
+        {
+            _options.ClientId = value;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithCommunicationTimeout(TimeSpan value)
+        {
+            _options.CommunicationTimeout = value;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithConnectionUri(Uri uri)
+        {
+            if (uri == null)
+            {
+                throw new ArgumentNullException(nameof(uri));
+            }
+
+            var port = uri.IsDefaultPort ? null : (int?)uri.Port;
+            switch (uri.Scheme.ToLower())
+            {
+                case "tcp":
+                case "mqtt":
+                    WithTcpServer(uri.Host, port);
+                    break;
+
+                case "mqtts":
+                    WithTcpServer(uri.Host, port).WithTls();
+                    break;
+
+                case "ws":
+                case "wss":
+                    WithWebSocketServer(uri.ToString());
+                    break;
+
+                default:
+                    throw new ArgumentException("Unexpected scheme in uri.");
+            }
+
+            if (!string.IsNullOrEmpty(uri.UserInfo))
+            {
+                var userInfo = uri.UserInfo.Split(':');
+                var username = userInfo[0];
+                var password = userInfo.Length > 1 ? userInfo[1] : "";
+                WithCredentials(username, password);
+            }
+
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithConnectionUri(string uri)
+        {
+            return WithConnectionUri(new Uri(uri, UriKind.Absolute));
+        }
+
+        public MqttClientOptionsBuilder WithCredentials(string username, string password)
+        {
+            byte[] passwordBuffer = null;
+
+            if (password != null)
+            {
+                passwordBuffer = Encoding.UTF8.GetBytes(password);
+            }
+
+            return WithCredentials(username, passwordBuffer);
+        }
+
+        public MqttClientOptionsBuilder WithCredentials(string username, byte[] password = null)
+        {
+            return WithCredentials(new MqttClientCredentials(username, password));
+        }
+
+        public MqttClientOptionsBuilder WithCredentials(IMqttClientCredentialsProvider credentials)
+        {
+            _options.Credentials = credentials;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedAuthenticationExchangeHandler handler)
+        {
+            _options.ExtendedAuthenticationExchangeHandler = handler;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithKeepAlivePeriod(TimeSpan value)
+        {
+            _options.KeepAlivePeriod = value;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithMaximumPacketSize(uint maximumPacketSize)
+        {
+            _options.MaximumPacketSize = maximumPacketSize;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithNoKeepAlive()
+        {
+            return WithKeepAlivePeriod(TimeSpan.Zero);
+        }
+
+        public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion value)
+        {
+            if (value == MqttProtocolVersion.Unknown)
+            {
+                throw new ArgumentException("Protocol version is invalid.");
+            }
+
+            _options.ProtocolVersion = value;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithProxy(
+            string address,
+            string username = null,
+            string password = null,
+            string domain = null,
+            bool bypassOnLocal = false,
+            string[] bypassList = null)
+        {
+            _proxyOptions = new MqttClientWebSocketProxyOptions
+            {
+                Address = address,
+                Username = username,
+                Password = password,
+                Domain = domain,
+                BypassOnLocal = bypassOnLocal,
+                BypassList = bypassList
+            };
+
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithProxy(Action<MqttClientWebSocketProxyOptions> optionsBuilder)
+        {
+            if (optionsBuilder == null)
+            {
+                throw new ArgumentNullException(nameof(optionsBuilder));
+            }
+
+            _proxyOptions = new MqttClientWebSocketProxyOptions();
+            optionsBuilder(_proxyOptions);
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithReceiveMaximum(ushort receiveMaximum)
+        {
+            _options.ReceiveMaximum = receiveMaximum;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithRequestProblemInformation(bool requestProblemInformation = true)
+        {
+            _options.RequestProblemInformation = requestProblemInformation;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithRequestResponseInformation(bool requestResponseInformation = true)
+        {
+            _options.RequestResponseInformation = requestResponseInformation;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithSessionExpiryInterval(uint sessionExpiryInterval)
+        {
+            _options.SessionExpiryInterval = sessionExpiryInterval;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithTcpServer(string server, int? port = null)
+        {
+            _tcpOptions = new MqttClientTcpOptions
+            {
+                Server = server,
+                Port = port
+            };
+
+            return this;
+        }
+
+        // TODO: Consider creating _MqttClientTcpOptionsBuilder_ as overload.
+        public MqttClientOptionsBuilder WithTcpServer(Action<MqttClientTcpOptions> optionsBuilder)
+        {
+            if (optionsBuilder == null)
+            {
+                throw new ArgumentNullException(nameof(optionsBuilder));
+            }
+
+            _tcpOptions = new MqttClientTcpOptions();
+            optionsBuilder.Invoke(_tcpOptions);
+
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithTls(MqttClientOptionsBuilderTlsParameters parameters)
+        {
+            _tlsParameters = parameters;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithTls()
+        {
+            return WithTls(new MqttClientOptionsBuilderTlsParameters { UseTls = true });
+        }
+
+        public MqttClientOptionsBuilder WithTls(Action<MqttClientOptionsBuilderTlsParameters> optionsBuilder)
+        {
+            if (optionsBuilder == null)
+            {
+                throw new ArgumentNullException(nameof(optionsBuilder));
+            }
+
+            _tlsParameters = new MqttClientOptionsBuilderTlsParameters
+            {
+                UseTls = true
+            };
+
+            optionsBuilder(_tlsParameters);
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithTopicAliasMaximum(ushort topicAliasMaximum)
+        {
+            _options.TopicAliasMaximum = topicAliasMaximum;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithUserProperty(string name, string value)
+        {
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            if (_options.UserProperties == null)
+            {
+                _options.UserProperties = new List<MqttUserProperty>();
+            }
+
+            _options.UserProperties.Add(new MqttUserProperty(name, value));
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWebSocketServer(string uri, MqttClientOptionsBuilderWebSocketParameters parameters = null)
+        {
+            _webSocketOptions = new MqttClientWebSocketOptions
+            {
+                Uri = uri,
+                RequestHeaders = parameters?.RequestHeaders,
+                CookieContainer = parameters?.CookieContainer
+            };
+
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWebSocketServer(Action<MqttClientWebSocketOptions> optionsBuilder)
+        {
+            if (optionsBuilder == null)
+            {
+                throw new ArgumentNullException(nameof(optionsBuilder));
+            }
+
+            _webSocketOptions = new MqttClientWebSocketOptions();
+            optionsBuilder.Invoke(_webSocketOptions);
+
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWillDelayInterval(uint willDelayInterval)
+        {
+            _options.WillDelayInterval = willDelayInterval;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWillPayload(byte[] willPayload)
+        {
+            _options.WillPayload = willPayload;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel willQualityOfServiceLevel)
+        {
+            _options.WillQualityOfServiceLevel = willQualityOfServiceLevel;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWillTopic(string willTopic)
+        {
+            _options.WillTopic = willTopic;
+            return this;
         }
     }
 }

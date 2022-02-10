@@ -65,11 +65,17 @@ namespace MQTTnet.TestApp
         }
 
 
-        public class RandomPassword : IMqttClientCredentials
+        public sealed class RandomPassword : IMqttClientCredentialsProvider
         {
-            public byte[] Password => Guid.NewGuid().ToByteArray();
+            public string GetUserName(MqttClientOptions clientOptions)
+            {
+                return "the_static_user";
+            }
 
-            public string Username => "the_static_user";
+            public byte[] GetPassword(MqttClientOptions clientOptions)
+            {
+                return Guid.NewGuid().ToByteArray();
+            }
         }
 
         public class ClientRetainedMessageHandler : IManagedMqttClientStorage

@@ -8,7 +8,7 @@ Checkout the new samples (https://github.com/dotnet/MQTTnet/tree/feature/master/
 * [Core] Added support for .NET 6.0.
 * [Core] nuget packages are now created by MSBuild including more information (i.e. commit hash).
 * [Client] The OS will now choose the best TLS version to use. It is no longer fixed to 1.3 etc. (thanks to @patagonaa, #1271).
-* [Client] Added support for _ServerKeepAlive_.
+* [Client] Added support for _ServerKeepAlive_ (MQTTv5).
 * [Client] Exposed user properties and reason string in subscribe result.
 * [Client] Exposed user properties and reason string in unsubscribe result.
 * [Client] Migrated application message handler to a regular .NET event (BREAKING CHANGE!).

@@ -1,4 +1,8 @@
-﻿using MQTTnet.Adapter;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using System;
@@ -9,7 +13,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
 {
     public sealed class WebSocket4NetMqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, IMqttPacketInspectorHandler packetInspectorHandler, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -20,7 +24,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
                     return new MqttChannelAdapter(
                         new MqttTcpChannel(options),
                         new MqttPacketFormatterAdapter(options.ProtocolVersion),
-                        options.PacketInspector,
+                        packetInspectorHandler,
                         logger);
                 }
 
@@ -29,7 +33,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
                     return new MqttChannelAdapter(
                         new WebSocket4NetMqttChannel(options, webSocketOptions),
                         new MqttPacketFormatterAdapter(options.ProtocolVersion), 
-                        options.PacketInspector,
+                        packetInspectorHandler,
                         logger);
                 }
 

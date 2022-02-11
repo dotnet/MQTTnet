@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Threading;
 using MQTTnet.Packets;
@@ -49,7 +53,10 @@ namespace MQTTnet.Server
         
         public void HandleReceivedPacket(MqttBasePacket packet)
         {
-            if (packet == null) throw new ArgumentNullException(nameof(packet));
+            if (packet == null)
+            {
+                throw new ArgumentNullException(nameof(packet));
+            }
             
             // This class is tracking all values from Clients perspective!
             LastPacketSentTimestamp = DateTime.UtcNow;
@@ -69,7 +76,10 @@ namespace MQTTnet.Server
 
         public void HandleSentPacket(MqttBasePacket packet)
         {
-            if (packet == null) throw new ArgumentNullException(nameof(packet));
+            if (packet == null)
+            {
+                throw new ArgumentNullException(nameof(packet));
+            }
             
             // This class is tracking all values from Clients perspective!
             LastPacketReceivedTimestamp = DateTime.UtcNow;

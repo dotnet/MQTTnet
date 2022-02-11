@@ -1,3 +1,8 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Security.Authentication;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Samples.Helpers;
@@ -32,6 +37,13 @@ public static class Client_Connection_Samples
             Console.WriteLine("The MQTT client is connected.");
 
             response.DumpToConsole();
+            
+            // Send a clean disconnect to the server by calling _DisconnectAsync_. Without this the TCP connection
+            // gets dropped and the server will handle this as a non clean disconnect (see MQTT spec for details).
+            var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
+                .Build();
+            
+            await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
         }
     }
 
@@ -58,6 +70,61 @@ public static class Client_Connection_Samples
             Console.WriteLine("The MQTT client is connected.");
 
             response.DumpToConsole();
+        }
+    }
+    
+    public static async Task Connect_Client_With_TLS_Encryption()
+    {
+        /*
+         * This sample creates a simple MQTT client and connects to a public broker with enabled TLS encryption.
+         * 
+         * This is a modified version of the sample _Connect_Client_! See other sample for more details.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("test.mosquitto.org", 8883)
+                .WithTls(o =>
+                {
+                    o.SslProtocol = SslProtocols.Tls12; // The default value is determined by the OS. Set manually to force version.
+                })
+                .Build();
+
+            // In MQTTv5 the response contains much more information.
+            var response = await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            Console.WriteLine("The MQTT client is connected.");
+
+            response.DumpToConsole();
+        }
+    }
+    
+    public static async Task Connect_Client_Using_TLS_1_2()
+    {
+        /*
+         * This sample creates a simple MQTT client and connects to a public broker using TLS 1.2 encryption.
+         * 
+         * This is a modified version of the sample _Connect_Client_! See other sample for more details.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("mqtt.fluux.io")
+                .WithTls(o =>
+                {
+                    o.SslProtocol = SslProtocols.Tls12;
+                })
+                .Build();
+            
+            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            Console.WriteLine("The MQTT client is connected.");
         }
     }
 
@@ -130,7 +197,8 @@ public static class Client_Connection_Samples
             {
                 if (e.ClientWasConnected)
                 {
-                    await mqttClient.ReconnectAsync();
+                    // Use the current options as the new options.
+                    await mqttClient.ConnectAsync(mqttClient.Options);
                 }
             };
 

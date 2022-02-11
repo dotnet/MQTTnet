@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,12 +23,12 @@ namespace MQTTnet.Extensions.WebSocket4Net
     {
         readonly BlockingCollection<byte> _receiveBuffer = new BlockingCollection<byte>();
 
-        readonly IMqttClientOptions _clientOptions;
+        readonly MqttClientOptions _clientOptions;
         readonly MqttClientWebSocketOptions _webSocketOptions;
 
         WebSocket _webSocket;
 
-        public WebSocket4NetMqttChannel(IMqttClientOptions clientOptions, MqttClientWebSocketOptions webSocketOptions)
+        public WebSocket4NetMqttChannel(MqttClientOptions clientOptions, MqttClientWebSocketOptions webSocketOptions)
         {
             _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
             _webSocketOptions = webSocketOptions ?? throw new ArgumentNullException(nameof(webSocketOptions));

@@ -1,4 +1,8 @@
-﻿using System.Net;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Net;
 
 namespace MQTTnet.Server
 {
@@ -8,7 +12,7 @@ namespace MQTTnet.Server
 
         public int Port { get; set; }
 
-        public int ConnectionBacklog { get; set; } = 10;
+        public int ConnectionBacklog { get; set; } = 100;
 
         public bool NoDelay { get; set; } = true;
 

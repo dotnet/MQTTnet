@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Generic;
 using MQTTnet.Packets;
 
@@ -32,6 +36,7 @@ namespace MQTTnet.Server
         /// Gets the last will message.
         /// In MQTT, you use the last will message feature to notify other clients about an ungracefully disconnected client.
         /// </summary>
+        // TODO: Use single properties. No entire will message.
         MqttApplicationMessage WillMessage { get; set; }
 
         /// <summary>

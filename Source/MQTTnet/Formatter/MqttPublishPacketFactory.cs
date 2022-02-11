@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 
@@ -19,27 +23,16 @@ namespace MQTTnet.Formatter
                 QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
                 Retain = applicationMessage.Retain,
                 Dup = applicationMessage.Dup,
-                Properties =
-                {
-                    ContentType = applicationMessage.ContentType,
-                    CorrelationData = applicationMessage.CorrelationData,
-                    MessageExpiryInterval = applicationMessage.MessageExpiryInterval,
-                    PayloadFormatIndicator = applicationMessage.PayloadFormatIndicator,
-                    ResponseTopic = applicationMessage.ResponseTopic,
-                    TopicAlias = applicationMessage.TopicAlias
-                }
+                ContentType = applicationMessage.ContentType,
+                CorrelationData = applicationMessage.CorrelationData,
+                MessageExpiryInterval = applicationMessage.MessageExpiryInterval,
+                PayloadFormatIndicator = applicationMessage.PayloadFormatIndicator,
+                ResponseTopic = applicationMessage.ResponseTopic,
+                TopicAlias = applicationMessage.TopicAlias,
+                SubscriptionIdentifiers = applicationMessage.SubscriptionIdentifiers,
+                UserProperties = applicationMessage.UserProperties
             };
             
-            if (applicationMessage.SubscriptionIdentifiers != null)
-            {
-                packet.Properties.SubscriptionIdentifiers.AddRange(applicationMessage.SubscriptionIdentifiers);    
-            }
-            
-            if (applicationMessage.UserProperties != null)
-            {
-                packet.Properties.UserProperties.AddRange(applicationMessage.UserProperties);
-            }
-
             return packet;
         }
 
@@ -58,17 +51,13 @@ namespace MQTTnet.Formatter
                 Payload = connectPacket.WillMessage,
                 QualityOfServiceLevel = connectPacket.WillQoS,
                 Retain = connectPacket.WillRetain,
-                Properties =
-                {
-                    ContentType = connectPacket.WillProperties.ContentType,
-                    CorrelationData = connectPacket.WillProperties.CorrelationData,
-                    MessageExpiryInterval = connectPacket.WillProperties.MessageExpiryInterval,
-                    PayloadFormatIndicator = connectPacket.WillProperties.PayloadFormatIndicator,
-                    ResponseTopic = connectPacket.WillProperties.ResponseTopic
-                }
+                ContentType = connectPacket.WillContentType,
+                CorrelationData = connectPacket.WillCorrelationData,
+                MessageExpiryInterval = connectPacket.WillMessageExpiryInterval,
+                PayloadFormatIndicator = connectPacket.WillPayloadFormatIndicator,
+                ResponseTopic = connectPacket.WillResponseTopic,
+                UserProperties = connectPacket.WillUserProperties
             };
-            
-            packet.Properties.UserProperties.AddRange(connectPacket.WillProperties.UserProperties);
 
             return packet;
         }

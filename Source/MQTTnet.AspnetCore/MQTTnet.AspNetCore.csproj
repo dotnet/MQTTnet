@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;netcoreapp2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
@@ -16,7 +16,7 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <Copyright>Christian Kratky 2016-2021</Copyright>
+        <Copyright>Christian Kratky 2016-2022</Copyright>
         <PackageProjectUrl>https://github.com/chkr1011/MQTTnet</PackageProjectUrl>
         <RepositoryUrl>https://github.com/chkr1011/MQTTnet.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
@@ -29,6 +29,7 @@
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReleaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</PackageReleaseNotes>
+        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
@@ -48,7 +49,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -56,15 +57,15 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' or '$(TargetFramework)' == 'net5.0' or '$(TargetFramework)' == 'net6.0' ">
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1' and '$(TargetFramework)' != 'net5.0' and '$(TargetFramework)' != 'net6.0' ">
-        <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.1.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
     </ItemGroup>
 
 </Project>

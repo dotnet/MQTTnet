@@ -1,8 +1,11 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 #if !WINDOWS_UWP
 using MQTTnet.Channel;
 using System;
 using System.IO;
-using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
@@ -16,12 +19,18 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttChannel
     {
-        readonly IMqttClientOptions _clientOptions;
+        readonly MqttClientOptions _clientOptions;
         readonly MqttClientTcpOptions _tcpOptions;
+        readonly Action _disposeAction;
 
         Stream _stream;
 
-        public MqttTcpChannel(IMqttClientOptions clientOptions)
+        public MqttTcpChannel()
+        {
+            _disposeAction = Dispose;
+        }
+
+        public MqttTcpChannel(MqttClientOptions clientOptions) : this()
         {
             _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
             _tcpOptions = (MqttClientTcpOptions) clientOptions.ChannelOptions;
@@ -29,7 +38,7 @@ namespace MQTTnet.Implementations
             IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
         }
 
-        public MqttTcpChannel(Stream stream, string endpoint, X509Certificate2 clientCertificate)
+        public MqttTcpChannel(Stream stream, string endpoint, X509Certificate2 clientCertificate) : this()
         {
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
@@ -150,11 +159,15 @@ namespace MQTTnet.Implementations
                     return 0;
                 }
 
+#if NETCOREAPP3_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                return await stream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+#else
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
-                using (cancellationToken.Register(Dispose))
+                using (cancellationToken.Register(_disposeAction))
                 {
                     return await stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
+#endif
             }
             catch (ObjectDisposedException)
             {
@@ -178,18 +191,22 @@ namespace MQTTnet.Implementations
 
             try
             {
-                // Workaround for: https://github.com/dotnet/corefx/issues/24430
-                using (cancellationToken.Register(Dispose))
+                var stream = _stream;
+
+                if (stream == null)
                 {
-                    var stream = _stream;
+                    throw new MqttCommunicationException("The TCP connection is closed.");
+                }
 
-                    if (stream == null)
-                    {
-                        throw new MqttCommunicationException("The TCP connection is closed.");
-                    }
-
+#if NETCOREAPP3_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                await stream.WriteAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+#else
+                // Workaround for: https://github.com/dotnet/corefx/issues/24430
+                using (cancellationToken.Register(_disposeAction))
+                {
                     await stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
                 }
+#endif
             }
             catch (ObjectDisposedException)
             {
@@ -232,22 +249,10 @@ namespace MQTTnet.Implementations
 
         bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            #region OBSOLETE
-
-#pragma warning disable CS0618 // Type or member is obsolete
-            var certificateValidationCallback = _tcpOptions?.TlsOptions?.CertificateValidationCallback;
-#pragma warning restore CS0618 // Type or member is obsolete
-            if (certificateValidationCallback != null)
-            {
-                return certificateValidationCallback(x509Certificate, chain, sslPolicyErrors, _clientOptions);
-            }
-
-            #endregion
-
             var certificateValidationHandler = _tcpOptions?.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)
             {
-                var context = new MqttClientCertificateValidationCallbackContext
+                var eventArgs = new MqttClientCertificateValidationEventArgs
                 {
                     Certificate = x509Certificate,
                     Chain = chain,
@@ -255,32 +260,10 @@ namespace MQTTnet.Implementations
                     ClientOptions = _tcpOptions
                 };
 
-                return certificateValidationHandler(context);
+                return certificateValidationHandler(eventArgs);
             }
 
-            if (sslPolicyErrors == SslPolicyErrors.None)
-            {
-                return true;
-            }
-
-            if (chain.ChainStatus.Any(c =>
-                c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.OfflineRevocation))
-            {
-                if (_tcpOptions?.TlsOptions?.IgnoreCertificateRevocationErrors != true)
-                {
-                    return false;
-                }
-            }
-
-            if (chain.ChainStatus.Any(c => c.Status == X509ChainStatusFlags.PartialChain))
-            {
-                if (_tcpOptions?.TlsOptions?.IgnoreCertificateChainErrors != true)
-                {
-                    return false;
-                }
-            }
-
-            return _tcpOptions?.TlsOptions?.AllowUntrustedCertificates == true;
+            return sslPolicyErrors == SslPolicyErrors.None;
         }
 
         X509CertificateCollection LoadCertificates()

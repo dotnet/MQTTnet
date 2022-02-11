@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj"/>
+
+        <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
+        <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="wwwroot\"/>
+    </ItemGroup>
+
+</Project>

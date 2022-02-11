@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -8,34 +12,39 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttPubAckPacketFactory
     {
-        public MqttPubAckPacket Create(MqttPublishPacket publishPacket, PublishResponse applicationMessageResponse)
+        public MqttPubAckPacket Create(MqttPublishPacket publishPacket, InterceptingPublishEventArgs interceptingPublishEventArgs)
         {
-            if (applicationMessageResponse == null) throw new ArgumentNullException(nameof(applicationMessageResponse));
-
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+            if (publishPacket == null)
+            {
+                throw new ArgumentNullException(nameof(publishPacket));
+            }
 
             var pubAckPacket = new MqttPubAckPacket
             {
                 PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubAckReasonCode) (int) applicationMessageResponse.ReasonCode,
-                Properties =
-                {
-                    ReasonString = applicationMessageResponse.ReasonString
-                }
+                ReasonCode = MqttPubAckReasonCode.Success
             };
 
-            pubAckPacket.Properties.UserProperties.AddRange(applicationMessageResponse.UserProperties);
+            if (interceptingPublishEventArgs != null)
+            {
+                pubAckPacket.ReasonCode = (MqttPubAckReasonCode)(int)interceptingPublishEventArgs.Response.ReasonCode;
+                pubAckPacket.ReasonString = interceptingPublishEventArgs.Response.ReasonString;
+                pubAckPacket.UserProperties = interceptingPublishEventArgs.Response.UserProperties;
+            }
             
             return pubAckPacket;
         }
         
         public MqttPubAckPacket Create(MqttApplicationMessageReceivedEventArgs applicationMessageReceivedEventArgs)
         {
-            if (applicationMessageReceivedEventArgs == null) throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
+            if (applicationMessageReceivedEventArgs == null)
+            {
+                throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
+            }
 
             var pubAckPacket = Create(applicationMessageReceivedEventArgs.PublishPacket, applicationMessageReceivedEventArgs.ReasonCode);
-            pubAckPacket.Properties.UserProperties.AddRange(applicationMessageReceivedEventArgs.ResponseUserProperties);
-            pubAckPacket.Properties.ReasonString = applicationMessageReceivedEventArgs.ResponseReasonString;
+            pubAckPacket.UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties;
+            pubAckPacket.ReasonString = applicationMessageReceivedEventArgs.ResponseReasonString;
 
             return pubAckPacket;
         }

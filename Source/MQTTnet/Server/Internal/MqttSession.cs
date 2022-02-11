@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,65 +17,83 @@ namespace MQTTnet.Server
 {
     public sealed class MqttSession : IDisposable
     {
+        readonly MqttClientSessionsManager _clientSessionsManager;
         readonly MqttPacketBus _packetBus = new MqttPacketBus();
 
-        readonly Dictionary<ushort, MqttPublishPacket> _unacknowledgedPublishPackets = new Dictionary<ushort, MqttPublishPacket>();
-
         readonly MqttServerOptions _serverOptions;
-        readonly MqttClientSessionsManager _clientSessionsManager;
+
+        readonly Dictionary<ushort, MqttPublishPacket> _unacknowledgedPublishPackets = new Dictionary<ushort, MqttPublishPacket>();
 
         // Bookkeeping to know if this is a subscribing client; lazy intialize later.
         HashSet<string> _subscribedTopics;
 
 
-        public MqttSession(string clientId,
+        public MqttSession(
+            string clientId,
             bool isPersistent,
             IDictionary items,
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
             MqttRetainedMessagesManager retainedMessagesManager,
-            MqttClientSessionsManager clientSessionsManager
-            )
+            MqttClientSessionsManager clientSessionsManager)
         {
             Id = clientId ?? throw new ArgumentNullException(nameof(clientId));
             IsPersistent = isPersistent;
             Items = items ?? throw new ArgumentNullException(nameof(items));
-            
+
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
             
             SubscriptionsManager = new MqttClientSubscriptionsManager(this, eventContainer, retainedMessagesManager, clientSessionsManager);
         }
-        
-        public string Id { get; }
-        
-        /// <summary>
-        /// Session should persist if CleanSession was set to false (Mqtt3) or if SessionExpiryInterval != 0 (Mqtt5)
-        /// </summary>
-        public bool IsPersistent { get; set; }
-
-        public MqttPacketIdentifierProvider PacketIdentifierProvider { get; } = new MqttPacketIdentifierProvider();
 
         public DateTime CreatedTimestamp { get; } = DateTime.UtcNow;
 
-        public MqttConnectPacket LatestConnectPacket { get; set; }
+        public string Id { get; }
 
-        public MqttClientSubscriptionsManager SubscriptionsManager { get; }
+        /// <summary>
+        ///     Session should persist if CleanSession was set to false (Mqtt3) or if SessionExpiryInterval != 0 (Mqtt5)
+        /// </summary>
+        public bool IsPersistent { get; set; }
 
         public IDictionary Items { get; }
 
-        public bool WillMessageSent { get; set; }
+        public MqttConnectPacket LatestConnectPacket { get; set; }
+
+        public MqttPacketIdentifierProvider PacketIdentifierProvider { get; } = new MqttPacketIdentifierProvider();
 
         public long PendingDataPacketsCount => _packetBus.PartitionItemsCount(MqttPacketBusPartition.Data);
+
+        public MqttClientSubscriptionsManager SubscriptionsManager { get; }
+
+        public bool WillMessageSent { get; set; }
 
         public void AcknowledgePublishPacket(ushort packetIdentifier)
         {
             _unacknowledgedPublishPackets.Remove(packetIdentifier);
         }
 
+        public Task DeleteAsync()
+        {
+            return _clientSessionsManager.DeleteSessionAsync(Id);
+        }
+
+        public Task<MqttPacketBusItem> DequeuePacketAsync(CancellationToken cancellationToken)
+        {
+            return _packetBus.DequeueItemAsync(cancellationToken);
+        }
+
+        public void Dispose()
+        {
+            _packetBus?.Dispose();
+        }
+
         public void EnqueuePacket(MqttPacketBusItem packetBusItem)
         {
-            if (packetBusItem == null) throw new ArgumentNullException(nameof(packetBusItem));
+            if (packetBusItem == null)
+            {
+                throw new ArgumentNullException(nameof(packetBusItem));
+            }
 
             if (_packetBus.ItemsCount >= _serverOptions.MaxPendingMessagesPerClient)
             {
@@ -79,6 +101,7 @@ namespace MQTTnet.Server
                 {
                     return;
                 }
+
                 if (_serverOptions.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
                 {
                     _packetBus.DropFirstItem(MqttPacketBusPartition.Data);
@@ -106,16 +129,6 @@ namespace MQTTnet.Server
             }
         }
 
-        public Task<MqttPacketBusItem> DequeuePacketAsync(CancellationToken cancellationToken)
-        {
-            return _packetBus.DequeueItemAsync(cancellationToken);
-        }
-
-        public Task DeleteAsync()
-        {
-            return _clientSessionsManager.DeleteSessionAsync(Id);
-        }
-        
         public void Recover()
         {
             // TODO: Keep the bus and only insert pending items again.
@@ -146,11 +159,5 @@ namespace MQTTnet.Server
         }
 
         public bool HasSubscribedTopics { get { return _subscribedTopics != null && _subscribedTopics.Count > 0; } }
-
-
-        public void Dispose()
-        {
-            _packetBus?.Dispose();
-        }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 namespace MQTTnet.Client
 {
@@ -9,10 +11,7 @@ namespace MQTTnet.Client
         /// The topic filter can contain topics and wildcards.
         /// </summary>
         public string TopicFilter { get; internal set; }
-
-        [Obsolete("Use ResultCode instead. This property will be removed soon.")]
-        public MqttClientUnsubscribeResultCode ReasonCode => ResultCode;
-
+        
         /// <summary>
         /// Gets or sets the result code.
         /// Hint: MQTT 5 feature only.

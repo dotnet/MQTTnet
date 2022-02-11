@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Linq;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
@@ -133,18 +137,15 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write(packet.KeepAlivePeriod);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteSessionExpiryInterval(packet.Properties.SessionExpiryInterval);
-                propertiesWriter.WriteAuthenticationMethod(packet.Properties.AuthenticationMethod);
-                propertiesWriter.WriteAuthenticationData(packet.Properties.AuthenticationData);
-                propertiesWriter.WriteRequestProblemInformation(packet.Properties.RequestProblemInformation);
-                propertiesWriter.WriteRequestResponseInformation(packet.Properties.RequestResponseInformation);
-                propertiesWriter.WriteReceiveMaximum(packet.Properties.ReceiveMaximum);
-                propertiesWriter.WriteTopicAliasMaximum(packet.Properties.TopicAliasMaximum);
-                propertiesWriter.WriteMaximumPacketSize(packet.Properties.MaximumPacketSize);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
+            propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
+            propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+            propertiesWriter.WriteRequestProblemInformation(packet.RequestProblemInformation);
+            propertiesWriter.WriteRequestResponseInformation(packet.RequestResponseInformation);
+            propertiesWriter.WriteReceiveMaximum(packet.ReceiveMaximum);
+            propertiesWriter.WriteTopicAliasMaximum(packet.TopicAliasMaximum);
+            propertiesWriter.WriteMaximumPacketSize(packet.MaximumPacketSize);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             propertiesWriter.WriteTo(packetWriter);
 
@@ -153,15 +154,13 @@ namespace MQTTnet.Formatter.V5
             if (packet.WillFlag)
             {
                 var willPropertiesWriter = new MqttV500PropertiesWriter();
-                willPropertiesWriter.WritePayloadFormatIndicator(packet.WillProperties.PayloadFormatIndicator);
-                willPropertiesWriter.WriteMessageExpiryInterval(packet.WillProperties.MessageExpiryInterval);
-                willPropertiesWriter.WriteResponseTopic(packet.WillProperties.ResponseTopic);
-                willPropertiesWriter.WriteCorrelationData(packet.WillProperties.CorrelationData);
-                willPropertiesWriter.WriteContentType(packet.WillProperties.ContentType);
-                willPropertiesWriter.WriteUserProperties(packet.WillProperties.UserProperties);
-                
-                // This is a special case!
-                willPropertiesWriter.WriteWillDelayInterval(packet.Properties?.WillDelayInterval);
+                willPropertiesWriter.WritePayloadFormatIndicator(packet.WillPayloadFormatIndicator);
+                willPropertiesWriter.WriteMessageExpiryInterval(packet.WillMessageExpiryInterval);
+                willPropertiesWriter.WriteResponseTopic(packet.WillResponseTopic);
+                willPropertiesWriter.WriteCorrelationData(packet.WillCorrelationData);
+                willPropertiesWriter.WriteContentType(packet.WillContentType);
+                willPropertiesWriter.WriteUserProperties(packet.WillUserProperties);
+                willPropertiesWriter.WriteWillDelayInterval(packet.WillDelayInterval);
 
                 willPropertiesWriter.WriteTo(packetWriter);
 
@@ -197,26 +196,23 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write((byte)packet.ReasonCode);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteSessionExpiryInterval(packet.Properties.SessionExpiryInterval);
-                propertiesWriter.WriteAuthenticationMethod(packet.Properties.AuthenticationMethod);
-                propertiesWriter.WriteAuthenticationData(packet.Properties.AuthenticationData);
-                propertiesWriter.WriteRetainAvailable(packet.Properties.RetainAvailable);
-                propertiesWriter.WriteReceiveMaximum(packet.Properties.ReceiveMaximum);
-                propertiesWriter.WriteMaximumQoS(packet.Properties.MaximumQoS);
-                propertiesWriter.WriteAssignedClientIdentifier(packet.Properties.AssignedClientIdentifier);
-                propertiesWriter.WriteTopicAliasMaximum(packet.Properties.TopicAliasMaximum);
-                propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
-                propertiesWriter.WriteMaximumPacketSize(packet.Properties.MaximumPacketSize);
-                propertiesWriter.WriteWildcardSubscriptionAvailable(packet.Properties.WildcardSubscriptionAvailable);
-                propertiesWriter.WriteSubscriptionIdentifiersAvailable(packet.Properties.SubscriptionIdentifiersAvailable);
-                propertiesWriter.WriteSharedSubscriptionAvailable(packet.Properties.SharedSubscriptionAvailable);
-                propertiesWriter.WriteServerKeepAlive(packet.Properties.ServerKeepAlive);
-                propertiesWriter.WriteResponseInformation(packet.Properties.ResponseInformation);
-                propertiesWriter.WriteServerReference(packet.Properties.ServerReference);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
+            propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
+            propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+            propertiesWriter.WriteRetainAvailable(packet.RetainAvailable);
+            propertiesWriter.WriteReceiveMaximum(packet.ReceiveMaximum);
+            propertiesWriter.WriteMaximumQoS(packet.MaximumQoS);
+            propertiesWriter.WriteAssignedClientIdentifier(packet.AssignedClientIdentifier);
+            propertiesWriter.WriteTopicAliasMaximum(packet.TopicAliasMaximum);
+            propertiesWriter.WriteReasonString(packet.ReasonString);
+            propertiesWriter.WriteMaximumPacketSize(packet.MaximumPacketSize);
+            propertiesWriter.WriteWildcardSubscriptionAvailable(packet.WildcardSubscriptionAvailable);
+            propertiesWriter.WriteSubscriptionIdentifiersAvailable(packet.SubscriptionIdentifiersAvailable);
+            propertiesWriter.WriteSharedSubscriptionAvailable(packet.SharedSubscriptionAvailable);
+            propertiesWriter.WriteServerKeepAlive(packet.ServerKeepAlive);
+            propertiesWriter.WriteResponseInformation(packet.ResponseInformation);
+            propertiesWriter.WriteServerReference(packet.ServerReference);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             propertiesWriter.WriteTo(packetWriter);
 
@@ -253,21 +249,14 @@ namespace MQTTnet.Formatter.V5
             }
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteContentType(packet.Properties.ContentType);
-                propertiesWriter.WriteCorrelationData(packet.Properties.CorrelationData);
-                propertiesWriter.WriteMessageExpiryInterval(packet.Properties.MessageExpiryInterval);
-                propertiesWriter.WritePayloadFormatIndicator(packet.Properties.PayloadFormatIndicator);
-                propertiesWriter.WriteResponseTopic(packet.Properties.ResponseTopic);
-                propertiesWriter.WriteSubscriptionIdentifiers(packet.Properties.SubscriptionIdentifiers);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-
-                if (packet.Properties.TopicAlias > 0)
-                {
-                    propertiesWriter.WriteTopicAlias(packet.Properties.TopicAlias);
-                }
-            }
+            propertiesWriter.WriteContentType(packet.ContentType);
+            propertiesWriter.WriteCorrelationData(packet.CorrelationData);
+            propertiesWriter.WriteMessageExpiryInterval(packet.MessageExpiryInterval);
+            propertiesWriter.WritePayloadFormatIndicator(packet.PayloadFormatIndicator);
+            propertiesWriter.WriteResponseTopic(packet.ResponseTopic);
+            propertiesWriter.WriteSubscriptionIdentifiers(packet.SubscriptionIdentifiers);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
+            propertiesWriter.WriteTopicAlias(packet.TopicAlias);
 
             propertiesWriter.WriteTo(packetWriter);
 
@@ -304,11 +293,8 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write(packet.PacketIdentifier);
             
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteReasonString(packet.ReasonString);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             if (packetWriter.Length > 0 || packet.ReasonCode != MqttPubAckReasonCode.Success)
             {
@@ -324,11 +310,8 @@ namespace MQTTnet.Formatter.V5
             ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
             
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteReasonString(packet.ReasonString);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             packetWriter.Write(packet.PacketIdentifier);
 
@@ -346,11 +329,8 @@ namespace MQTTnet.Formatter.V5
             ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
             
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteReasonString(packet.ReasonString);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             packetWriter.Write(packet.PacketIdentifier);
             
@@ -370,11 +350,8 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write(packet.PacketIdentifier);
             
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteReasonString(packet.ReasonString);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             if (propertiesWriter.Length > 0 || packet.ReasonCode != MqttPubCompReasonCode.Success)
             {
@@ -394,15 +371,13 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write(packet.PacketIdentifier);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
+            
+            if (packet.SubscriptionIdentifier > 0)
             {
-                if (packet.Properties.SubscriptionIdentifier > 0)
-                {
-                    propertiesWriter.WriteSubscriptionIdentifier(packet.Properties.SubscriptionIdentifier);
-                }
-
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
+                propertiesWriter.WriteSubscriptionIdentifier(packet.SubscriptionIdentifier);
             }
+
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             propertiesWriter.WriteTo(packetWriter);
 
@@ -445,11 +420,8 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write(packet.PacketIdentifier);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteReasonString(packet.ReasonString);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             propertiesWriter.WriteTo(packetWriter);
 
@@ -470,10 +442,7 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write(packet.PacketIdentifier);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             propertiesWriter.WriteTo(packetWriter);
 
@@ -494,11 +463,8 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write(packet.PacketIdentifier);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteReasonString(packet.ReasonString);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             propertiesWriter.WriteTo(packetWriter);
 
@@ -515,13 +481,10 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write((byte)packet.ReasonCode);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteServerReference(packet.Properties.ServerReference);
-                propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
-                propertiesWriter.WriteSessionExpiryInterval(packet.Properties.SessionExpiryInterval);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteServerReference(packet.ServerReference);
+            propertiesWriter.WriteReasonString(packet.ReasonString);
+            propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             propertiesWriter.WriteTo(packetWriter);
 
@@ -543,13 +506,10 @@ namespace MQTTnet.Formatter.V5
             packetWriter.Write((byte)packet.ReasonCode);
 
             var propertiesWriter = new MqttV500PropertiesWriter();
-            if (packet.Properties != null)
-            {
-                propertiesWriter.WriteAuthenticationMethod(packet.Properties.AuthenticationMethod);
-                propertiesWriter.WriteAuthenticationData(packet.Properties.AuthenticationData);
-                propertiesWriter.WriteReasonString(packet.Properties.ReasonString);
-                propertiesWriter.WriteUserProperties(packet.Properties.UserProperties);
-            }
+            propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
+            propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+            propertiesWriter.WriteReasonString(packet.ReasonString);
+            propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             propertiesWriter.WriteTo(packetWriter);
 

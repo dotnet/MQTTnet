@@ -1,113 +1,165 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
-using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
 {
-    public class MqttClientOptions : IMqttClientOptions
+    public sealed class MqttClientOptions
     {
         /// <summary>
-        /// Gets the client identifier.
-        /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
-        /// </summary>
-        public string ClientId { get; set; } = Guid.NewGuid().ToString("N");
-
-        /// <summary>
-        /// Gets or sets a value indicating whether clean sessions are used or not.
-        /// When a client connects to a broker it can connect using either a non persistent connection (clean session) or a persistent connection.
-        /// With a non persistent connection the broker doesn't store any subscription information or undelivered messages for the client.
-        /// This mode is ideal when the client only publishes messages.
-        /// It can also connect as a durable client using a persistent connection.
-        /// In this mode, the broker will store subscription information, and undelivered messages for the client.
-        /// </summary>
-        public bool CleanSession { get; set; } = true;
-
-        public IMqttClientCredentials Credentials { get; set; }
-
-        public IMqttExtendedAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
-
-        public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
-
-        public IMqttClientChannelOptions ChannelOptions { get; set; }
-
-        public TimeSpan CommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
-
-        /// <summary>
-        /// Gets or sets the keep alive period.
-        /// The connection is normally left open by the client so that is can send and receive data at any time.
-        /// If no data flows over an open connection for a certain time period then the client will generate a PINGREQ and expect to receive a PINGRESP from the broker.
-        /// This message exchange confirms that the connection is open and working.
-        /// This period is known as the keep alive period. 
-        /// </summary>
-        public TimeSpan KeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(15);
-
-        /// <summary>
-        /// Gets or sets the last will message.
-        /// In MQTT, you use the last will message feature to notify other clients about an ungracefully disconnected client.
-        /// </summary>
-        public MqttApplicationMessage WillMessage { get; set; }
-
-        /// <summary>
-        /// Gets or sets the will delay interval.
-        /// This is the time between the client disconnect and the time the will message will be sent.
-        /// </summary>
-        public uint? WillDelayInterval { get; set; }
-
-        /// <summary>
-        /// Gets or sets the authentication method.
-        /// Hint: MQTT 5 feature only.
-        /// </summary>
-        public string AuthenticationMethod { get; set; }
-
-        /// <summary>
-        /// Gets or sets the authentication data.
-        /// Hint: MQTT 5 feature only.
+        ///     Gets or sets the authentication data.
+        ///     Hint: MQTT 5 feature only.
         /// </summary>
         public byte[] AuthenticationData { get; set; }
 
-        public uint? MaximumPacketSize { get; set; }
-
         /// <summary>
-        /// Gets or sets the receive maximum.
-        /// This gives the maximum length of the receive messages.
+        ///     Gets or sets the authentication method.
+        ///     Hint: MQTT 5 feature only.
         /// </summary>
-        public ushort? ReceiveMaximum { get; set; }
+        public string AuthenticationMethod { get; set; }
+
+        public IMqttClientChannelOptions ChannelOptions { get; set; }
 
         /// <summary>
-        /// Gets or sets the request problem information.
-        /// Hint: MQTT 5 feature only.
+        ///     Gets or sets a value indicating whether clean sessions are used or not.
+        ///     When a client connects to a broker it can connect using either a non persistent connection (clean session) or a
+        ///     persistent connection.
+        ///     With a non persistent connection the broker doesn't store any subscription information or undelivered messages for
+        ///     the client.
+        ///     This mode is ideal when the client only publishes messages.
+        ///     It can also connect as a durable client using a persistent connection.
+        ///     In this mode, the broker will store subscription information, and undelivered messages for the client.
+        /// </summary>
+        public bool CleanSession { get; set; } = true;
+
+        /// <summary>
+        ///     Gets the client identifier.
+        ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
+        /// </summary>
+        public string ClientId { get; set; } = Guid.NewGuid()
+            .ToString("N");
+
+        public TimeSpan CommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
+
+        public IMqttClientCredentialsProvider Credentials { get; set; }
+
+        public IMqttExtendedAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the keep alive period.
+        ///     The connection is normally left open by the client so that is can send and receive data at any time.
+        ///     If no data flows over an open connection for a certain time period then the client will generate a PINGREQ and
+        ///     expect to receive a PINGRESP from the broker.
+        ///     This message exchange confirms that the connection is open and working.
+        ///     This period is known as the keep alive period.
+        /// </summary>
+        public TimeSpan KeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(15);
+
+        public uint MaximumPacketSize { get; set; }
+
+        public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
+
+        /// <summary>
+        ///     Gets or sets the receive maximum.
+        ///     This gives the maximum length of the receive messages.
+        /// </summary>
+        public ushort ReceiveMaximum { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the request problem information.
+        ///     Hint: MQTT 5 feature only.
         /// </summary>
         public bool RequestProblemInformation { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the request response information.
-        /// Hint: MQTT 5 feature only.
+        ///     Gets or sets the request response information.
+        ///     Hint: MQTT 5 feature only.
         /// </summary>
         public bool RequestResponseInformation { get; set; }
 
         /// <summary>
-        /// Gets or sets the session expiry interval.
-        /// The time after a session expires when it's not actively used.
+        ///     Gets or sets the session expiry interval.
+        ///     The time after a session expires when it's not actively used.
         /// </summary>
         public uint SessionExpiryInterval { get; set; }
 
         /// <summary>
-        /// Gets or sets the topic alias maximum.
-        /// This gives the maximum length of the topic alias.
+        ///     Gets or sets the topic alias maximum.
+        ///     This gives the maximum length of the topic alias.
         /// </summary>
         public ushort TopicAliasMaximum { get; set; }
 
         /// <summary>
-        /// Gets or sets the user properties.
-        /// In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT packet.
-        /// As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add metadata to MQTT messages and pass information between publisher, broker, and subscriber.
-        /// The feature is very similar to the HTTP header concept.
-        /// Hint: MQTT 5 feature only.
+        ///     Gets or sets the user properties.
+        ///     In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT
+        ///     packet.
+        ///     As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
+        ///     metadata to MQTT messages and pass information between publisher, broker, and subscriber.
+        ///     The feature is very similar to the HTTP header concept.
+        ///     Hint: MQTT 5 feature only.
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
 
-        public IMqttPacketInspector PacketInspector { get; set; }
+        /// <summary>
+        ///     Gets or sets the content type of the will message.
+        /// </summary>
+        public string WillContentType { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the correlation data of the will message.
+        /// </summary>
+        public byte[] WillCorrelationData { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the will delay interval.
+        ///     This is the time between the client disconnect and the time the will message will be sent.
+        /// </summary>
+        public uint WillDelayInterval { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the message expiry interval of the will message.
+        /// </summary>
+        public uint WillMessageExpiryInterval { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the payload of the will message.
+        /// </summary>
+        public byte[] WillPayload { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the payload format indicator of the will message.
+        /// </summary>
+        public MqttPayloadFormatIndicator WillPayloadFormatIndicator { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the QoS level of the will message.
+        /// </summary>
+        public MqttQualityOfServiceLevel WillQualityOfServiceLevel { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the response topic of the will message.
+        /// </summary>
+        public string WillResponseTopic { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the retain flag of the will message.
+        /// </summary>
+        public bool WillRetain { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the topic of the will message.
+        /// </summary>
+        public string WillTopic { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the user properties of the will message.
+        /// </summary>
+        public List<MqttUserProperty> WillUserProperties { get; set; }
     }
 }

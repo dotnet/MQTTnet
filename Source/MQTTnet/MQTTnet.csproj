@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <Target Name="ImportReleaseNotes" BeforeTargets="GenerateNuspec">
-        <ReadLinesFromFile File="..\..\Build\ReleaseNotes.md">
+        <ReadLinesFromFile File="..\..\.github\workflows\ReleaseNotes.md">
             <Output TaskParameter="Lines" ItemName="ReleaseNotes" />
         </ReadLinesFromFile>
         <PropertyGroup>
@@ -12,7 +12,8 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard1.3;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
         <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net461</TargetFrameworks>
-        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' AND '$(SolutionName)' != 'MQTTnet.noUWP' ">$(TargetFrameworks);uap10.0</TargetFrameworks>
+        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">$(TargetFrameworks);uap10.0</TargetFrameworks>
+        <LangVersion>7.3</LangVersion>
         
         <AssemblyName>MQTTnet</AssemblyName>
         <RootNamespace>MQTTnet</RootNamespace>
@@ -22,12 +23,12 @@
         <Description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</Description>
         <Authors>The contributors of MQTTnet</Authors>
         <PackageId>MQTTnet</PackageId>
-        <SignAssembly>false</SignAssembly>
         <DelaySign>false</DelaySign>
+        <SignAssembly>false</SignAssembly>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <Copyright>Christian Kratky 2016-2021</Copyright>
+        <Copyright>Christian Kratky 2016-2022</Copyright>
         <PackageProjectUrl>https://github.com/chkr1011/MQTTnet</PackageProjectUrl>
         <RepositoryUrl>https://github.com/chkr1011/MQTTnet.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
@@ -39,6 +40,7 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(TargetFramework)'=='uap10.0'">

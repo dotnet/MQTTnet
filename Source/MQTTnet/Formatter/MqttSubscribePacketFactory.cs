@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using MQTTnet.Client;
 using MQTTnet.Packets;
 
@@ -10,14 +14,12 @@ namespace MQTTnet.Formatter
         {
             if (clientSubscribeOptions == null) throw new ArgumentNullException(nameof(clientSubscribeOptions));
 
-            var packet = new MqttSubscribePacket();
-            packet.TopicFilters.AddRange(clientSubscribeOptions.TopicFilters);
-            packet.Properties.SubscriptionIdentifier = clientSubscribeOptions.SubscriptionIdentifier;
-
-            if (clientSubscribeOptions.UserProperties != null)
+            var packet = new MqttSubscribePacket
             {
-                packet.Properties.UserProperties.AddRange(clientSubscribeOptions.UserProperties);
-            }
+                TopicFilters = clientSubscribeOptions.TopicFilters,
+                SubscriptionIdentifier = clientSubscribeOptions.SubscriptionIdentifier,
+                UserProperties = clientSubscribeOptions.UserProperties
+            };
 
             return packet;
         }

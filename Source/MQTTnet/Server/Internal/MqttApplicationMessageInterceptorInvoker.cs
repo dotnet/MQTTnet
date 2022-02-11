@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,10 +12,10 @@ namespace MQTTnet.Server
 {
     public sealed class MqttApplicationMessageInterceptorInvoker
     {
-        readonly MqttServerEventContainer _eventContainer;
         readonly string _clientId;
+        readonly MqttServerEventContainer _eventContainer;
         readonly IDictionary _sessionItems;
-        
+
         public MqttApplicationMessageInterceptorInvoker(MqttServerEventContainer eventContainer, string clientId, IDictionary sessionItems)
         {
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
@@ -19,23 +23,8 @@ namespace MQTTnet.Server
             _sessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
         }
 
-        public MqttApplicationMessage ApplicationMessage { get; private set; }
-        
-        public PublishResponse Response { get; private set; } = new PublishResponse();
-            
-        public bool ProcessPublish { get; private set; } = true;
-
-        public bool CloseConnection { get; private set; }
-            
-        public async Task Invoke(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
+        public async Task<InterceptingPublishEventArgs> Invoke(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken)
         {
-            // Reset to defaults.
-            Response = new PublishResponse();
-            ProcessPublish = true;
-            CloseConnection = false;
-            ApplicationMessage = applicationMessage;
-                
-            // Intercept.
             var eventArgs = new InterceptingPublishEventArgs
             {
                 ClientId = _clientId,
@@ -53,14 +42,10 @@ namespace MQTTnet.Server
                 eventArgs.Response.ReasonCode = MqttPubAckReasonCode.TopicNameInvalid;
                 eventArgs.ProcessPublish = false;
             }
-            
+
             await _eventContainer.InterceptingPublishEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
-            // Expose results.
-            ProcessPublish = eventArgs.ProcessPublish && eventArgs.ApplicationMessage != null;
-            CloseConnection = eventArgs.CloseConnection;
-            Response = eventArgs.Response;
-            ApplicationMessage = eventArgs.ApplicationMessage;
+            return eventArgs;
         }
     }
 }

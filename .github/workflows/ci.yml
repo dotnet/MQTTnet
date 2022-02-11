@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - feature/Reason_Code_In_Subscription_Interceptor
+      #- master
+  #pull_request
+
+jobs:
+  build:
+
+    runs-on: windows-2022
+
+    steps:
+      - name: Setup Windows SDK
+        uses: GuillaumeFalourd/setup-windows10-sdk-action@v1
+        with:
+          sdk-version: 18362
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v1.9.0
+        with:
+          dotnet-version: |
+            3.1.x
+            6.0.x
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Signing Certificate
+        run: |
+          $secret = '${{ secrets.SNC_BASE64 }}'
+          $decoded = [System.Convert]::FromBase64CharArray($secret, 0, $secret.Length)
+          Set-Content -Path ${{ github.workspace }}\certificate.snk -Value $decoded -AsByteStream
+      
+      - name: Setup Environment Variables
+        id: dotenv
+        uses: falti/dotenv-action@v0.2.7
+        with:
+          path: .github\workflows\.env
+          log-variables: true
+
+      - name: Restore nuget packages
+        run: msbuild MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
+
+      - name: Build solution
+        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ steps.dotenv.outputs.assembly_version }} /p:AssemblyVersion=${{ steps.dotenv.outputs.assembly_version }} /p:PackageVersion=${{ steps.dotenv.outputs.nuget_version }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
+
+      - name: Collect nuget Packages
+        uses: actions/upload-artifact@v2
+        with:
+          name: nuget Packages
+          path: |
+            **\*.nupkg
+            **\*.snupkg
+
+      - name: Setup VSTest
+        uses: darenm/Setup-VSTest@v1
+
+      - name: Core Tests
+        run: vstest.console.exe Source\MQTTnet.Tests\bin\Release\net6.0\MQTTnet.Tests.dll
+
+      - name: ASP.NET Tests
+        run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
+
+      - name: Publish nugets
+        #if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feature/Reason_Code_In_Subscription_Interceptor' }}
+        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+
+#  pull_request_ci:
+#    runs-on: windows-2022
+#    if: ${{ github.event_name == 'pull_request' }}
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Run PR CI
+#        run: ./run-additional-pr-ci
+
+#      - name: Install dependencies
+#        run: dotnet restore MQTTnet.sln
+#      - name: Build
+#        run: dotnet build --configuration Release --no-restore MQTTnet.sln
+#      - name: Test MQTTnet
+#        run: dotnet test --no-restore --verbosity normal Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
+#      - name: Test AspNetCore
+#        run: dotnet test --no-restore --verbosity normal Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj

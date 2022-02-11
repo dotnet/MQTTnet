@@ -1,24 +1,28 @@
-﻿using MQTTnet.Protocol;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Collections.Generic;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
     public sealed class MqttPubCompPacket : MqttBasePacket, IMqttPacketWithIdentifier
     {
         public ushort PacketIdentifier { get; set; }
-        
-        /// <summary>
-        /// Added in MQTTv5.
-        /// </summary>
+
+        // MQTTv5+
         public MqttPubCompReasonCode ReasonCode { get; set; } = MqttPubCompReasonCode.Success;
 
-        /// <summary>
-        /// Added in MQTTv5.
-        /// </summary>
-        public MqttPubCompPacketProperties Properties { get; } = new MqttPubCompPacketProperties();
-        
+        // MQTTv5+
+        public string ReasonString { get; set; }
+
+        // MQTTv5+
+        public List<MqttUserProperty> UserProperties { get; set; }
+
         public override string ToString()
         {
-            return string.Concat("PubComp: [PacketIdentifier=", PacketIdentifier, "] [ReasonCode=", ReasonCode, "]");
+            return $"PubComp: [PacketIdentifier={PacketIdentifier}] [ReasonCode={ReasonCode}]";
         }
     }
 }

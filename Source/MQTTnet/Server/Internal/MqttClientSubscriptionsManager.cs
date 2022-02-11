@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,20 +15,22 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientSubscriptionsManager
     {
-        // We use a reader writer lock because the subscriptions are only read most of the time.
-        // Since writing is done by multiple threads (server API or connection thread), we cannot avoid locking
-        // completely by swapping references etc.
-        readonly SemaphoreSlim _subscriptionsLock = new SemaphoreSlim(1);
-        
+        static readonly List<uint> EmptySubscriptionIdentifiers = new List<uint>();
+        readonly MqttServerEventContainer _eventContainer;
+        readonly MqttRetainedMessagesManager _retainedMessagesManager;
+
+        readonly MqttSession _session;
+
         // The subscriptions are stored as a ConcurrentDictionary in order ensure that reading the data is save.
         // The additional lock is important to coordinate complex update logic with multiple steps, checks and interceptors.
         readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>();
         readonly Dictionary<ulong, HashSet<MqttSubscription>> _noWildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();
         readonly Dictionary<ulong, TopicHashMaskSubscriptions> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, TopicHashMaskSubscriptions>();
 
-        readonly MqttSession _session;
-        readonly MqttServerEventContainer _eventContainer;
-        readonly MqttRetainedMessagesManager _retainedMessagesManager;
+        // Use subscription lock to maintain consistency across subscriptions and topic hash dictionaries
+        readonly SemaphoreSlim _subscriptionsLock = new SemaphoreSlim(1);
+
+        // Callback to maintain list of subscriber clients
         readonly ISubscriptionChangedNotification _subscriptionChangedNotification;
 
         public MqttClientSubscriptionsManager(
@@ -40,9 +46,131 @@ namespace MQTTnet.Server
             _subscriptionChangedNotification = subscriptionChangedNotification;
         }
 
+        public CheckSubscriptionsResult CheckSubscriptions(string topic, ulong topicHash, MqttQualityOfServiceLevel applicationMessageQoSLevel, string senderClientId)
+        {
+            List<MqttSubscription> subscriptions = new List<MqttSubscription>();
+
+            _subscriptionsLock.Wait();
+            try
+            {
+                if (_noWildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var noWildcardSubs))
+                {
+                    subscriptions.AddRange(noWildcardSubs.ToList());
+                }
+
+                foreach (var wcs in _wildcardSubscriptionsByTopicHash)
+                {
+                    var wildcardSubs = wcs.Value;
+                    var subscriptionHash = wcs.Key;
+                    var subscriptionHashMask = wildcardSubs.HashMask;
+                    if ((topicHash & subscriptionHashMask) == subscriptionHash)
+                    {
+                        subscriptions.AddRange(wildcardSubs.Subscriptions.ToList());
+                    }
+                }
+
+                if (subscriptions.Count == 0)
+                {
+                    return CheckSubscriptionsResult.NotSubscribed;
+                }
+            }
+            finally
+            {
+                _subscriptionsLock.Release();
+            }
+
+            var senderIsReceiver = string.Equals(senderClientId, _session.Id);
+            var maxQoSLevel = -1; // Not subscribed.
+
+            HashSet<uint> subscriptionIdentifiers = null;
+            var retainAsPublished = false;
+
+            foreach (var subscription in subscriptions)
+            {
+                if (subscription.NoLocal && senderIsReceiver)
+                {
+                    // This is a MQTTv5 feature!
+                    continue;
+                }
+
+                if (MqttTopicFilterComparer.Compare(topic, subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
+                {
+                    continue;
+                }
+
+                if (subscription.RetainAsPublished)
+                {
+                    // This is a MQTTv5 feature!
+                    retainAsPublished = true;
+                }
+
+                if ((int)subscription.GrantedQualityOfServiceLevel > maxQoSLevel)
+                {
+                    maxQoSLevel = (int)subscription.GrantedQualityOfServiceLevel;
+                }
+
+                if (subscription.Identifier > 0)
+                {
+                    if (subscriptionIdentifiers == null)
+                    {
+                        subscriptionIdentifiers = new HashSet<uint>();
+                    }
+
+                    subscriptionIdentifiers.Add(subscription.Identifier);
+                }
+            }
+
+            if (maxQoSLevel == -1)
+            {
+                return CheckSubscriptionsResult.NotSubscribed;
+            }
+
+            var result = new CheckSubscriptionsResult
+            {
+                IsSubscribed = true,
+                RetainAsPublished = retainAsPublished,
+                SubscriptionIdentifiers = subscriptionIdentifiers?.ToList() ?? EmptySubscriptionIdentifiers,
+
+                // Start with the same QoS as the publisher.
+                QualityOfServiceLevel = applicationMessageQoSLevel
+            };
+
+            // Now downgrade if required.
+            //
+            // If a subscribing Client has been granted maximum QoS 1 for a particular Topic Filter, then a QoS 0 Application Message matching the filter is delivered
+            // to the Client at QoS 0. This means that at most one copy of the message is received by the Client. On the other hand, a QoS 2 Message published to
+            // the same topic is downgraded by the Server to QoS 1 for delivery to the Client, so that Client might receive duplicate copies of the Message.
+
+            // Subscribing to a Topic Filter at QoS 2 is equivalent to saying "I would like to receive Messages matching this filter at the QoS with which they were published".
+            // This means a publisher is responsible for determining the maximum QoS a Message can be delivered at, but a subscriber is able to require that the Server
+            // downgrades the QoS to one more suitable for its usage.
+            if (maxQoSLevel < (int)applicationMessageQoSLevel)
+            {
+                result.QualityOfServiceLevel = (MqttQualityOfServiceLevel)maxQoSLevel;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Note: Use topic hash based method for repeated calls.
+        /// </summary>
+        public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel applicationMessageQoSLevel, string senderClientId)
+        {
+            ulong topicHash;
+            ulong topicHashMask; // not needed
+            bool hasWildcard;    // not needed
+            MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out hasWildcard);
+            return CheckSubscriptions(topic, topicHash, applicationMessageQoSLevel, senderClientId);
+        }
+
+
         public async Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
-            if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
+            if (subscribePacket == null)
+            {
+                throw new ArgumentNullException(nameof(subscribePacket));
+            }
 
             var retainedApplicationMessages = await _retainedMessagesManager.GetMessages().ConfigureAwait(false);
             var result = new SubscribeResult();
@@ -59,13 +187,10 @@ namespace MQTTnet.Server
 
                 if (string.IsNullOrEmpty(finalTopicFilter.Topic) || !processSubscription)
                 {
-                    // Return codes is for MQTT < 5 and Reason Code is for MQTT > 5.
-                    result.ReturnCodes.Add(MqttSubscribeReturnCode.Failure);
                     result.ReasonCodes.Add(interceptorContext.Response.ReasonCode);
                 }
                 else
                 {
-                    result.ReturnCodes.Add((MqttSubscribeReturnCode) interceptorContext.Response.ReasonCode);
                     result.ReasonCodes.Add(interceptorContext.Response.ReasonCode);
                 }
 
@@ -83,18 +208,20 @@ namespace MQTTnet.Server
 
                 if (interceptorContext.ProcessSubscription)
                 {
-                    var createSubscriptionResult = CreateSubscription(
-                        finalTopicFilter,
-                        subscribePacket.Properties?.SubscriptionIdentifier ?? 0,
-                        interceptorContext.Response.ReasonCode);
+                    var createSubscriptionResult = CreateSubscription(finalTopicFilter, subscribePacket.SubscriptionIdentifier, interceptorContext.Response.ReasonCode);
 
                     addedSubscriptions.Add(finalTopicFilter.Topic);
-
-                    await _eventContainer.ClientSubscribedTopicEvent.InvokeAsync(() => new ClientSubscribedTopicEventArgs
+                    
+                    if (_eventContainer.ClientSubscribedTopicEvent.HasHandlers)
                     {
-                        ClientId = _session.Id,
-                        TopicFilter = finalTopicFilter
-                    }).ConfigureAwait(false);
+                        var eventArgs = new ClientSubscribedTopicEventArgs
+                        {
+                            ClientId = _session.Id,
+                            TopicFilter = finalTopicFilter
+                        };
+
+                        await _eventContainer.ClientSubscribedTopicEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                    }
 
                     FilterRetainedApplicationMessages(retainedApplicationMessages, createSubscriptionResult, result);
                 }
@@ -110,7 +237,10 @@ namespace MQTTnet.Server
 
         public async Task<MqttUnsubscribeResult> Unsubscribe(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
-            if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
+            if (unsubscribePacket == null)
+            {
+                throw new ArgumentNullException(nameof(unsubscribePacket));
+            }
 
             var result = new MqttUnsubscribeResult();
 
@@ -183,115 +313,21 @@ namespace MQTTnet.Server
                 }
             }
 
-            foreach (var topicFilter in unsubscribePacket.TopicFilters)
+            if (_eventContainer.ClientUnsubscribedTopicEvent.HasHandlers)
             {
-                await _eventContainer.ClientUnsubscribedTopicEvent.InvokeAsync(() => new ClientUnsubscribedTopicEventArgs
+                foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
-                    ClientId = _session.Id,
-                    TopicFilter = topicFilter
-                }).ConfigureAwait(false);
+                    var eventArgs = new ClientUnsubscribedTopicEventArgs
+                    {
+                        ClientId = _session.Id,
+                        TopicFilter = topicFilter
+                    };
+
+                    await _eventContainer.ClientUnsubscribedTopicEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                }
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Note: Use topic hash based method for repeated calls.
-        /// </summary>
-        public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel qosLevel, string senderClientId)
-        {
-            ulong topicHash;
-            ulong topicHashMask; // not needed
-            bool hasWildcard;    // not needed
-            MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out hasWildcard);
-            return CheckSubscriptions(topic, topicHash, qosLevel, senderClientId);
-        }
-
-        public CheckSubscriptionsResult CheckSubscriptions(string topic, ulong topicHash, MqttQualityOfServiceLevel qosLevel, string senderClientId)
-        {
-            List<MqttSubscription> subscriptions = new List<MqttSubscription>();
-
-            _subscriptionsLock.Wait();
-            try
-            {
-                if (_noWildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var noWildcardSubs))
-                {
-                    subscriptions.AddRange(noWildcardSubs.ToList());
-                }
-
-                foreach (var wcs in _wildcardSubscriptionsByTopicHash)
-                {
-                    var wildcardSubs = wcs.Value;
-                    var subscriptionHash = wcs.Key;
-                    var subscriptionHashMask = wildcardSubs.HashMask;
-                    if ((topicHash & subscriptionHashMask) == subscriptionHash)
-                    {
-                        subscriptions.AddRange(wildcardSubs.Subscriptions.ToList());
-                    }
-                }
-
-                if (subscriptions.Count == 0)
-                {
-                    return CheckSubscriptionsResult.NotSubscribed;
-                }
-            }
-            finally
-            {
-                _subscriptionsLock.Release();
-            }
-
-            var senderIsReceiver = string.Equals(senderClientId, _session.Id);
-
-            var qosLevels = new HashSet<MqttQualityOfServiceLevel>();
-            var subscriptionIdentifiers = new HashSet<uint>();
-            var retainAsPublished = false;
-
-            foreach (var subscription in subscriptions)
-            {
-                if (subscription.NoLocal && senderIsReceiver)
-                {
-                    // This is a MQTTv5 feature!
-                    continue;
-                }
-
-                if (subscription.RetainAsPublished)
-                {
-                    // This is a MQTTv5 feature!
-                    retainAsPublished = true;
-                }
-
-                if (MqttTopicFilterComparer.Compare(topic, subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
-                {
-                    continue;
-                }
-
-                qosLevels.Add(subscription.GrantedQualityOfServiceLevel);
-
-                if (subscription.Identifier > 0)
-                {
-                    subscriptionIdentifiers.Add(subscription.Identifier);
-                }
-            }
-
-            if (qosLevels.Count == 0)
-            {
-                return CheckSubscriptionsResult.NotSubscribed;
-            }
-
-            return new CheckSubscriptionsResult
-            {
-                IsSubscribed = true,
-                RetainAsPublished = retainAsPublished,
-                SubscriptionIdentifiers = subscriptionIdentifiers.ToList(),
-                QualityOfServiceLevel = GetEffectiveQoS(qosLevel, qosLevels)
-            };
-        }
-
-        public sealed class CreateSubscriptionResult
-        {
-            public MqttSubscription Subscription { get; set; }
-
-            public bool IsNewSubscription { get; set; }
         }
 
         CreateSubscriptionResult CreateSubscription(MqttTopicFilter topicFilter, uint subscriptionIdentifier, MqttSubscribeReasonCode reasonCode)
@@ -325,6 +361,8 @@ namespace MQTTnet.Server
             );
 
             bool isNewSubscription;
+
+            // Add to subscriptions and maintain topic hash dictionaries
 
             _subscriptionsLock.Wait();
             try
@@ -390,7 +428,9 @@ namespace MQTTnet.Server
             };
         }
 
-        static void FilterRetainedApplicationMessages(IList<MqttApplicationMessage> retainedApplicationMessages, CreateSubscriptionResult createSubscriptionResult,
+        static void FilterRetainedApplicationMessages(
+            IList<MqttApplicationMessage> retainedApplicationMessages,
+            CreateSubscriptionResult createSubscriptionResult,
             SubscribeResult subscribeResult)
         {
             for (var i = retainedApplicationMessages.Count - 1; i >= 0; i--)
@@ -407,15 +447,13 @@ namespace MQTTnet.Server
                     continue;
                 }
 
-                if (createSubscriptionResult.Subscription.RetainHandling == MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly &&
-                    !createSubscriptionResult.IsNewSubscription)
+                if (createSubscriptionResult.Subscription.RetainHandling == MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly && !createSubscriptionResult.IsNewSubscription)
                 {
                     // This is a MQTT V5+ feature.
                     continue;
                 }
 
-                if (MqttTopicFilterComparer.Compare(retainedApplicationMessage.Topic, createSubscriptionResult.Subscription.Topic) !=
-                    MqttTopicFilterCompareResult.IsMatch)
+                if (MqttTopicFilterComparer.Compare(retainedApplicationMessage.Topic, createSubscriptionResult.Subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
                 {
                     continue;
                 }
@@ -430,6 +468,11 @@ namespace MQTTnet.Server
                 // {
                 //     queuedApplicationMessage.SubscriptionIdentifiers = new List<uint> {createSubscriptionResult.Subscription.Identifier};
                 // }
+
+                if (subscribeResult.RetainedApplicationMessages == null)
+                {
+                    subscribeResult.RetainedApplicationMessages = new List<MqttQueuedApplicationMessage>();
+                }
 
                 subscribeResult.RetainedApplicationMessages.Add(queuedApplicationMessage);
 
@@ -497,23 +540,11 @@ namespace MQTTnet.Server
             return clientUnsubscribingTopicEventArgs;
         }
 
-        static MqttQualityOfServiceLevel GetEffectiveQoS(MqttQualityOfServiceLevel qosLevel, ICollection<MqttQualityOfServiceLevel> subscribedQoSLevels)
+        public sealed class CreateSubscriptionResult
         {
-            MqttQualityOfServiceLevel effectiveQoS;
-            if (subscribedQoSLevels.Contains(qosLevel))
-            {
-                effectiveQoS = qosLevel;
-            }
-            else if (subscribedQoSLevels.Count == 1)
-            {
-                effectiveQoS = subscribedQoSLevels.First();
-            }
-            else
-            {
-                effectiveQoS = subscribedQoSLevels.Max();
-            }
+            public bool IsNewSubscription { get; set; }
 
-            return effectiveQoS;
+            public MqttSubscription Subscription { get; set; }
         }
     }
 }

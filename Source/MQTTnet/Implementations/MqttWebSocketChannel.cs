@@ -1,4 +1,8 @@
-﻿using MQTTnet.Channel;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using MQTTnet.Channel;
 using MQTTnet.Internal;
 using System;
 using System.Net;
@@ -172,7 +176,7 @@ namespace MQTTnet.Implementations
                 clientWebSocket.Options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
                 {
                     // TODO: Find a way to add client options to same callback. Problem is that they have a different type.
-                    var context = new MqttClientCertificateValidationCallbackContext
+                    var context = new MqttClientCertificateValidationEventArgs
                     {
                         Certificate = certificate,
                         Chain = chain,

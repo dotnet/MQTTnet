@@ -1,26 +1,26 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.IO;
 using System.Linq;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Adapter
 {
-    public sealed class MqttPacketInspectorHandler
+    public sealed class MqttPacketInspectorHandler : IMqttPacketInspectorHandler
     {
-        readonly MemoryStream _receivedPacketBuffer;
-        readonly IMqttPacketInspector _packetInspector;
+        readonly MemoryStream _receivedPacketBuffer = new MemoryStream();
         readonly MqttNetSourceLogger _logger;
-
-        public MqttPacketInspectorHandler(IMqttPacketInspector packetInspector, IMqttNetLogger logger)
+        readonly AsyncEvent<InspectMqttPacketEventArgs> _asyncEvent;
+        
+        public MqttPacketInspectorHandler(AsyncEvent<InspectMqttPacketEventArgs> asyncEvent, IMqttNetLogger logger)
         {
-            _packetInspector = packetInspector;
-
-            if (packetInspector != null)
-            {
-                _receivedPacketBuffer = new MemoryStream();
-            }
-
+            _asyncEvent = asyncEvent ?? throw new ArgumentNullException(nameof(asyncEvent));
+            
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttPacketInspectorHandler));
         }
@@ -32,7 +32,7 @@ namespace MQTTnet.Adapter
 
         public void EndReceivePacket()
         {
-            if (_packetInspector == null)
+            if (!_asyncEvent.HasHandlers)
             {
                 return;
             }
@@ -45,7 +45,7 @@ namespace MQTTnet.Adapter
 
         public void BeginSendPacket(MqttPacketBuffer buffer)
         {
-            if (_packetInspector == null)
+            if (!_asyncEvent.HasHandlers)
             {
                 return;
             }
@@ -60,6 +60,11 @@ namespace MQTTnet.Adapter
 
         public void FillReceiveBuffer(byte[] buffer)
         {
+            if (!_asyncEvent.HasHandlers)
+            {
+                return;
+            }
+            
             _receivedPacketBuffer?.Write(buffer, 0, buffer.Length);
         }
 
@@ -67,13 +72,13 @@ namespace MQTTnet.Adapter
         {
             try
             {
-                var context = new ProcessMqttPacketContext
+                var eventArgs = new InspectMqttPacketEventArgs
                 {
                     Buffer = buffer,
                     Direction = direction
                 };
 
-                _packetInspector.ProcessMqttPacket(context);
+                _asyncEvent.InvokeAsync(eventArgs).GetAwaiter().GetResult();
             }
             catch (Exception exception)
             {

@@ -1,257 +1,140 @@
-using MQTTnet.Protocol;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
 {
     public static class MqttClientExtensions
     {
-        public static IMqttClient UseConnectedHandler(this IMqttClient client, Func<MqttClientConnectedEventArgs, Task> handler)
+        public static Task DisconnectAsync(this MqttClient client, MqttClientDisconnectReason reason = MqttClientDisconnectReason.NormalDisconnection, string reasonString = null)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            if (handler == null)
+            if (client == null)
             {
-                return client.UseConnectedHandler((IMqttClientConnectedHandler)null);
+                throw new ArgumentNullException(nameof(client));
             }
 
-            return client.UseConnectedHandler(new MqttClientConnectedHandlerDelegate(handler));
+            return client.DisconnectAsync(
+                new MqttClientDisconnectOptions
+                {
+                    Reason = reason,
+                    ReasonString = reasonString
+                },
+                CancellationToken.None);
         }
 
-        public static IMqttClient UseConnectedHandler(this IMqttClient client, Action<MqttClientConnectedEventArgs> handler)
+        public static Task<MqttClientPublishResult> PublishBinaryAsync(
+            this MqttClient mqttClient,
+            string topic,
+            IEnumerable<byte> payload = null,
+            MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+            bool retain = false,
+            CancellationToken cancellationToken = default)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            if (handler == null)
+            if (mqttClient == null)
             {
-                return client.UseConnectedHandler((IMqttClientConnectedHandler)null);
+                throw new ArgumentNullException(nameof(mqttClient));
             }
 
-            return client.UseConnectedHandler(new MqttClientConnectedHandlerDelegate(handler));
-        }
-
-        public static IMqttClient UseConnectedHandler(this IMqttClient client, IMqttClientConnectedHandler handler)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            client.ConnectedHandler = handler;
-            return client;
-        }
-
-        public static IMqttClient UseDisconnectedHandler(this IMqttClient client, Func<MqttClientDisconnectedEventArgs, Task> handler)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            if (handler == null)
+            if (topic == null)
             {
-                return client.UseDisconnectedHandler((IMqttClientDisconnectedHandler)null);
+                throw new ArgumentNullException(nameof(topic));
             }
 
-            return client.UseDisconnectedHandler(new MqttClientDisconnectedHandlerDelegate(handler));
+            var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(topic)
+                .WithPayload(payload)
+                .WithRetainFlag(retain)
+                .WithQualityOfServiceLevel(qualityOfServiceLevel)
+                .Build();
+
+            return mqttClient.PublishAsync(applicationMessage, cancellationToken);
         }
 
-        public static IMqttClient UseDisconnectedHandler(this IMqttClient client, Action<MqttClientDisconnectedEventArgs> handler)
+        public static Task<MqttClientPublishResult> PublishStringAsync(
+            this MqttClient mqttClient,
+            string topic,
+            string payload = null,
+            MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+            bool retain = false,
+            CancellationToken cancellationToken = default)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
+            var payloadBuffer = Encoding.UTF8.GetBytes(payload ?? string.Empty);
+            return mqttClient.PublishBinaryAsync(topic, payloadBuffer, qualityOfServiceLevel, retain, cancellationToken);
+        }
 
-            if (handler == null)
+        public static Task SendExtendedAuthenticationExchangeDataAsync(this MqttClient client, MqttExtendedAuthenticationExchangeData data)
+        {
+            if (client == null)
             {
-                return client.UseDisconnectedHandler((IMqttClientDisconnectedHandler)null);
+                throw new ArgumentNullException(nameof(client));
             }
-
-            return client.UseDisconnectedHandler(new MqttClientDisconnectedHandlerDelegate(handler));
-        }
-
-        public static IMqttClient UseDisconnectedHandler(this IMqttClient client, IMqttClientDisconnectedHandler handler)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            client.DisconnectedHandler = handler;
-            return client;
-        }
-        
-        public static Task<MqttClientConnectResult> ReconnectAsync(this IMqttClient client)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            if (client.Options == null)
-            {
-                throw new InvalidOperationException("_ReconnectAsync_ can be used only if _ConnectAsync_ was called before.");
-            }
-
-            return client.ConnectAsync(client.Options);
-        }
-
-        public static Task<MqttClientConnectResult> ReconnectAsync(this IMqttClient client, CancellationToken cancellationToken)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            if (client.Options == null)
-            {
-                throw new InvalidOperationException("_ReconnectAsync_ can be used only if _ConnectAsync_ was called before.");
-            }
-
-            return client.ConnectAsync(client.Options, cancellationToken);
-        }
-
-        public static Task DisconnectAsync(this IMqttClient client)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            return client.DisconnectAsync(CancellationToken.None);
-        }
-
-        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectOptions options)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            return client.DisconnectAsync(options, CancellationToken.None);
-        }
-        
-        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectReason reason, string reasonString = null)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            return client.DisconnectAsync(new MqttClientDisconnectOptions
-            {
-                Reason = reason,
-                ReasonString = reasonString
-            }, CancellationToken.None);
-        }
-
-        public static Task DisconnectAsync(this IMqttClient client, CancellationToken cancellationToken = default)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            return client.DisconnectAsync(new MqttClientDisconnectOptions(), cancellationToken);
-        }
-
-        public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, params MqttTopicFilter[] topicFilters)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
-
-            var options = new MqttClientSubscribeOptions();
-            options.TopicFilters.AddRange(topicFilters);
-
-            return client.SubscribeAsync(options);
-        }
-
-        public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, string topic, MqttQualityOfServiceLevel qualityOfServiceLevel)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-
-            return client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
-        }
-
-        public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient client, string topic)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-
-            return client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).Build());
-        }
-
-        public static Task<MqttClientUnsubscribeResult> UnsubscribeAsync(this IMqttClient client, params string[] topicFilters)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
-
-            var options = new MqttClientUnsubscribeOptions();
-            options.TopicFilters.AddRange(topicFilters);
-
-            return client.UnsubscribeAsync(options);
-        }
-        
-        public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
 
             return client.SendExtendedAuthenticationExchangeDataAsync(data, CancellationToken.None);
         }
-        
-        public static async Task PublishAsync(this IMqttClient client, IEnumerable<MqttApplicationMessage> applicationMessages)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (applicationMessages == null) throw new ArgumentNullException(nameof(applicationMessages));
 
-            foreach (var applicationMessage in applicationMessages)
+        public static Task<MqttClientSubscribeResult> SubscribeAsync(this MqttClient mqttClient, MqttTopicFilter topicFilter, CancellationToken cancellationToken = default)
+        {
+            if (mqttClient == null)
             {
-                await client.PublishAsync(applicationMessage).ConfigureAwait(false);
+                throw new ArgumentNullException(nameof(mqttClient));
             }
+
+            if (topicFilter == null)
+            {
+                throw new ArgumentNullException(nameof(topicFilter));
+            }
+
+            var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topicFilter)
+                .Build();
+
+            return mqttClient.SubscribeAsync(subscribeOptions, cancellationToken);
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic)
+        public static Task<MqttClientSubscribeResult> SubscribeAsync(
+            this MqttClient mqttClient,
+            string topic,
+            MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+            CancellationToken cancellationToken = default)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
+            if (mqttClient == null)
+            {
+                throw new ArgumentNullException(nameof(mqttClient));
+            }
 
-            return client.PublishAsync(new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .Build());
+            if (topic == null)
+            {
+                throw new ArgumentNullException(nameof(topic));
+            }
+
+            var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topic, qualityOfServiceLevel)
+                .Build();
+
+            return mqttClient.SubscribeAsync(subscribeOptions, cancellationToken);
         }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, IEnumerable<byte> payload)
+        public static Task<MqttClientUnsubscribeResult> UnsubscribeAsync(this MqttClient mqttClient, string topic, CancellationToken cancellationToken = default)
         {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
+            if (mqttClient == null)
+            {
+                throw new ArgumentNullException(nameof(mqttClient));
+            }
 
-            return client.PublishAsync(new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(payload)
-                .Build());
-        }
+            if (topic == null)
+            {
+                throw new ArgumentNullException(nameof(topic));
+            }
 
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, string payload)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
+            var unsubscribeOptions = new MqttClientUnsubscribeOptionsBuilder().WithTopicFilter(topic)
+                .Build();
 
-            return client.PublishAsync(new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(payload)
-                .Build());
-        }
-
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-
-            return client.PublishAsync(new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(payload)
-                .WithQualityOfServiceLevel(qualityOfServiceLevel)
-                .Build());
-        }
-
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, bool retain)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-
-            return client.PublishAsync(new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(payload)
-                .WithQualityOfServiceLevel(qualityOfServiceLevel)
-                .WithRetainFlag(retain)
-                .Build());
-        }
-
-        public static Task<MqttClientPublishResult> PublishAsync(this IMqttClient client, string topic, string payload, bool retain)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-
-            return client.PublishAsync(new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(payload)
-                .WithRetainFlag(retain)
-                .Build());
+            return mqttClient.UnsubscribeAsync(unsubscribeOptions, cancellationToken);
         }
     }
 }

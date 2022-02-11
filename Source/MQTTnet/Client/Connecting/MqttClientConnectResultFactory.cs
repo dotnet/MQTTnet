@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
@@ -28,23 +32,23 @@ namespace MQTTnet.Client
             {
                 IsSessionPresent = connAckPacket.IsSessionPresent,
                 ResultCode = (MqttClientConnectResultCode) (int) connAckPacket.ReasonCode,
-                WildcardSubscriptionAvailable = connAckPacket.Properties.WildcardSubscriptionAvailable,
-                RetainAvailable = connAckPacket.Properties.RetainAvailable,
-                AssignedClientIdentifier = connAckPacket.Properties.AssignedClientIdentifier,
-                AuthenticationMethod = connAckPacket.Properties.AuthenticationMethod,
-                AuthenticationData = connAckPacket.Properties.AuthenticationData,
-                MaximumPacketSize = connAckPacket.Properties.MaximumPacketSize,
-                ReasonString = connAckPacket.Properties.ReasonString,
-                ReceiveMaximum = connAckPacket.Properties.ReceiveMaximum,
-                MaximumQoS = connAckPacket.Properties.MaximumQoS ?? MqttQualityOfServiceLevel.ExactlyOnce,
-                ResponseInformation = connAckPacket.Properties.ResponseInformation,
-                TopicAliasMaximum = connAckPacket.Properties.TopicAliasMaximum,
-                ServerReference = connAckPacket.Properties.ServerReference,
-                ServerKeepAlive = connAckPacket.Properties.ServerKeepAlive,
-                SessionExpiryInterval = connAckPacket.Properties?.SessionExpiryInterval,
-                SubscriptionIdentifiersAvailable = connAckPacket.Properties.SubscriptionIdentifiersAvailable,
-                SharedSubscriptionAvailable = connAckPacket.Properties.SharedSubscriptionAvailable,
-                UserProperties = connAckPacket.Properties.UserProperties 
+                WildcardSubscriptionAvailable = connAckPacket.WildcardSubscriptionAvailable,
+                RetainAvailable = connAckPacket.RetainAvailable,
+                AssignedClientIdentifier = connAckPacket.AssignedClientIdentifier,
+                AuthenticationMethod = connAckPacket.AuthenticationMethod,
+                AuthenticationData = connAckPacket.AuthenticationData,
+                MaximumPacketSize = connAckPacket.MaximumPacketSize,
+                ReasonString = connAckPacket.ReasonString,
+                ReceiveMaximum = connAckPacket.ReceiveMaximum,
+                MaximumQoS = connAckPacket.MaximumQoS,
+                ResponseInformation = connAckPacket.ResponseInformation,
+                TopicAliasMaximum = connAckPacket.TopicAliasMaximum,
+                ServerReference = connAckPacket.ServerReference,
+                ServerKeepAlive = connAckPacket.ServerKeepAlive,
+                SessionExpiryInterval = connAckPacket.SessionExpiryInterval,
+                SubscriptionIdentifiersAvailable = connAckPacket.SubscriptionIdentifiersAvailable,
+                SharedSubscriptionAvailable = connAckPacket.SharedSubscriptionAvailable,
+                UserProperties = connAckPacket.UserProperties
             };
         }
         

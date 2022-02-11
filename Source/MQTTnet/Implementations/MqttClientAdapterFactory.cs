@@ -1,4 +1,8 @@
-﻿using MQTTnet.Adapter;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using System;
@@ -9,7 +13,7 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(IMqttClientOptions options, IMqttNetLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, IMqttPacketInspectorHandler packetInspectorHandler, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -35,7 +39,7 @@ namespace MQTTnet.Implementations
             }
 
             var packetFormatterAdapter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttPacketWriter());
-            return new MqttChannelAdapter(channel, packetFormatterAdapter, options.PacketInspector, logger);
+            return new MqttChannelAdapter(channel, packetFormatterAdapter, packetInspectorHandler, logger);
         }
     }
 }

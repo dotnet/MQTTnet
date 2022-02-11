@@ -1,13 +1,15 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using MQTTnet.Client;
-using MQTTnet.Extensions.Rpc.Options;
-using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
 
 namespace MQTTnet.Extensions.Rpc
 {
     public static class MqttFactoryExtensions
     {
-        public static IMqttRpcClient CreateMqttRpcClient(this MqttFactory factory, IMqttClient mqttClient)
+        public static MqttRpcClient CreateMqttRpcClient(this MqttFactory factory, MqttClient mqttClient)
         {
             return factory.CreateMqttRpcClient(mqttClient, new MqttRpcClientOptions
             {
@@ -15,7 +17,7 @@ namespace MQTTnet.Extensions.Rpc
             });
         }
 
-        public static IMqttRpcClient CreateMqttRpcClient(this MqttFactory factory, IMqttClient mqttClient, IMqttRpcClientOptions rpcClientOptions)
+        public static MqttRpcClient CreateMqttRpcClient(this MqttFactory factory, MqttClient mqttClient, MqttRpcClientOptions rpcClientOptions)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             

@@ -1,13 +1,18 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
-using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
 namespace MQTTnet.Client
 {
-    public class MqttClientTlsOptions
+    public sealed class MqttClientTlsOptions
     {
+        public Func<MqttClientCertificateValidationEventArgs, bool> CertificateValidationHandler { get; set; }
+
         public bool UseTls { get; set; }
 
         public bool IgnoreCertificateRevocationErrors { get; set; }
@@ -23,14 +28,9 @@ namespace MQTTnet.Client
 #endif
 
 #if NETCOREAPP3_1 || NET5_0_OR_GREATER
-        public List<SslApplicationProtocol> ApplicationProtocols { get; set; }
+        public List<System.Net.Security.SslApplicationProtocol> ApplicationProtocols { get; set; }
 #endif
 
         public SslProtocols SslProtocol { get; set; } = SslProtocols.None;
-
-        [Obsolete("This property will be removed soon. Use CertificateValidationHandler instead.")]
-        public Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> CertificateValidationCallback { get; set; }
-
-        public Func<MqttClientCertificateValidationCallbackContext, bool> CertificateValidationHandler { get; set; }
     }
 }

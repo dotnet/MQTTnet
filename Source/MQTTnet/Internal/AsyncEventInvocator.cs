@@ -1,10 +1,14 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Threading.Tasks;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.Internal
 {
-    public sealed class AsyncEventInvocator<TEventArgs>
+    public readonly struct AsyncEventInvocator<TEventArgs>
     {
         readonly Action<TEventArgs> _handler;
         readonly Func<TEventArgs, Task> _asyncHandler;

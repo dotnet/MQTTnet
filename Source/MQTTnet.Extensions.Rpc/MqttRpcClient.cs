@@ -1,7 +1,9 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
-using MQTTnet.Extensions.Rpc.Options;
-using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
 using MQTTnet.Protocol;
 using System;
 using System.Collections.Concurrent;
@@ -11,13 +13,13 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet.Extensions.Rpc
 {
-    public sealed class MqttRpcClient : IMqttRpcClient
+    public sealed class MqttRpcClient : IDisposable
     {
         readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
-        readonly IMqttClient _mqttClient;
-        readonly IMqttRpcClientOptions _options;
+        readonly MqttClient _mqttClient;
+        readonly MqttRpcClientOptions _options;
         
-        public MqttRpcClient(IMqttClient mqttClient, IMqttRpcClientOptions options)
+        public MqttRpcClient(MqttClient mqttClient, MqttRpcClientOptions options)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -105,7 +107,7 @@ namespace MQTTnet.Extensions.Rpc
             finally
             {
                 _waitingCalls.TryRemove(responseTopic, out _);
-
+                
                 await _mqttClient.UnsubscribeAsync(responseTopic).ConfigureAwait(false);
             }
         }

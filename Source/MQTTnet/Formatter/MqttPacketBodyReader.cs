@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -117,7 +121,7 @@ namespace MQTTnet.Formatter
             return ReadSegmentWithLengthPrefix().ToArray();
         }
 
-        private ArraySegment<byte> ReadSegmentWithLengthPrefix()
+        ArraySegment<byte> ReadSegmentWithLengthPrefix()
         {
             var length = ReadTwoByteInteger();
 
@@ -130,7 +134,7 @@ namespace MQTTnet.Formatter
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ValidateReceiveBuffer(int length)
+        void ValidateReceiveBuffer(int length)
         {
             if (_length < _offset + length)
             {

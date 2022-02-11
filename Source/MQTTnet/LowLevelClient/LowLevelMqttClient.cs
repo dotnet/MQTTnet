@@ -1,15 +1,22 @@
-﻿using MQTTnet.Adapter;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Packets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Internal;
 
 namespace MQTTnet.LowLevelClient
 {
-    public sealed class LowLevelMqttClient : ILowLevelMqttClient
+    public sealed class LowLevelMqttClient : IDisposable
     {
+        readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();
+        
         readonly IMqttNetLogger _rootLogger;
         readonly MqttNetSourceLogger _logger;
         readonly IMqttClientAdapterFactory _clientAdapterFactory;
@@ -26,7 +33,13 @@ namespace MQTTnet.LowLevelClient
 
         bool IsConnected => _adapter != null;
 
-        public async Task ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken)
+        public event Func<InspectMqttPacketEventArgs, Task> InspectPackage
+        {
+            add => _inspectPacketEvent.AddHandler(value);
+            remove => _inspectPacketEvent.RemoveHandler(value);
+        }
+        
+        public async Task ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken)
         {
             if (options is null) throw new ArgumentNullException(nameof(options));
 
@@ -35,7 +48,7 @@ namespace MQTTnet.LowLevelClient
                 throw new InvalidOperationException("Low level MQTT client is already connected. Disconnect first before connecting again.");
             }
 
-            var newAdapter = _clientAdapterFactory.CreateClientAdapter(options, _rootLogger);
+            var newAdapter = _clientAdapterFactory.CreateClientAdapter(options, new MqttPacketInspectorHandler(_inspectPacketEvent, _rootLogger), _rootLogger);
 
             try
             {

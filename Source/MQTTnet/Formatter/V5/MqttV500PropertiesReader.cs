@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Generic;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
@@ -6,11 +10,11 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5
 {
-    public class MqttV500PropertiesReader
+    public sealed class MqttV500PropertiesReader
     {
-        private readonly IMqttPacketBodyReader _body;
-        private readonly int _length;
-        private readonly int _targetOffset;
+        readonly IMqttPacketBodyReader _body;
+        readonly int _length;
+        readonly int _targetOffset;
 
         public MqttV500PropertiesReader(IMqttPacketBodyReader body)
         {
@@ -26,30 +30,43 @@ namespace MQTTnet.Formatter.V5
 
         public MqttPropertyId CurrentPropertyId { get; private set; }
 
+        public List<MqttUserProperty> CollectedUserProperties { get; private set; }
+
         public bool MoveNext()
         {
-            if (_length == 0)
+            while (true)
             {
-                return false;
+                if (_length == 0)
+                {
+                    return false;
+                }
+
+                if (_body.Offset >= _targetOffset)
+                {
+                    return false;
+                }
+
+                CurrentPropertyId = (MqttPropertyId)_body.ReadByte();
+
+                // User properties are special because the can appear multiple times in the
+                // buffer and at any position. So we collect them here to expose them as a 
+                // final result list.
+                if (CurrentPropertyId == MqttPropertyId.UserProperty)
+                {
+                    var name = _body.ReadStringWithLengthPrefix();
+                    var value = _body.ReadStringWithLengthPrefix();
+
+                    if (CollectedUserProperties == null)
+                    {
+                        CollectedUserProperties = new List<MqttUserProperty>();
+                    }
+
+                    CollectedUserProperties.Add(new MqttUserProperty(name, value));
+                    continue;
+                }
+
+                return true;
             }
-
-            if (_body.Offset >= _targetOffset)
-            {
-                return false;
-            }
-
-            CurrentPropertyId = (MqttPropertyId)_body.ReadByte();
-            return true;
-        }
-
-        public void AddUserPropertyTo(List<MqttUserProperty> userProperties)
-        {
-            if (userProperties == null) throw new ArgumentNullException(nameof(userProperties));
-
-            var name = _body.ReadStringWithLengthPrefix();
-            var value = _body.ReadStringWithLengthPrefix();
-
-            userProperties.Add(new MqttUserProperty(name, value));
         }
 
         public string ReadReasonString()
@@ -84,7 +101,7 @@ namespace MQTTnet.Formatter.V5
 
         public MqttQualityOfServiceLevel ReadMaximumQoS()
         {
-            byte value = _body.ReadByte();
+            var value = _body.ReadByte();
             if (value > 1)
             {
                 throw new MqttProtocolViolationException($"Unexpected Maximum QoS value: {value}");

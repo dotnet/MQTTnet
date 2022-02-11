@@ -545,7 +545,6 @@ namespace MQTTnet.Server
             }
         }
 
-
         MqttClient CreateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, MqttSession session)
         {
             return new MqttClient(connectPacket, channelAdapter, session, _options, _eventContainer, this, _rootLogger);
@@ -579,7 +578,6 @@ namespace MQTTnet.Server
                 using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, cancellationToken))
                 {
                     var firstPacket = await channelAdapter.ReceivePacketAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
-
                     if (firstPacket is MqttConnectPacket connectPacket)
                     {
                         return connectPacket;

@@ -164,7 +164,6 @@ namespace MQTTnet.Server
             return CheckSubscriptions(topic, topicHash, applicationMessageQoSLevel, senderClientId);
         }
 
-
         public async Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
             if (subscribePacket == null)

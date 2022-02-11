@@ -27,7 +27,6 @@ namespace MQTTnet.Server
         // Bookkeeping to know if this is a subscribing client; lazy intialize later.
         HashSet<string> _subscribedTopics;
 
-
         public MqttSession(
             string clientId,
             bool isPersistent,

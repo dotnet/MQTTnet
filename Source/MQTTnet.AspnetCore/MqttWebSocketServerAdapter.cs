@@ -45,8 +45,7 @@ namespace MQTTnet.AspNetCore
                 var clientHandler = ClientHandler;
                 if (clientHandler != null)
                 {
-                    var writer = new SpanBasedMqttPacketWriter();
-                    var formatter = new MqttPacketFormatterAdapter(writer);
+                    var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
                     var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection, clientCertificate);
 
                     using (var channelAdapter = new MqttChannelAdapter(channel, formatter, null, _logger))

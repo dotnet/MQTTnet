@@ -25,7 +25,7 @@ namespace MQTTnet.Server
         
         public AsyncEvent<ClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopicEvent { get; } = new AsyncEvent<ClientUnsubscribedTopicEventArgs>();
         
-        public AsyncEvent<PreparingSessionEventArgs> PreparingSessionEvent { get; } = new AsyncEvent<PreparingSessionEventArgs>();
+        public AsyncEvent<EventArgs> PreparingSessionEvent { get; } = new AsyncEvent<EventArgs>();
         
         public AsyncEvent<SessionDeletedEventArgs> SessionDeletedEvent { get; } = new AsyncEvent<SessionDeletedEventArgs>();
         

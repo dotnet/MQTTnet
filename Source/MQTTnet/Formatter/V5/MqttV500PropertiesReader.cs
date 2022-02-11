@@ -12,17 +12,17 @@ namespace MQTTnet.Formatter.V5
 {
     public sealed class MqttV500PropertiesReader
     {
-        readonly IMqttPacketBodyReader _body;
+        readonly MqttBufferReader _body;
         readonly int _length;
         readonly int _targetOffset;
 
-        public MqttV500PropertiesReader(IMqttPacketBodyReader body)
+        public MqttV500PropertiesReader(MqttBufferReader body)
         {
             _body = body ?? throw new ArgumentNullException(nameof(body));
 
             if (!body.EndOfStream)
             {
-                _length = (int)body.ReadVariableLengthInteger();
+                _length = (int)body.ReadVariableByteInteger();
             }
 
             _targetOffset = body.Offset + _length;
@@ -53,8 +53,8 @@ namespace MQTTnet.Formatter.V5
                 // final result list.
                 if (CurrentPropertyId == MqttPropertyId.UserProperty)
                 {
-                    var name = _body.ReadStringWithLengthPrefix();
-                    var value = _body.ReadStringWithLengthPrefix();
+                    var name = _body.ReadString();
+                    var value = _body.ReadString();
 
                     if (CollectedUserProperties == null)
                     {
@@ -71,22 +71,22 @@ namespace MQTTnet.Formatter.V5
 
         public string ReadReasonString()
         {
-            return _body.ReadStringWithLengthPrefix();
+            return _body.ReadString();
         }
 
         public string ReadAuthenticationMethod()
         {
-            return _body.ReadStringWithLengthPrefix();
+            return _body.ReadString();
         }
 
         public byte[] ReadAuthenticationData()
         {
-            return _body.ReadWithLengthPrefix();
+            return _body.ReadBinaryData();
         }
 
         public bool ReadRetainAvailable()
         {
-            return _body.ReadBoolean();
+            return _body.ReadByte() == 1;
         }
 
         public uint ReadSessionExpiryInterval()
@@ -112,12 +112,12 @@ namespace MQTTnet.Formatter.V5
 
         public string ReadAssignedClientIdentifier()
         {
-            return _body.ReadStringWithLengthPrefix();
+            return _body.ReadString();
         }
 
         public string ReadServerReference()
         {
-            return _body.ReadStringWithLengthPrefix();
+            return _body.ReadString();
         }
 
         public ushort ReadTopicAliasMaximum()
@@ -137,27 +137,27 @@ namespace MQTTnet.Formatter.V5
 
         public string ReadResponseInformation()
         {
-            return _body.ReadStringWithLengthPrefix();
+            return _body.ReadString();
         }
 
         public bool ReadSharedSubscriptionAvailable()
         {
-            return _body.ReadBoolean();
+            return _body.ReadByte() == 1;
         }
 
         public bool ReadSubscriptionIdentifiersAvailable()
         {
-            return _body.ReadBoolean();
+            return _body.ReadByte() == 1;
         }
 
         public bool ReadWildcardSubscriptionAvailable()
         {
-            return _body.ReadBoolean();
+            return _body.ReadByte() == 1;
         }
 
         public uint ReadSubscriptionIdentifier()
         {
-            return _body.ReadVariableLengthInteger();
+            return _body.ReadVariableByteInteger();
         }
 
         public MqttPayloadFormatIndicator ReadPayloadFormatIndicator()
@@ -177,17 +177,17 @@ namespace MQTTnet.Formatter.V5
 
         public string ReadResponseTopic()
         {
-            return _body.ReadStringWithLengthPrefix();
+            return _body.ReadString();
         }
 
         public byte[] ReadCorrelationData()
         {
-            return _body.ReadWithLengthPrefix();
+            return _body.ReadBinaryData();
         }
 
         public string ReadContentType()
         {
-            return _body.ReadStringWithLengthPrefix();
+            return _body.ReadString();
         }
 
         public uint ReadWillDelayInterval()
@@ -197,12 +197,12 @@ namespace MQTTnet.Formatter.V5
 
         public bool RequestResponseInformation()
         {
-            return _body.ReadBoolean();
+            return _body.ReadByte() == 1;
         }
 
         public bool RequestProblemInformation()
         {
-            return _body.ReadBoolean();
+            return _body.ReadByte() == 1;
         }
 
         public void ThrowInvalidPropertyIdException(Type type)

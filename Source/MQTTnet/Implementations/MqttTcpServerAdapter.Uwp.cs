@@ -91,7 +91,7 @@ namespace MQTTnet.Implementations
                         }
                     }
 
-                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, clientCertificate, _options), new MqttPacketFormatterAdapter(new MqttPacketWriter()), null, _rootLogger))
+                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, clientCertificate, _options), new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535)), null, _rootLogger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }

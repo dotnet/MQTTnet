@@ -23,7 +23,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
                 {
                     return new MqttChannelAdapter(
                         new MqttTcpChannel(options),
-                        new MqttPacketFormatterAdapter(options.ProtocolVersion),
+                        new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(4096, 65535)),
                         packetInspectorHandler,
                         logger);
                 }
@@ -32,7 +32,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
                 {
                     return new MqttChannelAdapter(
                         new WebSocket4NetMqttChannel(options, webSocketOptions),
-                        new MqttPacketFormatterAdapter(options.ProtocolVersion), 
+                        new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(4068, 65535)), 
                         packetInspectorHandler,
                         logger);
                 }

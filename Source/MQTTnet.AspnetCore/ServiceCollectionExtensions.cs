@@ -66,16 +66,6 @@ namespace MQTTnet.AspNetCore
             return services;
         }
 
-        // public static IServiceCollection AddHostedMqttServer<TOptions>(this IServiceCollection services)
-        //     where TOptions : MqttServerOptions
-        // {
-        //     services.AddSingleton<MqttServerOptions, TOptions>();
-        //
-        //     services.AddHostedMqttServer();
-        //
-        //     return services;
-        // }
-
         static IServiceCollection AddHostedMqttServer(this IServiceCollection services)
         {
             var logger = new MqttNetEventLogger();

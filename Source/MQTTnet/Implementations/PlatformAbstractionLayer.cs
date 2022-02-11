@@ -20,6 +20,8 @@ namespace MQTTnet.Implementations
         public static byte[] EmptyByteArray { get; } = Array.Empty<byte>();
 #endif
 
+        public static ArraySegment<byte> EmptyByteArraySegment { get; } = new ArraySegment<byte>(EmptyByteArray);
+
         public static void Sleep(TimeSpan timeout)
         {
 #if !NETSTANDARD1_3 && !WINDOWS_UWP

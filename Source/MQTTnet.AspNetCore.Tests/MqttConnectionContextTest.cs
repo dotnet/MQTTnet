@@ -29,7 +29,7 @@ namespace MQTTnet.AspNetCore.Tests
         [TestMethod]
         public async Task TestReceivePacketAsyncThrowsWhenReaderCompleted()
         {
-            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
@@ -43,7 +43,7 @@ namespace MQTTnet.AspNetCore.Tests
         [TestMethod]
         public async Task TestCorruptedConnectPacket()
         {
-            var writer = new MqttPacketWriter();
+            var writer = new MqttBufferWriter(4096, 65535);
             var serializer = new MqttPacketFormatterAdapter(writer);
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
@@ -82,7 +82,7 @@ namespace MQTTnet.AspNetCore.Tests
         [TestMethod]
         public async Task TestLargePacket()
         {
-            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
@@ -116,6 +116,7 @@ namespace MQTTnet.AspNetCore.Tests
                     services.AddSingleton<IMqttServerAdapter>(mockup);
                 })
                 .Build())
+                
             using (var client = new MqttFactory().CreateMqttClient())
             {
                 host.Start();

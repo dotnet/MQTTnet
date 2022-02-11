@@ -25,7 +25,7 @@ namespace MQTTnet.Server
         public IPAddress BoundInterNetworkV6Address { get; set; } = IPAddress.IPv6Any;
 
         /// <summary>
-        /// This requires admin permissions on Linux.
+        ///     This requires admin permissions on Linux.
         /// </summary>
         public bool ReuseAddress { get; set; }
     }

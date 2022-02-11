@@ -20,21 +20,21 @@ namespace MQTTnet.Benchmarks
     [SimpleJob(RuntimeMoniker.NetCoreApp50)]
     [RPlotExporter]
     [MemoryDiagnoser]
-    public class SerializerBenchmark
+    public class SerializerBenchmark : BaseBenchmark
     {
         MqttBasePacket _packet;
         ArraySegment<byte> _serializedPacket;
         IMqttPacketFormatter _serializer;
 
         [GlobalSetup]
-        public void Setup()
+        public void GlobalSetup()
         {
             _packet = new MqttPublishPacket
             {
                 Topic = "A"
             };
 
-            _serializer = new MqttV311PacketFormatter(new MqttPacketWriter());
+            _serializer = new MqttV311PacketFormatter(new MqttBufferWriter(4096, 65535));
             _serializedPacket = _serializer.Encode(_packet).ToArray();
         }
 
@@ -52,8 +52,7 @@ namespace MQTTnet.Benchmarks
         public void Deserialize_10000_Messages()
         {
             var channel = new BenchmarkMqttChannel(_serializedPacket);
-            var fixedHeader = new byte[2];
-            var reader = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(new MqttPacketWriter()), null, new MqttNetEventLogger());
+            var reader = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535)), null, new MqttNetEventLogger());
 
             for (var i = 0; i < 10000; i++)
             {

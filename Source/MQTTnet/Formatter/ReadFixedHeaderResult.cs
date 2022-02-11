@@ -4,9 +4,21 @@
 
 namespace MQTTnet.Formatter
 {
-    public class ReadFixedHeaderResult
+    public struct ReadFixedHeaderResult
     {
-        public bool ConnectionClosed { get; set; }
+        public static ReadFixedHeaderResult Cancelled = new ReadFixedHeaderResult
+        {
+            IsCancelled = true
+        };
+        
+        public static ReadFixedHeaderResult ConnectionClosed = new ReadFixedHeaderResult
+        {
+            IsConnectionClosed = true
+        };
+        
+        public bool IsCancelled { get; set; }
+        
+        public bool IsConnectionClosed { get; set; }
 
         public MqttFixedHeader FixedHeader { get; set; }
     }

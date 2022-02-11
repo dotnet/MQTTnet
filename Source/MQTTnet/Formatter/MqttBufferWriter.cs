@@ -5,6 +5,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
+using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter
@@ -15,16 +16,22 @@ namespace MQTTnet.Formatter
     ///     same as for the original MemoryStream in .net. Also this implementation allows accessing the internal
     ///     buffer for all platforms and .net framework versions (which is not available at the regular MemoryStream).
     /// </summary>
-    public sealed class MqttPacketWriter : IMqttPacketWriter
+    public sealed class MqttBufferWriter
     {
-        public static int InitialBufferSize { get; set; } = 4096;
-        public static int MaxBufferSize { get; set; } = 4096 * 4;
+        public const uint VariableByteIntegerMaxValue = 268435455;
 
-        byte[] _buffer = new byte[InitialBufferSize];
+        readonly int _maxBufferSize;
+
+        byte[] _buffer;
         int _position;
-        int _length;
 
-        public int Length => _length;
+        public MqttBufferWriter(int bufferSize, int maxBufferSize)
+        {
+            _buffer = new byte[bufferSize];
+            _maxBufferSize = maxBufferSize;
+        }
+
+        public int Length { get; private set; }
 
         public static byte BuildFixedHeader(MqttControlPacketType packetType, byte flags = 0)
         {
@@ -41,14 +48,14 @@ namespace MQTTnet.Formatter
             // a lot and the size will never reduced. So this method tries to find a size which can be held in
             // memory for a long time without causing troubles.
 
-            if (_buffer.Length < MaxBufferSize)
+            if (_buffer.Length < _maxBufferSize)
             {
                 return;
             }
 
             // Create a new and empty buffer. Do not use Array.Resize because it will copy all data from
             // the old array to the new one which is not required in this case.
-            _buffer = new byte[MaxBufferSize];
+            _buffer = new byte[_maxBufferSize];
         }
 
         public byte[] GetBuffer()
@@ -72,7 +79,7 @@ namespace MQTTnet.Formatter
         public void Reset(int length)
         {
             _position = 0;
-            _length = length;
+            Length = length;
         }
 
         public void Seek(int position)
@@ -81,25 +88,23 @@ namespace MQTTnet.Formatter
             _position = position;
         }
 
-        public void Write(byte @byte)
+        public void Write(MqttBufferWriter propertyWriter)
         {
-            EnsureAdditionalCapacity(1);
+            if (propertyWriter is MqttBufferWriter writer)
+            {
+                WriteBinary(writer._buffer, 0, writer.Length);
+                return;
+            }
 
-            _buffer[_position] = @byte;
-            IncreasePosition(1);
+            if (propertyWriter == null)
+            {
+                throw new ArgumentNullException(nameof(propertyWriter));
+            }
+
+            throw new InvalidOperationException($"{nameof(propertyWriter)} must be of type {nameof(MqttBufferWriter)}");
         }
 
-        public void Write(ushort value)
-        {
-            EnsureAdditionalCapacity(2);
-
-            _buffer[_position] = (byte)(value >> 8);
-            IncreasePosition(1);
-            _buffer[_position] = (byte)value;
-            IncreasePosition(1);
-        }
-
-        public void Write(byte[] buffer, int offset, int count)
+        public void WriteBinary(byte[] buffer, int offset, int count)
         {
             if (buffer == null)
             {
@@ -117,59 +122,40 @@ namespace MQTTnet.Formatter
             IncreasePosition(count);
         }
 
-        public void Write(IMqttPacketWriter propertyWriter)
+        public void WriteBinaryData(byte[] value)
         {
-            if (propertyWriter is MqttPacketWriter writer)
+            if (value == null || value.Length == 0)
             {
-                Write(writer._buffer, 0, writer.Length);
-                return;
-            }
+                EnsureAdditionalCapacity(2);
 
-            if (propertyWriter == null)
-            {
-                throw new ArgumentNullException(nameof(propertyWriter));
-            }
-
-            throw new InvalidOperationException($"{nameof(propertyWriter)} must be of type {nameof(MqttPacketWriter)}");
-        }
-
-        public void WriteVariableLengthInteger(uint value)
-        {
-            if (value == 0)
-            {
                 _buffer[_position] = 0;
-                IncreasePosition(1);
+                _buffer[_position + 1] = 0;
 
-                return;
+                IncreasePosition(2);
             }
-
-            if (value <= 127)
+            else
             {
-                _buffer[_position] = (byte)value;
-                IncreasePosition(1);
+                var valueLength = value.Length;
 
-                return;
+                EnsureAdditionalCapacity(valueLength + 2);
+
+                _buffer[_position] = (byte)(valueLength >> 8);
+                _buffer[_position + 1] = (byte)valueLength;
+
+                Array.Copy(value, 0, _buffer, _position + 2, valueLength);
+                IncreasePosition(valueLength + 2);
             }
-
-            var size = 0;
-            var x = value;
-            do
-            {
-                var encodedByte = x % 128;
-                x /= 128;
-                if (x > 0)
-                {
-                    encodedByte |= 128;
-                }
-
-                _buffer[_position + size] = (byte)encodedByte;
-                size++;
-            } while (x > 0);
-
-            IncreasePosition(size);
         }
 
-        public void WriteWithLengthPrefix(string value)
+        public void WriteByte(byte @byte)
+        {
+            EnsureAdditionalCapacity(1);
+
+            _buffer[_position] = @byte;
+            IncreasePosition(1);
+        }
+
+        public void WriteString(string value)
         {
             if (string.IsNullOrEmpty(value))
             {
@@ -195,36 +181,62 @@ namespace MQTTnet.Formatter
             }
         }
 
-        public void WriteWithLengthPrefix(byte[] value)
+        public void WriteTwoByteInteger(ushort value)
         {
-            if (value == null || value.Length == 0)
-            {
-                EnsureAdditionalCapacity(2);
+            EnsureAdditionalCapacity(2);
 
+            _buffer[_position] = (byte)(value >> 8);
+            IncreasePosition(1);
+            _buffer[_position] = (byte)value;
+            IncreasePosition(1);
+        }
+
+        public void WriteVariableByteInteger(uint value)
+        {
+            if (value == 0)
+            {
                 _buffer[_position] = 0;
-                _buffer[_position + 1] = 0;
+                IncreasePosition(1);
 
-                IncreasePosition(2);
+                return;
             }
-            else
+
+            if (value <= 127)
             {
-                var valueLength = value.Length;
-                
-                EnsureAdditionalCapacity(valueLength + 2);
+                _buffer[_position] = (byte)value;
+                IncreasePosition(1);
 
-                _buffer[_position] = (byte)(valueLength >> 8);
-                _buffer[_position + 1] = (byte)valueLength;
-
-                Array.Copy(value, 0, _buffer, _position + 2, valueLength);
-                IncreasePosition(valueLength + 2);
+                return;
             }
+
+            if (value > VariableByteIntegerMaxValue)
+            {
+                throw new MqttProtocolViolationException($"The specified value ({value}) is too large for a variable byte integer.");
+            }
+
+            var size = 0;
+            var x = value;
+            do
+            {
+                var encodedByte = x % 128;
+                x /= 128;
+                if (x > 0)
+                {
+                    encodedByte |= 128;
+                }
+
+                _buffer[_position + size] = (byte)encodedByte;
+                size++;
+            } while (x > 0);
+
+            IncreasePosition(size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void EnsureAdditionalCapacity(int additionalCapacity)
         {
             var bufferLength = _buffer.Length;
-            
+
             var freeSpace = bufferLength - _position;
             if (freeSpace >= additionalCapacity)
             {
@@ -259,9 +271,9 @@ namespace MQTTnet.Formatter
         {
             _position += length;
 
-            if (_position > _length)
+            if (_position > Length)
             {
-                _length = _position;
+                Length = _position;
             }
         }
     }

@@ -15,6 +15,8 @@ namespace MQTTnet.AspNetCore
 {
     public sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
     {
+        MqttServerOptions _serverOptions;
+        
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
         public override async Task OnConnectedAsync(ConnectionContext connection)
@@ -25,9 +27,8 @@ namespace MQTTnet.AspNetCore
             {
                 transferFormatFeature.ActiveFormat = TransferFormat.Binary;
             }
-
-            var writer = new SpanBasedMqttPacketWriter();
-            var formatter = new MqttPacketFormatterAdapter(writer);
+            
+            var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax));
             using (var adapter = new MqttConnectionContext(formatter, connection))
             {
                 var clientHandler = ClientHandler;
@@ -40,6 +41,8 @@ namespace MQTTnet.AspNetCore
 
         public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
         {
+            _serverOptions = options;
+
             return Task.CompletedTask;
         }
 

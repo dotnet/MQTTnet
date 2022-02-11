@@ -24,6 +24,7 @@ namespace MQTTnet.Implementations
         readonly MqttNetSourceLogger _logger;
         readonly IMqttNetLogger _rootLogger;
         readonly AddressFamily _addressFamily;
+        readonly MqttServerOptions _serverOptions;
         readonly MqttServerTcpEndpointBaseOptions _options;
         readonly MqttServerTlsTcpEndpointOptions _tlsOptions;
         readonly X509Certificate2 _tlsCertificate;
@@ -33,12 +34,14 @@ namespace MQTTnet.Implementations
 
         public MqttTcpServerListener(
             AddressFamily addressFamily,
-            MqttServerTcpEndpointBaseOptions options,
+            MqttServerOptions serverOptions,
+            MqttServerTcpEndpointBaseOptions tcpEndpointOptions,
             X509Certificate2 tlsCertificate,
             IMqttNetLogger logger)
         {
             _addressFamily = addressFamily;
-            _options = options;
+            _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
+            _options = tcpEndpointOptions ?? throw new ArgumentNullException(nameof(tcpEndpointOptions));
             _tlsCertificate = tlsCertificate;
             _rootLogger = logger;
             _logger = logger.WithSource(nameof(MqttTcpServerListener));
@@ -182,11 +185,11 @@ namespace MQTTnet.Implementations
                 var clientHandler = ClientHandler;
                 if (clientHandler != null)
                 {
-                    using (var clientAdapter = new MqttChannelAdapter(
-                        new MqttTcpChannel(stream, remoteEndPoint, clientCertificate),
-                        new MqttPacketFormatterAdapter(new MqttPacketWriter()),
-                        null,
-                        _rootLogger))
+                    var tcpChannel = new MqttTcpChannel(stream, remoteEndPoint, clientCertificate);
+                    var bufferWriter = new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax);
+                    var packetFormatterAdapter = new MqttPacketFormatterAdapter(bufferWriter);
+                    
+                    using (var clientAdapter = new MqttChannelAdapter(tcpChannel, packetFormatterAdapter, null, _rootLogger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }

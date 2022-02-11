@@ -9,11 +9,11 @@ namespace MQTTnet.Tests.Extensions
 {
     public static class MqttPacketWriterExtensions
     {
-        public static byte[] AddMqttHeader(this IMqttPacketWriter writer, MqttControlPacketType header, byte[] body)
+        public static byte[] AddMqttHeader(this MqttBufferWriter writer, MqttControlPacketType header, byte[] body)
         {
-            writer.Write(MqttPacketWriter.BuildFixedHeader(header));
-            writer.WriteVariableLengthInteger((uint)body.Length);
-            writer.Write(body, 0, body.Length);
+            writer.WriteByte(MqttBufferWriter.BuildFixedHeader(header));
+            writer.WriteVariableByteInteger((uint)body.Length);
+            writer.WriteBinary(body, 0, body.Length);
             return writer.GetBuffer();
         }
     }

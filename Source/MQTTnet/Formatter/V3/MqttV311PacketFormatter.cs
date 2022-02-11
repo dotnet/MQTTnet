@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -10,17 +11,17 @@ namespace MQTTnet.Formatter.V3
 {
     public sealed class MqttV311PacketFormatter : MqttV310PacketFormatter
     {
-        public MqttV311PacketFormatter(IMqttPacketWriter packetWriter)
-            : base(packetWriter)
+        public MqttV311PacketFormatter(MqttBufferWriter bufferWriter)
+            : base(bufferWriter)
         {
         }
 
-        protected override byte EncodeConnectPacket(MqttConnectPacket packet, IMqttPacketWriter packetWriter)
+        protected override byte EncodeConnectPacket(MqttConnectPacket packet, MqttBufferWriter bufferWriter)
         {
             ValidateConnectPacket(packet);
 
-            packetWriter.WriteWithLengthPrefix("MQTT");
-            packetWriter.Write(4); // 3.1.2.2 Protocol Level 4
+            bufferWriter.WriteString("MQTT");
+            bufferWriter.WriteByte(4); // 3.1.2.2 Protocol Level 4
 
             byte connectFlags = 0x0;
             if (packet.CleanSession)
@@ -54,30 +55,30 @@ namespace MQTTnet.Formatter.V3
                 connectFlags |= 0x80;
             }
 
-            packetWriter.Write(connectFlags);
-            packetWriter.Write(packet.KeepAlivePeriod);
-            packetWriter.WriteWithLengthPrefix(packet.ClientId);
+            bufferWriter.WriteByte(connectFlags);
+            bufferWriter.WriteTwoByteInteger(packet.KeepAlivePeriod);
+            bufferWriter.WriteString(packet.ClientId);
 
             if (packet.WillFlag)
             {
-                packetWriter.WriteWithLengthPrefix(packet.WillTopic);
-                packetWriter.WriteWithLengthPrefix(packet.WillMessage);
+                bufferWriter.WriteString(packet.WillTopic);
+                bufferWriter.WriteBinaryData(packet.WillMessage);
             }
 
             if (packet.Username != null)
             {
-                packetWriter.WriteWithLengthPrefix(packet.Username);
+                bufferWriter.WriteString(packet.Username);
             }
 
             if (packet.Password != null)
             {
-                packetWriter.WriteWithLengthPrefix(packet.Password);
+                bufferWriter.WriteBinaryData(packet.Password);
             }
 
-            return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.Connect);
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);
         }
 
-        protected override byte EncodeConnAckPacket(MqttConnAckPacket packet, IMqttPacketWriter packetWriter)
+        protected override byte EncodeConnAckPacket(MqttConnAckPacket packet, MqttBufferWriter bufferWriter)
         {
             byte connectAcknowledgeFlags = 0x0;
             if (packet.IsSessionPresent)
@@ -85,22 +86,24 @@ namespace MQTTnet.Formatter.V3
                 connectAcknowledgeFlags |= 0x1;
             }
 
-            packetWriter.Write(connectAcknowledgeFlags);
-            packetWriter.Write((byte)packet.ReturnCode);
+            bufferWriter.WriteByte(connectAcknowledgeFlags);
+            bufferWriter.WriteByte((byte)packet.ReturnCode);
 
-            return MqttPacketWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }
 
-        protected override MqttBasePacket DecodeConnAckPacket(IMqttPacketBodyReader body)
+        protected override MqttBasePacket DecodeConnAckPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
+            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            
             var packet = new MqttConnAckPacket();
 
-            var acknowledgeFlags = body.ReadByte();
+            var acknowledgeFlags = _bufferReader.ReadByte();
 
             packet.IsSessionPresent = (acknowledgeFlags & 0x1) > 0;
-            packet.ReturnCode = (MqttConnectReturnCode)body.ReadByte();
+            packet.ReturnCode = (MqttConnectReturnCode)_bufferReader.ReadByte();
 
             return packet;
         }

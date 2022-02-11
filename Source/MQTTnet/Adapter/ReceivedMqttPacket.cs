@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using MQTTnet.Formatter;
 
 namespace MQTTnet.Adapter
 {
@@ -11,16 +10,16 @@ namespace MQTTnet.Adapter
     {
         public static readonly ReceivedMqttPacket Empty = new ReceivedMqttPacket();
         
-        public ReceivedMqttPacket(byte fixedHeader, IMqttPacketBodyReader bodyReader, int totalLength)
+        public ReceivedMqttPacket(byte fixedHeader, ArraySegment<byte> body, int totalLength)
         {
             FixedHeader = fixedHeader;
-            BodyReader = bodyReader ?? throw new ArgumentNullException(nameof(bodyReader));
+            Body = body;
             TotalLength = totalLength;
         }
 
         public byte FixedHeader { get; }
 
-        public IMqttPacketBodyReader BodyReader { get; }
+        public ArraySegment<byte> Body { get; }
 
         public int TotalLength { get; }
     }

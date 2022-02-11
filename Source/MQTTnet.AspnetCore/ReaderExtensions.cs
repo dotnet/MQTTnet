@@ -14,7 +14,6 @@ namespace MQTTnet.AspNetCore
     public static class ReaderExtensions
     {
         public static bool TryDecode(this MqttPacketFormatterAdapter formatter, 
-            SpanBasedMqttPacketBodyReader reader, 
             in ReadOnlySequence<byte> input, 
             out MqttBasePacket packet, 
             out SequencePosition consumed, 
@@ -34,7 +33,7 @@ namespace MQTTnet.AspNetCore
                 return false;
             }
 
-            var fixedheader = copy.First.Span[0];
+            var fixedHeader = copy.First.Span[0];
             if (!TryReadBodyLength(ref copy, out int headerLength, out var bodyLength))
             {
                 return false;
@@ -46,10 +45,9 @@ namespace MQTTnet.AspNetCore
             }
 
             var bodySlice = copy.Slice(0, bodyLength);
-            var buffer = bodySlice.GetMemory();
-            reader.SetBuffer(buffer);
-
-            var receivedMqttPacket = new ReceivedMqttPacket(fixedheader, reader, buffer.Length + 2);
+            var buffer = bodySlice.GetMemory().ToArray();
+            
+            var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, new ArraySegment<byte>(buffer, 0, buffer.Length), buffer.Length + 2);
 
             if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
             {
@@ -63,7 +61,7 @@ namespace MQTTnet.AspNetCore
             return true;
         }
 
-        private static ReadOnlyMemory<byte> GetMemory(this in ReadOnlySequence<byte> input)
+        static ReadOnlyMemory<byte> GetMemory(this in ReadOnlySequence<byte> input)
         {
             if (input.IsSingleSegment)
             {
@@ -74,7 +72,7 @@ namespace MQTTnet.AspNetCore
             return input.ToArray();
         }
 
-        private static bool TryReadBodyLength(ref ReadOnlySequence<byte> input, out int headerLength, out int bodyLength)
+        static bool TryReadBodyLength(ref ReadOnlySequence<byte> input, out int headerLength, out int bodyLength)
         {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
             var multiplier = 1;

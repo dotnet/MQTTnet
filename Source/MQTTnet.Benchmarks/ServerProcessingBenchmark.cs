@@ -22,7 +22,7 @@ namespace MQTTnet.Benchmarks
         }
         
         [Benchmark]
-        public void Benchmark()
+        public void Handle_100_000_Messages_In_Server()
         {
             new Load_Tests().Handle_100_000_Messages_In_Server().GetAwaiter().GetResult();
         }

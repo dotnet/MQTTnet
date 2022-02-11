@@ -24,7 +24,7 @@ namespace MQTTnet.Benchmarks
             Console.WriteLine("7 = TcpPipesBenchmark");
             Console.WriteLine("8 = MessageProcessingMqttConnectionContextBenchmark");
             Console.WriteLine("9 = ServerProcessingBenchmark");
-            Console.WriteLine("a = MqttPacketWriterBenchmark");
+            Console.WriteLine("a = MqttPacketReaderWriterBenchmark");
             Console.WriteLine("b = RoundtripBenchmark");
 
             var pressedKey = Console.ReadKey(true);
@@ -58,7 +58,7 @@ namespace MQTTnet.Benchmarks
                     BenchmarkRunner.Run<ServerProcessingBenchmark>();
                     break;
                 case 'a':
-                    BenchmarkRunner.Run<MqttPacketWriterBenchmark>();
+                    BenchmarkRunner.Run(typeof(MqttPacketReaderWriterBenchmark));
                     break;
                 case 'b':
                     BenchmarkRunner.Run<RoundtripProcessingBenchmark>();

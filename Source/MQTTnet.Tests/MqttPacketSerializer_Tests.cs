@@ -22,7 +22,7 @@ using MQTTnet.Tests.Extensions;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttPacketSerializer_Tests
+    public sealed class MqttPacketSerializer_Tests
     {
         [TestMethod]
         public void DetectVersionFromMqttConnectPacket()
@@ -38,17 +38,17 @@ namespace MQTTnet.Tests
 
             Assert.AreEqual(
                 MqttProtocolVersion.V310,
-                DeserializeAndDetectVersion(new MqttPacketFormatterAdapter(new MqttPacketWriter()), Serialize(packet, MqttProtocolVersion.V310)));
+                DeserializeAndDetectVersion(new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535)), Serialize(packet, MqttProtocolVersion.V310)));
 
             Assert.AreEqual(
                 MqttProtocolVersion.V311,
-                DeserializeAndDetectVersion(new MqttPacketFormatterAdapter(new MqttPacketWriter()), Serialize(packet, MqttProtocolVersion.V311)));
+                DeserializeAndDetectVersion(new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535)), Serialize(packet, MqttProtocolVersion.V311)));
 
             Assert.AreEqual(
                 MqttProtocolVersion.V500,
-                DeserializeAndDetectVersion(new MqttPacketFormatterAdapter(new MqttPacketWriter()), Serialize(packet, MqttProtocolVersion.V500)));
+                DeserializeAndDetectVersion(new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535)), Serialize(packet, MqttProtocolVersion.V500)));
 
-            var adapter = new MqttPacketFormatterAdapter(new MqttPacketWriter());
+            var adapter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
 
             var ex = Assert.ThrowsException<MqttProtocolViolationException>(() => DeserializeAndDetectVersion(adapter, WriterFactory().AddMqttHeader(MqttControlPacketType.Connect, new byte[0])));
             Assert.AreEqual("CONNECT packet must have at least 7 bytes.", ex.Message);
@@ -605,14 +605,16 @@ namespace MQTTnet.Tests
             return MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, WriterFactory()).Encode(packet).ToArray().ToArray();
         }
 
-        protected virtual IMqttPacketWriter WriterFactory()
+        MqttBufferWriter WriterFactory()
         {
-            return new MqttPacketWriter();
+            return new MqttBufferWriter(4096, 65535);
         }
 
-        protected virtual IMqttPacketBodyReader ReaderFactory(byte[] data)
+        MqttBufferReader ReaderFactory(byte[] data)
         {
-            return new MqttPacketBodyReader(data, 0, data.Length);
+            var reader = new MqttBufferReader();
+            reader.SetBuffer(data, 0, data.Length);
+            return reader;
         }
 
         void DeserializeAndCompare(MqttBasePacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
@@ -625,7 +627,7 @@ namespace MQTTnet.Tests
             using (var headerStream = new MemoryStream(buffer1.ToArray().ToArray()))
             {
                 var channel = new TestMqttChannel(headerStream);
-                var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, writer), null, new MqttNetEventLogger());
+                var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, new MqttBufferWriter(4096, 65535)), null, new MqttNetEventLogger());
                 var receivedPacket = adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
 
                 var buffer2 = serializer.Encode(receivedPacket);
@@ -642,7 +644,7 @@ namespace MQTTnet.Tests
             var buffer = serializer.Encode(packet);
             
             var channel = new TestMqttChannel(buffer.ToArray().ToArray());
-            var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, writer), null, new MqttNetEventLogger());
+            var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, new MqttBufferWriter(4096, 65535)), null, new MqttNetEventLogger());
             return (TPacket)adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
 

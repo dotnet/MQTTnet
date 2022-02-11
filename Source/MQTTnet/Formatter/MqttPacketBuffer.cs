@@ -5,6 +5,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Adapter;
 using MQTTnet.Channel;
 
 namespace MQTTnet.Formatter

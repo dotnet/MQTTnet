@@ -11,9 +11,20 @@ namespace MQTTnet.Formatter.V5
 {
     public sealed class MqttV500PropertiesWriter
     {
-        readonly MqttPacketWriter _packetWriter = new MqttPacketWriter();
+        readonly MqttBufferWriter _bufferWriter;
 
-        public int Length => _packetWriter.Length;
+        public MqttV500PropertiesWriter(MqttBufferWriter bufferWriter)
+        {
+            _bufferWriter = bufferWriter ?? throw new ArgumentNullException(nameof(bufferWriter));
+        }
+
+        public int Length => _bufferWriter.Length;
+
+        public void Reset()
+        {
+            _bufferWriter.Reset(0);
+            _bufferWriter.FreeBuffer();
+        }
 
         public void WriteAssignedClientIdentifier(string value)
         {
@@ -58,7 +69,7 @@ namespace MQTTnet.Formatter.V5
             {
                 return;
             }
-            
+
             if (value == MqttQualityOfServiceLevel.AtLeastOnce)
             {
                 Write(MqttPropertyId.MaximumQoS, true);
@@ -152,7 +163,7 @@ namespace MQTTnet.Formatter.V5
             {
                 return;
             }
-            
+
             Write(MqttPropertyId.ServerKeepAlive, value);
         }
 
@@ -168,7 +179,7 @@ namespace MQTTnet.Formatter.V5
             {
                 return;
             }
-            
+
             WriteAsFourByteInteger(MqttPropertyId.SessionExpiryInterval, value);
         }
 
@@ -212,15 +223,15 @@ namespace MQTTnet.Formatter.V5
             Write(MqttPropertyId.SubscriptionIdentifiersAvailable, false);
         }
 
-        public void WriteTo(IMqttPacketWriter packetWriter)
+        public void WriteTo(MqttBufferWriter target)
         {
-            if (packetWriter == null)
+            if (target == null)
             {
-                throw new ArgumentNullException(nameof(packetWriter));
+                throw new ArgumentNullException(nameof(target));
             }
 
-            packetWriter.WriteVariableLengthInteger((uint)_packetWriter.Length);
-            packetWriter.Write(_packetWriter);
+            target.WriteVariableByteInteger((uint)_bufferWriter.Length);
+            target.Write(_bufferWriter);
         }
 
         public void WriteTopicAlias(ushort value)
@@ -230,7 +241,7 @@ namespace MQTTnet.Formatter.V5
             {
                 return;
             }
-            
+
             Write(MqttPropertyId.TopicAlias, value);
         }
 
@@ -254,9 +265,9 @@ namespace MQTTnet.Formatter.V5
 
             foreach (var property in userProperties)
             {
-                _packetWriter.Write((byte)MqttPropertyId.UserProperty);
-                _packetWriter.WriteWithLengthPrefix(property.Name);
-                _packetWriter.WriteWithLengthPrefix(property.Value);
+                _bufferWriter.WriteByte((byte)MqttPropertyId.UserProperty);
+                _bufferWriter.WriteString(property.Name);
+                _bufferWriter.WriteString(property.Value);
             }
         }
 
@@ -267,7 +278,7 @@ namespace MQTTnet.Formatter.V5
             {
                 return;
             }
-            
+
             Write(MqttPropertyId.WildcardSubscriptionAvailable, false);
         }
 
@@ -278,26 +289,26 @@ namespace MQTTnet.Formatter.V5
             {
                 return;
             }
-            
+
             WriteAsFourByteInteger(MqttPropertyId.WillDelayInterval, value);
         }
 
         void Write(MqttPropertyId id, bool value)
         {
-            _packetWriter.Write((byte)id);
-            _packetWriter.Write(value ? (byte)0x1 : (byte)0x0);
+            _bufferWriter.WriteByte((byte)id);
+            _bufferWriter.WriteByte(value ? (byte)0x1 : (byte)0x0);
         }
 
         void Write(MqttPropertyId id, byte value)
         {
-            _packetWriter.Write((byte)id);
-            _packetWriter.Write(value);
+            _bufferWriter.WriteByte((byte)id);
+            _bufferWriter.WriteByte(value);
         }
 
         void Write(MqttPropertyId id, ushort value)
         {
-            _packetWriter.Write((byte)id);
-            _packetWriter.Write(value);
+            _bufferWriter.WriteByte((byte)id);
+            _bufferWriter.WriteTwoByteInteger(value);
         }
 
         void Write(MqttPropertyId id, string value)
@@ -307,8 +318,8 @@ namespace MQTTnet.Formatter.V5
                 return;
             }
 
-            _packetWriter.Write((byte)id);
-            _packetWriter.WriteWithLengthPrefix(value);
+            _bufferWriter.WriteByte((byte)id);
+            _bufferWriter.WriteString(value);
         }
 
         void Write(MqttPropertyId id, byte[] value)
@@ -318,23 +329,23 @@ namespace MQTTnet.Formatter.V5
                 return;
             }
 
-            _packetWriter.Write((byte)id);
-            _packetWriter.WriteWithLengthPrefix(value);
+            _bufferWriter.WriteByte((byte)id);
+            _bufferWriter.WriteBinaryData(value);
         }
 
         void WriteAsFourByteInteger(MqttPropertyId id, uint value)
         {
-            _packetWriter.Write((byte)id);
-            _packetWriter.Write((byte)(value >> 24));
-            _packetWriter.Write((byte)(value >> 16));
-            _packetWriter.Write((byte)(value >> 8));
-            _packetWriter.Write((byte)value);
+            _bufferWriter.WriteByte((byte)id);
+            _bufferWriter.WriteByte((byte)(value >> 24));
+            _bufferWriter.WriteByte((byte)(value >> 16));
+            _bufferWriter.WriteByte((byte)(value >> 8));
+            _bufferWriter.WriteByte((byte)value);
         }
 
         void WriteAsVariableLengthInteger(MqttPropertyId id, uint value)
         {
-            _packetWriter.Write((byte)id);
-            _packetWriter.WriteVariableLengthInteger(value);
+            _bufferWriter.WriteByte((byte)id);
+            _bufferWriter.WriteVariableByteInteger(value);
         }
     }
 }

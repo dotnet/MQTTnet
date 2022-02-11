@@ -4,7 +4,7 @@
         <OutputType>Exe</OutputType>
         <DebugType>Full</DebugType>
         <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
-        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFramework);net452;net461</TargetFrameworks>
+        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net461</TargetFrameworks>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
     </PropertyGroup>
 

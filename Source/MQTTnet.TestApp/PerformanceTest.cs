@@ -75,7 +75,7 @@ namespace MQTTnet.TestApp
                     }
                 };
 
-                var client = new MqttFactory().CreateMqttClient();
+                var client = mqttFactory.CreateMqttClient();
                 await client.ConnectAsync(options).ConfigureAwait(false);
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("t")

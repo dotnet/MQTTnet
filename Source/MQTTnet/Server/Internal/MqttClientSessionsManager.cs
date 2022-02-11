@@ -448,11 +448,9 @@ namespace MQTTnet.Server
 
                 if (!connAckPacket.IsSessionPresent)
                 {
+                    // TODO: This event is not yet final. It can already be used but restoring sessions from storage will be added later!
                     var preparingSessionEventArgs = new PreparingSessionEventArgs();
                     await _eventContainer.PreparingSessionEvent.InvokeAsync(preparingSessionEventArgs).ConfigureAwait(false);
-
-                    // TODO: Import subscriptions etc.
-                    //session.SubscriptionsManager.Subscribe()
                 }
 
                 MqttClient existing;

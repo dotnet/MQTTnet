@@ -17,7 +17,7 @@ namespace MQTTnet.AspNetCore.Tests
         [TestMethod]
         public void TestTryDeserialize()
         {
-            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
 
             var buffer = serializer.Encode(new MqttPublishPacket {Topic = "a", Payload = new byte[5]}).ToArray();
 
@@ -29,23 +29,21 @@ namespace MQTTnet.AspNetCore.Tests
             var observed = part.Start;
             var result = false;
             var read = 0;
-
-            var reader = new SpanBasedMqttPacketBodyReader();
-
+            
             part = sequence.Slice(sequence.Start, 0); // empty message should fail
-            result = serializer.TryDecode(reader, part, out packet, out consumed, out observed, out read);
+            result = serializer.TryDecode(part, out packet, out consumed, out observed, out read);
             Assert.IsFalse(result);
 
             part = sequence.Slice(sequence.Start, 1); // partial fixed header should fail
-            result = serializer.TryDecode(reader, part, out packet, out consumed, out observed, out read);
+            result = serializer.TryDecode(part, out packet, out consumed, out observed, out read);
             Assert.IsFalse(result);
 
             part = sequence.Slice(sequence.Start, 4); // partial body should fail
-            result = serializer.TryDecode(reader, part, out packet, out consumed, out observed, out read);
+            result = serializer.TryDecode(part, out packet, out consumed, out observed, out read);
             Assert.IsFalse(result);
 
             part = sequence; // complete msg should work
-            result = serializer.TryDecode(reader, part, out packet, out consumed, out observed, out read);
+            result = serializer.TryDecode(part, out packet, out consumed, out observed, out read);
             Assert.IsTrue(result);
         }
     }

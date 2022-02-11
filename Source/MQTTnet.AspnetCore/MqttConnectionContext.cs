@@ -21,7 +21,6 @@ namespace MQTTnet.AspNetCore
     public sealed class MqttConnectionContext : IMqttChannelAdapter
     {
         readonly AsyncLock _writerLock = new AsyncLock();
-        readonly SpanBasedMqttPacketBodyReader _reader;
         
         PipeReader _input;
         PipeWriter _output;
@@ -36,8 +35,6 @@ namespace MQTTnet.AspNetCore
                 _input = Connection.Transport.Input;
                 _output = Connection.Transport.Output;
             }
-
-            _reader = new SpanBasedMqttPacketBodyReader();
         }
 
         public string Endpoint
@@ -123,7 +120,7 @@ namespace MQTTnet.AspNetCore
                     {
                         if (!buffer.IsEmpty)
                         {
-                            if (PacketFormatterAdapter.TryDecode(_reader, buffer, out var packet, out consumed, out observed, out var received))
+                            if (PacketFormatterAdapter.TryDecode(buffer, out var packet, out consumed, out observed, out var received))
                             {
                                 BytesReceived += received;
                                 return packet;

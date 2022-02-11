@@ -1,3 +1,4 @@
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 
@@ -7,42 +8,84 @@ namespace MQTTnet.Tests.Formatter
     public sealed class MqttPacketWriter_Tests
     {
         [TestMethod]
+        public void Reset_After_Usage()
+        {
+            var writer = new MqttBufferWriter(4096, 65535);
+            writer.WriteString("AString");
+            writer.WriteByte(0x1);
+            writer.WriteByte(0x0);
+            writer.WriteByte(0x1);
+            writer.WriteVariableByteInteger(1234U);
+            writer.WriteVariableByteInteger(9876U);
+
+            writer.Reset(0);
+
+            Assert.AreEqual(0, writer.Length);
+        }
+
+        [TestMethod]
         public void Use_All_Data_Types()
         {
-            var writer = new MqttPacketWriter();
-            writer.WriteWithLengthPrefix("AString");
-            writer.Write(0x1);
-            writer.Write(0x0);
-            writer.Write(0x1);
-            writer.WriteVariableLengthInteger(1234U);
-            writer.WriteVariableLengthInteger(9876U);
+            var writer = new MqttBufferWriter(4096, 65535);
+            writer.WriteString("AString");
+            writer.WriteByte(0x1);
+            writer.WriteByte(0x0);
+            writer.WriteByte(0x1);
+            writer.WriteVariableByteInteger(1234U);
+            writer.WriteVariableByteInteger(9876U);
 
             var buffer = writer.GetBuffer();
 
-            var reader = new MqttPacketBodyReader(buffer, 0, writer.Length);
+            var reader = new MqttBufferReader();
+            reader.SetBuffer(buffer, 0, writer.Length);
 
-            Assert.AreEqual("AString", reader.ReadStringWithLengthPrefix());
-            Assert.IsTrue(reader.ReadBoolean());
-            Assert.IsFalse(reader.ReadBoolean());
-            Assert.IsTrue(reader.ReadBoolean());
-            Assert.AreEqual(1234U, reader.ReadVariableLengthInteger());
-            Assert.AreEqual(9876U, reader.ReadVariableLengthInteger());
+            Assert.AreEqual("AString", reader.ReadString());
+            Assert.IsTrue(reader.ReadByte() == 1);
+            Assert.IsTrue(reader.ReadByte() == 0);
+            Assert.IsTrue(reader.ReadByte() == 1);
+            Assert.AreEqual(1234U, reader.ReadVariableByteInteger());
+            Assert.AreEqual(9876U, reader.ReadVariableByteInteger());
         }
-        
-        [TestMethod]
-        public void Reset_After_Usage()
-        {
-            var writer = new MqttPacketWriter();
-            writer.WriteWithLengthPrefix("AString");
-            writer.Write(0x1);
-            writer.Write(0x0);
-            writer.Write(0x1);
-            writer.WriteVariableLengthInteger(1234U);
-            writer.WriteVariableLengthInteger(9876U);
 
-            writer.Reset(0);
+        [TestMethod]
+        public void Write_And_Read_Multiple_Times()
+        {
+            var writer = new MqttBufferWriter(4096, 65535);
+            writer.WriteString("A relative short string.");
+            writer.WriteBinaryData(new byte[1234]);
+            writer.WriteByte(0x01);
+            writer.WriteByte(0x02);
+            writer.WriteVariableByteInteger(5647382);
+            writer.WriteString("A relative short string.");
+            writer.WriteVariableByteInteger(8574489);
+            writer.WriteBinaryData(new byte[48]);
+            writer.WriteByte(2);
+            writer.WriteByte(0x02);
+            writer.WriteString("fjgffiogfhgfhoihgoireghreghreguhreguireoghreouighreouighreughreguiorehreuiohruiorehreuioghreug");
+            writer.WriteBinaryData(new byte[3]);
+
+            var readPayload = new ArraySegment<byte>(writer.GetBuffer(), 0, writer.Length).ToArray();
             
-            Assert.AreEqual(0, writer.Length);
+            var reader = new MqttBufferReader();
+            reader.SetBuffer(readPayload, 0, readPayload.Length);
+            
+            for (var i = 0; i < 100000; i++)
+            {
+                reader.Seek(0);
+
+                reader.ReadString();
+                reader.ReadBinaryData();
+                reader.ReadByte();
+                reader.ReadByte();
+                reader.ReadVariableByteInteger();
+                reader.ReadString();
+                reader.ReadVariableByteInteger();
+                reader.ReadBinaryData();
+                reader.ReadByte();
+                reader.ReadByte();
+                reader.ReadString();
+                reader.ReadBinaryData();
+            }
         }
     }
 }

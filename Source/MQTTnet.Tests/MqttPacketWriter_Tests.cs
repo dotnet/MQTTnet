@@ -10,9 +10,9 @@ namespace MQTTnet.Tests
     [TestClass]
     public class MqttPacketWriter_Tests
     {
-        protected virtual IMqttPacketWriter WriterFactory()
+        protected virtual MqttBufferWriter WriterFactory()
         {
-            return new MqttPacketWriter();
+            return new MqttBufferWriter(4096, 65535);
         }
 
         [TestMethod]
@@ -21,13 +21,13 @@ namespace MQTTnet.Tests
             var writer = WriterFactory();
             Assert.AreEqual(0, writer.Length);
 
-            writer.WriteWithLengthPrefix("1234567890");
+            writer.WriteString("1234567890");
             Assert.AreEqual(10 + 2, writer.Length);
 
-            writer.WriteWithLengthPrefix(new byte[300]);
+            writer.WriteBinaryData(new byte[300]);
             Assert.AreEqual(300 + 2 + 12, writer.Length);
 
-            writer.WriteWithLengthPrefix(new byte[5000]);
+            writer.WriteBinaryData(new byte[5000]);
             Assert.AreEqual(5000 + 2 + 300 + 2 + 12, writer.Length);
         }
     }

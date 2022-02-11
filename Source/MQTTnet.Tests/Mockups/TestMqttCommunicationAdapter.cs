@@ -25,7 +25,7 @@ namespace MQTTnet.Tests.Mockups
 
         public X509Certificate2 ClientCertificate { get; }
 
-        public MqttPacketFormatterAdapter PacketFormatterAdapter { get; } = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311);
+        public MqttPacketFormatterAdapter PacketFormatterAdapter { get; } = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
 
         public long BytesSent { get; }
         public long BytesReceived { get; }

@@ -21,8 +21,7 @@ namespace MQTTnet.AspNetCore.Tests.Mockups
         {
             try
             {
-                var writer = new SpanBasedMqttPacketWriter();
-                var formatter = new MqttPacketFormatterAdapter(writer);
+                var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
                 var context = new MqttConnectionContext(formatter, connection);
                 Context.TrySetResult(context);
 

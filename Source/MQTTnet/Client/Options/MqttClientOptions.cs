@@ -42,8 +42,7 @@ namespace MQTTnet.Client
         ///     Gets the client identifier.
         ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
-        public string ClientId { get; set; } = Guid.NewGuid()
-            .ToString("N");
+        public string ClientId { get; set; } = Guid.NewGuid().ToString("N");
 
         public TimeSpan CommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
@@ -161,5 +160,19 @@ namespace MQTTnet.Client
         ///     Gets or sets the user properties of the will message.
         /// </summary>
         public List<MqttUserProperty> WillUserProperties { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the default and initial size of the packet write buffer.
+        ///     It is recommended to set this to a value close to the usual expected packet size * 1.5.
+        ///     Do not change this value when no memory issues are experienced.
+        /// </summary>
+        public int WriterBufferSize { get; set; } = 4096;
+
+        /// <summary>
+        ///     Gets or sets the maximum size of the buffer writer. The writer will reduce its internal buffer
+        ///     to this value after serializing a packet.
+        ///     Do not change this value when no memory issues are experienced.
+        /// </summary>
+        public int WriterBufferSizeMax { get; set; } = 65535;
     }
 }

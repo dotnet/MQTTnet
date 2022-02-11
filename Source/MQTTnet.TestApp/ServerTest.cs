@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -39,7 +40,7 @@ namespace MQTTnet.TestApp
             Console.WriteLine("Press any key to exit.");
             Console.ReadLine();
         }
-
+        
         public static async Task RunAsync()
         {
             try

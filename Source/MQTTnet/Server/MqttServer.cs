@@ -110,7 +110,7 @@ namespace MQTTnet.Server
             remove => _eventContainer.LoadingRetainedMessagesEvent.RemoveHandler(value);
         }
 
-        public event Func<PreparingSessionEventArgs, Task> PreparingSessionAsync
+        public event Func<EventArgs, Task> PreparingSessionAsync
         {
             add => _eventContainer.PreparingSessionEvent.AddHandler(value);
             remove => _eventContainer.PreparingSessionEvent.RemoveHandler(value);

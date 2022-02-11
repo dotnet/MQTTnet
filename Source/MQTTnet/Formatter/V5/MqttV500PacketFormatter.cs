@@ -13,7 +13,7 @@ namespace MQTTnet.Formatter.V5
         readonly MqttV500PacketDecoder _decoder = new MqttV500PacketDecoder();
         readonly MqttV500PacketEncoder _encoder;
 
-        public MqttV500PacketFormatter(IMqttPacketWriter writer)
+        public MqttV500PacketFormatter(MqttBufferWriter writer)
         {
             _encoder = new MqttV500PacketEncoder(writer);
         }

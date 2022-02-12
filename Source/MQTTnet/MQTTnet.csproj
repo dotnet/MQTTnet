@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <Target Name="ImportReleaseNotes" BeforeTargets="GenerateNuspec">
         <ReadLinesFromFile File="..\..\.github\workflows\ReleaseNotes.md">
@@ -29,8 +29,8 @@
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <Copyright>Christian Kratky 2016-2022</Copyright>
-        <PackageProjectUrl>https://github.com/chkr1011/MQTTnet</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/chkr1011/MQTTnet.git</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/dotnet/MQTTnet</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/dotnet/MQTTnet.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</PackageTags>
         <NeutralLanguage>en-US</NeutralLanguage>

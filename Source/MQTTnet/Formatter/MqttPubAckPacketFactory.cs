@@ -31,10 +31,10 @@ namespace MQTTnet.Formatter
                 pubAckPacket.ReasonString = interceptingPublishEventArgs.Response.ReasonString;
                 pubAckPacket.UserProperties = interceptingPublishEventArgs.Response.UserProperties;
             }
-            
+
             return pubAckPacket;
         }
-        
+
         public MqttPubAckPacket Create(MqttApplicationMessageReceivedEventArgs applicationMessageReceivedEventArgs)
         {
             if (applicationMessageReceivedEventArgs == null)
@@ -51,12 +51,15 @@ namespace MQTTnet.Formatter
 
         static MqttPubAckPacket Create(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode applicationMessageReceivedReasonCode)
         {
-            if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
+            if (publishPacket == null)
+            {
+                throw new ArgumentNullException(nameof(publishPacket));
+            }
 
             var pubAckPacket = new MqttPubAckPacket
             {
                 PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubAckReasonCode) (int) applicationMessageReceivedReasonCode
+                ReasonCode = (MqttPubAckReasonCode)(int)applicationMessageReceivedReasonCode
             };
 
             return pubAckPacket;

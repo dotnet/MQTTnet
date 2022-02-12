@@ -12,7 +12,10 @@ namespace MQTTnet.Formatter
     {
         public MqttUnsubscribePacket Create(MqttClientUnsubscribeOptions clientUnsubscribeOptions)
         {
-            if (clientUnsubscribeOptions == null) throw new ArgumentNullException(nameof(clientUnsubscribeOptions));
+            if (clientUnsubscribeOptions == null)
+            {
+                throw new ArgumentNullException(nameof(clientUnsubscribeOptions));
+            }
 
             var packet = new MqttUnsubscribePacket
             {
@@ -23,7 +26,7 @@ namespace MQTTnet.Formatter
             {
                 packet.TopicFilters.AddRange(clientUnsubscribeOptions.TopicFilters);
             }
-            
+
             return packet;
         }
     }

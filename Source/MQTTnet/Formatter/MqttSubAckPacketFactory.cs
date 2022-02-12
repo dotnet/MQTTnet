@@ -12,8 +12,15 @@ namespace MQTTnet.Formatter
     {
         public MqttSubAckPacket Create(MqttSubscribePacket subscribePacket, SubscribeResult subscribeResult)
         {
-            if (subscribePacket == null) throw new ArgumentNullException(nameof(subscribePacket));
-            if (subscribeResult == null) throw new ArgumentNullException(nameof(subscribeResult));
+            if (subscribePacket == null)
+            {
+                throw new ArgumentNullException(nameof(subscribePacket));
+            }
+
+            if (subscribeResult == null)
+            {
+                throw new ArgumentNullException(nameof(subscribeResult));
+            }
 
             var subAckPacket = new MqttSubAckPacket
             {
@@ -21,7 +28,7 @@ namespace MQTTnet.Formatter
             };
 
             subAckPacket.ReasonCodes.AddRange(subscribeResult.ReasonCodes);
-            
+
             return subAckPacket;
         }
     }

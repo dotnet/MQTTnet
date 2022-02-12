@@ -9,9 +9,8 @@ namespace MQTTnet.Formatter
 {
     public interface IMqttPacketFormatter
     {
-        MqttPacketBuffer Encode(MqttBasePacket mqttPacket);
-
         MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket);
+        MqttPacketBuffer Encode(MqttBasePacket mqttPacket);
 
         void FreeBuffer();
     }

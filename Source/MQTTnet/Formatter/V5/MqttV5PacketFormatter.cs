@@ -7,12 +7,12 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Formatter.V5
 {
-    public sealed class MqttV500PacketFormatter : IMqttPacketFormatter
+    public sealed class MqttV5PacketFormatter : IMqttPacketFormatter
     {
-        readonly MqttV500PacketDecoder _decoder = new MqttV500PacketDecoder();
+        readonly MqttV5PacketDecoder _decoder = new MqttV5PacketDecoder();
         readonly MqttV5PacketEncoder _encoder;
 
-        public MqttV500PacketFormatter(MqttBufferWriter writer)
+        public MqttV5PacketFormatter(MqttBufferWriter writer)
         {
             _encoder = new MqttV5PacketEncoder(writer);
         }

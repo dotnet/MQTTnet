@@ -11,10 +11,10 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5
 {
-    public sealed class MqttV500PacketDecoder
+    public sealed class MqttV5PacketDecoder
     {
         readonly MqttBufferReader _bufferReader = new MqttBufferReader();
-        
+
         public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
             if (receivedMqttPacket.TotalLength == 0)
@@ -30,70 +30,62 @@ namespace MQTTnet.Formatter.V5
 
             switch ((MqttControlPacketType)controlPacketType)
             {
-                case MqttControlPacketType.Connect: return DecodeConnectPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.ConnAck: return DecodeConnAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Disconnect: return DecodeDisconnectPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Publish: return DecodePublishPacket(receivedMqttPacket.FixedHeader, receivedMqttPacket.Body);
-                case MqttControlPacketType.PubAck: return DecodePubAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubRec: return DecodePubRecPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubRel: return DecodePubRelPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PubComp: return DecodePubCompPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.PingReq: return DecodePingReqPacket();
-                case MqttControlPacketType.PingResp: return DecodePingRespPacket();
-                case MqttControlPacketType.Subscribe: return DecodeSubscribePacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.SubAck: return DecodeSubAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Unsubscibe: return DecodeUnsubscribePacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.UnsubAck: return DecodeUnsubAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Auth: return DecodeAuthPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.Connect:
+                    return DecodeConnectPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.ConnAck:
+                    return DecodeConnAckPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.Disconnect:
+                    return DecodeDisconnectPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.Publish:
+                    return DecodePublishPacket(receivedMqttPacket.FixedHeader, receivedMqttPacket.Body);
+                case MqttControlPacketType.PubAck:
+                    return DecodePubAckPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.PubRec:
+                    return DecodePubRecPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.PubRel:
+                    return DecodePubRelPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.PubComp:
+                    return DecodePubCompPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.PingReq:
+                    return MqttPingReqPacket.Instance;
+                case MqttControlPacketType.PingResp:
+                    return MqttPingRespPacket.Instance;
+                case MqttControlPacketType.Subscribe:
+                    return DecodeSubscribePacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.SubAck:
+                    return DecodeSubAckPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.Unsubscibe:
+                    return DecodeUnsubscribePacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.UnsubAck:
+                    return DecodeUnsubAckPacket(receivedMqttPacket.Body);
+                case MqttControlPacketType.Auth:
+                    return DecodeAuthPacket(receivedMqttPacket.Body);
 
-                default: throw new MqttProtocolViolationException($"Packet type ({controlPacketType}) not supported.");
+                default:
+                    throw new MqttProtocolViolationException($"Packet type ({controlPacketType}) not supported.");
             }
         }
 
-        MqttBasePacket DecodeConnectPacket(ArraySegment<byte> body)
+        MqttBasePacket DecodeAuthPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
-            var packet = new MqttConnectPacket();
 
-            var protocolName = _bufferReader.ReadString();
-            var protocolVersion = _bufferReader.ReadByte();
+            var packet = new MqttAuthPacket();
 
-            if (protocolName != "MQTT" && protocolVersion != 5)
+            if (_bufferReader.EndOfStream)
             {
-                throw new MqttProtocolViolationException("MQTT protocol name and version do not match MQTT v5.");
+                packet.ReasonCode = MqttAuthenticateReasonCode.Success;
+                return packet;
             }
 
-            var connectFlags = _bufferReader.ReadByte();
+            packet.ReasonCode = (MqttAuthenticateReasonCode)_bufferReader.ReadByte();
 
-            var cleanSessionFlag = (connectFlags & 0x02) > 0;
-            var willMessageFlag = (connectFlags & 0x04) > 0;
-            var willMessageQoS = (byte)(connectFlags >> 3 & 3);
-            var willMessageRetainFlag = (connectFlags & 0x20) > 0;
-            var passwordFlag = (connectFlags & 0x40) > 0;
-            var usernameFlag = (connectFlags & 0x80) > 0;
-
-            packet.CleanSession = cleanSessionFlag;
-
-            if (willMessageFlag)
-            {
-                packet.WillFlag = true;
-                packet.WillQoS = (MqttQualityOfServiceLevel) willMessageQoS;
-                packet.WillRetain = willMessageRetainFlag;
-            }
-
-            packet.KeepAlivePeriod = _bufferReader.ReadTwoByteInteger();
-
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
             while (propertiesReader.MoveNext())
             {
-                if (propertiesReader.CurrentPropertyId == MqttPropertyId.SessionExpiryInterval)
-                {
-                    packet.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval();
-                }
-                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.AuthenticationMethod)
+                if (propertiesReader.CurrentPropertyId == MqttPropertyId.AuthenticationMethod)
                 {
                     packet.AuthenticationMethod = propertiesReader.ReadAuthenticationMethod();
                 }
@@ -101,86 +93,17 @@ namespace MQTTnet.Formatter.V5
                 {
                     packet.AuthenticationData = propertiesReader.ReadAuthenticationData();
                 }
-                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReceiveMaximum)
+                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
                 {
-                    packet.ReceiveMaximum = propertiesReader.ReadReceiveMaximum();
-                }
-                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.TopicAliasMaximum)
-                {
-                    packet.TopicAliasMaximum = propertiesReader.ReadTopicAliasMaximum();
-                }
-                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.MaximumPacketSize)
-                {
-                    packet.MaximumPacketSize = propertiesReader.ReadMaximumPacketSize();
-                }
-                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.RequestResponseInformation)
-                {
-                    packet.RequestResponseInformation = propertiesReader.RequestResponseInformation();
-                }
-                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.RequestProblemInformation)
-                {
-                    packet.RequestProblemInformation = propertiesReader.RequestProblemInformation();
+                    packet.ReasonString = propertiesReader.ReadReasonString();
                 }
                 else
                 {
-                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttConnectPacket));
+                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttAuthPacket));
                 }
             }
 
             packet.UserProperties = propertiesReader.CollectedUserProperties;
-
-            packet.ClientId = _bufferReader.ReadString();
-
-            if (packet.WillFlag)
-            {
-                var willPropertiesReader = new MqttV500PropertiesReader(_bufferReader);
-
-                while (willPropertiesReader.MoveNext())
-                {
-                    if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.PayloadFormatIndicator)
-                    {
-                        packet.WillPayloadFormatIndicator = propertiesReader.ReadPayloadFormatIndicator();
-                    }
-                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.MessageExpiryInterval)
-                    {
-                        packet.WillMessageExpiryInterval = propertiesReader.ReadMessageExpiryInterval();
-                    }
-                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.ResponseTopic)
-                    {
-                        packet.WillResponseTopic = propertiesReader.ReadResponseTopic();
-                    }
-                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.CorrelationData)
-                    {
-                        packet.WillCorrelationData = propertiesReader.ReadCorrelationData();
-                    }
-                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.ContentType)
-                    {
-                        packet.WillContentType = propertiesReader.ReadContentType();
-                    }
-                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.WillDelayInterval)
-                    {
-                        packet.WillDelayInterval = propertiesReader.ReadWillDelayInterval();
-                    }
-                    else
-                    {
-                        propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttPublishPacket));
-                    }
-                }
-
-                packet.WillTopic = _bufferReader.ReadString();
-                packet.WillMessage = _bufferReader.ReadBinaryData();
-                packet.WillUserProperties = propertiesReader.CollectedUserProperties;
-            }
-
-            if (usernameFlag)
-            {
-                packet.Username = _bufferReader.ReadString();
-            }
-
-            if (passwordFlag)
-            {
-                packet.Password = _bufferReader.ReadBinaryData();
-            }
 
             return packet;
         }
@@ -190,7 +113,7 @@ namespace MQTTnet.Formatter.V5
             ThrowIfBodyIsEmpty(body);
 
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
+
             var acknowledgeFlags = _bufferReader.ReadByte();
 
             var packet = new MqttConnAckPacket
@@ -205,7 +128,7 @@ namespace MQTTnet.Formatter.V5
                 WildcardSubscriptionAvailable = true
             };
 
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
             while (propertiesReader.MoveNext())
             {
                 if (propertiesReader.CurrentPropertyId == MqttPropertyId.SessionExpiryInterval)
@@ -279,7 +202,142 @@ namespace MQTTnet.Formatter.V5
             }
 
             packet.UserProperties = propertiesReader.CollectedUserProperties;
-            
+
+            return packet;
+        }
+
+        MqttBasePacket DecodeConnectPacket(ArraySegment<byte> body)
+        {
+            ThrowIfBodyIsEmpty(body);
+
+            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+
+            var packet = new MqttConnectPacket();
+
+            var protocolName = _bufferReader.ReadString();
+            var protocolVersion = _bufferReader.ReadByte();
+
+            if (protocolName != "MQTT" && protocolVersion != 5)
+            {
+                throw new MqttProtocolViolationException("MQTT protocol name and version do not match MQTT v5.");
+            }
+
+            var connectFlags = _bufferReader.ReadByte();
+
+            var cleanSessionFlag = (connectFlags & 0x02) > 0;
+            var willMessageFlag = (connectFlags & 0x04) > 0;
+            var willMessageQoS = (byte)((connectFlags >> 3) & 3);
+            var willMessageRetainFlag = (connectFlags & 0x20) > 0;
+            var passwordFlag = (connectFlags & 0x40) > 0;
+            var usernameFlag = (connectFlags & 0x80) > 0;
+
+            packet.CleanSession = cleanSessionFlag;
+
+            if (willMessageFlag)
+            {
+                packet.WillFlag = true;
+                packet.WillQoS = (MqttQualityOfServiceLevel)willMessageQoS;
+                packet.WillRetain = willMessageRetainFlag;
+            }
+
+            packet.KeepAlivePeriod = _bufferReader.ReadTwoByteInteger();
+
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
+            while (propertiesReader.MoveNext())
+            {
+                if (propertiesReader.CurrentPropertyId == MqttPropertyId.SessionExpiryInterval)
+                {
+                    packet.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval();
+                }
+                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.AuthenticationMethod)
+                {
+                    packet.AuthenticationMethod = propertiesReader.ReadAuthenticationMethod();
+                }
+                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.AuthenticationData)
+                {
+                    packet.AuthenticationData = propertiesReader.ReadAuthenticationData();
+                }
+                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReceiveMaximum)
+                {
+                    packet.ReceiveMaximum = propertiesReader.ReadReceiveMaximum();
+                }
+                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.TopicAliasMaximum)
+                {
+                    packet.TopicAliasMaximum = propertiesReader.ReadTopicAliasMaximum();
+                }
+                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.MaximumPacketSize)
+                {
+                    packet.MaximumPacketSize = propertiesReader.ReadMaximumPacketSize();
+                }
+                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.RequestResponseInformation)
+                {
+                    packet.RequestResponseInformation = propertiesReader.RequestResponseInformation();
+                }
+                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.RequestProblemInformation)
+                {
+                    packet.RequestProblemInformation = propertiesReader.RequestProblemInformation();
+                }
+                else
+                {
+                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttConnectPacket));
+                }
+            }
+
+            packet.UserProperties = propertiesReader.CollectedUserProperties;
+
+            packet.ClientId = _bufferReader.ReadString();
+
+            if (packet.WillFlag)
+            {
+                var willPropertiesReader = new MqttV5PropertiesReader(_bufferReader);
+
+                while (willPropertiesReader.MoveNext())
+                {
+                    if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.PayloadFormatIndicator)
+                    {
+                        packet.WillPayloadFormatIndicator = propertiesReader.ReadPayloadFormatIndicator();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.MessageExpiryInterval)
+                    {
+                        packet.WillMessageExpiryInterval = propertiesReader.ReadMessageExpiryInterval();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.ResponseTopic)
+                    {
+                        packet.WillResponseTopic = propertiesReader.ReadResponseTopic();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.CorrelationData)
+                    {
+                        packet.WillCorrelationData = propertiesReader.ReadCorrelationData();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.ContentType)
+                    {
+                        packet.WillContentType = propertiesReader.ReadContentType();
+                    }
+                    else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.WillDelayInterval)
+                    {
+                        packet.WillDelayInterval = propertiesReader.ReadWillDelayInterval();
+                    }
+                    else
+                    {
+                        propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttPublishPacket));
+                    }
+                }
+
+                packet.WillTopic = _bufferReader.ReadString();
+                packet.WillMessage = _bufferReader.ReadBinaryData();
+                packet.WillUserProperties = propertiesReader.CollectedUserProperties;
+            }
+
+            if (usernameFlag)
+            {
+                packet.Username = _bufferReader.ReadString();
+            }
+
+            if (passwordFlag)
+            {
+                packet.Password = _bufferReader.ReadBinaryData();
+            }
+
             return packet;
         }
 
@@ -288,13 +346,13 @@ namespace MQTTnet.Formatter.V5
             ThrowIfBodyIsEmpty(body);
 
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
+
             var packet = new MqttDisconnectPacket
             {
                 ReasonCode = (MqttDisconnectReasonCode)_bufferReader.ReadByte()
             };
 
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
             while (propertiesReader.MoveNext())
             {
                 if (propertiesReader.CurrentPropertyId == MqttPropertyId.SessionExpiryInterval)
@@ -316,176 +374,94 @@ namespace MQTTnet.Formatter.V5
             }
 
             packet.UserProperties = packet.UserProperties;
-            
-            return packet;
-        }
-
-        MqttBasePacket DecodeSubscribePacket(ArraySegment<byte> body)
-        {
-            ThrowIfBodyIsEmpty(body);
-
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
-            var packet = new MqttSubscribePacket
-            {
-                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
-            };
-
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
-            while (propertiesReader.MoveNext())
-            {
-                if (propertiesReader.CurrentPropertyId == MqttPropertyId.SubscriptionIdentifier)
-                {
-                    packet.SubscriptionIdentifier = propertiesReader.ReadSubscriptionIdentifier();
-                }
-                else
-                {
-                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttSubscribePacket));
-                }
-            }
-
-            packet.UserProperties = propertiesReader.CollectedUserProperties;
-
-            while (!_bufferReader.EndOfStream)
-            {
-                var topic = _bufferReader.ReadString();
-                var options = _bufferReader.ReadByte();
-
-                var qos = (MqttQualityOfServiceLevel)(options & 3);
-                var noLocal = (options & (1 << 2)) > 0;
-                var retainAsPublished = (options & (1 << 3)) > 0;
-                var retainHandling = (MqttRetainHandling)((options >> 4) & 3);
-
-                packet.TopicFilters.Add(new MqttTopicFilter
-                {
-                    Topic = topic,
-                    QualityOfServiceLevel = qos,
-                    NoLocal = noLocal,
-                    RetainAsPublished = retainAsPublished,
-                    RetainHandling = retainHandling
-                });
-            }
 
             return packet;
         }
-
-        MqttBasePacket DecodeSubAckPacket(ArraySegment<byte> body)
-        {
-            ThrowIfBodyIsEmpty(body);
-            
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
-            var packet = new MqttSubAckPacket
-            {
-                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
-            };
-
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
-            while (propertiesReader.MoveNext())
-            {
-                if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
-                {
-                    packet.ReasonString = propertiesReader.ReadReasonString();
-                }
-                else
-                {
-                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttSubAckPacket));
-                }
-            }
-
-            packet.UserProperties = packet.UserProperties;
-            
-            while (!_bufferReader.EndOfStream)
-            {
-                var reasonCode = (MqttSubscribeReasonCode)_bufferReader.ReadByte();
-                packet.ReasonCodes.Add(reasonCode);
-            }
-
-            return packet;
-        }
-
-        MqttBasePacket DecodeUnsubscribePacket(ArraySegment<byte> body)
-        {
-            ThrowIfBodyIsEmpty(body);
-
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
-            var packet = new MqttUnsubscribePacket
-            {
-                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
-            };
-
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
-            while (propertiesReader.MoveNext())
-            {
-                propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttUnsubscribePacket));
-            }
-
-            packet.UserProperties = propertiesReader.CollectedUserProperties;
-
-            while (!_bufferReader.EndOfStream)
-            {
-                packet.TopicFilters.Add(_bufferReader.ReadString());
-            }
-
-            return packet;
-        }
-
-        MqttBasePacket DecodeUnsubAckPacket(ArraySegment<byte> body)
-        {
-            ThrowIfBodyIsEmpty(body);
-
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
-            var packet = new MqttUnsubAckPacket
-            {
-                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
-            };
-
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
-            while (propertiesReader.MoveNext())
-            {
-                if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
-                {
-                    packet.ReasonString = propertiesReader.ReadReasonString();
-                }
-                else
-                {
-                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttUnsubAckPacket));
-                }
-            }
-
-            packet.UserProperties = propertiesReader.CollectedUserProperties;
-
-            while (!_bufferReader.EndOfStream)
-            {
-                var reasonCode = (MqttUnsubscribeReasonCode)_bufferReader.ReadByte();
-                packet.ReasonCodes.Add(reasonCode);
-            }
-
-            return packet;
-        }
-
-        static MqttBasePacket DecodePingReqPacket()
-        {
-            return MqttPingReqPacket.Instance;
-        }
-
-        static MqttBasePacket DecodePingRespPacket()
-        {
-            return MqttPingRespPacket.Instance;
-        }
-
         
+        MqttBasePacket DecodePubAckPacket(ArraySegment<byte> body)
+        {
+            ThrowIfBodyIsEmpty(body);
+
+            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+
+            var packet = new MqttPubAckPacket
+            {
+                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
+            };
+
+            if (_bufferReader.EndOfStream)
+            {
+                packet.ReasonCode = MqttPubAckReasonCode.Success;
+                return packet;
+            }
+
+            packet.ReasonCode = (MqttPubAckReasonCode)_bufferReader.ReadByte();
+
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
+            while (propertiesReader.MoveNext())
+            {
+                if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
+                {
+                    packet.ReasonString = propertiesReader.ReadReasonString();
+                }
+                else
+                {
+                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttPubAckPacket));
+                }
+            }
+
+            packet.UserProperties = propertiesReader.CollectedUserProperties;
+
+            return packet;
+        }
+
+        MqttBasePacket DecodePubCompPacket(ArraySegment<byte> body)
+        {
+            ThrowIfBodyIsEmpty(body);
+
+            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+
+            var packet = new MqttPubCompPacket
+            {
+                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
+            };
+
+            if (_bufferReader.EndOfStream)
+            {
+                packet.ReasonCode = MqttPubCompReasonCode.Success;
+                return packet;
+            }
+
+            packet.ReasonCode = (MqttPubCompReasonCode)_bufferReader.ReadByte();
+
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
+            while (propertiesReader.MoveNext())
+            {
+                if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
+                {
+                    packet.ReasonString = propertiesReader.ReadReasonString();
+                }
+                else
+                {
+                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttPubCompPacket));
+                }
+            }
+
+            packet.UserProperties = propertiesReader.CollectedUserProperties;
+
+            return packet;
+        }
+
+
         MqttBasePacket DecodePublishPacket(byte header, ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
+
             var retain = (header & 1) > 0;
-            var qos = (MqttQualityOfServiceLevel)(header >> 1 & 3);
-            var dup = (header >> 3 & 1) > 0;
+            var qos = (MqttQualityOfServiceLevel)((header >> 1) & 3);
+            var dup = ((header >> 3) & 1) > 0;
 
             var packet = new MqttPublishPacket
             {
@@ -500,7 +476,7 @@ namespace MQTTnet.Formatter.V5
                 packet.PacketIdentifier = _bufferReader.ReadTwoByteInteger();
             }
 
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
             while (propertiesReader.MoveNext())
             {
                 if (propertiesReader.CurrentPropertyId == MqttPropertyId.PayloadFormatIndicator)
@@ -529,7 +505,7 @@ namespace MQTTnet.Formatter.V5
                     {
                         packet.SubscriptionIdentifiers = new List<uint>();
                     }
-                    
+
                     packet.SubscriptionIdentifiers.Add(propertiesReader.ReadSubscriptionIdentifier());
                 }
                 else if (propertiesReader.CurrentPropertyId == MqttPropertyId.ContentType)
@@ -552,49 +528,12 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodePubAckPacket(ArraySegment<byte> body)
-        {
-            ThrowIfBodyIsEmpty(body);
-
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
-            var packet = new MqttPubAckPacket
-            {
-                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
-            };
-
-            if (_bufferReader.EndOfStream)
-            {
-                packet.ReasonCode = MqttPubAckReasonCode.Success;
-                return packet;
-            }
-
-            packet.ReasonCode = (MqttPubAckReasonCode)_bufferReader.ReadByte();
-
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
-            while (propertiesReader.MoveNext())
-            {
-                if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
-                {
-                    packet.ReasonString = propertiesReader.ReadReasonString();
-                }
-                else
-                {
-                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttPubAckPacket));
-                }
-            }
-
-            packet.UserProperties = propertiesReader.CollectedUserProperties;
-            
-            return packet;
-        }
-
         MqttBasePacket DecodePubRecPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
-            
+
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
+
             var packet = new MqttPubRecPacket
             {
                 PacketIdentifier = _bufferReader.ReadTwoByteInteger()
@@ -608,7 +547,7 @@ namespace MQTTnet.Formatter.V5
 
             packet.ReasonCode = (MqttPubRecReasonCode)_bufferReader.ReadByte();
 
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
             while (propertiesReader.MoveNext())
             {
                 if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
@@ -631,7 +570,7 @@ namespace MQTTnet.Formatter.V5
             ThrowIfBodyIsEmpty(body);
 
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
+
             var packet = new MqttPubRelPacket
             {
                 PacketIdentifier = _bufferReader.ReadTwoByteInteger()
@@ -645,7 +584,7 @@ namespace MQTTnet.Formatter.V5
 
             packet.ReasonCode = (MqttPubRelReasonCode)_bufferReader.ReadByte();
 
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
             while (propertiesReader.MoveNext())
             {
                 if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
@@ -659,30 +598,22 @@ namespace MQTTnet.Formatter.V5
             }
 
             packet.UserProperties = propertiesReader.CollectedUserProperties;
-            
+
             return packet;
         }
 
-        MqttBasePacket DecodePubCompPacket(ArraySegment<byte> body)
+        MqttBasePacket DecodeSubAckPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
-            var packet = new MqttPubCompPacket
+
+            var packet = new MqttSubAckPacket
             {
                 PacketIdentifier = _bufferReader.ReadTwoByteInteger()
             };
 
-            if (_bufferReader.EndOfStream)
-            {
-                packet.ReasonCode = MqttPubCompReasonCode.Success;
-                return packet;
-            }
-
-            packet.ReasonCode = (MqttPubCompReasonCode)_bufferReader.ReadByte();
-
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
             while (propertiesReader.MoveNext())
             {
                 if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
@@ -691,53 +622,129 @@ namespace MQTTnet.Formatter.V5
                 }
                 else
                 {
-                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttPubCompPacket));
+                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttSubAckPacket));
                 }
             }
 
-            packet.UserProperties = propertiesReader.CollectedUserProperties;
-            
+            packet.UserProperties = packet.UserProperties;
+
+            while (!_bufferReader.EndOfStream)
+            {
+                var reasonCode = (MqttSubscribeReasonCode)_bufferReader.ReadByte();
+                packet.ReasonCodes.Add(reasonCode);
+            }
+
             return packet;
         }
 
-        MqttBasePacket DecodeAuthPacket(ArraySegment<byte> body)
+        MqttBasePacket DecodeSubscribePacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
-            
-            var packet = new MqttAuthPacket();
 
-            if (_bufferReader.EndOfStream)
+            var packet = new MqttSubscribePacket
             {
-                packet.ReasonCode = MqttAuthenticateReasonCode.Success;
-                return packet;
-            }
+                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
+            };
 
-            packet.ReasonCode = (MqttAuthenticateReasonCode)_bufferReader.ReadByte();
-
-            var propertiesReader = new MqttV500PropertiesReader(_bufferReader);
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
             while (propertiesReader.MoveNext())
             {
-                if (propertiesReader.CurrentPropertyId == MqttPropertyId.AuthenticationMethod)
+                if (propertiesReader.CurrentPropertyId == MqttPropertyId.SubscriptionIdentifier)
                 {
-                    packet.AuthenticationMethod = propertiesReader.ReadAuthenticationMethod();
+                    packet.SubscriptionIdentifier = propertiesReader.ReadSubscriptionIdentifier();
                 }
-                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.AuthenticationData)
+                else
                 {
-                    packet.AuthenticationData = propertiesReader.ReadAuthenticationData();
+                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttSubscribePacket));
                 }
-                else if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
+            }
+
+            packet.UserProperties = propertiesReader.CollectedUserProperties;
+
+            while (!_bufferReader.EndOfStream)
+            {
+                var topic = _bufferReader.ReadString();
+                var options = _bufferReader.ReadByte();
+
+                var qos = (MqttQualityOfServiceLevel)(options & 3);
+                var noLocal = (options & (1 << 2)) > 0;
+                var retainAsPublished = (options & (1 << 3)) > 0;
+                var retainHandling = (MqttRetainHandling)((options >> 4) & 3);
+
+                packet.TopicFilters.Add(
+                    new MqttTopicFilter
+                    {
+                        Topic = topic,
+                        QualityOfServiceLevel = qos,
+                        NoLocal = noLocal,
+                        RetainAsPublished = retainAsPublished,
+                        RetainHandling = retainHandling
+                    });
+            }
+
+            return packet;
+        }
+
+        MqttBasePacket DecodeUnsubAckPacket(ArraySegment<byte> body)
+        {
+            ThrowIfBodyIsEmpty(body);
+
+            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+
+            var packet = new MqttUnsubAckPacket
+            {
+                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
+            };
+
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
+            while (propertiesReader.MoveNext())
+            {
+                if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)
                 {
                     packet.ReasonString = propertiesReader.ReadReasonString();
                 }
                 else
                 {
-                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttAuthPacket));
+                    propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttUnsubAckPacket));
                 }
             }
 
             packet.UserProperties = propertiesReader.CollectedUserProperties;
+
+            while (!_bufferReader.EndOfStream)
+            {
+                var reasonCode = (MqttUnsubscribeReasonCode)_bufferReader.ReadByte();
+                packet.ReasonCodes.Add(reasonCode);
+            }
+
+            return packet;
+        }
+
+        MqttBasePacket DecodeUnsubscribePacket(ArraySegment<byte> body)
+        {
+            ThrowIfBodyIsEmpty(body);
+
+            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+
+            var packet = new MqttUnsubscribePacket
+            {
+                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
+            };
+
+            var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
+            while (propertiesReader.MoveNext())
+            {
+                propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttUnsubscribePacket));
+            }
+
+            packet.UserProperties = propertiesReader.CollectedUserProperties;
+
+            while (!_bufferReader.EndOfStream)
+            {
+                packet.TopicFilters.Add(_bufferReader.ReadString());
+            }
 
             return packet;
         }

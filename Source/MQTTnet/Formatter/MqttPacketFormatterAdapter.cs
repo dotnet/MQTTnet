@@ -66,7 +66,7 @@ namespace MQTTnet.Formatter
             {
                 case MqttProtocolVersion.V500:
                 {
-                    return new MqttV500PacketFormatter(bufferWriter);
+                    return new MqttV5PacketFormatter(bufferWriter);
                 }
                 case MqttProtocolVersion.V310:
                 case MqttProtocolVersion.V311:

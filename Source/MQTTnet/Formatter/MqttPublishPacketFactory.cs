@@ -10,9 +10,25 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttPublishPacketFactory
     {
+        public MqttPublishPacket Clone(MqttPublishPacket publishPacket)
+        {
+            return new MqttPublishPacket
+            {
+                Topic = publishPacket.Topic,
+                Payload = publishPacket.Payload,
+                Retain = publishPacket.Retain,
+                QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
+                Dup = publishPacket.Dup,
+                PacketIdentifier = publishPacket.PacketIdentifier
+            };
+        }
+
         public MqttPublishPacket Create(MqttApplicationMessage applicationMessage)
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+            if (applicationMessage == null)
+            {
+                throw new ArgumentNullException(nameof(applicationMessage));
+            }
 
             // Copy all values to their matching counterparts.
             // The not supported values in MQTT 3.1.1 are not serialized (excluded) later.
@@ -32,19 +48,22 @@ namespace MQTTnet.Formatter
                 SubscriptionIdentifiers = applicationMessage.SubscriptionIdentifiers,
                 UserProperties = applicationMessage.UserProperties
             };
-            
+
             return packet;
         }
 
         public MqttPublishPacket Create(MqttConnectPacket connectPacket)
         {
-            if (connectPacket == null) throw new ArgumentNullException(nameof(connectPacket));
+            if (connectPacket == null)
+            {
+                throw new ArgumentNullException(nameof(connectPacket));
+            }
 
             if (!connectPacket.WillFlag)
             {
                 throw new MqttProtocolViolationException("The CONNECT packet contains no will message (WillFlag).");
             }
-            
+
             var packet = new MqttPublishPacket
             {
                 Topic = connectPacket.WillTopic,
@@ -60,19 +79,6 @@ namespace MQTTnet.Formatter
             };
 
             return packet;
-        }
-
-        public MqttPublishPacket Clone(MqttPublishPacket publishPacket)
-        {
-            return new MqttPublishPacket
-            {
-                Topic = publishPacket.Topic,
-                Payload = publishPacket.Payload,
-                Retain = publishPacket.Retain,
-                QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
-                Dup = publishPacket.Dup,
-                PacketIdentifier = publishPacket.PacketIdentifier
-            };
         }
     }
 }

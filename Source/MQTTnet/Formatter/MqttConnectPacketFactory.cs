@@ -12,15 +12,18 @@ namespace MQTTnet.Formatter
     {
         public MqttConnectPacket Create(MqttClientOptions clientOptions)
         {
-            if (clientOptions == null) throw new ArgumentNullException(nameof(clientOptions));
-            
+            if (clientOptions == null)
+            {
+                throw new ArgumentNullException(nameof(clientOptions));
+            }
+
             var connectPacket = new MqttConnectPacket
             {
                 ClientId = clientOptions.ClientId,
                 Username = clientOptions.Credentials?.GetUserName(clientOptions),
                 Password = clientOptions.Credentials?.GetPassword(clientOptions),
                 CleanSession = clientOptions.CleanSession,
-                KeepAlivePeriod = (ushort) clientOptions.KeepAlivePeriod.TotalSeconds,
+                KeepAlivePeriod = (ushort)clientOptions.KeepAlivePeriod.TotalSeconds,
                 AuthenticationMethod = clientOptions.AuthenticationMethod,
                 AuthenticationData = clientOptions.AuthenticationData,
                 WillDelayInterval = clientOptions.WillDelayInterval,

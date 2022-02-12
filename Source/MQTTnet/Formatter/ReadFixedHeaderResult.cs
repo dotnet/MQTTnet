@@ -6,12 +6,12 @@ namespace MQTTnet.Formatter
 {
     public struct ReadFixedHeaderResult
     {
-        public static ReadFixedHeaderResult Cancelled = new ReadFixedHeaderResult
+        public static ReadFixedHeaderResult Cancelled { get; } = new ReadFixedHeaderResult
         {
             IsCancelled = true
         };
         
-        public static ReadFixedHeaderResult ConnectionClosed = new ReadFixedHeaderResult
+        public static ReadFixedHeaderResult ConnectionClosed { get; } = new ReadFixedHeaderResult
         {
             IsConnectionClosed = true
         };

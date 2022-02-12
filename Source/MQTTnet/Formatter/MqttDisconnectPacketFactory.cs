@@ -10,14 +10,24 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttDisconnectPacketFactory
     {
+        readonly MqttDisconnectPacket _normalDisconnection = new MqttDisconnectPacket
+        {
+            ReasonCode = MqttDisconnectReasonCode.NormalDisconnection
+        };
+
         public MqttDisconnectPacket Create(MqttDisconnectReasonCode reasonCode)
         {
+            if (reasonCode == MqttDisconnectReasonCode.NormalDisconnection)
+            {
+                return _normalDisconnection;
+            }
+
             return new MqttDisconnectPacket
             {
                 ReasonCode = reasonCode
             };
         }
-        
+
         public MqttDisconnectPacket Create(MqttClientDisconnectOptions clientDisconnectOptions)
         {
             var packet = new MqttDisconnectPacket();
@@ -28,7 +38,7 @@ namespace MQTTnet.Formatter
             }
             else
             {
-                packet.ReasonCode = (MqttDisconnectReasonCode) clientDisconnectOptions.Reason;
+                packet.ReasonCode = (MqttDisconnectReasonCode)clientDisconnectOptions.Reason;
             }
 
             return packet;

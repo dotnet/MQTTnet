@@ -12,7 +12,10 @@ namespace MQTTnet.Formatter
     {
         public MqttConnAckPacket Create(ValidatingConnectionEventArgs validatingConnectionEventArgs)
         {
-            if (validatingConnectionEventArgs == null) throw new ArgumentNullException(nameof(validatingConnectionEventArgs));
+            if (validatingConnectionEventArgs == null)
+            {
+                throw new ArgumentNullException(nameof(validatingConnectionEventArgs));
+            }
 
             var connAckPacket = new MqttConnAckPacket
             {
@@ -23,7 +26,7 @@ namespace MQTTnet.Formatter
                 SharedSubscriptionAvailable = false,
                 TopicAliasMaximum = ushort.MaxValue,
                 WildcardSubscriptionAvailable = true,
-                    
+
                 AuthenticationMethod = validatingConnectionEventArgs.AuthenticationMethod,
                 AuthenticationData = validatingConnectionEventArgs.ResponseAuthenticationData,
                 AssignedClientIdentifier = validatingConnectionEventArgs.AssignedClientIdentifier,
@@ -31,7 +34,7 @@ namespace MQTTnet.Formatter
                 ServerReference = validatingConnectionEventArgs.ServerReference,
                 UserProperties = validatingConnectionEventArgs.ResponseUserProperties
             };
-            
+
             return connAckPacket;
         }
     }

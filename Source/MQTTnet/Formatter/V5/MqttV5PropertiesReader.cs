@@ -10,13 +10,13 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5
 {
-    public sealed class MqttV500PropertiesReader
+    public sealed class MqttV5PropertiesReader
     {
         readonly MqttBufferReader _body;
         readonly int _length;
         readonly int _targetOffset;
 
-        public MqttV500PropertiesReader(MqttBufferReader body)
+        public MqttV5PropertiesReader(MqttBufferReader body)
         {
             _body = body ?? throw new ArgumentNullException(nameof(body));
 
@@ -28,9 +28,9 @@ namespace MQTTnet.Formatter.V5
             _targetOffset = body.Offset + _length;
         }
 
-        public MqttPropertyId CurrentPropertyId { get; private set; }
-
         public List<MqttUserProperty> CollectedUserProperties { get; private set; }
+
+        public MqttPropertyId CurrentPropertyId { get; private set; }
 
         public bool MoveNext()
         {
@@ -48,7 +48,7 @@ namespace MQTTnet.Formatter.V5
 
                 CurrentPropertyId = (MqttPropertyId)_body.ReadByte();
 
-                // User properties are special because the can appear multiple times in the
+                // User properties are special because they can appear multiple times in the
                 // buffer and at any position. So we collect them here to expose them as a 
                 // final result list.
                 if (CurrentPropertyId == MqttPropertyId.UserProperty)
@@ -69,12 +69,7 @@ namespace MQTTnet.Formatter.V5
             }
         }
 
-        public string ReadReasonString()
-        {
-            return _body.ReadString();
-        }
-
-        public string ReadAuthenticationMethod()
+        public string ReadAssignedClientIdentifier()
         {
             return _body.ReadString();
         }
@@ -84,98 +79,12 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadBinaryData();
         }
 
-        public bool ReadRetainAvailable()
-        {
-            return _body.ReadByte() == 1;
-        }
-
-        public uint ReadSessionExpiryInterval()
-        {
-            return _body.ReadFourByteInteger();
-        }
-
-        public ushort ReadReceiveMaximum()
-        {
-            return _body.ReadTwoByteInteger();
-        }
-
-        public MqttQualityOfServiceLevel ReadMaximumQoS()
-        {
-            var value = _body.ReadByte();
-            if (value > 1)
-            {
-                throw new MqttProtocolViolationException($"Unexpected Maximum QoS value: {value}");
-            }
-            
-            return (MqttQualityOfServiceLevel)value;
-        }
-
-        public string ReadAssignedClientIdentifier()
+        public string ReadAuthenticationMethod()
         {
             return _body.ReadString();
         }
 
-        public string ReadServerReference()
-        {
-            return _body.ReadString();
-        }
-
-        public ushort ReadTopicAliasMaximum()
-        {
-            return _body.ReadTwoByteInteger();
-        }
-
-        public uint ReadMaximumPacketSize()
-        {
-            return _body.ReadFourByteInteger();
-        }
-
-        public ushort ReadServerKeepAlive()
-        {
-            return _body.ReadTwoByteInteger();
-        }
-
-        public string ReadResponseInformation()
-        {
-            return _body.ReadString();
-        }
-
-        public bool ReadSharedSubscriptionAvailable()
-        {
-            return _body.ReadByte() == 1;
-        }
-
-        public bool ReadSubscriptionIdentifiersAvailable()
-        {
-            return _body.ReadByte() == 1;
-        }
-
-        public bool ReadWildcardSubscriptionAvailable()
-        {
-            return _body.ReadByte() == 1;
-        }
-
-        public uint ReadSubscriptionIdentifier()
-        {
-            return _body.ReadVariableByteInteger();
-        }
-
-        public MqttPayloadFormatIndicator ReadPayloadFormatIndicator()
-        {
-            return (MqttPayloadFormatIndicator)_body.ReadByte();
-        }
-
-        public uint ReadMessageExpiryInterval()
-        {
-            return _body.ReadFourByteInteger();
-        }
-
-        public ushort ReadTopicAlias()
-        {
-            return _body.ReadTwoByteInteger();
-        }
-
-        public string ReadResponseTopic()
+        public string ReadContentType()
         {
             return _body.ReadString();
         }
@@ -185,9 +94,100 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadBinaryData();
         }
 
-        public string ReadContentType()
+        public uint ReadMaximumPacketSize()
+        {
+            return _body.ReadFourByteInteger();
+        }
+
+        public MqttQualityOfServiceLevel ReadMaximumQoS()
+        {
+            var value = _body.ReadByte();
+            if (value > 1)
+            {
+                throw new MqttProtocolViolationException($"Unexpected Maximum QoS value: {value}");
+            }
+
+            return (MqttQualityOfServiceLevel)value;
+        }
+
+        public uint ReadMessageExpiryInterval()
+        {
+            return _body.ReadFourByteInteger();
+        }
+
+        public MqttPayloadFormatIndicator ReadPayloadFormatIndicator()
+        {
+            return (MqttPayloadFormatIndicator)_body.ReadByte();
+        }
+
+        public string ReadReasonString()
         {
             return _body.ReadString();
+        }
+
+        public ushort ReadReceiveMaximum()
+        {
+            return _body.ReadTwoByteInteger();
+        }
+
+        public string ReadResponseInformation()
+        {
+            return _body.ReadString();
+        }
+
+        public string ReadResponseTopic()
+        {
+            return _body.ReadString();
+        }
+
+        public bool ReadRetainAvailable()
+        {
+            return _body.ReadByte() == 1;
+        }
+
+        public ushort ReadServerKeepAlive()
+        {
+            return _body.ReadTwoByteInteger();
+        }
+
+        public string ReadServerReference()
+        {
+            return _body.ReadString();
+        }
+
+        public uint ReadSessionExpiryInterval()
+        {
+            return _body.ReadFourByteInteger();
+        }
+
+        public bool ReadSharedSubscriptionAvailable()
+        {
+            return _body.ReadByte() == 1;
+        }
+
+        public uint ReadSubscriptionIdentifier()
+        {
+            return _body.ReadVariableByteInteger();
+        }
+
+        public bool ReadSubscriptionIdentifiersAvailable()
+        {
+            return _body.ReadByte() == 1;
+        }
+
+        public ushort ReadTopicAlias()
+        {
+            return _body.ReadTwoByteInteger();
+        }
+
+        public ushort ReadTopicAliasMaximum()
+        {
+            return _body.ReadTwoByteInteger();
+        }
+
+        public bool ReadWildcardSubscriptionAvailable()
+        {
+            return _body.ReadByte() == 1;
         }
 
         public uint ReadWillDelayInterval()
@@ -195,12 +195,12 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadFourByteInteger();
         }
 
-        public bool RequestResponseInformation()
+        public bool RequestProblemInformation()
         {
             return _body.ReadByte() == 1;
         }
 
-        public bool RequestProblemInformation()
+        public bool RequestResponseInformation()
         {
             return _body.ReadByte() == 1;
         }

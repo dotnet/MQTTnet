@@ -10,20 +10,22 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5
 {
-    public sealed class MqttV500PacketEncoder
+    public sealed class MqttV5PacketEncoder
     {
-        readonly MqttV500PropertiesWriter _propertiesWriter = new MqttV500PropertiesWriter(new MqttBufferWriter(1024, 4096));
-        
         readonly MqttBufferWriter _bufferWriter;
-        
-        public MqttV500PacketEncoder(MqttBufferWriter bufferWriter)
+        readonly MqttV5PropertiesWriter _propertiesWriter = new MqttV5PropertiesWriter(new MqttBufferWriter(1024, 4096));
+
+        public MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
         {
             _bufferWriter = bufferWriter ?? throw new ArgumentNullException(nameof(bufferWriter));
         }
 
         public MqttPacketBuffer Encode(MqttBasePacket packet)
         {
-            if (packet == null) throw new ArgumentNullException(nameof(packet));
+            if (packet == null)
+            {
+                throw new ArgumentNullException(nameof(packet));
+            }
 
             // Leave enough head space for max header size (fixed + 4 variable remaining length = 5 bytes)
             _bufferWriter.Reset(5);
@@ -37,9 +39,9 @@ namespace MQTTnet.Formatter.V5
             {
                 remainingLength += (uint)publishPacket.Payload.Length;
             }
-            
+
             var remainingLengthSize = MqttBufferWriter.GetLengthOfVariableInteger(remainingLength);
-            
+
             var headerSize = 1 + remainingLengthSize;
             var headerOffset = 5 - headerSize;
 
@@ -51,13 +53,13 @@ namespace MQTTnet.Formatter.V5
             var buffer = _bufferWriter.GetBuffer();
 
             var firstSegment = new ArraySegment<byte>(buffer, headerOffset, _bufferWriter.Length - headerOffset);
-            
+
             if (publishPacket?.Payload != null)
             {
                 var payloadSegment = new ArraySegment<byte>(publishPacket.Payload, 0, publishPacket.Payload.Length);
-                return new MqttPacketBuffer(firstSegment, payloadSegment);   
+                return new MqttPacketBuffer(firstSegment, payloadSegment);
             }
-            
+
             return new MqttPacketBuffer(firstSegment);
         }
 
@@ -66,28 +68,54 @@ namespace MQTTnet.Formatter.V5
             _bufferWriter.FreeBuffer();
         }
 
-        byte EncodePacket(MqttBasePacket packet)
+        byte EncodeAuthPacket(MqttAuthPacket packet)
         {
-            switch (packet)
-            {
-                case MqttConnectPacket connectPacket: return EncodeConnectPacket(connectPacket);
-                case MqttConnAckPacket connAckPacket: return EncodeConnAckPacket(connAckPacket);
-                case MqttDisconnectPacket disconnectPacket: return EncodeDisconnectPacket(disconnectPacket);
-                case MqttPingReqPacket _: return EncodePingReqPacket();
-                case MqttPingRespPacket _: return EncodePingRespPacket();
-                case MqttPublishPacket publishPacket: return EncodePublishPacket(publishPacket);
-                case MqttPubAckPacket pubAckPacket: return EncodePubAckPacket(pubAckPacket);
-                case MqttPubRecPacket pubRecPacket: return EncodePubRecPacket(pubRecPacket);
-                case MqttPubRelPacket pubRelPacket: return EncodePubRelPacket(pubRelPacket);
-                case MqttPubCompPacket pubCompPacket: return EncodePubCompPacket(pubCompPacket);
-                case MqttSubscribePacket subscribePacket: return EncodeSubscribePacket(subscribePacket);
-                case MqttSubAckPacket subAckPacket: return EncodeSubAckPacket(subAckPacket);
-                case MqttUnsubscribePacket unsubscribePacket: return EncodeUnsubscribePacket(unsubscribePacket);
-                case MqttUnsubAckPacket unsubAckPacket: return EncodeUnsubAckPacket(unsubAckPacket);
-                case MqttAuthPacket authPacket: return EncodeAuthPacket(authPacket);
+            _bufferWriter.WriteByte((byte)packet.ReasonCode);
 
-                default: throw new MqttProtocolViolationException("Packet type invalid.");
+            _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
+            _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+            _propertiesWriter.WriteReasonString(packet.ReasonString);
+            _propertiesWriter.WriteUserProperties(packet.UserProperties);
+
+            _propertiesWriter.WriteTo(_bufferWriter);
+            _propertiesWriter.Reset();
+
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Auth);
+        }
+
+        byte EncodeConnAckPacket(MqttConnAckPacket packet)
+        {
+            byte connectAcknowledgeFlags = 0x0;
+            if (packet.IsSessionPresent)
+            {
+                connectAcknowledgeFlags |= 0x1;
             }
+
+            _bufferWriter.WriteByte(connectAcknowledgeFlags);
+            _bufferWriter.WriteByte((byte)packet.ReasonCode);
+
+            _propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
+            _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
+            _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+            _propertiesWriter.WriteRetainAvailable(packet.RetainAvailable);
+            _propertiesWriter.WriteReceiveMaximum(packet.ReceiveMaximum);
+            _propertiesWriter.WriteMaximumQoS(packet.MaximumQoS);
+            _propertiesWriter.WriteAssignedClientIdentifier(packet.AssignedClientIdentifier);
+            _propertiesWriter.WriteTopicAliasMaximum(packet.TopicAliasMaximum);
+            _propertiesWriter.WriteReasonString(packet.ReasonString);
+            _propertiesWriter.WriteMaximumPacketSize(packet.MaximumPacketSize);
+            _propertiesWriter.WriteWildcardSubscriptionAvailable(packet.WildcardSubscriptionAvailable);
+            _propertiesWriter.WriteSubscriptionIdentifiersAvailable(packet.SubscriptionIdentifiersAvailable);
+            _propertiesWriter.WriteSharedSubscriptionAvailable(packet.SharedSubscriptionAvailable);
+            _propertiesWriter.WriteServerKeepAlive(packet.ServerKeepAlive);
+            _propertiesWriter.WriteResponseInformation(packet.ResponseInformation);
+            _propertiesWriter.WriteServerReference(packet.ServerReference);
+            _propertiesWriter.WriteUserProperties(packet.UserProperties);
+
+            _propertiesWriter.WriteTo(_bufferWriter);
+            _propertiesWriter.Reset();
+
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
         }
 
         byte EncodeConnectPacket(MqttConnectPacket packet)
@@ -149,7 +177,7 @@ namespace MQTTnet.Formatter.V5
             _propertiesWriter.Reset();
 
             _bufferWriter.WriteString(packet.ClientId);
-            
+
             if (packet.WillFlag)
             {
                 _propertiesWriter.WritePayloadFormatIndicator(packet.WillPayloadFormatIndicator);
@@ -180,43 +208,114 @@ namespace MQTTnet.Formatter.V5
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);
         }
 
-        byte EncodeConnAckPacket(MqttConnAckPacket packet)
+        byte EncodeDisconnectPacket(MqttDisconnectPacket packet)
         {
-            byte connectAcknowledgeFlags = 0x0;
-            if (packet.IsSessionPresent)
-            {
-                connectAcknowledgeFlags |= 0x1;
-            }
-
-            _bufferWriter.WriteByte(connectAcknowledgeFlags);
             _bufferWriter.WriteByte((byte)packet.ReasonCode);
 
-            _propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
-            _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
-            _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
-            _propertiesWriter.WriteRetainAvailable(packet.RetainAvailable);
-            _propertiesWriter.WriteReceiveMaximum(packet.ReceiveMaximum);
-            _propertiesWriter.WriteMaximumQoS(packet.MaximumQoS);
-            _propertiesWriter.WriteAssignedClientIdentifier(packet.AssignedClientIdentifier);
-            _propertiesWriter.WriteTopicAliasMaximum(packet.TopicAliasMaximum);
-            _propertiesWriter.WriteReasonString(packet.ReasonString);
-            _propertiesWriter.WriteMaximumPacketSize(packet.MaximumPacketSize);
-            _propertiesWriter.WriteWildcardSubscriptionAvailable(packet.WildcardSubscriptionAvailable);
-            _propertiesWriter.WriteSubscriptionIdentifiersAvailable(packet.SubscriptionIdentifiersAvailable);
-            _propertiesWriter.WriteSharedSubscriptionAvailable(packet.SharedSubscriptionAvailable);
-            _propertiesWriter.WriteServerKeepAlive(packet.ServerKeepAlive);
-            _propertiesWriter.WriteResponseInformation(packet.ResponseInformation);
             _propertiesWriter.WriteServerReference(packet.ServerReference);
+            _propertiesWriter.WriteReasonString(packet.ReasonString);
+            _propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
             _propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             _propertiesWriter.WriteTo(_bufferWriter);
             _propertiesWriter.Reset();
 
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Disconnect);
+        }
+
+        byte EncodePacket(MqttBasePacket packet)
+        {
+            switch (packet)
+            {
+                case MqttConnectPacket connectPacket:
+                    return EncodeConnectPacket(connectPacket);
+                case MqttConnAckPacket connAckPacket:
+                    return EncodeConnAckPacket(connAckPacket);
+                case MqttDisconnectPacket disconnectPacket:
+                    return EncodeDisconnectPacket(disconnectPacket);
+                case MqttPingReqPacket _:
+                    return EncodePingReqPacket();
+                case MqttPingRespPacket _:
+                    return EncodePingRespPacket();
+                case MqttPublishPacket publishPacket:
+                    return EncodePublishPacket(publishPacket);
+                case MqttPubAckPacket pubAckPacket:
+                    return EncodePubAckPacket(pubAckPacket);
+                case MqttPubRecPacket pubRecPacket:
+                    return EncodePubRecPacket(pubRecPacket);
+                case MqttPubRelPacket pubRelPacket:
+                    return EncodePubRelPacket(pubRelPacket);
+                case MqttPubCompPacket pubCompPacket:
+                    return EncodePubCompPacket(pubCompPacket);
+                case MqttSubscribePacket subscribePacket:
+                    return EncodeSubscribePacket(subscribePacket);
+                case MqttSubAckPacket subAckPacket:
+                    return EncodeSubAckPacket(subAckPacket);
+                case MqttUnsubscribePacket unsubscribePacket:
+                    return EncodeUnsubscribePacket(unsubscribePacket);
+                case MqttUnsubAckPacket unsubAckPacket:
+                    return EncodeUnsubAckPacket(unsubAckPacket);
+                case MqttAuthPacket authPacket:
+                    return EncodeAuthPacket(authPacket);
+
+                default:
+                    throw new MqttProtocolViolationException("Packet type invalid.");
+            }
+        }
+
+        static byte EncodePingReqPacket()
+        {
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.PingReq);
+        }
+
+        static byte EncodePingRespPacket()
+        {
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.PingResp);
+        }
+
+        byte EncodePubAckPacket(MqttPubAckPacket packet)
+        {
+            if (packet.PacketIdentifier == 0)
+            {
+                throw new MqttProtocolViolationException("PubAck packet has no packet identifier.");
+            }
+
+            _bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
+
+            _propertiesWriter.WriteReasonString(packet.ReasonString);
+            _propertiesWriter.WriteUserProperties(packet.UserProperties);
+
+            if (_bufferWriter.Length > 0 || packet.ReasonCode != MqttPubAckReasonCode.Success)
+            {
+                _bufferWriter.WriteByte((byte)packet.ReasonCode);
+                _propertiesWriter.WriteTo(_bufferWriter);
+                _propertiesWriter.Reset();
+            }
+
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.PubAck);
+        }
+
+        byte EncodePubCompPacket(MqttPubCompPacket packet)
+        {
+            ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
+
+            _bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
+
+            _propertiesWriter.WriteReasonString(packet.ReasonString);
+            _propertiesWriter.WriteUserProperties(packet.UserProperties);
+
+            if (_propertiesWriter.Length > 0 || packet.ReasonCode != MqttPubCompReasonCode.Success)
+            {
+                _bufferWriter.WriteByte((byte)packet.ReasonCode);
+                _propertiesWriter.WriteTo(_bufferWriter);
+                _propertiesWriter.Reset();
+            }
+
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.PubComp);
         }
 
         byte EncodePublishPacket(MqttPublishPacket packet)
-        { 
+        {
             if (packet.QualityOfServiceLevel == 0 && packet.Dup)
             {
                 throw new MqttProtocolViolationException("Dup flag must be false for QoS 0 packets [MQTT-3.3.1-2].");
@@ -252,7 +351,7 @@ namespace MQTTnet.Formatter.V5
 
             _propertiesWriter.WriteTo(_bufferWriter);
             _propertiesWriter.Reset();
-            
+
             // The payload is the past part of the packet. But it is not added here in order to keep
             // memory allocation low.
 
@@ -273,32 +372,10 @@ namespace MQTTnet.Formatter.V5
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Publish, fixedHeader);
         }
 
-        byte EncodePubAckPacket(MqttPubAckPacket packet)
-        {
-            if (packet.PacketIdentifier == 0)
-            {
-                throw new MqttProtocolViolationException("PubAck packet has no packet identifier.");
-            }
-            
-            _bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
-            
-            _propertiesWriter.WriteReasonString(packet.ReasonString);
-            _propertiesWriter.WriteUserProperties(packet.UserProperties);
-
-            if (_bufferWriter.Length > 0 || packet.ReasonCode != MqttPubAckReasonCode.Success)
-            {
-                _bufferWriter.WriteByte((byte)packet.ReasonCode);
-                _propertiesWriter.WriteTo(_bufferWriter);
-                _propertiesWriter.Reset();
-            }
-            
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.PubAck);
-        }
-
         byte EncodePubRecPacket(MqttPubRecPacket packet)
         {
             ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
-            
+
             _propertiesWriter.WriteReasonString(packet.ReasonString);
             _propertiesWriter.WriteUserProperties(packet.UserProperties);
 
@@ -317,12 +394,12 @@ namespace MQTTnet.Formatter.V5
         byte EncodePubRelPacket(MqttPubRelPacket packet)
         {
             ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
-            
+
             _propertiesWriter.WriteReasonString(packet.ReasonString);
             _propertiesWriter.WriteUserProperties(packet.UserProperties);
 
             _bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
-            
+
             if (_propertiesWriter.Length > 0 || packet.ReasonCode != MqttPubRelReasonCode.Success)
             {
                 _bufferWriter.WriteByte((byte)packet.ReasonCode);
@@ -333,28 +410,37 @@ namespace MQTTnet.Formatter.V5
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.PubRel, 0x02);
         }
 
-        byte EncodePubCompPacket(MqttPubCompPacket packet)
+        byte EncodeSubAckPacket(MqttSubAckPacket packet)
         {
+            if (packet.ReasonCodes?.Any() != true)
+            {
+                throw new MqttProtocolViolationException("At least one reason code must be set[MQTT - 3.8.3 - 3].");
+            }
+
             ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
-            
+
             _bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
-            
+
             _propertiesWriter.WriteReasonString(packet.ReasonString);
             _propertiesWriter.WriteUserProperties(packet.UserProperties);
 
-            if (_propertiesWriter.Length > 0 || packet.ReasonCode != MqttPubCompReasonCode.Success)
+            _propertiesWriter.WriteTo(_bufferWriter);
+            _propertiesWriter.Reset();
+
+            foreach (var reasonCode in packet.ReasonCodes)
             {
-                _bufferWriter.WriteByte((byte)packet.ReasonCode);
-                _propertiesWriter.WriteTo(_bufferWriter);
-                _propertiesWriter.Reset();
+                _bufferWriter.WriteByte((byte)reasonCode);
             }
 
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.PubComp);
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.SubAck);
         }
 
         byte EncodeSubscribePacket(MqttSubscribePacket packet)
         {
-            if (packet.TopicFilters?.Any() != true) throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
+            if (packet.TopicFilters?.Any() != true)
+            {
+                throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
+            }
 
             ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
 
@@ -392,7 +478,7 @@ namespace MQTTnet.Formatter.V5
                     {
                         options |= (byte)((byte)topicFilter.RetainHandling << 4);
                     }
-                    
+
                     _bufferWriter.WriteByte(options);
                 }
             }
@@ -400,13 +486,8 @@ namespace MQTTnet.Formatter.V5
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Subscribe, 0x02);
         }
 
-        byte EncodeSubAckPacket(MqttSubAckPacket packet)
+        byte EncodeUnsubAckPacket(MqttUnsubAckPacket packet)
         {
-            if (packet.ReasonCodes?.Any() != true)
-            {
-                throw new MqttProtocolViolationException("At least one reason code must be set[MQTT - 3.8.3 - 3].");
-            }
-
             ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
 
             _bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
@@ -416,13 +497,13 @@ namespace MQTTnet.Formatter.V5
 
             _propertiesWriter.WriteTo(_bufferWriter);
             _propertiesWriter.Reset();
-            
+
             foreach (var reasonCode in packet.ReasonCodes)
             {
                 _bufferWriter.WriteByte((byte)reasonCode);
             }
 
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.SubAck);
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.UnsubAck);
         }
 
         byte EncodeUnsubscribePacket(MqttUnsubscribePacket packet)
@@ -440,7 +521,7 @@ namespace MQTTnet.Formatter.V5
 
             _propertiesWriter.WriteTo(_bufferWriter);
             _propertiesWriter.Reset();
-            
+
             foreach (var topicFilter in packet.TopicFilters)
             {
                 _bufferWriter.WriteString(topicFilter);
@@ -449,66 +530,6 @@ namespace MQTTnet.Formatter.V5
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Unsubscibe, 0x02);
         }
 
-        byte EncodeUnsubAckPacket(MqttUnsubAckPacket packet)
-        {
-            ThrowIfPacketIdentifierIsInvalid(packet.PacketIdentifier, packet);
-            
-            _bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
-
-            _propertiesWriter.WriteReasonString(packet.ReasonString);
-            _propertiesWriter.WriteUserProperties(packet.UserProperties);
-
-            _propertiesWriter.WriteTo(_bufferWriter);
-            _propertiesWriter.Reset();
-            
-            foreach (var reasonCode in packet.ReasonCodes)
-            {
-                _bufferWriter.WriteByte((byte)reasonCode);
-            }
-
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.UnsubAck);
-        }
-
-        byte EncodeDisconnectPacket(MqttDisconnectPacket packet)
-        {
-            _bufferWriter.WriteByte((byte)packet.ReasonCode);
-
-            _propertiesWriter.WriteServerReference(packet.ServerReference);
-            _propertiesWriter.WriteReasonString(packet.ReasonString);
-            _propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
-            _propertiesWriter.WriteUserProperties(packet.UserProperties);
-
-            _propertiesWriter.WriteTo(_bufferWriter);
-            _propertiesWriter.Reset();
-
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Disconnect);
-        }
-
-        static byte EncodePingReqPacket()
-        {
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.PingReq);
-        }
-
-        static byte EncodePingRespPacket()
-        {
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.PingResp);
-        }
-
-        byte EncodeAuthPacket(MqttAuthPacket packet)
-        {
-            _bufferWriter.WriteByte((byte)packet.ReasonCode);
-
-            _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
-            _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
-            _propertiesWriter.WriteReasonString(packet.ReasonString);
-            _propertiesWriter.WriteUserProperties(packet.UserProperties);
-
-            _propertiesWriter.WriteTo(_bufferWriter);
-            _propertiesWriter.Reset();
-
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Auth);
-        }
-        
         static void ThrowIfPacketIdentifierIsInvalid(ushort packetIdentifier, MqttBasePacket packet)
         {
             // SUBSCRIBE, UNSUBSCRIBE, and PUBLISH(in cases where QoS > 0) Control Packets MUST contain a non-zero 16 - bit Packet Identifier[MQTT - 2.3.1 - 1]. 

@@ -9,11 +9,11 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5
 {
-    public sealed class MqttV500PropertiesWriter
+    public sealed class MqttV5PropertiesWriter
     {
         readonly MqttBufferWriter _bufferWriter;
 
-        public MqttV500PropertiesWriter(MqttBufferWriter bufferWriter)
+        public MqttV5PropertiesWriter(MqttBufferWriter bufferWriter)
         {
             _bufferWriter = bufferWriter ?? throw new ArgumentNullException(nameof(bufferWriter));
         }

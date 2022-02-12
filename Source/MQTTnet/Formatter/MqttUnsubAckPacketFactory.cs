@@ -12,8 +12,15 @@ namespace MQTTnet.Formatter
     {
         public MqttUnsubAckPacket Create(MqttUnsubscribePacket unsubscribePacket, MqttUnsubscribeResult mqttUnsubscribeResult)
         {
-            if (unsubscribePacket == null) throw new ArgumentNullException(nameof(unsubscribePacket));
-            if (mqttUnsubscribeResult == null) throw new ArgumentNullException(nameof(mqttUnsubscribeResult));
+            if (unsubscribePacket == null)
+            {
+                throw new ArgumentNullException(nameof(unsubscribePacket));
+            }
+
+            if (mqttUnsubscribeResult == null)
+            {
+                throw new ArgumentNullException(nameof(mqttUnsubscribeResult));
+            }
 
             var unsubAckPacket = new MqttUnsubAckPacket
             {
@@ -22,7 +29,7 @@ namespace MQTTnet.Formatter
 
             // MQTTv5.0.0 only.
             unsubAckPacket.ReasonCodes.AddRange(mqttUnsubscribeResult.ReasonCodes);
-            
+
             return unsubAckPacket;
         }
     }

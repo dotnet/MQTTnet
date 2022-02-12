@@ -91,7 +91,11 @@ namespace MQTTnet.Implementations
                         }
                     }
 
-                    using (var clientAdapter = new MqttChannelAdapter(new MqttTcpChannel(args.Socket, clientCertificate, _options), new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535)), null, _rootLogger))
+                    var bufferWriter = new MqttBufferWriter(4096, 65535);
+                    var packetFormatterAdapter = new MqttPacketFormatterAdapter(bufferWriter);
+                    var tcpChannel = new MqttTcpChannel(args.Socket, clientCertificate, _options);
+
+                    using (var clientAdapter = new MqttChannelAdapter(tcpChannel, packetFormatterAdapter, null, _rootLogger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }

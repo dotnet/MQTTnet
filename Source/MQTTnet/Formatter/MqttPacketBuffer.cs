@@ -5,7 +5,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Adapter;
 using MQTTnet.Channel;
 
 namespace MQTTnet.Formatter
@@ -24,7 +23,7 @@ namespace MQTTnet.Formatter
         }
 
         public int Length { get; }
-        
+
         public ArraySegment<byte> ToArray()
         {
             if (_segment1.Count == 0)
@@ -35,8 +34,8 @@ namespace MQTTnet.Formatter
             var buffer = new byte[Length];
             Array.Copy(_segment0.Array, _segment0.Offset, buffer, 0, _segment0.Count);
             Array.Copy(_segment1.Array, _segment1.Offset, buffer, _segment0.Count, _segment1.Count);
-            
-            return new ArraySegment<byte>(buffer);  
+
+            return new ArraySegment<byte>(buffer);
         }
 
         public async Task WriteToAsync(IMqttChannel channel, CancellationToken cancellationToken)
@@ -45,9 +44,9 @@ namespace MQTTnet.Formatter
             {
                 throw new ArgumentNullException(nameof(channel));
             }
-            
+
             await channel.WriteAsync(_segment0.Array, _segment0.Offset, _segment0.Count, cancellationToken).ConfigureAwait(false);
-            
+
             if (_segment1.Count > 0)
             {
                 await channel.WriteAsync(_segment1.Array, _segment1.Offset, _segment1.Count, cancellationToken).ConfigureAwait(false);

@@ -12,7 +12,10 @@ namespace MQTTnet.Formatter
     {
         public MqttSubscribePacket Create(MqttClientSubscribeOptions clientSubscribeOptions)
         {
-            if (clientSubscribeOptions == null) throw new ArgumentNullException(nameof(clientSubscribeOptions));
+            if (clientSubscribeOptions == null)
+            {
+                throw new ArgumentNullException(nameof(clientSubscribeOptions));
+            }
 
             var packet = new MqttSubscribePacket
             {

@@ -13,12 +13,15 @@ namespace MQTTnet.Formatter
     {
         public MqttPubRelPacket Create(MqttPubRecPacket pubRecPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
         {
-            if (pubRecPacket == null) throw new ArgumentNullException(nameof(pubRecPacket));
+            if (pubRecPacket == null)
+            {
+                throw new ArgumentNullException(nameof(pubRecPacket));
+            }
 
             return new MqttPubRelPacket
             {
                 PacketIdentifier = pubRecPacket.PacketIdentifier,
-                ReasonCode = (MqttPubRelReasonCode) (int) reasonCode
+                ReasonCode = (MqttPubRelReasonCode)(int)reasonCode
             };
         }
     }

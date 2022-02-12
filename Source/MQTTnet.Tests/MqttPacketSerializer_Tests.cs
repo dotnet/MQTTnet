@@ -192,7 +192,7 @@ namespace MQTTnet.Tests
         [TestMethod]
         public void Serialize_LargePacket()
         {
-            var serializer = new MqttV311PacketFormatter(WriterFactory());
+            var serializer = new MqttV3PacketFormatter(WriterFactory(), MqttProtocolVersion.V311);
 
             const int payloadLength = 80000;
 

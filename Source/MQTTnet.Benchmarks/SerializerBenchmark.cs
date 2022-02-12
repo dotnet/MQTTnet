@@ -34,7 +34,7 @@ namespace MQTTnet.Benchmarks
                 Topic = "A"
             };
 
-            _serializer = new MqttV311PacketFormatter(new MqttBufferWriter(4096, 65535));
+            _serializer = new MqttV3PacketFormatter(new MqttBufferWriter(4096, 65535), MqttProtocolVersion.V311);
             _serializedPacket = _serializer.Encode(_packet).ToArray();
         }
 

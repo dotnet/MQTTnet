@@ -146,20 +146,24 @@ namespace MQTTnet.Server
 
         public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
         {
-            var interceptingPacketEventArgs = new InterceptingPacketEventArgs
+            if (_eventContainer.InterceptingOutboundPacketEvent.HasHandlers)
             {
-                ClientId = Id,
-                Endpoint = Endpoint,
-                Packet = packet,
-                CancellationToken = cancellationToken
-            };
+                var interceptingPacketEventArgs = new InterceptingPacketEventArgs
+                {
+                    ClientId = Id,
+                    Endpoint = Endpoint,
+                    Packet = packet,
+                    CancellationToken = cancellationToken
+                };
             
-            await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
-            packet = interceptingPacketEventArgs.Packet;
-
-            if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
-            {
-                return;
+                await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
+                
+                if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
+                {
+                    return;
+                }
+                
+                packet = interceptingPacketEventArgs.Packet;
             }
 
             await ChannelAdapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);

@@ -10,13 +10,13 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5
 {
-    public sealed class MqttV500PacketEncoder
+    public sealed class MqttV5PacketEncoder
     {
         readonly MqttV500PropertiesWriter _propertiesWriter = new MqttV500PropertiesWriter(new MqttBufferWriter(1024, 4096));
         
         readonly MqttBufferWriter _bufferWriter;
         
-        public MqttV500PacketEncoder(MqttBufferWriter bufferWriter)
+        public MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
         {
             _bufferWriter = bufferWriter ?? throw new ArgumentNullException(nameof(bufferWriter));
         }

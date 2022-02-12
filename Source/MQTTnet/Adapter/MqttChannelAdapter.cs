@@ -110,6 +110,9 @@ namespace MQTTnet.Adapter
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
 
+            // This lock makes sure that multiple threads can send packets at the same time.
+            // This is required when a disconnect is sent from another thread while the 
+            // worker thread is still sending publish packets etc.
             using (await _syncRoot.WaitAsync(cancellationToken).ConfigureAwait(false))
             {
                 // Check for cancellation here again because "WaitAsync" might take some time.

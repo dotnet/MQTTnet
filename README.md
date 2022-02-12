@@ -21,7 +21,7 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * TLS support for client and server (but not UWP servers)
 * Extensible communication channels (e.g. In-Memory, TCP, TCP+TLS, WS)
 * Lightweight (only the low level implementation of MQTT, no overhead)
-* Performance optimized (processing ~70.000 messages / second)*
+* Performance optimized (processing ~150.000 messages / second)*
 * Uniform API across all supported versions of the MQTT protocol
 * Interfaces included for mocking and testing
 * Access to internal trace messages

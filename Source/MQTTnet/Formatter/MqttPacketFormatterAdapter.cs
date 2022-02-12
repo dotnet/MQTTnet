@@ -46,13 +46,7 @@ namespace MQTTnet.Formatter
 
         public MqttPacketBuffer Encode(MqttBasePacket packet)
         {
-            if (packet == null)
-            {
-                throw new ArgumentNullException(nameof(packet));
-            }
-
             ThrowIfFormatterNotSet();
-
             return _formatter.Encode(packet);
         }
 
@@ -74,13 +68,10 @@ namespace MQTTnet.Formatter
                 {
                     return new MqttV500PacketFormatter(bufferWriter);
                 }
+                case MqttProtocolVersion.V310:
                 case MqttProtocolVersion.V311:
                 {
-                    return new MqttV311PacketFormatter(bufferWriter);
-                }
-                case MqttProtocolVersion.V310:
-                {
-                    return new MqttV310PacketFormatter(bufferWriter);
+                    return new MqttV3PacketFormatter(bufferWriter, protocolVersion);
                 }
                 default:
                 {
@@ -100,7 +91,7 @@ namespace MQTTnet.Formatter
             }
 
             _bufferReader.SetBuffer(receivedMqttPacket.Body.Array, receivedMqttPacket.Body.Offset, receivedMqttPacket.Body.Count);
-            
+
             var protocolName = _bufferReader.ReadString();
             var protocolLevel = _bufferReader.ReadByte();
 

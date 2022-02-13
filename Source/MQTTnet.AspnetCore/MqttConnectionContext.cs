@@ -181,7 +181,7 @@ namespace MQTTnet.AspNetCore
                     BytesSent += msg.Length;
                 }
 
-                PacketFormatterAdapter.FreeBuffer();
+                PacketFormatterAdapter.Cleanup();
             }
         }
 

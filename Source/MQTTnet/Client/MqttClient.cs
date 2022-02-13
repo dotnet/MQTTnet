@@ -128,7 +128,7 @@ namespace MQTTnet.Client
                 _backgroundCancellationTokenSource = new CancellationTokenSource();
                 var backgroundCancellationToken = _backgroundCancellationTokenSource.Token;
 
-                var adapter = _adapterFactory.CreateClientAdapter(options, new MqttPacketInspectorHandler(_inspectPacketEvent, _rootLogger), _rootLogger);
+                var adapter = _adapterFactory.CreateClientAdapter(options, new MqttPacketInspector(_inspectPacketEvent, _rootLogger), _rootLogger);
                 _adapter = adapter;
 
                 using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))

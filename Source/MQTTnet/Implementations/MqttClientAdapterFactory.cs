@@ -13,7 +13,7 @@ namespace MQTTnet.Implementations
 {
     public sealed class MqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, IMqttPacketInspectorHandler packetInspectorHandler, IMqttNetLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -40,7 +40,7 @@ namespace MQTTnet.Implementations
 
             var bufferWriter = new MqttBufferWriter(options.WriterBufferSize, options.WriterBufferSizeMax);
             var packetFormatterAdapter = new MqttPacketFormatterAdapter(options.ProtocolVersion, bufferWriter);
-            return new MqttChannelAdapter(channel, packetFormatterAdapter, packetInspectorHandler, logger);
+            return new MqttChannelAdapter(channel, packetFormatterAdapter, packetInspector, logger);
         }
     }
 }

@@ -36,6 +36,7 @@ namespace MQTTnet.Packets
         public string ResponseInformation { get; set; }
 
         public bool RetainAvailable { get; set; }
+        
         public MqttConnectReturnCode ReturnCode { get; set; }
 
         public ushort ServerKeepAlive { get; set; }

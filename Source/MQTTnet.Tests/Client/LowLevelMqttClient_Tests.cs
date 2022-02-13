@@ -30,6 +30,40 @@ namespace MQTTnet.Tests.Client
 
             await client.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
         }
+        
+        [TestMethod]
+        public async Task Maintain_IsConnected_Property()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var server = await testEnvironment.StartServer();
+
+                using (var lowLevelClient = testEnvironment.CreateLowLevelClient())
+                {
+                    Assert.IsFalse(lowLevelClient.IsConnected);
+
+                    await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);
+                    
+                    Assert.IsTrue(lowLevelClient.IsConnected);
+
+                    await server.StopAsync();
+                    await LongTestDelay();
+                    
+                    Assert.IsTrue(lowLevelClient.IsConnected);
+
+                    try
+                    {
+                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+                    }
+                    catch
+                    {
+                    }
+                    
+                    Assert.IsFalse(lowLevelClient.IsConnected);
+                }
+            }
+        }
 
         [TestMethod]
         public async Task Connect_And_Disconnect()
@@ -38,8 +72,7 @@ namespace MQTTnet.Tests.Client
             {
                 await testEnvironment.StartServer();
 
-                var factory = new MqttFactory();
-                var lowLevelClient = factory.CreateLowLevelMqttClient();
+                var lowLevelClient = testEnvironment.Factory.CreateLowLevelMqttClient();
 
                 await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);
 
@@ -110,7 +143,7 @@ namespace MQTTnet.Tests.Client
                 try
                 {
                     await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None).ConfigureAwait(false);
-                    await Task.Delay(1000);
+                    await Task.Delay(2000);
                     await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None).ConfigureAwait(false);
                 }
                 catch (MqttCommunicationException exception)

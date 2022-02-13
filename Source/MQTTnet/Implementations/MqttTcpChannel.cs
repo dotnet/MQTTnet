@@ -72,7 +72,7 @@ namespace MQTTnet.Implementations
                 socket.SendBufferSize = _tcpOptions.BufferSize;
                 socket.SendTimeout = (int) _clientOptions.CommunicationTimeout.TotalMilliseconds;
                 socket.NoDelay = _tcpOptions.NoDelay;
-
+                
                 if (_tcpOptions.DualMode.HasValue)
                 {
                     // It is important to avoid setting the flag if no specific value is set by the user

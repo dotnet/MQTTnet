@@ -119,8 +119,8 @@ namespace MQTTnet.Server
                 {
                     IsRunning = false;
 
-                    cancellationToken.Cancel();
                     _cancellationToken = null;
+                    cancellationToken.Cancel();
                 }
             }
 
@@ -339,7 +339,15 @@ namespace MQTTnet.Server
         
         void StopInternal()
         {
-            _cancellationToken?.Cancel();
+            try
+            {
+                _cancellationToken?.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // This can happen when connections are created and dropped very quickly.
+                // It is not an issue if the cancellation token cannot be cancelled multiple times.
+            }
         }
 
         void HandleIncomingPubRecPacket(MqttPubRecPacket pubRecPacket)

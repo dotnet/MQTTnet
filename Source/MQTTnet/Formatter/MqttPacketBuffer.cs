@@ -3,54 +3,48 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
-using MQTTnet.Channel;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.Formatter
 {
-    public sealed class MqttPacketBuffer
+    public readonly struct MqttPacketBuffer
     {
-        readonly ArraySegment<byte> _segment0;
-        readonly ArraySegment<byte> _segment1;
-
-        public MqttPacketBuffer(ArraySegment<byte> segment0, ArraySegment<byte> segment1 = default)
+        static readonly ArraySegment<byte> EmptyPayload = PlatformAbstractionLayer.EmptyByteArraySegment;
+        
+        public MqttPacketBuffer(ArraySegment<byte> packet, ArraySegment<byte> payload)
         {
-            _segment0 = segment0;
-            _segment1 = segment1;
+            Packet = packet;
+            Payload = payload;
 
-            Length = segment0.Count + segment1.Count;
+            Length = Packet.Count + Payload.Count;
+        }
+        
+        public MqttPacketBuffer(ArraySegment<byte> packet)
+        {
+            Packet = packet;
+            Payload = EmptyPayload;
+
+            Length = Packet.Count;
         }
 
         public int Length { get; }
+        
+        public ArraySegment<byte> Packet { get; }
+        
+        public ArraySegment<byte> Payload { get; }
 
         public ArraySegment<byte> ToArray()
         {
-            if (_segment1.Count == 0)
+            if (Packet.Count == 0)
             {
-                return _segment0;
+                return Packet;
             }
 
             var buffer = new byte[Length];
-            Array.Copy(_segment0.Array, _segment0.Offset, buffer, 0, _segment0.Count);
-            Array.Copy(_segment1.Array, _segment1.Offset, buffer, _segment0.Count, _segment1.Count);
+            Array.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
+            Array.Copy(Payload.Array, Payload.Offset, buffer, Packet.Count, Payload.Count);
 
             return new ArraySegment<byte>(buffer);
-        }
-
-        public async Task WriteToAsync(IMqttChannel channel, CancellationToken cancellationToken)
-        {
-            if (channel == null)
-            {
-                throw new ArgumentNullException(nameof(channel));
-            }
-
-            await channel.WriteAsync(_segment0.Array, _segment0.Offset, _segment0.Count, cancellationToken).ConfigureAwait(false);
-
-            if (_segment1.Count > 0)
-            {
-                await channel.WriteAsync(_segment1.Array, _segment1.Offset, _segment1.Count, cancellationToken).ConfigureAwait(false);
-            }
         }
     }
 }

@@ -2,27 +2,27 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
-using MQTTnet.Packets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Adapter;
 using MQTTnet.Client;
+using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
+using MQTTnet.Packets;
 
 namespace MQTTnet.LowLevelClient
 {
     public sealed class LowLevelMqttClient : IDisposable
     {
-        readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();
-        
-        readonly IMqttNetLogger _rootLogger;
-        readonly MqttNetSourceLogger _logger;
         readonly IMqttClientAdapterFactory _clientAdapterFactory;
+        readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();
+        readonly MqttNetSourceLogger _logger;
+
+        readonly IMqttNetLogger _rootLogger;
 
         IMqttChannelAdapter _adapter;
-        
+
         public LowLevelMqttClient(IMqttClientAdapterFactory clientAdapterFactory, IMqttNetLogger logger)
         {
             _clientAdapterFactory = clientAdapterFactory ?? throw new ArgumentNullException(nameof(clientAdapterFactory));
@@ -31,29 +31,34 @@ namespace MQTTnet.LowLevelClient
             _logger = logger.WithSource(nameof(LowLevelMqttClient));
         }
 
-        bool IsConnected => _adapter != null;
-
         public event Func<InspectMqttPacketEventArgs, Task> InspectPackage
         {
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);
         }
-        
+
+        public bool IsConnected => _adapter != null;
+
         public async Task ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken)
         {
-            if (options is null) throw new ArgumentNullException(nameof(options));
+            if (options is null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
 
             if (_adapter != null)
             {
                 throw new InvalidOperationException("Low level MQTT client is already connected. Disconnect first before connecting again.");
             }
 
-            var newAdapter = _clientAdapterFactory.CreateClientAdapter(options, new MqttPacketInspectorHandler(_inspectPacketEvent, _rootLogger), _rootLogger);
+            var newAdapter = _clientAdapterFactory.CreateClientAdapter(options, new MqttPacketInspector(_inspectPacketEvent, _rootLogger), _rootLogger);
 
             try
             {
-                _logger.Verbose("Trying to connect with server '{0}' (Timeout={1}).", options.ChannelOptions, options.CommunicationTimeout);
-                await newAdapter.ConnectAsync(options.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
+                _logger.Verbose("Trying to connect with server '{0}'.", options.ChannelOptions);
+                
+                // Do not use default communication timeout. It gets removed in future versions.
+                await newAdapter.ConnectAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
                 _logger.Verbose("Connection with server established.");
             }
             catch (Exception)
@@ -67,71 +72,80 @@ namespace MQTTnet.LowLevelClient
 
         public async Task DisconnectAsync(CancellationToken cancellationToken)
         {
-            if (_adapter == null)
-            {
-                return;
-            }
-
             await SafeDisconnect(cancellationToken).ConfigureAwait(false);
-            _adapter = null;
-        }
-
-        public async Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken)
-        {
-            if (packet is null) throw new ArgumentNullException(nameof(packet));
-
-            if (_adapter == null)
-            {
-                throw new InvalidOperationException("Low level MQTT client is not connected.");
-            }
-
-            try
-            {
-                await _adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                await SafeDisconnect(cancellationToken).ConfigureAwait(false);
-                throw;
-            }
-        }
-
-        public async Task<MqttBasePacket> ReceiveAsync(CancellationToken cancellationToken)
-        {
-            if (_adapter == null)
-            {
-                throw new InvalidOperationException("Low level MQTT client is not connected.");
-            }
-
-            try
-            {
-                return await _adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                await SafeDisconnect(cancellationToken).ConfigureAwait(false);
-                throw;
-            }
         }
 
         public void Dispose()
         {
             _adapter?.Dispose();
+            _adapter = null;
+        }
+
+        public async Task<MqttBasePacket> ReceiveAsync(CancellationToken cancellationToken)
+        {
+            var adapter = _adapter;
+            if (adapter == null)
+            {
+                throw new InvalidOperationException("Low level MQTT client is not connected.");
+            }
+            
+            try
+            {
+                return await adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                await SafeDisconnect(cancellationToken).ConfigureAwait(false);
+                throw;
+            }
+        }
+
+        public async Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        {
+            if (packet is null)
+            {
+                throw new ArgumentNullException(nameof(packet));
+            }
+
+            var adapter = _adapter;
+            if (adapter == null)
+            {
+                throw new InvalidOperationException("Low level MQTT client is not connected.");
+            }
+
+            try
+            {
+                await adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                await SafeDisconnect(cancellationToken).ConfigureAwait(false);
+                throw;
+            }
         }
 
         async Task SafeDisconnect(CancellationToken cancellationToken)
         {
             try
             {
-                await _adapter.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+                var adapter = _adapter;
+                if (adapter == null)
+                {
+                    return;
+                }
+                
+                await adapter.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (ObjectDisposedException)
+            {
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Error while disconnecting.");
+                _logger.Error(exception, "Error while disconnecting low level MQTT client.");
             }
             finally
             {
-                _adapter.Dispose();
+                Dispose();
             }
         }
     }

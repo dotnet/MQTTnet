@@ -23,7 +23,7 @@ namespace MQTTnet.Formatter.V5
         public void Reset()
         {
             _bufferWriter.Reset(0);
-            _bufferWriter.FreeBuffer();
+            _bufferWriter.Cleanup();
         }
 
         public void WriteAssignedClientIdentifier(string value)

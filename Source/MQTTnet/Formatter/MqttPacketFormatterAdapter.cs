@@ -50,9 +50,9 @@ namespace MQTTnet.Formatter
             return _formatter.Encode(packet);
         }
 
-        public void FreeBuffer()
+        public void Cleanup()
         {
-            _formatter?.FreeBuffer();
+            _bufferWriter.Cleanup();
         }
 
         public static IMqttPacketFormatter GetMqttPacketFormatter(MqttProtocolVersion protocolVersion, MqttBufferWriter bufferWriter)

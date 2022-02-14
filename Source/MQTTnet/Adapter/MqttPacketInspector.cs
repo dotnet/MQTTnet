@@ -11,22 +11,33 @@ using MQTTnet.Internal;
 
 namespace MQTTnet.Adapter
 {
-    public sealed class MqttPacketInspectorHandler : IMqttPacketInspectorHandler
+    public sealed class MqttPacketInspector
     {
-        readonly MemoryStream _receivedPacketBuffer = new MemoryStream();
         readonly MqttNetSourceLogger _logger;
         readonly AsyncEvent<InspectMqttPacketEventArgs> _asyncEvent;
         
-        public MqttPacketInspectorHandler(AsyncEvent<InspectMqttPacketEventArgs> asyncEvent, IMqttNetLogger logger)
+        MemoryStream _receivedPacketBuffer;
+        
+        public MqttPacketInspector(AsyncEvent<InspectMqttPacketEventArgs> asyncEvent, IMqttNetLogger logger)
         {
             _asyncEvent = asyncEvent ?? throw new ArgumentNullException(nameof(asyncEvent));
             
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _logger = logger.WithSource(nameof(MqttPacketInspectorHandler));
+            _logger = logger.WithSource(nameof(MqttPacketInspector));
         }
 
         public void BeginReceivePacket()
         {
+            if (!_asyncEvent.HasHandlers)
+            {
+                return;
+            }
+
+            if (_receivedPacketBuffer == null)
+            {
+                _receivedPacketBuffer = new MemoryStream();
+            }
+            
             _receivedPacketBuffer?.SetLength(0);
         }
 

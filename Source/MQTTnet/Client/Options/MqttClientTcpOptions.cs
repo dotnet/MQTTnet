@@ -6,7 +6,7 @@ using System.Net.Sockets;
 
 namespace MQTTnet.Client
 {
-    public class MqttClientTcpOptions : IMqttClientChannelOptions
+    public sealed class MqttClientTcpOptions : IMqttClientChannelOptions
     {
         public string Server { get; set; }
 

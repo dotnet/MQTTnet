@@ -25,6 +25,7 @@ namespace MQTTnet.Benchmarks
         MqttBasePacket _packet;
         ArraySegment<byte> _serializedPacket;
         IMqttPacketFormatter _serializer;
+        MqttBufferWriter _bufferWriter;
 
         [GlobalSetup]
         public void GlobalSetup()
@@ -34,7 +35,8 @@ namespace MQTTnet.Benchmarks
                 Topic = "A"
             };
 
-            _serializer = new MqttV3PacketFormatter(new MqttBufferWriter(4096, 65535), MqttProtocolVersion.V311);
+            _bufferWriter = new MqttBufferWriter(4096, 65535);
+            _serializer = new MqttV3PacketFormatter(_bufferWriter, MqttProtocolVersion.V311);
             _serializedPacket = _serializer.Encode(_packet).ToArray();
         }
 
@@ -44,7 +46,7 @@ namespace MQTTnet.Benchmarks
             for (var i = 0; i < 10000; i++)
             {
                 _serializer.Encode(_packet);
-                _serializer.FreeBuffer();
+                _bufferWriter.Cleanup();
             }
         }
 

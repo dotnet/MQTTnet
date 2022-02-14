@@ -2,12 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using MQTTnet.Channel;
-using MQTTnet.Diagnostics;
-using MQTTnet.Exceptions;
-using MQTTnet.Formatter;
-using MQTTnet.Internal;
-using MQTTnet.Packets;
 using System;
 using System.IO;
 using System.Net.Sockets;
@@ -15,7 +9,13 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Channel;
+using MQTTnet.Diagnostics;
+using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Implementations;
+using MQTTnet.Internal;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Adapter
 {
@@ -23,44 +23,48 @@ namespace MQTTnet.Adapter
     {
         const uint ErrorOperationAborted = 0x800703E3;
         const int ReadBufferSize = 4096;
+        
+        readonly IMqttChannel _channel;
+        readonly byte[] _fixedHeaderBuffer = new byte[2];
+        readonly MqttNetSourceLogger _logger;
+
+        readonly MqttPacketInspector _packetInspector;
 
         readonly byte[] _singleByteBuffer = new byte[1];
-        readonly byte[] _fixedHeaderBuffer = new byte[2];
-
-        readonly IMqttPacketInspectorHandler _packetInspectorHandler;
-        readonly MqttNetSourceLogger _logger;
-        readonly IMqttChannel _channel;
 
         readonly AsyncLock _syncRoot = new AsyncLock();
 
         long _bytesReceived;
         long _bytesSent;
 
-        public MqttChannelAdapter(IMqttChannel channel, MqttPacketFormatterAdapter packetFormatterAdapter, IMqttPacketInspectorHandler packetInspector, IMqttNetLogger logger)
+        public MqttChannelAdapter(IMqttChannel channel, MqttPacketFormatterAdapter packetFormatterAdapter, MqttPacketInspector packetInspector, IMqttNetLogger logger)
         {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
-            _packetInspectorHandler = packetInspector;
+            _packetInspector = packetInspector;
 
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
 
             if (logger == null)
+            {
                 throw new ArgumentNullException(nameof(logger));
+            }
+
             _logger = logger.WithSource(nameof(MqttChannelAdapter));
         }
 
-        public string Endpoint => _channel.Endpoint;
-
-        public bool IsSecureConnection => _channel.IsSecureConnection;
-
-        public X509Certificate2 ClientCertificate => _channel.ClientCertificate;
-
-        public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
+        public long BytesReceived => Interlocked.Read(ref _bytesReceived);
 
         public long BytesSent => Interlocked.Read(ref _bytesSent);
 
-        public long BytesReceived => Interlocked.Read(ref _bytesReceived);
+        public X509Certificate2 ClientCertificate => _channel.ClientCertificate;
+
+        public string Endpoint => _channel.Endpoint;
 
         public bool IsReadingPacket { get; private set; }
+
+        public bool IsSecureConnection => _channel.IsSecureConnection;
+
+        public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
         public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
@@ -105,44 +109,6 @@ namespace MQTTnet.Adapter
             }
         }
 
-        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
-
-            // This lock makes sure that multiple threads can send packets at the same time.
-            // This is required when a disconnect is sent from another thread while the 
-            // worker thread is still sending publish packets etc.
-            using (await _syncRoot.WaitAsync(cancellationToken).ConfigureAwait(false))
-            {
-                // Check for cancellation here again because "WaitAsync" might take some time.
-                cancellationToken.ThrowIfCancellationRequested();
-
-                try
-                {
-                    var packetData = PacketFormatterAdapter.Encode(packet);
-                    _packetInspectorHandler?.BeginSendPacket(packetData);
-
-                    _logger.Verbose("TX ({0} bytes) >>> {1}", packetData.Length, packet);
-
-                    await packetData.WriteToAsync(_channel, cancellationToken).ConfigureAwait(false);
-
-                    Interlocked.Add(ref _bytesReceived, packetData.Length);
-                }
-                catch (Exception exception)
-                {
-                    if (!WrapAndThrowException(exception))
-                    {
-                        throw;
-                    }
-                }
-                finally
-                {
-                    PacketFormatterAdapter.FreeBuffer();
-                }
-            }
-        }
-
         public async Task<MqttBasePacket> ReceivePacketAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -150,7 +116,7 @@ namespace MQTTnet.Adapter
 
             try
             {
-                _packetInspectorHandler?.BeginReceivePacket();
+                _packetInspector?.BeginReceivePacket();
 
                 ReceivedMqttPacket receivedPacket;
                 var receivedPacketTask = ReceiveAsync(cancellationToken);
@@ -168,7 +134,7 @@ namespace MQTTnet.Adapter
                     return null;
                 }
 
-                _packetInspectorHandler?.EndReceivePacket();
+                _packetInspector?.EndReceivePacket();
 
                 Interlocked.Add(ref _bytesSent, receivedPacket.TotalLength);
 
@@ -184,7 +150,7 @@ namespace MQTTnet.Adapter
                 }
 
                 _logger.Verbose("RX ({0} bytes) <<< {1}", receivedPacket.TotalLength, packet);
-                
+
                 return packet;
             }
             catch (OperationCanceledException)
@@ -210,6 +176,48 @@ namespace MQTTnet.Adapter
             Interlocked.Exchange(ref _bytesSent, 0L);
         }
 
+        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        {
+            ThrowIfDisposed();
+
+            // This lock makes sure that multiple threads can send packets at the same time.
+            // This is required when a disconnect is sent from another thread while the 
+            // worker thread is still sending publish packets etc.
+            using (await _syncRoot.WaitAsync(cancellationToken).ConfigureAwait(false))
+            {
+                // Check for cancellation here again because "WaitAsync" might take some time.
+                cancellationToken.ThrowIfCancellationRequested();
+
+                try
+                {
+                    var packetBuffer = PacketFormatterAdapter.Encode(packet);
+                    _packetInspector?.BeginSendPacket(packetBuffer);
+
+                    _logger.Verbose("TX ({0} bytes) >>> {1}", packetBuffer.Length, packet);
+
+                    await _channel.WriteAsync(packetBuffer.Packet.Array, packetBuffer.Packet.Offset, packetBuffer.Packet.Count, cancellationToken).ConfigureAwait(false);
+
+                    if (packetBuffer.Payload.Count > 0)
+                    {
+                        await _channel.WriteAsync(packetBuffer.Payload.Array, packetBuffer.Payload.Offset, packetBuffer.Payload.Count, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    Interlocked.Add(ref _bytesReceived, packetBuffer.Length);
+                }
+                catch (Exception exception)
+                {
+                    if (!WrapAndThrowException(exception))
+                    {
+                        throw;
+                    }
+                }
+                finally
+                {
+                    PacketFormatterAdapter.Cleanup();
+                }
+            }
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -219,6 +227,101 @@ namespace MQTTnet.Adapter
             }
 
             base.Dispose(disposing);
+        }
+
+        async Task<int> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
+        {
+            var offset = 0;
+            var multiplier = 128;
+            var value = initialEncodedByte & 127;
+            int encodedByte = initialEncodedByte;
+
+            while ((encodedByte & 128) != 0)
+            {
+                offset++;
+                if (offset > 3)
+                {
+                    throw new MqttProtocolViolationException("Remaining length is invalid.");
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return -1;
+                }
+
+                var readCount = await _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return -1;
+                }
+
+                if (readCount == 0)
+                {
+                    return -1;
+                }
+
+                _packetInspector?.FillReceiveBuffer(_singleByteBuffer);
+
+                encodedByte = _singleByteBuffer[0];
+
+                value += (encodedByte & 127) * multiplier;
+                multiplier *= 128;
+            }
+
+            return value;
+        }
+
+        async Task<ReadFixedHeaderResult> ReadFixedHeaderAsync(CancellationToken cancellationToken)
+        {
+            // The MQTT fixed header contains 1 byte of flags and at least 1 byte for the remaining data length.
+            // So in all cases at least 2 bytes must be read for a complete MQTT packet.
+            var buffer = _fixedHeaderBuffer;
+            var totalBytesRead = 0;
+
+            while (totalBytesRead < buffer.Length)
+            {
+                var bytesRead = await _channel.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return ReadFixedHeaderResult.Cancelled;
+                }
+
+                if (bytesRead == 0)
+                {
+                    return ReadFixedHeaderResult.ConnectionClosed;
+                }
+
+                totalBytesRead += bytesRead;
+            }
+
+            _packetInspector?.FillReceiveBuffer(buffer);
+
+            var hasRemainingLength = buffer[1] != 0;
+            if (!hasRemainingLength)
+            {
+                return new ReadFixedHeaderResult
+                {
+                    FixedHeader = new MqttFixedHeader(buffer[0], 0, totalBytesRead)
+                };
+            }
+
+            var bodyLength = await ReadBodyLengthAsync(buffer[1], cancellationToken).ConfigureAwait(false);
+
+            if (bodyLength == -1)
+            {
+                return new ReadFixedHeaderResult
+                {
+                    IsConnectionClosed = true
+                };
+            }
+
+            totalBytesRead += bodyLength;
+            return new ReadFixedHeaderResult
+            {
+                FixedHeader = new MqttFixedHeader(buffer[0], bodyLength, totalBytesRead)
+            };
         }
 
         async Task<ReceivedMqttPacket> ReceiveAsync(CancellationToken cancellationToken)
@@ -279,7 +382,7 @@ namespace MQTTnet.Adapter
                     bodyOffset += readBytes;
                 } while (bodyOffset < bodyLength);
 
-                _packetInspectorHandler?.FillReceiveBuffer(body);
+                _packetInspector?.FillReceiveBuffer(body);
 
                 var bodySegment = new ArraySegment<byte>(body, 0, bodyLength);
                 return new ReceivedMqttPacket(fixedHeader.Flags, bodySegment, fixedHeader.TotalLength);
@@ -288,101 +391,6 @@ namespace MQTTnet.Adapter
             {
                 IsReadingPacket = false;
             }
-        }
-
-        async Task<ReadFixedHeaderResult> ReadFixedHeaderAsync(CancellationToken cancellationToken)
-        {
-            // The MQTT fixed header contains 1 byte of flags and at least 1 byte for the remaining data length.
-            // So in all cases at least 2 bytes must be read for a complete MQTT packet.
-            var buffer = _fixedHeaderBuffer;
-            var totalBytesRead = 0;
-
-            while (totalBytesRead < buffer.Length)
-            {
-                var bytesRead = await _channel.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return ReadFixedHeaderResult.Cancelled;
-                }
-
-                if (bytesRead == 0)
-                {
-                    return ReadFixedHeaderResult.ConnectionClosed;
-                }
-
-                totalBytesRead += bytesRead;
-            }
-
-            _packetInspectorHandler?.FillReceiveBuffer(buffer);
-
-            var hasRemainingLength = buffer[1] != 0;
-            if (!hasRemainingLength)
-            {
-                return new ReadFixedHeaderResult
-                {
-                    FixedHeader = new MqttFixedHeader(buffer[0], 0, totalBytesRead)
-                };
-            }
-
-            var bodyLength = await ReadBodyLengthAsync(buffer[1], cancellationToken).ConfigureAwait(false);
-
-            if (bodyLength == -1)
-            {
-                return new ReadFixedHeaderResult
-                {
-                    IsConnectionClosed = true
-                };
-            }
-
-            totalBytesRead += bodyLength;
-            return new ReadFixedHeaderResult
-            {
-                FixedHeader = new MqttFixedHeader(buffer[0], bodyLength, totalBytesRead)
-            };
-        }
-
-        async Task<int> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
-        {
-            var offset = 0;
-            var multiplier = 128;
-            var value = initialEncodedByte & 127;
-            int encodedByte = initialEncodedByte;
-
-            while ((encodedByte & 128) != 0)
-            {
-                offset++;
-                if (offset > 3)
-                {
-                    throw new MqttProtocolViolationException("Remaining length is invalid.");
-                }
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return -1;
-                }
-
-                var readCount = await _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return -1;
-                }
-
-                if (readCount == 0)
-                {
-                    return -1;
-                }
-
-                _packetInspectorHandler?.FillReceiveBuffer(_singleByteBuffer);
-
-                encodedByte = _singleByteBuffer[0];
-
-                value += (encodedByte & 127) * multiplier;
-                multiplier *= 128;
-            }
-
-            return value;
         }
 
         static bool WrapAndThrowException(Exception exception)

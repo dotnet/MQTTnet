@@ -62,12 +62,7 @@ namespace MQTTnet.Formatter.V5
 
             return new MqttPacketBuffer(firstSegment);
         }
-
-        public void FreeBuffer()
-        {
-            _bufferWriter.FreeBuffer();
-        }
-
+        
         byte EncodeAuthPacket(MqttAuthPacket packet)
         {
             _bufferWriter.WriteByte((byte)packet.ReasonCode);

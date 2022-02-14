@@ -126,12 +126,7 @@ namespace MQTTnet.Formatter.V3
 
             return new MqttPacketBuffer(firstSegment);
         }
-
-        public void FreeBuffer()
-        {
-            _bufferWriter.FreeBuffer();
-        }
-
+        
         MqttBasePacket DecodeConnAckPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);

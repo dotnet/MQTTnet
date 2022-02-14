@@ -47,7 +47,7 @@ namespace MQTTnet.Implementations
             // We cannot use the _NoDelay_ property from the socket because there is an issue in .NET 4.5.2, 4.6.
             // The decompiled code is: this.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.Debug, value ? 1 : 0);
             // Which is wrong because the "NoDelay" should be set and not "Debug".
-            get => (int) _socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay) > 0;
+            get => (int)_socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay) > 0;
             set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, value ? 1 : 0);
         }
 
@@ -79,9 +79,11 @@ namespace MQTTnet.Implementations
 
         public bool ReuseAddress
         {
-            get => (int) _socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
+            get => (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
             set => _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, value ? 1 : 0);
         }
+
+        public bool IsConnected => _socket.Connected;
 
         public async Task<CrossPlatformSocket> AcceptAsync()
         {
@@ -103,7 +105,10 @@ namespace MQTTnet.Implementations
 
         public void Bind(EndPoint localEndPoint)
         {
-            if (localEndPoint is null) throw new ArgumentNullException(nameof(localEndPoint));
+            if (localEndPoint is null)
+            {
+                throw new ArgumentNullException(nameof(localEndPoint));
+            }
 
             _socket.Bind(localEndPoint);
         }
@@ -115,7 +120,10 @@ namespace MQTTnet.Implementations
 
         public async Task ConnectAsync(string host, int port, CancellationToken cancellationToken)
         {
-            if (host is null) throw new ArgumentNullException(nameof(host));
+            if (host is null)
+            {
+                throw new ArgumentNullException(nameof(host));
+            }
 
             try
             {

@@ -30,7 +30,7 @@ namespace MQTTnet.Packets
 
         public ushort ReceiveMaximum { get; set; }
 
-        public bool RequestProblemInformation { get; set; } = true;
+        public bool RequestProblemInformation { get; set; }
 
         public bool RequestResponseInformation { get; set; }
 

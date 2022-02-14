@@ -40,7 +40,7 @@ namespace MQTTnet.Formatter
             return (byte)fixedHeader;
         }
 
-        public void FreeBuffer()
+        public void Cleanup()
         {
             // This method frees the used memory by shrinking the buffer. This is required because the buffer
             // is used across several messages. In general this is not a big issue because subsequent Ping packages
@@ -48,7 +48,7 @@ namespace MQTTnet.Formatter
             // a lot and the size will never reduced. So this method tries to find a size which can be held in
             // memory for a long time without causing troubles.
 
-            if (_buffer.Length < _maxBufferSize)
+            if (_buffer.Length <= _maxBufferSize)
             {
                 return;
             }

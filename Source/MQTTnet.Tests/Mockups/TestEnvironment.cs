@@ -172,18 +172,11 @@ namespace MQTTnet.Tests.Mockups
             }
         }
         
-        public Task<LowLevelMqttClient> ConnectLowLevelClient()
+        public async Task<LowLevelMqttClient> ConnectLowLevelClient(Action<MqttClientOptionsBuilder> optionsBuilder = null)
         {
-            return ConnectLowLevelClient(o => { });
-        }
-
-        public async Task<LowLevelMqttClient> ConnectLowLevelClient(Action<MqttClientOptionsBuilder> optionsBuilder)
-        {
-            if (optionsBuilder == null) throw new ArgumentNullException(nameof(optionsBuilder));
-
             var options = new MqttClientOptionsBuilder();
             options = options.WithTcpServer("127.0.0.1", ServerPort);
-            optionsBuilder.Invoke(options);
+            optionsBuilder?.Invoke(options);
 
             var client = CreateLowLevelClient();
             await client.ConnectAsync(options.Build(), CancellationToken.None).ConfigureAwait(false);
@@ -269,7 +262,9 @@ namespace MQTTnet.Tests.Mockups
             {
                 if (!IgnoreServerLogErrors && _serverErrors.Count > 0)
                 {
-                    throw new Exception($"Server had {_serverErrors.Count} errors (${string.Join(Environment.NewLine, _serverErrors)}).");
+                    var message = $"Server had {_serverErrors.Count} errors (${string.Join(Environment.NewLine, _serverErrors)}).";
+                    Console.WriteLine(message);
+                    throw new Exception(message);
                 }
             }
 
@@ -277,7 +272,9 @@ namespace MQTTnet.Tests.Mockups
             {
                 if (!IgnoreClientLogErrors && _clientErrors.Count > 0)
                 {
-                    throw new Exception($"Client(s) had {_clientErrors.Count} errors (${string.Join(Environment.NewLine, _clientErrors)}).");
+                    var message = $"Client(s) had {_clientErrors.Count} errors (${string.Join(Environment.NewLine, _clientErrors)})";
+                    Console.WriteLine(message);
+                    throw new Exception(message);
                 }
             }
         }

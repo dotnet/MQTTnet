@@ -12,9 +12,9 @@ namespace MQTTnet.Formatter.V5
         readonly MqttV5PacketDecoder _decoder = new MqttV5PacketDecoder();
         readonly MqttV5PacketEncoder _encoder;
 
-        public MqttV5PacketFormatter(MqttBufferWriter writer)
+        public MqttV5PacketFormatter(MqttBufferWriter bufferWriter)
         {
-            _encoder = new MqttV5PacketEncoder(writer);
+            _encoder = new MqttV5PacketEncoder(bufferWriter);
         }
 
         public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
@@ -25,11 +25,6 @@ namespace MQTTnet.Formatter.V5
         public MqttPacketBuffer Encode(MqttBasePacket mqttPacket)
         {
             return _encoder.Encode(mqttPacket);
-        }
-
-        public void FreeBuffer()
-        {
-            _encoder.FreeBuffer();
         }
     }
 }

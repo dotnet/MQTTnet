@@ -22,6 +22,9 @@ namespace MQTTnet.Server
     public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification, IDisposable
     {
         readonly Dictionary<string, MqttClient> _clients = new Dictionary<string, MqttClient>(4096);
+
+        // The _sessions dictionary contains all session, the _subscriberSessions hash set contains subscriber sessions only.
+        // See the MqttSubscription object for a detailed explanation.
         readonly Dictionary<string, MqttSession> _sessions = new Dictionary<string, MqttSession>(4096);
         readonly HashSet<MqttSession> _subscriberSessions = new HashSet<MqttSession>();
 

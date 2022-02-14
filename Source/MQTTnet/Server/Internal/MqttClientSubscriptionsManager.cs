@@ -21,7 +21,7 @@ namespace MQTTnet.Server
 
         readonly MqttSession _session;
 
-        // The subscriptions are stored as a ConcurrentDictionary in order ensure that reading the data is save.
+        // Subscriptions are stored in various dictionaries and use a "topic hash"; see the MqttSubscription object for a detailed explanation.
         // The additional lock is important to coordinate complex update logic with multiple steps, checks and interceptors.
         readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>();
         readonly Dictionary<ulong, HashSet<MqttSubscription>> _noWildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();

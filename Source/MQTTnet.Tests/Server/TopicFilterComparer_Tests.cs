@@ -137,6 +137,25 @@ namespace MQTTnet.Tests.Server
         static void CompareAndAssert(string topic, string filter, MqttTopicFilterCompareResult expectedResult)
         {
             Assert.AreEqual(expectedResult, MqttTopicFilterComparer.Compare(topic, filter));
+
+            ulong topicHash;
+            ulong topicHashMask;
+            bool topicHasWildcard;
+
+            MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+
+
+            ulong filterTopicHash;
+            ulong filterTopicHashMask;
+            bool filterTopicHasWildcard;
+
+            MqttSubscription.CalcTopicHash(filter, out filterTopicHash, out filterTopicHashMask, out filterTopicHasWildcard);
+
+            if (expectedResult == MqttTopicFilterCompareResult.IsMatch)
+            {
+                // If it matches then the hash evaluation should also indicate a match
+                Assert.IsTrue((topicHash & filterTopicHashMask) == filterTopicHash, "Incorrect topic hash (is equal)");
+            }
         }
     }
 }

@@ -19,9 +19,14 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttClientSessionsManager : IDisposable
+    public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification, IDisposable
     {
         readonly Dictionary<string, MqttClient> _clients = new Dictionary<string, MqttClient>(4096);
+
+        // The _sessions dictionary contains all session, the _subscriberSessions hash set contains subscriber sessions only.
+        // See the MqttSubscription object for a detailed explanation.
+        readonly Dictionary<string, MqttSession> _sessions = new Dictionary<string, MqttSession>(4096);
+        readonly HashSet<MqttSession> _subscriberSessions = new HashSet<MqttSession>();
 
         readonly AsyncLock _createConnectionSyncRoot = new AsyncLock();
         readonly MqttServerEventContainer _eventContainer;
@@ -32,7 +37,6 @@ namespace MQTTnet.Server
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttNetLogger _rootLogger;
 
-        readonly ConcurrentDictionary<string, MqttSession> _sessions = new ConcurrentDictionary<string, MqttSession>();
         readonly object _sessionsManagementLock = new object();
 
         public MqttClientSessionsManager(
@@ -78,7 +82,17 @@ namespace MQTTnet.Server
                 _clients.TryGetValue(clientId, out connection);
             }
 
-            _sessions.TryRemove(clientId, out var session);
+            MqttSession session;
+
+            lock (_sessionsManagementLock)
+            {
+                _sessions.TryGetValue(clientId, out session);
+                _sessions.Remove(clientId);
+                if (session != null)
+                {
+                    _subscriberSessions.Remove(session);
+                }
+            }
 
             try
             {
@@ -122,13 +136,24 @@ namespace MQTTnet.Server
                 }
 
                 var deliveryCount = 0;
-
-                foreach (var clientSessionItem in _sessions)
+                List<MqttSession> sessions;
+                lock (_sessionsManagementLock)
                 {
-                    var clientSession = clientSessionItem.Value;
+                    // only subscriber clients are of interest here
+                    sessions = _subscriberSessions.ToList();
+                }
 
+                // Calculate application message topic hash once for subscription checks
+                ulong topicHash;
+                ulong topicHashMask; // not needed
+                bool topicHasWildcard; // not needed
+                MqttSubscription.CalcTopicHash(applicationMessage.Topic, out topicHash, out topicHashMask, out topicHasWildcard);
+
+                foreach (var clientSession in sessions)
+                {
                     var checkSubscriptionsResult = clientSession.SubscriptionsManager.CheckSubscriptions(
                         applicationMessage.Topic,
+                        topicHash,
                         applicationMessage.QualityOfServiceLevel,
                         senderClientId);
 
@@ -184,9 +209,12 @@ namespace MQTTnet.Server
         {
             _createConnectionSyncRoot?.Dispose();
 
-            foreach (var sessionItem in _sessions)
+            lock (_sessionsManagementLock)
             {
-                sessionItem.Value.Dispose();
+                foreach (var sessionItem in _sessions)
+                {
+                    sessionItem.Value.Dispose();
+                }
             }
         }
 
@@ -235,10 +263,13 @@ namespace MQTTnet.Server
         {
             var result = new List<MqttSessionStatus>();
 
-            foreach (var sessionItem in _sessions)
+            lock (_sessionsManagementLock)
             {
-                var sessionStatus = new MqttSessionStatus(sessionItem.Value);
-                result.Add(sessionStatus);
+                foreach (var sessionItem in _sessions)
+                {
+                    var sessionStatus = new MqttSessionStatus(sessionItem.Value);
+                    result.Add(sessionStatus);
+                }
             }
 
             return Task.FromResult((IList<MqttSessionStatus>)result);
@@ -485,6 +516,38 @@ namespace MQTTnet.Server
             return connection;
         }
 
+        public void OnSubscriptionsAdded(MqttSession clientSession, List<string> subscriptionTopics)
+        {
+            lock (_sessionsManagementLock)
+            {
+                if (!clientSession.HasSubscribedTopics)
+                {
+                    // first subscribed topic
+                    _subscriberSessions.Add(clientSession);
+                }
+                foreach (var subscriptionTopic in subscriptionTopics)
+                {
+                    clientSession.AddSubscribedTopic(subscriptionTopic);
+                }
+            }
+        }
+
+        public void OnSubscriptionsRemoved(MqttSession clientSession, List<string> subscriptionTopics)
+        {
+            lock (_sessionsManagementLock)
+            {
+                foreach (var subscriptionTopic in subscriptionTopics)
+                {
+                    clientSession.RemoveSubscribedTopic(subscriptionTopic);
+                }
+                if (!clientSession.HasSubscribedTopics)
+                {
+                    // last subscription removed
+                    _subscriberSessions.Remove(clientSession);
+                }
+            }
+        }
+
         MqttClient CreateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, MqttSession session)
         {
             return new MqttClient(connectPacket, channelAdapter, session, _options, _eventContainer, this, _rootLogger);
@@ -499,12 +562,15 @@ namespace MQTTnet.Server
 
         MqttSession GetClientSession(string clientId)
         {
-            if (!_sessions.TryGetValue(clientId, out var session))
+            lock (_sessionsManagementLock)
             {
-                throw new InvalidOperationException($"Client session '{clientId}' is unknown.");
-            }
+                if (!_sessions.TryGetValue(clientId, out var session))
+                {
+                    throw new InvalidOperationException($"Client session '{clientId}' is unknown.");
+                }
 
-            return session;
+                return session;
+            }
         }
 
         async Task<MqttConnectPacket> ReceiveConnectPacket(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
@@ -515,7 +581,6 @@ namespace MQTTnet.Server
                 using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, cancellationToken))
                 {
                     var firstPacket = await channelAdapter.ReceivePacketAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
-
                     if (firstPacket is MqttConnectPacket connectPacket)
                     {
                         return connectPacket;

@@ -24,6 +24,9 @@ namespace MQTTnet.Server
 
         readonly Dictionary<ushort, MqttPublishPacket> _unacknowledgedPublishPackets = new Dictionary<ushort, MqttPublishPacket>();
 
+        // Bookkeeping to know if this is a subscribing client; lazy intialize later.
+        HashSet<string> _subscribedTopics;
+
         public MqttSession(
             string clientId,
             bool isPersistent,
@@ -39,8 +42,8 @@ namespace MQTTnet.Server
 
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
-
-            SubscriptionsManager = new MqttClientSubscriptionsManager(this, eventContainer, retainedMessagesManager);
+            
+            SubscriptionsManager = new MqttClientSubscriptionsManager(this, eventContainer, retainedMessagesManager, clientSessionsManager);
         }
 
         public DateTime CreatedTimestamp { get; } = DateTime.UtcNow;
@@ -136,5 +139,24 @@ namespace MQTTnet.Server
                 EnqueuePacket(new MqttPacketBusItem(publishPacket));
             }
         }
+
+        public void AddSubscribedTopic(string topic)
+        {
+            if (_subscribedTopics == null)
+            {
+                _subscribedTopics = new HashSet<string>();
+            }
+            _subscribedTopics.Add(topic);
+        }
+
+        public void RemoveSubscribedTopic(string topic)
+        {
+            if (_subscribedTopics != null)
+            {
+                _subscribedTopics.Remove(topic);
+            }
+        }
+
+        public bool HasSubscribedTopics { get { return _subscribedTopics != null && _subscribedTopics.Count > 0; } }
     }
 }

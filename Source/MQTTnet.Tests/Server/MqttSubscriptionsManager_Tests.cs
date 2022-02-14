@@ -27,6 +27,7 @@ namespace MQTTnet.Tests.Server
             var options = new MqttServerOptions();
             var retainedMessagesManager = new MqttRetainedMessagesManager(new MqttServerEventContainer(), logger);
             var eventContainer = new MqttServerEventContainer();
+            var clientSessionManager = new MqttClientSessionsManager(options, retainedMessagesManager, eventContainer, logger);
 
             var session = new MqttSession(
                 "",
@@ -35,10 +36,10 @@ namespace MQTTnet.Tests.Server
                 options,
                 eventContainer,
                 retainedMessagesManager,
-                new MqttClientSessionsManager(options, retainedMessagesManager, eventContainer, logger));
+                clientSessionManager);
 
             _subscriptionsManager = new MqttClientSubscriptionsManager(session, new MqttServerEventContainer(),
-                new MqttRetainedMessagesManager(new MqttServerEventContainer(), new MqttNetNullLogger()));
+                retainedMessagesManager, clientSessionManager);
         }
 
         [TestMethod]

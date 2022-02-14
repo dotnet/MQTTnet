@@ -6,10 +6,10 @@ namespace MQTTnet.Server
 {
     public static class MqttTopicFilterComparer
     {
-        const char LevelSeparator = '/';
-        const char MultiLevelWildcard = '#';
-        const char SingleLevelWildcard = '+';
-        const char ReservedTopicPrefix = '$';
+        public const char LevelSeparator = '/';
+        public const char MultiLevelWildcard = '#';
+        public const char SingleLevelWildcard = '+';
+        public const char ReservedTopicPrefix = '$';
 
         public static MqttTopicFilterCompareResult Compare(string topic, string filter)
         {

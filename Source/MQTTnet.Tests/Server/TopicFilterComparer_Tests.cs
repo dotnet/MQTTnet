@@ -142,14 +142,14 @@ namespace MQTTnet.Tests.Server
             ulong topicHashMask;
             bool topicHasWildcard;
 
-            MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
 
 
             ulong filterTopicHash;
             ulong filterTopicHashMask;
             bool filterTopicHasWildcard;
 
-            MqttSubscription.CalcTopicHash(filter, out filterTopicHash, out filterTopicHashMask, out filterTopicHasWildcard);
+            MqttSubscription.CalculateTopicHash(filter, out filterTopicHash, out filterTopicHashMask, out filterTopicHasWildcard);
 
             if (expectedResult == MqttTopicFilterCompareResult.IsMatch)
             {

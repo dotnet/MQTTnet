@@ -27,9 +27,7 @@ namespace MQTTnet.Server
         
         readonly MqttClientSessionsManager _sessionsManager;
         readonly MqttNetSourceLogger _logger;
-        
-        readonly MqttApplicationMessageInterceptorInvoker _applicationMessageInterceptorInvoker;
-        
+   
         readonly MqttServerOptions _serverOptions;
         readonly MqttServerEventContainer _eventContainer;
         readonly MqttConnectPacket _connectPacket;
@@ -55,8 +53,6 @@ namespace MQTTnet.Server
             Session = session ?? throw new ArgumentNullException(nameof(session));
             _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
 
-            _applicationMessageInterceptorInvoker = new MqttApplicationMessageInterceptorInvoker(eventContainer, Id, Session.Items);
-            
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttClient));
         }
@@ -407,7 +403,26 @@ namespace MQTTnet.Server
             
             if (_eventContainer.InterceptingPublishEvent.HasHandlers)
             {
-                interceptingPublishEventArgs = await _applicationMessageInterceptorInvoker.Invoke(applicationMessage, cancellationToken).ConfigureAwait(false);
+                interceptingPublishEventArgs = new InterceptingPublishEventArgs
+                {
+                    ClientId = Id,
+                    ApplicationMessage = applicationMessage,
+                    SessionItems = Session.Items,
+                    ProcessPublish = true,
+                    CloseConnection = false,
+                    CancellationToken = cancellationToken
+                };
+
+                if (string.IsNullOrEmpty(interceptingPublishEventArgs.ApplicationMessage.Topic))
+                {
+                    // This can happen if a topic alias us used but the topic is
+                    // unknown to the server.
+                    interceptingPublishEventArgs.Response.ReasonCode = MqttPubAckReasonCode.TopicNameInvalid;
+                    interceptingPublishEventArgs.ProcessPublish = false;
+                }
+                
+                await _eventContainer.InterceptingPublishEvent.InvokeAsync(interceptingPublishEventArgs).ConfigureAwait(false);
+                
                 applicationMessage = interceptingPublishEventArgs.ApplicationMessage;
                 closeConnection = interceptingPublishEventArgs.CloseConnection;
                 processPublish = interceptingPublishEventArgs.ProcessPublish;

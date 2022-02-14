@@ -144,10 +144,9 @@ namespace MQTTnet.Server
                 }
 
                 // Calculate application message topic hash once for subscription checks
-                ulong topicHash;
                 ulong topicHashMask; // not needed
                 bool topicHasWildcard; // not needed
-                MqttSubscription.CalcTopicHash(applicationMessage.Topic, out topicHash, out topicHashMask, out topicHasWildcard);
+                MqttSubscription.CalculateTopicHash(applicationMessage.Topic, out var topicHash, out topicHashMask, out topicHasWildcard);
 
                 foreach (var clientSession in sessions)
                 {

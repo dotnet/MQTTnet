@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Server
+namespace MQTTnet
 {
     public static class MqttTopicFilterComparer
     {
@@ -96,7 +96,6 @@ namespace MQTTnet.Server
                     {
                         if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
                         {
-                            // Invalid filter.
                             return MqttTopicFilterCompareResult.FilterInvalid;
                         }
 

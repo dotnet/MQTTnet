@@ -32,7 +32,7 @@ namespace MQTTnet.Tests.Server
             UInt64 topicHash;
             UInt64 topicHashMask;
             bool topicHasWildcard;
-            MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
 
@@ -71,7 +71,7 @@ namespace MQTTnet.Tests.Server
             UInt64 topicHashMask;
             bool topicHasWildcard;
 
-            MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
 
@@ -110,7 +110,7 @@ namespace MQTTnet.Tests.Server
             UInt64 topicHashMask;
             bool topicHasWildcard;
 
-            MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
 
             Assert.IsFalse(topicHasWildcard, "Wildcard detected when not wildcard present");
 
@@ -171,7 +171,7 @@ namespace MQTTnet.Tests.Server
             UInt64 topicHashMask;
             bool topicHasWildcard;
 
-            MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
 
@@ -239,7 +239,7 @@ namespace MQTTnet.Tests.Server
             UInt64 topicHashMask;
             bool topicHasWildcard;
 
-            MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
 
@@ -300,7 +300,7 @@ namespace MQTTnet.Tests.Server
             UInt64 topicHashMask;
             bool topicHasWildcard;
 
-            MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
 
             Assert.IsFalse(topicHasWildcard, "Wildcard detected when not present");
 
@@ -336,7 +336,7 @@ namespace MQTTnet.Tests.Server
             UInt64 topicHashMask;
             bool topicHasWildcard;
 
-            MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
         }
@@ -353,7 +353,7 @@ namespace MQTTnet.Tests.Server
             UInt64 topicHashMask;
             bool topicHasWildcard;
 
-            MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
         }
@@ -447,7 +447,7 @@ namespace MQTTnet.Tests.Server
                     UInt64 topicHash;
                     UInt64 hashMask;
                     bool hasWildcard;
-                    MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out hashMask, out hasWildcard);
+                    MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out hashMask, out hasWildcard);
 
                     bucketDepths.TryGetValue(topicHash, out var currentValue);
                     ++currentValue;
@@ -493,7 +493,7 @@ namespace MQTTnet.Tests.Server
             ulong hashMask;
             bool hasWildcard;
 
-            MQTTnet.Server.MqttSubscription.CalcTopicHash(topic, out topicHash, out hashMask, out hasWildcard);
+            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out hashMask, out hasWildcard);
 
             Console.WriteLine();
             Console.WriteLine("Topic: " + topic);
@@ -580,7 +580,7 @@ namespace MQTTnet.Tests.Server
                     UInt64 topicHash;
                     UInt64 hashMask;
                     bool hasWildcard;
-                    MQTTnet.Server.MqttSubscription.CalcTopicHash((string)topicToFind, out topicHash, out hashMask, out hasWildcard);
+                    MQTTnet.Server.MqttSubscription.CalculateTopicHash((string)topicToFind, out topicHash, out hashMask, out hasWildcard);
 
                     var result = clientSession.SubscriptionsManager.CheckSubscriptions((string)topicToFind, topicHash, MqttQualityOfServiceLevel.AtMostOnce, "OtherClient");
                     if (result.IsSubscribed)

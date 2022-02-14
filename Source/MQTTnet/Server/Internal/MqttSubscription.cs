@@ -163,17 +163,15 @@ namespace MQTTnet.Server
 * To also handle a larger number of subscribers, it may be beneficial to maintain
 * a subscribers-by-subscription-topic dictionary.
 */
-
     public sealed class MqttSubscription
     {
         public MqttSubscription(
-           string topic,
-           bool noLocal,
-           MqttRetainHandling retainHandling,
-           bool retainAsPublished,
-           MqttQualityOfServiceLevel qualityOfServiceLevel,
-           uint identifier
-       )
+            string topic,
+            bool noLocal,
+            MqttRetainHandling retainHandling,
+            bool retainAsPublished,
+            MqttQualityOfServiceLevel qualityOfServiceLevel,
+            uint identifier)
         {
             Topic = topic;
             NoLocal = noLocal;
@@ -181,35 +179,32 @@ namespace MQTTnet.Server
             RetainAsPublished = retainAsPublished;
             GrantedQualityOfServiceLevel = qualityOfServiceLevel;
             Identifier = identifier;
-            // calculate topic hash
-            ulong hash;
-            ulong hashMask;
-            bool hasWildcard;
-            CalcTopicHash(Topic, out hash, out hashMask, out hasWildcard);
+            
+            CalculateTopicHash(Topic, out var hash, out var hashMask, out var hasWildcard);
             TopicHash = hash;
             TopicHashMask = hashMask;
             TopicHasWildcard = hasWildcard;
         }
 
-        public string Topic { get; private set; }
+        public MqttQualityOfServiceLevel GrantedQualityOfServiceLevel { get; }
 
-        public bool NoLocal { get; private set; }
+        public uint Identifier { get; }
 
-        public MqttRetainHandling RetainHandling { get; private set; }
+        public bool NoLocal { get; }
 
-        public bool RetainAsPublished { get; private set; }
+        public bool RetainAsPublished { get; }
 
-        public MqttQualityOfServiceLevel GrantedQualityOfServiceLevel { get; private set; }
+        public MqttRetainHandling RetainHandling { get; }
 
-        public uint Identifier { get; private set; }
+        public string Topic { get; }
 
-        public ulong TopicHash { get; private set; }
+        public ulong TopicHash { get; }
 
-        public ulong TopicHashMask { get; private set; }
+        public ulong TopicHashMask { get; }
 
-        public bool TopicHasWildcard { get; private set; }
+        public bool TopicHasWildcard { get; }
 
-        public static void CalcTopicHash(string topic, out ulong resultHash, out ulong resultHashMask, out bool resultHasWildcard)
+        public static void CalculateTopicHash(string topic, out ulong resultHash, out ulong resultHashMask, out bool resultHasWildcard)
         {
             // calculate topic hash
             ulong hash = 0;
@@ -218,9 +213,9 @@ namespace MQTTnet.Server
             ulong fillLevelBitMask = 0;
             var hasWildcard = false;
             byte checkSum = 0;
-            int level = 0;
+            var level = 0;
 
-            int i = 0;
+            var i = 0;
             while (i < topic.Length)
             {
                 var c = topic[i];
@@ -235,19 +230,21 @@ namespace MQTTnet.Server
                     levelBitMask = 0;
                     ++level;
                     if (level >= 8)
+                    {
                         break;
+                    }
                 }
                 else if (c == MqttTopicFilterComparer.SingleLevelWildcard)
                 {
-                    levelBitMask = (byte)0xff;
+                    levelBitMask = 0xff;
                     hasWildcard = true;
                 }
                 else if (c == MqttTopicFilterComparer.MultiLevelWildcard)
                 {
                     // checksum is zero for a valid topic
-                    levelBitMask = (byte)0xff;
+                    levelBitMask = 0xff;
                     // fill rest with this fillLevelBitMask
-                    fillLevelBitMask = (byte)0xff;
+                    fillLevelBitMask = 0xff;
                     hasWildcard = true;
                     break;
                 }
@@ -294,11 +291,12 @@ namespace MQTTnet.Server
                 while (i < topic.Length)
                 {
                     var c = topic[i];
-                    if ((c == MqttTopicFilterComparer.SingleLevelWildcard) || (c == MqttTopicFilterComparer.MultiLevelWildcard))
+                    if (c == MqttTopicFilterComparer.SingleLevelWildcard || c == MqttTopicFilterComparer.MultiLevelWildcard)
                     {
                         hasWildcard = true;
                         break;
                     }
+
                     ++i;
                 }
             }

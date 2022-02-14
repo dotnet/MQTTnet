@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -17,28 +16,27 @@ namespace MQTTnet.Server
     {
         static readonly List<uint> EmptySubscriptionIdentifiers = new List<uint>();
         readonly MqttServerEventContainer _eventContainer;
+        readonly Dictionary<ulong, HashSet<MqttSubscription>> _noWildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
 
         readonly MqttSession _session;
 
+        // Callback to maintain list of subscriber clients
+        readonly ISubscriptionChangedNotification _subscriptionChangedNotification;
+
         // Subscriptions are stored in various dictionaries and use a "topic hash"; see the MqttSubscription object for a detailed explanation.
         // The additional lock is important to coordinate complex update logic with multiple steps, checks and interceptors.
         readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>();
-        readonly Dictionary<ulong, HashSet<MqttSubscription>> _noWildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();
-        readonly Dictionary<ulong, TopicHashMaskSubscriptions> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, TopicHashMaskSubscriptions>();
 
         // Use subscription lock to maintain consistency across subscriptions and topic hash dictionaries
         readonly SemaphoreSlim _subscriptionsLock = new SemaphoreSlim(1);
-
-        // Callback to maintain list of subscriber clients
-        readonly ISubscriptionChangedNotification _subscriptionChangedNotification;
+        readonly Dictionary<ulong, TopicHashMaskSubscriptions> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, TopicHashMaskSubscriptions>();
 
         public MqttClientSubscriptionsManager(
             MqttSession session,
             MqttServerEventContainer eventContainer,
             MqttRetainedMessagesManager retainedMessagesManager,
-            ISubscriptionChangedNotification subscriptionChangedNotification
-            )
+            ISubscriptionChangedNotification subscriptionChangedNotification)
         {
             _session = session ?? throw new ArgumentNullException(nameof(session));
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
@@ -48,7 +46,7 @@ namespace MQTTnet.Server
 
         public CheckSubscriptionsResult CheckSubscriptions(string topic, ulong topicHash, MqttQualityOfServiceLevel applicationMessageQoSLevel, string senderClientId)
         {
-            List<MqttSubscription> subscriptions = new List<MqttSubscription>();
+            var subscriptions = new List<MqttSubscription>();
 
             _subscriptionsLock.Wait();
             try
@@ -153,14 +151,13 @@ namespace MQTTnet.Server
         }
 
         /// <summary>
-        /// Note: Use topic hash based method for repeated calls.
+        ///     Note: Use topic hash based method for repeated calls.
         /// </summary>
         public CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel applicationMessageQoSLevel, string senderClientId)
         {
-            ulong topicHash;
             ulong topicHashMask; // not needed
-            bool hasWildcard;    // not needed
-            MqttSubscription.CalcTopicHash(topic, out topicHash, out topicHashMask, out hasWildcard);
+            bool hasWildcard; // not needed
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out topicHashMask, out hasWildcard);
             return CheckSubscriptions(topic, topicHash, applicationMessageQoSLevel, senderClientId);
         }
 
@@ -210,7 +207,7 @@ namespace MQTTnet.Server
                     var createSubscriptionResult = CreateSubscription(finalTopicFilter, subscribePacket.SubscriptionIdentifier, interceptorContext.Response.ReasonCode);
 
                     addedSubscriptions.Add(finalTopicFilter.Topic);
-                    
+
                     if (_eventContainer.ClientSubscribedTopicEvent.HasHandlers)
                     {
                         var eventArgs = new ClientSubscribedTopicEventArgs
@@ -274,7 +271,7 @@ namespace MQTTnet.Server
                         _subscriptions.Remove(topicFilter);
 
                         // must remove subscription object from topic hash dictionary also
-                        
+
                         if (existingSubscription.TopicHasWildcard)
                         {
                             if (_wildcardSubscriptionsByTopicHash.TryGetValue(existingSubscription.TopicHash, out var subs))
@@ -356,8 +353,7 @@ namespace MQTTnet.Server
                 topicFilter.RetainHandling,
                 topicFilter.RetainAsPublished,
                 grantedQualityOfServiceLevel,
-                subscriptionIdentifier
-            );
+                subscriptionIdentifier);
 
             bool isNewSubscription;
 
@@ -369,7 +365,7 @@ namespace MQTTnet.Server
                 ulong topicHash;
                 ulong topicHashMask;
                 bool hasWildcard;
-                MqttSubscription.CalcTopicHash(topicFilter.Topic, out topicHash, out topicHashMask, out hasWildcard);
+                MqttSubscription.CalculateTopicHash(topicFilter.Topic, out topicHash, out topicHashMask, out hasWildcard);
 
                 if (_subscriptions.TryGetValue(topicFilter.Topic, out var existingSubscription))
                 {
@@ -403,6 +399,7 @@ namespace MQTTnet.Server
                         subs = new TopicHashMaskSubscriptions(topicHashMask);
                         _wildcardSubscriptionsByTopicHash.Add(topicHash, subs);
                     }
+
                     subs.Subscriptions.Add(subscription);
                 }
                 else
@@ -412,6 +409,7 @@ namespace MQTTnet.Server
                         subs = new HashSet<MqttSubscription>();
                         _noWildcardSubscriptionsByTopicHash.Add(topicHash, subs);
                     }
+
                     subs.Add(subscription);
                 }
             }

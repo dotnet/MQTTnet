@@ -13,24 +13,28 @@ namespace MQTTnet.Formatter
     public sealed class MqttBufferReader
     {
         byte[] _buffer = PlatformAbstractionLayer.EmptyByteArray;
-        int _initialOffset;
+        int _initialPosition;
         int _length;
+        int _position;
 
-        public bool EndOfStream => Offset == _length;
-
-        public int Length => _length - Offset;
-
-        public int Offset { get; private set; }
+        public bool EndOfStream => _position == _length;
+        
+        public int Position => _position;
 
         public byte[] ReadBinaryData()
         {
             var length = ReadTwoByteInteger();
 
+            if (length == 0)
+            {
+                return PlatformAbstractionLayer.EmptyByteArray;
+            }
+
             ValidateReceiveBuffer(length);
 
             var result = new byte[length];
-            Array.Copy(_buffer, Offset, result, 0, length);
-            Offset += length;
+            Array.Copy(_buffer, _position, result, 0, length);
+            _position += length;
 
             return result;
         }
@@ -39,26 +43,32 @@ namespace MQTTnet.Formatter
         {
             ValidateReceiveBuffer(1);
 
-            return _buffer[Offset++];
+            return _buffer[_position++];
         }
 
         public uint ReadFourByteInteger()
         {
             ValidateReceiveBuffer(4);
 
-            var byte0 = _buffer[Offset++];
-            var byte1 = _buffer[Offset++];
-            var byte2 = _buffer[Offset++];
-            var byte3 = _buffer[Offset++];
+            var byte0 = _buffer[_position++];
+            var byte1 = _buffer[_position++];
+            var byte2 = _buffer[_position++];
+            var byte3 = _buffer[_position++];
 
             return (uint)((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3);
         }
 
         public byte[] ReadRemainingData()
         {
-            var bufferLength = _length - Offset;
+            var bufferLength = _length - _position;
+
+            if (bufferLength == 0)
+            {
+                return PlatformAbstractionLayer.EmptyByteArray;
+            }
+            
             var buffer = new byte[bufferLength];
-            Array.Copy(_buffer, Offset, buffer, 0, bufferLength);
+            Array.Copy(_buffer, _position, buffer, 0, bufferLength);
 
             return buffer;
         }
@@ -67,10 +77,15 @@ namespace MQTTnet.Formatter
         {
             var length = ReadTwoByteInteger();
 
+            if (length == 0)
+            {
+                return string.Empty;
+            }
+            
             ValidateReceiveBuffer(length);
 
-            var result = Encoding.UTF8.GetString(_buffer, Offset, length);
-            Offset += length;
+            var result = Encoding.UTF8.GetString(_buffer, _position, length);
+            _position += length;
             return result;
         }
 
@@ -78,8 +93,8 @@ namespace MQTTnet.Formatter
         {
             ValidateReceiveBuffer(2);
 
-            var msb = _buffer[Offset++];
-            var lsb = _buffer[Offset++];
+            var msb = _buffer[_position++];
+            var lsb = _buffer[_position++];
 
             return (ushort)((msb << 8) | lsb);
         }
@@ -108,23 +123,23 @@ namespace MQTTnet.Formatter
 
         public void Seek(int position)
         {
-            Offset = _initialOffset + position;
+            _position = _initialPosition + position;
         }
 
-        public void SetBuffer(byte[] buffer, int offset, int length)
+        public void SetBuffer(byte[] buffer, int position, int length)
         {
             _buffer = buffer;
-            _initialOffset = offset;
-            Offset = offset;
+            _initialPosition = position;
+            _position = position;
             _length = length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ValidateReceiveBuffer(int length)
         {
-            if (_length < Offset + length)
+            if (_length < _position + length)
             {
-                throw new MqttProtocolViolationException($"Expected at least {Offset + length} bytes but there are only {_length} bytes");
+                throw new MqttProtocolViolationException($"Expected at least {Position + length} bytes but there are only {_length} bytes");
             }
         }
     }

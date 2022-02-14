@@ -5,7 +5,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Server;
 
-namespace MQTTnet.Tests.Server
+namespace MQTTnet.Tests
 {
     [TestClass]
     public sealed class MqttTopicFilterComparer_Tests

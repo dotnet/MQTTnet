@@ -25,7 +25,7 @@ namespace MQTTnet.Formatter.V5
                 _length = (int)body.ReadVariableByteInteger();
             }
 
-            _targetOffset = body.Offset + _length;
+            _targetOffset = body.Position + _length;
         }
 
         public List<MqttUserProperty> CollectedUserProperties { get; private set; }
@@ -41,7 +41,7 @@ namespace MQTTnet.Formatter.V5
                     return false;
                 }
 
-                if (_body.Offset >= _targetOffset)
+                if (_body.Position >= _targetOffset)
                 {
                     return false;
                 }

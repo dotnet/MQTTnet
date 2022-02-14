@@ -168,16 +168,20 @@ namespace MQTTnet.Formatter
             }
             else
             {
-                var bufferSize = Encoding.UTF8.GetByteCount(value);
+                // Do not use Encoding.UTF8.GetByteCount(value);
+                // UTF8 chars can have a max length of 4 and the used buffer increase *2 every time.
+                // So the buffer should always have much more capacity left so that a correct value
+                // here is only waste of CPU cycles.
+                var byteCount = value.Length * 4;
 
-                EnsureAdditionalCapacity(bufferSize + 2);
+                EnsureAdditionalCapacity(byteCount + 2);
 
-                _buffer[_position] = (byte)(bufferSize >> 8);
-                _buffer[_position + 1] = (byte)bufferSize;
+                var writtenBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _position + 2);
 
-                Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _position + 2);
-
-                IncreasePosition(bufferSize + 2);
+                _buffer[_position] = (byte)(writtenBytes >> 8);
+                _buffer[_position + 1] = (byte)writtenBytes;
+                
+                IncreasePosition(writtenBytes + 2);
             }
         }
 

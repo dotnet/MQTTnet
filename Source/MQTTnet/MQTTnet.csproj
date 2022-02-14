@@ -58,6 +58,12 @@
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
         <DebugType>Full</DebugType>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
     </PropertyGroup>
 
     <ItemGroup>

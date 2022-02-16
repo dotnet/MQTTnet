@@ -3,8 +3,10 @@
     <PropertyGroup>
         <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
-        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         <LangVersion>7.3</LangVersion>
+        <EnableNETAnalyzers>false</EnableNETAnalyzers>
+        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
     </PropertyGroup>
 
     <ItemGroup>

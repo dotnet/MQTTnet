@@ -52,7 +52,7 @@ jobs:
         run: msbuild MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
 
       - name: Build solution
-        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ steps.dotenv.outputs.assembly_version }} /p:AssemblyVersion=${{ steps.dotenv.outputs.assembly_version }} /p:PackageVersion=${{ steps.dotenv.outputs.nuget_version }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
+        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
 
       - name: Collect nuget Packages
         uses: actions/upload-artifact@v2

@@ -378,7 +378,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 {
                     try
                     {
-                        using (var disconnectTimeout = new CancellationTokenSource(Options.ClientOptions.CommunicationTimeout))
+                        using (var disconnectTimeout = new CancellationTokenSource(Options.ClientOptions.Timeout))
                         {
                             await InternalClient.DisconnectAsync(new MqttClientDisconnectOptions(), disconnectTimeout.Token).ConfigureAwait(false);
                         }

@@ -7,6 +7,10 @@ on:
       #- master
   #pull_request
 
+env:
+  ASSEMBLY_VERSION: "4.0.0.${{github.run_number}}"
+  NUGET_VERSION:  "4.0.0.${{github.run_number}}"
+
 jobs:
   build:
 
@@ -37,12 +41,12 @@ jobs:
           $decoded = [System.Convert]::FromBase64CharArray($secret, 0, $secret.Length)
           Set-Content -Path ${{ github.workspace }}\certificate.snk -Value $decoded -AsByteStream
       
-      - name: Setup Environment Variables
-        id: dotenv
-        uses: falti/dotenv-action@v0.2.7
-        with:
-          path: .github\workflows\.env
-          log-variables: true
+#      - name: Setup Environment Variables
+#        id: dotenv
+#        uses: falti/dotenv-action@v0.2.7
+#        with:
+#          path: .github\workflows\.env
+#          log-variables: true
 
       - name: Restore nuget packages
         run: msbuild MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
@@ -67,10 +71,13 @@ jobs:
       - name: ASP.NET Tests
         run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
 
-      - name: Publish nugets
-        #if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feature/Reason_Code_In_Subscription_Interceptor' }}
-        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Publish myget nugets
+        run: dotnet nuget push **/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
+
+#      - name: Publish nugets
+#        #if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+#        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feature/Reason_Code_In_Subscription_Interceptor' }}
+#        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
 
 #  pull_request_ci:
 #    runs-on: windows-2022

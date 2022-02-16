@@ -396,9 +396,9 @@ namespace MQTTnet.Client
             {
                 if (_adapter != null)
                 {
-                    _logger.Verbose("Disconnecting [Timeout={0}]", Options.CommunicationTimeout);
+                    _logger.Verbose("Disconnecting [Timeout={0}]", Options.Timeout);
 
-                    using (var timeout = new CancellationTokenSource(Options.CommunicationTimeout))
+                    using (var timeout = new CancellationTokenSource(Options.Timeout))
                     {
                         await _adapter.DisconnectAsync(timeout.Token).ConfigureAwait(false);
                     }

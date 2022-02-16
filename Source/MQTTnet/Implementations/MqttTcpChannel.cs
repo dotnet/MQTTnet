@@ -70,7 +70,7 @@ namespace MQTTnet.Implementations
 
                 socket.ReceiveBufferSize = _tcpOptions.BufferSize;
                 socket.SendBufferSize = _tcpOptions.BufferSize;
-                socket.SendTimeout = (int) _clientOptions.CommunicationTimeout.TotalMilliseconds;
+                socket.SendTimeout = (int) _clientOptions.Timeout.TotalMilliseconds;
                 socket.NoDelay = _tcpOptions.NoDelay;
                 
                 if (_tcpOptions.DualMode.HasValue)

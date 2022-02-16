@@ -208,7 +208,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
                 _webSocket.Open();
 #pragma warning restore AsyncFixer02 // Long-running or blocking operations inside an async method
 
-                using (var timeoutCts = new CancellationTokenSource(_clientOptions.CommunicationTimeout))
+                using (var timeoutCts = new CancellationTokenSource(_clientOptions.Timeout))
                 using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken))
                 {
                     using (linkedCts.Token.Register(() => taskCompletionSource.TrySetCanceled()))

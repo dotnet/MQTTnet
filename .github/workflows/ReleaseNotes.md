@@ -13,6 +13,7 @@ Checkout the new samples (https://github.com/dotnet/MQTTnet/tree/feature/master/
 * [Client] Exposed user properties and reason string in unsubscribe result.
 * [Client] Migrated application message handler to a regular .NET event (BREAKING CHANGE!).
 * [Client] The will message is longer a regular application message due to not supported properties by the will message (BREAKING CHANGE!).
+* [Client] Timeouts are no longer handled inside the library. Each method (Connect, Publish etc.) supports a cancellation token so that custom timeouts can and must be used (BREAKING CHANGE!). 
 * [Server] Added support for returning individual subscription errors (#80 thanks to @jimch)
 * [Server] Improved topic filter comparisons (support for $).
 * [Server] Added more MQTTv5 response information to all interceptors (BREAKING CHANGE!).

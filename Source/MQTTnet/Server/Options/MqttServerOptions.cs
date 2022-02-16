@@ -8,7 +8,7 @@ namespace MQTTnet.Server
 {
     public sealed class MqttServerOptions
     {
-        public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(15);
+        public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(100);
         
         public MqttServerTcpEndpointOptions DefaultEndpointOptions { get; } = new MqttServerTcpEndpointOptions();
 
@@ -21,7 +21,6 @@ namespace MQTTnet.Server
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage;
 
         public MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsTcpEndpointOptions();
-
 
         /// <summary>
         ///     Gets or sets the default and initial size of the packet write buffer.

@@ -96,9 +96,9 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithCommunicationTimeout(TimeSpan value)
+        public MqttClientOptionsBuilder WithTimeout(TimeSpan value)
         {
-            _options.CommunicationTimeout = value;
+            _options.Timeout = value;
             return this;
         }
 

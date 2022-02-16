@@ -430,7 +430,7 @@ namespace MQTTnet.Tests.Client
                     new ManagedMqttClientOptions
                     {
                         ClientOptions = testEnvironment.Factory.CreateClientOptionsBuilder()
-                            .WithCommunicationTimeout(TimeSpan.FromSeconds(2))
+                            .WithTimeout(TimeSpan.FromSeconds(2))
                             .WithTcpServer("wrong_server", 1234)
                             .Build()
                     });

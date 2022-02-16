@@ -73,7 +73,7 @@ namespace MQTTnet.Tests.Client
         public async Task Connect_To_Invalid_Server_Port_Not_Opened()
         {
             var client = new MqttFactory().CreateMqttClient();
-            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", 12345).WithCommunicationTimeout(TimeSpan.FromSeconds(5)).Build());
+            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", 12345).WithTimeout(TimeSpan.FromSeconds(5)).Build());
         }
 
         [TestMethod]
@@ -92,7 +92,7 @@ namespace MQTTnet.Tests.Client
         public async Task Connect_To_Invalid_Server_Wrong_Protocol()
         {
             var client = new MqttFactory().CreateMqttClient();
-            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("http://127.0.0.1", 12345).WithCommunicationTimeout(TimeSpan.FromSeconds(2)).Build());
+            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("http://127.0.0.1", 12345).WithTimeout(TimeSpan.FromSeconds(2)).Build());
         }
 
         [TestMethod]

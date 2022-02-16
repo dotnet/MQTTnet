@@ -135,7 +135,7 @@ namespace MQTTnet.Tests.Client
                 testEnvironment.ServerPort = 8364;
                 var server = await testEnvironment.StartServer();
                 
-                var client = await testEnvironment.ConnectLowLevelClient(o => o.WithCommunicationTimeout(TimeSpan.Zero));
+                var client = await testEnvironment.ConnectLowLevelClient(o => o.WithTimeout(TimeSpan.Zero));
 
                 await Authenticate(client).ConfigureAwait(false);
 

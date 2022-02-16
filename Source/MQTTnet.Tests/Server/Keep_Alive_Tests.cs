@@ -23,8 +23,8 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var client = await testEnvironment.ConnectLowLevelClient(o => o
-                    .WithCommunicationTimeout(TimeSpan.FromSeconds(1))
-                    .WithCommunicationTimeout(TimeSpan.Zero)
+                    .WithTimeout(TimeSpan.FromSeconds(1))
+                    .WithTimeout(TimeSpan.Zero)
                     .WithProtocolVersion(MqttProtocolVersion.V500)).ConfigureAwait(false);
 
                 await client.SendAsync(new MqttConnectPacket

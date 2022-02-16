@@ -44,8 +44,6 @@ namespace MQTTnet.Client
         /// </summary>
         public string ClientId { get; set; } = Guid.NewGuid().ToString("N");
 
-        public TimeSpan CommunicationTimeout { get; set; } = TimeSpan.FromSeconds(10);
-
         public IMqttClientCredentialsProvider Credentials { get; set; }
 
         public IMqttExtendedAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
@@ -87,6 +85,11 @@ namespace MQTTnet.Client
         ///     The time after a session expires when it's not actively used.
         /// </summary>
         public uint SessionExpiryInterval { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the timeout which will be applied at socket level or internal operations.
+        /// </summary>
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(100);
 
         /// <summary>
         ///     Gets or sets the topic alias maximum.

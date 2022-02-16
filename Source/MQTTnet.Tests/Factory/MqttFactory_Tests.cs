@@ -45,7 +45,7 @@ namespace MQTTnet.Tests.Factory
             {
                 var clientOptions = new ManagedMqttClientOptionsBuilder();
 
-                clientOptions.WithClientOptions(o => o.WithTcpServer("this_is_an_invalid_host").WithCommunicationTimeout(TimeSpan.FromSeconds(1)));
+                clientOptions.WithClientOptions(o => o.WithTcpServer("this_is_an_invalid_host").WithTimeout(TimeSpan.FromSeconds(1)));
 
                 // try connect to get some log entries
                 await managedClient.StartAsync(clientOptions.Build());
@@ -58,7 +58,7 @@ namespace MQTTnet.Tests.Factory
                     return Task.CompletedTask;
                 };
                 
-                await Task.WhenAny(Task.Delay(managedClient.Options.ClientOptions.CommunicationTimeout), tcs.Task);
+                await Task.WhenAny(Task.Delay(managedClient.Options.ClientOptions.Timeout), tcs.Task);
             }
             finally
             {

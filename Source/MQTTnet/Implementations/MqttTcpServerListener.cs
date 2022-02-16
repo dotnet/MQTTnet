@@ -66,12 +66,11 @@ namespace MQTTnet.Implementations
 
                 _localEndPoint = new IPEndPoint(boundIp, _options.Port);
 
-                _logger.Info("Starting TCP listener for {0} TLS={1}.", _localEndPoint, _tlsCertificate != null);
+                _logger.Info("Starting TCP listener (Endpoint='{0}', TLS={1}).", _localEndPoint, _tlsCertificate != null);
 
                 _socket = new CrossPlatformSocket(_addressFamily);
 
                 // Usage of socket options is described here: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.setsocketoption?view=netcore-2.2
-
                 if (_options.ReuseAddress)
                 {
                     _socket.ReuseAddress = true;
@@ -83,7 +82,15 @@ namespace MQTTnet.Implementations
                 }
 
                 _socket.Bind(_localEndPoint);
+                
+                // Get the local endpoint back from the socket. The port may have changed.
+                // This can happen when port 0 is used. Then the OS will choose the next free port.
+                _localEndPoint = (IPEndPoint)_socket.LocalEndPoint;
+                _options.Port = _localEndPoint.Port;
+                
                 _socket.Listen(_options.ConnectionBacklog);
+                
+                _logger.Verbose("TCP listener started (Endpoint='{0}'.", _localEndPoint);
                 
                 Task.Run(() => AcceptClientConnectionsAsync(cancellationToken), cancellationToken).RunInBackground(_logger);
 

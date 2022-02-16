@@ -103,6 +103,8 @@ namespace MQTTnet.Implementations
             }
         }
 
+        public EndPoint LocalEndPoint => _socket.LocalEndPoint;
+
         public void Bind(EndPoint localEndPoint)
         {
             if (localEndPoint is null)
@@ -124,7 +126,7 @@ namespace MQTTnet.Implementations
             {
                 throw new ArgumentNullException(nameof(host));
             }
-            
+
             cancellationToken.ThrowIfCancellationRequested();
 
             try

@@ -116,8 +116,7 @@ namespace MQTTnet.TestApp
                 {
                     ChannelOptions = new MqttClientTcpOptions { Server = "localhost" },
                     ClientId = "Client1",
-                    CleanSession = true,
-                    CommunicationTimeout = TimeSpan.FromMinutes(10)
+                    CleanSession = true
                 };
 
                 var client = new MqttFactory().CreateMqttClient();

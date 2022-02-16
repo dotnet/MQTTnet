@@ -562,7 +562,7 @@ namespace MQTTnet.Extensions.ManagedClient
             MqttClientConnectResult connectResult = null;
             try
             {
-                using (var connectTimeout = new CancellationTokenSource(Options.ClientOptions.CommunicationTimeout))
+                using (var connectTimeout = new CancellationTokenSource(Options.ClientOptions.Timeout))
                 {
                     connectResult = await InternalClient.ConnectAsync(Options.ClientOptions, connectTimeout.Token).ConfigureAwait(false);
                 }

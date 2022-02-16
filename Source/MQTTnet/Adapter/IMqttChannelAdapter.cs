@@ -27,13 +27,13 @@ namespace MQTTnet.Adapter
 
         bool IsReadingPacket { get; }
 
-        Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken);
+        Task ConnectAsync(CancellationToken cancellationToken);
 
         Task DisconnectAsync(CancellationToken cancellationToken);
 
-        Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken);
+        Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken);
 
-        Task<MqttBasePacket> ReceivePacketAsync(CancellationToken cancellationToken);
+        Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken);
 
         void ResetStatistics();
     }

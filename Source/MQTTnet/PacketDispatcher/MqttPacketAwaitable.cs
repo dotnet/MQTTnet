@@ -11,9 +11,9 @@ using MQTTnet.Internal;
 
 namespace MQTTnet.PacketDispatcher
 {
-    public sealed class MqttPacketAwaitable<TPacket> : IMqttPacketAwaitable where TPacket : MqttBasePacket
+    public sealed class MqttPacketAwaitable<TPacket> : IMqttPacketAwaitable where TPacket : MqttPacket
     {
-        readonly CrossPlatformPromise<MqttBasePacket> _promise = new CrossPlatformPromise<MqttBasePacket>();
+        readonly CrossPlatformPromise<MqttPacket> _promise = new CrossPlatformPromise<MqttPacket>();
         readonly MqttPacketDispatcher _owningPacketDispatcher;
 
         public MqttPacketAwaitable(ushort packetIdentifier, MqttPacketDispatcher owningPacketDispatcher)
@@ -29,19 +29,16 @@ namespace MQTTnet.PacketDispatcher
         
         public MqttPacketAwaitableFilter Filter { get; }
         
-        public async Task<TPacket> WaitOneAsync(TimeSpan timeout)
+        public async Task<TPacket> WaitOneAsync(CancellationToken cancellationToken)
         {
-            using (var timeoutToken = new CancellationTokenSource(timeout))
+            using (cancellationToken.Register(() => Fail(new MqttCommunicationTimedOutException())))
             {
-                using (timeoutToken.Token.Register(() => Fail(new MqttCommunicationTimedOutException())))
-                {
-                    var packet = await _promise.Task.ConfigureAwait(false);
-                    return (TPacket)packet;
-                }
+                var packet = await _promise.Task.ConfigureAwait(false);
+                return (TPacket)packet;
             }
         }
 
-        public void Complete(MqttBasePacket packet)
+        public void Complete(MqttPacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
 

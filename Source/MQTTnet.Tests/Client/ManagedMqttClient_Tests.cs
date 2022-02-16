@@ -64,7 +64,7 @@ namespace MQTTnet.Tests.Client
                 var receivedMessagesCount = 0;
                 
                 var clientOptions = new MqttClientOptionsBuilder()
-                    .WithTcpServer("localhost", testEnvironment.ServerPort)
+                    .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                     .WithWillTopic("My/last/will")
                     .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
                     .Build();
@@ -76,6 +76,9 @@ namespace MQTTnet.Tests.Client
                     .WithClientOptions(clientOptions)
                     .Build());
 
+                // Wait until the managed client is fully set up and running.
+                await Task.Delay(1000);
+                
                 var receivingClient = await testEnvironment.ConnectClient();
                 
                 receivingClient.ApplicationMessageReceivedAsync += e =>
@@ -86,8 +89,11 @@ namespace MQTTnet.Tests.Client
                 
                 await receivingClient.SubscribeAsync("My/last/will");
 
+                // Disposing the client will not sent a DISCONNECT packet so that connection is terminated
+                // which will lead to the will publish.
                 dyingManagedClient.Dispose();
 
+                // Wait for arrival of the will message at the receiver.
                 await Task.Delay(5000);
 
                 Assert.AreEqual(1, receivedMessagesCount);
@@ -368,8 +374,7 @@ namespace MQTTnet.Tests.Client
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
-                var serverOptions = new MqttServerOptionsBuilder();
-                await testEnvironment.StartServer(serverOptions);
+                await testEnvironment.StartServer();
 
                 var options = new MqttClientOptionsBuilder().WithClientId("1").WithKeepAlivePeriod(TimeSpan.FromSeconds(5));
                 
@@ -443,17 +448,17 @@ namespace MQTTnet.Tests.Client
         
         async Task<MqttClient> TryConnect_Subscribe(TestEnvironment testEnvironment, MqttClientOptionsBuilder options, Action onReceive)
         {
-
             try
             {
                 var sendClient = await testEnvironment.ConnectClient(options);
+                
                 sendClient.ApplicationMessageReceivedAsync += e =>
                 {
                     onReceive();
                     return Task.CompletedTask;
                 };
                 
-                await sendClient.SubscribeAsync("aaa");
+                await sendClient.SubscribeAsync("aaa").ConfigureAwait(false);
                 return sendClient;
             }
             catch (Exception)

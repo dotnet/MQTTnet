@@ -140,7 +140,7 @@ namespace MQTTnet.Server
             _logger.Info("Client '{0}': Connection stopped.", Id);
         }
 
-        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             if (_eventContainer.InterceptingOutboundPacketEvent.HasHandlers)
             {

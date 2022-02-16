@@ -15,7 +15,7 @@ namespace MQTTnet.Formatter.V5
     {
         readonly MqttBufferReader _bufferReader = new MqttBufferReader();
 
-        public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
+        public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
             if (receivedMqttPacket.TotalLength == 0)
             {
@@ -66,7 +66,7 @@ namespace MQTTnet.Formatter.V5
             }
         }
 
-        MqttBasePacket DecodeAuthPacket(ArraySegment<byte> body)
+        MqttPacket DecodeAuthPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -108,7 +108,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodeConnAckPacket(ArraySegment<byte> body)
+        MqttPacket DecodeConnAckPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -125,7 +125,9 @@ namespace MQTTnet.Formatter.V5
                 RetainAvailable = true,
                 SharedSubscriptionAvailable = true,
                 SubscriptionIdentifiersAvailable = true,
-                WildcardSubscriptionAvailable = true
+                WildcardSubscriptionAvailable = true,
+                // Absence indicates max QoS level.
+                MaximumQoS = MqttQualityOfServiceLevel.ExactlyOnce
             };
 
             var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
@@ -206,13 +208,17 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodeConnectPacket(ArraySegment<byte> body)
+        MqttPacket DecodeConnectPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
 
-            var packet = new MqttConnectPacket();
+            var packet = new MqttConnectPacket
+            {
+                // If the Request Problem Information is absent, the value of 1 is used.
+                RequestProblemInformation = true 
+            };
 
             var protocolName = _bufferReader.ReadString();
             var protocolVersion = _bufferReader.ReadByte();
@@ -295,37 +301,37 @@ namespace MQTTnet.Formatter.V5
                 {
                     if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.PayloadFormatIndicator)
                     {
-                        packet.WillPayloadFormatIndicator = propertiesReader.ReadPayloadFormatIndicator();
+                        packet.WillPayloadFormatIndicator = willPropertiesReader.ReadPayloadFormatIndicator();
                     }
                     else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.MessageExpiryInterval)
                     {
-                        packet.WillMessageExpiryInterval = propertiesReader.ReadMessageExpiryInterval();
+                        packet.WillMessageExpiryInterval = willPropertiesReader.ReadMessageExpiryInterval();
                     }
                     else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.ResponseTopic)
                     {
-                        packet.WillResponseTopic = propertiesReader.ReadResponseTopic();
+                        packet.WillResponseTopic = willPropertiesReader.ReadResponseTopic();
                     }
                     else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.CorrelationData)
                     {
-                        packet.WillCorrelationData = propertiesReader.ReadCorrelationData();
+                        packet.WillCorrelationData = willPropertiesReader.ReadCorrelationData();
                     }
                     else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.ContentType)
                     {
-                        packet.WillContentType = propertiesReader.ReadContentType();
+                        packet.WillContentType = willPropertiesReader.ReadContentType();
                     }
                     else if (willPropertiesReader.CurrentPropertyId == MqttPropertyId.WillDelayInterval)
                     {
-                        packet.WillDelayInterval = propertiesReader.ReadWillDelayInterval();
+                        packet.WillDelayInterval = willPropertiesReader.ReadWillDelayInterval();
                     }
                     else
                     {
-                        propertiesReader.ThrowInvalidPropertyIdException(typeof(MqttPublishPacket));
+                        willPropertiesReader.ThrowInvalidPropertyIdException(typeof(MqttPublishPacket));
                     }
                 }
 
                 packet.WillTopic = _bufferReader.ReadString();
                 packet.WillMessage = _bufferReader.ReadBinaryData();
-                packet.WillUserProperties = propertiesReader.CollectedUserProperties;
+                packet.WillUserProperties = willPropertiesReader.CollectedUserProperties;
             }
 
             if (usernameFlag)
@@ -341,7 +347,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodeDisconnectPacket(ArraySegment<byte> body)
+        MqttPacket DecodeDisconnectPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -373,12 +379,12 @@ namespace MQTTnet.Formatter.V5
                 }
             }
 
-            packet.UserProperties = packet.UserProperties;
+            packet.UserProperties = propertiesReader.CollectedUserProperties;
 
             return packet;
         }
         
-        MqttBasePacket DecodePubAckPacket(ArraySegment<byte> body)
+        MqttPacket DecodePubAckPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -415,7 +421,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodePubCompPacket(ArraySegment<byte> body)
+        MqttPacket DecodePubCompPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -453,7 +459,7 @@ namespace MQTTnet.Formatter.V5
         }
 
 
-        MqttBasePacket DecodePublishPacket(byte header, ArraySegment<byte> body)
+        MqttPacket DecodePublishPacket(byte header, ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -528,7 +534,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodePubRecPacket(ArraySegment<byte> body)
+        MqttPacket DecodePubRecPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -565,7 +571,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodePubRelPacket(ArraySegment<byte> body)
+        MqttPacket DecodePubRelPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -602,7 +608,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodeSubAckPacket(ArraySegment<byte> body)
+        MqttPacket DecodeSubAckPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -626,8 +632,8 @@ namespace MQTTnet.Formatter.V5
                 }
             }
 
-            packet.UserProperties = packet.UserProperties;
-
+            packet.UserProperties = propertiesReader.CollectedUserProperties;
+            
             while (!_bufferReader.EndOfStream)
             {
                 var reasonCode = (MqttSubscribeReasonCode)_bufferReader.ReadByte();
@@ -637,7 +643,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodeSubscribePacket(ArraySegment<byte> body)
+        MqttPacket DecodeSubscribePacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -687,7 +693,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodeUnsubAckPacket(ArraySegment<byte> body)
+        MqttPacket DecodeUnsubAckPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 
@@ -713,6 +719,8 @@ namespace MQTTnet.Formatter.V5
 
             packet.UserProperties = propertiesReader.CollectedUserProperties;
 
+            packet.ReasonCodes = new List<MqttUnsubscribeReasonCode>(_bufferReader.BytesLeft);
+            
             while (!_bufferReader.EndOfStream)
             {
                 var reasonCode = (MqttUnsubscribeReasonCode)_bufferReader.ReadByte();
@@ -722,7 +730,7 @@ namespace MQTTnet.Formatter.V5
             return packet;
         }
 
-        MqttBasePacket DecodeUnsubscribePacket(ArraySegment<byte> body)
+        MqttPacket DecodeUnsubscribePacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
 

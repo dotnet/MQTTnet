@@ -124,6 +124,8 @@ namespace MQTTnet.Implementations
             {
                 throw new ArgumentNullException(nameof(host));
             }
+            
+            cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
@@ -135,8 +137,6 @@ namespace MQTTnet.Implementations
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(_socketDisposeAction))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
 #if NET452 || NET461
                     await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, host, port, null).ConfigureAwait(false);
 #else
@@ -151,6 +151,11 @@ namespace MQTTnet.Implementations
                 if (socketException.SocketErrorCode == SocketError.OperationAborted)
                 {
                     throw new OperationCanceledException();
+                }
+
+                if (socketException.SocketErrorCode == SocketError.TimedOut)
+                {
+                    throw new MqttCommunicationTimedOutException();
                 }
 
                 throw new MqttCommunicationException($"Error while connecting with host '{host}:{port}'.", socketException);
@@ -213,7 +218,7 @@ namespace MQTTnet.Implementations
         }
 
 #if NET452 || NET461
-        class SocketWrapper
+        sealed class SocketWrapper
         {
             readonly Socket _socket;
             readonly ArraySegment<byte> _buffer;

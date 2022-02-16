@@ -4,7 +4,7 @@
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttPingReqPacket : MqttBasePacket
+    public sealed class MqttPingReqPacket : MqttPacket
     {
         // This is a minor performance improvement.
         public static readonly MqttPingReqPacket Instance = new MqttPingReqPacket();

@@ -7,17 +7,21 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttPubCompPacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public sealed class MqttPubCompPacket : MqttPacketWithIdentifier
     {
-        public ushort PacketIdentifier { get; set; }
-
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public MqttPubCompReasonCode ReasonCode { get; set; } = MqttPubCompReasonCode.Success;
 
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public string ReasonString { get; set; }
 
-        // MQTTv5+
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
 
         public override string ToString()

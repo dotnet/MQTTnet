@@ -22,7 +22,7 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class SerializerBenchmark : BaseBenchmark
     {
-        MqttBasePacket _packet;
+        MqttPacket _packet;
         ArraySegment<byte> _serializedPacket;
         IMqttPacketFormatter _serializer;
         MqttBufferWriter _bufferWriter;
@@ -37,7 +37,7 @@ namespace MQTTnet.Benchmarks
 
             _bufferWriter = new MqttBufferWriter(4096, 65535);
             _serializer = new MqttV3PacketFormatter(_bufferWriter, MqttProtocolVersion.V311);
-            _serializedPacket = _serializer.Encode(_packet).ToArray();
+            _serializedPacket = _serializer.Encode(_packet).Join();
         }
 
         [Benchmark]

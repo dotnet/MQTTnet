@@ -73,7 +73,7 @@ namespace MQTTnet.AspNetCore
 
         IHttpContextFeature Http => Connection.Features.Get<IHttpContextFeature>();
 
-        public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             if (Connection is TcpConnection tcp && !tcp.IsConnected)
             {
@@ -92,7 +92,7 @@ namespace MQTTnet.AspNetCore
             return Task.CompletedTask;
         }
 
-        public async Task<MqttBasePacket> ReceivePacketAsync(CancellationToken cancellationToken)
+        public async Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken)
         {
             var input = Connection.Transport.Input;
 
@@ -167,13 +167,14 @@ namespace MQTTnet.AspNetCore
             BytesSent = 0;
         }
 
-        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             var formatter = PacketFormatterAdapter;
+            
             using (await _writerLock.WaitAsync(cancellationToken).ConfigureAwait(false))
             {
                 var buffer = formatter.Encode(packet);
-                var msg = buffer.ToArray().AsMemory();
+                var msg = buffer.Join().AsMemory();
                 var output = _output;
                 var result = await output.WriteAsync(msg, cancellationToken).ConfigureAwait(false);
                 if (result.IsCompleted)

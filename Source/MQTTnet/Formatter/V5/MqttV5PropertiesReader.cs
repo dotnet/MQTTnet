@@ -10,7 +10,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5
 {
-    public sealed class MqttV5PropertiesReader
+    public struct MqttV5PropertiesReader
     {
         readonly MqttBufferReader _body;
         readonly int _length;
@@ -24,8 +24,15 @@ namespace MQTTnet.Formatter.V5
             {
                 _length = (int)body.ReadVariableByteInteger();
             }
+            else
+            {
+                _length = 0;
+            }
 
             _targetOffset = body.Position + _length;
+
+            CollectedUserProperties = null;
+            CurrentPropertyId = MqttPropertyId.None;
         }
 
         public List<MqttUserProperty> CollectedUserProperties { get; private set; }

@@ -28,7 +28,7 @@ namespace MQTTnet.Formatter
             };
 
             // MQTTv5.0.0 only.
-            unsubAckPacket.ReasonCodes.AddRange(mqttUnsubscribeResult.ReasonCodes);
+            unsubAckPacket.ReasonCodes = mqttUnsubscribeResult.ReasonCodes;
 
             return unsubAckPacket;
         }

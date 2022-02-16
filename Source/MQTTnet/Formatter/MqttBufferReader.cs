@@ -3,10 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Implementations;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter
 {
@@ -20,6 +22,8 @@ namespace MQTTnet.Formatter
         public bool EndOfStream => _position == _length;
         
         public int Position => _position;
+        
+        public int BytesLeft => _length - _position;
 
         public byte[] ReadBinaryData()
         {

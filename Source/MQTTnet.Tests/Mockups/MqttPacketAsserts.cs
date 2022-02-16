@@ -9,12 +9,12 @@ namespace MQTTnet.Tests.Mockups
 {
     public sealed class MqttPacketAsserts
     {
-        public void AssertIsConnectPacket(MqttBasePacket packet)
+        public void AssertIsConnectPacket(MqttPacket packet)
         {
             Assert.AreEqual(packet.GetType(), typeof(MqttConnectPacket));
         }
         
-        public void AssertIsConnAckPacket(MqttBasePacket packet)
+        public void AssertIsConnAckPacket(MqttPacket packet)
         {
             Assert.AreEqual(packet.GetType(), typeof(MqttConnAckPacket));
         }

@@ -9,6 +9,7 @@ namespace MQTTnet.Server
     public sealed class MqttServerOptions
     {
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(15);
+        
         public MqttServerTcpEndpointOptions DefaultEndpointOptions { get; } = new MqttServerTcpEndpointOptions();
 
         public bool EnablePersistentSessions { get; set; }

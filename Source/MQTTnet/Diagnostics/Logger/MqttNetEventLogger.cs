@@ -7,7 +7,7 @@ using System;
 namespace MQTTnet.Diagnostics
 {
     /// <summary>
-    /// This logger fires an event when a new message was published.
+    ///     This logger fires an event when a new message was published.
     /// </summary>
     public sealed class MqttNetEventLogger : IMqttNetLogger
     {
@@ -18,9 +18,9 @@ namespace MQTTnet.Diagnostics
 
         public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
 
-        public string LogId { get; }
-
         public bool IsEnabled => LogMessagePublished != null;
+
+        public string LogId { get; }
 
         public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
         {
@@ -32,7 +32,7 @@ namespace MQTTnet.Diagnostics
                 // might be null after preparing the message.
                 return;
             }
-            
+
             if (parameters?.Length > 0 && message?.Length > 0)
             {
                 try
@@ -57,7 +57,7 @@ namespace MQTTnet.Diagnostics
                 Message = message,
                 Exception = exception
             };
-            
+
             eventHandler.Invoke(this, new MqttNetLogMessagePublishedEventArgs(logMessage));
         }
     }

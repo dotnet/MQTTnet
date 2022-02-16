@@ -4,7 +4,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -66,7 +65,7 @@ namespace MQTTnet.Adapter
             // intended for debugging etc. so that this is OK.
             var bufferCopy = buffer.ToArray();
 
-            InspectPacket(bufferCopy.ToArray(), MqttPacketFlowDirection.Outbound);
+            InspectPacket(bufferCopy, MqttPacketFlowDirection.Outbound);
         }
 
         public void FillReceiveBuffer(byte[] buffer)

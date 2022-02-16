@@ -56,9 +56,7 @@ namespace MQTTnet.LowLevelClient
             try
             {
                 _logger.Verbose("Trying to connect with server '{0}'.", options.ChannelOptions);
-                
-                // Do not use default communication timeout. It gets removed in future versions.
-                await newAdapter.ConnectAsync(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
+                await newAdapter.ConnectAsync(cancellationToken).ConfigureAwait(false);
                 _logger.Verbose("Connection with server established.");
             }
             catch (Exception)
@@ -81,7 +79,7 @@ namespace MQTTnet.LowLevelClient
             _adapter = null;
         }
 
-        public async Task<MqttBasePacket> ReceiveAsync(CancellationToken cancellationToken)
+        public async Task<MqttPacket> ReceiveAsync(CancellationToken cancellationToken)
         {
             var adapter = _adapter;
             if (adapter == null)
@@ -100,7 +98,7 @@ namespace MQTTnet.LowLevelClient
             }
         }
 
-        public async Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        public async Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             if (packet is null)
             {

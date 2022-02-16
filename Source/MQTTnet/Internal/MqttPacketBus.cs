@@ -109,7 +109,7 @@ namespace MQTTnet.Internal
             _semaphore.Release();
         }
 
-        public List<MqttBasePacket> ExportPackets(MqttPacketBusPartition partition)
+        public List<MqttPacket> ExportPackets(MqttPacketBusPartition partition)
         {
             lock (_syncRoot)
             {

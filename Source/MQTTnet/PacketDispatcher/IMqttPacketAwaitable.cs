@@ -11,7 +11,7 @@ namespace MQTTnet.PacketDispatcher
     {
         MqttPacketAwaitableFilter Filter { get; }
         
-        void Complete(MqttBasePacket packet);
+        void Complete(MqttPacket packet);
 
         void Fail(Exception exception);
 

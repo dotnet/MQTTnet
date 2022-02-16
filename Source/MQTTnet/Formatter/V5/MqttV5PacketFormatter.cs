@@ -17,12 +17,12 @@ namespace MQTTnet.Formatter.V5
             _encoder = new MqttV5PacketEncoder(bufferWriter);
         }
 
-        public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
+        public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
             return _decoder.Decode(receivedMqttPacket);
         }
 
-        public MqttPacketBuffer Encode(MqttBasePacket mqttPacket)
+        public MqttPacketBuffer Encode(MqttPacket mqttPacket)
         {
             return _encoder.Encode(mqttPacket);
         }

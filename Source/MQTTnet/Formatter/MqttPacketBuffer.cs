@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.Formatter
@@ -33,7 +34,21 @@ namespace MQTTnet.Formatter
         
         public ArraySegment<byte> Payload { get; }
 
-        public ArraySegment<byte> ToArray()
+        public byte[] ToArray()
+        {
+            if (Packet.Count == 0)
+            {
+                return Packet.ToArray();
+            }
+
+            var buffer = new byte[Length];
+            Array.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
+            Array.Copy(Payload.Array, Payload.Offset, buffer, Packet.Count, Payload.Count);
+
+            return buffer;
+        }
+        
+        public ArraySegment<byte> Join()
         {
             if (Packet.Count == 0)
             {

@@ -7,7 +7,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttDisconnectPacket : MqttBasePacket
+    public sealed class MqttDisconnectPacket : MqttPacket
     {
         /// <summary>
         ///     Added in MQTTv5.

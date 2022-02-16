@@ -20,7 +20,7 @@ namespace MQTTnet.Formatter.V5
             _bufferWriter = bufferWriter ?? throw new ArgumentNullException(nameof(bufferWriter));
         }
 
-        public MqttPacketBuffer Encode(MqttBasePacket packet)
+        public MqttPacketBuffer Encode(MqttPacket packet)
         {
             if (packet == null)
             {
@@ -218,7 +218,7 @@ namespace MQTTnet.Formatter.V5
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Disconnect);
         }
 
-        byte EncodePacket(MqttBasePacket packet)
+        byte EncodePacket(MqttPacket packet)
         {
             switch (packet)
             {
@@ -525,7 +525,7 @@ namespace MQTTnet.Formatter.V5
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Unsubscibe, 0x02);
         }
 
-        static void ThrowIfPacketIdentifierIsInvalid(ushort packetIdentifier, MqttBasePacket packet)
+        static void ThrowIfPacketIdentifierIsInvalid(ushort packetIdentifier, MqttPacket packet)
         {
             // SUBSCRIBE, UNSUBSCRIBE, and PUBLISH(in cases where QoS > 0) Control Packets MUST contain a non-zero 16 - bit Packet Identifier[MQTT - 2.3.1 - 1]. 
 

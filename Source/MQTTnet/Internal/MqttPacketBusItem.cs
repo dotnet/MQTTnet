@@ -12,12 +12,12 @@ namespace MQTTnet.Internal
     {
         readonly CrossPlatformPromise<int> _promise = new CrossPlatformPromise<int>();
 
-        public MqttPacketBusItem(MqttBasePacket packet)
+        public MqttPacketBusItem(MqttPacket packet)
         {
             Packet = packet ?? throw new ArgumentNullException(nameof(packet));
         }
         
-        public MqttBasePacket Packet { get; }
+        public MqttPacket Packet { get; }
 
         public event EventHandler Delivered;
 

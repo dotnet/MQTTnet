@@ -20,7 +20,7 @@ namespace MQTTnet.Client
             if (unsubAckPacket == null) throw new ArgumentNullException(nameof(unsubAckPacket));
 
             // MQTTv3.1.1 has no reason code at all!
-            if (unsubAckPacket.ReasonCodes.Count != 0 && unsubAckPacket.ReasonCodes.Count != unsubscribePacket.TopicFilters.Count)
+            if (unsubAckPacket.ReasonCodes != null && unsubAckPacket.ReasonCodes.Count != unsubscribePacket.TopicFilters.Count)
             {
                 throw new MqttProtocolViolationException(
                     "The return codes are not matching the topic filters [MQTT-3.9.3-1].");
@@ -47,7 +47,7 @@ namespace MQTTnet.Client
         {
             var resultCode = MqttClientUnsubscribeResultCode.Success;
             
-            if (unsubAckPacket.ReasonCodes.Any())
+            if (unsubAckPacket.ReasonCodes != null)
             {
                 // MQTTv3.1.1 has no reason code and no return code!.
                 resultCode = (MqttClientUnsubscribeResultCode) unsubAckPacket.ReasonCodes[index];

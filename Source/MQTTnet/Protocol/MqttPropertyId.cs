@@ -6,6 +6,8 @@ namespace MQTTnet.Protocol
 {
     public enum MqttPropertyId
     {
+        None = 0,
+        
         PayloadFormatIndicator = 1,
         MessageExpiryInterval = 2,
         ContentType = 3,

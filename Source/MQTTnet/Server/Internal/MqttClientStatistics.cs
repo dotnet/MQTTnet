@@ -51,7 +51,7 @@ namespace MQTTnet.Server
         
         public long ReceivedPacketsCount => Interlocked.Read(ref _receivedPacketsCount);
         
-        public void HandleReceivedPacket(MqttBasePacket packet)
+        public void HandleReceivedPacket(MqttPacket packet)
         {
             if (packet == null)
             {
@@ -74,7 +74,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public void HandleSentPacket(MqttBasePacket packet)
+        public void HandleSentPacket(MqttPacket packet)
         {
             if (packet == null)
             {

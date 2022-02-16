@@ -7,8 +7,11 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttConnAckPacket : MqttBasePacket
+    public sealed class MqttConnAckPacket : MqttPacket
     {
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
         public string AssignedClientIdentifier { get; set; }
 
         public byte[] AuthenticationData { get; set; }
@@ -16,16 +19,16 @@ namespace MQTTnet.Packets
         public string AuthenticationMethod { get; set; }
 
         /// <summary>
-        ///     Added in MQTT 3.1.1.
+        ///     Added in MQTTv3.1.1.
         /// </summary>
         public bool IsSessionPresent { get; set; }
 
         public uint MaximumPacketSize { get; set; }
 
-        public MqttQualityOfServiceLevel MaximumQoS { get; set; } = MqttQualityOfServiceLevel.ExactlyOnce;
+        public MqttQualityOfServiceLevel MaximumQoS { get; set; }
 
         /// <summary>
-        ///     Added in MQTT 5.0.0.
+        ///     Added in MQTTv5.
         /// </summary>
         public MqttConnectReasonCode ReasonCode { get; set; }
 

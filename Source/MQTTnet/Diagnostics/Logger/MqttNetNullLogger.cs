@@ -11,6 +11,8 @@ namespace MQTTnet.Diagnostics
     /// </summary>
     public sealed class MqttNetNullLogger : IMqttNetLogger
     {
+        public static MqttNetNullLogger Instance { get; } = new MqttNetNullLogger();
+        
         public bool IsEnabled { get; }
 
         public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)

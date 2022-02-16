@@ -6,11 +6,9 @@ using System.Collections.Generic;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttUnsubscribePacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public sealed class MqttUnsubscribePacket : MqttPacketWithIdentifier
     {
-        public ushort PacketIdentifier { get; set; }
-
-        public List<string> TopicFilters { get; } = new List<string>();
+        public List<string> TopicFilters { get; set; } = new List<string>();
 
         /// <summary>
         ///     Added in MQTTv5.

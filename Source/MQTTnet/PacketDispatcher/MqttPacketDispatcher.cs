@@ -40,12 +40,12 @@ namespace MQTTnet.PacketDispatcher
             }
         }
         
-        public bool TryDispatch(MqttBasePacket packet)
+        public bool TryDispatch(MqttPacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
             
             ushort identifier = 0;
-            if (packet is IMqttPacketWithIdentifier packetWithIdentifier)
+            if (packet is MqttPacketWithIdentifier packetWithIdentifier)
             {
                 identifier = packetWithIdentifier.PacketIdentifier;
             }
@@ -80,7 +80,7 @@ namespace MQTTnet.PacketDispatcher
             return awaitables.Count > 0;
         }
         
-        public MqttPacketAwaitable<TResponsePacket> AddAwaitable<TResponsePacket>(ushort packetIdentifier) where TResponsePacket : MqttBasePacket
+        public MqttPacketAwaitable<TResponsePacket> AddAwaitable<TResponsePacket>(ushort packetIdentifier) where TResponsePacket : MqttPacket
         {
             var awaitable = new MqttPacketAwaitable<TResponsePacket>(packetIdentifier, this);
 

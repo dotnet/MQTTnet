@@ -54,6 +54,9 @@ namespace MQTTnet.Tests.Client
                     try
                     {
                         await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+                        
+                        await LongTestDelay();
+                        
                         await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
                     }
                     catch

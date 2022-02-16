@@ -23,7 +23,7 @@ namespace MQTTnet.Server
         /// <summary>
         /// Gets or sets the MQTT packet which was received or will be sent.
         /// </summary>
-        public MqttBasePacket Packet { get; set; }
+        public MqttPacket Packet { get; set; }
 
         /// <summary>
         /// Gets or sets whether the packet should be processed or not.

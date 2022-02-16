@@ -7,7 +7,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttPublishPacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public sealed class MqttPublishPacket : MqttPacketWithIdentifier
     {
         public string ContentType { get; set; }
 
@@ -16,7 +16,6 @@ namespace MQTTnet.Packets
         public bool Dup { get; set; }
 
         public uint MessageExpiryInterval { get; set; }
-        public ushort PacketIdentifier { get; set; }
 
         public byte[] Payload { get; set; }
 

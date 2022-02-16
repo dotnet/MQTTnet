@@ -15,7 +15,7 @@ namespace MQTTnet.AspNetCore
     {
         public static bool TryDecode(this MqttPacketFormatterAdapter formatter, 
             in ReadOnlySequence<byte> input, 
-            out MqttBasePacket packet, 
+            out MqttPacket packet, 
             out SequencePosition consumed, 
             out SequencePosition observed,
             out int bytesRead)

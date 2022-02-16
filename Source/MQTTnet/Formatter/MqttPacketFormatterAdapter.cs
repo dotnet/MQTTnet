@@ -31,7 +31,7 @@ namespace MQTTnet.Formatter
 
         public MqttProtocolVersion ProtocolVersion { get; private set; } = MqttProtocolVersion.Unknown;
 
-        public MqttBasePacket Decode(ReceivedMqttPacket receivedMqttPacket)
+        public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {
             ThrowIfFormatterNotSet();
 
@@ -44,7 +44,7 @@ namespace MQTTnet.Formatter
             UseProtocolVersion(protocolVersion);
         }
 
-        public MqttPacketBuffer Encode(MqttBasePacket packet)
+        public MqttPacketBuffer Encode(MqttPacket packet)
         {
             ThrowIfFormatterNotSet();
             return _formatter.Encode(packet);

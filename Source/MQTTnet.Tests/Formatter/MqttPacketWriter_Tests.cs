@@ -65,10 +65,10 @@ namespace MQTTnet.Tests.Formatter
             writer.WriteBinaryData(new byte[3]);
 
             var readPayload = new ArraySegment<byte>(writer.GetBuffer(), 0, writer.Length).ToArray();
-            
+
             var reader = new MqttBufferReader();
             reader.SetBuffer(readPayload, 0, readPayload.Length);
-            
+
             for (var i = 0; i < 100000; i++)
             {
                 reader.Seek(0);

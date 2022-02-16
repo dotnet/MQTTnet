@@ -25,7 +25,7 @@ namespace MQTTnet.Formatter
             return pubRecPacket;
         }
 
-        public MqttBasePacket Create(MqttPublishPacket publishPacket, InterceptingPublishEventArgs interceptingPublishEventArgs)
+        public MqttPacket Create(MqttPublishPacket publishPacket, InterceptingPublishEventArgs interceptingPublishEventArgs)
         {
             if (publishPacket == null)
             {

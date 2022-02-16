@@ -7,7 +7,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttConnectPacket : MqttBasePacket
+    public sealed class MqttConnectPacket : MqttPacket
     {
         public byte[] AuthenticationData { get; set; }
 

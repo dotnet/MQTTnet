@@ -66,21 +66,14 @@ namespace MQTTnet.Adapter
 
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
-        public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
 
             try
             {
-                if (timeout == TimeSpan.Zero)
-                {
-                    await _channel.ConnectAsync(cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    await MqttTaskTimeout.WaitAsync(t => _channel.ConnectAsync(t), timeout, cancellationToken).ConfigureAwait(false);
-                }
+                await _channel.ConnectAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -109,7 +102,7 @@ namespace MQTTnet.Adapter
             }
         }
 
-        public async Task<MqttBasePacket> ReceivePacketAsync(CancellationToken cancellationToken)
+        public async Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
@@ -176,7 +169,7 @@ namespace MQTTnet.Adapter
             Interlocked.Exchange(ref _bytesSent, 0L);
         }
 
-        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 

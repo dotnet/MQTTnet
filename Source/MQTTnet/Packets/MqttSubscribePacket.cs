@@ -7,10 +7,8 @@ using System.Linq;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttSubscribePacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public sealed class MqttSubscribePacket : MqttPacketWithIdentifier
     {
-        public ushort PacketIdentifier { get; set; }
-
         /// <summary>
         ///     It is a Protocol Error if the Subscription Identifier has a value of 0.
         /// </summary>

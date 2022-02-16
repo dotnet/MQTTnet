@@ -562,7 +562,10 @@ namespace MQTTnet.Extensions.ManagedClient
             MqttClientConnectResult connectResult = null;
             try
             {
-                connectResult = await InternalClient.ConnectAsync(Options.ClientOptions, cancellationToken).ConfigureAwait(false);
+                using (var connectTimeout = new CancellationTokenSource(Options.ClientOptions.CommunicationTimeout))
+                {
+                    connectResult = await InternalClient.ConnectAsync(Options.ClientOptions, connectTimeout.Token).ConfigureAwait(false);
+                }
 
                 if (connectResult.ResultCode != MqttClientConnectResultCode.Success)
                 {
@@ -654,9 +657,8 @@ namespace MQTTnet.Extensions.ManagedClient
             try
             {
                 var oldConnectionState = InternalClient.IsConnected;
-
                 var connectionState = await ReconnectIfRequiredAsync(cancellationToken).ConfigureAwait(false);
-
+                
                 if (connectionState == ReconnectionResult.NotConnected)
                 {
                     StopPublishing();

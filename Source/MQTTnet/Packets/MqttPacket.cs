@@ -4,8 +4,7 @@
 
 namespace MQTTnet.Packets
 {
-    public interface IMqttPacketWithIdentifier
+    public abstract class MqttPacket
     {
-        ushort PacketIdentifier { get; set; }
     }
 }

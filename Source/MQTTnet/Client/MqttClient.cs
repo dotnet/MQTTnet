@@ -133,8 +133,8 @@ namespace MQTTnet.Client
 
                 using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))
                 {
-                    _logger.Verbose("Trying to connect with server '{0}' (Timeout={1}).", options.ChannelOptions, options.CommunicationTimeout);
-                    await adapter.ConnectAsync(options.CommunicationTimeout, effectiveCancellationToken.Token).ConfigureAwait(false);
+                    _logger.Verbose("Trying to connect with server '{0}'.", options.ChannelOptions);
+                    await adapter.ConnectAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
                     _logger.Verbose("Connection with server established.");
 
                     _publishPacketReceiverQueue?.Dispose();
@@ -461,7 +461,7 @@ namespace MQTTnet.Client
             }
         }
 
-        Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -470,12 +470,12 @@ namespace MQTTnet.Client
             return _adapter.SendPacketAsync(packet, cancellationToken);
         }
 
-        async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttBasePacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttBasePacket
+        async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttPacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttPacket
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             ushort packetIdentifier = 0;
-            if (requestPacket is IMqttPacketWithIdentifier packetWithIdentifier)
+            if (requestPacket is MqttPacketWithIdentifier packetWithIdentifier)
             {
                 packetIdentifier = packetWithIdentifier.PacketIdentifier;
             }
@@ -494,7 +494,7 @@ namespace MQTTnet.Client
 
                 try
                 {
-                    return await packetAwaitable.WaitOneAsync(Options.CommunicationTimeout).ConfigureAwait(false);
+                    return await packetAwaitable.WaitOneAsync(cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -569,7 +569,7 @@ namespace MQTTnet.Client
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    MqttBasePacket packet;
+                    MqttPacket packet;
                     var packetTask = _adapter.ReceivePacketAsync(cancellationToken);
 
                     if (packetTask.IsCompleted)
@@ -625,7 +625,7 @@ namespace MQTTnet.Client
             }
         }
 
-        async Task TryProcessReceivedPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        async Task TryProcessReceivedPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             try
             {

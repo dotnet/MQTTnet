@@ -196,7 +196,7 @@ namespace MQTTnet.Formatter.V5
 
         public void WriteSubscriptionIdentifier(uint value)
         {
-            WriteAsVariableLengthInteger(MqttPropertyId.SubscriptionIdentifier, value);
+            WriteAsVariableByteInteger(MqttPropertyId.SubscriptionIdentifier, value);
         }
 
         public void WriteSubscriptionIdentifiers(ICollection<uint> value)
@@ -208,7 +208,7 @@ namespace MQTTnet.Formatter.V5
 
             foreach (var subscriptionIdentifier in value)
             {
-                WriteAsVariableLengthInteger(MqttPropertyId.SubscriptionIdentifier, subscriptionIdentifier);
+                WriteAsVariableByteInteger(MqttPropertyId.SubscriptionIdentifier, subscriptionIdentifier);
             }
         }
 
@@ -342,7 +342,7 @@ namespace MQTTnet.Formatter.V5
             _bufferWriter.WriteByte((byte)value);
         }
 
-        void WriteAsVariableLengthInteger(MqttPropertyId id, uint value)
+        void WriteAsVariableByteInteger(MqttPropertyId id, uint value)
         {
             _bufferWriter.WriteByte((byte)id);
             _bufferWriter.WriteVariableByteInteger(value);

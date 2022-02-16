@@ -8,10 +8,8 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttSubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public sealed class MqttSubAckPacket : MqttPacketWithIdentifier
     {
-        public ushort PacketIdentifier { get; set; }
-
         /// <summary>
         ///     Reason Code is used in MQTTv5.0.0 and backward compatible to v.3.1.1. Return Code is used in MQTTv3.1.1
         /// </summary>

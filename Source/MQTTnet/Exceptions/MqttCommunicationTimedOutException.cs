@@ -6,9 +6,9 @@ using System;
 
 namespace MQTTnet.Exceptions
 {
-    public class MqttCommunicationTimedOutException : MqttCommunicationException
+    public sealed class MqttCommunicationTimedOutException : MqttCommunicationException
     {
-        public MqttCommunicationTimedOutException()
+        public MqttCommunicationTimedOutException() : base("The operation has timed out.")
         {
         }
 

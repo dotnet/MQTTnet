@@ -32,7 +32,7 @@ namespace MQTTnet.Benchmarks
 
             var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
             
-            var serializedPacket = Join(serializer.Encode(_packet).ToArray());
+            var serializedPacket = Join(serializer.Encode(_packet).Join());
 
             _iterations = 10000;
 

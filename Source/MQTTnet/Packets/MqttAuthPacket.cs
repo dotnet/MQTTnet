@@ -8,7 +8,7 @@ using MQTTnet.Protocol;
 namespace MQTTnet.Packets
 {
     /// <summary>Added in MQTTv5.0.0.</summary>
-    public sealed class MqttAuthPacket : MqttBasePacket
+    public sealed class MqttAuthPacket : MqttPacket
     {
         public byte[] AuthenticationData { get; set; }
 

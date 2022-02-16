@@ -7,10 +7,8 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttPubRecPacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public sealed class MqttPubRecPacket : MqttPacketWithIdentifier
     {
-        public ushort PacketIdentifier { get; set; }
-
         /// <summary>
         ///     Added in MQTTv5.
         /// </summary>

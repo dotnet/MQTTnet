@@ -20,76 +20,6 @@ namespace MQTTnet.Tests.Client
     public sealed class LowLevelMqttClient_Tests : BaseTestClass
     {
         [TestMethod]
-        [ExpectedException(typeof(MqttCommunicationException))]
-        public async Task Connect_To_Not_Existing_Server()
-        {
-            var client = new MqttFactory().CreateLowLevelMqttClient();
-            var options = new MqttClientOptionsBuilder()
-                .WithTcpServer("localhost")
-                .Build();
-
-            await client.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
-        }
-        
-        [TestMethod]
-        public async Task Maintain_IsConnected_Property()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var server = await testEnvironment.StartServer();
-
-                using (var lowLevelClient = testEnvironment.CreateLowLevelClient())
-                {
-                    Assert.IsFalse(lowLevelClient.IsConnected);
-
-                    await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);
-                    
-                    Assert.IsTrue(lowLevelClient.IsConnected);
-
-                    await server.StopAsync();
-                    server.Dispose();
-                    
-                    await LongTestDelay();
-                    
-                    Assert.IsTrue(lowLevelClient.IsConnected);
-
-                    try
-                    {
-                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
-                        
-                        await LongTestDelay();
-                        
-                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
-                        
-                        await LongTestDelay();
-                        
-                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
-                    }
-                    catch
-                    {
-                    }
-                    
-                    Assert.IsFalse(lowLevelClient.IsConnected);
-                }
-            }
-        }
-
-        [TestMethod]
-        public async Task Connect_And_Disconnect()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                await testEnvironment.StartServer();
-
-                var lowLevelClient = testEnvironment.Factory.CreateLowLevelMqttClient();
-
-                await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);
-
-                await lowLevelClient.DisconnectAsync(CancellationToken.None);
-            }
-        }
-
-        [TestMethod]
         public async Task Authenticate()
         {
             using (var testEnvironment = CreateTestEnvironment())
@@ -111,26 +41,38 @@ namespace MQTTnet.Tests.Client
         }
 
         [TestMethod]
-        public async Task Subscribe()
+        public async Task Connect_And_Disconnect()
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
-                var factory = new MqttFactory();
-                var lowLevelClient = factory.CreateLowLevelMqttClient();
+                var lowLevelClient = testEnvironment.Factory.CreateLowLevelMqttClient();
 
                 await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);
 
-                await Authenticate(lowLevelClient).ConfigureAwait(false);
-
-                var receivedPacket = await Subscribe(lowLevelClient, "a").ConfigureAwait(false);
-
-                await lowLevelClient.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
-
-                Assert.IsNotNull(receivedPacket);
-                Assert.AreEqual(MqttSubscribeReasonCode.GrantedQoS0, receivedPacket.ReasonCodes[0]);
+                await lowLevelClient.DisconnectAsync(CancellationToken.None);
             }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(MqttCommunicationException))]
+        public async Task Connect_To_Not_Existing_Broker()
+        {
+            var client = new MqttFactory().CreateLowLevelMqttClient();
+            var options = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
+
+            await client.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
+        }
+        
+        [TestMethod]
+        [ExpectedException(typeof(MqttCommunicationException))]
+        public async Task Connect_To_Wrong_Host()
+        {
+            var client = new MqttFactory().CreateLowLevelMqttClient();
+            var options = new MqttClientOptionsBuilder().WithTcpServer("123.456.789.10").Build();
+
+            await client.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
         }
 
         [TestMethod]
@@ -140,7 +82,7 @@ namespace MQTTnet.Tests.Client
             {
                 testEnvironment.ServerPort = 8364;
                 var server = await testEnvironment.StartServer();
-                
+
                 var client = await testEnvironment.ConnectLowLevelClient(o => o.WithTimeout(TimeSpan.Zero));
 
                 await Authenticate(client).ConfigureAwait(false);
@@ -169,34 +111,106 @@ namespace MQTTnet.Tests.Client
             }
         }
 
+        [TestMethod]
+        public async Task Maintain_IsConnected_Property()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var server = await testEnvironment.StartServer();
+
+                using (var lowLevelClient = testEnvironment.CreateLowLevelClient())
+                {
+                    Assert.IsFalse(lowLevelClient.IsConnected);
+
+                    var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).WithTimeout(TimeSpan.FromSeconds(1)).Build();
+                    
+                    await lowLevelClient.ConnectAsync(clientOptions, CancellationToken.None);
+
+                    Assert.IsTrue(lowLevelClient.IsConnected);
+
+                    await server.StopAsync();
+                    server.Dispose();
+
+                    await LongTestDelay();
+
+                    Assert.IsTrue(lowLevelClient.IsConnected);
+
+                    try
+                    {
+                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+
+                        await LongTestDelay();
+
+                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+
+                        await LongTestDelay();
+
+                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+                    }
+                    catch
+                    {
+                    }
+
+                    Assert.IsFalse(lowLevelClient.IsConnected);
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task Subscribe()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var factory = new MqttFactory();
+                var lowLevelClient = factory.CreateLowLevelMqttClient();
+
+                await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);
+
+                await Authenticate(lowLevelClient).ConfigureAwait(false);
+
+                var receivedPacket = await Subscribe(lowLevelClient, "a").ConfigureAwait(false);
+
+                await lowLevelClient.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+
+                Assert.IsNotNull(receivedPacket);
+                Assert.AreEqual(MqttSubscribeReasonCode.GrantedQoS0, receivedPacket.ReasonCodes[0]);
+            }
+        }
+
         async Task<MqttConnAckPacket> Authenticate(LowLevelMqttClient client)
         {
-            await client.SendAsync(new MqttConnectPacket
-            {
-                CleanSession = true,
-                ClientId = TestContext.TestName,
-                Username = "user",
-                Password = Encoding.UTF8.GetBytes("pass")
-            },
-            CancellationToken.None).ConfigureAwait(false);
+            await client.SendAsync(
+                    new MqttConnectPacket
+                    {
+                        CleanSession = true,
+                        ClientId = TestContext.TestName,
+                        Username = "user",
+                        Password = Encoding.UTF8.GetBytes("pass")
+                    },
+                    CancellationToken.None)
+                .ConfigureAwait(false);
 
             return await client.ReceiveAsync(CancellationToken.None).ConfigureAwait(false) as MqttConnAckPacket;
         }
 
         async Task<MqttSubAckPacket> Subscribe(LowLevelMqttClient client, string topic)
         {
-            await client.SendAsync(new MqttSubscribePacket
-            {
-                PacketIdentifier = 1,
-                TopicFilters =
-                {
-                    new MqttTopicFilter
+            await client.SendAsync(
+                    new MqttSubscribePacket
                     {
-                        Topic = topic
-                    }
-                }
-            },
-            CancellationToken.None).ConfigureAwait(false);
+                        PacketIdentifier = 1,
+                        TopicFilters =
+                        {
+                            new MqttTopicFilter
+                            {
+                                Topic = topic
+                            }
+                        }
+                    },
+                    CancellationToken.None)
+                .ConfigureAwait(false);
 
             return await client.ReceiveAsync(CancellationToken.None).ConfigureAwait(false) as MqttSubAckPacket;
         }

@@ -74,7 +74,7 @@ namespace MQTTnet.Implementations
             get => _socket.SendTimeout;
             set => _socket.SendTimeout = value;
         }
-
+        
         public EndPoint RemoteEndPoint => _socket.RemoteEndPoint;
 
         public bool ReuseAddress

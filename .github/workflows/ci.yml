@@ -64,12 +64,12 @@ jobs:
       - name: ASP.NET Tests
         run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
 
-      - name: Create tag
-        if: ${{ github.event_name == 'push' }}
-        uses: tvdias/github-tagger@v0.0.1
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ env.ASSEMBLY_VERSION }}
+     # - name: Create tag
+     #   if: ${{ github.event_name == 'push' }}
+     #   uses: tvdias/github-tagger@v0.0.1
+     #   with:
+     #     repo-token: ${{ secrets.GITHUB_TOKEN }}
+     #     tag: v${{ env.ASSEMBLY_VERSION }}
 
       - name: Publish MyGet nugets
         if: ${{ github.event_name == 'push' }}

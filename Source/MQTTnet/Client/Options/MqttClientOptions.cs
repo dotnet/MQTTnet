@@ -87,7 +87,8 @@ namespace MQTTnet.Client
         public uint SessionExpiryInterval { get; set; }
 
         /// <summary>
-        ///     Gets or sets the timeout which will be applied at socket level or internal operations.
+        ///     Gets or sets the timeout which will be applied at socket level and internal operations.
+        ///     The default value is the same as for sockets in .NET in general.
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(100);
 

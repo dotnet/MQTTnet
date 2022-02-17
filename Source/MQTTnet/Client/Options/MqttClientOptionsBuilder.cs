@@ -96,6 +96,10 @@ namespace MQTTnet.Client
             return this;
         }
 
+        /// <summary>
+        ///     Sets the timeout which will be applied at socket level and internal operations.
+        ///     The default value is the same as for sockets in .NET in general.
+        /// </summary>
         public MqttClientOptionsBuilder WithTimeout(TimeSpan value)
         {
             _options.Timeout = value;

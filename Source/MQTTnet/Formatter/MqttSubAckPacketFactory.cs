@@ -24,10 +24,11 @@ namespace MQTTnet.Formatter
 
             var subAckPacket = new MqttSubAckPacket
             {
-                PacketIdentifier = subscribePacket.PacketIdentifier
+                PacketIdentifier = subscribePacket.PacketIdentifier,
+                ReasonCodes = subscribeResult.ReasonCodes,
+                ReasonString = subscribeResult.ReasonString,
+                UserProperties = subscribeResult.UserProperties
             };
-
-            subAckPacket.ReasonCodes.AddRange(subscribeResult.ReasonCodes);
 
             return subAckPacket;
         }

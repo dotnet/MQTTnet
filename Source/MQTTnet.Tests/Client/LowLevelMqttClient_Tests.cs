@@ -47,12 +47,18 @@ namespace MQTTnet.Tests.Client
                     Assert.IsTrue(lowLevelClient.IsConnected);
 
                     await server.StopAsync();
+                    server.Dispose();
+                    
                     await LongTestDelay();
                     
                     Assert.IsTrue(lowLevelClient.IsConnected);
 
                     try
                     {
+                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+                        
+                        await LongTestDelay();
+                        
                         await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
                         
                         await LongTestDelay();

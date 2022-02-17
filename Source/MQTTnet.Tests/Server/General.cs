@@ -153,7 +153,8 @@ namespace MQTTnet.Tests.Server
                 await client2.SubscribeAsync("n");
  
                 await Task.Delay(500);
-
+                
+                // No 'n' in buffer!
                 Assert.AreEqual("y", buffer.ToString());
             }
         }

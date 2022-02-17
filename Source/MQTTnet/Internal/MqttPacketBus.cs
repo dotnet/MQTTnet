@@ -23,7 +23,7 @@ namespace MQTTnet.Internal
         readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
         readonly object _syncRoot = new object();
 
-        int _activePartition = (int) MqttPacketBusPartition.Health;
+        int _activePartition = (int)MqttPacketBusPartition.Health;
 
         public int ItemsCount
         {
@@ -85,7 +85,7 @@ namespace MQTTnet.Internal
         {
             lock (_syncRoot)
             {
-                var partitionInstance = _partitions[(int) partition];
+                var partitionInstance = _partitions[(int)partition];
 
                 if (partitionInstance.Any())
                 {
@@ -103,7 +103,7 @@ namespace MQTTnet.Internal
 
             lock (_syncRoot)
             {
-                _partitions[(int) partition].AddLast(item);
+                _partitions[(int)partition].AddLast(item);
             }
 
             _semaphore.Release();
@@ -113,7 +113,15 @@ namespace MQTTnet.Internal
         {
             lock (_syncRoot)
             {
-                return _partitions[(int) partition].Select(i => i.Packet).ToList();
+                return _partitions[(int)partition].Select(i => i.Packet).ToList();
+            }
+        }
+
+        public int PartitionItemsCount(MqttPacketBusPartition partition)
+        {
+            lock (_syncRoot)
+            {
+                return _partitions[(int)partition].Count;
             }
         }
 
@@ -126,14 +134,6 @@ namespace MQTTnet.Internal
             else
             {
                 _activePartition++;
-            }
-        }
-
-        public int PartitionItemsCount(MqttPacketBusPartition partition)
-        {
-            lock (_syncRoot)
-            {
-                return _partitions[(int) partition].Count;
             }
         }
     }

@@ -387,7 +387,7 @@ namespace MQTTnet.Tests
             {
                 PacketIdentifier = 123,
                 ReasonString = "ReasonString",
-                ReasonCodes =
+                ReasonCodes = new List<MqttSubscribeReasonCode>
                 {
                     MqttSubscribeReasonCode.GrantedQoS1
                 },

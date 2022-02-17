@@ -633,7 +633,8 @@ namespace MQTTnet.Formatter.V5
             }
 
             packet.UserProperties = propertiesReader.CollectedUserProperties;
-            
+
+            packet.ReasonCodes = new List<MqttSubscribeReasonCode>(_bufferReader.BytesLeft);
             while (!_bufferReader.EndOfStream)
             {
                 var reasonCode = (MqttSubscribeReasonCode)_bufferReader.ReadByte();

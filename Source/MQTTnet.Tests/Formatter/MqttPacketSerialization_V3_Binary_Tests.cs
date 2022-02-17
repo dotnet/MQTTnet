@@ -203,14 +203,16 @@ namespace MQTTnet.Tests
         {
             var p = new MqttSubAckPacket
             {
-                PacketIdentifier = 123
+                PacketIdentifier = 123,
+                ReasonCodes = new List<MqttSubscribeReasonCode>
+                {
+                    MqttSubscribeReasonCode.GrantedQoS0,
+                    MqttSubscribeReasonCode.GrantedQoS1,
+                    MqttSubscribeReasonCode.GrantedQoS2,
+                    MqttSubscribeReasonCode.UnspecifiedError
+                }
             };
-
-            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS0);
-            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS1);
-            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS2);
-            p.ReasonCodes.Add(MqttSubscribeReasonCode.UnspecifiedError);
-
+            
             DeserializeAndCompare(p, "kAYAewABAoA=");
         }
 
@@ -495,14 +497,16 @@ namespace MQTTnet.Tests
         {
             var p = new MqttSubAckPacket
             {
-                PacketIdentifier = 123
+                PacketIdentifier = 123,
+                ReasonCodes = new List<MqttSubscribeReasonCode>
+                {
+                    MqttSubscribeReasonCode.GrantedQoS0,
+                    MqttSubscribeReasonCode.GrantedQoS1,
+                    MqttSubscribeReasonCode.GrantedQoS2,
+                    MqttSubscribeReasonCode.UnspecifiedError
+                }
             };
-
-            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS0);
-            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS1);
-            p.ReasonCodes.Add(MqttSubscribeReasonCode.GrantedQoS2);
-            p.ReasonCodes.Add(MqttSubscribeReasonCode.UnspecifiedError);
-
+            
             SerializeAndCompare(p, "kAYAewABAoA=");
         }
 

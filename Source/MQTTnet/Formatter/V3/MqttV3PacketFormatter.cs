@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using MQTTnet.Adapter;
@@ -313,7 +314,8 @@ namespace MQTTnet.Formatter.V3
 
             var packet = new MqttSubAckPacket
             {
-                PacketIdentifier = _bufferReader.ReadTwoByteInteger()
+                PacketIdentifier = _bufferReader.ReadTwoByteInteger(),
+                ReasonCodes = new List<MqttSubscribeReasonCode>(_bufferReader.BytesLeft)
             };
 
             while (!_bufferReader.EndOfStream)

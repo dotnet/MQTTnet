@@ -123,7 +123,8 @@ namespace MQTTnet.Server
         {
             lock (_messages)
             {
-                return Task.FromResult((IList<MqttApplicationMessage>)_messages.Values.ToList());
+                var result = new List<MqttApplicationMessage>(_messages.Values);
+                return Task.FromResult((IList<MqttApplicationMessage>)result);
             }
         }
 

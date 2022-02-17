@@ -42,11 +42,13 @@ namespace MQTTnet.Server
 
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
-            
+
             SubscriptionsManager = new MqttClientSubscriptionsManager(this, eventContainer, retainedMessagesManager, clientSessionsManager);
         }
 
         public DateTime CreatedTimestamp { get; } = DateTime.UtcNow;
+
+        public bool HasSubscribedTopics => _subscribedTopics != null && _subscribedTopics.Count > 0;
 
         public string Id { get; }
 
@@ -72,6 +74,16 @@ namespace MQTTnet.Server
             _unacknowledgedPublishPackets.Remove(packetIdentifier);
         }
 
+        public void AddSubscribedTopic(string topic)
+        {
+            if (_subscribedTopics == null)
+            {
+                _subscribedTopics = new HashSet<string>();
+            }
+
+            _subscribedTopics.Add(topic);
+        }
+
         public Task DeleteAsync()
         {
             return _clientSessionsManager.DeleteSessionAsync(Id);
@@ -85,6 +97,7 @@ namespace MQTTnet.Server
         public void Dispose()
         {
             _packetBus?.Dispose();
+            SubscriptionsManager.Dispose();
         }
 
         public void EnqueuePacket(MqttPacketBusItem packetBusItem)
@@ -103,9 +116,9 @@ namespace MQTTnet.Server
 
                 if (_serverOptions.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
                 {
+                    // Only drop from the data partition. Dropping from control partition might break the connection
+                    // because the client does not receive PINGREQ packets etc. any longer.
                     _packetBus.DropFirstItem(MqttPacketBusPartition.Data);
-
-                    // TODO: Implement.
                 }
             }
 
@@ -140,23 +153,9 @@ namespace MQTTnet.Server
             }
         }
 
-        public void AddSubscribedTopic(string topic)
-        {
-            if (_subscribedTopics == null)
-            {
-                _subscribedTopics = new HashSet<string>();
-            }
-            _subscribedTopics.Add(topic);
-        }
-
         public void RemoveSubscribedTopic(string topic)
         {
-            if (_subscribedTopics != null)
-            {
-                _subscribedTopics.Remove(topic);
-            }
+            _subscribedTopics?.Remove(topic);
         }
-
-        public bool HasSubscribedTopics { get { return _subscribedTopics != null && _subscribedTopics.Count > 0; } }
     }
 }

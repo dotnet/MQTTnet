@@ -376,9 +376,9 @@ namespace MQTTnet.Server
                 return;
             }
 
-            if (subscribeResult.RetainedApplicationMessages != null)
+            if (subscribeResult.RetainedMessages != null)
             {
-                foreach (var retainedApplicationMessage in subscribeResult.RetainedApplicationMessages)
+                foreach (var retainedApplicationMessage in subscribeResult.RetainedMessages)
                 {
                     var publishPacket = _packetFactories.Publish.Create(retainedApplicationMessage.ApplicationMessage);
                     Session.EnqueuePacket(new MqttPacketBusItem(publishPacket));

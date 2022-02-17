@@ -56,9 +56,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return managedMqttClient.SubscribeAsync(
                 new List<MqttTopicFilter>
                 {
-                    new MqttTopicFilterBuilder().WithTopic(topic)
-                        .WithQualityOfServiceLevel(qualityOfServiceLevel)
-                        .Build()
+                    new MqttTopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build()
                 });
         }
 

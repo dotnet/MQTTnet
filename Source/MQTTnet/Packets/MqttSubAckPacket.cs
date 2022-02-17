@@ -13,7 +13,7 @@ namespace MQTTnet.Packets
         /// <summary>
         ///     Reason Code is used in MQTTv5.0.0 and backward compatible to v.3.1.1. Return Code is used in MQTTv3.1.1
         /// </summary>
-        public List<MqttSubscribeReasonCode> ReasonCodes { get; } = new List<MqttSubscribeReasonCode>();
+        public List<MqttSubscribeReasonCode> ReasonCodes { get; set; }
 
         /// <summary>
         ///     Added in MQTTv5.

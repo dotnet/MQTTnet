@@ -88,6 +88,7 @@ namespace MQTTnet.Server
             {
                 _sessions.TryGetValue(clientId, out session);
                 _sessions.Remove(clientId);
+                
                 if (session != null)
                 {
                     _subscriberSessions.Remove(session);
@@ -108,13 +109,15 @@ namespace MQTTnet.Server
 
             try
             {
-                await _eventContainer.SessionDeletedEvent.TryInvokeAsync(
-                        new SessionDeletedEventArgs
-                        {
-                            Id = session.Id
-                        },
-                        _logger)
-                    .ConfigureAwait(false);
+                if (_eventContainer.SessionDeletedEvent.HasHandlers)
+                {
+                    var eventArgs = new SessionDeletedEventArgs
+                    {
+                        Id = session?.Id
+                    };
+                    
+                    await _eventContainer.SessionDeletedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
+                }
             }
             catch (Exception exception)
             {
@@ -136,21 +139,19 @@ namespace MQTTnet.Server
                 }
 
                 var deliveryCount = 0;
-                List<MqttSession> sessions;
+                List<MqttSession> subscriberSessions;
                 lock (_sessionsManagementLock)
                 {
-                    // only subscriber clients are of interest here
-                    sessions = _subscriberSessions.ToList();
+                    // only subscriber clients are of interest here.
+                    subscriberSessions = _subscriberSessions.ToList();
                 }
 
                 // Calculate application message topic hash once for subscription checks
-                ulong topicHashMask; // not needed
-                bool topicHasWildcard; // not needed
-                MqttSubscription.CalculateTopicHash(applicationMessage.Topic, out var topicHash, out topicHashMask, out topicHasWildcard);
+                MqttSubscription.CalculateTopicHash(applicationMessage.Topic, out var topicHash, out _, out _);
 
-                foreach (var clientSession in sessions)
+                foreach (var session in subscriberSessions)
                 {
-                    var checkSubscriptionsResult = clientSession.SubscriptionsManager.CheckSubscriptions(
+                    var checkSubscriptionsResult = session.SubscriptionsManager.CheckSubscriptions(
                         applicationMessage.Topic,
                         topicHash,
                         applicationMessage.QualityOfServiceLevel,
@@ -167,13 +168,12 @@ namespace MQTTnet.Server
 
                     if (newPublishPacket.QualityOfServiceLevel > 0)
                     {
-                        newPublishPacket.PacketIdentifier = clientSession.PacketIdentifierProvider.GetNextPacketIdentifier();
+                        newPublishPacket.PacketIdentifier = session.PacketIdentifierProvider.GetNextPacketIdentifier();
                     }
 
                     if (checkSubscriptionsResult.RetainAsPublished)
                     {
-                        // Transfer the original retain state from the publisher.
-                        // This is a MQTTv5 feature.
+                        // Transfer the original retain state from the publisher. This is a MQTTv5 feature.
                         newPublishPacket.Retain = applicationMessage.Retain;
                     }
                     else
@@ -181,10 +181,10 @@ namespace MQTTnet.Server
                         newPublishPacket.Retain = false;
                     }
 
-                    clientSession.EnqueuePacket(new MqttPacketBusItem(newPublishPacket));
+                    session.EnqueuePacket(new MqttPacketBusItem(newPublishPacket));
                     deliveryCount++;
 
-                    _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'.", clientSession.Id, applicationMessage.Topic);
+                    _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'.", session.Id, applicationMessage.Topic);
                 }
 
                 if (deliveryCount == 0 && _eventContainer.ApplicationMessageNotConsumedEvent.HasHandlers)
@@ -386,9 +386,9 @@ namespace MQTTnet.Server
 
             var subscribeResult = await clientSession.SubscriptionsManager.Subscribe(fakeSubscribePacket, CancellationToken.None).ConfigureAwait(false);
 
-            if (subscribeResult.RetainedApplicationMessages != null)
+            if (subscribeResult.RetainedMessages != null)
             {
-                foreach (var retainedApplicationMessage in subscribeResult.RetainedApplicationMessages)
+                foreach (var retainedApplicationMessage in subscribeResult.RetainedMessages)
                 {
                     var publishPacket = _packetFactories.Publish.Create(retainedApplicationMessage.ApplicationMessage);
                     clientSession.EnqueuePacket(new MqttPacketBusItem(publishPacket));
@@ -515,7 +515,7 @@ namespace MQTTnet.Server
             return connection;
         }
 
-        public void OnSubscriptionsAdded(MqttSession clientSession, List<string> subscriptionTopics)
+        public void OnSubscriptionsAdded(MqttSession clientSession, List<string> topics)
         {
             lock (_sessionsManagementLock)
             {
@@ -524,9 +524,10 @@ namespace MQTTnet.Server
                     // first subscribed topic
                     _subscriberSessions.Add(clientSession);
                 }
-                foreach (var subscriptionTopic in subscriptionTopics)
+                
+                foreach (var topic in topics)
                 {
-                    clientSession.AddSubscribedTopic(subscriptionTopic);
+                    clientSession.AddSubscribedTopic(topic);
                 }
             }
         }
@@ -539,6 +540,7 @@ namespace MQTTnet.Server
                 {
                     clientSession.RemoveSubscribedTopic(subscriptionTopic);
                 }
+                
                 if (!clientSession.HasSubscribedTopics)
                 {
                     // last subscription removed

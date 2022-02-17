@@ -26,10 +26,10 @@ namespace MQTTnet.Client.Options
         public List<SslApplicationProtocol> ApplicationProtocols { get; set; }
 #endif
 
-#if NET452 || NET46 || NET461 || NET462 || NET47
-        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
+#if NET48 || NETCOREAPP3_1 || NET5 || NET6
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;
 #else
-        public SslProtocols SslProtocol { get; set; } = SslProtocols.None;
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;
 #endif
 
         [Obsolete("This property will be removed soon. Use CertificateValidationHandler instead.")]

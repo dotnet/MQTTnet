@@ -52,10 +52,10 @@ namespace MQTTnet.Extensions.WebSocket4Net
                 }
             }
 
-#if NET452 || NET46 || NET461 || NET462 || NET47
-            var sslProtocols = _webSocketOptions?.TlsOptions?.SslProtocol ?? SslProtocols.Tls12;
+#if NET48 || NETCOREAPP3_1 || NET5 || NET6
+            var sslProtocols = _webSocketOptions?.TlsOptions.SslProtocol ?? SslProtocols.Tls12 | SslProtocols.Tls13;
 #else
-            var sslProtocols = _webSocketOptions?.TlsOptions?.SslProtocol ?? SslProtocols.None;
+            var sslProtocols = _webSocketOptions?.TlsOptions.SslProtocol ?? SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;
 #endif
 
             var subProtocol = _webSocketOptions.SubProtocols.FirstOrDefault() ?? string.Empty;

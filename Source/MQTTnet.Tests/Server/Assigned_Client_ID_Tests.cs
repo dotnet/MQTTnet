@@ -46,21 +46,21 @@ namespace MQTTnet.Tests.Server
                         e.AssignedClientIdentifier = assignedClientId;
                         e.ReasonCode = MqttConnectReasonCode.Success;
                     }
-                    
-                    return Task.CompletedTask;
+
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
                 
                 testEnvironment.Server.ClientConnectedAsync += args =>
                 {
                     serverConnectedClientId = args.ClientId;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 testEnvironment.Server.ClientDisconnectedAsync += args =>
                 {
                     serverDisconnectedClientId = args.ClientId;
                     disconnectedMre.Set();
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 // Arrange client

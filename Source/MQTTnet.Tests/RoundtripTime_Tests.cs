@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
+using MQTTnet.Implementations;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests
@@ -32,7 +33,7 @@ namespace MQTTnet.Tests
                 receiverClient.ApplicationMessageReceivedAsync += e => 
                 {
                     response?.TrySetResult(e.ApplicationMessage.ConvertPayloadToString());
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await receiverClient.SubscribeAsync("#");

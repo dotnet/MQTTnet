@@ -8,6 +8,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Tests.Mockups;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests.MQTTv5
@@ -30,7 +31,7 @@ namespace MQTTnet.Tests.MQTTv5
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessagesCount);
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
                 
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());

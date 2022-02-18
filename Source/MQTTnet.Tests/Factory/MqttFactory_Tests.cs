@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
+using MQTTnet.Implementations;
 using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Factory
@@ -55,7 +56,7 @@ namespace MQTTnet.Tests.Factory
                 managedClient.ConnectingFailedAsync += e =>
                 {
                     tcs.TrySetResult(null);
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
                 
                 await Task.WhenAny(Task.Delay(managedClient.Options.ClientOptions.Timeout), tcs.Task);

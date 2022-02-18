@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
+using MQTTnet.Implementations;
 using MQTTnet.Packets;
 using MQTTnet.Tests.Mockups;
 
@@ -47,7 +48,7 @@ namespace MQTTnet.Tests.Server
                 receiver.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedMessage = e.ApplicationMessage;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await sender.PublishAsync(message.Build(), CancellationToken.None);

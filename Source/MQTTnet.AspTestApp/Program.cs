@@ -50,7 +50,7 @@ app.UseMqttServer(server =>
             {
                 try
                 {
-                    await server.InjectApplicationMessage(new MqttInjectedApplicationMessage(mqttApplicationMessage)
+                    await server.InjectApplicationMessage(new InjectedMqttApplicationMessage(mqttApplicationMessage)
                     {
                         SenderClientId = "server"
                     });

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 #if !WINDOWS_UWP
-using MQTTnet.Channel;
 using System;
 using System.IO;
 using System.Net.Security;
@@ -12,6 +11,7 @@ using System.Runtime.ExceptionServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Channel;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
 
@@ -20,8 +20,8 @@ namespace MQTTnet.Implementations
     public sealed class MqttTcpChannel : IMqttChannel
     {
         readonly MqttClientOptions _clientOptions;
-        readonly MqttClientTcpOptions _tcpOptions;
         readonly Action _disposeAction;
+        readonly MqttClientTcpOptions _tcpOptions;
 
         Stream _stream;
 
@@ -33,7 +33,7 @@ namespace MQTTnet.Implementations
         public MqttTcpChannel(MqttClientOptions clientOptions) : this()
         {
             _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
-            _tcpOptions = (MqttClientTcpOptions) clientOptions.ChannelOptions;
+            _tcpOptions = (MqttClientTcpOptions)clientOptions.ChannelOptions;
 
             IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
         }
@@ -48,11 +48,11 @@ namespace MQTTnet.Implementations
             ClientCertificate = clientCertificate;
         }
 
+        public X509Certificate2 ClientCertificate { get; }
+
         public string Endpoint { get; private set; }
 
         public bool IsSecureConnection { get; }
-
-        public X509Certificate2 ClientCertificate { get; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
@@ -70,7 +70,7 @@ namespace MQTTnet.Implementations
 
                 socket.ReceiveBufferSize = _tcpOptions.BufferSize;
                 socket.SendBufferSize = _tcpOptions.BufferSize;
-                socket.SendTimeout = (int) _clientOptions.Timeout.TotalMilliseconds;
+                socket.SendTimeout = (int)_clientOptions.Timeout.TotalMilliseconds;
                 socket.NoDelay = _tcpOptions.NoDelay;
                 
                 if (_tcpOptions.DualMode.HasValue)
@@ -139,6 +139,30 @@ namespace MQTTnet.Implementations
         {
             Dispose();
             return Task.FromResult(0);
+        }
+
+        public void Dispose()
+        {
+            // When the stream is disposed it will also close the socket and this will also dispose it.
+            // So there is no need to dispose the socket again.
+            // https://stackoverflow.com/questions/3601521/should-i-manually-dispose-the-socket-after-closing-it
+            try
+            {
+#if !NETSTANDARD1_3
+                _stream?.Close();
+#endif
+                _stream?.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (NullReferenceException)
+            {
+            }
+            finally
+            {
+                _stream = null;
+            }
         }
 
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -220,30 +244,6 @@ namespace MQTTnet.Implementations
                 }
 
                 throw;
-            }
-        }
-
-        public void Dispose()
-        {
-            // When the stream is disposed it will also close the socket and this will also dispose it.
-            // So there is no need to dispose the socket again.
-            // https://stackoverflow.com/questions/3601521/should-i-manually-dispose-the-socket-after-closing-it
-            try
-            {
-#if !NETSTANDARD1_3
-                _stream?.Close();
-#endif
-                _stream?.Dispose();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (NullReferenceException)
-            {
-            }
-            finally
-            {
-                _stream = null;
             }
         }
 

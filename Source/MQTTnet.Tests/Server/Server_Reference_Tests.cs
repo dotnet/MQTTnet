@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
+using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests.Server
@@ -27,8 +28,7 @@ namespace MQTTnet.Tests.Server
                 {
                     e.ReasonCode = MqttConnectReasonCode.ServerMoved;
                     e.ServerReference = "new_server";
-                    
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 try

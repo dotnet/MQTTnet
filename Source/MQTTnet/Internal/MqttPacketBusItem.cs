@@ -10,7 +10,7 @@ namespace MQTTnet.Internal
 {
     public sealed class MqttPacketBusItem
     {
-        readonly CrossPlatformPromise<int> _promise = new CrossPlatformPromise<int>();
+        readonly AsyncTaskCompletionSource<int> _promise = new AsyncTaskCompletionSource<int>();
 
         public MqttPacketBusItem(MqttPacket packet)
         {

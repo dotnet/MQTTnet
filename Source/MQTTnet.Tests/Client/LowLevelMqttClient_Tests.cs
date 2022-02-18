@@ -137,15 +137,19 @@ namespace MQTTnet.Tests.Client
 
                     try
                     {
-                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+                        var tries = 0;
+                        while (tries < 60)
+                        {
+                            await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+                            await LongTestDelay();
 
-                        await LongTestDelay();
-
-                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
-
-                        await LongTestDelay();
-
-                        await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
+                            if (!lowLevelClient.IsConnected)
+                            {
+                                break;
+                            }
+                            
+                            tries++;
+                        }
                     }
                     catch
                     {

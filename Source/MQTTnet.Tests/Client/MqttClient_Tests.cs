@@ -56,7 +56,7 @@ namespace MQTTnet.Tests.Client
                     }
 
                     _ = InvokeInternal();
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 var publishes = Task.WhenAll(publisher.PublishStringAsync("a", null, qos), publisher.PublishStringAsync("b", null, qos));
@@ -167,7 +167,7 @@ namespace MQTTnet.Tests.Client
                 server.InterceptingPublishAsync += c =>
                 {
                     i++;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await client.SendAsync(
@@ -252,7 +252,7 @@ namespace MQTTnet.Tests.Client
                 receiveClient.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedPayload = e.ApplicationMessage.ConvertPayloadToString();
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await receiveClient.SubscribeAsync("x");
@@ -310,7 +310,7 @@ namespace MQTTnet.Tests.Client
                 receiver.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedMessage = e.ApplicationMessage;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await sender.PublishAsync(message.Build(), CancellationToken.None);
@@ -453,7 +453,7 @@ namespace MQTTnet.Tests.Client
                         receivedValues.Add(value);
                     }
 
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 }
 
                 client1.ApplicationMessageReceivedAsync += Handler1;
@@ -531,7 +531,7 @@ namespace MQTTnet.Tests.Client
                 client2.ApplicationMessageReceivedAsync += e =>
                 {
                     client2TopicResults.Add(Encoding.UTF8.GetString(e.ApplicationMessage.Payload));
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await client2.SubscribeAsync(client2Topic);
@@ -566,7 +566,7 @@ namespace MQTTnet.Tests.Client
                         receivedMessages.Add(e.ApplicationMessage);
                     }
 
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await client1.SubscribeAsync("a");
@@ -723,7 +723,7 @@ namespace MQTTnet.Tests.Client
                         replies.Add(eventArgs.ApplicationMessage.Topic);
                     }
 
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 }
 
                 client2.ApplicationMessageReceivedAsync += Handler2;
@@ -761,7 +761,7 @@ namespace MQTTnet.Tests.Client
                         replyReceived = true;
                     }
 
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 client2.ApplicationMessageReceivedAsync += async e =>
@@ -812,7 +812,7 @@ namespace MQTTnet.Tests.Client
                         replyReceived = true;
                     }
 
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await client.PublishStringAsync("request", null, MqttQualityOfServiceLevel.AtLeastOnce);
@@ -855,7 +855,7 @@ namespace MQTTnet.Tests.Client
                 client.DisconnectedAsync += e =>
                 {
                     Assert.IsTrue(e.ClientWasConnected);
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await server.StopAsync();
@@ -892,7 +892,7 @@ namespace MQTTnet.Tests.Client
                         receivedMessages.Add(e.ApplicationMessage);
                     }
 
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost", testEnvironment.ServerPort).Build());
@@ -924,7 +924,7 @@ namespace MQTTnet.Tests.Client
                 client1.ApplicationMessageReceivedAsync += e =>
                 {
                     messageReceived = true;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await client1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("topic1").WithExactlyOnceQoS().Build());

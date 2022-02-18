@@ -16,6 +16,6 @@ namespace MQTTnet.Server
         /// <summary>
         ///     Gets the ID of the client which has sent the affected application message.
         /// </summary>
-        public string SenderClientId { get; internal set; }
+        public string SenderId { get; internal set; }
     }
 }

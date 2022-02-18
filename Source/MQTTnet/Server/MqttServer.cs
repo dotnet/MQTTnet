@@ -18,17 +18,18 @@ namespace MQTTnet.Server
 {
     public class MqttServer : Disposable
     {
-        readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttServerEventContainer _eventContainer = new MqttServerEventContainer();
+        
+        readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttNetSourceLogger _logger;
         readonly MqttServerOptions _options;
         readonly IMqttNetLogger _rootLogger;
+        readonly MqttRetainedMessagesManager _retainedMessagesManager;
+        readonly MqttServerKeepAliveMonitor _keepAliveMonitor;
+        readonly MqttClientSessionsManager _clientSessionsManager;
+        
         CancellationTokenSource _cancellationTokenSource;
-
-        MqttClientSessionsManager _clientSessionsManager;
-        MqttServerKeepAliveMonitor _keepAliveMonitor;
-        MqttRetainedMessagesManager _retainedMessagesManager;
-
+        
         public MqttServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -42,6 +43,10 @@ namespace MQTTnet.Server
 
             _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttServer));
+
+            _retainedMessagesManager = new MqttRetainedMessagesManager(_eventContainer, _rootLogger);
+            _clientSessionsManager = new MqttClientSessionsManager(options, _retainedMessagesManager, _eventContainer, _rootLogger);
+            _keepAliveMonitor = new MqttServerKeepAliveMonitor(options, _clientSessionsManager, _rootLogger);
         }
 
         public event Func<ApplicationMessageNotConsumedEventArgs, Task> ApplicationMessageNotConsumedAsync
@@ -153,99 +158,75 @@ namespace MQTTnet.Server
         }
 
         public bool IsStarted => _cancellationTokenSource != null;
-
-        /// <summary>
-        ///     Deletes all retained messages.
-        /// </summary>
-        /// <returns>A task.</returns>
+        
         public Task DeleteRetainedMessagesAsync()
         {
-            ThrowIfDisposed();
             ThrowIfNotStarted();
 
             return _retainedMessagesManager?.ClearMessages() ?? PlatformAbstractionLayer.CompletedTask;
         }
 
+        public Task DisconnectClientAsync(string id, MqttDisconnectReasonCode reasonCode)
+        {
+            if (id == null)
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+
+            ThrowIfNotStarted();
+            
+            return _clientSessionsManager.GetClient(id).StopAsync(reasonCode);
+        }
+        
         public Task<IList<MqttClientStatus>> GetClientsAsync()
         {
-            ThrowIfDisposed();
             ThrowIfNotStarted();
 
             return _clientSessionsManager.GetClientStatusAsync();
         }
 
-        /// <summary>
-        ///     Gets all currently cached retained messages.
-        /// </summary>
-        /// <returns>A list of retained messages.</returns>
         public Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync()
         {
-            ThrowIfDisposed();
             ThrowIfNotStarted();
 
             return _retainedMessagesManager.GetMessages();
         }
 
-        /// <summary>
-        /// Disconnects the client with the specified ID.
-        /// </summary>
-        /// <param name="id">The ID.</param>
-        /// <param name="reasonCode">The reason code.</param>
-        /// <returns>A task.</returns>
-        public Task DisconnectClientAsync(string id, MqttDisconnectReasonCode reasonCode)
-        {
-            // TODO: Add more options.
-            if (id == null)
-            {
-                throw new ArgumentNullException(nameof(id));
-            }
-            
-            return _clientSessionsManager.GetClient(id).StopAsync(reasonCode);
-        }
-
         public Task<IList<MqttSessionStatus>> GetSessionsAsync()
         {
-            ThrowIfDisposed();
             ThrowIfNotStarted();
 
             return _clientSessionsManager.GetSessionStatusAsync();
         }
-        
-        public Task InjectApplicationMessage(MqttInjectedApplicationMessage injectedApplicationMessage, CancellationToken cancellationToken = default)
+
+        public Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage)
         {
             if (injectedApplicationMessage == null)
             {
                 throw new ArgumentNullException(nameof(injectedApplicationMessage));
             }
-            
+
             if (injectedApplicationMessage.ApplicationMessage == null)
             {
                 throw new ArgumentNullException(nameof(injectedApplicationMessage.ApplicationMessage));
             }
 
-            ThrowIfDisposed();
-
             MqttTopicValidator.ThrowIfInvalid(injectedApplicationMessage.ApplicationMessage.Topic);
 
             ThrowIfNotStarted();
 
-            return _clientSessionsManager.DispatchPublishPacket(injectedApplicationMessage.SenderClientId, injectedApplicationMessage.ApplicationMessage);
+            return _clientSessionsManager.DispatchApplicationMessage(injectedApplicationMessage.SenderClientId, injectedApplicationMessage.ApplicationMessage);
         }
 
         public async Task StartAsync()
         {
-            ThrowIfDisposed();
             ThrowIfStarted();
 
             _cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = _cancellationTokenSource.Token;
 
-            _retainedMessagesManager = new MqttRetainedMessagesManager(_eventContainer, _rootLogger);
-            await _retainedMessagesManager.LoadMessages().ConfigureAwait(false);
-
-            _clientSessionsManager = new MqttClientSessionsManager(_options, _retainedMessagesManager, _eventContainer, _rootLogger);
-
-            _keepAliveMonitor = new MqttServerKeepAliveMonitor(_options, _clientSessionsManager, _rootLogger);
+            await _retainedMessagesManager.Start().ConfigureAwait(false);
+            _clientSessionsManager.Start();
             _keepAliveMonitor.Start(cancellationToken);
 
             foreach (var adapter in _adapters)
@@ -254,9 +235,9 @@ namespace MQTTnet.Server
                 await adapter.StartAsync(_options, _rootLogger).ConfigureAwait(false);
             }
 
-            _logger.Info("Started.");
-
             await _eventContainer.StartedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
+            
+            _logger.Info("Started.");
         }
 
         public async Task StopAsync()
@@ -277,21 +258,16 @@ namespace MQTTnet.Server
                     adapter.ClientHandler = null;
                     await adapter.StopAsync().ConfigureAwait(false);
                 }
-
-                _logger.Info("Stopped.");
             }
             finally
             {
-                //_clientSessionsManager?.Dispose();
-                _clientSessionsManager = null;
-
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
-
-                _retainedMessagesManager = null;
             }
 
             await _eventContainer.StoppedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
+            
+            _logger.Info("Stopped.");
         }
 
         public Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
@@ -334,13 +310,7 @@ namespace MQTTnet.Server
 
             return _clientSessionsManager.UnsubscribeAsync(clientId, topicFilters);
         }
-
-        /// <summary>
-        ///     Updates the specified retained message.
-        ///     Setting the payload to null or empty will delete the retained message.
-        /// </summary>
-        /// <param name="retainedMessage">The retained message.</param>
-        /// <returns>A task.</returns>
+        
         public Task UpdateRetainedMessageAsync(MqttApplicationMessage retainedMessage)
         {
             if (retainedMessage == null)
@@ -376,6 +346,8 @@ namespace MQTTnet.Server
 
         void ThrowIfNotStarted()
         {
+            ThrowIfDisposed();
+            
             if (_cancellationTokenSource == null)
             {
                 throw new InvalidOperationException("The MQTT server is not started.");
@@ -384,6 +356,8 @@ namespace MQTTnet.Server
 
         void ThrowIfStarted()
         {
+            ThrowIfDisposed();
+            
             if (_cancellationTokenSource != null)
             {
                 throw new InvalidOperationException("The MQTT server is already started.");

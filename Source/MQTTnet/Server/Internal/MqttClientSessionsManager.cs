@@ -23,11 +23,6 @@ namespace MQTTnet.Server
     {
         readonly Dictionary<string, MqttClient> _clients = new Dictionary<string, MqttClient>(4096);
 
-        // The _sessions dictionary contains all session, the _subscriberSessions hash set contains subscriber sessions only.
-        // See the MqttSubscription object for a detailed explanation.
-        readonly Dictionary<string, MqttSession> _sessions = new Dictionary<string, MqttSession>(4096);
-        readonly HashSet<MqttSession> _subscriberSessions = new HashSet<MqttSession>();
-
         readonly AsyncLock _createConnectionSyncRoot = new AsyncLock();
         readonly MqttServerEventContainer _eventContainer;
         readonly MqttNetSourceLogger _logger;
@@ -37,7 +32,12 @@ namespace MQTTnet.Server
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttNetLogger _rootLogger;
 
+        // The _sessions dictionary contains all session, the _subscriberSessions hash set contains subscriber sessions only.
+        // See the MqttSubscription object for a detailed explanation.
+        readonly Dictionary<string, MqttSession> _sessions = new Dictionary<string, MqttSession>(4096);
+
         readonly object _sessionsManagementLock = new object();
+        readonly HashSet<MqttSession> _subscriberSessions = new HashSet<MqttSession>();
 
         public MqttClientSessionsManager(
             MqttServerOptions options,
@@ -88,7 +88,7 @@ namespace MQTTnet.Server
             {
                 _sessions.TryGetValue(clientId, out session);
                 _sessions.Remove(clientId);
-                
+
                 if (session != null)
                 {
                     _subscriberSessions.Remove(session);
@@ -115,7 +115,7 @@ namespace MQTTnet.Server
                     {
                         Id = session?.Id
                     };
-                    
+
                     await _eventContainer.SessionDeletedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
                 }
             }
@@ -129,13 +129,13 @@ namespace MQTTnet.Server
             _logger.Verbose("Session for client '{0}' deleted.", clientId);
         }
 
-        public async Task DispatchPublishPacket(string senderClientId, MqttApplicationMessage applicationMessage)
+        public async Task DispatchApplicationMessage(string senderId, MqttApplicationMessage applicationMessage)
         {
             try
             {
                 if (applicationMessage.Retain)
                 {
-                    await _retainedMessagesManager.UpdateMessage(senderClientId, applicationMessage).ConfigureAwait(false);
+                    await _retainedMessagesManager.UpdateMessage(senderId, applicationMessage).ConfigureAwait(false);
                 }
 
                 var deliveryCount = 0;
@@ -155,7 +155,7 @@ namespace MQTTnet.Server
                         applicationMessage.Topic,
                         topicHash,
                         applicationMessage.QualityOfServiceLevel,
-                        senderClientId);
+                        senderId);
 
                     if (!checkSubscriptionsResult.IsSubscribed)
                     {
@@ -187,16 +187,7 @@ namespace MQTTnet.Server
                     _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'.", session.Id, applicationMessage.Topic);
                 }
 
-                if (deliveryCount == 0 && _eventContainer.ApplicationMessageNotConsumedEvent.HasHandlers)
-                {
-                    var eventArgs = new ApplicationMessageNotConsumedEventArgs
-                    {
-                        ApplicationMessage = applicationMessage,
-                        SenderClientId = senderClientId
-                    };
-
-                    await _eventContainer.ApplicationMessageNotConsumedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
-                }
+                await FireApplicationMessageNotConsumedEvent(applicationMessage, deliveryCount, senderId);
             }
             catch (Exception exception)
             {
@@ -355,7 +346,7 @@ namespace MQTTnet.Server
                             DisconnectType = client.IsCleanDisconnect ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean,
                             Endpoint = endpoint
                         };
-                        
+
                         await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
                 }
@@ -364,6 +355,48 @@ namespace MQTTnet.Server
                 {
                     await channelAdapter.DisconnectAsync(timeout.Token).ConfigureAwait(false);
                 }
+            }
+        }
+
+        public void OnSubscriptionsAdded(MqttSession clientSession, List<string> topics)
+        {
+            lock (_sessionsManagementLock)
+            {
+                if (!clientSession.HasSubscribedTopics)
+                {
+                    // first subscribed topic
+                    _subscriberSessions.Add(clientSession);
+                }
+
+                foreach (var topic in topics)
+                {
+                    clientSession.AddSubscribedTopic(topic);
+                }
+            }
+        }
+
+        public void OnSubscriptionsRemoved(MqttSession clientSession, List<string> subscriptionTopics)
+        {
+            lock (_sessionsManagementLock)
+            {
+                foreach (var subscriptionTopic in subscriptionTopics)
+                {
+                    clientSession.RemoveSubscribedTopic(subscriptionTopic);
+                }
+
+                if (!clientSession.HasSubscribedTopics)
+                {
+                    // last subscription removed
+                    _subscriberSessions.Remove(clientSession);
+                }
+            }
+        }
+
+        public void Start()
+        {
+            if (!_options.EnablePersistentSessions)
+            {
+                _sessions.Clear();
             }
         }
 
@@ -515,40 +548,6 @@ namespace MQTTnet.Server
             return connection;
         }
 
-        public void OnSubscriptionsAdded(MqttSession clientSession, List<string> topics)
-        {
-            lock (_sessionsManagementLock)
-            {
-                if (!clientSession.HasSubscribedTopics)
-                {
-                    // first subscribed topic
-                    _subscriberSessions.Add(clientSession);
-                }
-                
-                foreach (var topic in topics)
-                {
-                    clientSession.AddSubscribedTopic(topic);
-                }
-            }
-        }
-
-        public void OnSubscriptionsRemoved(MqttSession clientSession, List<string> subscriptionTopics)
-        {
-            lock (_sessionsManagementLock)
-            {
-                foreach (var subscriptionTopic in subscriptionTopics)
-                {
-                    clientSession.RemoveSubscribedTopic(subscriptionTopic);
-                }
-                
-                if (!clientSession.HasSubscribedTopics)
-                {
-                    // last subscription removed
-                    _subscriberSessions.Remove(clientSession);
-                }
-            }
-        }
-
         MqttClient CreateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, MqttSession session)
         {
             return new MqttClient(connectPacket, channelAdapter, session, _options, _eventContainer, this, _rootLogger);
@@ -559,6 +558,27 @@ namespace MQTTnet.Server
             _logger.Verbose("Created a new session for client '{0}'.", clientId);
 
             return new MqttSession(clientId, isPersistent, sessionItems, _options, _eventContainer, _retainedMessagesManager, this);
+        }
+
+        async Task FireApplicationMessageNotConsumedEvent(MqttApplicationMessage applicationMessage, int deliveryCount, string senderId)
+        {
+            if (deliveryCount > 0)
+            {
+                return;
+            }
+
+            if (!_eventContainer.ApplicationMessageNotConsumedEvent.HasHandlers)
+            {
+                return;
+            }
+
+            var eventArgs = new ApplicationMessageNotConsumedEventArgs
+            {
+                ApplicationMessage = applicationMessage,
+                SenderId = senderId
+            };
+
+            await _eventContainer.ApplicationMessageNotConsumedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
         }
 
         MqttSession GetClientSession(string clientId)

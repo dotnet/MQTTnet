@@ -87,7 +87,7 @@ namespace MQTTnet.Tests.Mockups
 
         public MqttNetEventLogger ServerLogger { get; } = new MqttNetEventLogger("server");
 
-        public int ServerPort { get; set; } = 1888;
+        public int ServerPort { get; set; }
 
         public TestContext TestContext { get; }
 
@@ -258,7 +258,7 @@ namespace MQTTnet.Tests.Mockups
                     }
                 }
 
-                return Task.CompletedTask;
+                return PlatformAbstractionLayer.CompletedTask;
             };
 
             return Server;
@@ -313,16 +313,18 @@ namespace MQTTnet.Tests.Mockups
             return StartServer(Factory.CreateServerOptionsBuilder());
         }
 
-        public async Task<MqttServer> StartServer(MqttServerOptionsBuilder options)
+        public async Task<MqttServer> StartServer(MqttServerOptionsBuilder optionsBuilder)
         {
-            var server = CreateServer(options.Build());
+            optionsBuilder.WithDefaultEndpoint();
+            optionsBuilder.WithDefaultEndpointPort(ServerPort);
+            optionsBuilder.WithMaxPendingMessagesPerClient(int.MaxValue);
 
-            options.WithDefaultEndpoint();
-            options.WithDefaultEndpointPort(ServerPort);
-            options.WithMaxPendingMessagesPerClient(int.MaxValue);
-
+            var options = optionsBuilder.Build();
+            var server = CreateServer(options);
             await server.StartAsync();
-
+            
+            // The OS has chosen the port to we have to properly expose it to the tests.
+            ServerPort = options.DefaultEndpointOptions.Port;
             return server;
         }
 
@@ -336,8 +338,12 @@ namespace MQTTnet.Tests.Mockups
 
             configure?.Invoke(optionsBuilder);
 
-            var server = CreateServer(optionsBuilder.Build());
+            var options = optionsBuilder.Build();
+            var server = CreateServer(options);
             await server.StartAsync();
+            
+            // The OS has chosen the port to we have to properly expose it to the tests.
+            ServerPort = options.DefaultEndpointOptions.Port;
             return server;
         }
 

@@ -29,7 +29,7 @@ namespace MQTTnet.Server
             _logger = logger.WithSource(nameof(MqttRetainedMessagesManager));
         }
         
-        public async Task LoadMessages()
+        public async Task Start()
         {
             try
             {
@@ -40,9 +40,12 @@ namespace MQTTnet.Server
                 {
                     _messages.Clear();
 
-                    foreach (var retainedMessage in eventArgs.LoadedRetainedMessages ?? new List<MqttApplicationMessage>())
+                    if (eventArgs.LoadedRetainedMessages != null)
                     {
-                        _messages[retainedMessage.Topic] = retainedMessage;
+                        foreach (var retainedMessage in eventArgs.LoadedRetainedMessages)
+                        {
+                            _messages[retainedMessage.Topic] = retainedMessage;
+                        }
                     }
                 }
             }

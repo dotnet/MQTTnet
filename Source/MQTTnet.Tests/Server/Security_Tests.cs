@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
+using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests.Server
@@ -78,7 +79,7 @@ namespace MQTTnet.Tests.Server
                         e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                     }
 
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 var client = testEnvironment.CreateClient();

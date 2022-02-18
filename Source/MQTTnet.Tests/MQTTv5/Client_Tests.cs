@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
+using MQTTnet.Implementations;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Tests.Mockups;
@@ -42,7 +43,7 @@ namespace MQTTnet.Tests.MQTTv5
                 client.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedMessage = e.ApplicationMessage;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await client.PublishAsync(new MqttApplicationMessageBuilder()
@@ -244,7 +245,7 @@ namespace MQTTnet.Tests.MQTTv5
                 receiver.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedMessage = e.ApplicationMessage;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 var sender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));

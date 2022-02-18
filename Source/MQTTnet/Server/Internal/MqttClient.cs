@@ -131,7 +131,7 @@ namespace MQTTnet.Server
                 var willPublishPacket = _packetFactories.Publish.Create(Session.LatestConnectPacket);
                 var willApplicationMessage = _applicationMessageFactory.Create(willPublishPacket);
                 
-                _= _sessionsManager.DispatchPublishPacket(Id, willApplicationMessage);
+                _= _sessionsManager.DispatchApplicationMessage(Id, willApplicationMessage);
                 Session.WillMessageSent = true;
                 
                 _logger.Info("Client '{0}': Published will message.", Id);
@@ -142,28 +142,41 @@ namespace MQTTnet.Server
 
         public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
-            if (_eventContainer.InterceptingOutboundPacketEvent.HasHandlers)
+            packet = await InterceptPacketAsync(packet, cancellationToken).ConfigureAwait(false);
+            if (packet == null)
             {
-                var interceptingPacketEventArgs = new InterceptingPacketEventArgs
-                {
-                    ClientId = Id,
-                    Endpoint = Endpoint,
-                    Packet = packet,
-                    CancellationToken = cancellationToken
-                };
-            
-                await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
-                
-                if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
-                {
-                    return;
-                }
-                
-                packet = interceptingPacketEventArgs.Packet;
+                // The interceptor has decided that this packet will not used at all.
+                // This might break the protocol but the user wants that.
+                return;
             }
-
+            
             await ChannelAdapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
             Statistics.HandleSentPacket(packet);
+        }
+
+        async Task<MqttPacket> InterceptPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
+        {
+            if (!_eventContainer.InterceptingOutboundPacketEvent.HasHandlers)
+            {
+                return packet;
+            }
+            
+            var interceptingPacketEventArgs = new InterceptingPacketEventArgs
+            {
+                ClientId = Id,
+                Endpoint = Endpoint,
+                Packet = packet,
+                CancellationToken = cancellationToken
+            };
+            
+            await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
+                
+            if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
+            {
+                return null;
+            }
+                
+            return interceptingPacketEventArgs.Packet;
         }
 
         async Task ReceivePackagesLoop(CancellationToken cancellationToken)
@@ -444,7 +457,7 @@ namespace MQTTnet.Server
 
             if (processPublish && applicationMessage != null)
             {
-                await _sessionsManager.DispatchPublishPacket(Id, applicationMessage).ConfigureAwait(false);    
+                await _sessionsManager.DispatchApplicationMessage(Id, applicationMessage).ConfigureAwait(false);    
             }
             
             switch (publishPacket.QualityOfServiceLevel)

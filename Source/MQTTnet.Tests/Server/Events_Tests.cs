@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
+using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
@@ -26,7 +27,7 @@ namespace MQTTnet.Tests.Server
                 server.ClientConnectedAsync += e =>
                 {
                     eventArgs = e;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
@@ -53,7 +54,7 @@ namespace MQTTnet.Tests.Server
                 server.ClientDisconnectedAsync += e =>
                 {
                     eventArgs = e;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
@@ -80,7 +81,7 @@ namespace MQTTnet.Tests.Server
                 server.ClientSubscribedTopicAsync += e =>
                 {
                     eventArgs = e;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 var client = await testEnvironment.ConnectClient();
@@ -107,7 +108,7 @@ namespace MQTTnet.Tests.Server
                 server.ClientUnsubscribedTopicAsync += e =>
                 {
                     eventArgs = e;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
         
                 var client = await testEnvironment.ConnectClient();
@@ -133,7 +134,7 @@ namespace MQTTnet.Tests.Server
                 server.InterceptingPublishAsync += e =>
                 {
                     eventArgs = e;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
         
                 var client = await testEnvironment.ConnectClient();
@@ -160,7 +161,7 @@ namespace MQTTnet.Tests.Server
                 server.StartedAsync += e =>
                 {
                     eventArgs = e;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
                 
                 await server.StartAsync();
@@ -182,7 +183,7 @@ namespace MQTTnet.Tests.Server
                 server.StoppedAsync += e =>
                 {
                     eventArgs = e;
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 await server.StopAsync();

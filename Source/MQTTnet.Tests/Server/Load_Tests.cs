@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
+using MQTTnet.Implementations;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -25,7 +26,7 @@ namespace MQTTnet.Tests.Server
                     receiverClient.ApplicationMessageReceivedAsync += e =>
                     {
                         Interlocked.Increment(ref receivedMessages);
-                        return Task.CompletedTask;
+                        return PlatformAbstractionLayer.CompletedTask;
                     };
 
                     await receiverClient.SubscribeAsync("t/+");
@@ -73,7 +74,7 @@ namespace MQTTnet.Tests.Server
                 server.InterceptingPublishAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessages);
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
                 
                 for (var i = 0; i < 100; i++)
@@ -136,7 +137,7 @@ namespace MQTTnet.Tests.Server
                 server.InterceptingPublishAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessages);
-                    return Task.CompletedTask;
+                    return PlatformAbstractionLayer.CompletedTask;
                 };
 
                 for (var i = 0; i < 100; i++)

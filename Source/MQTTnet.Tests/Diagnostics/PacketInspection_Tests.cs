@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Implementations;
 
 namespace MQTTnet.Tests.Diagnostics
 {
@@ -32,7 +33,7 @@ namespace MQTTnet.Tests.Diagnostics
                     mqttClient.InspectPackage += eventArgs =>
                     {
                         packets.Add(eventArgs.Direction + ":" + Convert.ToBase64String(eventArgs.Buffer));
-                        return Task.CompletedTask;
+                        return PlatformAbstractionLayer.CompletedTask;
                     };
                 
                     await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);

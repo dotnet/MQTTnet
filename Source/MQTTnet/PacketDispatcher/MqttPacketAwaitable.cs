@@ -13,7 +13,7 @@ namespace MQTTnet.PacketDispatcher
 {
     public sealed class MqttPacketAwaitable<TPacket> : IMqttPacketAwaitable where TPacket : MqttPacket
     {
-        readonly CrossPlatformPromise<MqttPacket> _promise = new CrossPlatformPromise<MqttPacket>();
+        readonly AsyncTaskCompletionSource<MqttPacket> _promise = new AsyncTaskCompletionSource<MqttPacket>();
         readonly MqttPacketDispatcher _owningPacketDispatcher;
 
         public MqttPacketAwaitable(ushort packetIdentifier, MqttPacketDispatcher owningPacketDispatcher)

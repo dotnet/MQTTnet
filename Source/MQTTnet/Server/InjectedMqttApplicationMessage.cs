@@ -6,9 +6,9 @@ using System;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttInjectedApplicationMessage
+    public sealed class InjectedMqttApplicationMessage
     {
-        public MqttInjectedApplicationMessage(MqttApplicationMessage applicationMessage)
+        public InjectedMqttApplicationMessage(MqttApplicationMessage applicationMessage)
         {
             ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
         }

@@ -7,6 +7,7 @@ Checkout the new samples (https://github.com/dotnet/MQTTnet/tree/feature/master/
 * [Core] Improved memory management when working with large payloads.
 * [Core] Added support for .NET 6.0.
 * [Core] nuget packages are now created by MSBuild including more information (i.e. commit hash).
+* [Client] Exposed socket linger state in options.
 * [Client] The OS will now choose the best TLS version to use. It is no longer fixed to 1.3 etc. (thanks to @patagonaa, #1271).
 * [Client] Added support for _ServerKeepAlive_ (MQTTv5).
 * [Client] Exposed user properties and reason string in subscribe result.
@@ -14,6 +15,7 @@ Checkout the new samples (https://github.com/dotnet/MQTTnet/tree/feature/master/
 * [Client] Migrated application message handler to a regular .NET event (BREAKING CHANGE!).
 * [Client] The will message is longer a regular application message due to not supported properties by the will message (BREAKING CHANGE!).
 * [Client] Timeouts are no longer handled inside the library. Each method (Connect, Publish etc.) supports a cancellation token so that custom timeouts can and must be used (BREAKING CHANGE!). 
+* [Server] Exposed socket linger state in options.
 * [Server] Added support for returning individual subscription errors (#80 thanks to @jimch)
 * [Server] Improved topic filter comparisons (support for $).
 * [Server] Added more MQTTv5 response information to all interceptors (BREAKING CHANGE!).

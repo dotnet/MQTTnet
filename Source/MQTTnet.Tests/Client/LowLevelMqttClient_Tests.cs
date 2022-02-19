@@ -137,24 +137,18 @@ namespace MQTTnet.Tests.Client
 
                     try
                     {
-                        var tries = 0;
-                        while (tries < 60)
+                        using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
                         {
                             await lowLevelClient.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
                             await LongTestDelay();
 
-                            if (!lowLevelClient.IsConnected)
-                            {
-                                break;
-                            }
-                            
-                            tries++;
+                            await lowLevelClient.ReceiveAsync(timeout.Token);
                         }
                     }
                     catch
                     {
                     }
-
+           
                     Assert.IsFalse(lowLevelClient.IsConnected);
                 }
             }

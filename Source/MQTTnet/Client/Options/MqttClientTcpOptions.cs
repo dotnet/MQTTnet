@@ -8,17 +8,19 @@ namespace MQTTnet.Client
 {
     public sealed class MqttClientTcpOptions : IMqttClientChannelOptions
     {
-        public string Server { get; set; }
-
-        public int? Port { get; set; }
+        public AddressFamily AddressFamily { get; set; } = AddressFamily.Unspecified;
 
         public int BufferSize { get; set; } = 8192;
 
         public bool? DualMode { get; set; }
 
+        public LingerOption LingerState { get; set; } = new LingerOption(true, 0);
+
         public bool NoDelay { get; set; } = true;
 
-        public AddressFamily AddressFamily { get; set; } = AddressFamily.Unspecified;
+        public int? Port { get; set; }
+        
+        public string Server { get; set; }
 
         public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
 

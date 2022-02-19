@@ -81,6 +81,11 @@ namespace MQTTnet.Implementations
                     _socket.NoDelay = true;
                 }
 
+                if (_options.LingerState != null)
+                {
+                    _socket.LingerState = _options.LingerState;
+                }
+
                 _socket.Bind(_localEndPoint);
                 
                 // Get the local endpoint back from the socket. The port may have changed.

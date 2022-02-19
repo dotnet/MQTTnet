@@ -51,6 +51,12 @@ namespace MQTTnet.Implementations
             set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, value ? 1 : 0);
         }
 
+        public LingerOption LingerState
+        {
+            get => _socket.LingerState;
+            set => _socket.LingerState = value;
+        }
+
         public bool DualMode
         {
             get => _socket.DualMode;
@@ -74,7 +80,7 @@ namespace MQTTnet.Implementations
             get => _socket.SendTimeout;
             set => _socket.SendTimeout = value;
         }
-        
+
         public EndPoint RemoteEndPoint => _socket.RemoteEndPoint;
 
         public bool ReuseAddress

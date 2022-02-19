@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Net;
+using System.Net.Sockets;
 
 namespace MQTTnet.Server
 {
@@ -15,6 +16,8 @@ namespace MQTTnet.Server
         public int ConnectionBacklog { get; set; } = 100;
 
         public bool NoDelay { get; set; } = true;
+
+        public LingerOption LingerState { get; set; } = new LingerOption(true, 0);
 
 #if WINDOWS_UWP
         public int BufferSize { get; set; } = 4096;

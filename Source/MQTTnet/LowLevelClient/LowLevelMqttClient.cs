@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
+using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 
@@ -89,7 +90,12 @@ namespace MQTTnet.LowLevelClient
             
             try
             {
-                return await adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+                var receivedPacket = await adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+                if (receivedPacket == null)
+                {
+                    // Graceful socket close.
+                    throw new MqttCommunicationException("The connection is closed.");
+                }
             }
             catch
             {

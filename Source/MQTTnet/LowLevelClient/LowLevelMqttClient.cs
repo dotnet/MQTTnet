@@ -96,6 +96,8 @@ namespace MQTTnet.LowLevelClient
                     // Graceful socket close.
                     throw new MqttCommunicationException("The connection is closed.");
                 }
+
+                return receivedPacket;
             }
             catch
             {

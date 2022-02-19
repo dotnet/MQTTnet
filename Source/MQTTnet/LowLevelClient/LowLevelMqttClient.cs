@@ -71,7 +71,21 @@ namespace MQTTnet.LowLevelClient
 
         public async Task DisconnectAsync(CancellationToken cancellationToken)
         {
-            await SafeDisconnect(cancellationToken).ConfigureAwait(false);
+            var adapter = _adapter;
+            if (adapter == null)
+            {
+                throw new InvalidOperationException("Low level MQTT client is not connected.");
+            }
+
+            try
+            {
+                await adapter.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                Dispose();
+                throw;
+            }
         }
 
         public void Dispose()
@@ -87,7 +101,7 @@ namespace MQTTnet.LowLevelClient
             {
                 throw new InvalidOperationException("Low level MQTT client is not connected.");
             }
-            
+
             try
             {
                 var receivedPacket = await adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
@@ -101,7 +115,7 @@ namespace MQTTnet.LowLevelClient
             }
             catch
             {
-                await SafeDisconnect(cancellationToken).ConfigureAwait(false);
+                Dispose();
                 throw;
             }
         }
@@ -125,33 +139,8 @@ namespace MQTTnet.LowLevelClient
             }
             catch
             {
-                await SafeDisconnect(cancellationToken).ConfigureAwait(false);
-                throw;
-            }
-        }
-
-        async Task SafeDisconnect(CancellationToken cancellationToken)
-        {
-            try
-            {
-                var adapter = _adapter;
-                if (adapter == null)
-                {
-                    return;
-                }
-                
-                await adapter.DisconnectAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (Exception exception)
-            {
-                _logger.Error(exception, "Error while disconnecting low level MQTT client.");
-            }
-            finally
-            {
                 Dispose();
+                throw;
             }
         }
     }

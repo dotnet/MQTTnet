@@ -36,10 +36,5 @@ namespace MQTTnet.Client
 #else
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;
 #endif
-
-        [Obsolete("This property will be removed soon. Use CertificateValidationHandler instead.")]
-        public Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> CertificateValidationCallback { get; set; }
-
-        public Func<MqttClientCertificateValidationCallbackContext, bool> CertificateValidationHandler { get; set; }
     }
 }

@@ -1,7 +1,6 @@
 <p align="center">
 <img src="https://github.com/dotnet/MQTTnet/blob/master/Images/icon_det_256.png?raw=true" width="196">
 <br/>
-<br/>
 </p>
 
 [![NuGet Badge](https://buildstats.info/nuget/MQTTnet)](https://www.nuget.org/packages/MQTTnet)

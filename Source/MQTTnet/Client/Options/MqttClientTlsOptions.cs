@@ -31,6 +31,15 @@ namespace MQTTnet.Client
         public List<System.Net.Security.SslApplicationProtocol> ApplicationProtocols { get; set; }
 #endif
 
-        public SslProtocols SslProtocol { get; set; } = SslProtocols.None;
+#if NET48 || NETCOREAPP3_1 || NET5 || NET6
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;
+#else
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;
+#endif
+
+        [Obsolete("This property will be removed soon. Use CertificateValidationHandler instead.")]
+        public Func<X509Certificate, X509Chain, SslPolicyErrors, IMqttClientOptions, bool> CertificateValidationCallback { get; set; }
+
+        public Func<MqttClientCertificateValidationCallbackContext, bool> CertificateValidationHandler { get; set; }
     }
 }

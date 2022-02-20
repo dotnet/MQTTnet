@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.IO;
 using System.Net;
@@ -43,8 +47,14 @@ namespace MQTTnet.Implementations
             // We cannot use the _NoDelay_ property from the socket because there is an issue in .NET 4.5.2, 4.6.
             // The decompiled code is: this.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.Debug, value ? 1 : 0);
             // Which is wrong because the "NoDelay" should be set and not "Debug".
-            get => (int)_socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay) > 0;
+            get => (int)_socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay) != 0;
             set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, value ? 1 : 0);
+        }
+
+        public LingerOption LingerState
+        {
+            get => _socket.LingerState;
+            set => _socket.LingerState = value;
         }
 
         public bool DualMode
@@ -58,7 +68,7 @@ namespace MQTTnet.Implementations
             get => _socket.ReceiveBufferSize;
             set => _socket.ReceiveBufferSize = value;
         }
-        
+
         public int SendBufferSize
         {
             get => _socket.SendBufferSize;
@@ -79,6 +89,8 @@ namespace MQTTnet.Implementations
             set => _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, value ? 1 : 0);
         }
 
+        public bool IsConnected => _socket.Connected;
+
         public async Task<CrossPlatformSocket> AcceptAsync()
         {
             try
@@ -97,9 +109,14 @@ namespace MQTTnet.Implementations
             }
         }
 
+        public EndPoint LocalEndPoint => _socket.LocalEndPoint;
+
         public void Bind(EndPoint localEndPoint)
         {
-            if (localEndPoint is null) throw new ArgumentNullException(nameof(localEndPoint));
+            if (localEndPoint is null)
+            {
+                throw new ArgumentNullException(nameof(localEndPoint));
+            }
 
             _socket.Bind(localEndPoint);
         }
@@ -111,30 +128,42 @@ namespace MQTTnet.Implementations
 
         public async Task ConnectAsync(string host, int port, CancellationToken cancellationToken)
         {
-            if (host is null) throw new ArgumentNullException(nameof(host));
+            if (host is null)
+            {
+                throw new ArgumentNullException(nameof(host));
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
                 _networkStream?.Dispose();
 
+#if NET5_0_OR_GREATER
+                await _socket.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+#else
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(_socketDisposeAction))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
 #if NET452 || NET461
                     await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, host, port, null).ConfigureAwait(false);
 #else
                     await _socket.ConnectAsync(host, port).ConfigureAwait(false);
 #endif
-                    _networkStream = new NetworkStream(_socket, true);
                 }
+#endif
+                _networkStream = new NetworkStream(_socket, true);
             }
             catch (SocketException socketException)
             {
                 if (socketException.SocketErrorCode == SocketError.OperationAborted)
                 {
                     throw new OperationCanceledException();
+                }
+
+                if (socketException.SocketErrorCode == SocketError.TimedOut)
+                {
+                    throw new MqttCommunicationTimedOutException();
                 }
 
                 throw new MqttCommunicationException($"Error while connecting with host '{host}:{port}'.", socketException);
@@ -197,7 +226,7 @@ namespace MQTTnet.Implementations
         }
 
 #if NET452 || NET461
-        class SocketWrapper
+        sealed class SocketWrapper
         {
             readonly Socket _socket;
             readonly ArraySegment<byte> _buffer;

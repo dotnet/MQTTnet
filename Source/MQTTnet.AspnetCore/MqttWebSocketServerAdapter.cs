@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using Microsoft.AspNetCore.Http;
 using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
@@ -6,23 +10,19 @@ using MQTTnet.Server;
 using System;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics;
 
 namespace MQTTnet.AspNetCore
 {
     public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter
     {
-        readonly IMqttNetLogger _rootLogger;
-
-        public MqttWebSocketServerAdapter(IMqttNetLogger logger)
-        {
-            _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
+        IMqttNetLogger _logger = new MqttNetNullLogger();
+        
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
-        public Task StartAsync(IMqttServerOptions options)
+        public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
         {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             return Task.CompletedTask;
         }
 
@@ -45,11 +45,10 @@ namespace MQTTnet.AspNetCore
                 var clientHandler = ClientHandler;
                 if (clientHandler != null)
                 {
-                    var writer = new SpanBasedMqttPacketWriter();
-                    var formatter = new MqttPacketFormatterAdapter(writer);
+                    var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
                     var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection, clientCertificate);
 
-                    using (var channelAdapter = new MqttChannelAdapter(channel, formatter, null, _rootLogger))
+                    using (var channelAdapter = new MqttChannelAdapter(channel, formatter, null, _logger))
                     {
                         await clientHandler(channelAdapter).ConfigureAwait(false);
                     }

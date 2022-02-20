@@ -1,40 +1,72 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net461</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' AND '$(SolutionName)' != 'MQTTnet.noUWP' ">$(TargetFrameworks);uap10.0</TargetFrameworks>
-    <Product />
-    <Company />
-    <Authors />
-    <PackageId />
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <SignAssembly>false</SignAssembly>
-    <DelaySign>false</DelaySign>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard1.3;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net461</TargetFrameworks>
+        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">$(TargetFrameworks);uap10.0</TargetFrameworks>
+        
+        <AssemblyName>MQTTnet.Extensions.Rpc</AssemblyName>
+        <RootNamespace>MQTTnet.Extensions.Rpc</RootNamespace>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Company>The contributors of MQTTnet</Company>
+        <Product>MQTTnet</Product>
+        <Description>This is an extension library which allows executing synchronous device calls including a response using MQTTnet.</Description>
+        <Authors>The contributors of MQTTnet</Authors>
+        <PackageId>MQTTnet.Extensions.Rpc</PackageId>
+        <SignAssembly>false</SignAssembly>
+        <DelaySign>false</DelaySign>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <Copyright>Christian Kratky 2016-2022</Copyright>
+        <PackageProjectUrl>https://github.com/dotnet/MQTTnet</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/dotnet/MQTTnet.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</PackageTags>
+        <NeutralLanguage>en-US</NeutralLanguage>
+        <EnableNETAnalyzers>false</EnableNETAnalyzers>
+        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+        <PackageIcon>nuget.png</PackageIcon>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReleaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</PackageReleaseNotes>
+        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">
-    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
-    <NugetTargetMoniker>UAP,Version=v10.0</NugetTargetMoniker>
-    <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
-    <TargetFrameworkIdentifier>.NETCore</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
-    <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
-    <DefaultLanguage>en</DefaultLanguage>
-    <LanguageTargets>$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets</LanguageTargets>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">
+        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+        <NugetTargetMoniker>UAP,Version=v10.0</NugetTargetMoniker>
+        <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+        <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+        <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
+        <TargetFrameworkIdentifier>.NETCore</TargetFrameworkIdentifier>
+        <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+        <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
+        <DefaultLanguage>en</DefaultLanguage>
+        <LanguageTargets>$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets</LanguageTargets>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="..\..\Images\nuget.png">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="..\..\LICENSE">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+    </ItemGroup>
 
 </Project>

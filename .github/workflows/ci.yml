@@ -1,34 +1,68 @@
 name: CI
 
-on: [push]
+on: [push, pull_request]
+
+env:
+  ASSEMBLY_VERSION: "4.0.0.${{github.run_number}}"
+  NUGET_VERSION:  "4.0.0.${{github.run_number}}"
 
 jobs:
   build:
 
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        dotnet-version: ['6.0.x']
+    runs-on: windows-2022
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v1.7.2
+      - name: Setup Windows SDK
+        uses: GuillaumeFalourd/setup-windows10-sdk-action@v1
         with:
-          dotnet-version: ${{ matrix.dotnet-version }}
+          sdk-version: 18362
 
-      - name: Build
-        shell: pwsh
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v1.9.0
+        with:
+          dotnet-version: |
+            3.1.x
+            6.0.x
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Signing Certificate
         run: |
-          Set-Location -Path "Build"
-          .\build.ps1 1.2.3 4.5.6-rc1
+          $secret = '${{ secrets.SNC_BASE64 }}'
+          $decoded = [System.Convert]::FromBase64CharArray($secret, 0, $secret.Length)
+          Set-Content -Path ${{ github.workspace }}\certificate.snk -Value $decoded -AsByteStream
 
+      - name: Restore nuget packages
+        run: msbuild MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
 
-#      - name: Install dependencies
-#        run: dotnet restore MQTTnet.sln
-#      - name: Build
-#        run: dotnet build --configuration Release --no-restore MQTTnet.sln
-#      - name: Test MQTTnet
-#        run: dotnet test --no-restore --verbosity normal Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
-#      - name: Test AspNetCore
-#        run: dotnet test --no-restore --verbosity normal Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj
+      - name: Build solution
+        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
+
+      - name: Collect nuget Packages
+        uses: actions/upload-artifact@v2
+        with:
+          name: nuget Packages
+          path: |
+            **\*.nupkg
+            **\*.snupkg
+
+      - name: Setup VSTest
+        uses: darenm/Setup-VSTest@v1
+
+      - name: Core Tests
+        run: vstest.console.exe Source\MQTTnet.Tests\bin\Release\net6.0\MQTTnet.Tests.dll
+
+      - name: ASP.NET Tests
+        run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
+
+      - name: Publish MyGet nugets
+        if: ${{ github.event_name == 'push' }}
+        run: dotnet nuget push **/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
+
+#      - name: Publish nugets
+#        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+#        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate

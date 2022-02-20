@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Collections.Generic;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Client.Connecting
+namespace MQTTnet.Client
 {
     public sealed class MqttClientConnectResult
     {
@@ -83,11 +87,12 @@ namespace MQTTnet.Client.Connecting
         public string ServerReference { get; internal set; }
 
         /// <summary>
+        /// MQTTv5 only.
         /// Gets the keep alive interval which was chosen by the server instead of the
         /// keep alive interval from the client CONNECT packet.
-        /// MQTTv5 only.
+        /// A value of 0 indicates that the feature is not used.
         /// </summary>
-        public ushort? ServerKeepAlive { get; internal set; }
+        public ushort ServerKeepAlive { get; internal set; }
 
         public uint? SessionExpiryInterval { get; internal set; }
 

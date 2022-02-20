@@ -1,21 +1,24 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client.Disconnecting;
 using MQTTnet.Diagnostics;
-using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
+using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server
 {
     public sealed class MqttServerKeepAliveMonitor
     {
-        readonly IMqttServerOptions _options;
+        readonly MqttServerOptions _options;
         readonly MqttClientSessionsManager _sessionsManager;
         readonly MqttNetSourceLogger _logger;
 
-        public MqttServerKeepAliveMonitor(IMqttServerOptions options, MqttClientSessionsManager sessionsManager, IMqttNetLogger logger)
+        public MqttServerKeepAliveMonitor(MqttServerOptions options, MqttClientSessionsManager sessionsManager, IMqttNetLogger logger)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
@@ -41,7 +44,7 @@ namespace MQTTnet.Server.Internal
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    TryMaintainConnections();
+                    TryProcessClients();
                     PlatformAbstractionLayer.Sleep(_options.KeepAliveMonitorInterval);
                 }
             }
@@ -58,16 +61,16 @@ namespace MQTTnet.Server.Internal
             }
         }
 
-        void TryMaintainConnections()
+        void TryProcessClients()
         {
             var now = DateTime.UtcNow;
-            foreach (var connection in _sessionsManager.GetConnections())
+            foreach (var client in _sessionsManager.GetClients())
             {
-                TryMaintainConnection(connection, now);
+                TryProcessClient(client, now);
             }
         }
 
-        void TryMaintainConnection(MqttClientConnection connection, DateTime now)
+        void TryProcessClient(MqttClient connection, DateTime now)
         {
             try
             {
@@ -83,7 +86,7 @@ namespace MQTTnet.Server.Internal
                     return;
                 }
 
-                if (connection.IsReadingPacket)
+                if (connection.ChannelAdapter.IsReadingPacket)
                 {
                     // The connection is currently reading a (large) packet. So it is obviously 
                     // doing something and thus "connected".
@@ -102,18 +105,18 @@ namespace MQTTnet.Server.Internal
                     return;
                 }
 
-                _logger.Warning("Client '{0}': Did not receive any packet or keep alive signal.", connection.ClientId);
+                _logger.Warning("Client '{0}': Did not receive any packet or keep alive signal.", connection.Id);
 
                 // Execute the disconnection in background so that the keep alive monitor can continue
                 // with checking other connections.
                 // We do not need to wait for the task so no await is needed.
                 // Also the internal state of the connection must be swapped to "Finalizing" because the
                 // next iteration of the keep alive timer happens.
-                var _ = connection.StopAsync(MqttClientDisconnectReason.KeepAliveTimeout);
+                var _ = connection.StopAsync(MqttDisconnectReasonCode.KeepAliveTimeout);
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, "Client {0}: Unhandled exception while checking keep alive timeouts.", connection.ClientId);
+                _logger.Error(exception, "Client {0}: Unhandled exception while checking keep alive timeouts.", connection.Id);
             }
         }
     }

@@ -1,26 +1,39 @@
-﻿using System.Collections.Generic;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Collections.Generic;
 using System.Linq;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttUnsubAckPacket : MqttBasePacket, IMqttPacketWithIdentifier
+    public sealed class MqttUnsubAckPacket : MqttPacketWithIdentifier
     {
-        public ushort PacketIdentifier { get; set; }
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
+        public List<MqttUnsubscribeReasonCode> ReasonCodes { get; set; }
 
-        #region Added in MQTTv5
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
+        public string ReasonString { get; set; }
 
-        public MqttUnsubAckPacketProperties Properties { get; set; }
-
-        public List<MqttUnsubscribeReasonCode> ReasonCodes { get; set; } = new List<MqttUnsubscribeReasonCode>();
-
-        #endregion
+        /// <summary>
+        ///     Added in MQTTv5.
+        /// </summary>
+        public List<MqttUserProperty> UserProperties { get; set; }
 
         public override string ToString()
         {
-            var reasonCodesText = string.Join(",", ReasonCodes.Select(f => f.ToString()));
+            var reasonCodesText = string.Empty;
+            if (ReasonCodes != null)
+            {
+                reasonCodesText = string.Join(",", ReasonCodes?.Select(f => f.ToString()));
+            }
 
-            return string.Concat("UnsubAck: [PacketIdentifier=", PacketIdentifier, "] [ReasonCodes=", reasonCodesText, "]");
+            return $"UnsubAck: [PacketIdentifier={PacketIdentifier}] [ReasonCodes={reasonCodesText}] [ReasonString={ReasonString}]";
         }
     }
 }

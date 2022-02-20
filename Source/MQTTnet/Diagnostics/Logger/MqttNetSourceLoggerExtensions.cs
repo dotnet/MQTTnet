@@ -1,6 +1,10 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Diagnostics.Logger
+using System;
+
+namespace MQTTnet.Diagnostics
 {
     public static class MqttNetSourceLoggerExtensions
     {
@@ -124,6 +128,16 @@ namespace MQTTnet.Diagnostics.Logger
             }
             
             logger.Publish(MqttNetLogLevel.Warning, message, new object[] {parameter1}, null);
+        }
+        
+        public static void Warning<TParameter1, TParameter2>(this MqttNetSourceLogger logger, string message, TParameter1 parameter1, TParameter2 parameter2)
+        {
+            if (!logger.IsEnabled)
+            {
+                return;
+            }
+            
+            logger.Publish(MqttNetLogLevel.Warning, message, new object[] {parameter1, parameter2}, null);
         }
         
         public static void Warning(this MqttNetSourceLogger logger, string message)

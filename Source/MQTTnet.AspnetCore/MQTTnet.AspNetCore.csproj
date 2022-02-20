@@ -1,36 +1,71 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
-    <Product />
-    <Company />
-    <Authors />
-    <PackageId />
-    <LangVersion>7.2</LangVersion>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;netcoreapp2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-  </ItemGroup>
+        <AssemblyName>MQTTnet.AspNetCore</AssemblyName>
+        <RootNamespace>MQTTnet.AspNetCore</RootNamespace>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Company>The contributors of MQTTnet</Company>
+        <Product>MQTTnet</Product>
+        <Description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</Description>
+        <Authors>The contributors of MQTTnet</Authors>
+        <PackageId>MQTTnet.AspNetCore</PackageId>
+        <SignAssembly>false</SignAssembly>
+        <DelaySign>false</DelaySign>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <Copyright>Christian Kratky 2016-2022</Copyright>
+        <PackageProjectUrl>https://github.com/dotnet/MQTTnet</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/dotnet/MQTTnet.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</PackageTags>
+        <NeutralLanguage>en-US</NeutralLanguage>
+        <EnableNETAnalyzers>false</EnableNETAnalyzers>
+        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+        <PackageIcon>nuget.png</PackageIcon>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReleaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</PackageReleaseNotes>
+        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
+        
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>RELEASE;NETSTANDARD2_0</DefineConstants>
-  </PropertyGroup>
+    <ItemGroup>
+        <None Include="..\..\Images\nuget.png">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' or '$(TargetFramework)' == 'net5.0' ">
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-    
-  <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1' and '$(TargetFramework)' != 'net5.0' ">
-    <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.1.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="..\..\LICENSE">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    </ItemGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <DefineConstants>RELEASE;NETSTANDARD2_0</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' or '$(TargetFramework)' == 'net5.0' or '$(TargetFramework)' == 'net6.0' ">
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1' and '$(TargetFramework)' != 'net5.0' and '$(TargetFramework)' != 'net6.0' ">
+        <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+    </ItemGroup>
 
 </Project>

@@ -1,39 +1,30 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
-using MQTTnet.Extensions.Rpc.Options;
-using MQTTnet.Extensions.Rpc.Options.TopicGeneration;
 using MQTTnet.Protocol;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client.Subscribing;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.Extensions.Rpc
 {
-    public sealed class MqttRpcClient : IMqttRpcClient
+    public sealed class MqttRpcClient : IDisposable
     {
         readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
-        readonly IMqttClient _mqttClient;
-        readonly IMqttRpcClientOptions _options;
-        readonly RpcAwareApplicationMessageReceivedHandler _applicationMessageReceivedHandler;
-
-        [Obsolete("Use MqttRpcClient(IMqttClient mqttClient, IMqttRpcClientOptions options).")]
-        public MqttRpcClient(IMqttClient mqttClient) : this(mqttClient, new MqttRpcClientOptions())
-        {
-        }
-
-        public MqttRpcClient(IMqttClient mqttClient, IMqttRpcClientOptions options)
+        readonly MqttClient _mqttClient;
+        readonly MqttRpcClientOptions _options;
+        
+        public MqttRpcClient(MqttClient mqttClient, MqttRpcClientOptions options)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
             _options = options ?? throw new ArgumentNullException(nameof(options));
 
-            _applicationMessageReceivedHandler = new RpcAwareApplicationMessageReceivedHandler(
-                mqttClient.ApplicationMessageReceivedHandler,
-                HandleApplicationMessageReceivedAsync);
-
-            _mqttClient.ApplicationMessageReceivedHandler = _applicationMessageReceivedHandler;
+            _mqttClient.ApplicationMessageReceivedAsync += HandleApplicationMessageReceivedAsync;
         }
 
         public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
@@ -59,12 +50,7 @@ namespace MQTTnet.Extensions.Rpc
         public async Task<byte[]> ExecuteAsync(string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, CancellationToken cancellationToken)
         {
             if (methodName == null) throw new ArgumentNullException(nameof(methodName));
-
-            if (!(_mqttClient.ApplicationMessageReceivedHandler is RpcAwareApplicationMessageReceivedHandler))
-            {
-                throw new InvalidOperationException("The application message received handler was modified.");
-            }
-
+            
             var topicNames = _options.TopicGenerationStrategy.CreateRpcTopics(new TopicGenerationContext
             {
                 MethodName = methodName,
@@ -121,7 +107,7 @@ namespace MQTTnet.Extensions.Rpc
             finally
             {
                 _waitingCalls.TryRemove(responseTopic, out _);
-
+                
                 await _mqttClient.UnsubscribeAsync(responseTopic).ConfigureAwait(false);
             }
         }
@@ -147,7 +133,7 @@ namespace MQTTnet.Extensions.Rpc
 
         public void Dispose()
         {
-            _mqttClient.ApplicationMessageReceivedHandler = _applicationMessageReceivedHandler.OriginalHandler;
+            _mqttClient.ApplicationMessageReceivedAsync -= HandleApplicationMessageReceivedAsync;
 
             foreach (var tcs in _waitingCalls)
             {

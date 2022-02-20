@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using MQTTnet.Packets;
 using System;
 using System.Collections.Generic;
@@ -36,12 +40,12 @@ namespace MQTTnet.PacketDispatcher
             }
         }
         
-        public bool TryDispatch(MqttBasePacket packet)
+        public bool TryDispatch(MqttPacket packet)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
             
             ushort identifier = 0;
-            if (packet is IMqttPacketWithIdentifier packetWithIdentifier)
+            if (packet is MqttPacketWithIdentifier packetWithIdentifier)
             {
                 identifier = packetWithIdentifier.PacketIdentifier;
             }
@@ -76,7 +80,7 @@ namespace MQTTnet.PacketDispatcher
             return awaitables.Count > 0;
         }
         
-        public MqttPacketAwaitable<TResponsePacket> AddAwaitable<TResponsePacket>(ushort packetIdentifier) where TResponsePacket : MqttBasePacket
+        public MqttPacketAwaitable<TResponsePacket> AddAwaitable<TResponsePacket>(ushort packetIdentifier) where TResponsePacket : MqttPacket
         {
             var awaitable = new MqttPacketAwaitable<TResponsePacket>(packetIdentifier, this);
 

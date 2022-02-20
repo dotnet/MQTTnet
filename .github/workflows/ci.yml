@@ -1,11 +1,6 @@
 name: CI
 
 on: [push, pull_request]
-  #push:
-  #  branches:
-  #    - feature/Reason_Code_In_Subscription_Interceptor
-      #- master
-  #pull_request:
 
 env:
   ASSEMBLY_VERSION: "4.0.0.${{github.run_number}}"
@@ -64,13 +59,6 @@ jobs:
       - name: ASP.NET Tests
         run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
 
-     # - name: Create tag
-     #   if: ${{ github.event_name == 'push' }}
-     #   uses: tvdias/github-tagger@v0.0.1
-     #   with:
-     #     repo-token: ${{ secrets.GITHUB_TOKEN }}
-     #     tag: v${{ env.ASSEMBLY_VERSION }}
-
       - name: Publish MyGet nugets
         if: ${{ github.event_name == 'push' }}
         run: dotnet nuget push **/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
@@ -78,20 +66,3 @@ jobs:
 #      - name: Publish nugets
 #        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
 #        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
-
-#  pull_request_ci:
-#    runs-on: windows-2022
-#    if: ${{ github.event_name == 'pull_request' }}
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Run PR CI
-#        run: ./run-additional-pr-ci
-
-#      - name: Install dependencies
-#        run: dotnet restore MQTTnet.sln
-#      - name: Build
-#        run: dotnet build --configuration Release --no-restore MQTTnet.sln
-#      - name: Test MQTTnet
-#        run: dotnet test --no-restore --verbosity normal Tests\MQTTnet.Core.Tests\MQTTnet.Tests.csproj
-#      - name: Test AspNetCore
-#        run: dotnet test --no-restore --verbosity normal Tests\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj

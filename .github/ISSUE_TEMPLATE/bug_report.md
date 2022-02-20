@@ -48,7 +48,9 @@ Include debugging or logging information here:
 \\ Put your logging output here.
 ```
 ### Code example
- Please provide full code examples below where possible to make it easier for the developers to check your issues.
+Please provide full code examples below where possible to make it easier for the developers to check your issues.
+
+**Ideally a Unit Test (which shows the error) is provided so that the behavior can be reproduced easily.**
  
 ```csharp
 \\ Put your code here.

@@ -10,7 +10,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace MQTTnet.Client
 {
-    public class MqttClientOptionsBuilderTlsParameters
+    public sealed class MqttClientOptionsBuilderTlsParameters
     {
         public bool UseTls { get; set; }
         

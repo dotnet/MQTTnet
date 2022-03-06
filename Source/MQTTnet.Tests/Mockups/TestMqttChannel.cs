@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
 
-namespace MQTTnet.Internal
+namespace MQTTnet.Tests.Mockups
 {
     public sealed class TestMqttChannel : IMqttChannel
     {

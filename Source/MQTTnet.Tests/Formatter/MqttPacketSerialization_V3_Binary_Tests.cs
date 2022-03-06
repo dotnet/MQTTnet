@@ -17,6 +17,7 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Tests.Extensions;
+using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests
 {

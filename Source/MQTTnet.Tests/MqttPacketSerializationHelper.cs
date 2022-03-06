@@ -5,6 +5,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
+using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests
 {

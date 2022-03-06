@@ -103,24 +103,24 @@ namespace MQTTnet.Server
             Session.LatestConnectPacket = _connectPacket;
             Session.WillMessageSent = false;
 
-            using (var cancellationToken = new CancellationTokenSource())
+            using (_cancellationToken = new CancellationTokenSource())
             {
-                _cancellationToken = cancellationToken;
+                var cancellationToken = _cancellationToken.Token;
 
                 try
                 {
-                    Task.Run(() => SendPacketsLoop(cancellationToken.Token), cancellationToken.Token).RunInBackground(_logger);
+                    Task.Run(() => SendPacketsLoop(cancellationToken), cancellationToken).RunInBackground(_logger);
                     
                     IsRunning = true;
 
-                    await ReceivePackagesLoop(cancellationToken.Token).ConfigureAwait(false);
+                    await ReceivePackagesLoop(cancellationToken).ConfigureAwait(false);
                 }
                 finally
                 {
                     IsRunning = false;
 
+                    _cancellationToken?.Cancel();
                     _cancellationToken = null;
-                    cancellationToken.Cancel();
                 }
             }
 

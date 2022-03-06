@@ -40,7 +40,7 @@ namespace MQTTnet.AspNetCore
 
         public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<MqttServerOptionsBuilder> configure = null)
         {
-            services.AddSingleton<MqttServerOptions>(s =>
+            services.AddSingleton(s =>
             {
                 var serverOptionsBuilder = new MqttServerOptionsBuilder();
                 configure?.Invoke(serverOptionsBuilder);
@@ -54,7 +54,7 @@ namespace MQTTnet.AspNetCore
 
         public static IServiceCollection AddHostedMqttServerWithServices(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configure)
         {
-            services.AddSingleton<MqttServerOptions>(s =>
+            services.AddSingleton(s =>
             {
                 var builder = new AspNetMqttServerOptionsBuilder(s);
                 configure(builder);

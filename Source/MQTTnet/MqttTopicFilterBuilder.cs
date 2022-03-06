@@ -4,7 +4,6 @@
 
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
-using System;
 using MQTTnet.Packets;
 
 namespace MQTTnet

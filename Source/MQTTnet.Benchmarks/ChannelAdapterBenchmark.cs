@@ -11,6 +11,7 @@ using System.IO;
 using System.Threading;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
+using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Benchmarks
 {

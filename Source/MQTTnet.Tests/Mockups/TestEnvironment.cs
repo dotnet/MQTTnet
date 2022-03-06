@@ -96,28 +96,32 @@ namespace MQTTnet.Tests.Mockups
             return ConnectClient(Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion));
         }
 
-        public async Task<MqttClient> ConnectClient(Action<MqttClientOptionsBuilder> optionsBuilder, TimeSpan timeout = default)
+        public async Task<MqttClient> ConnectClient(Action<MqttClientOptionsBuilder> configureOptions, TimeSpan timeout = default)
         {
-            if (optionsBuilder == null)
+            if (configureOptions == null)
             {
-                throw new ArgumentNullException(nameof(optionsBuilder));
+                throw new ArgumentNullException(nameof(configureOptions));
             }
 
-            var options = Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort);
+            // Start with initial default values.
+            var optionsBuilder = Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort);
 
-            optionsBuilder.Invoke(options);
+            // Let the caller override settings. Do not touch the options after this.
+            configureOptions.Invoke(optionsBuilder);
 
+            var options = optionsBuilder.Build();
+            
             var client = CreateClient();
 
             if (timeout == TimeSpan.Zero)
             {
-                await client.ConnectAsync(options.Build()).ConfigureAwait(false);
+                await client.ConnectAsync(options).ConfigureAwait(false);
             }
             else
             {
                 using (var timeoutToken = new CancellationTokenSource(timeout))
                 {
-                    await client.ConnectAsync(options.Build(), timeoutToken.Token).ConfigureAwait(false);
+                    await client.ConnectAsync(options, timeoutToken.Token).ConfigureAwait(false);
                 }
             }
 

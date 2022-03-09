@@ -66,6 +66,11 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 | Xamarin.iOS        | 10.14+      |
 | Blazor WebAssembly | 3.2.0+      |
 
+## Build requirements
+
+* Visual Studio 2022 (Net6.0 is targeted in the project and Visual Studio 2019 won't work with Net6.0)
+* UWP Support for Visual Studio (Windows SDK for UWP version 10.0.18362.0+)
+
 ## References
 
 This library is used in the following projects:

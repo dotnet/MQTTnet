@@ -19,6 +19,33 @@ namespace MQTTnet.Tests.Server
     public sealed class Subscribe_Tests : BaseTestClass
     {
         [TestMethod]
+        public async Task Deny_Invalid_Topic()
+        {
+            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            {
+                var server = await testEnvironment.StartServer();
+
+                server.InterceptingSubscriptionAsync += e =>
+                {
+                    if (e.TopicFilter.Topic == "not_allowed_topic")
+                    {
+                        e.Response.ReasonCode = MqttSubscribeReasonCode.TopicFilterInvalid;
+                    }
+
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                var client = await testEnvironment.ConnectClient();
+
+                var subscribeResult = await client.SubscribeAsync("allowed_topic");
+                Assert.AreEqual(MqttClientSubscribeResultCode.GrantedQoS0, subscribeResult.Items.First().ResultCode);
+
+                subscribeResult = await client.SubscribeAsync("not_allowed_topic");
+                Assert.AreEqual(MqttClientSubscribeResultCode.TopicFilterInvalid, subscribeResult.Items.First().ResultCode);
+            }
+        }
+
+        [TestMethod]
         public async Task Intercept_Subscription()
         {
             using (var testEnvironment = CreateTestEnvironment())
@@ -31,7 +58,7 @@ namespace MQTTnet.Tests.Server
                     e.TopicFilter.Topic = "a";
                     return PlatformAbstractionLayer.CompletedTask;
                 };
-                
+
                 var topicAReceived = false;
                 var topicBReceived = false;
 
@@ -46,7 +73,7 @@ namespace MQTTnet.Tests.Server
                     {
                         topicBReceived = true;
                     }
-                    
+
                     return PlatformAbstractionLayer.CompletedTask;
                 };
 
@@ -58,6 +85,181 @@ namespace MQTTnet.Tests.Server
 
                 Assert.IsTrue(topicAReceived);
                 Assert.IsFalse(topicBReceived);
+            }
+        }
+
+        [TestMethod]
+        public async Task Response_Contains_Equal_Reason_Codes()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+                var client = await testEnvironment.ConnectClient();
+
+                var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter("a")
+                    .WithTopicFilter("b", MqttQualityOfServiceLevel.AtLeastOnce)
+                    .WithTopicFilter("c", MqttQualityOfServiceLevel.ExactlyOnce)
+                    .WithTopicFilter("d")
+                    .Build();
+                
+                var response = await client.SubscribeAsync(subscribeOptions);
+
+                Assert.AreEqual(subscribeOptions.TopicFilters.Count, response.Items.Count);
+            }
+        }
+
+        [TestMethod]
+        public async Task Subscribe_Lots_In_Multiple_Requests()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServer();
+
+                var c1 = await testEnvironment.ConnectClient();
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                for (var i = 0; i < 500; i++)
+                {
+                    var so = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(i.ToString()).Build();
+
+                    await c1.SubscribeAsync(so).ConfigureAwait(false);
+
+                    await Task.Delay(10);
+                }
+
+                var c2 = await testEnvironment.ConnectClient();
+
+                var messageBuilder = new MqttApplicationMessageBuilder();
+                for (var i = 0; i < 500; i++)
+                {
+                    messageBuilder.WithTopic(i.ToString());
+
+                    await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
+
+                    await Task.Delay(10);
+                }
+
+                SpinWait.SpinUntil(() => receivedMessagesCount == 500, 5000);
+
+                Assert.AreEqual(500, receivedMessagesCount);
+            }
+        }
+
+        [TestMethod]
+        public async Task Subscribe_Lots_In_Single_Request()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServer();
+
+                var c1 = await testEnvironment.ConnectClient();
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                var optionsBuilder = new MqttClientSubscribeOptionsBuilder();
+                for (var i = 0; i < 500; i++)
+                {
+                    optionsBuilder.WithTopicFilter(i.ToString());
+                }
+
+                await c1.SubscribeAsync(optionsBuilder.Build()).ConfigureAwait(false);
+
+                var c2 = await testEnvironment.ConnectClient();
+
+                var messageBuilder = new MqttApplicationMessageBuilder();
+                for (var i = 0; i < 500; i++)
+                {
+                    messageBuilder.WithTopic(i.ToString());
+
+                    await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
+                }
+
+                SpinWait.SpinUntil(() => receivedMessagesCount == 500, TimeSpan.FromSeconds(20));
+
+                Assert.AreEqual(500, receivedMessagesCount);
+            }
+        }
+
+        [TestMethod]
+        public async Task Subscribe_Multiple_In_Multiple_Request()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServer();
+
+                var c1 = await testEnvironment.ConnectClient();
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder().WithTopicFilter("a").Build());
+
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder().WithTopicFilter("b").Build());
+
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder().WithTopicFilter("c").Build());
+
+                var c2 = await testEnvironment.ConnectClient();
+
+                await c2.PublishStringAsync("a");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 1);
+
+                await c2.PublishStringAsync("b");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 2);
+
+                await c2.PublishStringAsync("c");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 3);
+            }
+        }
+
+        [TestMethod]
+        public async Task Subscribe_Multiple_In_Single_Request()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServer();
+
+                var c1 = await testEnvironment.ConnectClient();
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder().WithTopicFilter("a").WithTopicFilter("b").WithTopicFilter("c").Build());
+
+                var c2 = await testEnvironment.ConnectClient();
+
+                await c2.PublishStringAsync("a");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 1);
+
+                await c2.PublishStringAsync("b");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 2);
+
+                await c2.PublishStringAsync("c");
+                await Task.Delay(100);
+                Assert.AreEqual(receivedMessagesCount, 3);
             }
         }
 
@@ -118,199 +320,6 @@ namespace MQTTnet.Tests.Server
                 await Task.Delay(500);
 
                 Assert.AreEqual(1, receivedMessagesCount);
-            }
-        }
-
-        [TestMethod]
-        public async Task Subscribe_Multiple_In_Single_Request()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var receivedMessagesCount = 0;
-
-                await testEnvironment.StartServer();
-
-                var c1 = await testEnvironment.ConnectClient();
-                c1.ApplicationMessageReceivedAsync += e =>
-                {
-                    Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
-                };
-                
-                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
-                    .WithTopicFilter("a")
-                    .WithTopicFilter("b")
-                    .WithTopicFilter("c")
-                    .Build());
-
-                var c2 = await testEnvironment.ConnectClient();
-
-                await c2.PublishStringAsync("a");
-                await Task.Delay(100);
-                Assert.AreEqual(receivedMessagesCount, 1);
-
-                await c2.PublishStringAsync("b");
-                await Task.Delay(100);
-                Assert.AreEqual(receivedMessagesCount, 2);
-
-                await c2.PublishStringAsync("c");
-                await Task.Delay(100);
-                Assert.AreEqual(receivedMessagesCount, 3);
-            }
-        }
-
-        [TestMethod]
-        public async Task Subscribe_Lots_In_Single_Request()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var receivedMessagesCount = 0;
-
-                await testEnvironment.StartServer();
-
-                var c1 = await testEnvironment.ConnectClient();
-                c1.ApplicationMessageReceivedAsync += e =>
-                {
-                    Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
-                };
-
-                var optionsBuilder = new MqttClientSubscribeOptionsBuilder();
-                for (var i = 0; i < 500; i++)
-                {
-                    optionsBuilder.WithTopicFilter(i.ToString());
-                }
-
-                await c1.SubscribeAsync(optionsBuilder.Build()).ConfigureAwait(false);
-
-                var c2 = await testEnvironment.ConnectClient();
-
-                var messageBuilder = new MqttApplicationMessageBuilder();
-                for (var i = 0; i < 500; i++)
-                {
-                    messageBuilder.WithTopic(i.ToString());
-
-                    await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
-                }
-
-                SpinWait.SpinUntil(() => receivedMessagesCount == 500, TimeSpan.FromSeconds(20));
-
-                Assert.AreEqual(500, receivedMessagesCount);
-            }
-        }
-
-        [TestMethod]
-        public async Task Subscribe_Lots_In_Multiple_Requests()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var receivedMessagesCount = 0;
-
-                await testEnvironment.StartServer();
-
-                var c1 = await testEnvironment.ConnectClient();
-                c1.ApplicationMessageReceivedAsync += e =>
-                {
-                    Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
-                };
-
-                for (var i = 0; i < 500; i++)
-                {
-                    var so = new MqttClientSubscribeOptionsBuilder()
-                        .WithTopicFilter(i.ToString()).Build();
-
-                    await c1.SubscribeAsync(so).ConfigureAwait(false);
-
-                    await Task.Delay(10);
-                }
-
-                var c2 = await testEnvironment.ConnectClient();
-
-                var messageBuilder = new MqttApplicationMessageBuilder();
-                for (var i = 0; i < 500; i++)
-                {
-                    messageBuilder.WithTopic(i.ToString());
-
-                    await c2.PublishAsync(messageBuilder.Build()).ConfigureAwait(false);
-
-                    await Task.Delay(10);
-                }
-
-                SpinWait.SpinUntil(() => receivedMessagesCount == 500, 5000);
-
-                Assert.AreEqual(500, receivedMessagesCount);
-            }
-        }
-
-        [TestMethod]
-        public async Task Subscribe_Multiple_In_Multiple_Request()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var receivedMessagesCount = 0;
-
-                await testEnvironment.StartServer();
-
-                var c1 = await testEnvironment.ConnectClient();
-                c1.ApplicationMessageReceivedAsync += e =>
-                {
-                    Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
-                };
-                
-                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
-                    .WithTopicFilter("a")
-                    .Build());
-
-                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
-                    .WithTopicFilter("b")
-                    .Build());
-
-                await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder()
-                    .WithTopicFilter("c")
-                    .Build());
-
-                var c2 = await testEnvironment.ConnectClient();
-
-                await c2.PublishStringAsync("a");
-                await Task.Delay(100);
-                Assert.AreEqual(receivedMessagesCount, 1);
-
-                await c2.PublishStringAsync("b");
-                await Task.Delay(100);
-                Assert.AreEqual(receivedMessagesCount, 2);
-
-                await c2.PublishStringAsync("c");
-                await Task.Delay(100);
-                Assert.AreEqual(receivedMessagesCount, 3);
-            }
-        }
-        
-        [TestMethod]
-        public async Task Deny_Invalid_Topic()
-        {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
-            {
-                var server = await testEnvironment.StartServer();
-
-                server.InterceptingSubscriptionAsync += e =>
-                {
-                    if (e.TopicFilter.Topic == "not_allowed_topic")
-                    {
-                        e.Response.ReasonCode = MqttSubscribeReasonCode.TopicFilterInvalid;
-                    }
-                    
-                    return PlatformAbstractionLayer.CompletedTask;
-                };
-                
-                var client = await testEnvironment.ConnectClient();
-                
-                var subscribeResult =await client.SubscribeAsync("allowed_topic");
-                Assert.AreEqual(MqttClientSubscribeResultCode.GrantedQoS0, subscribeResult.Items.First().ResultCode);
-
-                subscribeResult =await client.SubscribeAsync("not_allowed_topic");
-                Assert.AreEqual(MqttClientSubscribeResultCode.TopicFilterInvalid, subscribeResult.Items.First().ResultCode);
             }
         }
     }

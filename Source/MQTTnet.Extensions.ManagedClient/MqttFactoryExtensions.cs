@@ -10,7 +10,7 @@ namespace MQTTnet.Extensions.ManagedClient
 {
     public static class MqttFactoryExtensions
     {
-        public static ManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, MqttClient mqttClient = null)
+        public static IManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, MqttClient mqttClient = null)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
 
@@ -22,7 +22,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return new ManagedMqttClient(mqttClient, factory.DefaultLogger);
         }
         
-        public static ManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttNetLogger logger)
+        public static IManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttNetLogger logger)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
             if (logger == null) throw new ArgumentNullException(nameof(logger));

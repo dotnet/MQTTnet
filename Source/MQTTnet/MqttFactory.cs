@@ -72,26 +72,26 @@ namespace MQTTnet
             return new LowLevelMqttClient(_clientAdapterFactory, logger);
         }
 
-        public MqttClient CreateMqttClient()
+        public IMqttClient CreateMqttClient()
         {
             return CreateMqttClient(DefaultLogger);
         }
 
-        public MqttClient CreateMqttClient(IMqttNetLogger logger)
+        public IMqttClient CreateMqttClient(IMqttNetLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             return new MqttClient(_clientAdapterFactory, logger);
         }
 
-        public MqttClient CreateMqttClient(IMqttClientAdapterFactory clientAdapterFactory)
+        public IMqttClient CreateMqttClient(IMqttClientAdapterFactory clientAdapterFactory)
         {
             if (clientAdapterFactory == null) throw new ArgumentNullException(nameof(clientAdapterFactory));
 
             return new MqttClient(clientAdapterFactory, DefaultLogger);
         }
 
-        public MqttClient CreateMqttClient(IMqttNetLogger logger, IMqttClientAdapterFactory clientAdapterFactory)
+        public IMqttClient CreateMqttClient(IMqttNetLogger logger, IMqttClientAdapterFactory clientAdapterFactory)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
             if (clientAdapterFactory == null) throw new ArgumentNullException(nameof(clientAdapterFactory));

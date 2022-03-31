@@ -2,16 +2,23 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Client;
+using MQTTnet.Packets;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public interface IManagedMqttClient
+    public interface IManagedMqttClient : IDisposable
     {
         IApplicationMessageSkippedHandler ApplicationMessageSkippedHandler { get; set; }
         IMqttClient InternalClient { get; }
         bool IsConnected { get; }
         bool IsStarted { get; }
         ManagedMqttClientOptions Options { get; }
-        bool PendingApplicationMessagesCount { get; }
+        int PendingApplicationMessagesCount { get; }
         ISynchronizingSubscriptionsFailedHandler SynchronizingSubscriptionsFailedHandler { get; set; }
 
         event Func<ApplicationMessageProcessedEventArgs, Task> ApplicationMessageProcessedAsync;
@@ -27,6 +34,6 @@ namespace MQTTnet.Extensions.ManagedClient
         Task StartAsync(ManagedMqttClientOptions options);
         Task StopAsync();
         Task SubscribeAsync(ICollection<MqttTopicFilter> topicFilters);
-        Task UnsubscribeAsync(ICollection<global::System.String> topics);
+        Task UnsubscribeAsync(ICollection<string> topics);
     }
 }

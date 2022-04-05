@@ -389,7 +389,7 @@ namespace MQTTnet.Tests.Client
 
         async Task<ManagedMqttClient> CreateManagedClientAsync(
             TestEnvironment testEnvironment,
-            MqttClient underlyingClient = null,
+            IMqttClient underlyingClient = null,
             TimeSpan? connectionCheckInterval = null,
             string host = "localhost")
         {

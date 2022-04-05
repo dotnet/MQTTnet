@@ -201,7 +201,7 @@ namespace MQTTnet.TestApp
             };
         }
 
-        static Task PublishSingleMessage(MqttClient client, MqttApplicationMessage applicationMessage, ref int count)
+        static Task PublishSingleMessage(IMqttClient client, MqttApplicationMessage applicationMessage, ref int count)
         {
             Interlocked.Increment(ref count);
             return Task.Run(() => client.PublishAsync(applicationMessage));

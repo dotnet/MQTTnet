@@ -226,7 +226,7 @@ namespace MQTTnet.Tests.Client
             {
                 await testEnvironment.StartServer();
 
-                var clients = new List<MqttClient>();
+                var clients = new List<IMqttClient>();
                 for (var i = 0; i < 100; i++)
                 {
                     clients.Add(await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("a")));

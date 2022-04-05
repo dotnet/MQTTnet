@@ -1,5 +1,4 @@
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
 using MQTTnet.Client;
 using MQTTnet.Server;
 using System.Collections.Generic;
@@ -11,7 +10,7 @@ namespace MQTTnet.Benchmarks
     public class UnsubscribeBenchmark
     {
         MqttServer _mqttServer;
-        MQTTnet.Client.MqttClient _mqttClient;
+        IMqttClient _mqttClient;
 
         const int NumPublishers = 1;
         const int NumTopicsPerPublisher = 10000;
@@ -40,7 +39,7 @@ namespace MQTTnet.Benchmarks
             foreach (var topic in _topics)
             {
                 var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
-                       .WithTopicFilter(topic, Protocol.MqttQualityOfServiceLevel.AtMostOnce)
+                       .WithTopicFilter(topic)
                        .Build();
                 _mqttClient.SubscribeAsync(subscribeOptions).GetAwaiter().GetResult();
             }

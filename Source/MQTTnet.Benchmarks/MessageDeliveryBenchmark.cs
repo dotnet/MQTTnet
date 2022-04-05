@@ -37,8 +37,8 @@ namespace MQTTnet.Benchmarks
         CancellationTokenSource _cancellationTokenSource;
 
         MqttServer _mqttServer;
-        List<MQTTnet.Client.MqttClient> _mqttSubscriberClients;
-        Dictionary<string, MQTTnet.Client.MqttClient> _mqttPublisherClientsByPublisherName;
+        List<IMqttClient> _mqttSubscriberClients;
+        Dictionary<string, IMqttClient> _mqttPublisherClientsByPublisherName;
 
         Dictionary<string, List<string>> _topicsByPublisher;
         Dictionary<string, string> _publisherByTopic;        
@@ -74,7 +74,7 @@ namespace MQTTnet.Benchmarks
             _mqttServer.StartAsync().GetAwaiter().GetResult();
 
             // Create publisher clients
-            _mqttPublisherClientsByPublisherName = new Dictionary<string, MQTTnet.Client.MqttClient>();
+            _mqttPublisherClientsByPublisherName = new Dictionary<string, IMqttClient>();
             foreach (var pt in _topicsByPublisher)
             {
                 var publisherName = pt.Key;
@@ -89,7 +89,7 @@ namespace MQTTnet.Benchmarks
             }
 
             // Create subscriber clients
-            _mqttSubscriberClients = new List<MQTTnet.Client.MqttClient>();
+            _mqttSubscriberClients = new List<IMqttClient>();
             for (var i = 0; i < NumSubscribers; i++)
             {
                 var mqttSubscriberClient = factory.CreateMqttClient();

@@ -16,7 +16,7 @@ namespace MQTTnet.Benchmarks
     public class MessageProcessingBenchmark
     {
         MqttServer _mqttServer;
-        MqttClient _mqttClient;
+        IMqttClient _mqttClient;
         MqttApplicationMessage _message;
 
         [GlobalSetup]

@@ -14,7 +14,7 @@ namespace MQTTnet.Client
 {
     public static class MqttClientExtensions
     {
-        public static Task DisconnectAsync(this MqttClient client, MqttClientDisconnectReason reason = MqttClientDisconnectReason.NormalDisconnection, string reasonString = null)
+        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectReason reason = MqttClientDisconnectReason.NormalDisconnection, string reasonString = null)
         {
             if (client == null)
             {
@@ -31,7 +31,7 @@ namespace MQTTnet.Client
         }
 
         public static Task<MqttClientPublishResult> PublishBinaryAsync(
-            this MqttClient mqttClient,
+            this IMqttClient mqttClient,
             string topic,
             IEnumerable<byte> payload = null,
             MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
@@ -58,7 +58,7 @@ namespace MQTTnet.Client
         }
 
         public static Task<MqttClientPublishResult> PublishStringAsync(
-            this MqttClient mqttClient,
+            this IMqttClient mqttClient,
             string topic,
             string payload = null,
             MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
@@ -69,7 +69,7 @@ namespace MQTTnet.Client
             return mqttClient.PublishBinaryAsync(topic, payloadBuffer, qualityOfServiceLevel, retain, cancellationToken);
         }
 
-        public static Task SendExtendedAuthenticationExchangeDataAsync(this MqttClient client, MqttExtendedAuthenticationExchangeData data)
+        public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)
         {
             if (client == null)
             {
@@ -79,7 +79,7 @@ namespace MQTTnet.Client
             return client.SendExtendedAuthenticationExchangeDataAsync(data, CancellationToken.None);
         }
 
-        public static Task<MqttClientSubscribeResult> SubscribeAsync(this MqttClient mqttClient, MqttTopicFilter topicFilter, CancellationToken cancellationToken = default)
+        public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient mqttClient, MqttTopicFilter topicFilter, CancellationToken cancellationToken = default)
         {
             if (mqttClient == null)
             {
@@ -91,14 +91,13 @@ namespace MQTTnet.Client
                 throw new ArgumentNullException(nameof(topicFilter));
             }
 
-            var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topicFilter)
-                .Build();
+            var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topicFilter).Build();
 
             return mqttClient.SubscribeAsync(subscribeOptions, cancellationToken);
         }
 
         public static Task<MqttClientSubscribeResult> SubscribeAsync(
-            this MqttClient mqttClient,
+            this IMqttClient mqttClient,
             string topic,
             MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
             CancellationToken cancellationToken = default)
@@ -113,13 +112,12 @@ namespace MQTTnet.Client
                 throw new ArgumentNullException(nameof(topic));
             }
 
-            var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topic, qualityOfServiceLevel)
-                .Build();
+            var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topic, qualityOfServiceLevel).Build();
 
             return mqttClient.SubscribeAsync(subscribeOptions, cancellationToken);
         }
 
-        public static Task<MqttClientUnsubscribeResult> UnsubscribeAsync(this MqttClient mqttClient, string topic, CancellationToken cancellationToken = default)
+        public static Task<MqttClientUnsubscribeResult> UnsubscribeAsync(this IMqttClient mqttClient, string topic, CancellationToken cancellationToken = default)
         {
             if (mqttClient == null)
             {
@@ -131,8 +129,7 @@ namespace MQTTnet.Client
                 throw new ArgumentNullException(nameof(topic));
             }
 
-            var unsubscribeOptions = new MqttClientUnsubscribeOptionsBuilder().WithTopicFilter(topic)
-                .Build();
+            var unsubscribeOptions = new MqttClientUnsubscribeOptionsBuilder().WithTopicFilter(topic).Build();
 
             return mqttClient.UnsubscribeAsync(unsubscribeOptions, cancellationToken);
         }

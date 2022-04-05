@@ -11,7 +11,7 @@ namespace MQTTnet.Benchmarks
     public class SubscribeBenchmark
     {
         MqttServer _mqttServer;
-        MQTTnet.Client.MqttClient _mqttClient;
+        IMqttClient _mqttClient;
 
         const int NumPublishers = 1;
         const int NumTopicsPerPublisher = 10000;
@@ -54,6 +54,7 @@ namespace MQTTnet.Benchmarks
                 var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
                        .WithTopicFilter(topic, Protocol.MqttQualityOfServiceLevel.AtMostOnce)
                        .Build();
+                
                 _mqttClient.SubscribeAsync(subscribeOptions).GetAwaiter().GetResult();
             }
         }

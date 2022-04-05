@@ -17,7 +17,7 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet.Client
 {
-    public sealed class MqttClient : Disposable
+    public sealed class MqttClient : Disposable, IMqttClient
     {
         readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
         

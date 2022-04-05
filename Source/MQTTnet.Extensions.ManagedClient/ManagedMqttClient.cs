@@ -14,11 +14,10 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public sealed class ManagedMqttClient : Disposable
+    public sealed class ManagedMqttClient : Disposable, IManagedMqttClient
     {
         readonly AsyncEvent<ApplicationMessageProcessedEventArgs> _applicationMessageProcessedEvent = new AsyncEvent<ApplicationMessageProcessedEventArgs>();
         readonly AsyncEvent<ConnectingFailedEventArgs> _connectingFailedEvent = new AsyncEvent<ConnectingFailedEventArgs>();
@@ -62,7 +61,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
         ManagedMqttClientStorageManager _storageManager;
 
-        public ManagedMqttClient(MqttClient mqttClient, IMqttNetLogger logger)
+        public ManagedMqttClient(IMqttClient mqttClient, IMqttNetLogger logger)
         {
             InternalClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
 
@@ -112,7 +111,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public IApplicationMessageSkippedHandler ApplicationMessageSkippedHandler { get; set; }
 
-        public MqttClient InternalClient { get; }
+        public IMqttClient InternalClient { get; }
 
         public bool IsConnected => InternalClient.IsConnected;
 
@@ -203,7 +202,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        public Task PingAsync(CancellationToken cancellationToken)
+        public Task PingAsync(CancellationToken cancellationToken = default)
         {
             return InternalClient.PingAsync(cancellationToken);
         }

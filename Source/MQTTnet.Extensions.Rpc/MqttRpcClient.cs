@@ -13,13 +13,13 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet.Extensions.Rpc
 {
-    public sealed class MqttRpcClient : IDisposable
+    public sealed class MqttRpcClient : IMqttRpcClient
     {
         readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
-        readonly MqttClient _mqttClient;
+        readonly IMqttClient _mqttClient;
         readonly MqttRpcClientOptions _options;
         
-        public MqttRpcClient(MqttClient mqttClient, MqttRpcClientOptions options)
+        public MqttRpcClient(IMqttClient mqttClient, MqttRpcClientOptions options)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -47,7 +47,7 @@ namespace MQTTnet.Extensions.Rpc
             }
         }
 
-        public async Task<byte[]> ExecuteAsync(string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, CancellationToken cancellationToken)
+        public async Task<byte[]> ExecuteAsync(string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, CancellationToken cancellationToken = default)
         {
             if (methodName == null) throw new ArgumentNullException(nameof(methodName));
             

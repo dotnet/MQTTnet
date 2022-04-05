@@ -166,7 +166,7 @@ namespace MQTTnet.Tests
         {
             var disconnectPacket = new MqttDisconnectPacket
             {
-                ReasonCode = MqttDisconnectReasonCode.NormalDisconnection,
+                ReasonCode = MqttDisconnectReasonCode.QuotaExceeded,
                 ReasonString = "ReasonString",
                 ServerReference = "ServerReference",
                 SessionExpiryInterval = 234,

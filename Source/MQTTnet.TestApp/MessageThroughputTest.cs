@@ -33,8 +33,8 @@ namespace MQTTnet.TestApp
         CancellationTokenSource _cancellationTokenSource;
 
         MqttServer _mqttServer;
-        Dictionary<string, Client.MqttClient> _mqttPublisherClientsByPublisherName;
-        List<Client.MqttClient> _mqttSubscriberClients;
+        Dictionary<string, IMqttClient> _mqttPublisherClientsByPublisherName;
+        List<IMqttClient> _mqttSubscriberClients;
 
         Dictionary<string, List<string>> _topicsByPublisher;
         Dictionary<string, List<string>> _singleWildcardTopicsByPublisher;
@@ -85,7 +85,7 @@ namespace MQTTnet.TestApp
 
             var stopWatch = new System.Diagnostics.Stopwatch();
             stopWatch.Start();
-            _mqttPublisherClientsByPublisherName = new Dictionary<string, Client.MqttClient>();
+            _mqttPublisherClientsByPublisherName = new Dictionary<string, IMqttClient>();
             foreach (var pt in _topicsByPublisher)
             {
                 var publisherName = pt.Key;
@@ -99,10 +99,10 @@ namespace MQTTnet.TestApp
             }
             stopWatch.Stop();
 
-            Console.Write(string.Format("{0} publisher(s) connected in {1:0.000} seconds, ", NumPublishers, stopWatch.ElapsedMilliseconds / 1000.0));
-            Console.WriteLine(string.Format("connections per second: {0:0.000}", NumPublishers / (stopWatch.ElapsedMilliseconds / 1000.0)));
+            Console.Write($"{NumPublishers} publisher(s) connected in {stopWatch.ElapsedMilliseconds / 1000.0:0.000} seconds, ");
+            Console.WriteLine($"connections per second: {NumPublishers / (stopWatch.ElapsedMilliseconds / 1000.0):0.000}");
 
-            _mqttSubscriberClients = new List<Client.MqttClient>();
+            _mqttSubscriberClients = new List<IMqttClient>();
             for (var i = 0; i < NumSubscribers; ++i)
             {
                 var mqttClient = factory.CreateMqttClient();
@@ -147,7 +147,6 @@ namespace MQTTnet.TestApp
             _mqttServer.Dispose();
         }
 
-
         /// <summary>
         /// Measure no-wildcard topic subscription message exchange performance
         /// </summary>
@@ -174,16 +173,16 @@ namespace MQTTnet.TestApp
 
 
         /// <summary>
-        ///  Subcribe to all topics, then run message exchange
+        ///  Subscribe to all topics, then run message exchange
         /// </summary>
         public async Task ProcessMessages(Dictionary<string, List<string>> topicsByPublisher, string topicTypeDescription)
         {
             var numTopics = CountTopics(topicsByPublisher);
 
             Console.WriteLine();
-            Console.Write(string.Format("Subscribing to {0} topics ", numTopics));
-            ConsoleWriteInfo(string.Format("({0})", topicTypeDescription));
-            Console.WriteLine(string.Format(" for {0} subscriber(s)...", NumSubscribers));
+            Console.Write($"Subscribing to {numTopics} topics ");
+            ConsoleWriteInfo($"({topicTypeDescription})");
+            Console.WriteLine($" for {NumSubscribers} subscriber(s)...");
 
             var stopWatch = new System.Diagnostics.Stopwatch();
             stopWatch.Start();
@@ -204,12 +203,12 @@ namespace MQTTnet.TestApp
 
             stopWatch.Stop();
 
-            Console.Write(string.Format("{0} subscriber(s) subscribed in {1:0.000} seconds, ", NumSubscribers, stopWatch.ElapsedMilliseconds / 1000.0));
-            Console.WriteLine(string.Format("subscribe calls per second: {0:0.000}", numTopics / (stopWatch.ElapsedMilliseconds / 1000.0)));
+            Console.Write($"{NumSubscribers} subscriber(s) subscribed in {stopWatch.ElapsedMilliseconds / 1000.0:0.000} seconds, ");
+            Console.WriteLine($"subscribe calls per second: {numTopics / (stopWatch.ElapsedMilliseconds / 1000.0):0.000}");
 
             await PublishAllAsync();
 
-            Console.WriteLine(string.Format("Unsubscribing {0} topics ({1}) for {2} subscriber(s)...", numTopics, topicTypeDescription, NumSubscribers));
+            Console.WriteLine($"Unsubscribing {numTopics} topics ({topicTypeDescription}) for {NumSubscribers} subscriber(s)...");
 
             stopWatch.Restart();
 
@@ -234,10 +233,9 @@ namespace MQTTnet.TestApp
 
             stopWatch.Stop();
 
-            Console.Write(string.Format("{0} subscriber(s) unsubscribed in {1:0.000} seconds, ", NumSubscribers, stopWatch.ElapsedMilliseconds / 1000.0));
-            Console.WriteLine(string.Format("unsubscribe calls per second: {0:0.000}", numTopics / (stopWatch.ElapsedMilliseconds / 1000.0)));
+            Console.Write($"{NumSubscribers} subscriber(s) unsubscribed in {stopWatch.ElapsedMilliseconds / 1000.0:0.000} seconds, ");
+            Console.WriteLine($"unsubscribe calls per second: {numTopics / (stopWatch.ElapsedMilliseconds / 1000.0):0.000}");
         }
-
 
         /// <summary>
         /// Publish messages in batches of NumPublishCallsPerBatch, wait for messages sent to subscriber
@@ -289,7 +287,6 @@ namespace MQTTnet.TestApp
                 }
                 catch
                 {
-
                 }
 
                 _cancellationTokenSource.Dispose();
@@ -305,8 +302,8 @@ namespace MQTTnet.TestApp
 
             stopWatch.Stop();
 
-            System.Console.Write(string.Format("{0} messages published and received in {1:0.000} seconds, ", totalNumMessagesReceived, stopWatch.ElapsedMilliseconds / 1000.0));
-            ConsoleWriteLineSuccess(string.Format("messages per second: {0}", (int)(totalNumMessagesReceived / (stopWatch.ElapsedMilliseconds / 1000.0))));
+            Console.Write($"{totalNumMessagesReceived} messages published and received in {stopWatch.ElapsedMilliseconds / 1000.0:0.000} seconds, ");
+            ConsoleWriteLineSuccess($"messages per second: {(int)(totalNumMessagesReceived / (stopWatch.ElapsedMilliseconds / 1000.0))}");
         }
 
         int CountTopics(Dictionary<string, List<string>> topicsByPublisher)

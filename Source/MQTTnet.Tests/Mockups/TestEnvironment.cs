@@ -17,17 +17,16 @@ using MQTTnet.Implementations;
 using MQTTnet.LowLevelClient;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.Tests.Mockups
 {
     public sealed class TestEnvironment : IDisposable
     {
         readonly List<string> _clientErrors = new List<string>();
-        readonly List<MqttClient> _clients = new List<MqttClient>();
+        readonly List<IMqttClient> _clients = new List<IMqttClient>();
 
         readonly List<Exception> _exceptions = new List<Exception>();
-        readonly List<LowLevelMqttClient> _lowLevelClients = new List<LowLevelMqttClient>();
+        readonly List<ILowLevelMqttClient> _lowLevelClients = new List<ILowLevelMqttClient>();
         readonly MqttProtocolVersion _protocolVersion;
         readonly List<string> _serverErrors = new List<string>();
 
@@ -91,12 +90,12 @@ namespace MQTTnet.Tests.Mockups
 
         public TestContext TestContext { get; }
 
-        public Task<MqttClient> ConnectClient()
+        public Task<IMqttClient> ConnectClient()
         {
             return ConnectClient(Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion));
         }
 
-        public async Task<MqttClient> ConnectClient(Action<MqttClientOptionsBuilder> configureOptions, TimeSpan timeout = default)
+        public async Task<IMqttClient> ConnectClient(Action<MqttClientOptionsBuilder> configureOptions, TimeSpan timeout = default)
         {
             if (configureOptions == null)
             {
@@ -128,7 +127,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
 
-        public async Task<MqttClient> ConnectClient(MqttClientOptionsBuilder options, TimeSpan timeout = default)
+        public async Task<IMqttClient> ConnectClient(MqttClientOptionsBuilder options, TimeSpan timeout = default)
         {
             if (options == null)
             {
@@ -154,7 +153,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
 
-        public async Task<MqttClient> ConnectClient(MqttClientOptions options, TimeSpan timeout = default)
+        public async Task<IMqttClient> ConnectClient(MqttClientOptions options, TimeSpan timeout = default)
         {
             if (options == null)
             {
@@ -178,7 +177,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
 
-        public async Task<LowLevelMqttClient> ConnectLowLevelClient(Action<MqttClientOptionsBuilder> optionsBuilder = null)
+        public async Task<ILowLevelMqttClient> ConnectLowLevelClient(Action<MqttClientOptionsBuilder> optionsBuilder = null)
         {
             var options = new MqttClientOptionsBuilder();
             options = options.WithTcpServer("127.0.0.1", ServerPort);
@@ -195,12 +194,12 @@ namespace MQTTnet.Tests.Mockups
             return new MqttRpcClient(await ConnectClient(), options);
         }
 
-        public TestApplicationMessageReceivedHandler CreateApplicationMessageHandler(MqttClient mqttClient)
+        public TestApplicationMessageReceivedHandler CreateApplicationMessageHandler(IMqttClient mqttClient)
         {
             return new TestApplicationMessageReceivedHandler(mqttClient);
         }
 
-        public MqttClient CreateClient()
+        public IMqttClient CreateClient()
         {
             lock (_clients)
             {
@@ -228,7 +227,7 @@ namespace MQTTnet.Tests.Mockups
             }
         }
 
-        public LowLevelMqttClient CreateLowLevelClient()
+        public ILowLevelMqttClient CreateLowLevelClient()
         {
             lock (_clients)
             {

@@ -177,7 +177,7 @@ namespace MQTTnet.Tests.Client
             }
         }
 
-        async Task<MqttConnAckPacket> Authenticate(LowLevelMqttClient client)
+        async Task<MqttConnAckPacket> Authenticate(ILowLevelMqttClient client)
         {
             await client.SendAsync(
                     new MqttConnectPacket
@@ -193,7 +193,7 @@ namespace MQTTnet.Tests.Client
             return await client.ReceiveAsync(CancellationToken.None).ConfigureAwait(false) as MqttConnAckPacket;
         }
 
-        async Task<MqttSubAckPacket> Subscribe(LowLevelMqttClient client, string topic)
+        async Task<MqttSubAckPacket> Subscribe(ILowLevelMqttClient client, string topic)
         {
             await client.SendAsync(
                     new MqttSubscribePacket

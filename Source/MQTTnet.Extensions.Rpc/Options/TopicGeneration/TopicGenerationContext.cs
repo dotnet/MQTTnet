@@ -21,7 +21,7 @@ namespace MQTTnet.Extensions.Rpc
         /// </summary>
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
 
-        public MqttClient MqttClient { get; set; }
+        public IMqttClient MqttClient { get; set; }
 
         public MqttRpcClientOptions Options { get; set; }
     }

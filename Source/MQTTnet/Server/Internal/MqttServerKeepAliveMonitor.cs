@@ -96,10 +96,10 @@ namespace MQTTnet.Server
                 // Values described here: [MQTT-3.1.2-24].
                 // If the client sends 5 sec. the server will allow up to 7.5 seconds.
                 // If the client sends 1 sec. the server will allow up to 1.5 seconds.
-                var maxDurationWithoutPacket = connection.KeepAlivePeriod * 1.5D;
+                var maxSecondsWithoutPacket = connection.KeepAlivePeriod * 1.5D;
 
                 var secondsWithoutPackage = (now - connection.Statistics.LastPacketSentTimestamp).TotalSeconds;
-                if (secondsWithoutPackage < maxDurationWithoutPacket)
+                if (secondsWithoutPackage < maxSecondsWithoutPacket)
                 {
                     // A packet was received before the timeout is affected.
                     return;

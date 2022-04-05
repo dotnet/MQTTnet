@@ -277,7 +277,7 @@ namespace MQTTnet.Tests.Server
             }
         }
 
-        async Task<MqttClient> ConnectAndSubscribe(TestEnvironment testEnvironment, MqttClientOptionsBuilder options, Action onReceive)
+        async Task<IMqttClient> ConnectAndSubscribe(TestEnvironment testEnvironment, MqttClientOptionsBuilder options, Action onReceive)
         {
             try
             {
@@ -302,7 +302,7 @@ namespace MQTTnet.Tests.Server
             }
         }
 
-        async Task<MqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
+        async Task<IMqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
         {
             try
             {

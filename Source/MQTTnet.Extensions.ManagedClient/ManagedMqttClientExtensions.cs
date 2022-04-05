@@ -13,7 +13,7 @@ namespace MQTTnet.Extensions.ManagedClient
     public static class ManagedMqttClientExtensions
     {
         public static Task EnqueueAsync(
-            this ManagedMqttClient managedMqttClient,
+            this IManagedMqttClient managedMqttClient,
             string topic,
             string payload = null,
             MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
@@ -39,7 +39,7 @@ namespace MQTTnet.Extensions.ManagedClient
         }
 
         public static Task SubscribeAsync(
-            this ManagedMqttClient managedMqttClient,
+            this IManagedMqttClient managedMqttClient,
             string topic,
             MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce)
         {
@@ -60,7 +60,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 });
         }
 
-        public static Task UnsubscribeAsync(this ManagedMqttClient managedMqttClient, string topic)
+        public static Task UnsubscribeAsync(this IManagedMqttClient managedMqttClient, string topic)
         {
             if (managedMqttClient == null)
             {

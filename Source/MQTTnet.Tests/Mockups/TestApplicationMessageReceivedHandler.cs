@@ -15,7 +15,7 @@ namespace MQTTnet.Tests.Mockups
     {
         readonly List<MqttApplicationMessageReceivedEventArgs> _receivedEventArgs = new List<MqttApplicationMessageReceivedEventArgs>();
 
-        public TestApplicationMessageReceivedHandler(MqttClient mqttClient)
+        public TestApplicationMessageReceivedHandler(IMqttClient mqttClient)
         {
             mqttClient.ApplicationMessageReceivedAsync += MqttClientOnApplicationMessageReceivedAsync;
         }

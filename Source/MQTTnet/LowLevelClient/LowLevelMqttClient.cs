@@ -14,7 +14,7 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.LowLevelClient
 {
-    public sealed class LowLevelMqttClient : IDisposable
+    public sealed class LowLevelMqttClient : ILowLevelMqttClient
     {
         readonly IMqttClientAdapterFactory _clientAdapterFactory;
         readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();

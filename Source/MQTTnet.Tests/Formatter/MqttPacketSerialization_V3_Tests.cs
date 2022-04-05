@@ -204,7 +204,7 @@ namespace MQTTnet.Tests
         {
             var disconnectPacket = new MqttDisconnectPacket
             {
-                ReasonCode = MqttDisconnectReasonCode.NormalDisconnection,
+                ReasonCode = MqttDisconnectReasonCode.NormalDisconnection, // MQTTv3 has no other values than this.
                 ReasonString = "ReasonString",
                 ServerReference = "ServerReference",
                 SessionExpiryInterval = 234,
@@ -216,7 +216,6 @@ namespace MQTTnet.Tests
 
             var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(disconnectPacket, MqttProtocolVersion.V311);
 
-            
             Assert.AreEqual(disconnectPacket.ReasonCode, deserialized.ReasonCode);
             Assert.AreEqual(null, deserialized.ReasonString); // Not supported in v3.1.1
             Assert.AreEqual(null, deserialized.ServerReference); // Not supported in v3.1.1

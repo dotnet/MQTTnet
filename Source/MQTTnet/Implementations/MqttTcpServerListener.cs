@@ -178,7 +178,7 @@ namespace MQTTnet.Implementations
                 {
                     var sslStream = new SslStream(stream, false, _tlsOptions.RemoteCertificateValidationCallback);
 
-                    #if NETCOREAPP3_0_OR_GREATER
+                    #if NETCOREAPP3_1 || NET5_0_OR_GREATER
                         await sslStream.AuthenticateAsServerAsync(
                             new SslServerAuthenticationOptions()
                             {

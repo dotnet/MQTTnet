@@ -188,7 +188,7 @@ namespace MQTTnet.Implementations
                                 CertificateRevocationCheckMode = _tlsOptions.CheckCertificateRevocation ? X509RevocationMode.Online : X509RevocationMode.NoCheck,
                                 EncryptionPolicy = EncryptionPolicy.RequireEncryption,
                                 CipherSuitesPolicy = _tlsOptions.CipherSuitesPolicy
-                            });
+                            }).ConfigureAwait(false);
                     #else
                         await sslStream.AuthenticateAsServerAsync(
                             _tlsCertificate,

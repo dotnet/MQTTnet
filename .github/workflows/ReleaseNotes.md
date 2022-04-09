@@ -25,3 +25,4 @@ Checkout the new samples (https://github.com/dotnet/MQTTnet/tree/feature/master/
 * [Server] Renamed a lot of classes and adjusted namespaces (BREAKING CHANGE!).
 * [Server] Introduced a new queueing approach for internal message process (packet bus).
 * [Server] For security reasons the default endpoint (1883) is no longer enabled by default (BREAKING CHANGE!).
+* [Nuget] Added method summaries etc. to nuget packages (thanks to @SpringHgui).

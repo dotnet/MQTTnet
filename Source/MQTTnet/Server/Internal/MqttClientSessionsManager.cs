@@ -229,7 +229,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public Task<IList<MqttClientStatus>> GetClientStatusAsync()
+        public Task<IList<MqttClientStatus>> GetClientsStatusAsync()
         {
             var result = new List<MqttClientStatus>();
 

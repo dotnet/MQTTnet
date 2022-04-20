@@ -185,11 +185,11 @@ namespace MQTTnet.Server
             return _clientSessionsManager.GetClientStatusAsync();
         }
 
-        public Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync()
+        public Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync(List<MqttTopicFilter> topicFilters = null)
         {
             ThrowIfNotStarted();
 
-            return _retainedMessagesManager.GetMessages();
+            return _retainedMessagesManager.GetMessages(topicFilters);
         }
 
         public Task<IList<MqttSessionStatus>> GetSessionsAsync()

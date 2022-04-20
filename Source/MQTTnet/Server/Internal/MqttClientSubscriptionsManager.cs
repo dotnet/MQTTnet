@@ -168,7 +168,9 @@ namespace MQTTnet.Server
                 throw new ArgumentNullException(nameof(subscribePacket));
             }
 
-            var retainedApplicationMessages = await _retainedMessagesManager.GetMessages().ConfigureAwait(false);
+            var retainedApplicationMessages = await _retainedMessagesManager
+                .GetMessages(subscribePacket.TopicFilters)
+                .ConfigureAwait(false);
             var result = new SubscribeResult
             {
                 ReasonCodes = new List<MqttSubscribeReasonCode>(subscribePacket.TopicFilters.Count)

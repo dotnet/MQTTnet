@@ -13,6 +13,8 @@ using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
+    using MQTTnet.Packets;
+
     public sealed class MqttRetainedMessagesManager
     {
         readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>(4096);
@@ -122,7 +124,8 @@ namespace MQTTnet.Server
             }
         }
         
-        public Task<IList<MqttApplicationMessage>> GetMessages()
+        public Task<IList<MqttApplicationMessage>> GetMessages(
+            List<MqttTopicFilter> topicFilters = null)
         {
             lock (_messages)
             {

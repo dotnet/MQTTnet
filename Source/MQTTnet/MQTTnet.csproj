@@ -42,6 +42,7 @@
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
+        <NoWarn>1591</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(TargetFramework)'=='uap10.0'">

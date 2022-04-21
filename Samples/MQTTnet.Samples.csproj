@@ -9,6 +9,7 @@
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+        <NoWarn>1591</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

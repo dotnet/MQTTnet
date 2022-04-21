@@ -33,6 +33,7 @@
         <PackageReleaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</PackageReleaseNotes>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>1591</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">

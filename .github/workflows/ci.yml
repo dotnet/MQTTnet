@@ -1,6 +1,7 @@
 name: CI
 
-on: [push, pull_request]
+# on: [push, pull_request]
+on: [push]
 
 env:
   ASSEMBLY_VERSION: "4.0.0.${{github.run_number}}"

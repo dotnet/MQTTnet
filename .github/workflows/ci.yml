@@ -30,17 +30,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Setup Signing Certificate
-        run: |
-          $secret = '${{ secrets.SNC_BASE64 }}'
-          $decoded = [System.Convert]::FromBase64CharArray($secret, 0, $secret.Length)
-          Set-Content -Path ${{ github.workspace }}\certificate.snk -Value $decoded -AsByteStream
-
       - name: Restore nuget packages
         run: msbuild MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
 
       - name: Build solution
-        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
+        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }}
 
       - name: Collect nuget Packages
         uses: actions/upload-artifact@v2
@@ -58,10 +52,6 @@ jobs:
 
       - name: ASP.NET Tests
         run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
-
-      - name: Publish MyGet nugets
-        if: ${{ github.event_name == 'push' }}
-        run: dotnet nuget push **/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
 
 #      - name: Publish nugets
 #        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}

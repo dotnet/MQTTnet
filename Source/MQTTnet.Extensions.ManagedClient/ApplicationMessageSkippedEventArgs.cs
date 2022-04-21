@@ -6,7 +6,7 @@ using System;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public class ApplicationMessageSkippedEventArgs : EventArgs
+    public sealed class ApplicationMessageSkippedEventArgs : EventArgs
     {
         public ApplicationMessageSkippedEventArgs(ManagedMqttApplicationMessage applicationMessage)
         {

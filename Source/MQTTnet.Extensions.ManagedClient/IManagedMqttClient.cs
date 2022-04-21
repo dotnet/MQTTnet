@@ -13,6 +13,8 @@ namespace MQTTnet.Extensions.ManagedClient
         
         event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync;
         
+        event Func<ApplicationMessageSkippedEventArgs, Task> ApplicationMessageSkippedAsync;
+        
         event Func<EventArgs, Task> ConnectedAsync;
         
         event Func<ConnectingFailedEventArgs, Task> ConnectingFailedAsync;
@@ -21,7 +23,7 @@ namespace MQTTnet.Extensions.ManagedClient
         
         event Func<EventArgs, Task> DisconnectedAsync;
         
-        IApplicationMessageSkippedHandler ApplicationMessageSkippedHandler { get; set; }
+        event Func<ManagedProcessFailedEventArgs, Task> SynchronizingSubscriptionsFailedAsync;
         
         IMqttClient InternalClient { get; }
         
@@ -32,8 +34,6 @@ namespace MQTTnet.Extensions.ManagedClient
         ManagedMqttClientOptions Options { get; }
         
         int PendingApplicationMessagesCount { get; }
-        
-        ISynchronizingSubscriptionsFailedHandler SynchronizingSubscriptionsFailedHandler { get; set; }
         
         Task EnqueueAsync(MqttApplicationMessage applicationMessage);
         

@@ -4,6 +4,8 @@ Version 4 comes with a new API so a lot of breaking changes should be expected.
 Checkout the upgrade guide (https://github.com/dotnet/MQTTnet/wiki/Upgrading-guide) for an overview of the changes.
 Checkout the new samples (https://github.com/dotnet/MQTTnet/tree/feature/master/Samples) how to use the new API. The wiki only remains for version 3 of this library.
 
+Preview builds of this library are available at: https://www.myget.org/feed/mqttnet/package/nuget/MQTTnet
+
 * [Core] Improved memory management when working with large payloads.
 * [Core] Added support for .NET 6.0.
 * [Core] nuget packages are now created by MSBuild including more information (i.e. commit hash).
@@ -25,4 +27,5 @@ Checkout the new samples (https://github.com/dotnet/MQTTnet/tree/feature/master/
 * [Server] Renamed a lot of classes and adjusted namespaces (BREAKING CHANGE!).
 * [Server] Introduced a new queueing approach for internal message process (packet bus).
 * [Server] For security reasons the default endpoint (1883) is no longer enabled by default (BREAKING CHANGE!).
+* [Server] Added support for choosing the cipher suite (thanks to @TimSiefert).
 * [Nuget] Added method summaries etc. to nuget packages (thanks to @SpringHgui).

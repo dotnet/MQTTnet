@@ -33,7 +33,7 @@ namespace MQTTnet.Server
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
             
             var publishPacketFactory = new MqttPublishPacketFactory();
-            _session.EnqueuePacket(new MqttPacketBusItem(publishPacketFactory.Create(applicationMessage)));
+            _session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketFactory.Create(applicationMessage)));
             
             return PlatformAbstractionLayer.CompletedTask;
         }
@@ -44,7 +44,7 @@ namespace MQTTnet.Server
             
             var publishPacketFactory = new MqttPublishPacketFactory();
             var packetBusItem = new MqttPacketBusItem(publishPacketFactory.Create(applicationMessage));
-            _session.EnqueuePacket(packetBusItem);
+            _session.EnqueueDataPacket(packetBusItem);
 
             return packetBusItem.WaitForDeliveryAsync();
         }

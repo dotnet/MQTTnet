@@ -27,6 +27,37 @@ namespace MQTTnet.Tests.Internal
         }
         
         [TestMethod]
+        public async Task Fill_From_Different_Task()
+        {
+            const int MessageCount = 500;
+
+            var delayRandom = new Random();
+            
+            var bus = new MqttPacketBus();
+
+            _ = Task.Run(
+                () =>
+                {
+                    for (int i = 0; i < MessageCount; i++)
+                    {
+                        bus.EnqueueItem(new MqttPacketBusItem(MqttPingReqPacket.Instance), MqttPacketBusPartition.Health);
+                        
+                        Thread.Sleep(delayRandom.Next(0, 10));
+                    }
+                });
+            
+            for (var i = 0; i < MessageCount; i++)
+            {
+                using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+                {
+                    await bus.DequeueItemAsync(timeout.Token);
+                }    
+            }
+            
+            Assert.AreEqual(0, bus.TotalItemsCount);
+        }
+        
+        [TestMethod]
         public void Alternate_Priorities()
         {
             var bus = new MqttPacketBus();
@@ -43,7 +74,7 @@ namespace MQTTnet.Tests.Internal
             bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
             bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
 
-            Assert.AreEqual(9, bus.ItemsCount);
+            Assert.AreEqual(9, bus.TotalItemsCount);
             
             Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
             Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
@@ -55,7 +86,7 @@ namespace MQTTnet.Tests.Internal
             Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
             Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
             
-            Assert.AreEqual(0, bus.ItemsCount);
+            Assert.AreEqual(0, bus.TotalItemsCount);
         }
         
         [TestMethod]
@@ -67,7 +98,7 @@ namespace MQTTnet.Tests.Internal
             bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
             bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
             
-            Assert.AreEqual(3, bus.ItemsCount);
+            Assert.AreEqual(3, bus.TotalItemsCount);
 
             var exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Control);
             Assert.AreEqual(0, exportedPackets.Count);
@@ -78,7 +109,7 @@ namespace MQTTnet.Tests.Internal
             exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Data);
             Assert.AreEqual(3, exportedPackets.Count);
             
-            Assert.AreEqual(3, bus.ItemsCount);
+            Assert.AreEqual(3, bus.TotalItemsCount);
         }
         
         [TestMethod]

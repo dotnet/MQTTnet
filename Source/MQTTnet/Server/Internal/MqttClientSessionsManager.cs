@@ -181,7 +181,7 @@ namespace MQTTnet.Server
                         newPublishPacket.Retain = false;
                     }
 
-                    session.EnqueuePacket(new MqttPacketBusItem(newPublishPacket));
+                    session.EnqueueDataPacket(new MqttPacketBusItem(newPublishPacket));
                     deliveryCount++;
 
                     _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'.", session.Id, applicationMessage.Topic);
@@ -229,7 +229,7 @@ namespace MQTTnet.Server
             }
         }
 
-        public Task<IList<MqttClientStatus>> GetClientStatusAsync()
+        public Task<IList<MqttClientStatus>> GetClientStatusesAsync()
         {
             var result = new List<MqttClientStatus>();
 
@@ -424,7 +424,7 @@ namespace MQTTnet.Server
                 foreach (var retainedApplicationMessage in subscribeResult.RetainedMessages)
                 {
                     var publishPacket = _packetFactories.Publish.Create(retainedApplicationMessage.ApplicationMessage);
-                    clientSession.EnqueuePacket(new MqttPacketBusItem(publishPacket));
+                    clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
                 }
             }
         }

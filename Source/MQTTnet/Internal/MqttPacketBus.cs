@@ -20,12 +20,12 @@ namespace MQTTnet.Internal
             new LinkedList<MqttPacketBusItem>()
         };
 
-        readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0, 1);
         readonly object _syncRoot = new object();
 
         int _activePartition = (int)MqttPacketBusPartition.Health;
 
-        public int ItemsCount
+        public int TotalItemsCount
         {
             get
             {
@@ -55,12 +55,26 @@ namespace MQTTnet.Internal
                 {
                     for (var i = 0; i < 3; i++)
                     {
+                        // Iterate through the partitions in order to ensure processing of health packets
+                        // even if lots of data packets are enqueued.
+
+                        // Partition | Messages (left = oldest).
+                        // DATA      | [#]#########################
+                        // CONTROL   | [#]#############
+                        // HEALTH    | [#]####
+
+                        // In this sample the 3 oldest messages from the partitions are processed in a row.
+                        // Then the next 3 from all 3 partitions.
+
                         MoveActivePartition();
 
-                        if (_partitions[_activePartition].Count > 0)
+                        var activePartition = _partitions[_activePartition];
+
+                        if (activePartition.First != null)
                         {
-                            var item = _partitions[_activePartition].First;
-                            _partitions[_activePartition].RemoveFirst();
+                            var item = activePartition.First;
+                            activePartition.RemoveFirst();
+
                             return item.Value;
                         }
                     }
@@ -104,9 +118,12 @@ namespace MQTTnet.Internal
             lock (_syncRoot)
             {
                 _partitions[(int)partition].AddLast(item);
-            }
 
-            _semaphore.Release();
+                if (_semaphore.CurrentCount == 0)
+                {
+                    _semaphore.Release();
+                }
+            }
         }
 
         public List<MqttPacket> ExportPackets(MqttPacketBusPartition partition)
@@ -114,6 +131,14 @@ namespace MQTTnet.Internal
             lock (_syncRoot)
             {
                 return _partitions[(int)partition].Select(i => i.Packet).ToList();
+            }
+        }
+
+        public int ItemsCount(MqttPacketBusPartition partition)
+        {
+            lock (_syncRoot)
+            {
+                return _partitions[(int)partition].Count;
             }
         }
 

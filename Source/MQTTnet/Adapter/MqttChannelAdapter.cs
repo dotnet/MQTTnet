@@ -239,19 +239,19 @@ namespace MQTTnet.Adapter
 
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    return -1;
+                    return 0;
                 }
 
                 var readCount = await _channel.ReadAsync(_singleByteBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
 
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    return -1;
+                    return 0;
                 }
 
                 if (readCount == 0)
                 {
-                    return -1;
+                    return 0;
                 }
 
                 _packetInspector?.FillReceiveBuffer(_singleByteBuffer);
@@ -301,8 +301,7 @@ namespace MQTTnet.Adapter
             }
 
             var bodyLength = await ReadBodyLengthAsync(buffer[1], cancellationToken).ConfigureAwait(false);
-
-            if (bodyLength == -1)
+            if (bodyLength == 0)
             {
                 return new ReadFixedHeaderResult
                 {
@@ -336,10 +335,9 @@ namespace MQTTnet.Adapter
                 return ReceivedMqttPacket.Empty;
             }
 
+            IsReadingPacket = true;
             try
             {
-                IsReadingPacket = true;
-
                 var fixedHeader = readFixedHeaderResult.FixedHeader;
                 if (fixedHeader.RemainingLength == 0)
                 {

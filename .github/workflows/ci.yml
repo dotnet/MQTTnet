@@ -53,6 +53,6 @@ jobs:
       - name: ASP.NET Tests
         run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
 
-#      - name: Publish nugets
-#        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-#        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Publish nugets
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://nuget.pkg.github.com/yarektyshchenko/index.json --skip-duplicate

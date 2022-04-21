@@ -29,6 +29,8 @@ namespace MQTTnet.Client
 
 #if NETCOREAPP3_1 || NET5_0_OR_GREATER
         public List<System.Net.Security.SslApplicationProtocol> ApplicationProtocols { get; set; }
+        
+        public System.Net.Security.CipherSuitesPolicy CipherSuitesPolicy { get; set; }
 #endif
 
 #if NET48 || NETCOREAPP3_1 || NET5 || NET6

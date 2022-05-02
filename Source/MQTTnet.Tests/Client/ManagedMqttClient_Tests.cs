@@ -214,13 +214,13 @@ namespace MQTTnet.Tests.Client
 
                 // Perform some opposing subscriptions and unsubscriptions to verify
                 // that these conflicting subscriptions are handled correctly
-                await managedClient.SubscribeAsync("keptSubscribed");
-                await managedClient.SubscribeAsync("subscribedThenUnsubscribed");
+                await managedClient.SubscribeAsync("keptSubscribed",noLocal:false);
+                await managedClient.SubscribeAsync("subscribedThenUnsubscribed",noLocal: false);
 
                 await managedClient.UnsubscribeAsync("subscribedThenUnsubscribed");
                 await managedClient.UnsubscribeAsync("unsubscribedThenSubscribed");
 
-                await managedClient.SubscribeAsync("unsubscribedThenSubscribed");
+                await managedClient.SubscribeAsync("unsubscribedThenSubscribed",noLocal:false);
 
                 //wait a bit for the subscriptions to become established before the messages are published
                 await Task.Delay(500);
@@ -256,6 +256,72 @@ namespace MQTTnet.Tests.Client
                 await Task.Delay(500);
 
                 received = SetupReceivingOfMessages(managedClient, 2);
+
+                await PublishMessages();
+
+                // and then the same subscriptions need to exist again
+                await AssertMessagesReceived();
+            }
+        }
+        /// <summary>
+        /// testing subscribe/unsubscribe at reconnect with _some_ subscriptions having NoLocal set.
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod]
+        public async Task Subscriptions_And_Unsubscriptions_Are_Made_And_Reestablished_At_Reconnect_NoLocalPreserved()
+        {
+            using ( var testEnvironment = CreateTestEnvironment() ) {
+                var unmanagedClient = testEnvironment.CreateClient();
+                var managedClient = await CreateManagedClientAsync( testEnvironment, unmanagedClient );
+
+                var received = SetupReceivingOfMessages( managedClient, 2 );
+
+                // Perform some opposing subscriptions and unsubscriptions to verify
+                // that these conflicting subscriptions are handled correctly
+                await managedClient.SubscribeAsync( "keptSubscribed", noLocal: false );
+                await managedClient.SubscribeAsync( "keptSubscribedNoLocal", noLocal: true );
+                await managedClient.SubscribeAsync( "subscribedThenUnsubscribed", noLocal: false );
+
+                await managedClient.UnsubscribeAsync( "subscribedThenUnsubscribed" );
+                await managedClient.UnsubscribeAsync( "unsubscribedThenSubscribed" );
+
+                await managedClient.SubscribeAsync( "unsubscribedThenSubscribed", noLocal: false );
+
+                //wait a bit for the subscriptions to become established before the messages are published
+                await Task.Delay( 500 );
+
+                var sendingClient = await testEnvironment.ConnectClient();
+
+                async Task PublishMessages()
+                {
+                    await sendingClient.PublishBinaryAsync( "keptSubscribed", new byte[] { 1 } );
+                    await sendingClient.PublishBinaryAsync( "keptSubscribedNoLocal", new byte[] { 1 } );
+                    await sendingClient.PublishBinaryAsync( "subscribedThenUnsubscribed", new byte[] { 1 } );
+                    await sendingClient.PublishBinaryAsync( "unsubscribedThenSubscribed", new byte[] { 1 } );
+                }
+
+                await PublishMessages();
+
+                async Task AssertMessagesReceived()
+                {
+                    var messages = await received;
+                    Assert.AreEqual( "keptSubscribed", messages[ 0 ].Topic );
+                    Assert.AreEqual( "unsubscribedThenSubscribed", messages[ 1 ].Topic );
+                }
+
+                await AssertMessagesReceived();
+
+                var connected = GetConnectedTask( managedClient );
+
+                await unmanagedClient.DisconnectAsync();
+
+                // the managed client has to reconnect by itself
+                await connected;
+
+                // wait a bit so that the managed client can reestablish the subscriptions
+                await Task.Delay( 500 );
+
+                received = SetupReceivingOfMessages( managedClient, 2 );
 
                 await PublishMessages();
 

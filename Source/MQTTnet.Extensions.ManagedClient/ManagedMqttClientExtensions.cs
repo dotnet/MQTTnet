@@ -41,23 +41,45 @@ namespace MQTTnet.Extensions.ManagedClient
         public static Task SubscribeAsync(
             this IManagedMqttClient managedMqttClient,
             string topic,
-            MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce)
+            MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce )
         {
-            if (managedMqttClient == null)
-            {
-                throw new ArgumentNullException(nameof(managedMqttClient));
+            if ( managedMqttClient == null ) {
+                throw new ArgumentNullException( nameof( managedMqttClient ) );
             }
 
-            if (topic == null)
-            {
-                throw new ArgumentNullException(nameof(topic));
+            if ( topic == null ) {
+                throw new ArgumentNullException( nameof( topic ) );
             }
 
             return managedMqttClient.SubscribeAsync(
                 new List<MqttTopicFilter>
                 {
                     new MqttTopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build()
-                });
+                } );
+        }
+        public static Task SubscribeAsync(
+            this IManagedMqttClient managedMqttClient,
+            string topic,
+            bool noLocal,
+            MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce )
+        {
+            if ( managedMqttClient == null ) {
+                throw new ArgumentNullException( nameof( managedMqttClient ) );
+            }
+
+            if ( topic == null ) {
+                throw new ArgumentNullException( nameof( topic ) );
+            }
+
+            return managedMqttClient.SubscribeAsync(
+                new List<MqttTopicFilter>
+                {
+                    new MqttTopicFilterBuilder()
+                        .WithTopic(topic)
+                        .WithNoLocal( noLocal )
+                        .WithQualityOfServiceLevel(qualityOfServiceLevel)
+                        .Build()
+                } );
         }
 
         public static Task UnsubscribeAsync(this IManagedMqttClient managedMqttClient, string topic)

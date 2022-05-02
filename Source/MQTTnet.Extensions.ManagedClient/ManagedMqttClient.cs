@@ -51,9 +51,8 @@ namespace MQTTnet.Extensions.ManagedClient
         ///         cref="MaintainConnectionAsync" />
         ///     .
         /// </summary>
-        readonly Dictionary<string, MqttQualityOfServiceLevel> _reconnectSubscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
-
-        readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
+        readonly Dictionary<string, MqttTopicFilter> _reconnectSubscriptions = new Dictionary<string, MqttTopicFilter>();
+        readonly Dictionary<string, MqttTopicFilter> _subscriptions = new Dictionary<string, MqttTopicFilter>();
         readonly SemaphoreSlim _subscriptionsQueuedSignal = new SemaphoreSlim(0);
         readonly HashSet<string> _unsubscriptions = new HashSet<string>();
 
@@ -289,7 +288,7 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 foreach (var topicFilter in topicFilters)
                 {
-                    _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                    _subscriptions[ topicFilter.Topic ] = topicFilter;
                     _unsubscriptions.Remove(topicFilter.Topic);
                 }
             }
@@ -455,27 +454,20 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 if (_reconnectSubscriptions.Any())
                 {
-                    var subscriptions = _reconnectSubscriptions.Select(
-                        i => new MqttTopicFilter
-                        {
-                            Topic = i.Key,
-                            QualityOfServiceLevel = i.Value
-                        });
-
-                    var topicFilters = new List<MqttTopicFilter>();
-
-                    foreach (var sub in subscriptions)
-                    {
-                        topicFilters.Add(sub);
-
-                        if (topicFilters.Count == Options.MaxTopicFiltersInSubscribeUnsubscribePackets)
-                        {
-                            await SendSubscribeUnsubscribe(topicFilters, null).ConfigureAwait(false);
-                            topicFilters.Clear();
-                        }
+#if NET6
+                    foreach ( var filters in _reconnectSubscriptions.Values.Chunk( Options.MaxTopicFiltersInSubscribeUnsubscribePackets ) )
+                        await SendSubscribeUnsubscribe( filters, null ).ConfigureAwait( false );
+#else
+                    int totalFiltersSent = 0;
+                    while ( totalFiltersSent < _reconnectSubscriptions.Count ) {
+                        List<MqttTopicFilter> filtersToSend = _reconnectSubscriptions.Values
+                            .Skip( totalFiltersSent )
+                            .Take( Options.MaxTopicFiltersInSubscribeUnsubscribePackets )
+                            .ToList();
+                        await SendSubscribeUnsubscribe( filtersToSend, null ).ConfigureAwait( false );
+                        totalFiltersSent += filtersToSend.Count;
                     }
-
-                    await SendSubscribeUnsubscribe(topicFilters, null).ConfigureAwait(false);
+#endif
                 }
             }
             catch (Exception exception)
@@ -495,16 +487,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 lock (_subscriptions)
                 {
-                    subscriptions = _subscriptions.Select(
-                            i => new MqttTopicFilter
-                            {
-                                Topic = i.Key,
-                                QualityOfServiceLevel = i.Value
-                            })
-                        .ToList();
-
+                    subscriptions = _subscriptions.Values.ToList();
                     _subscriptions.Clear();
-
                     unsubscriptions = new HashSet<string>(_unsubscriptions);
                     _unsubscriptions.Clear();
                 }
@@ -523,9 +507,9 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 foreach (var subscription in subscriptions)
                 {
-                    _reconnectSubscriptions[subscription.Topic] = subscription.QualityOfServiceLevel;
+                    _reconnectSubscriptions[ subscription.Topic ] = subscription;
                 }
-
+#if false
                 var addedTopicFilters = new List<MqttTopicFilter>();
                 foreach (var subscription in subscriptions)
                 {
@@ -537,9 +521,18 @@ namespace MQTTnet.Extensions.ManagedClient
                         addedTopicFilters.Clear();
                     }
                 }
-
                 await SendSubscribeUnsubscribe(addedTopicFilters, null).ConfigureAwait(false);
-
+#endif
+                int filtersSent = 0;
+                while ( filtersSent < subscriptions.Count ) {
+                    List<MqttTopicFilter> filtersToSend = subscriptions
+                        .Skip( filtersSent )
+                        .Take( Options.MaxTopicFiltersInSubscribeUnsubscribePackets )
+                        .ToList();
+                    await SendSubscribeUnsubscribe( filtersToSend, null ).ConfigureAwait( false );
+                    filtersSent += filtersToSend.Count;
+                }
+#if false
                 var removedTopicFilters = new List<string>();
                 foreach (var unSub in unsubscriptions)
                 {
@@ -551,8 +544,14 @@ namespace MQTTnet.Extensions.ManagedClient
                         removedTopicFilters.Clear();
                     }
                 }
-
                 await SendSubscribeUnsubscribe(null, removedTopicFilters).ConfigureAwait(false);
+#endif
+                int filtersRemoved = 0;
+                while ( filtersRemoved < unsubscriptions.Count ) {
+                    List<string> filtersToRemove = unsubscriptions.Skip( filtersRemoved ).Take( Options.MaxTopicFiltersInSubscribeUnsubscribePackets ).ToList();
+                    await SendSubscribeUnsubscribe( null, filtersToRemove ).ConfigureAwait( false );
+                    filtersRemoved += filtersToRemove.Count;
+                }
             }
         }
 

@@ -45,7 +45,15 @@ namespace MQTTnet.Packets
         ///     separator).
         /// </summary>
         public string Topic { get; set; }
-
+        /// <summary>
+        /// Compares TopicFilters on Topic strings.  Overlapping Topics are not considered.
+        /// </summary>
+        public override bool Equals( object other )
+        {
+            if ( !( other is MqttTopicFilter otherFilter ) )
+                return false;
+            return this.Topic == otherFilter.Topic;
+        }
         public override string ToString()
         {
             return

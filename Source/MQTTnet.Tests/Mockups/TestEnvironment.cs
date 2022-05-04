@@ -88,6 +88,8 @@ namespace MQTTnet.Tests.Mockups
 
         public int ServerPort { get; set; }
 
+        public MqttProtocolVersion ProtocolVersion { get => _protocolVersion; }
+
         public TestContext TestContext { get; }
 
         public Task<IMqttClient> ConnectClient()

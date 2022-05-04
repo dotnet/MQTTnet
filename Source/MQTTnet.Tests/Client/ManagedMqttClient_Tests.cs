@@ -264,132 +264,75 @@ namespace MQTTnet.Tests.Client
             }
         }
         /// <summary>
-        /// testing subscribe/unsubscribe at reconnect with subscriptions having NoLocal set.
+        /// testing subscribe/unsubscribe at reconnect - some subscriptions have NoLocal set to verify 
+        /// subscribing using TopicFilter info.
         /// </summary>
         /// <remarks>
-        /// 5/3/2022 jkohler@gpd-global.com
-        /// The MQTTnet server doesn't appear to support the NoLocal flag on subscriptions????  
-        /// I was unable to get it work as expected.  So this test was developed (naively) to use a mosquitto
-        /// broker running on a remote host.
-        /// broker:     mosquitto   2.0.12
-        /// host:       10.0.2.92:1883  
-        ///             Debian 10.11
-        /// This test uses a technique seen in other places in this test suite:
-        ///   a low level MqttClient is supplied to a ManagedMqttClient.  THe low level
-        ///   client can be disconnected to trigger the ManagedClient performing a re-connect
-        ///   operation - which issues all current subscriptions.  Which is what we're testing 
-        ///   here.
+        /// jkohler@gpd-global.com  5/4/2022
+        /// added:
+        ///     ManagedMqttClientExtensions.SubscribeAsync  
+        ///         takes parameter for NoLocal TopicFilter property
+        /// modified:
+        ///     TestEnvironment             - adding property ProtocolVersion
+        ///     CreateManagedClientAsync    - adding ProtocolVersion to client options
         /// </remarks>
         [TestMethod]
-        public async Task Subscriptions_And_Unsubscriptions_Are_Made_And_Reestablished_At_Reconnect_NoLocalPreserved()
+        public async Task Subscriptions_And_Unsubscriptions_Are_Made_And_Reestablished_At_Reconnect_NoLocal()
         {
-            const string TestBrokerAddress = "10.0.2.92";
-            const int TestBrokerPort = 1883;
-            // 
-            // topic which is subscribed _without_ the NoLocal property set.  We _should_ get
-            // messages back on this topic.
-            const string TopicLocal = "test-topics/nolocal/nolocal-reset";
-            //
-            // topic which is subscribed _with_ the NoLocal proeprty set.  We should get no
-            // messages back on this topic.
-            const string TopicNoLocal = "test-topics/nolocal/nolocal-set";
-
-            const int ExpectedReceivedMessageCount = 3;
-
-            var mqttClientFactory = new MqttFactory();
-
-            //
-            // create unmanaged client to serve as underlyung client for managed client
-            //  an unmanaged client can be connected/disconnected w/o interfering with the 
-            //  managed client's 'started' state
-            var unmanagedClient = mqttClientFactory.CreateMqttClient();
-            var unmanagedClientOptions = new MqttClientOptionsBuilder()
-                .WithTcpServer( TestBrokerAddress, TestBrokerPort )
-                .WithClientId( "NoLocalTest" + Guid.NewGuid().ToString( "N" ) )
-                // The NoLocal property on subscriptions is a protocol version 5 thing so
-                // this has to be set.
-                .WithProtocolVersion( MQTTnet.Formatter.MqttProtocolVersion.V500 )
-                .Build();
-            //
-            // connect the unmanaged client and give a few msecs to stabilize
-            var response = await unmanagedClient.ConnectAsync( unmanagedClientOptions, CancellationToken.None );
-            await Task.Delay( 500 );
-            Assert.IsTrue( unmanagedClient.IsConnected );
-            //
-            // create a managed client using the unmanaged client 
-            // the managed client has to be started
-            var managedOptions = new ManagedMqttClientOptionsBuilder().WithClientOptions( unmanagedClientOptions ).Build();
-            var managedClient = mqttClientFactory.CreateManagedMqttClient( unmanagedClient ) as ManagedMqttClient;
-            Assert.IsNotNull( managedClient );
-            //
-            // add subscriptions before starting the managedclient - these subscriptions should be sent to the 
-            // broker as part of the startup
-            await managedClient.SubscribeAsync( TopicLocal, noLocal: false );
-            await managedClient.SubscribeAsync( TopicNoLocal, noLocal: true );
-
-            await managedClient.StartAsync( managedOptions );
-            await Task.Delay( 500 );
-            Assert.IsTrue( managedClient.IsConnected );
-            Assert.IsTrue( managedClient.IsStarted );
-            //
-            // we're connected, started and should have established two subscriptions
-            // now we send messages to both subscribed topics - we should see message back
-            // on only one topic
-            //
-
-            //
-            // establish a one-time receiver for expected message count
-            Task<List<MqttApplicationMessage>> received = SetupReceivingOfMessages( managedClient, ExpectedReceivedMessageCount );
-            //
-            // task to publish messages 
-            async Task PublishMessages()
+            using (var testEnvironment = CreateTestEnvironment(protocolVersion: MQTTnet.Formatter.MqttProtocolVersion.V500))
             {
-                await unmanagedClient.PublishBinaryAsync( TopicLocal, new byte[] { 1 } );       // will receive     +1
-                await unmanagedClient.PublishBinaryAsync( TopicNoLocal, new byte[] { 1 } );     // won't receive
-                await unmanagedClient.PublishBinaryAsync( TopicNoLocal, new byte[] { 1 } );     // won't receive
-                await unmanagedClient.PublishBinaryAsync( TopicLocal, new byte[] { 1 } );       // will receive     +2
-                await unmanagedClient.PublishBinaryAsync( TopicNoLocal, new byte[] { 1 } );     // won't receive
-                await unmanagedClient.PublishBinaryAsync( TopicNoLocal, new byte[] { 1 } );     // won't receive
-                await unmanagedClient.PublishBinaryAsync( TopicLocal, new byte[] { 1 } );       // will receive     +3
+                var unmanagedClient = testEnvironment.CreateClient();
+                var managedClient = await CreateManagedClientAsync(testEnvironment, unmanagedClient);
+
+                var received = SetupReceivingOfMessages(managedClient, 2);
+
+                await managedClient.SubscribeAsync("keptSubscribed", noLocal: false);
+                await managedClient.SubscribeAsync("keptSubscribedNoLocal", noLocal: true);
+                await managedClient.SubscribeAsync("subscribedThenUnsubscribed", noLocal: false);
+                await managedClient.UnsubscribeAsync("subscribedThenUnsubscribed");
+                await managedClient.UnsubscribeAsync("unsubscribedThenSubscribed");
+                await managedClient.UnsubscribeAsync("unsubscribedThenSubscribedNoLocal");
+                await managedClient.SubscribeAsync("unsubscribedThenSubscribed", noLocal: false);
+                await managedClient.SubscribeAsync("unsubscribedThenSubscribedNoLocal", noLocal: true);
+
+                //wait a bit for the subscriptions to become established before the messages are published
+                await Task.Delay(500);
+
+                async Task PublishMessages()
+                {
+                    await unmanagedClient.PublishBinaryAsync("keptSubscribedNoLocal", new byte[] { 1 });
+                    await unmanagedClient.PublishBinaryAsync("keptSubscribed", new byte[] { 1 });
+                    await unmanagedClient.PublishBinaryAsync("keptSubscribedNoLocal", new byte[] { 1 });
+                    await unmanagedClient.PublishBinaryAsync("subscribedThenUnsubscribed", new byte[] { 1 });
+                    await unmanagedClient.PublishBinaryAsync("keptSubscribedNoLocal", new byte[] { 1 });
+                    await unmanagedClient.PublishBinaryAsync("unsubscribedThenSubscribed", new byte[] { 1 });
+                    await unmanagedClient.PublishBinaryAsync("unsubscribedThenSubscribedNoLocal", new byte[] { 1 });
+                }
+
+                await PublishMessages();
+
+                async Task AssertMessagesReceived()
+                {
+                    var messages = await received;
+                    Assert.AreEqual("keptSubscribed", messages[0].Topic);
+                    Assert.AreEqual("unsubscribedThenSubscribed", messages[1].Topic);
+                }
+
+                Assert.IsTrue(AssertMessagesReceived().Wait(TimeSpan.FromSeconds(5)));
+
+                // force a reconnect by disconnecting the unmanaged client
+                var connected = GetConnectedTask(managedClient);
+                await unmanagedClient.DisconnectAsync();
+                Assert.IsTrue(connected.Wait(TimeSpan.FromSeconds(5)));
+
+                // wait a bit so that the managed client can reestablish the subscriptions
+                await Task.Delay(500);
+
+                received = SetupReceivingOfMessages(managedClient, 2);
+                await PublishMessages();
+                // and then the same subscriptions need to exist again
+                Assert.IsTrue(AssertMessagesReceived().Wait(TimeSpan.FromSeconds(5)));
             }
-            //
-            // publish messages
-            await PublishMessages();
-            //
-            // receive 3 messages
-            var received_messages = await received;
-            //
-            // validate count and topics
-            Assert.AreEqual( ExpectedReceivedMessageCount, received_messages.Count );
-            Assert.IsTrue( received_messages.All( m => m.Topic == TopicLocal ) );
-            //
-            // now we can disconnect the unmanaged client and the managed client will immediately 
-            // begin a reconnect 
-            // when disconnected both clients should report ! IsConnected but the managed client will still be 'Started'
-            await unmanagedClient.DisconnectAsync();
-            Assert.IsFalse( unmanagedClient.IsConnected );
-            Assert.IsFalse( managedClient.IsConnected );
-            Assert.IsTrue( managedClient.IsStarted );
-            //
-            // allow some time for the managed client to reconnect and emit the subscriptions
-            await Task.Delay( 1000 );
-            Assert.IsTrue( unmanagedClient.IsConnected );
-            Assert.IsTrue( managedClient.IsConnected );
-            Assert.IsTrue( managedClient.IsStarted );
-            //
-            // setup a message receiver - for two messages
-            received = SetupReceivingOfMessages( managedClient, ExpectedReceivedMessageCount );
-            // 
-            // publish test messages
-            await PublishMessages();
-            received_messages = await received;
-            //
-            // validate as before
-            Assert.AreEqual( ExpectedReceivedMessageCount, received_messages.Count );
-            Assert.IsTrue( received_messages.All( m => m.Topic == TopicLocal ) );
-            //
-            // graceful shutdown
-            await managedClient.StopAsync();
         }
 
         [TestMethod]
@@ -523,7 +466,9 @@ namespace MQTTnet.Tests.Client
         {
             await testEnvironment.StartServer();
 
-            var clientOptions = new MqttClientOptionsBuilder().WithTcpServer(host, testEnvironment.ServerPort);
+            var clientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer(host, testEnvironment.ServerPort)
+                .WithProtocolVersion(testEnvironment.ProtocolVersion);
 
             var managedOptions = new ManagedMqttClientOptionsBuilder().WithClientOptions(clientOptions).Build();
 
@@ -549,12 +494,13 @@ namespace MQTTnet.Tests.Client
         ///         name="managedClient" />
         ///     has connected
         /// </summary>
-        Task GetConnectedTask( ManagedMqttClient managedClient )
+        Task GetConnectedTask(ManagedMqttClient managedClient)
         {
             var connected = new TaskCompletionSource<bool>();
 
-            managedClient.ConnectedAsync += e => {
-                connected.TrySetResult( true );
+            managedClient.ConnectedAsync += e =>
+            {
+                connected.TrySetResult(true);
                 return PlatformAbstractionLayer.CompletedTask;
             };
 
@@ -566,12 +512,13 @@ namespace MQTTnet.Tests.Client
         ///         name="managedClient" />
         ///     has disconnected
         /// </summary>
-        Task GetDisConnectedTask( ManagedMqttClient managedClient )
+        Task GetDisConnectedTask(ManagedMqttClient managedClient)
         {
             var connected = new TaskCompletionSource<bool>();
 
-            managedClient.DisconnectedAsync += e => {
-                connected.TrySetResult( false );
+            managedClient.DisconnectedAsync += e =>
+            {
+                connected.TrySetResult(false);
                 return PlatformAbstractionLayer.CompletedTask;
             };
 

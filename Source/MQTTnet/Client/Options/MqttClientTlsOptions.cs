@@ -21,6 +21,8 @@ namespace MQTTnet.Client
 
         public bool AllowUntrustedCertificates { get; set; }
 
+        public X509RevocationMode RevocationMode { get; set; } = X509RevocationMode.Online;
+
 #if WINDOWS_UWP
         public List<byte[]> Certificates { get; set; }
 #else

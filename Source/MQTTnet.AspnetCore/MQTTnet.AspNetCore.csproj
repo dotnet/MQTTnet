@@ -27,7 +27,7 @@
         <PackageIcon>nuget.png</PackageIcon>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReleaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</PackageReleaseNotes>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -41,14 +41,7 @@
             <PackagePath>\</PackagePath>
         </None>
     </ItemGroup>
-
-    <ItemGroup>
-        <None Include="..\..\LICENSE">
-            <Pack>True</Pack>
-            <PackagePath>\</PackagePath>
-        </None>
-    </ItemGroup>
-
+    
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     </ItemGroup>

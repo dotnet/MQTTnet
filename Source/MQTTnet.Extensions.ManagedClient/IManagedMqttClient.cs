@@ -1,51 +1,52 @@
-﻿using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public interface IManagedMqttClient : IApplicationMessageReceiver, IApplicationMessagePublisher, IDisposable
+    public interface IManagedMqttClient : IDisposable
     {
-        /// <summary>
-        /// Gets the internally used MQTT client.
-        /// This property should be used with caution because manipulating the internal client might break the managed client.
-        /// </summary>
+        event Func<ApplicationMessageProcessedEventArgs, Task> ApplicationMessageProcessedAsync;
+        
+        event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync;
+        
+        event Func<ApplicationMessageSkippedEventArgs, Task> ApplicationMessageSkippedAsync;
+        
+        event Func<EventArgs, Task> ConnectedAsync;
+        
+        event Func<ConnectingFailedEventArgs, Task> ConnectingFailedAsync;
+        
+        event Func<EventArgs, Task> ConnectionStateChangedAsync;
+        
+        event Func<EventArgs, Task> DisconnectedAsync;
+        
+        event Func<ManagedProcessFailedEventArgs, Task> SynchronizingSubscriptionsFailedAsync;
+        
         IMqttClient InternalClient { get; }
-
-        bool IsStarted { get; }
         
         bool IsConnected { get; }
         
+        bool IsStarted { get; }
+        
+        ManagedMqttClientOptions Options { get; }
+        
         int PendingApplicationMessagesCount { get; }
         
-        IManagedMqttClientOptions Options { get; }
+        Task EnqueueAsync(MqttApplicationMessage applicationMessage);
         
-        IMqttClientConnectedHandler ConnectedHandler { get; set; }
+        Task EnqueueAsync(ManagedMqttApplicationMessage applicationMessage);
         
-        IMqttClientDisconnectedHandler DisconnectedHandler { get; set; }
-
-        IApplicationMessageProcessedHandler ApplicationMessageProcessedHandler { get; set; }
+        Task PingAsync(CancellationToken cancellationToken = default);
         
-        IApplicationMessageSkippedHandler ApplicationMessageSkippedHandler { get; set; }
-
-        IConnectingFailedHandler ConnectingFailedHandler { get; set; }
-        
-        ISynchronizingSubscriptionsFailedHandler SynchronizingSubscriptionsFailedHandler { get; set; }
-
-        Task StartAsync(IManagedMqttClientOptions options);
+        Task StartAsync(ManagedMqttClientOptions options);
         
         Task StopAsync();
         
-        Task PingAsync(CancellationToken cancellationToken);
-
-        Task SubscribeAsync(IEnumerable<MqttTopicFilter> topicFilters);
+        Task SubscribeAsync(ICollection<MqttTopicFilter> topicFilters);
         
-        Task UnsubscribeAsync(IEnumerable<string> topics);
-
-        Task PublishAsync(ManagedMqttApplicationMessage applicationMessages);
+        Task UnsubscribeAsync(ICollection<string> topics);
     }
 }

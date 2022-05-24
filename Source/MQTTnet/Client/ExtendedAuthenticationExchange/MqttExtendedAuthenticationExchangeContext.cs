@@ -1,21 +1,25 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Generic;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Client.ExtendedAuthenticationExchange
+namespace MQTTnet.Client
 {
     public class MqttExtendedAuthenticationExchangeContext
     {
-        public MqttExtendedAuthenticationExchangeContext(MqttAuthPacket authPacket, IMqttClient client)
+        public MqttExtendedAuthenticationExchangeContext(MqttAuthPacket authPacket, MqttClient client)
         {
             if (authPacket == null) throw new ArgumentNullException(nameof(authPacket));
 
             ReasonCode = authPacket.ReasonCode;
-            ReasonString = authPacket.Properties?.ReasonString;
-            AuthenticationMethod = authPacket.Properties?.AuthenticationMethod;
-            AuthenticationData = authPacket.Properties?.AuthenticationData;
-            UserProperties = authPacket.Properties?.UserProperties;
+            ReasonString = authPacket.ReasonString;
+            AuthenticationMethod = authPacket.AuthenticationMethod;
+            AuthenticationData = authPacket.AuthenticationData;
+            UserProperties = authPacket.UserProperties;
 
             Client = client ?? throw new ArgumentNullException(nameof(client));
         }
@@ -53,6 +57,6 @@ namespace MQTTnet.Client.ExtendedAuthenticationExchange
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; }
 
-        public IMqttClient Client { get; }
+        public MqttClient Client { get; }
     }
 }

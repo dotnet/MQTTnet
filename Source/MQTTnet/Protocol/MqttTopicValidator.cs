@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using MQTTnet.Exceptions;
 
 namespace MQTTnet.Protocol
@@ -9,16 +13,9 @@ namespace MQTTnet.Protocol
         {
             if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
 
-            if (!applicationMessage.TopicAlias.HasValue)
+            if (applicationMessage.TopicAlias == 0)
             {
                 ThrowIfInvalid(applicationMessage.Topic);
-            }
-            else
-            {
-                if (applicationMessage.TopicAlias.Value == 0)
-                {
-                    throw new MqttProtocolViolationException("The topic alias cannot be 0.");
-                }
             }
         }
 
@@ -40,6 +37,20 @@ namespace MQTTnet.Protocol
                 {
                     throw new MqttProtocolViolationException("The character '#' is not allowed in topics.");
                 }
+            }
+        }
+
+        public static void ThrowIfInvalidSubscribe(string topic)
+        {
+            if (string.IsNullOrEmpty(topic))
+            {
+                throw new MqttProtocolViolationException("Topic should not be empty.");
+            }
+
+            var indexOfHash = topic.IndexOf("#", StringComparison.Ordinal);
+            if (indexOfHash != -1 && indexOfHash != topic.Length - 1)
+            {
+                throw new MqttProtocolViolationException("The character '#' is only allowed as last character");
             }
         }
     }

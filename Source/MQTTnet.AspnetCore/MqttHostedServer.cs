@@ -1,4 +1,7 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,19 +12,16 @@ using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore
 {
-    public class MqttHostedServer : MqttServer, IHostedService
+    public sealed class MqttHostedServer : MqttServer, IHostedService
     {
-        private readonly IMqttServerOptions _options;
-
-        public MqttHostedServer(IMqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger) 
-            : base(adapters, logger)
+        public MqttHostedServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger) 
+            : base(options, adapters, logger)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _ = StartAsync(_options);
+            _ =  StartAsync();
             return Task.CompletedTask;
         }
 

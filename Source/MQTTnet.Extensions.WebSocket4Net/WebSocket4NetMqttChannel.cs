@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +12,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using SuperSocket.ClientEngine;
 using WebSocket4Net;
 
@@ -20,12 +23,12 @@ namespace MQTTnet.Extensions.WebSocket4Net
     {
         readonly BlockingCollection<byte> _receiveBuffer = new BlockingCollection<byte>();
 
-        readonly IMqttClientOptions _clientOptions;
+        readonly MqttClientOptions _clientOptions;
         readonly MqttClientWebSocketOptions _webSocketOptions;
 
         WebSocket _webSocket;
 
-        public WebSocket4NetMqttChannel(IMqttClientOptions clientOptions, MqttClientWebSocketOptions webSocketOptions)
+        public WebSocket4NetMqttChannel(MqttClientOptions clientOptions, MqttClientWebSocketOptions webSocketOptions)
         {
             _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
             _webSocketOptions = webSocketOptions ?? throw new ArgumentNullException(nameof(webSocketOptions));
@@ -52,7 +55,12 @@ namespace MQTTnet.Extensions.WebSocket4Net
                 }
             }
 
-            var sslProtocols = _webSocketOptions?.TlsOptions?.SslProtocol ?? SslProtocols.None;
+#if NET48 || NETCOREAPP3_1 || NET5 || NET6
+            var sslProtocols = _webSocketOptions?.TlsOptions?.SslProtocol ?? SslProtocols.Tls12 | SslProtocols.Tls13;
+#else
+            var sslProtocols = _webSocketOptions?.TlsOptions?.SslProtocol ?? SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;
+#endif
+
             var subProtocol = _webSocketOptions.SubProtocols.FirstOrDefault() ?? string.Empty;
 
             var cookies = new List<KeyValuePair<string, string>>();
@@ -205,25 +213,36 @@ namespace MQTTnet.Extensions.WebSocket4Net
                 _webSocket.Open();
 #pragma warning restore AsyncFixer02 // Long-running or blocking operations inside an async method
 
-                var exception = await MqttTaskTimeout.WaitAsync(c =>
+                using (var timeoutCts = new CancellationTokenSource(_clientOptions.Timeout))
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken))
                 {
-                    c.Register(() => taskCompletionSource.TrySetCanceled());
-                    return taskCompletionSource.Task;
-                }, _clientOptions.CommunicationTimeout, cancellationToken).ConfigureAwait(false);
-
-                if (exception != null)
-                {
-                    if (exception is AuthenticationException authenticationException)
+                    using (linkedCts.Token.Register(() => taskCompletionSource.TrySetCanceled()))
                     {
-                        throw new MqttCommunicationException(authenticationException.InnerException);
-                    }
+                        try
+                        {
+                            await taskCompletionSource.Task.ConfigureAwait(false);
+                        }
+                        catch (Exception exception)
+                        {
+                            var timeoutReached = timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested;
+                            if (timeoutReached)
+                            {
+                                throw new MqttCommunicationTimedOutException(exception);
+                            }
+                            
+                            if (exception is AuthenticationException authenticationException)
+                            {
+                                throw new MqttCommunicationException(authenticationException.InnerException);
+                            }
 
-                    if (exception is OperationCanceledException)
-                    {
-                        throw new MqttCommunicationTimedOutException();
-                    }
+                            if (exception is OperationCanceledException)
+                            {
+                                throw new MqttCommunicationTimedOutException();
+                            }
 
-                    throw new MqttCommunicationException(exception);
+                            throw new MqttCommunicationException(exception);
+                        }
+                    }
                 }
             }
             catch (OperationCanceledException)

@@ -1,41 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
+using System.Collections;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
+using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
-namespace MQTTnet.Server.Status
+namespace MQTTnet.Server
 {
-    public sealed class MqttSessionStatus : IMqttSessionStatus
+    public sealed class MqttSessionStatus
     {
-        readonly MqttClientSession _session;
-        readonly MqttClientSessionsManager _sessionsManager;
+        readonly MqttSession _session;
 
-        public MqttSessionStatus(MqttClientSession session, MqttClientSessionsManager sessionsManager)
+        public MqttSessionStatus(MqttSession session)
         {
             _session = session ?? throw new ArgumentNullException(nameof(session));
-            _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
+        }
+        
+        public string Id => _session.Id;
+
+        public long PendingApplicationMessagesCount => _session.PendingDataPacketsCount;
+
+        public DateTime CreatedTimestamp => _session.CreatedTimestamp;
+
+        public IDictionary Items => _session.Items;
+        
+        public Task EnqueueApplicationMessageAsync(MqttApplicationMessage applicationMessage)
+        {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+            
+            var publishPacketFactory = new MqttPublishPacketFactory();
+            _session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketFactory.Create(applicationMessage)));
+            
+            return PlatformAbstractionLayer.CompletedTask;
         }
 
-        /// <summary>
-        /// Gets or sets the client identifier.
-        /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
-        /// </summary>
-        public string ClientId { get; set; }
+        public Task DeliverApplicationMessageAsync(MqttApplicationMessage applicationMessage)
+        {
+            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+            
+            var publishPacketFactory = new MqttPublishPacketFactory();
+            var packetBusItem = new MqttPacketBusItem(publishPacketFactory.Create(applicationMessage));
+            _session.EnqueueDataPacket(packetBusItem);
 
-        public long PendingApplicationMessagesCount { get; set; }
-
-        public DateTime CreatedTimestamp { get; set; }
-
-        public IDictionary<object, object> Items { get; set; }
-
+            return packetBusItem.WaitForDeliveryAsync();
+        }
+        
         public Task DeleteAsync()
         {
-            return _sessionsManager.DeleteSessionAsync(ClientId);
+            return _session.DeleteAsync();
         }
-
-        public Task ClearPendingApplicationMessagesAsync()
+        
+        public Task ClearApplicationMessagesQueueAsync()
         {
-            _session.ApplicationMessagesQueue.Clear();
-            return Task.FromResult(0);
+            throw new NotImplementedException();
         }
     }
 }

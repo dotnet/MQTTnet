@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net452;net461;netcoreapp3.1;net6.0</TargetFrameworks>
+        <IsPackable>false</IsPackable>
+        <LangVersion>7.3</LangVersion>
+        <EnableNETAnalyzers>false</EnableNETAnalyzers>
+        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MSTest.TestAdapter" Version="2.1.2" />
+        <PackageReference Include="MSTest.TestFramework" Version="2.1.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0" />
+
+        <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
+        <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
+        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj" />
+        <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
+    </ItemGroup>
+
+</Project>

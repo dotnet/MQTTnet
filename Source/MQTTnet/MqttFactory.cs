@@ -1,42 +1,57 @@
-﻿using MQTTnet.Adapter;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.LowLevelClient;
 using MQTTnet.Server;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet
 {
-    public sealed class MqttFactory : IMqttFactory
+    public sealed class MqttFactory
     {
         IMqttClientAdapterFactory _clientAdapterFactory;
 
-        public MqttFactory() : this(new MqttNetLogger())
+        public MqttFactory() : this(new MqttNetNullLogger())
         {
         }
 
         public MqttFactory(IMqttNetLogger logger)
         {
             DefaultLogger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _clientAdapterFactory = new MqttClientAdapterFactory(logger);
+
+            _clientAdapterFactory = new MqttClientAdapterFactory();
         }
 
         public IMqttNetLogger DefaultLogger { get; }
 
-        public IList<Func<IMqttFactory, IMqttServerAdapter>> DefaultServerAdapters { get; } = new List<Func<IMqttFactory, IMqttServerAdapter>>
+        public IList<Func<MqttFactory, IMqttServerAdapter>> DefaultServerAdapters { get; } = new List<Func<MqttFactory, IMqttServerAdapter>>
         {
-            factory => new MqttTcpServerAdapter(factory.DefaultLogger)
+            factory => new MqttTcpServerAdapter()
         };
 
         public IDictionary<object, object> Properties { get; } = new Dictionary<object, object>();
 
-        public IMqttFactory UseClientAdapterFactory(IMqttClientAdapterFactory clientAdapterFactory)
+        public MqttApplicationMessageBuilder CreateApplicationMessageBuilder()
         {
-            _clientAdapterFactory = clientAdapterFactory ?? throw new ArgumentNullException(nameof(clientAdapterFactory));
-            return this;
+            return new MqttApplicationMessageBuilder();
+        }
+
+        public MqttClientDisconnectOptionsBuilder CreateClientDisconnectOptionsBuilder()
+        {
+            return new MqttClientDisconnectOptionsBuilder();
+        }
+
+        public MqttClientOptionsBuilder CreateClientOptionsBuilder()
+        {
+            return new MqttClientOptionsBuilder();
         }
 
         public ILowLevelMqttClient CreateLowLevelMqttClient()
@@ -46,22 +61,35 @@ namespace MQTTnet
 
         public ILowLevelMqttClient CreateLowLevelMqttClient(IMqttNetLogger logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
 
             return new LowLevelMqttClient(_clientAdapterFactory, logger);
         }
 
         public ILowLevelMqttClient CreateLowLevelMqttClient(IMqttClientAdapterFactory clientAdapterFactory)
         {
-            if (clientAdapterFactory == null) throw new ArgumentNullException(nameof(clientAdapterFactory));
+            if (clientAdapterFactory == null)
+            {
+                throw new ArgumentNullException(nameof(clientAdapterFactory));
+            }
 
             return new LowLevelMqttClient(_clientAdapterFactory, DefaultLogger);
         }
 
         public ILowLevelMqttClient CreateLowLevelMqttClient(IMqttNetLogger logger, IMqttClientAdapterFactory clientAdapterFactory)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
-            if (clientAdapterFactory == null) throw new ArgumentNullException(nameof(clientAdapterFactory));
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
+            if (clientAdapterFactory == null)
+            {
+                throw new ArgumentNullException(nameof(clientAdapterFactory));
+            }
 
             return new LowLevelMqttClient(_clientAdapterFactory, logger);
         }
@@ -73,52 +101,104 @@ namespace MQTTnet
 
         public IMqttClient CreateMqttClient(IMqttNetLogger logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
 
             return new MqttClient(_clientAdapterFactory, logger);
         }
 
         public IMqttClient CreateMqttClient(IMqttClientAdapterFactory clientAdapterFactory)
         {
-            if (clientAdapterFactory == null) throw new ArgumentNullException(nameof(clientAdapterFactory));
+            if (clientAdapterFactory == null)
+            {
+                throw new ArgumentNullException(nameof(clientAdapterFactory));
+            }
 
             return new MqttClient(clientAdapterFactory, DefaultLogger);
         }
 
         public IMqttClient CreateMqttClient(IMqttNetLogger logger, IMqttClientAdapterFactory clientAdapterFactory)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
-            if (clientAdapterFactory == null) throw new ArgumentNullException(nameof(clientAdapterFactory));
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
+            if (clientAdapterFactory == null)
+            {
+                throw new ArgumentNullException(nameof(clientAdapterFactory));
+            }
 
             return new MqttClient(clientAdapterFactory, logger);
         }
 
-        public IMqttServer CreateMqttServer()
+        public MqttServer CreateMqttServer(MqttServerOptions options)
         {
-            return CreateMqttServer(DefaultLogger);
+            return CreateMqttServer(options, DefaultLogger);
         }
 
-        public IMqttServer CreateMqttServer(IMqttNetLogger logger)
+        public MqttServer CreateMqttServer(MqttServerOptions options, IMqttNetLogger logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
 
             var serverAdapters = DefaultServerAdapters.Select(a => a.Invoke(this));
-            return CreateMqttServer(serverAdapters, logger);
+            return CreateMqttServer(options, serverAdapters, logger);
         }
 
-        public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> serverAdapters, IMqttNetLogger logger)
+        public MqttServer CreateMqttServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> serverAdapters, IMqttNetLogger logger)
         {
-            if (serverAdapters == null) throw new ArgumentNullException(nameof(serverAdapters));
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (serverAdapters == null)
+            {
+                throw new ArgumentNullException(nameof(serverAdapters));
+            }
 
-            return new MqttServer(serverAdapters, logger);
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
+            return new MqttServer(options, serverAdapters, logger);
         }
 
-        public IMqttServer CreateMqttServer(IEnumerable<IMqttServerAdapter> serverAdapters)
+        public MqttServer CreateMqttServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> serverAdapters)
         {
-            if (serverAdapters == null) throw new ArgumentNullException(nameof(serverAdapters));
+            if (serverAdapters == null)
+            {
+                throw new ArgumentNullException(nameof(serverAdapters));
+            }
 
-            return new MqttServer(serverAdapters, DefaultLogger);
+            return new MqttServer(options, serverAdapters, DefaultLogger);
+        }
+
+        public MqttServerOptionsBuilder CreateServerOptionsBuilder()
+        {
+            return new MqttServerOptionsBuilder();
+        }
+
+        public MqttClientSubscribeOptionsBuilder CreateSubscribeOptionsBuilder()
+        {
+            return new MqttClientSubscribeOptionsBuilder();
+        }
+
+        public MqttTopicFilterBuilder CreateTopicFilterBuilder()
+        {
+            return new MqttTopicFilterBuilder();
+        }
+
+        public MqttClientUnsubscribeOptionsBuilder CreateUnsubscribeOptionsBuilder()
+        {
+            return new MqttClientUnsubscribeOptionsBuilder();
+        }
+
+        public MqttFactory UseClientAdapterFactory(IMqttClientAdapterFactory clientAdapterFactory)
+        {
+            _clientAdapterFactory = clientAdapterFactory ?? throw new ArgumentNullException(nameof(clientAdapterFactory));
+            return this;
         }
     }
 }

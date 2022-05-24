@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Collections.Generic;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Client.Subscribing
+namespace MQTTnet.Client
 {
-    public class MqttClientSubscribeOptions
+    public sealed class MqttClientSubscribeOptions
     {
         /// <summary>
         /// Gets or sets a list of topic filters the client wants to subscribe to.
@@ -18,7 +22,7 @@ namespace MQTTnet.Client.Subscribing
         /// The broker will return the subscription identifier associated with this PUBLISH packet and the PUBLISH packet to the client when need to forward PUBLISH packets matching this subscription to this client.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public uint? SubscriptionIdentifier { get; set; }
+        public uint SubscriptionIdentifier { get; set; }
 
         /// <summary>
         /// Gets or sets the user properties.

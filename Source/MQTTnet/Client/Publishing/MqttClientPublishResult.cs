@@ -1,11 +1,17 @@
-﻿
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Collections.Generic;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Client.Publishing
+namespace MQTTnet.Client
 {
-    public class MqttClientPublishResult
+    public sealed class MqttClientPublishResult
     {
+        /// <summary>
+        /// Gets the packet identifier which was used for this publish.
+        /// </summary>
         public ushort? PacketIdentifier { get; set; }
 
         /// <summary>
@@ -27,6 +33,6 @@ namespace MQTTnet.Client.Publishing
         /// The feature is very similar to the HTTP header concept.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public List<MqttUserProperty> UserProperties { get; set; }
+        public IReadOnlyCollection<MqttUserProperty> UserProperties { get; internal set; }
     }
 }

@@ -1,11 +1,16 @@
-﻿namespace MQTTnet.Client.Subscribing
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+namespace MQTTnet.Client
 {
     public enum MqttClientSubscribeResultCode
     {
-        GrantedQoS0 = 0,
-        GrantedQoS1 = 1,
-        GrantedQoS2 = 2,
-        UnspecifiedError = 128,
+        GrantedQoS0 = 0x00,
+        GrantedQoS1 = 0x01,
+        GrantedQoS2 = 0x02,
+        UnspecifiedError = 0x80,
+        
         ImplementationSpecificError = 131,
         NotAuthorized = 135,
         TopicFilterInvalid = 143,

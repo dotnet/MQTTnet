@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 #if WINDOWS_UWP
 using System;
 using System.Collections.Generic;
@@ -12,7 +16,7 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography.Certificates;
 using MQTTnet.Channel;
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 using MQTTnet.Server;
 
 namespace MQTTnet.Implementations
@@ -26,13 +30,13 @@ namespace MQTTnet.Implementations
         Stream _readStream;
         Stream _writeStream;
 
-        public MqttTcpChannel(IMqttClientOptions clientOptions)
+        public MqttTcpChannel(MqttClientOptions clientOptions)
         {
             _options = (MqttClientTcpOptions)clientOptions.ChannelOptions;
             _bufferSize = _options.BufferSize;
         }
 
-        public MqttTcpChannel(StreamSocket socket, X509Certificate2 clientCertificate, IMqttServerOptions serverOptions)
+        public MqttTcpChannel(StreamSocket socket, X509Certificate2 clientCertificate, MqttServerOptions serverOptions)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _bufferSize = serverOptions.DefaultEndpointOptions.BufferSize;
@@ -75,23 +79,11 @@ namespace MQTTnet.Implementations
                     _socket.Control.IgnorableServerCertificateErrors.Add(ignorableChainValidationResult);
                 }
 
-#if NETCOREAPP3_1 || NET5_0
-                var socketProtectionLevel = SocketProtectionLevel.Tls13;
-                if (_options.TlsOptions.SslProtocol == SslProtocols.Tls12)
-                {
-                    socketProtectionLevel = SocketProtectionLevel.Tls12;
-                }
-                else if (_options.TlsOptions.SslProtocol == SslProtocols.Tls11)
-                {
-                    socketProtectionLevel = SocketProtectionLevel.Tls11;
-                }
-#else
                 var socketProtectionLevel = SocketProtectionLevel.Tls12;
                 if (_options.TlsOptions.SslProtocol == SslProtocols.Tls11)
                 {
                     socketProtectionLevel = SocketProtectionLevel.Tls11;
                 }
-#endif
                 else if (_options.TlsOptions.SslProtocol == SslProtocols.Tls)
                 {
                     socketProtectionLevel = SocketProtectionLevel.Tls10;

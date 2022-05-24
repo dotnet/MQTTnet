@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Connections;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
@@ -10,7 +14,6 @@ using System.IO.Pipelines;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.AspNetCore.Extensions;
 using MQTTnet.Internal;
 
 namespace MQTTnet.AspNetCore
@@ -18,7 +21,6 @@ namespace MQTTnet.AspNetCore
     public sealed class MqttConnectionContext : IMqttChannelAdapter
     {
         readonly AsyncLock _writerLock = new AsyncLock();
-        readonly SpanBasedMqttPacketBodyReader _reader;
         
         PipeReader _input;
         PipeWriter _output;
@@ -33,8 +35,6 @@ namespace MQTTnet.AspNetCore
                 _input = Connection.Transport.Input;
                 _output = Connection.Transport.Output;
             }
-
-            _reader = new SpanBasedMqttPacketBodyReader();
         }
 
         public string Endpoint
@@ -73,7 +73,7 @@ namespace MQTTnet.AspNetCore
 
         IHttpContextFeature Http => Connection.Features.Get<IHttpContextFeature>();
 
-        public async Task ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             if (Connection is TcpConnection tcp && !tcp.IsConnected)
             {
@@ -84,7 +84,7 @@ namespace MQTTnet.AspNetCore
             _output = Connection.Transport.Output;
         }
 
-        public Task DisconnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public Task DisconnectAsync(CancellationToken cancellationToken)
         {
             _input?.Complete();
             _output?.Complete();
@@ -92,7 +92,7 @@ namespace MQTTnet.AspNetCore
             return Task.CompletedTask;
         }
 
-        public async Task<MqttBasePacket> ReceivePacketAsync(CancellationToken cancellationToken)
+        public async Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken)
         {
             var input = Connection.Transport.Input;
 
@@ -120,7 +120,7 @@ namespace MQTTnet.AspNetCore
                     {
                         if (!buffer.IsEmpty)
                         {
-                            if (PacketFormatterAdapter.TryDecode(_reader, buffer, out var packet, out consumed, out observed, out var received))
+                            if (PacketFormatterAdapter.TryDecode(buffer, out var packet, out consumed, out observed, out var received))
                             {
                                 BytesReceived += received;
                                 return packet;
@@ -167,13 +167,14 @@ namespace MQTTnet.AspNetCore
             BytesSent = 0;
         }
 
-        public async Task SendPacketAsync(MqttBasePacket packet, CancellationToken cancellationToken)
+        public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             var formatter = PacketFormatterAdapter;
+            
             using (await _writerLock.WaitAsync(cancellationToken).ConfigureAwait(false))
             {
                 var buffer = formatter.Encode(packet);
-                var msg = buffer.AsMemory();
+                var msg = buffer.Join().AsMemory();
                 var output = _output;
                 var result = await output.WriteAsync(msg, cancellationToken).ConfigureAwait(false);
                 if (result.IsCompleted)
@@ -181,7 +182,7 @@ namespace MQTTnet.AspNetCore
                     BytesSent += msg.Length;
                 }
 
-                PacketFormatterAdapter.FreeBuffer();
+                PacketFormatterAdapter.Cleanup();
             }
         }
 

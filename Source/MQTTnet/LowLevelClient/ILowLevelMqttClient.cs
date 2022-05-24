@@ -1,19 +1,24 @@
-﻿using MQTTnet.Client.Options;
-using MQTTnet.Packets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client;
+using MQTTnet.Diagnostics;
+using MQTTnet.Packets;
 
 namespace MQTTnet.LowLevelClient
 {
     public interface ILowLevelMqttClient : IDisposable
     {
-        Task ConnectAsync(IMqttClientOptions options, CancellationToken cancellationToken);
-
-        Task DisconnectAsync(CancellationToken cancellationToken);
-
-        Task SendAsync(MqttBasePacket packet, CancellationToken cancellationToken);
-
-        Task<MqttBasePacket> ReceiveAsync(CancellationToken cancellationToken);
+        event Func<InspectMqttPacketEventArgs, Task> InspectPackage;
+        
+        bool IsConnected { get; }
+        
+        Task ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken = default);
+        
+        Task DisconnectAsync(CancellationToken cancellationToken = default);
+        
+        Task<MqttPacket> ReceiveAsync(CancellationToken cancellationToken = default);
+        
+        Task SendAsync(MqttPacket packet, CancellationToken cancellationToken = default);
     }
 }

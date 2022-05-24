@@ -1,4 +1,9 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Implementations
@@ -15,10 +20,21 @@ namespace MQTTnet.Implementations
         public static byte[] EmptyByteArray { get; } = Array.Empty<byte>();
 #endif
 
+        public static ArraySegment<byte> EmptyByteArraySegment { get; } = new ArraySegment<byte>(EmptyByteArray);
+
         public static void Sleep(TimeSpan timeout)
         {
-#if NET452 || NETSTANDARD2_0 || NETSTANDARD2_1 || NETCOREAPP3_1
-            System.Threading.Thread.Sleep(timeout);
+#if !NETSTANDARD1_3 && !WINDOWS_UWP
+            try
+            {
+                System.Threading.Thread.Sleep(timeout);
+            }
+            catch (ThreadAbortException)
+            {
+                // The ThreadAbortException is not actively catched in this project.
+                // So we use a one which is similar and will be catched properly.
+                throw new OperationCanceledException();
+            }
 #else
             Task.Delay(timeout).Wait();
 #endif

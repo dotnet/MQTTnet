@@ -1,15 +1,14 @@
-﻿using MQTTnet.Exceptions;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
-using System;
+using MQTTnet.Packets;
 
 namespace MQTTnet
 {
-    [Obsolete("Use MqttTopicFilterBuilder instead. It is just a renamed version to align with general namings in this lib.")]
-    public class TopicFilterBuilder : MqttTopicFilterBuilder
-    {
-    }
-
-    public class MqttTopicFilterBuilder
+    public sealed class MqttTopicFilterBuilder
     {
         /// <summary>
         /// The quality of service level.
@@ -27,9 +26,9 @@ namespace MQTTnet
         /// The topic consists of one or more topic levels. Each topic level is separated by a forward slash (topic level separator).
         /// </summary>
         string _topic;
-        bool? _noLocal;
-        bool? _retainAsPublished;
-        MqttRetainHandling? _retainHandling;
+        bool _noLocal;
+        bool _retainAsPublished;
+        MqttRetainHandling _retainHandling = MqttRetainHandling.SendAtSubscribe;
 
         public MqttTopicFilterBuilder WithTopic(string topic)
         {
@@ -60,20 +59,20 @@ namespace MQTTnet
             _qualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce;
             return this;
         }
-
-        public MqttTopicFilterBuilder WithNoLocal(bool? value = true)
+        
+        public MqttTopicFilterBuilder WithNoLocal(bool value = true)
         {
             _noLocal = value;
             return this;
         }
-
-        public MqttTopicFilterBuilder WithRetainAsPublished(bool? value = true)
+        
+        public MqttTopicFilterBuilder WithRetainAsPublished(bool value = true)
         {
             _retainAsPublished = value;
             return this;
         }
-
-        public MqttTopicFilterBuilder WithRetainHandling(MqttRetainHandling? value)
+        
+        public MqttTopicFilterBuilder WithRetainHandling(MqttRetainHandling value)
         {
             _retainHandling = value;
             return this;

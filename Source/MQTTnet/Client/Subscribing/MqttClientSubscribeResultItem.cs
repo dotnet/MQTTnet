@@ -1,25 +1,23 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Client.Subscribing
+using MQTTnet.Packets;
+
+namespace MQTTnet.Client
 {
-    public class MqttClientSubscribeResultItem
+    public sealed class MqttClientSubscribeResultItem
     {
-        public MqttClientSubscribeResultItem(MqttTopicFilter topicFilter, MqttClientSubscribeResultCode resultCode)
-        {
-            TopicFilter = topicFilter ?? throw new ArgumentNullException(nameof(topicFilter));
-            ResultCode = resultCode;
-        }
-
         /// <summary>
         /// Gets or sets the topic filter.
         /// The topic filter can contain topics and wildcards.
         /// </summary>
-        public MqttTopicFilter TopicFilter { get; }
+        public MqttTopicFilter TopicFilter { get; internal set; }
 
         /// <summary>
         /// Gets or sets the result code.
         /// Hint: MQTT 5 feature only.
         /// </summary>
-        public MqttClientSubscribeResultCode ResultCode { get; }
+        public MqttClientSubscribeResultCode ResultCode { get; internal set; }
     }
 }

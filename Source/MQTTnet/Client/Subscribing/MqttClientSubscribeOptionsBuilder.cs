@@ -1,13 +1,18 @@
-﻿using MQTTnet.Packets;
-using MQTTnet.Protocol;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
+using MQTTnet.Exceptions;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
-namespace MQTTnet.Client.Subscribing
+namespace MQTTnet.Client
 {
-    public class MqttClientSubscribeOptionsBuilder
+    public sealed class MqttClientSubscribeOptionsBuilder
     {
-        private readonly MqttClientSubscribeOptions _subscribeOptions = new MqttClientSubscribeOptions();
+        readonly MqttClientSubscribeOptions _subscribeOptions = new MqttClientSubscribeOptions();
 
         /// <summary>
         /// Adds the user property to the subscribe options.
@@ -31,8 +36,13 @@ namespace MQTTnet.Client.Subscribing
             return this;
         }
 
-        public MqttClientSubscribeOptionsBuilder WithSubscriptionIdentifier(uint? subscriptionIdentifier)
+        public MqttClientSubscribeOptionsBuilder WithSubscriptionIdentifier(uint subscriptionIdentifier)
         {
+            if (subscriptionIdentifier == 0)
+            {
+                throw new MqttProtocolViolationException("Subscription identifier cannot be 0.");
+            }
+            
             _subscribeOptions.SubscriptionIdentifier = subscriptionIdentifier;
             return this;
         }
@@ -40,9 +50,9 @@ namespace MQTTnet.Client.Subscribing
         public MqttClientSubscribeOptionsBuilder WithTopicFilter(
             string topic,
             MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
-            bool? noLocal = null,
-            bool? retainAsPublished = null,
-            MqttRetainHandling? retainHandling = null)
+            bool noLocal = false,
+            bool retainAsPublished = false,
+            MqttRetainHandling retainHandling = MqttRetainHandling.SendAtSubscribe)
         {
             return WithTopicFilter(new MqttTopicFilter
             {

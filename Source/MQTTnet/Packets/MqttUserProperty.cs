@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 
 namespace MQTTnet.Packets
 {
@@ -13,11 +17,6 @@ namespace MQTTnet.Packets
         public string Name { get; }
 
         public string Value { get; }
-
-        public override int GetHashCode()
-        {
-            return Name.GetHashCode() ^ Value.GetHashCode();
-        }
 
         public override bool Equals(object other)
         {
@@ -36,8 +35,17 @@ namespace MQTTnet.Packets
                 return true;
             }
 
-            return string.Equals(Name, other.Name, StringComparison.Ordinal) &&
-                string.Equals(Value, other.Value, StringComparison.Ordinal);
+            return string.Equals(Name, other.Name, StringComparison.Ordinal) && string.Equals(Value, other.Value, StringComparison.Ordinal);
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode() ^ Value.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return $"{Name} = {Value}";
         }
     }
 }

@@ -33,7 +33,7 @@ public static class RcpClient_Samples
             
             using (var mqttRpcClient = mqttFactory.CreateMqttRpcClient(mqttClient))
             {
-                // Access to a fully featured application message is not supported for RCP calls!
+                // Access to a fully featured application message is not supported for RPC calls!
                 // The method will throw an exception when the response was not received in time.
                 await mqttRpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
             }

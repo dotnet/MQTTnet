@@ -8,7 +8,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Samples.RpcClient;
 
-public static class RcpClient_Samples
+public static class RpcClient_Samples
 {
     /*
      * The extension MQTTnet.Extensions.Rpc (available as nuget) allows sending a request and waiting for the matching reply.

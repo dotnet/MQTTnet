@@ -24,7 +24,7 @@ A clear and concise description of what the bug is.
 <!-- Remove the items which don't apply from the following list. -->
 - Client
 - ManagedClient
-- RcpClient
+- RpcClient
 - Server
 
 ### To Reproduce

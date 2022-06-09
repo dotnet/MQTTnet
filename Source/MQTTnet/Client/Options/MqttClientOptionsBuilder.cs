@@ -379,6 +379,17 @@ namespace MQTTnet.Client
             _options.WillPayload = willPayload;
             return this;
         }
+        
+        public MqttClientOptionsBuilder WithWillPayload(string willPayload)
+        {
+            if (string.IsNullOrEmpty(willPayload))
+            {
+                return WithWillPayload((byte[])null);
+            }
+            
+            _options.WillPayload = Encoding.UTF8.GetBytes(willPayload);
+            return this;
+        }
 
         public MqttClientOptionsBuilder WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel willQualityOfServiceLevel)
         {
@@ -389,6 +400,47 @@ namespace MQTTnet.Client
         public MqttClientOptionsBuilder WithWillTopic(string willTopic)
         {
             _options.WillTopic = willTopic;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWillRetain(bool willRetain = true)
+        {
+            _options.WillRetain = willRetain;
+            return this;
+        }
+        
+        public MqttClientOptionsBuilder WithWillContentType(string willContentType)
+        {
+            _options.WillContentType = willContentType;
+            return this;
+        }
+        
+        public MqttClientOptionsBuilder WithWillCorrelationData(byte[] willCorrelationData)
+        {
+            _options.WillCorrelationData = willCorrelationData;
+            return this;
+        }
+        
+        public MqttClientOptionsBuilder WithWillResponseTopic(string willResponseTopic)
+        {
+            _options.WillResponseTopic = willResponseTopic;
+            return this;
+        }
+        
+        public MqttClientOptionsBuilder WithWillPayloadFormatIndicator(MqttPayloadFormatIndicator willPayloadFormatIndicator)
+        {
+            _options.WillPayloadFormatIndicator = willPayloadFormatIndicator;
+            return this;
+        }
+        
+        public MqttClientOptionsBuilder WithWillUserProperty(string name, string value)
+        {
+            if (_options.WillUserProperties == null)
+            {
+                _options.WillUserProperties = new List<MqttUserProperty>();
+            }
+            
+            _options.WillUserProperties.Add(new MqttUserProperty(name, value));
             return this;
         }
     }

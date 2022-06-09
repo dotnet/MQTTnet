@@ -84,6 +84,11 @@ namespace MQTTnet.Formatter.V5
         {
             // If absent, the Application Message does not expire.
             // This library uses 0 to indicate no expiration.
+            if (value == 0)
+            {
+                return;
+            }
+            
             WriteAsFourByteInteger(MqttPropertyId.MessageExpiryInterval, value);
         }
 

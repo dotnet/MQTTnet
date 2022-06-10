@@ -3,8 +3,7 @@ name: CI
 on: [push, pull_request]
 
 env:
-  ASSEMBLY_VERSION: "4.0.0.${{github.run_number}}"
-  NUGET_VERSION:  "4.0.0.${{github.run_number}}"
+  VERSION: "4.0.1.${{github.run_number}}"
 
 jobs:
   build:
@@ -40,7 +39,7 @@ jobs:
         run: msbuild MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
 
       - name: Build solution
-        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.ASSEMBLY_VERSION }} /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} /p:PackageVersion=${{ env.NUGET_VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
+        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
 
       - name: Collect nuget Packages
         uses: actions/upload-artifact@v2

@@ -64,6 +64,8 @@ namespace MQTTnet.Packets
 
         public List<MqttUserProperty> WillUserProperties { get; set; }
 
+        public bool TryPrivate { get; set; }
+        
         public override string ToString()
         {
             var passwordText = string.Empty;

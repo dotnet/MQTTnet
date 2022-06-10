@@ -96,16 +96,6 @@ namespace MQTTnet.Client
             return this;
         }
 
-        /// <summary>
-        ///     Sets the timeout which will be applied at socket level and internal operations.
-        ///     The default value is the same as for sockets in .NET in general.
-        /// </summary>
-        public MqttClientOptionsBuilder WithTimeout(TimeSpan value)
-        {
-            _options.Timeout = value;
-            return this;
-        }
-
         public MqttClientOptionsBuilder WithConnectionUri(Uri uri)
         {
             if (uri == null)
@@ -289,6 +279,16 @@ namespace MQTTnet.Client
             return this;
         }
 
+        /// <summary>
+        ///     Sets the timeout which will be applied at socket level and internal operations.
+        ///     The default value is the same as for sockets in .NET in general.
+        /// </summary>
+        public MqttClientOptionsBuilder WithTimeout(TimeSpan value)
+        {
+            _options.Timeout = value;
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithTls(MqttClientOptionsBuilderTlsParameters parameters)
         {
             _tlsParameters = parameters;
@@ -319,6 +319,20 @@ namespace MQTTnet.Client
         public MqttClientOptionsBuilder WithTopicAliasMaximum(ushort topicAliasMaximum)
         {
             _options.TopicAliasMaximum = topicAliasMaximum;
+            return this;
+        }
+
+        /// <summary>
+        ///     If set to true, the bridge will attempt to indicate to the remote broker that it is a bridge not an ordinary
+        ///     client.
+        ///     If successful, this means that loop detection will be more effective and that retained messages will be propagated
+        ///     correctly.
+        ///     Not all brokers support this feature so it may be necessary to set it to false if your bridge does not connect
+        ///     properly.
+        /// </summary>
+        public MqttClientOptionsBuilder WithTryPrivate(bool tryPrivate = true)
+        {
+            _options.TryPrivate = true;
             return this;
         }
 

@@ -33,7 +33,8 @@ namespace MQTTnet.Formatter
                 RequestResponseInformation = clientOptions.RequestResponseInformation,
                 SessionExpiryInterval = clientOptions.SessionExpiryInterval,
                 TopicAliasMaximum = clientOptions.TopicAliasMaximum,
-                UserProperties = clientOptions.UserProperties
+                UserProperties = clientOptions.UserProperties,
+                TryPrivate = clientOptions.TryPrivate
             };
 
             if (!string.IsNullOrEmpty(clientOptions.WillTopic))

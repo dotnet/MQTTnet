@@ -175,12 +175,18 @@ namespace MQTTnet.Formatter.V3
                 throw new MqttProtocolViolationException("MQTT protocol name do not match MQTT v3.");
             }
 
+            var tryPrivate = (protocolVersion & 0x80) > 0;
+            protocolVersion &= 0x7F;
+            
             if (protocolVersion != 3 && protocolVersion != 4)
             {
                 throw new MqttProtocolViolationException("MQTT protocol version do not match MQTT v3.");
             }
 
-            var packet = new MqttConnectPacket();
+            var packet = new MqttConnectPacket
+            {
+                TryPrivate = tryPrivate
+            };
 
             var connectFlags = _bufferReader.ReadByte();
             if ((connectFlags & 0x1) > 0)
@@ -409,7 +415,14 @@ namespace MQTTnet.Formatter.V3
             ValidateConnectPacket(packet);
 
             bufferWriter.WriteString("MQIsdp");
-            bufferWriter.WriteByte(3); // Protocol Level 3
+
+            var protocolVersion = 3;
+            if (packet.TryPrivate)
+            {
+                protocolVersion |= 0x80;
+            }
+            
+            bufferWriter.WriteByte((byte)protocolVersion);
 
             byte connectFlags = 0x0;
             if (packet.CleanSession)

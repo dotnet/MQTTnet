@@ -99,6 +99,16 @@ namespace MQTTnet.Client
         public ushort TopicAliasMaximum { get; set; }
 
         /// <summary>
+        ///     If set to true, the bridge will attempt to indicate to the remote broker that it is a bridge not an ordinary
+        ///     client.
+        ///     If successful, this means that loop detection will be more effective and that retained messages will be propagated
+        ///     correctly.
+        ///     Not all brokers support this feature so it may be necessary to set it to false if your bridge does not connect
+        ///     properly.
+        /// </summary>
+        public bool TryPrivate { get; set; } = true;
+
+        /// <summary>
         ///     Gets or sets the user properties.
         ///     In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT
         ///     packet.

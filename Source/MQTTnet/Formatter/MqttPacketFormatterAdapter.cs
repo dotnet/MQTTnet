@@ -95,6 +95,10 @@ namespace MQTTnet.Formatter
             var protocolName = _bufferReader.ReadString();
             var protocolLevel = _bufferReader.ReadByte();
 
+            // Remove the mosquitto try_private flag (MQTT 3.1.1 Bridge).
+            // This flag is accepted but not yet used.
+            protocolLevel &= 0x7F;
+            
             if (protocolName == "MQTT")
             {
                 if (protocolLevel == 5)

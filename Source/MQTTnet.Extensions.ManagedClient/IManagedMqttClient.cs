@@ -15,13 +15,13 @@ namespace MQTTnet.Extensions.ManagedClient
         
         event Func<ApplicationMessageSkippedEventArgs, Task> ApplicationMessageSkippedAsync;
         
-        event Func<EventArgs, Task> ConnectedAsync;
+        event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync;
         
         event Func<ConnectingFailedEventArgs, Task> ConnectingFailedAsync;
         
         event Func<EventArgs, Task> ConnectionStateChangedAsync;
         
-        event Func<EventArgs, Task> DisconnectedAsync;
+        event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync;
         
         event Func<ManagedProcessFailedEventArgs, Task> SynchronizingSubscriptionsFailedAsync;
         

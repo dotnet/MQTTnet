@@ -93,7 +93,7 @@ namespace MQTTnet.Extensions.ManagedClient
             remove => InternalClient.ApplicationMessageReceivedAsync -= value;
         }
 
-        public event Func<EventArgs, Task> ConnectedAsync
+        public event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync
         {
             add => InternalClient.ConnectedAsync += value;
             remove => InternalClient.ConnectedAsync -= value;
@@ -111,7 +111,7 @@ namespace MQTTnet.Extensions.ManagedClient
             remove => _connectionStateChangedEvent.RemoveHandler(value);
         }
 
-        public event Func<EventArgs, Task> DisconnectedAsync
+        public event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync
         {
             add => InternalClient.DisconnectedAsync += value;
             remove => InternalClient.DisconnectedAsync -= value;

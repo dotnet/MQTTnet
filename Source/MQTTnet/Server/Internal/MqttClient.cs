@@ -392,7 +392,7 @@ namespace MQTTnet.Server
                 foreach (var retainedApplicationMessage in subscribeResult.RetainedMessages)
                 {
                     var publishPacket = _packetFactories.Publish.Create(retainedApplicationMessage.ApplicationMessage);
-                    Session.EnqueueControlPacket(new MqttPacketBusItem(publishPacket));
+                    Session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
                 }
             }
         }

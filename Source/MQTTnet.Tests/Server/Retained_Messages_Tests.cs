@@ -16,67 +16,52 @@ namespace MQTTnet.Tests.Server
     public sealed class Retained_Messages_Tests : BaseTestClass
     {
         [TestMethod]
-        public async Task Server_Reports_Retained_Messages_Supported_V3()
+        public async Task Clear_Retained_Message_With_Empty_Payload()
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
-                var client = testEnvironment.CreateClient();
-                
-                var connectResult = await client.ConnectAsync(testEnvironment.Factory.CreateClientOptionsBuilder()
-                    .WithProtocolVersion(MqttProtocolVersion.V311)
-                    .WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
-
-                Assert.IsTrue(connectResult.RetainAvailable);
-            }
-        }
-        
-        [TestMethod]
-        public async Task Server_Reports_Retained_Messages_Supported_V5()
-        {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
-            {
-                await testEnvironment.StartServer();
-
-                var client = testEnvironment.CreateClient();
-                var connectResult = await client.ConnectAsync(testEnvironment.Factory.CreateClientOptionsBuilder()
-                    .WithProtocolVersion(MqttProtocolVersion.V500)
-                    .WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
-
-                Assert.IsTrue(connectResult.RetainAvailable);
-            }
-        }
-        
-        [TestMethod]
-        public async Task Retained_Messages_Flow()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var retainedMessage = new MqttApplicationMessageBuilder().WithTopic("r").WithPayload("r").WithRetainFlag().Build();
-
-                await testEnvironment.StartServer();
                 var c1 = await testEnvironment.ConnectClient();
-    
+
+                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
+                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[0]).WithRetainFlag().Build());
+
+                await c1.DisconnectAsync();
+
                 var c2 = await testEnvironment.ConnectClient();
                 var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
-                
-                await c1.PublishAsync(retainedMessage);
+
+                await Task.Delay(200);
+                await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                await Task.Delay(500);
+
+                messageHandler.AssertReceivedCountEquals(0);
+            }
+        }
+
+        [TestMethod]
+        public async Task Clear_Retained_Message_With_Null_Payload()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var c1 = await testEnvironment.ConnectClient();
+
+                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
+                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload((byte[])null).WithRetainFlag().Build());
+
                 await c1.DisconnectAsync();
-                await LongTestDelay();
 
-                for (var i = 0; i < 5; i++)
-                {
-                    await c2.UnsubscribeAsync("r");
-                    await Task.Delay(100);
-                    messageHandler.AssertReceivedCountEquals(i);
-                    
-                    await c2.SubscribeAsync("r");
-                    await Task.Delay(100);
-                    messageHandler.AssertReceivedCountEquals(i + 1);
-                }
+                var c2 = await testEnvironment.ConnectClient();
+                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
 
-                await c2.DisconnectAsync();
+                await Task.Delay(200);
+                await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                await Task.Delay(500);
+
+                messageHandler.AssertReceivedCountEquals(0);
             }
         }
 
@@ -114,7 +99,7 @@ namespace MQTTnet.Tests.Server
 
                 var c2 = await testEnvironment.ConnectClient();
                 var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
-                
+
                 await c2.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("retained").Build());
 
                 await Task.Delay(500);
@@ -125,52 +110,102 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
-        public async Task Clear_Retained_Message_With_Empty_Payload()
+        public async Task Receive_Retained_Messages_From_Higher_Qos_Level()
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
+                // Upload retained message.
                 var c1 = await testEnvironment.ConnectClient();
-
-                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
-                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[0]).WithRetainFlag().Build());
-
+                await c1.PublishAsync(
+                    new MqttApplicationMessageBuilder().WithTopic("retained")
+                        .WithPayload(new byte[1])
+                        .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                        .WithRetainFlag()
+                        .Build());
+                
                 await c1.DisconnectAsync();
 
+                // Subscribe using a new client.
                 var c2 = await testEnvironment.ConnectClient();
                 var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
-                
+
                 await Task.Delay(200);
-                await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
+                // Using QoS 2 will lead to 1 instead because the publish was made with QoS level 1 (see 3.8.4 SUBSCRIBE Actions)!
+                await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce });
                 await Task.Delay(500);
 
-                messageHandler.AssertReceivedCountEquals(0);
+                messageHandler.AssertReceivedCountEquals(1);
             }
         }
 
         [TestMethod]
-        public async Task Clear_Retained_Message_With_Null_Payload()
+        public async Task Retained_Messages_Flow()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var retainedMessage = new MqttApplicationMessageBuilder().WithTopic("r").WithPayload("r").WithRetainFlag().Build();
+
+                await testEnvironment.StartServer();
+                var c1 = await testEnvironment.ConnectClient();
+
+                var c2 = await testEnvironment.ConnectClient();
+                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+
+                await c1.PublishAsync(retainedMessage);
+                await c1.DisconnectAsync();
+                await LongTestDelay();
+
+                for (var i = 0; i < 5; i++)
+                {
+                    await c2.UnsubscribeAsync("r");
+                    await Task.Delay(100);
+                    messageHandler.AssertReceivedCountEquals(i);
+
+                    await c2.SubscribeAsync("r");
+                    await Task.Delay(100);
+                    messageHandler.AssertReceivedCountEquals(i + 1);
+                }
+
+                await c2.DisconnectAsync();
+            }
+        }
+
+        [TestMethod]
+        public async Task Server_Reports_Retained_Messages_Supported_V3()
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
-                var c1 = await testEnvironment.ConnectClient();
+                var client = testEnvironment.CreateClient();
 
-                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
-                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload((byte[])null).WithRetainFlag().Build());
+                var connectResult = await client.ConnectAsync(
+                    testEnvironment.Factory.CreateClientOptionsBuilder()
+                        .WithProtocolVersion(MqttProtocolVersion.V311)
+                        .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
+                        .Build());
 
-                await c1.DisconnectAsync();
+                Assert.IsTrue(connectResult.RetainAvailable);
+            }
+        }
 
-                var c2 = await testEnvironment.ConnectClient();
-                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
-                
-                await Task.Delay(200);
-                await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
-                await Task.Delay(500);
+        [TestMethod]
+        public async Task Server_Reports_Retained_Messages_Supported_V5()
+        {
+            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            {
+                await testEnvironment.StartServer();
 
-                messageHandler.AssertReceivedCountEquals(0);
+                var client = testEnvironment.CreateClient();
+                var connectResult = await client.ConnectAsync(
+                    testEnvironment.Factory.CreateClientOptionsBuilder()
+                        .WithProtocolVersion(MqttProtocolVersion.V500)
+                        .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
+                        .Build());
+
+                Assert.IsTrue(connectResult.RetainAvailable);
             }
         }
     }

@@ -128,11 +128,8 @@ public static class Server_Simple_Samples
 
         // Due to security reasons the "default" endpoint (which is unencrypted) is not enabled by default!
         var mqttServerOptions = mqttFactory.CreateServerOptionsBuilder().WithDefaultEndpoint().Build();
-
         var server = mqttFactory.CreateMqttServer(mqttServerOptions);
-
         await server.StartAsync();
-
         return server;
     }
 }

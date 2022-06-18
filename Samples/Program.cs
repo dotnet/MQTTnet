@@ -39,10 +39,16 @@ Console.WriteLine();
 
 try
 {
-    var task = selectedSampleMethod.Invoke(null, null) as Task;
-    task?.Wait();
+    if (selectedSampleMethod.Invoke(null, null) is Task task)
+    {
+        await task;    
+    }
 }
 catch (Exception exception)
 {
     Console.WriteLine(exception.ToString());
 }
+
+Console.WriteLine();
+Console.WriteLine("Press Enter to exit.");
+Console.ReadLine();

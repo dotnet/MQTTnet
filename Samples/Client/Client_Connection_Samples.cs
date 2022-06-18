@@ -111,13 +111,21 @@ public static class Client_Connection_Samples
                 .WithTls(
                     o =>
                     {
+                        // The used public broker sometimes has invalid certificates. This sample accepts all
+                        // certificates. This should not be used in live environments.
+                        o.CertificateValidationHandler = _ => true;
+                        
+                        // The default value is determined by the OS. Set manually to force version.
                         o.SslProtocol = SslProtocols.Tls12;
                     })
                 .Build();
 
-            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+            using (var timeout = new CancellationTokenSource(5000))
+            {
+                await mqttClient.ConnectAsync(mqttClientOptions, timeout.Token);
 
-            Console.WriteLine("The MQTT client is connected.");
+                Console.WriteLine("The MQTT client is connected.");
+            }
         }
     }
 
@@ -159,19 +167,59 @@ public static class Client_Connection_Samples
                 .WithTls(
                     o =>
                     {
-                        o.SslProtocol = SslProtocols.Tls12; // The default value is determined by the OS. Set manually to force version.
+                        // The used public broker sometimes has invalid certificates. This sample accepts all
+                        // certificates. This should not be used in live environments.
+                        o.CertificateValidationHandler = _ => true;
                     })
                 .Build();
 
             // In MQTTv5 the response contains much more information.
-            var response = await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+            using (var timeout = new CancellationTokenSource(5000))
+            {
+                var response = await mqttClient.ConnectAsync(mqttClientOptions, timeout.Token);
+                
+                Console.WriteLine("The MQTT client is connected.");
 
-            Console.WriteLine("The MQTT client is connected.");
-
-            response.DumpToConsole();
+                response.DumpToConsole();
+            }
         }
     }
 
+    public static async Task Inspect_Certificate_Validation_Errors()
+    {
+        /*
+         * This sample prints the certificate information while connection. This data can be used to decide whether a connection is secure or not
+         * including the reason for that status.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("mqtt.fluux.io", 8883)
+                .WithTls(
+                    o =>
+                    {
+                        o.CertificateValidationHandler = eventArgs =>
+                        {
+                            eventArgs.Certificate.Subject.DumpToConsole();
+                            eventArgs.Certificate.GetExpirationDateString().DumpToConsole();
+                            eventArgs.Chain.ChainPolicy.RevocationMode.DumpToConsole();
+                            eventArgs.Chain.ChainStatus.DumpToConsole();
+                            eventArgs.SslPolicyErrors.DumpToConsole();
+                            return true;
+                        };
+                    })
+                .Build();
+
+            // In MQTTv5 the response contains much more information.
+            using (var timeout = new CancellationTokenSource(5000))
+            {
+                await mqttClient.ConnectAsync(mqttClientOptions, timeout.Token);
+            }
+        }
+    }
+    
     public static async Task Ping_Server()
     {
         /*

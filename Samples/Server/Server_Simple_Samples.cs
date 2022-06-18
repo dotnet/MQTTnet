@@ -9,27 +9,66 @@ namespace MQTTnet.Samples.Server;
 
 public static class Server_Simple_Samples
 {
+    public static async Task Force_Disconnecting_Client()
+    {
+        /*
+         * This sample will disconnect a client.
+         *
+         * See _Run_Minimal_Server_ for more information.
+         */
+
+        using (var mqttServer = await StartMqttServer())
+        {
+            // Let the client connect.
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
+            // Now disconnect the client (if connected).
+            var affectedClient = (await mqttServer.GetClientsAsync()).FirstOrDefault(c => c.Id == "MyClient");
+            if (affectedClient != null)
+            {
+                await affectedClient.DisconnectAsync();
+            }
+        }
+    }
+
+    public static async Task Publish_Message_From_Broker()
+    {
+        /*
+         * This sample will publish a message directly at the broker.
+         *
+         * See _Run_Minimal_Server_ for more information.
+         */
+
+        using (var mqttServer = await StartMqttServer())
+        {
+            // Create a new message using the builder as usual.
+            var message = new MqttApplicationMessageBuilder().WithTopic("HelloWorld").WithPayload("Test").Build();
+
+            // Now inject the new message at the broker.
+            await mqttServer.InjectApplicationMessage(
+                new InjectedMqttApplicationMessage(message)
+                {
+                    SenderClientId = "SenderClientId"
+                });
+        }
+    }
+
     public static async Task Run_Minimal_Server()
     {
         /*
          * This sample starts a simple MQTT server which will accept any TCP connection.
          */
-        
+
         var mqttFactory = new MqttFactory();
 
         // The port for the default endpoint is 1883.
         // The default endpoint is NOT encrypted!
         // Use the builder classes where possible.
-        var mqttServerOptions = new MqttServerOptionsBuilder()
-            .WithDefaultEndpoint()
-            .Build();
-        
+        var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
+
         // The port can be changed using the following API (not used in this example).
-        new MqttServerOptionsBuilder()
-            .WithDefaultEndpoint()
-            .WithDefaultEndpointPort(1234)
-            .Build();
-        
+        new MqttServerOptionsBuilder().WithDefaultEndpoint().WithDefaultEndpointPort(1234).Build();
+
         using (var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions))
         {
             await mqttServer.StartAsync();
@@ -50,13 +89,7 @@ public static class Server_Simple_Samples
          * See _Run_Minimal_Server_ for more information.
          */
 
-        var mqttFactory = new MqttFactory();
-
-        var mqttServerOptions = new MqttServerOptionsBuilder()
-            .WithDefaultEndpoint()
-            .Build();
-
-        using (var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions))
+        using (var mqttServer = await StartMqttServer())
         {
             // Setup connection validation before starting the server so that there is 
             // no change to connect without valid credentials.
@@ -87,5 +120,19 @@ public static class Server_Simple_Samples
 
             await mqttServer.StopAsync();
         }
+    }
+
+    static async Task<MqttServer> StartMqttServer()
+    {
+        var mqttFactory = new MqttFactory();
+
+        // Due to security reasons the "default" endpoint (which is unencrypted) is not enabled by default!
+        var mqttServerOptions = mqttFactory.CreateServerOptionsBuilder().WithDefaultEndpoint().Build();
+
+        var server = mqttFactory.CreateMqttServer(mqttServerOptions);
+
+        await server.StartAsync();
+
+        return server;
     }
 }

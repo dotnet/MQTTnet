@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Diagnostics;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
@@ -67,7 +68,36 @@ public static class Server_Simple_Samples
         var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
         // The port can be changed using the following API (not used in this example).
-        new MqttServerOptionsBuilder().WithDefaultEndpoint().WithDefaultEndpointPort(1234).Build();
+        // new MqttServerOptionsBuilder()
+        //     .WithDefaultEndpoint()
+        //     .WithDefaultEndpointPort(1234)
+        //     .Build();
+
+        using (var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions))
+        {
+            await mqttServer.StartAsync();
+
+            Console.WriteLine("Press Enter to exit.");
+            Console.ReadLine();
+
+            // Stop and dispose the MQTT server if it is no longer needed!
+            await mqttServer.StopAsync();
+        }
+    }
+
+    public static async Task Run_Server_With_Logging()
+    {
+        /*
+         * This sample starts a simple MQTT server and prints the logs to the output.
+         *
+         * IMPORTANT! Do not enable logging in live environment. It will decrease performance.
+         *
+         * See sample "Run_Minimal_Server" for more details.
+         */
+
+        var mqttFactory = new MqttFactory(new ConsoleLogger());
+
+        var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
         using (var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions))
         {
@@ -89,7 +119,11 @@ public static class Server_Simple_Samples
          * See _Run_Minimal_Server_ for more information.
          */
 
-        using (var mqttServer = await StartMqttServer())
+        var mqttFactory = new MqttFactory();
+
+        var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
+
+        using (var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions))
         {
             // Setup connection validation before starting the server so that there is 
             // no change to connect without valid credentials.
@@ -131,5 +165,51 @@ public static class Server_Simple_Samples
         var server = mqttFactory.CreateMqttServer(mqttServerOptions);
         await server.StartAsync();
         return server;
+    }
+
+    class ConsoleLogger : IMqttNetLogger
+    {
+        readonly object _consoleSyncRoot = new();
+
+        public bool IsEnabled => true;
+
+        public void Publish(MqttNetLogLevel logLevel, string source, string message, object[]? parameters, Exception? exception)
+        {
+            var foregroundColor = ConsoleColor.White;
+            switch (logLevel)
+            {
+                case MqttNetLogLevel.Verbose:
+                    foregroundColor = ConsoleColor.White;
+                    break;
+
+                case MqttNetLogLevel.Info:
+                    foregroundColor = ConsoleColor.Green;
+                    break;
+
+                case MqttNetLogLevel.Warning:
+                    foregroundColor = ConsoleColor.DarkYellow;
+                    break;
+
+                case MqttNetLogLevel.Error:
+                    foregroundColor = ConsoleColor.Red;
+                    break;
+            }
+
+            if (parameters?.Length > 0)
+            {
+                message = string.Format(message, parameters);
+            }
+
+            lock (_consoleSyncRoot)
+            {
+                Console.ForegroundColor = foregroundColor;
+                Console.WriteLine(message);
+
+                if (exception != null)
+                {
+                    Console.WriteLine(exception);
+                }
+            }
+        }
     }
 }

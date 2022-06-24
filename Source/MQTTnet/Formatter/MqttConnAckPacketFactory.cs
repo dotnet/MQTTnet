@@ -4,6 +4,7 @@
 
 using System;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using MQTTnet.Server;
 
 namespace MQTTnet.Formatter
@@ -25,6 +26,7 @@ namespace MQTTnet.Formatter
                 SubscriptionIdentifiersAvailable = true,
                 SharedSubscriptionAvailable = false,
                 TopicAliasMaximum = ushort.MaxValue,
+                MaximumQoS = MqttQualityOfServiceLevel.ExactlyOnce,
                 WildcardSubscriptionAvailable = true,
 
                 AuthenticationMethod = validatingConnectionEventArgs.AuthenticationMethod,
@@ -32,7 +34,11 @@ namespace MQTTnet.Formatter
                 AssignedClientIdentifier = validatingConnectionEventArgs.AssignedClientIdentifier,
                 ReasonString = validatingConnectionEventArgs.ReasonString,
                 ServerReference = validatingConnectionEventArgs.ServerReference,
-                UserProperties = validatingConnectionEventArgs.ResponseUserProperties
+                UserProperties = validatingConnectionEventArgs.ResponseUserProperties,
+
+                ResponseInformation = null,
+                MaximumPacketSize = 0, // Unlimited,
+                ReceiveMaximum = 0 // Unlimited
             };
 
             return connAckPacket;

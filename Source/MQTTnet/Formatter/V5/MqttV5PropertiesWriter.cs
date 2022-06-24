@@ -72,11 +72,11 @@ namespace MQTTnet.Formatter.V5
 
             if (value == MqttQualityOfServiceLevel.AtLeastOnce)
             {
-                Write(MqttPropertyId.MaximumQoS, true);
+                Write(MqttPropertyId.MaximumQoS, 0x1);
             }
             else
             {
-                Write(MqttPropertyId.MaximumQoS, false);
+                Write(MqttPropertyId.MaximumQoS, 0x0);
             }
         }
 

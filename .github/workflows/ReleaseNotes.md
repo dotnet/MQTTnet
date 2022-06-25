@@ -4,3 +4,4 @@
 * [ManagedClient] Fixed wrong event args type for connected and disconnected events (#1432).
 * [Server] Fixed wrong handling of retained messages with QoS > 0 (#1434).
 * [Server] Connections with _try_private_ flag (MQTT 3.1.1 Bridge) are now accepted (#1413).
+* [Server] Fixed reporting of _MaximumQoS_ in _ConnAck_ packet (MQTTv5 only) (#1442).

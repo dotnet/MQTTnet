@@ -5,7 +5,7 @@ using MQTTnet.Tests.Server;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.NetCoreApp50)]
+    [SimpleJob(RuntimeMoniker.Net60)]
     [RPlotExporter, RankColumn]
     [MemoryDiagnoser]
     public class ServerProcessingBenchmark

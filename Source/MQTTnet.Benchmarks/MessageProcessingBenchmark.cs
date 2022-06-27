@@ -6,11 +6,10 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Client;
 using MQTTnet.Server;
-using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.NetCoreApp50)]
+    [SimpleJob(RuntimeMoniker.Net60)]
     [RPlotExporter, RankColumn]
     [MemoryDiagnoser]
     public class MessageProcessingBenchmark

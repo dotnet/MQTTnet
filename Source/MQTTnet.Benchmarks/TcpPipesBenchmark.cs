@@ -13,7 +13,7 @@ using MQTTnet.AspNetCore.Client.Tcp;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.NetCoreApp50)]
+    [SimpleJob(RuntimeMoniker.Net60)]
     [MemoryDiagnoser]
     public class TcpPipesBenchmark
     {

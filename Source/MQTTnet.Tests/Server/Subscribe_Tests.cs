@@ -12,6 +12,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Server
 {
@@ -42,6 +43,30 @@ namespace MQTTnet.Tests.Server
 
                 subscribeResult = await client.SubscribeAsync("not_allowed_topic");
                 Assert.AreEqual(MqttClientSubscribeResultCode.TopicFilterInvalid, subscribeResult.Items.First().ResultCode);
+            }
+        }
+
+        [TestMethod]
+        public async Task Enqueue_Message_After_Subscription()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var server = await testEnvironment.StartServer();
+
+                server.ClientSubscribedTopicAsync += e =>
+                {
+                    server.InjectApplicationMessage(new InjectedMqttApplicationMessage(new MqttApplicationMessageBuilder().WithTopic("test_topic").Build()));
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                var client = await testEnvironment.ConnectClient();
+                var receivedMessages = testEnvironment.CreateApplicationMessageHandler(client);
+
+                await client.SubscribeAsync("test_topic");
+
+                await LongTestDelay();
+
+                Assert.AreEqual(1, receivedMessages.ReceivedEventArgs.Count);
             }
         }
 
@@ -101,7 +126,7 @@ namespace MQTTnet.Tests.Server
                     .WithTopicFilter("c", MqttQualityOfServiceLevel.ExactlyOnce)
                     .WithTopicFilter("d")
                     .Build();
-                
+
                 var response = await client.SubscribeAsync(subscribeOptions);
 
                 Assert.AreEqual(subscribeOptions.TopicFilters.Count, response.Items.Count);

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -23,7 +24,7 @@ namespace MQTTnet.Server
 
         readonly MqttServerOptions _serverOptions;
 
-        readonly Dictionary<ushort, MqttPublishPacket> _unacknowledgedPublishPackets = new Dictionary<ushort, MqttPublishPacket>();
+        readonly ConcurrentDictionary<ushort, MqttPublishPacket> _unacknowledgedPublishPackets = new ConcurrentDictionary<ushort, MqttPublishPacket>();
 
         // Bookkeeping to know if this is a subscribing client; lazy initialize later.
         HashSet<string> _subscribedTopics;
@@ -72,7 +73,7 @@ namespace MQTTnet.Server
 
         public void AcknowledgePublishPacket(ushort packetIdentifier)
         {
-            _unacknowledgedPublishPackets.Remove(packetIdentifier);
+            _unacknowledgedPublishPackets.TryRemove(packetIdentifier, out _);
         }
 
         public void AddSubscribedTopic(string topic)

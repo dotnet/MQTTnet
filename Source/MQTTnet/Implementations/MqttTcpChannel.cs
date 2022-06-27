@@ -77,7 +77,7 @@ namespace MQTTnet.Implementations
                 {
                     socket.LingerState = _tcpOptions.LingerState;
                 }
-                
+
                 if (_tcpOptions.DualMode.HasValue)
                 {
                     // It is important to avoid setting the flag if no specific value is set by the user
@@ -103,15 +103,20 @@ namespace MQTTnet.Implementations
                             ApplicationProtocols = _tcpOptions.TlsOptions.ApplicationProtocols,
                             ClientCertificates = LoadCertificates(),
                             EnabledSslProtocols = _tcpOptions.TlsOptions.SslProtocol,
-                            CertificateRevocationCheckMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode,
+                            CertificateRevocationCheckMode =
+ _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode,
                             TargetHost = _tcpOptions.Server,
                             CipherSuitesPolicy = _tcpOptions.TlsOptions.CipherSuitesPolicy
                         };
 
                         await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
 #else
-                        await sslStream.AuthenticateAsClientAsync(_tcpOptions.Server, LoadCertificates(), _tcpOptions.TlsOptions.SslProtocol,
-                            !_tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+                        await sslStream.AuthenticateAsClientAsync(
+                                _tcpOptions.Server,
+                                LoadCertificates(),
+                                _tcpOptions.TlsOptions.SslProtocol,
+                                !_tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors)
+                            .ConfigureAwait(false);
 #endif
                     }
                     catch

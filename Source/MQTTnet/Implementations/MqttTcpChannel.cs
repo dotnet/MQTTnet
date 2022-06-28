@@ -3,6 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 #if !WINDOWS_UWP
+using MQTTnet.Channel;
+using MQTTnet.Client;
+using MQTTnet.Exceptions;
 using System;
 using System.IO;
 using System.Net.Security;
@@ -11,9 +14,6 @@ using System.Runtime.ExceptionServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Channel;
-using MQTTnet.Client;
-using MQTTnet.Exceptions;
 
 namespace MQTTnet.Implementations
 {
@@ -77,7 +77,7 @@ namespace MQTTnet.Implementations
                 {
                     socket.LingerState = _tcpOptions.LingerState;
                 }
-                
+
                 if (_tcpOptions.DualMode.HasValue)
                 {
                     // It is important to avoid setting the flag if no specific value is set by the user
@@ -268,6 +268,9 @@ namespace MQTTnet.Implementations
 
                 return certificateValidationHandler(eventArgs);
             }
+
+            if (_tcpOptions?.TlsOptions?.IgnoreCertificateChainErrors ?? false)
+                sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateChainErrors;
 
             return sslPolicyErrors == SslPolicyErrors.None;
         }

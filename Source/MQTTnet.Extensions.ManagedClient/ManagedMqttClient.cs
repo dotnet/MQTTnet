@@ -51,9 +51,9 @@ namespace MQTTnet.Extensions.ManagedClient
         ///         cref="MaintainConnectionAsync" />
         ///     .
         /// </summary>
-        readonly Dictionary<string, MqttQualityOfServiceLevel> _reconnectSubscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
+        readonly Dictionary<string, MqttTopicFilter> _reconnectSubscriptions = new Dictionary<string, MqttTopicFilter>();
 
-        readonly Dictionary<string, MqttQualityOfServiceLevel> _subscriptions = new Dictionary<string, MqttQualityOfServiceLevel>();
+        readonly Dictionary<string, MqttTopicFilter> _subscriptions = new Dictionary<string, MqttTopicFilter>();
         readonly SemaphoreSlim _subscriptionsQueuedSignal = new SemaphoreSlim(0);
         readonly HashSet<string> _unsubscriptions = new HashSet<string>();
 
@@ -289,7 +289,7 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 foreach (var topicFilter in topicFilters)
                 {
-                    _subscriptions[topicFilter.Topic] = topicFilter.QualityOfServiceLevel;
+                    _subscriptions[topicFilter.Topic] = topicFilter;
                     _unsubscriptions.Remove(topicFilter.Topic);
                 }
             }
@@ -455,18 +455,11 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 if (_reconnectSubscriptions.Any())
                 {
-                    var subscriptions = _reconnectSubscriptions.Select(
-                        i => new MqttTopicFilter
-                        {
-                            Topic = i.Key,
-                            QualityOfServiceLevel = i.Value
-                        });
-
                     var topicFilters = new List<MqttTopicFilter>();
 
-                    foreach (var sub in subscriptions)
+                    foreach (var sub in _reconnectSubscriptions)
                     {
-                        topicFilters.Add(sub);
+                        topicFilters.Add(sub.Value);
 
                         if (topicFilters.Count == Options.MaxTopicFiltersInSubscribeUnsubscribePackets)
                         {
@@ -495,14 +488,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 lock (_subscriptions)
                 {
-                    subscriptions = _subscriptions.Select(
-                            i => new MqttTopicFilter
-                            {
-                                Topic = i.Key,
-                                QualityOfServiceLevel = i.Value
-                            })
-                        .ToList();
-
+                    subscriptions = _subscriptions.Values.ToList();
                     _subscriptions.Clear();
 
                     unsubscriptions = new HashSet<string>(_unsubscriptions);
@@ -523,7 +509,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
                 foreach (var subscription in subscriptions)
                 {
-                    _reconnectSubscriptions[subscription.Topic] = subscription.QualityOfServiceLevel;
+                    _reconnectSubscriptions[subscription.Topic] = subscription;
                 }
 
                 var addedTopicFilters = new List<MqttTopicFilter>();

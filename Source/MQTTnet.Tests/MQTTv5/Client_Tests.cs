@@ -212,7 +212,7 @@ namespace MQTTnet.Tests.MQTTv5
                 
                 var client1 = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client1"));
 
-                var testMessageHandler = new TestApplicationMessageReceivedHandler(client1);
+                var testMessageHandler = testEnvironment.CreateApplicationMessageHandler(client1);
 
                 await client1.SubscribeAsync("a");
 

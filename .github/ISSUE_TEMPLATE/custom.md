@@ -14,6 +14,5 @@ A clear and concise description of what you want to know.
 <!-- Remove the items which don't apply from the following list -->
 - Client
 - ManagedClient
-- MQTTnet.Server standalone
 - Server
 - Generic

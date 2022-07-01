@@ -15,7 +15,6 @@ A clear and concise description of what the problem is. Example. I'm am trying t
 <!-- Remove the items which don't apply from the following list -->
 - Client
 - ManagedClient
-- MQTTnet.Server standalone
 - Server
 - Generic
 

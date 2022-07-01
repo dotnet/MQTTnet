@@ -275,7 +275,9 @@ namespace MQTTnet.Implementations
             }
 
             if (_tcpOptions?.TlsOptions?.IgnoreCertificateChainErrors ?? false)
+            {
                 sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateChainErrors;
+            }
 
             return sslPolicyErrors == SslPolicyErrors.None;
         }

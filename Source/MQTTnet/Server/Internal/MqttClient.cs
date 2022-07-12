@@ -188,6 +188,8 @@ namespace MQTTnet.Server
                 // own exception in the reading loop!
                 while (!cancellationToken.IsCancellationRequested)
                 {
+                    await Task.Yield();
+                    
                     var packet = await ChannelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
                     if (packet == null)
                     {
@@ -314,6 +316,10 @@ namespace MQTTnet.Server
                     catch (Exception exception)
                     {
                         packetBusItem.MarkAsFailed(exception);
+                    }
+                    finally
+                    {
+                        await Task.Yield();
                     }
                 }
             }

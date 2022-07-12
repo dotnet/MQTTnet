@@ -201,7 +201,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             finally
             {
-                if (_applicationMessageSkippedEvent.HasHandlers)
+                if (applicationMessageSkippedEventArgs != null && _applicationMessageSkippedEvent.HasHandlers)
                 {
                     await _applicationMessageSkippedEvent.InvokeAsync(applicationMessageSkippedEventArgs).ConfigureAwait(false);
                 }

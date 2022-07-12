@@ -10,16 +10,16 @@ using MQTTnet.Channel;
 
 namespace MQTTnet.Tests.Mockups
 {
-    public sealed class TestMqttChannel : IMqttChannel
+    public sealed class MemoryMqttChannel : IMqttChannel
     {
         readonly MemoryStream _stream;
 
-        public TestMqttChannel(MemoryStream stream)
+        public MemoryMqttChannel(MemoryStream stream)
         {
             _stream = stream;
         }
 
-        public TestMqttChannel(byte[] buffer)
+        public MemoryMqttChannel(byte[] buffer)
         {
             _stream = new MemoryStream(buffer);
         }

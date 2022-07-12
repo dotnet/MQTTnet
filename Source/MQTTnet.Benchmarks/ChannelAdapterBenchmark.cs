@@ -46,7 +46,7 @@ namespace MQTTnet.Benchmarks
 
             _stream.Position = 0;
 
-            var channel = new TestMqttChannel(_stream);
+            var channel = new MemoryMqttChannel(_stream);
             
             _channelAdapter = new MqttChannelAdapter(channel, serializer, null, new MqttNetEventLogger());
         }

@@ -563,7 +563,7 @@ namespace MQTTnet.Tests
 
             using (var headerStream = new MemoryStream(buffer1.Join().ToArray()))
             {
-                using (var channel = new TestMqttChannel(headerStream))
+                using (var channel = new MemoryMqttChannel(headerStream))
                 {
                     using (var adapter = new MqttChannelAdapter(
                                channel,
@@ -583,7 +583,7 @@ namespace MQTTnet.Tests
 
         MqttProtocolVersion DeserializeAndDetectVersion(MqttPacketFormatterAdapter packetFormatterAdapter, byte[] buffer)
         {
-            var channel = new TestMqttChannel(buffer);
+            var channel = new MemoryMqttChannel(buffer);
             var adapter = new MqttChannelAdapter(channel, packetFormatterAdapter, null, new MqttNetEventLogger());
 
             adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
@@ -603,7 +603,7 @@ namespace MQTTnet.Tests
             var serializer = MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, writer);
             var buffer = serializer.Encode(packet);
 
-            using (var channel = new TestMqttChannel(buffer.Join().ToArray()))
+            using (var channel = new MemoryMqttChannel(buffer.Join().ToArray()))
             {
                 var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, new MqttBufferWriter(4096, 65535)), null, new MqttNetEventLogger());
                 return (TPacket)adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();

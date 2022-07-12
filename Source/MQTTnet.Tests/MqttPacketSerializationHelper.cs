@@ -27,7 +27,7 @@ namespace MQTTnet.Tests
 
         public MqttPacket Decode(MqttPacketBuffer buffer)
         {
-            using (var channel = new TestMqttChannel(buffer.ToArray()))
+            using (var channel = new MemoryMqttChannel(buffer.ToArray()))
             {
                 var formatterAdapter = new MqttPacketFormatterAdapter(_protocolVersion, new MqttBufferWriter(4096, 65535));
 

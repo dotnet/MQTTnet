@@ -68,6 +68,11 @@ namespace MQTTnet.Implementations
                     socket = new CrossPlatformSocket(_tcpOptions.AddressFamily);
                 }
 
+                if (_tcpOptions.LocalEndpoint != null)
+                {
+                    socket.Bind(_tcpOptions.LocalEndpoint);
+                }
+                
                 socket.ReceiveBufferSize = _tcpOptions.BufferSize;
                 socket.SendBufferSize = _tcpOptions.BufferSize;
                 socket.SendTimeout = (int)_clientOptions.Timeout.TotalMilliseconds;

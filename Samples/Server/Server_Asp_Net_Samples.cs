@@ -5,12 +5,15 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
+// ReSharper disable EmptyConstructor
+// ReSharper disable MemberCanBeMadeStatic.Local
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MQTTnet.AspNetCore;
+using MQTTnet.Server;
 
 namespace MQTTnet.Samples.Server;
 
@@ -30,7 +33,7 @@ public static class Server_Asp_Net_Samples
                         {
                             // This will allow MQTT connections based on TCP port 1883.
                             o.ListenAnyIP(1883, l => l.UseMqtt());
-                            
+
                             // This will allow MQTT connections based on HTTP WebSockets with URI "localhost:5000/mqtt"
                             // See code below for URI configuration.
                             o.ListenAnyIP(5000); // Default HTTP pipeline
@@ -42,9 +45,30 @@ public static class Server_Asp_Net_Samples
         return host.RunConsoleAsync();
     }
 
+    sealed class MqttController
+    {
+        public MqttController()
+        {
+            // Inject other services via constructor.
+        }
+        
+        public Task OnClientConnected(ClientConnectedEventArgs eventArgs)
+        {
+            Console.WriteLine($"Client '{eventArgs.ClientId}' connected.");
+            return Task.CompletedTask;
+        }
+
+
+        public Task ValidateConnection(ValidatingConnectionEventArgs eventArgs)
+        {
+            Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Accepting!");
+            return Task.CompletedTask;
+        }
+    }
+
     sealed class Startup
     {
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment environment, MqttController mqttController)
         {
             app.UseRouting();
 
@@ -64,17 +88,8 @@ public static class Server_Asp_Net_Samples
                      * Attach event handlers etc. if required.
                      */
 
-                    server.ValidatingConnectionAsync += e =>
-                    {
-                        Console.WriteLine($"Client '{e.ClientId}' wants to connect. Accepting!");
-                        return Task.CompletedTask;
-                    };
-
-                    server.ClientConnectedAsync += e =>
-                    {
-                        Console.WriteLine($"Client '{e.ClientId}' connected.");
-                        return Task.CompletedTask;
-                    };
+                    server.ValidatingConnectionAsync += mqttController.ValidateConnection;
+                    server.ClientConnectedAsync += mqttController.OnClientConnected;
                 });
         }
 
@@ -88,6 +103,8 @@ public static class Server_Asp_Net_Samples
 
             services.AddMqttConnectionHandler();
             services.AddConnections();
+
+            services.AddSingleton<MqttController>();
         }
     }
 }

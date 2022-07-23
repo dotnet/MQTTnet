@@ -118,7 +118,7 @@ namespace MQTTnet.TestApp
                 {
                     if (e.ClientId == "SpecialClient")
                     {
-                        if (e.Username != "USER" || e.Password != "PASS")
+                        if (e.UserName != "USER" || e.Password != "PASS")
                         {
                             e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                         }

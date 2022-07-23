@@ -38,7 +38,7 @@ namespace MQTTnet.Tests.Server
 
                 testEnvironment.Server.ValidatingConnectionAsync += eventArgs =>
                 {
-                    if (eventArgs.Username == "SECRET")
+                    if (eventArgs.UserName == "SECRET")
                     {
                         eventArgs.ReasonCode = MqttConnectReasonCode.Success;
                     }
@@ -147,7 +147,7 @@ namespace MQTTnet.Tests.Server
 
                 server.ValidatingConnectionAsync += e =>
                 {
-                    if (e.Username != "UserName1")
+                    if (e.UserName != "UserName1")
                     {
                         e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                     }

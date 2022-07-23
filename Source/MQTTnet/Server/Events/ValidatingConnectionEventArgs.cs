@@ -17,13 +17,12 @@ namespace MQTTnet.Server
 {
     public sealed class ValidatingConnectionEventArgs : EventArgs
     {
-        readonly IMqttChannelAdapter _clientAdapter;
         readonly MqttConnectPacket _connectPacket;
 
         public ValidatingConnectionEventArgs(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
         {
             _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
-            _clientAdapter = clientAdapter ?? throw new ArgumentNullException(nameof(clientAdapter));
+            ChannelAdapter = clientAdapter ?? throw new ArgumentNullException(nameof(clientAdapter));
         }
 
         /// <summary>
@@ -45,6 +44,12 @@ namespace MQTTnet.Server
         public string AuthenticationMethod => _connectPacket.AuthenticationMethod;
 
         /// <summary>
+        ///     Gets the channel adapter. This can be a _MqttConnectionContext_ (used in ASP.NET), a _MqttChannelAdapter_ (used for
+        ///     TCP or WebSockets) or a custom implementation.
+        /// </summary>
+        public IMqttChannelAdapter ChannelAdapter { get; }
+
+        /// <summary>
         ///     Gets or sets a value indicating whether clean sessions are used or not.
         ///     When a client connects to a broker it can connect using either a non persistent connection (clean session) or a
         ///     persistent connection.
@@ -56,7 +61,7 @@ namespace MQTTnet.Server
         /// </summary>
         public bool? CleanSession => _connectPacket.CleanSession;
 
-        public X509Certificate2 ClientCertificate => _clientAdapter.ClientCertificate;
+        public X509Certificate2 ClientCertificate => ChannelAdapter.ClientCertificate;
 
         /// <summary>
         ///     Gets the client identifier.
@@ -64,9 +69,9 @@ namespace MQTTnet.Server
         /// </summary>
         public string ClientId => _connectPacket.ClientId;
 
-        public string Endpoint => _clientAdapter.Endpoint;
+        public string Endpoint => ChannelAdapter.Endpoint;
 
-        public bool IsSecureConnection => _clientAdapter.IsSecureConnection;
+        public bool IsSecureConnection => ChannelAdapter.IsSecureConnection;
 
         /// <summary>
         ///     Gets or sets the keep alive period.
@@ -85,7 +90,7 @@ namespace MQTTnet.Server
 
         public string Password => Encoding.UTF8.GetString(RawPassword ?? PlatformAbstractionLayer.EmptyByteArray);
 
-        public MqttProtocolVersion ProtocolVersion => _clientAdapter.PacketFormatterAdapter.ProtocolVersion;
+        public MqttProtocolVersion ProtocolVersion => ChannelAdapter.PacketFormatterAdapter.ProtocolVersion;
 
         public byte[] RawPassword => _connectPacket.Password;
 

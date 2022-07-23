@@ -623,25 +623,25 @@ namespace MQTTnet.Server
 
         async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter)
         {
-            var context = new ValidatingConnectionEventArgs(connectPacket, channelAdapter)
+            var eventArgs = new ValidatingConnectionEventArgs(connectPacket, channelAdapter)
             {
                 SessionItems = new ConcurrentDictionary<object, object>()
             };
 
-            await _eventContainer.ValidatingConnectionEvent.InvokeAsync(context).ConfigureAwait(false);
+            await _eventContainer.ValidatingConnectionEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
             // Check the client ID and set a random one if supported.
             if (string.IsNullOrEmpty(connectPacket.ClientId) && channelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500)
             {
-                connectPacket.ClientId = context.AssignedClientIdentifier;
+                connectPacket.ClientId = eventArgs.AssignedClientIdentifier;
             }
 
             if (string.IsNullOrEmpty(connectPacket.ClientId))
             {
-                context.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
+                eventArgs.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
             }
 
-            return context;
+            return eventArgs;
         }
     }
 }

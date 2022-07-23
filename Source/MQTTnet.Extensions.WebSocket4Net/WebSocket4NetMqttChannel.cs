@@ -98,7 +98,6 @@ namespace MQTTnet.Extensions.WebSocket4Net
 #else
                     certificates.Add(certificate);
 #endif
-                    
                 }
             }
 

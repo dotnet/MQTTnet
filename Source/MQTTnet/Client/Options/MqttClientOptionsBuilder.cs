@@ -264,8 +264,7 @@ namespace MQTTnet.Client
 
             return this;
         }
-
-        // TODO: Consider creating _MqttClientTcpOptionsBuilder_ as overload.
+        
         public MqttClientOptionsBuilder WithTcpServer(Action<MqttClientTcpOptions> optionsBuilder)
         {
             if (optionsBuilder == null)

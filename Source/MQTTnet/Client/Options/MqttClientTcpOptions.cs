@@ -19,6 +19,11 @@ namespace MQTTnet.Client
         
         public int BufferSize { get; set; } = 8192;
 
+        /// <summary>
+        /// Gets or sets whether the underlying socket should run in dual mode.
+        /// Leaving this _null_ will avoid setting this value at socket level.
+        /// Setting this a value other than _null_ will throw an exception when only IPv4 is supported on the machine.
+        /// </summary>
         public bool? DualMode { get; set; }
 
         public LingerOption LingerState { get; set; } = new LingerOption(true, 0);

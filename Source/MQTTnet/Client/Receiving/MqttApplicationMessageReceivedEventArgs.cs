@@ -25,6 +25,7 @@ namespace MQTTnet.Client
             ClientId = clientId;
             ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
             PublishPacket = publishPacket;
+            PacketIdentifier = publishPacket.PacketIdentifier;
             _acknowledgeHandler = acknowledgeHandler;
         }
 
@@ -62,12 +63,17 @@ namespace MQTTnet.Client
         public bool IsHandled { get; set; }
 
         /// <summary>
-        /// Gets ir sets whether the library should send MQTT ACK packets automatically if required.
+        /// Gets or sets whether the library should send MQTT ACK packets automatically if required.
         /// </summary>
         public bool AutoAcknowledge { get; set; } = true;
         
         public object Tag { get; set; }
-        
+
+        /// <summary>
+        /// Gets the indentifier of MQTT packet
+        /// </summary>
+        public ushort PacketIdentifier { get; }
+
         public Task AcknowledgeAsync(CancellationToken cancellationToken) 
         {
             if (_acknowledgeHandler == null)

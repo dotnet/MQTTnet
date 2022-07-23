@@ -217,12 +217,7 @@ namespace MQTTnet.Server
             {
                 foreach (var finalTopicFilter in finalTopicFilters)
                 {
-                    var eventArgs = new ClientSubscribedTopicEventArgs
-                    {
-                        ClientId = _session.Id,
-                        TopicFilter = finalTopicFilter
-                    };
-
+                    var eventArgs = new ClientSubscribedTopicEventArgs(_session.Id, finalTopicFilter, _session.Items);
                     await _eventContainer.ClientSubscribedTopicEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
             }
@@ -312,12 +307,7 @@ namespace MQTTnet.Server
             {
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
-                    var eventArgs = new ClientUnsubscribedTopicEventArgs
-                    {
-                        ClientId = _session.Id,
-                        TopicFilter = topicFilter
-                    };
-
+                    var eventArgs = new ClientUnsubscribedTopicEventArgs(_session.Id, topicFilter, _session.Items);
                     await _eventContainer.ClientUnsubscribedTopicEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
             }
@@ -472,14 +462,7 @@ namespace MQTTnet.Server
 
         async Task<InterceptingSubscriptionEventArgs> InterceptSubscribe(MqttTopicFilter topicFilter, CancellationToken cancellationToken)
         {
-            var eventArgs = new InterceptingSubscriptionEventArgs
-            {
-                ClientId = _session.Id,
-                TopicFilter = topicFilter,
-                SessionItems = _session.Items,
-                Session = new MqttSessionStatus(_session),
-                CancellationToken = cancellationToken
-            };
+            var eventArgs = new InterceptingSubscriptionEventArgs(cancellationToken, _session.Id, new MqttSessionStatus(_session), topicFilter);
 
             if (topicFilter.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
@@ -508,13 +491,7 @@ namespace MQTTnet.Server
 
         async Task<InterceptingUnsubscriptionEventArgs> InterceptUnsubscribe(string topicFilter, MqttSubscription mqttSubscription, CancellationToken cancellationToken)
         {
-            var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs
-            {
-                ClientId = _session.Id,
-                Topic = topicFilter,
-                SessionItems = _session.Items,
-                CancellationToken = cancellationToken
-            };
+            var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs(cancellationToken, topicFilter, _session.Items, topicFilter);
 
             if (mqttSubscription == null)
             {

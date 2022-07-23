@@ -105,13 +105,7 @@ namespace MQTTnet.Server
                 {
                     using (await _storageAccessLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
                     {
-                        var eventArgs = new RetainedMessageChangedEventArgs
-                        {
-                            ClientId = clientId,
-                            ChangedRetainedMessage = applicationMessage,
-                            StoredRetainedMessages = messagesForSave
-                        };
-                        
+                        var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessage, messagesForSave);
                         await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
                 }

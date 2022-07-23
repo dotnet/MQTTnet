@@ -160,15 +160,8 @@ namespace MQTTnet.Server
             {
                 return packet;
             }
-            
-            var interceptingPacketEventArgs = new InterceptingPacketEventArgs
-            {
-                ClientId = Id,
-                Endpoint = Endpoint,
-                Packet = packet,
-                CancellationToken = cancellationToken
-            };
-            
+
+            var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, Endpoint, packet, Session.Items);
             await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
                 
             if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
@@ -200,14 +193,7 @@ namespace MQTTnet.Server
                     
                     if (_eventContainer.InterceptingInboundPacketEvent.HasHandlers)
                     {
-                        var interceptingPacketEventArgs = new InterceptingPacketEventArgs
-                        {
-                            ClientId = Id,
-                            Endpoint = Endpoint,
-                            Packet = packet,
-                            CancellationToken = cancellationToken
-                        };
-                    
+                        var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, Endpoint, packet, Session.Items);
                         await _eventContainer.InterceptingInboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
                         packet = interceptingPacketEventArgs.Packet;
                         processPacket = interceptingPacketEventArgs.ProcessPacket;
@@ -428,16 +414,7 @@ namespace MQTTnet.Server
             
             if (_eventContainer.InterceptingPublishEvent.HasHandlers)
             {
-                interceptingPublishEventArgs = new InterceptingPublishEventArgs
-                {
-                    ClientId = Id,
-                    ApplicationMessage = applicationMessage,
-                    SessionItems = Session.Items,
-                    ProcessPublish = true,
-                    CloseConnection = false,
-                    CancellationToken = cancellationToken
-                };
-
+                interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, Id, Session.Items);
                 if (string.IsNullOrEmpty(interceptingPublishEventArgs.ApplicationMessage.Topic))
                 {
                     // This can happen if a topic alias us used but the topic is

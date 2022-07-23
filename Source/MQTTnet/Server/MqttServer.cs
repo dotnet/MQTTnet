@@ -60,6 +60,12 @@ namespace MQTTnet.Server
             add => _eventContainer.ClientConnectedEvent.AddHandler(value);
             remove => _eventContainer.ClientConnectedEvent.RemoveHandler(value);
         }
+        
+        public event Func<ClientAcknowledgedPublishPacketEventArgs, Task> ClientAcknowledgedPublishPacketAsync
+        {
+            add => _eventContainer.ClientAcknowledgedPublishPacketEvent.AddHandler(value);
+            remove => _eventContainer.ClientAcknowledgedPublishPacketEvent.RemoveHandler(value);
+        }
 
         public event Func<ClientDisconnectedEventArgs, Task> ClientDisconnectedAsync
         {

@@ -71,9 +71,18 @@ namespace MQTTnet.Server
 
         public bool WillMessageSent { get; set; }
 
-        public void AcknowledgePublishPacket(ushort packetIdentifier)
+        public MqttPublishPacket PeekAcknowledgePublishPacket(ushort packetIdentifier)
         {
-            _unacknowledgedPublishPackets.TryRemove(packetIdentifier, out _);
+            // This will only return the matching PUBLISH packet but does not remove it.
+            // This is required for QoS 2.
+            _unacknowledgedPublishPackets.TryGetValue(packetIdentifier, out var publishPacket);
+            return publishPacket;
+        }
+        
+        public MqttPublishPacket AcknowledgePublishPacket(ushort packetIdentifier)
+        {
+            _unacknowledgedPublishPackets.TryRemove(packetIdentifier, out var publishPacket);
+            return publishPacket;
         }
 
         public void AddSubscribedTopic(string topic)

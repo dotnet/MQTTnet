@@ -118,7 +118,6 @@ namespace MQTTnet.Implementations
 
         void SetupClientWebSocket(ClientWebSocket clientWebSocket)
         {
-
             if (_options.ProxyOptions != null)
             {
                 clientWebSocket.Options.Proxy = CreateProxy();

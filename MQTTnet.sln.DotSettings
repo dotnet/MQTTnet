@@ -29,7 +29,7 @@
 	<s:String x:Key="/Default/CodeStyle/CodeFormatting/XmlDocFormatter/ProcessingInstructionAttributesFormat/@EntryValue">OnDifferentLines</s:String>
 	<s:String x:Key="/Default/CodeStyle/CodeFormatting/XmlDocFormatter/TagAttributesFormat/@EntryValue">OnDifferentLines</s:String>
 	<s:String x:Key="/Default/CodeStyle/CSharpFileLayoutPatterns/Pattern/@EntryValue">&lt;?xml version="1.0" encoding="utf-16"?&gt;
-&lt;Patterns xmlns="urn:schemas-jetbrains-com:member-reordering-patterns"&gt;
+&lt;Patterns xmlns="urn:schemas-jetbrains-com:member-reordering-patterns"&gt;    
   &lt;TypePattern DisplayName="Non-reorderable types"&gt;
     &lt;TypePattern.Match&gt;
       &lt;Or&gt;
@@ -226,6 +226,9 @@
     &lt;/Entry&gt;
   &lt;/TypePattern&gt;
 &lt;/Patterns&gt;</s:String>
+	<s:String x:Key="/Default/CodeStyle/FileHeader/FileHeaderText/@EntryValue">// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.</s:String>
 	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ECSharpAttributeForSingleLineMethodUpgrade/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ECSharpKeepExistingMigration/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ECSharpPlaceEmbeddedOnSameLineMigration/@EntryIndexedValue">True</s:Boolean>

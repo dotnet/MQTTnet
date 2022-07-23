@@ -1,8 +1,4 @@
-* [Core] Updated nuget packages.
-* [Core] The option _IgnoreCertificateChainErrors_ is now respected (thanks to @GodVenn, #1447).
-* [ManagedClient] The managed client now sends the entire topic filter including new MQTTv5 properties when subscribing.
-* [ManagedClient] Fixed wrong firing of _ApplicationMessageSkippedAsync_ event (thanks to @quackgizmo, #1460).
-* [Server] Fixed reporting of _MaximumQoS_ in _ConnAck_ packet (MQTTv5 only) (#1442).
-* [Server] Fix cross thread issue in session message storage for QoS 1 and 2.
-* [Server] The event _ClientSubscribedTopicAsync_ is now fired after the subscription is completely processed internally (#1435).
-* [Server] Improved CPU usage on lower end machines (#788).
+* [Client] Added support for passing the local endpoint which should be used (network card).
+* [Client] Exposed _PackageIdentifier_ in _MqttApplicationMessageReceivedEventArgs_ (thanks to @koepalex, #1466).
+* [Server] Added a new event (_ClientAcknowledgedPublishPacketAsync_) which is fired whenever a client acknowledges a PUBLISH packet (QoS 1 and 2, #487).
+* [Server] Exposed channel adapter (HTTP context etc.) in connection validation (#1125).

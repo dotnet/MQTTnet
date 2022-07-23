@@ -4,7 +4,7 @@
 
 namespace MQTTnet.Client
 {
-    public class MqttClientWebSocketProxyOptions
+    public sealed class MqttClientWebSocketProxyOptions
     {
         public string Address { get; set; }
 

@@ -138,7 +138,7 @@ public static class Server_Simple_Samples
                     e.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
                 }
 
-                if (e.Username != "ValidUser")
+                if (e.UserName != "ValidUser")
                 {
                     e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                 }

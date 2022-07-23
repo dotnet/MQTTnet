@@ -2,10 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
@@ -40,7 +38,7 @@ namespace MQTTnet.Tests.Server
 
                 testEnvironment.Server.ValidatingConnectionAsync += eventArgs =>
                 {
-                    if (eventArgs.Username == "SECRET")
+                    if (eventArgs.UserName == "SECRET")
                     {
                         eventArgs.ReasonCode = MqttConnectReasonCode.Success;
                     }
@@ -149,7 +147,7 @@ namespace MQTTnet.Tests.Server
 
                 server.ValidatingConnectionAsync += e =>
                 {
-                    if (e.Username != "UserName1")
+                    if (e.UserName != "UserName1")
                     {
                         e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                     }

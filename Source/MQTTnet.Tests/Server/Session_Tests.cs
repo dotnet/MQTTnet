@@ -14,7 +14,6 @@ using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
-using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.Tests.Server
 {
@@ -221,6 +220,37 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
+        public async Task Session_Takeover()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var options = new MqttClientOptionsBuilder().WithCleanSession(false)
+                    .WithProtocolVersion(MqttProtocolVersion.V500) // Disconnect reason is only available in MQTT 5+
+                    .WithClientId("a");
+
+                var client1 = await testEnvironment.ConnectClient(options);
+                await Task.Delay(500);
+
+                var disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
+                client1.DisconnectedAsync += c =>
+                {
+                    disconnectReason = c.Reason;
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                var client2 = await testEnvironment.ConnectClient(options);
+                await Task.Delay(500);
+
+                Assert.IsFalse(client1.IsConnected);
+                Assert.IsTrue(client2.IsConnected);
+
+                Assert.AreEqual(MqttClientDisconnectReason.SessionTakenOver, disconnectReason);
+            }
+        }
+
+        [TestMethod]
         public async Task Set_Session_Item()
         {
             using (var testEnvironment = CreateTestEnvironment())
@@ -274,6 +304,59 @@ namespace MQTTnet.Tests.Server
                 await Task.Delay(1000);
 
                 Assert.AreEqual("Hello World", receivedPayload);
+            }
+        }
+
+        [TestMethod]
+        public async Task Use_Clean_Session()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var client = testEnvironment.CreateClient();
+                var connectResult = await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost", testEnvironment.ServerPort).WithCleanSession().Build());
+
+                // Create the session including the subscription.
+                var client1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("a").WithCleanSession(false));
+                await client1.SubscribeAsync("x");
+                await client1.DisconnectAsync();
+                await Task.Delay(500);
+
+                Assert.IsFalse(connectResult.IsSessionPresent);
+            }
+        }
+
+        [TestMethod]
+        public async Task Will_Message_Do_Not_Send_On_Takeover()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var receivedMessagesCount = 0;
+
+                await testEnvironment.StartServer();
+
+                // C1 will receive the last will!
+                var c1 = await testEnvironment.ConnectClient();
+                c1.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
+
+                // C2 has the last will defined.
+                var clientOptions = new MqttClientOptionsBuilder().WithWillTopic("My/last/will").WithClientId("WillOwner");
+
+                var c2 = await testEnvironment.ConnectClient(clientOptions);
+
+                // C3 will do the connection takeover.
+                var c3 = await testEnvironment.ConnectClient(clientOptions);
+
+                await Task.Delay(1000);
+
+                Assert.AreEqual(0, receivedMessagesCount);
             }
         }
 

@@ -229,7 +229,14 @@ namespace MQTTnet.Server
             
             if (_eventContainer.InterceptingPublishEvent.HasHandlers)
             {
-                var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, _cancellationTokenSource.Token, injectedApplicationMessage.SenderClientId, _sessionItems);
+                var interceptingPublishEventArgs = new InterceptingPublishEventArgs
+                {
+                    ApplicationMessage = applicationMessage,
+                    CancellationToken = _cancellationTokenSource.Token,
+                    ClientId = injectedApplicationMessage.SenderClientId,
+                    SessionItems = _sessionItems
+                };
+                    
                 await _eventContainer.InterceptingPublishEvent.InvokeAsync(interceptingPublishEventArgs).ConfigureAwait(false);
 
                 applicationMessage = interceptingPublishEventArgs.ApplicationMessage;

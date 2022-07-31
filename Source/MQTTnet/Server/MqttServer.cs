@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -19,7 +21,8 @@ namespace MQTTnet.Server
     public class MqttServer : Disposable
     {
         readonly MqttServerEventContainer _eventContainer = new MqttServerEventContainer();
-        
+
+        readonly IDictionary _sessionItems = new ConcurrentDictionary<object, object>();
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttNetSourceLogger _logger;
         readonly MqttServerOptions _options;
@@ -205,7 +208,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.GetSessionStatusAsync();
         }
 
-        public Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage)
+        public async Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage)
         {
             if (injectedApplicationMessage == null)
             {
@@ -221,7 +224,29 @@ namespace MQTTnet.Server
 
             ThrowIfNotStarted();
 
-            return _clientSessionsManager.DispatchApplicationMessage(injectedApplicationMessage.SenderClientId, injectedApplicationMessage.ApplicationMessage);
+            var processPublish = true;
+            var applicationMessage = injectedApplicationMessage.ApplicationMessage;
+            
+            if (_eventContainer.InterceptingPublishEvent.HasHandlers)
+            {
+                var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, _cancellationTokenSource.Token, injectedApplicationMessage.SenderClientId, _sessionItems);
+                await _eventContainer.InterceptingPublishEvent.InvokeAsync(interceptingPublishEventArgs).ConfigureAwait(false);
+
+                applicationMessage = interceptingPublishEventArgs.ApplicationMessage;
+                processPublish = interceptingPublishEventArgs.ProcessPublish;
+            }
+
+            if (!processPublish)
+            {
+                return;
+            }
+            
+            if (string.IsNullOrEmpty(applicationMessage.Topic))
+            {
+                throw new NotSupportedException("Injected application messages must contain a topic. Topic alias is not supported.");
+            }
+            
+            await _clientSessionsManager.DispatchApplicationMessage(injectedApplicationMessage.SenderClientId, applicationMessage).ConfigureAwait(false);
         }
 
         public async Task StartAsync()

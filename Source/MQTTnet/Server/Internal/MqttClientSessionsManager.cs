@@ -109,13 +109,9 @@ namespace MQTTnet.Server
 
             try
             {
-                if (_eventContainer.SessionDeletedEvent.HasHandlers)
+                if (_eventContainer.SessionDeletedEvent.HasHandlers && session != null)
                 {
-                    var eventArgs = new SessionDeletedEventArgs
-                    {
-                        Id = session?.Id
-                    };
-
+                    var eventArgs = new SessionDeletedEventArgs(clientId, session.Items);
                     await _eventContainer.SessionDeletedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
                 }
             }
@@ -295,13 +291,12 @@ namespace MQTTnet.Server
 
                 if (_eventContainer.ClientConnectedEvent.HasHandlers)
                 {
-                    var eventArgs = new ClientConnectedEventArgs
-                    {
-                        ClientId = connectPacket.ClientId,
-                        UserName = connectPacket.Username,
-                        ProtocolVersion = channelAdapter.PacketFormatterAdapter.ProtocolVersion,
-                        Endpoint = channelAdapter.Endpoint
-                    };
+                    var eventArgs = new ClientConnectedEventArgs(
+                        connectPacket.ClientId,
+                        connectPacket.Username,
+                        channelAdapter.PacketFormatterAdapter.ProtocolVersion,
+                        channelAdapter.Endpoint,
+                        client.Session.Items);
 
                     await _eventContainer.ClientConnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
@@ -340,12 +335,8 @@ namespace MQTTnet.Server
 
                     if (client.Id != null && !client.IsTakenOver && _eventContainer.ClientDisconnectedEvent.HasHandlers)
                     {
-                        var eventArgs = new ClientDisconnectedEventArgs
-                        {
-                            ClientId = client.Id,
-                            DisconnectType = client.IsCleanDisconnect ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean,
-                            Endpoint = endpoint
-                        };
+                        var disconnectType = client.IsCleanDisconnect ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean;
+                        var eventArgs = new ClientDisconnectedEventArgs(client.Id, disconnectType, endpoint, client.Session.Items);
 
                         await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
@@ -533,13 +524,7 @@ namespace MQTTnet.Server
 
                     if (_eventContainer.ClientConnectedEvent.HasHandlers)
                     {
-                        var eventArgs = new ClientDisconnectedEventArgs
-                        {
-                            ClientId = existing.Id,
-                            DisconnectType = MqttClientDisconnectType.Takeover,
-                            Endpoint = existing.Endpoint
-                        };
-
+                        var eventArgs = new ClientDisconnectedEventArgs(existing.Id, MqttClientDisconnectType.Takeover, existing.Endpoint, existing.Session.Items);
                         await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
                 }
@@ -572,12 +557,7 @@ namespace MQTTnet.Server
                 return;
             }
 
-            var eventArgs = new ApplicationMessageNotConsumedEventArgs
-            {
-                ApplicationMessage = applicationMessage,
-                SenderId = senderId
-            };
-
+            var eventArgs = new ApplicationMessageNotConsumedEventArgs(applicationMessage, senderId);
             await _eventContainer.ApplicationMessageNotConsumedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
         }
 

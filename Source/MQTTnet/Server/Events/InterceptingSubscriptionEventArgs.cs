@@ -12,16 +12,28 @@ namespace MQTTnet.Server
 {
     public sealed class InterceptingSubscriptionEventArgs : EventArgs
     {
+        public InterceptingSubscriptionEventArgs(
+            CancellationToken cancellationToken,
+            string clientId,
+            MqttSessionStatus session,
+            MqttTopicFilter topicFilter)
+        {
+            CancellationToken = cancellationToken;
+            ClientId = clientId;
+            Session = session;
+            TopicFilter = topicFilter;
+        }
+
         /// <summary>
         ///     Gets the cancellation token which can indicate that the client connection gets down.
         /// </summary>
-        public CancellationToken CancellationToken { get; internal set; }
+        public CancellationToken CancellationToken { get; }
 
         /// <summary>
         ///     Gets the client identifier.
         ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
-        public string ClientId { get; internal set; }
+        public string ClientId { get; }
 
         /// <summary>
         ///     Gets or sets whether the broker should close the client connection.
@@ -48,12 +60,12 @@ namespace MQTTnet.Server
         /// <summary>
         ///     Gets the current client session.
         /// </summary>
-        public MqttSessionStatus Session { get; internal set; }
+        public MqttSessionStatus Session { get; }
 
         /// <summary>
         ///     Gets or sets a key/value collection that can be used to share data within the scope of this session.
         /// </summary>
-        public IDictionary SessionItems { get; internal set; }
+        public IDictionary SessionItems => Session.Items;
 
         /// <summary>
         ///     Gets or sets the topic filter.

@@ -10,18 +10,26 @@ namespace MQTTnet.Server
 {
     public sealed class InterceptingPublishEventArgs : EventArgs
     {
+        public InterceptingPublishEventArgs(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken, string clientId, IDictionary sessionItems)
+        {
+            ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
+            CancellationToken = cancellationToken;
+            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
+        }
+
         public MqttApplicationMessage ApplicationMessage { get; set; }
 
         /// <summary>
         ///     Gets the cancellation token which can indicate that the client connection gets down.
         /// </summary>
-        public CancellationToken CancellationToken { get; internal set; }
+        public CancellationToken CancellationToken { get; }
 
         /// <summary>
         ///     Gets the client identifier.
         ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
-        public string ClientId { get; internal set; }
+        public string ClientId { get; }
 
         public bool CloseConnection { get; set; }
 
@@ -38,6 +46,6 @@ namespace MQTTnet.Server
         /// <summary>
         ///     Gets or sets a key/value collection that can be used to share data within the scope of this session.
         /// </summary>
-        public IDictionary SessionItems { get; internal set; }
+        public IDictionary SessionItems { get; }
     }
 }

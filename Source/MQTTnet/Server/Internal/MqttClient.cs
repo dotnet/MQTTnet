@@ -170,7 +170,7 @@ namespace MQTTnet.Server
                     ClientId = Id,
                     SessionItems = Session.Items
                 };
-                
+
                 return _eventContainer.ClientAcknowledgedPublishPacketEvent.TryInvokeAsync(eventArgs, _logger);
             }
 
@@ -180,7 +180,7 @@ namespace MQTTnet.Server
         Task HandleIncomingPubAckPacket(MqttPubAckPacket pubAckPacket)
         {
             var acknowledgedPublishPacket = Session.AcknowledgePublishPacket(pubAckPacket.PacketIdentifier);
-            
+
             if (acknowledgedPublishPacket != null)
             {
                 return ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubAckPacket);
@@ -192,7 +192,7 @@ namespace MQTTnet.Server
         Task HandleIncomingPubCompPacket(MqttPubCompPacket pubCompPacket)
         {
             var acknowledgedPublishPacket = Session.AcknowledgePublishPacket(pubCompPacket.PacketIdentifier);
-            
+
             if (acknowledgedPublishPacket != null)
             {
                 return ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubCompPacket);
@@ -212,16 +212,7 @@ namespace MQTTnet.Server
 
             if (_eventContainer.InterceptingPublishEvent.HasHandlers)
             {
-                interceptingPublishEventArgs = new InterceptingPublishEventArgs
-                {
-                    ClientId = Id,
-                    ApplicationMessage = applicationMessage,
-                    SessionItems = Session.Items,
-                    ProcessPublish = true,
-                    CloseConnection = false,
-                    CancellationToken = cancellationToken
-                };
-
+                interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, Id, Session.Items);
                 if (string.IsNullOrEmpty(interceptingPublishEventArgs.ApplicationMessage.Topic))
                 {
                     // This can happen if a topic alias us used but the topic is
@@ -277,7 +268,7 @@ namespace MQTTnet.Server
         async Task HandleIncomingPubRecPacket(MqttPubRecPacket pubRecPacket)
         {
             var acknowledgedPublishPacket = Session.PeekAcknowledgePublishPacket(pubRecPacket.PacketIdentifier);
-            
+
             if (acknowledgedPublishPacket != null)
             {
                 await ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubRecPacket).ConfigureAwait(false);
@@ -316,6 +307,7 @@ namespace MQTTnet.Server
                 }
             }
         }
+
 
         async Task HandleIncomingUnsubscribePacket(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
@@ -365,14 +357,7 @@ namespace MQTTnet.Server
                 return packet;
             }
 
-            var interceptingPacketEventArgs = new InterceptingPacketEventArgs
-            {
-                ClientId = Id,
-                Endpoint = Endpoint,
-                Packet = packet,
-                CancellationToken = cancellationToken
-            };
-
+            var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, Endpoint, packet, Session.Items);
             await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
 
             if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
@@ -393,7 +378,7 @@ namespace MQTTnet.Server
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     await Task.Yield();
-                    
+
                     var packet = await ChannelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
                     if (packet == null)
                     {
@@ -404,14 +389,7 @@ namespace MQTTnet.Server
 
                     if (_eventContainer.InterceptingInboundPacketEvent.HasHandlers)
                     {
-                        var interceptingPacketEventArgs = new InterceptingPacketEventArgs
-                        {
-                            ClientId = Id,
-                            Endpoint = Endpoint,
-                            Packet = packet,
-                            CancellationToken = cancellationToken
-                        };
-
+                        var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, Endpoint, packet, Session.Items);
                         await _eventContainer.InterceptingInboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
                         packet = interceptingPacketEventArgs.Packet;
                         processPacket = interceptingPacketEventArgs.ProcessPacket;

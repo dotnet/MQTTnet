@@ -25,14 +25,11 @@ namespace MQTTnet.Server
         readonly IDictionary _sessionItems = new ConcurrentDictionary<object, object>();
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttClientSessionsManager _clientSessionsManager;
-        readonly MqttServerEventContainer _eventContainer = new MqttServerEventContainer();
         readonly MqttServerKeepAliveMonitor _keepAliveMonitor;
         readonly MqttNetSourceLogger _logger;
         readonly MqttServerOptions _options;
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttNetLogger _rootLogger;
-
-        readonly IDictionary _sessionItems = new ConcurrentDictionary<object, object>();
 
         CancellationTokenSource _cancellationTokenSource;
 

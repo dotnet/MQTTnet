@@ -160,7 +160,11 @@ namespace MQTTnet.Extensions.ManagedClient
                 throw new InvalidOperationException("call StartAsync before publishing messages");
             }
 
-            MqttTopicValidator.ThrowIfInvalid(applicationMessage.ApplicationMessage.Topic);
+            // Only validate the topic if no topic alias is used.
+            if (applicationMessage.ApplicationMessage.TopicAlias == 0)
+            {
+                MqttTopicValidator.ThrowIfInvalid(applicationMessage.ApplicationMessage.Topic);
+            }
 
             ManagedMqttApplicationMessage removedMessage = null;
             ApplicationMessageSkippedEventArgs applicationMessageSkippedEventArgs = null;

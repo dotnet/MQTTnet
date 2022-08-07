@@ -1,0 +1,1 @@
+* [ManagedClient] The topic is no longer declared as invalid if a topic alias is used (#1395).

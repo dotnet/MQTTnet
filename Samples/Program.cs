@@ -8,6 +8,7 @@ Console.WriteLine("Welcome to MQTTnet samples!");
 Console.WriteLine();
 
 var sampleClasses = Assembly.GetExecutingAssembly().GetExportedTypes().OrderBy(c => c.Name).ToList();
+sampleClasses.RemoveAll(c => c.Namespace.Contains(".Shared"));
 
 var index = 0;
 foreach (var sampleClass in sampleClasses)

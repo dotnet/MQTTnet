@@ -7,7 +7,7 @@
 // ReSharper disable InconsistentNaming
 
 using MQTTnet.Client;
-using MQTTnet.Samples.Helpers;
+using MQTTnet.Samples.Shared;
 
 namespace MQTTnet.Samples.Client;
 

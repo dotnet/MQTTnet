@@ -10,7 +10,7 @@ using System.Security.Authentication;
 using MQTTnet.Client;
 using MQTTnet.Extensions.WebSocket4Net;
 using MQTTnet.Formatter;
-using MQTTnet.Samples.Helpers;
+using MQTTnet.Samples.Shared;
 
 namespace MQTTnet.Samples.Client;
 

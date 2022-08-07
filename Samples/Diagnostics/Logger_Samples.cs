@@ -8,6 +8,7 @@
 
 using System.Text;
 using MQTTnet.Diagnostics;
+using MQTTnet.Samples.Shared;
 
 namespace MQTTnet.Samples.Diagnostics;
 
@@ -22,9 +23,7 @@ public static class Logger_Samples
 
         var mqttFactory = new MqttFactory(new MyLogger());
 
-        var mqttClientOptions = mqttFactory.CreateClientOptionsBuilder()
-            .WithTcpServer("broker.hivemq.com")
-            .Build();
+        var mqttClientOptions = mqttFactory.CreateClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -32,10 +31,28 @@ public static class Logger_Samples
 
             Console.WriteLine("MQTT client is connected.");
 
-            var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
-                .Build();
+            var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder().Build();
 
             await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
+        }
+    }
+
+    public static async Task Log_To_Console()
+    {
+        /*
+       * This sample covers the creation of a custom logger which is used to log to the console.
+       */
+
+        var mqttFactory = new MqttFactory(new ConsoleLogger());
+
+        var mqttClientOptions = mqttFactory.CreateClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            Console.WriteLine("MQTT client is connected. Press any key to exit.");
+            Console.ReadKey(true);
         }
     }
 
@@ -64,9 +81,7 @@ public static class Logger_Samples
 
         var mqttFactory = new MqttFactory(mqttEventLogger);
 
-        var mqttClientOptions = mqttFactory.CreateClientOptionsBuilder()
-            .WithTcpServer("broker.hivemq.com")
-            .Build();
+        var mqttClientOptions = mqttFactory.CreateClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -74,8 +89,7 @@ public static class Logger_Samples
 
             Console.WriteLine("MQTT client is connected.");
 
-            var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
-                .Build();
+            var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder().Build();
 
             await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
         }
@@ -83,7 +97,7 @@ public static class Logger_Samples
 
     sealed class MyLogger : IMqttNetLogger
     {
-        public bool IsEnabled { get; set; } = true;
+        public bool IsEnabled { get; } = true;
 
         public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
         {

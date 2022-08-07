@@ -6,8 +6,8 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
 
-using MQTTnet.Diagnostics;
 using MQTTnet.Protocol;
+using MQTTnet.Samples.Shared;
 using MQTTnet.Server;
 
 namespace MQTTnet.Samples.Server;
@@ -169,51 +169,5 @@ public static class Server_Simple_Samples
         var server = mqttFactory.CreateMqttServer(mqttServerOptions);
         await server.StartAsync();
         return server;
-    }
-
-    class ConsoleLogger : IMqttNetLogger
-    {
-        readonly object _consoleSyncRoot = new();
-
-        public bool IsEnabled => true;
-
-        public void Publish(MqttNetLogLevel logLevel, string source, string message, object[]? parameters, Exception? exception)
-        {
-            var foregroundColor = ConsoleColor.White;
-            switch (logLevel)
-            {
-                case MqttNetLogLevel.Verbose:
-                    foregroundColor = ConsoleColor.White;
-                    break;
-
-                case MqttNetLogLevel.Info:
-                    foregroundColor = ConsoleColor.Green;
-                    break;
-
-                case MqttNetLogLevel.Warning:
-                    foregroundColor = ConsoleColor.DarkYellow;
-                    break;
-
-                case MqttNetLogLevel.Error:
-                    foregroundColor = ConsoleColor.Red;
-                    break;
-            }
-
-            if (parameters?.Length > 0)
-            {
-                message = string.Format(message, parameters);
-            }
-
-            lock (_consoleSyncRoot)
-            {
-                Console.ForegroundColor = foregroundColor;
-                Console.WriteLine(message);
-
-                if (exception != null)
-                {
-                    Console.WriteLine(exception);
-                }
-            }
-        }
     }
 }

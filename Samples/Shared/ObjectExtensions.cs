@@ -4,7 +4,7 @@
 
 using System.Text.Json;
 
-namespace MQTTnet.Samples.Helpers;
+namespace MQTTnet.Samples.Shared;
 
 internal static class ObjectExtensions
 {

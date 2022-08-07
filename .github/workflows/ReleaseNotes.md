@@ -1,0 +1,1 @@
+* [Server] When using MQTTv5 the reason code _NoMatchingSubscribers_ is returned when no client is subscribed to a published topic (#802).

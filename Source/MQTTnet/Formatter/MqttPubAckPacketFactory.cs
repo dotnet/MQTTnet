@@ -12,7 +12,10 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttPubAckPacketFactory
     {
-        public MqttPubAckPacket Create(MqttPublishPacket publishPacket, InterceptingPublishEventArgs interceptingPublishEventArgs)
+        public MqttPubAckPacket Create(
+            MqttPublishPacket publishPacket,
+            InterceptingPublishEventArgs interceptingPublishEventArgs,
+            DispatchApplicationMessageResult dispatchApplicationMessageResult)
         {
             if (publishPacket == null)
             {
@@ -21,9 +24,18 @@ namespace MQTTnet.Formatter
 
             var pubAckPacket = new MqttPubAckPacket
             {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = MqttPubAckReasonCode.Success
+                PacketIdentifier = publishPacket.PacketIdentifier
             };
+
+            if (dispatchApplicationMessageResult.MatchingSubscribersCount == 0)
+            {
+                // NoMatchingSubscribers is ONLY sent by the server!
+                pubAckPacket.ReasonCode = MqttPubAckReasonCode.NoMatchingSubscribers;
+            }
+            else
+            {
+                pubAckPacket.ReasonCode = MqttPubAckReasonCode.Success;
+            }
 
             if (interceptingPublishEventArgs != null)
             {
@@ -42,24 +54,12 @@ namespace MQTTnet.Formatter
                 throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
             }
 
-            var pubAckPacket = Create(applicationMessageReceivedEventArgs.PublishPacket, applicationMessageReceivedEventArgs.ReasonCode);
-            pubAckPacket.UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties;
-            pubAckPacket.ReasonString = applicationMessageReceivedEventArgs.ResponseReasonString;
-
-            return pubAckPacket;
-        }
-
-        static MqttPubAckPacket Create(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode applicationMessageReceivedReasonCode)
-        {
-            if (publishPacket == null)
-            {
-                throw new ArgumentNullException(nameof(publishPacket));
-            }
-
             var pubAckPacket = new MqttPubAckPacket
             {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubAckReasonCode)(int)applicationMessageReceivedReasonCode
+                PacketIdentifier = applicationMessageReceivedEventArgs.PublishPacket.PacketIdentifier,
+                ReasonCode = (MqttPubAckReasonCode)(int)applicationMessageReceivedEventArgs.ReasonCode,
+                UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties,
+                ReasonString = applicationMessageReceivedEventArgs.ResponseReasonString
             };
 
             return pubAckPacket;

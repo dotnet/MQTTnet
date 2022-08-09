@@ -70,7 +70,7 @@ namespace MQTTnet.Client
         public object Tag { get; set; }
 
         /// <summary>
-        /// Gets the indentifier of MQTT packet
+        /// Gets the MQTT packet identifier.
         /// </summary>
         public ushort PacketIdentifier { get; }
 

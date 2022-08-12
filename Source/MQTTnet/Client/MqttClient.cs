@@ -523,7 +523,11 @@ namespace MQTTnet.Client
 
                     if (timeWithoutPacketSent > keepAlivePeriod)
                     {
-                        await PingAsync(cancellationToken).ConfigureAwait(false);
+                        using (var timeoutCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                        {
+                            timeoutCancellationTokenSource.CancelAfter(Options.Timeout);
+                            await PingAsync(timeoutCancellationTokenSource.Token).ConfigureAwait(false);
+                        }
                     }
 
                     // Wait a fixed time in all cases. Calculation of the remaining time is complicated

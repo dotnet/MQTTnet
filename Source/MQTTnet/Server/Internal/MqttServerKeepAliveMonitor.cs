@@ -63,14 +63,14 @@ namespace MQTTnet.Server
 
         void TryProcessClients()
         {
-            var now = DateTime.UtcNow;
+            var now = Stopwatch.GetTimestamp();
             foreach (var client in _sessionsManager.GetClients())
             {
                 TryProcessClient(client, now);
             }
         }
 
-        void TryProcessClient(MqttClient connection, DateTime now)
+        void TryProcessClient(MqttClient connection, TimeSpan now)
         {
             try
             {
@@ -98,7 +98,7 @@ namespace MQTTnet.Server
                 // If the client sends 1 sec. the server will allow up to 1.5 seconds.
                 var maxSecondsWithoutPacket = connection.KeepAlivePeriod * 1.5D;
 
-                var secondsWithoutPackage = (now - connection.Statistics.LastPacketSentTimestamp).TotalSeconds;
+                var secondsWithoutPackage = (now - connection.Statistics.LastPacketSentTimestampSinceSystemStart).TotalSeconds;
                 if (secondsWithoutPackage < maxSecondsWithoutPacket)
                 {
                     // A packet was received before the timeout is affected.

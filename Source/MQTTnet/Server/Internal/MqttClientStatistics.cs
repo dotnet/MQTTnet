@@ -4,6 +4,7 @@
 
 using System;
 using System.Threading;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Server
@@ -25,6 +26,7 @@ namespace MQTTnet.Server
 
             LastPacketReceivedTimestamp = ConnectedTimestamp;
             LastPacketSentTimestamp = ConnectedTimestamp;
+            LastPacketSentTimestampSinceSystemStart = Stopwatch.GetTimestamp();
 
             LastNonKeepAlivePacketReceivedTimestamp = ConnectedTimestamp;
         }
@@ -40,7 +42,8 @@ namespace MQTTnet.Server
         /// Timestamp of the last package that has been received from the client ("sent" from the client's perspective)
         /// </summary>
         public DateTime LastPacketSentTimestamp { get; private set; }
-        
+        internal TimeSpan LastPacketSentTimestampSinceSystemStart { get; private set; }
+
         public DateTime LastNonKeepAlivePacketReceivedTimestamp { get; private set; }
 
         public long SentApplicationMessagesCount => Interlocked.Read(ref _sentApplicationMessagesCount);
@@ -60,6 +63,7 @@ namespace MQTTnet.Server
             
             // This class is tracking all values from Clients perspective!
             LastPacketSentTimestamp = DateTime.UtcNow;
+            LastPacketSentTimestampSinceSystemStart = Stopwatch.GetTimestamp();
 
             Interlocked.Increment(ref _sentPacketsCount);
 

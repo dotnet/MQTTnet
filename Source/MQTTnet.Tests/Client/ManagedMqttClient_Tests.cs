@@ -339,7 +339,7 @@ namespace MQTTnet.Tests.Client
 
                 await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", Payload = new byte[] { 1 }, Retain = true });
 
-                var subscribeTime = DateTime.UtcNow;
+                var subscribeTime = Stopwatch.GetTimestamp();
 
                 var messagesTask = SetupReceivingOfMessages(receivingClient, 1);
 
@@ -347,7 +347,7 @@ namespace MQTTnet.Tests.Client
 
                 var messages = await messagesTask;
 
-                var elapsed = DateTime.UtcNow - subscribeTime;
+                var elapsed = Stopwatch.GetTimestamp() - subscribeTime;
                 Assert.IsTrue(elapsed < TimeSpan.FromSeconds(1), $"Subscriptions must be activated immediately, this one took {elapsed}");
                 Assert.AreEqual(messages.Single().Topic, "topic");
             }

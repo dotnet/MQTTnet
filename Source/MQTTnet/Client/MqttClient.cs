@@ -53,7 +53,7 @@ namespace MQTTnet.Client
 
         MqttClientDisconnectReason _disconnectReason;
 
-        DateTime _lastPacketSentTimestamp;
+        TimeSpan _lastPacketSentTimestamp;
         string _disconnectReasonString;
         
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
@@ -146,7 +146,7 @@ namespace MQTTnet.Client
                     connectResult = await AuthenticateAsync(options, effectiveCancellationToken.Token).ConfigureAwait(false);
                 }
 
-                _lastPacketSentTimestamp = DateTime.UtcNow;
+                _lastPacketSentTimestamp = Stopwatch.GetTimestamp();
 
                 var keepAliveInterval = Options.KeepAlivePeriod;
                 if (connectResult.ServerKeepAlive > 0)
@@ -465,7 +465,7 @@ namespace MQTTnet.Client
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            _lastPacketSentTimestamp = DateTime.UtcNow;
+            _lastPacketSentTimestamp = Stopwatch.GetTimestamp();
 
             return _adapter.SendPacketAsync(packet, cancellationToken);
         }
@@ -519,7 +519,7 @@ namespace MQTTnet.Client
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     // Values described here: [MQTT-3.1.2-24].
-                    var timeWithoutPacketSent = DateTime.UtcNow - _lastPacketSentTimestamp;
+                    var timeWithoutPacketSent = Stopwatch.GetTimestamp() - _lastPacketSentTimestamp;
 
                     if (timeWithoutPacketSent > keepAlivePeriod)
                     {

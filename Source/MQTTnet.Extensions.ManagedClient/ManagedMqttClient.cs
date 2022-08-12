@@ -344,9 +344,9 @@ namespace MQTTnet.Extensions.ManagedClient
             base.Dispose(disposing);
         }
 
-        static TimeSpan GetRemainingTime(DateTime endTime)
+        static TimeSpan GetRemainingTime(TimeSpan endTime)
         {
-            var remainingTime = endTime - DateTime.UtcNow;
+            var remainingTime = endTime - Stopwatch.GetTimestamp();
             return remainingTime < TimeSpan.Zero ? TimeSpan.Zero : remainingTime;
         }
 
@@ -479,7 +479,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
         async Task PublishSubscriptionsAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            var endTime = DateTime.UtcNow + timeout;
+            var endTime = Stopwatch.GetTimestamp() + timeout;
 
             while (await _subscriptionsQueuedSignal.WaitAsync(GetRemainingTime(endTime), cancellationToken).ConfigureAwait(false))
             {

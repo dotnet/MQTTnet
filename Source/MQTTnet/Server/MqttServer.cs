@@ -287,8 +287,9 @@ namespace MQTTnet.Server
 
                 _cancellationTokenSource.Cancel(false);
 
-                await _clientSessionsManager.CloseAllConnectionsAsync().ConfigureAwait(false);
-
+                await _clientSessionsManager.Stop().ConfigureAwait(false);
+                await _retainedMessagesManager.Stop().ConfigureAwait(false);
+                
                 foreach (var adapter in _adapters)
                 {
                     adapter.ClientHandler = null;
@@ -357,7 +358,7 @@ namespace MQTTnet.Server
             ThrowIfDisposed();
             ThrowIfNotStarted();
 
-            return _retainedMessagesManager?.UpdateMessage(null, retainedMessage);
+            return _retainedMessagesManager?.HandleMessage(null, retainedMessage);
         }
 
         protected override void Dispose(bool disposing)

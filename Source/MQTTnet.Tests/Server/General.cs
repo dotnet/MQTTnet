@@ -394,7 +394,7 @@ namespace MQTTnet.Tests.Server
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                List<MqttApplicationMessage> savedRetainedMessages = null;
+                ICollection<MqttRetainedMessage> savedRetainedMessages = null;
 
                 var s = await testEnvironment.StartServer();
                 s.RetainedMessageChangedAsync += e =>

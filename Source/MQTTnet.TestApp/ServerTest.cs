@@ -4,12 +4,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
-using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Implementations;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -80,15 +78,15 @@ namespace MQTTnet.TestApp
                 
                 mqttServer.LoadingRetainedMessageAsync += e =>
                 {
-                    List<MqttApplicationMessage> retainedMessages;
+                    List<MqttRetainedMessage> retainedMessages;
                     if (File.Exists(Filename))
                     {
                         var json = File.ReadAllText(Filename);
-                        retainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(json);
+                        retainedMessages = JsonConvert.DeserializeObject<List<MqttRetainedMessage>>(json);
                     }
                     else
                     {
-                        retainedMessages = new List<MqttApplicationMessage>();
+                        retainedMessages = new List<MqttRetainedMessage>();
                     }
 
                     e.LoadedRetainedMessages = retainedMessages;

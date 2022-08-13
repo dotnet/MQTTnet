@@ -58,7 +58,7 @@ namespace MQTTnet.Server
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
         }
 
-        public async Task CloseAllConnectionsAsync()
+        public async Task Stop()
         {
             List<MqttClient> connections;
             lock (_clients)
@@ -131,7 +131,7 @@ namespace MQTTnet.Server
             {
                 if (applicationMessage.Retain)
                 {
-                    await _retainedMessagesManager.UpdateMessage(senderId, applicationMessage).ConfigureAwait(false);
+                    await _retainedMessagesManager.HandleMessage(senderId, applicationMessage).ConfigureAwait(false);
                 }
 
                 var deliveryCount = 0;

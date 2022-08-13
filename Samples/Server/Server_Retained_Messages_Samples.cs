@@ -7,6 +7,7 @@
 // ReSharper disable InconsistentNaming
 
 using System.Text.Json;
+using MQTTnet.Server;
 
 namespace MQTTnet.Samples.Server;
 
@@ -32,7 +33,7 @@ public static class Server_Retained_Messages_Samples
             {
                 try
                 {
-                    eventArgs.LoadedRetainedMessages = await JsonSerializer.DeserializeAsync<List<MqttApplicationMessage>>(File.OpenRead(storePath));
+                    eventArgs.LoadedRetainedMessages = await JsonSerializer.DeserializeAsync<List<MqttRetainedMessage>>(File.OpenRead(storePath));
                     Console.WriteLine("Retained messages loaded.");
                 }
                 catch (FileNotFoundException)

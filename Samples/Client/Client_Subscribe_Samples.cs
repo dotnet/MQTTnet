@@ -7,6 +7,7 @@
 // ReSharper disable InconsistentNaming
 
 using MQTTnet.Client;
+using MQTTnet.Packets;
 using MQTTnet.Samples.Helpers;
 
 namespace MQTTnet.Samples.Client;
@@ -63,6 +64,50 @@ public static class Client_Subscribe_Samples
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
+            var mqttClientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("broker.hivemq.com")
+                .Build();
+
+            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
+                .WithTopicFilter(f => { f.WithTopic("mqttnet/samples/topic/1"); })
+                .Build();
+
+            var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+
+            Console.WriteLine("MQTT client subscribed to topic.");
+
+            // The response contains additional data sent by the server after subscribing.
+            response.DumpToConsole();
+        }
+    }
+    
+    public static async Task Send_Responses()
+    {
+        /*
+         * This sample subscribes to a topic and sends a response to the broker. This requires at least QoS level 1 to work!
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            mqttClient.ApplicationMessageReceivedAsync += delegate(MqttApplicationMessageReceivedEventArgs args)
+            {
+                // Do some work with the message...
+
+                // Now respond to the broker with a reason code other than success.
+                args.ReasonCode = MqttApplicationMessageReceivedReasonCode.ImplementationSpecificError;
+                args.ResponseReasonString = "That did not work!";
+                
+                // User properties require MQTT v5!
+                args.ResponseUserProperties.Add(new MqttUserProperty("My", "Data"));
+                
+                // Now the broker will resend the message again.
+                return Task.CompletedTask;
+            };
+            
             var mqttClientOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer("broker.hivemq.com")
                 .Build();

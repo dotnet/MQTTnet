@@ -37,7 +37,7 @@ namespace MQTTnet.Internal
 
         public async Task InvokeAsync(TEventArgs eventArgs)
         {
-            foreach (var handler in _handlers)
+            foreach (var handler in _handlers.ToArray())
             {
                 await handler.InvokeAsync(eventArgs).ConfigureAwait(false);
             }

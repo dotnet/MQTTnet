@@ -147,7 +147,9 @@ namespace MQTTnet.Server
         {
             IsRunning = false;
 
-            if (reason == MqttDisconnectReasonCode.SessionTakenOver || reason == MqttDisconnectReasonCode.KeepAliveTimeout)
+            // Potentially send disconnect reason to MQTT 5 clients
+
+            if (ChannelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500 && reason != MqttDisconnectReasonCode.NormalDisconnection)            
             {
                 // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
                 // token because the entire connection is closed (disposed) as soon as the cancellation

@@ -175,6 +175,49 @@ namespace MQTTnet.Tests.MQTTv5
             }
         }
 
+        [TestMethod]
+        public async Task Disconnect_with_Reason()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var disconnectReason = MQTTnet.Client.MqttClientDisconnectReason.UnspecifiedError;
+
+                string testClientId = null;
+
+                await testEnvironment.StartServer();
+
+                testEnvironment.Server.ClientConnectedAsync += e =>
+                {
+                    testClientId = e.ClientId;
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                var client = await testEnvironment.ConnectClient(new MQTTnet.Client.MqttClientOptionsBuilder().WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V500));
+
+                client.DisconnectedAsync += e =>
+                {
+                    disconnectReason = e.Reason;
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                await LongTestDelay();
+
+                // Test client should be connected now
+
+                Assert.IsTrue(testClientId != null);
+
+                // Have the server disconnect the client with AdministrativeAction reason
+
+                await testEnvironment.Server.DisconnectClientAsync(testClientId, Protocol.MqttDisconnectReasonCode.AdministrativeAction);
+
+                await LongTestDelay();
+
+                // The reason should be returned to the client in the DISCONNECT packet
+
+                Assert.AreEqual(MQTTnet.Client.MqttClientDisconnectReason.AdministrativeAction, disconnectReason);
+            }
+        }
+
         MqttClientOptions CreateClientOptions(TestEnvironment testEnvironment, string clientId, bool cleanSession, uint sessionExpiryInterval)
         {
             return testEnvironment.Factory.CreateClientOptionsBuilder()

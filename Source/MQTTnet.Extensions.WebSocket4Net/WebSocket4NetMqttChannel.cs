@@ -154,9 +154,9 @@ namespace MQTTnet.Extensions.WebSocket4Net
             return Task.FromResult(readBytes);
         }
 
-        public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
-            _webSocket.Send(buffer, offset, count);
+            _webSocket.Send(buffer.Array, buffer.Offset, buffer.Count);
             return Task.FromResult(0);
         }
 

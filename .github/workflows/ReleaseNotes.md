@@ -1,1 +1,2 @@
 * [Client] Keep alive mechanism now uses the configured timeout value from the options (thanks to @Stannieman, #1495).
+* [Core] MQTT Packets being sent over web socket transport are now setting the web socket frame boundaries correctly (#1499).

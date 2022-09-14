@@ -134,7 +134,7 @@ namespace MQTTnet.Implementations
                         continue;
                     }
 
-                    Task.Run(() => TryHandleClientConnectionAsync(clientSocket), cancellationToken).RunInBackground(_logger);
+                    _ = Task.Factory.StartNew(() => TryHandleClientConnectionAsync(clientSocket), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {

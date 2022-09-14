@@ -147,13 +147,20 @@ namespace MQTTnet.Server
         {
             IsRunning = false;
 
-            if (reason == MqttDisconnectReasonCode.SessionTakenOver || reason == MqttDisconnectReasonCode.KeepAliveTimeout)
+            // Sending DISCONNECT packets from the server to the client is only supported when using MQTTv5+.
+            if (ChannelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500)
             {
-                // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
-                // token because the entire connection is closed (disposed) as soon as the cancellation
-                // token is cancelled. To there is no chance that the DISCONNECT packet will ever arrive
-                // at the client!
-                await TrySendDisconnectPacket(reason).ConfigureAwait(false);
+                // The Client or Server MAY send a DISCONNECT packet before closing the Network Connection.
+                // This library does not sent a DISCONNECT packet for a normal disconnection. Maybe adding
+                // a configuration option is requested in the future.
+                if (reason != MqttDisconnectReasonCode.NormalDisconnection)
+                {
+                    // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
+                    // token because the entire connection is closed (disposed) as soon as the cancellation
+                    // token is cancelled. To there is no chance that the DISCONNECT packet will ever arrive
+                    // at the client!
+                    await TrySendDisconnectPacket(reason).ConfigureAwait(false);
+                }
             }
 
             StopInternal();

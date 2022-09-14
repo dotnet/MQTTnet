@@ -935,7 +935,62 @@ namespace MQTTnet.Tests.Server
                 Assert.IsTrue(client.IsConnected);
             }
         }
-        
+
+        [TestMethod]
+        public async Task Disconnect_Client_with_Reason()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var disconnectPacketReceived = false;
+
+                string testClientId = null;
+
+                await testEnvironment.StartServer();
+
+                testEnvironment.Server.ClientConnectedAsync += e =>
+                {
+                    testClientId = e.ClientId;
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                var client = testEnvironment.CreateClient();
+
+                client.InspectPackage += e =>
+                {
+                    if (e.Buffer.Length > 0)
+                    {
+                        if (e.Buffer[0] == (byte)Protocol.MqttControlPacketType.Disconnect << 4)
+                        {
+                            disconnectPacketReceived = true;
+                        }
+                    }
+                    return PlatformAbstractionLayer.CompletedTask;
+                };
+
+                await client.ConnectAsync(
+                    new MqttClientOptionsBuilder().WithTcpServer("localhost", testEnvironment.ServerPort)
+                    .WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V311)
+                    .Build()
+                    );
+
+                await LongTestDelay();
+
+                // Test client should be connected now
+
+                Assert.IsTrue(testClientId != null);
+
+                // Have the server disconnect the client with SessionTakenOver reason; no DISCONNECT should be sent to MQTT 3.1.1 clients
+
+                await testEnvironment.Server.DisconnectClientAsync(testClientId, Protocol.MqttDisconnectReasonCode.SessionTakenOver);
+
+                await LongTestDelay();
+
+                // MQTT 3.1.1 client should not receive a disconnect packet
+
+                Assert.IsFalse(disconnectPacketReceived, "Disconnect packet received when none is expected");
+            }
+        }
+
         void ConnectionValidationHandler(ValidatingConnectionEventArgs eventArgs)
         {
             if (_connected.ContainsKey(eventArgs.ClientId))

@@ -104,7 +104,7 @@ namespace MQTTnet.Benchmarks
                 return Task.FromResult(count);
             }
 
-            public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            public Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
             {
                 throw new NotSupportedException();
             }

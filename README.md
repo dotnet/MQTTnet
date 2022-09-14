@@ -78,6 +78,7 @@ This library is used in the following projects:
 * Wirehome.Core (Open Source Home Automation system for .NET Core, <https://github.com/chkr1011/Wirehome.Core>)
 * SparkplugNet (Sparkplug library for .Net, <https://github.com/SeppPenner/SparkplugNet>)
 * Silverback (Framework to build event-driven applications - support for MQTT, Kafka & RabbitMQ) <https://github.com/BEagle1984/silverback>
+* MQTTnet.Extensions.MultiCloud (Framework to apply the Telemetry/Properties/Commands pattern to different Cloud providers, including Azure IoT Hub, AWS, HiveMQ and Mosquitto) <https://github.com/iotmodels/MQTTnet.Extensions.MultiCloud>
 
 Further projects using this project can be found under https://github.com/dotnet/MQTTnet/network/dependents.
 

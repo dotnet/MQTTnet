@@ -98,7 +98,7 @@ namespace MQTTnet.Server
 
                 try
                 {
-                    Task.Run(() => SendPacketsLoop(cancellationToken), cancellationToken).RunInBackground(_logger);
+                    _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
 
                     IsRunning = true;
 
@@ -391,7 +391,20 @@ namespace MQTTnet.Server
                     {
                         return;
                     }
+                    
+                    // Check for cancellation again because receive packet might block some time.
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
 
+                    // The TCP connection of this client may be still open but the client has already been taken over by
+                    // a new TCP connection. So we must exit here to make sure to no longer process any message.
+                    if (IsTakenOver || !IsRunning)
+                    {
+                        return;
+                    }
+                    
                     var processPacket = true;
 
                     if (_eventContainer.InterceptingInboundPacketEvent.HasHandlers)
@@ -489,6 +502,11 @@ namespace MQTTnet.Server
 
                     // Also check the cancellation token here because the dequeue is blocking and may take some time.
                     if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    if (IsTakenOver || !IsRunning)
                     {
                         return;
                     }

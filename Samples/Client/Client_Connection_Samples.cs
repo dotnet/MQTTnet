@@ -321,14 +321,12 @@ public static class Client_Connection_Samples
                     {
                         try
                         {
-                            // This code will also do the very first connect! So no call to _ConnectAsync_ is required
-                            // in the first place.
-                            if (!mqttClient.IsConnected)
+                            // This code will also do the very first connect! So no call to _ConnectAsync_ is required in the first place.
+                            if (!await mqttClient.TryPingAsync())
                             {
                                 await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
                                 // Subscribe to topics when session is clean etc.
-
                                 Console.WriteLine("The MQTT client is connected.");
                             }
                         }

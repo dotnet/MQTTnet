@@ -124,7 +124,9 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
-        public async Task Handle_Parallel_Connection_Attempts()
+        [DataRow(MqttProtocolVersion.V311)]
+        [DataRow(MqttProtocolVersion.V500)]
+        public async Task Handle_Parallel_Connection_Attempts(MqttProtocolVersion protocolVersion)
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
@@ -132,7 +134,7 @@ namespace MQTTnet.Tests.Server
 
                 await testEnvironment.StartServer();
 
-                var options = new MqttClientOptionsBuilder().WithClientId("1").WithKeepAlivePeriod(TimeSpan.FromSeconds(5));
+                var options = new MqttClientOptionsBuilder().WithClientId("1").WithTimeout(TimeSpan.FromSeconds(1)).WithProtocolVersion(protocolVersion).WithKeepAlivePeriod(TimeSpan.FromSeconds(5));
 
                 var hasReceive = false;
 
@@ -146,7 +148,10 @@ namespace MQTTnet.Tests.Server
 
                 // Try to connect 50 clients at the same time.
                 var clients = await Task.WhenAll(Enumerable.Range(0, 50).Select(i => ConnectAndSubscribe(testEnvironment, options, OnReceive)));
-                var connectedClients = clients.Where(c => c?.IsConnected ?? false).ToList();
+
+                await LongTestDelay();
+                
+                var connectedClients = clients.Where(c => c != null).Where(c => c.TryPingAsync().GetAwaiter().GetResult()).ToList();
 
                 Assert.AreEqual(1, connectedClients.Count);
 
@@ -161,26 +166,7 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(true, hasReceive);
             }
         }
-
-        [TestMethod]
-        public async Task Manage_Session_MaxParallel()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                testEnvironment.IgnoreClientLogErrors = true;
-                var serverOptions = new MqttServerOptionsBuilder();
-                await testEnvironment.StartServer(serverOptions);
-
-                var options = new MqttClientOptionsBuilder().WithClientId("1");
-
-                var clients = await Task.WhenAll(Enumerable.Range(0, 10).Select(i => TryConnect(testEnvironment, options)));
-
-                var connectedClients = clients.Where(c => c?.IsConnected ?? false).ToList();
-
-                Assert.AreEqual(1, connectedClients.Count);
-            }
-        }
-
+        
         [DataTestMethod]
         [DataRow(MqttQualityOfServiceLevel.ExactlyOnce)]
         [DataRow(MqttQualityOfServiceLevel.AtLeastOnce)]
@@ -360,7 +346,7 @@ namespace MQTTnet.Tests.Server
             }
         }
 
-        async Task<IMqttClient> ConnectAndSubscribe(TestEnvironment testEnvironment, MqttClientOptionsBuilder options, Action onReceive)
+        static async Task<IMqttClient> ConnectAndSubscribe(TestEnvironment testEnvironment, MqttClientOptionsBuilder options, Action onReceive)
         {
             try
             {
@@ -379,13 +365,13 @@ namespace MQTTnet.Tests.Server
 
                 return sendClient;
             }
-            catch (Exception)
+            catch
             {
                 return null;
             }
         }
 
-        async Task<IMqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
+        static async Task<IMqttClient> TryConnect(TestEnvironment testEnvironment, MqttClientOptionsBuilder options)
         {
             try
             {

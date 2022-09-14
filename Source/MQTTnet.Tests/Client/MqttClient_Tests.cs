@@ -19,10 +19,12 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Tests.Mockups;
 
+// ReSharper disable InconsistentNaming
+
 namespace MQTTnet.Tests.Client
 {
     [TestClass]
-    public sealed class Client_Tests : BaseTestClass
+    public sealed class MqttClient_Tests : BaseTestClass
     {
         [DataTestMethod]
         [DataRow(MqttQualityOfServiceLevel.ExactlyOnce)]
@@ -145,6 +147,7 @@ namespace MQTTnet.Tests.Client
                 }
                 catch
                 {
+                    // Ignore errors.
                 }
 
                 await Task.Delay(500);
@@ -239,10 +242,10 @@ namespace MQTTnet.Tests.Client
 
                 for (var i = 0; i < 98; i++)
                 {
-                    Assert.IsFalse(clients[i].IsConnected, $"clients[{i}] is not connected");
+                    Assert.IsFalse(clients[i].TryPingAsync().GetAwaiter().GetResult(), $"clients[{i}] is not connected");
                 }
 
-                Assert.IsTrue(clients[99].IsConnected);
+                Assert.IsTrue(clients[99].TryPingAsync().GetAwaiter().GetResult());
 
                 Assert.AreEqual(1, clientStatus.Count);
                 Assert.AreEqual(1, sessionStatus.Count);
@@ -332,7 +335,7 @@ namespace MQTTnet.Tests.Client
 
                 var client = await testEnvironment.ConnectClient();
 
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(client.TryPingAsync().GetAwaiter().GetResult());
             }
         }
 
@@ -343,11 +346,11 @@ namespace MQTTnet.Tests.Client
             {
                 await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(client.TryPingAsync().GetAwaiter().GetResult());
 
                 await client.DisconnectAsync();
 
-                Assert.IsFalse(client.IsConnected);
+                Assert.IsFalse(client.TryPingAsync().GetAwaiter().GetResult());
             }
         }
 
@@ -591,17 +594,17 @@ namespace MQTTnet.Tests.Client
                 var client = await testEnvironment.ConnectClient();
 
                 await Task.Delay(500);
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(await client.TryPingAsync());
 
                 await server.StopAsync();
                 await Task.Delay(500);
-                Assert.IsFalse(client.IsConnected);
+                Assert.IsFalse(await client.TryPingAsync());
 
                 await server.StartAsync();
                 await Task.Delay(500);
 
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(await client.TryPingAsync());
             }
         }
 
@@ -637,6 +640,7 @@ namespace MQTTnet.Tests.Client
                 }
                 catch
                 {
+                    // Ignore errors.
                 }
 
                 SpinWait.SpinUntil(() => tries >= maxTries, 10000);
@@ -656,11 +660,11 @@ namespace MQTTnet.Tests.Client
                 var client = await testEnvironment.ConnectClient();
 
                 await Task.Delay(500);
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(client.TryPingAsync().GetAwaiter().GetResult());
 
                 await server.StopAsync();
                 await Task.Delay(500);
-                Assert.IsFalse(client.IsConnected);
+                Assert.IsFalse(client.TryPingAsync().GetAwaiter().GetResult());
 
                 for (var i = 0; i < 5; i++)
                 {
@@ -671,6 +675,7 @@ namespace MQTTnet.Tests.Client
                     }
                     catch
                     {
+                        // Ignore errors.
                     }
                 }
 
@@ -678,7 +683,7 @@ namespace MQTTnet.Tests.Client
                 await Task.Delay(500);
 
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
-                Assert.IsTrue(client.IsConnected);
+                await client.PingAsync();
             }
         }
 
@@ -828,10 +833,10 @@ namespace MQTTnet.Tests.Client
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServer();
+                await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
 
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(client.TryPingAsync().GetAwaiter().GetResult());
                 client.DisconnectedAsync += e =>
                 {
                     Assert.IsTrue(e.ClientWasConnected);
@@ -851,7 +856,7 @@ namespace MQTTnet.Tests.Client
                 var server = await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
 
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(client.TryPingAsync().GetAwaiter().GetResult());
                 client.DisconnectedAsync += e =>
                 {
                     Assert.IsTrue(e.ClientWasConnected);
@@ -941,7 +946,7 @@ namespace MQTTnet.Tests.Client
                 await Task.Delay(500);
 
                 Assert.IsTrue(messageReceived);
-                Assert.IsTrue(client1.IsConnected);
+                Assert.IsTrue(client1.TryPingAsync().GetAwaiter().GetResult());
                 Assert.IsFalse(disconnectedFired);
             }
         }

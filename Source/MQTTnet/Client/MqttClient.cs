@@ -91,9 +91,7 @@ namespace MQTTnet.Client
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);
         }
-
-        [Obsolete(
-            "This property will be removed in the future. Checking for a working connection should be done via calling _PinAsync_. Also other successful traffic can be used to indicate connection status.")]
+        
         public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
         public MqttClientOptions Options { get; private set; }

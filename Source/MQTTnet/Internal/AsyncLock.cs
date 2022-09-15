@@ -10,14 +10,23 @@ namespace MQTTnet.Internal
 {
     public sealed class AsyncLock : IDisposable
     {
-        readonly object _syncRoot = new object();
         readonly Task<IDisposable> _releaser;
+        readonly object _syncRoot = new object();
 
         SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public AsyncLock()
         {
             _releaser = Task.FromResult((IDisposable)new Releaser(this));
+        }
+
+        public void Dispose()
+        {
+            lock (_syncRoot)
+            {
+                _semaphore?.Dispose();
+                _semaphore = null;
+            }
         }
 
         public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
@@ -45,22 +54,10 @@ namespace MQTTnet.Internal
             }
 
             // Wait for the _WaitAsync_ method and return the releaser afterwards.
-            return task.ContinueWith(
-                (_, state) => (IDisposable)state, 
-                _releaser.Result, 
-                cancellationToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            return task.ContinueWith((_, state) => (IDisposable)state, _releaser.Result, cancellationToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
-        public void Dispose()
-        {
-            lock (_syncRoot)
-            {
-                _semaphore?.Dispose();
-                _semaphore = null;
-            }
-        }
-
-        internal void Release()
+        void Release()
         {
             lock (_syncRoot)
             {

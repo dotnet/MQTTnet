@@ -63,17 +63,13 @@ jobs:
         run: dotnet nuget push **/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
 
       - name: Create comment
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/github-script@v5
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: mshick/add-pr-comment@v1
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'This build is available at the MyGet feed (https://www.myget.org/F/mqttnet/api/v3/index.json) version ${{ env.VERSION }}.'
-            })
+          message: 'This build is available at the MyGet feed (https://www.myget.org/F/mqttnet/api/v3/index.json) version ${{ env.VERSION }}.'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'github-actions[bot]'
+          allow-repeats: false
 
 #      - name: Publish nugets
 #        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}

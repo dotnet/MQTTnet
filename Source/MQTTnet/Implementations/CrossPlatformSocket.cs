@@ -89,8 +89,6 @@ namespace MQTTnet.Implementations
             set => _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, value ? 1 : 0);
         }
 
-        public bool IsConnected => _socket.Connected;
-
         public async Task<CrossPlatformSocket> AcceptAsync()
         {
             try
@@ -113,11 +111,6 @@ namespace MQTTnet.Implementations
 
         public void Bind(EndPoint localEndPoint)
         {
-            if (localEndPoint is null)
-            {
-                throw new ArgumentNullException(nameof(localEndPoint));
-            }
-
             _socket.Bind(localEndPoint);
         }
 

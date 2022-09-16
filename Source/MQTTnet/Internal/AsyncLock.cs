@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Internal
 {
-        public sealed class AsyncLockOldFixed : IDisposable
+    public sealed class AsyncLockOldFixed : IDisposable
     {
         readonly IDisposable _releaser;
         readonly object _syncRoot = new object();
@@ -174,8 +174,8 @@ namespace MQTTnet.Internal
          */
 
         readonly object _syncRoot = new object();
+        
         volatile bool _isDisposed;
-
         volatile LinkedList<WaitingTask> _waitingTasks = new LinkedList<WaitingTask>();
 
         public void Dispose()

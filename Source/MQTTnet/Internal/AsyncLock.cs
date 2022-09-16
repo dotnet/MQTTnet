@@ -4,9 +4,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Implementations;
 
 namespace MQTTnet.Internal
 {
@@ -85,23 +85,28 @@ namespace MQTTnet.Internal
 
     public sealed class AsyncLock : IDisposable
     {
+        //static readonly int SpinCount = (Environment.ProcessorCount == 1 ? 1 : 35) * 4;
+
         /*
          * This async supporting lock does not support reentrancy!
          */
 
-        readonly object _syncRoot = new object();
-        
-        bool _isDisposed;
-        readonly LinkedList<QueuedTask> _queuedTasks = new LinkedList<QueuedTask>();
-        int _queuedTasksCount;
+        readonly List<Releaser> _queuedTasks = new List<Releaser>(64);
+        readonly Task<IDisposable> _releaserTaskWithDirectApproval;
 
-        readonly QueuedTask _queuedTaskWithDirectApproval;
+        readonly Releaser _releaserWithDirectApproval;
+
+        readonly object _syncRoot = new object();
+
+        bool _isDisposed;
+        int _queuedTasksCount;
 
         public AsyncLock()
         {
-            _queuedTaskWithDirectApproval = new QueuedTask(this);
+            _releaserWithDirectApproval = new Releaser(this, null, CancellationToken.None);
+            _releaserTaskWithDirectApproval = Task.FromResult((IDisposable)_releaserWithDirectApproval);
         }
-        
+
         public void Dispose()
         {
             lock (_syncRoot)
@@ -118,56 +123,61 @@ namespace MQTTnet.Internal
             }
         }
 
-        public async Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
+        public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
         {
             if (_isDisposed)
             {
                 throw new ObjectDisposedException(nameof(AsyncLock));
             }
-            
+
+            // Try to wait some time. The lock may gets freed up in a few ms. This should avoid creating
+            // lots of tasks where they probably not needed. The behavior is the same as in the _SemaphoreSlim_.
+            // if (_queuedTasksCount > 0)
+            // {
+            //     SpinWait spinner = default;
+            //     while (spinner.Count < SpinCount)
+            //     {
+            //         spinner.SpinOnce();
+            //         if (_queuedTasksCount == 0)
+            //         {
+            //             // The wait was successful. The lock was just released.
+            //             break;
+            //         }
+            //     }
+            // }
+
             var hasDirectApproval = false;
-            QueuedTask queuedTask;
-            
+            Releaser releaser;
+
             lock (_syncRoot)
             {
-                _queuedTasksCount++;
-                
-                if (_queuedTasks.Count == 0)
+                if (_queuedTasksCount == 0)
                 {
                     // There is no other waiting task apart from the current one.
                     // So we can approve the current task directly.
-                    //Debug.WriteLine("AsyncLock: Task directly approved.");
+                    releaser = _releaserWithDirectApproval;
                     hasDirectApproval = true;
-                    
-                    queuedTask = _queuedTaskWithDirectApproval;
+                    Debug.WriteLine("AsyncLock: Task directly approved.");
                 }
                 else
                 {
-                    queuedTask = new QueuedTask(this);
-                    
-                    if (cancellationToken.CanBeCanceled)
-                    {
-                        //cancellationToken.Register(queuedTask.Cancel);
-                    }
-                    
-                    //Debug.WriteLine($"AsyncLock: Task {queuedTask.Id} queued.");
-                    queuedTask.Queue();
+                    releaser = new Releaser(this, new TaskCompletionSource<IDisposable>(), cancellationToken);
+                    Debug.WriteLine($"AsyncLock: Task {releaser.Id} queued.");
                 }
 
-                _queuedTasks.AddLast(queuedTask);
+                _queuedTasks.Add(releaser);
+                _queuedTasksCount++;
             }
 
             if (!hasDirectApproval)
             {
-                await queuedTask.WaitAsync().ConfigureAwait(false);
+                return releaser.Task;
             }
-
-            // Now the caller will perform its action and call the releaser after the work is done.
-
-            return queuedTask;
+            
+            return _releaserTaskWithDirectApproval;
         }
 
-        void Release(QueuedTask releaser)
+        void Release(Releaser releaser)
         {
             lock (_syncRoot)
             {
@@ -177,83 +187,89 @@ namespace MQTTnet.Internal
                     return;
                 }
 
-                _queuedTasksCount--;
-                
-                var activeTask = _queuedTasks.First.Value;
+                var activeTask = _queuedTasks[0];
                 if (!ReferenceEquals(activeTask, releaser))
                 {
                     throw new InvalidOperationException("The active task must be the current releaser.");
                 }
 
-                _queuedTasks.RemoveFirst();
+                _queuedTasks.RemoveAt(0);
+                _queuedTasksCount--;
+                
+                Debug.WriteLine($"AsyncLock: Task {activeTask.Id} completed.");
 
-                //Debug.WriteLine($"AsyncLock: Task {activeTask.Id} done.");
-
-                while (_queuedTasks.Count > 0)
+                while (_queuedTasksCount > 0)
                 {
-                    var nextTask = _queuedTasks.First.Value;
+                    var nextTask = _queuedTasks[0];
                     if (!nextTask.IsPending)
                     {
                         // Dequeue all canceled or failed tasks.
-                        _queuedTasks.RemoveFirst();
+                        _queuedTasks.RemoveAt(0);
+                        _queuedTasksCount--;
                         continue;
                     }
 
                     nextTask.Approve();
-                    //Debug.WriteLine($"AsyncLock: Task {nextTask.Id} approved.");
+                    Debug.WriteLine($"AsyncLock: Task {nextTask.Id} approved.");
 
                     return;
                 }
 
-                //Debug.WriteLine("AsyncLock: No Task pending.");
+                Debug.WriteLine("AsyncLock: No Task pending.");
             }
         }
 
-        sealed class QueuedTask : IDisposable
+        sealed class Releaser : IDisposable
         {
             readonly AsyncLock _asyncLock;
+            readonly CancellationToken _cancellationToken;
+            readonly TaskCompletionSource<IDisposable> _promise;
 
-            TaskCompletionSource<object> _promise;
-            
-            internal QueuedTask(AsyncLock asyncLock)
+            CancellationTokenRegistration _cancellationTokenRegistration;
+
+            internal Releaser(AsyncLock asyncLock, TaskCompletionSource<IDisposable> promise, CancellationToken cancellationToken)
             {
                 _asyncLock = asyncLock ?? throw new ArgumentNullException(nameof(asyncLock));
+                _promise = promise;
+                _cancellationToken = cancellationToken;
+
+                if (cancellationToken.CanBeCanceled)
+                {
+                    _cancellationTokenRegistration = cancellationToken.Register(Cancel);
+                }
             }
 
-            public int Id => _promise?.Task.Id ?? -1;
+            public int Id => _promise?.Task?.Id ?? -1;
 
-            public bool IsPending => !_promise.Task.IsCanceled && !_promise.Task.IsFaulted && !_promise.Task.IsCompleted;
+            public bool IsPending => _promise != null && !(_promise.Task.IsCanceled && !_promise.Task.IsFaulted && !_promise.Task.IsCompleted);
+
+            public Task<IDisposable> Task => _promise?.Task;
 
             public void Approve()
             {
-                _promise?.TrySetResult(null);
-            }
-
-            public void Cancel()
-            {
-                _promise?.TrySetCanceled();
+                _promise?.TrySetResult(this);
             }
 
             public void Dispose()
             {
+                if (_cancellationToken.CanBeCanceled)
+                {
+                    _cancellationTokenRegistration.Dispose();
+                }
+
                 _asyncLock?.Release(this);
             }
 
-            public void Queue()
-            {
-                _promise = new TaskCompletionSource<object>();
-            }
-            
             public void Fail(Exception exception)
             {
                 _promise?.TrySetException(exception);
 
-                //Debug.WriteLine($"AsyncLock: Task {Id} failed ({exception.GetType().Name}).");
+                Debug.WriteLine($"AsyncLock: Task {Id} failed ({exception.GetType().Name}).");
             }
 
-            public Task WaitAsync()
+            void Cancel()
             {
-                return _promise?.Task ?? PlatformAbstractionLayer.CompletedTask;
+                _promise?.TrySetCanceled();
             }
         }
     }

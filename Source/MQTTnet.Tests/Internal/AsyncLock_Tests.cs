@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -13,6 +14,50 @@ namespace MQTTnet.Tests.Internal
     [TestClass]
     public class AsyncLock_Tests
     {
+        [TestMethod]
+        public void Lock_10_Parallel_Tasks_With_Dispose_Doesnt_Lockup()
+        {
+            const int ThreadsCount = 10;
+
+            var threads = new Task[ThreadsCount];
+            var @lock = new AsyncLock();
+            var globalI = 0;
+            for (var i = 0; i < ThreadsCount; i++)
+            {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                threads[i] = Task.Run(
+                    async () =>
+                    {
+                        using (await @lock.WaitAsync(CancellationToken.None))
+                        {
+                            var localI = globalI;
+                            await Task.Delay(10); // Increase the chance for wrong data.
+                            localI++;
+                            globalI = localI;
+                        }
+                    }).ContinueWith(
+                    x =>
+                    {
+                        if (globalI == 5)
+                        {
+                            @lock.Dispose();
+                            @lock = new AsyncLock();
+                        }
+
+                        if (x.Exception != null)
+                        {
+                            Debug.WriteLine(x.Exception.GetBaseException().GetType().Name);
+                        }
+                    });
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            }
+
+            Task.WaitAll(threads);
+
+            // Expect only 6 because the others are failing due to disposal (if (globalI == 5)).
+            Assert.AreEqual(6, globalI);
+        }
+    
         [TestMethod]
         public async Task Lock_Serial_Calls()
         {
@@ -84,7 +129,7 @@ namespace MQTTnet.Tests.Internal
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 threads[i] = Task.Run(async () =>
                 {
-                    using (var releaser = await @lock.WaitAsync(CancellationToken.None))
+                    using (await @lock.WaitAsync(CancellationToken.None))
                     {
                         var localI = globalI;
                         await Task.Delay(10); // Increase the chance for wrong data.

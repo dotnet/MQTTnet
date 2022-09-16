@@ -61,18 +61,3 @@ jobs:
       - name: Publish MyGet nugets
         if: ${{ github.event_name == 'push' }}
         run: dotnet nuget push **/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
-
-      - name: Create comment
-        uses: thollander/actions-comment-pull-request@v1
-        with:
-          message: 'This build is available at the MyGet feed (https://www.myget.org/feed/Packages/mqttnet) version ${{ env.VERSION }}.'
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    #  - name: Create comment
-    #    if: ${{ github.event_name == 'pull_request' }}
-    #    uses: mshick/add-pr-comment@v1
-    #    with:
-    #      message: 'This build is available at the MyGet feed (https://www.myget.org/feed/Packages/mqttnet) version ${{ env.VERSION }}.'
-    #      repo-token: ${{ secrets.GITHUB_TOKEN }}
-    #      repo-token-user-login: 'github-actions[bot]'
-    #      allow-repeats: true

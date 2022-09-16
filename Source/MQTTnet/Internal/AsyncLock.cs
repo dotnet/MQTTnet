@@ -196,8 +196,6 @@ namespace MQTTnet.Internal
                 _queuedTasks.RemoveAt(0);
                 _queuedTasksCount--;
                 
-                Debug.WriteLine($"AsyncLock: Task {activeTask.Id} completed.");
-
                 while (_queuedTasksCount > 0)
                 {
                     var nextTask = _queuedTasks[0];
@@ -210,8 +208,6 @@ namespace MQTTnet.Internal
                     }
 
                     nextTask.Approve();
-                    Debug.WriteLine($"AsyncLock: Task {nextTask.Id} approved.");
-
                     return;
                 }
 
@@ -225,7 +221,7 @@ namespace MQTTnet.Internal
             readonly CancellationToken _cancellationToken;
             readonly TaskCompletionSource<IDisposable> _promise;
 
-            CancellationTokenRegistration _cancellationTokenRegistration;
+            readonly CancellationTokenRegistration _cancellationTokenRegistration;
 
             internal Releaser(AsyncLock asyncLock, TaskCompletionSource<IDisposable> promise, CancellationToken cancellationToken)
             {
@@ -248,6 +244,8 @@ namespace MQTTnet.Internal
             public void Approve()
             {
                 _promise?.TrySetResult(this);
+                
+                Debug.WriteLine($"AsyncLock: Task {Id} approved.");
             }
 
             public void Dispose()
@@ -257,6 +255,8 @@ namespace MQTTnet.Internal
                     _cancellationTokenRegistration.Dispose();
                 }
 
+                Debug.WriteLine($"AsyncLock: Task {Id} completed.");
+                
                 _asyncLock?.Release(this);
             }
 
@@ -270,6 +270,8 @@ namespace MQTTnet.Internal
             void Cancel()
             {
                 _promise?.TrySetCanceled();
+                
+                Debug.WriteLine($"AsyncLock: Task {Id} canceled.");
             }
         }
     }

@@ -41,6 +41,33 @@ namespace MQTTnet.Tests.Internal
             Assert.AreEqual(0, _testEventAsyncCount);
         }
 
+        [TestMethod]
+        public void Has_Handlers()
+        {
+            var testClass = new TestClass();
+            testClass.TestEventAsync += OnTestEventAsync;
+
+            Assert.AreEqual(true, testClass.HasTestHandlers);
+        }
+
+        [TestMethod]
+        public void No_Handlers()
+        {
+            var testClass = new TestClass();
+
+            Assert.AreEqual(false, testClass.HasTestHandlers);
+        }
+
+        [TestMethod]
+        public void Remove_Handlers()
+        {
+            var testClass = new TestClass();
+            testClass.TestEventAsync += OnTestEventAsync;
+            testClass.TestEventAsync -= OnTestEventAsync;
+
+            Assert.AreEqual(false, testClass.HasTestHandlers);
+        }
+
         Task OnTestEventAsync(EventArgs arg)
         {
             Interlocked.Increment(ref _testEventAsyncCount);
@@ -56,6 +83,8 @@ namespace MQTTnet.Tests.Internal
                 add => _testEvent.AddHandler(value);
                 remove => _testEvent.RemoveHandler(value);
             }
+
+            public bool HasTestHandlers => _testEvent.HasHandlers;
 
             public Task FireEventAsync(EventArgs eventArgs)
             {

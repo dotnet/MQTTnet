@@ -97,8 +97,7 @@ namespace MQTTnet.Internal
         readonly object _syncRoot = new object();
 
         bool _isDisposed;
-        int _queuedTasksCount;
-
+        
         public AsyncLock()
         {
             _releaserWithDirectApproval = new Releaser(this, null, CancellationToken.None);
@@ -115,25 +114,24 @@ namespace MQTTnet.Internal
                 }
 
                 _queuedTasks.Clear();
-                _queuedTasksCount = 0;
-
+                
                 _isDisposed = true;
             }
         }
 
         public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
         {
-            if (_isDisposed)
-            {
-                throw new ObjectDisposedException(nameof(AsyncLock));
-            }
-
             var hasDirectApproval = false;
             Releaser releaser;
 
             lock (_syncRoot)
             {
-                if (_queuedTasksCount == 0)
+                if (_isDisposed)
+                {
+                    throw new ObjectDisposedException(nameof(AsyncLock));
+                }
+                
+                if (_queuedTasks.Count == 0)
                 {
                     // There is no other waiting task apart from the current one.
                     // So we can approve the current task directly.
@@ -147,7 +145,6 @@ namespace MQTTnet.Internal
                 }
 
                 _queuedTasks.Add(releaser);
-                _queuedTasksCount++;
             }
 
             if (!hasDirectApproval)
@@ -175,16 +172,14 @@ namespace MQTTnet.Internal
                 }
 
                 _queuedTasks.RemoveAt(0);
-                _queuedTasksCount--;
-
-                while (_queuedTasksCount > 0)
+                
+                while (_queuedTasks.Count > 0)
                 {
                     var nextTask = _queuedTasks[0];
                     if (!nextTask.IsPending)
                     {
                         // Dequeue all canceled or failed tasks.
                         _queuedTasks.RemoveAt(0);
-                        _queuedTasksCount--;
                         continue;
                     }
 

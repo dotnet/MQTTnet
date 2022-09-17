@@ -85,8 +85,6 @@ namespace MQTTnet.Internal
 
     public sealed class AsyncLock : IDisposable
     {
-        //static readonly int SpinCount = (Environment.ProcessorCount == 1 ? 1 : 35) * 4;
-
         /*
          * This async supporting lock does not support reentrancy!
          */
@@ -130,22 +128,6 @@ namespace MQTTnet.Internal
                 throw new ObjectDisposedException(nameof(AsyncLock));
             }
 
-            // Try to wait some time. The lock may gets freed up in a few ms. This should avoid creating
-            // lots of tasks where they probably not needed. The behavior is the same as in the _SemaphoreSlim_.
-            // if (_queuedTasksCount > 0)
-            // {
-            //     SpinWait spinner = default;
-            //     while (spinner.Count < SpinCount)
-            //     {
-            //         spinner.SpinOnce();
-            //         if (_queuedTasksCount == 0)
-            //         {
-            //             // The wait was successful. The lock was just released.
-            //             break;
-            //         }
-            //     }
-            // }
-
             var hasDirectApproval = false;
             Releaser releaser;
 
@@ -157,12 +139,11 @@ namespace MQTTnet.Internal
                     // So we can approve the current task directly.
                     releaser = _releaserWithDirectApproval;
                     hasDirectApproval = true;
-                    Debug.WriteLine("AsyncLock: Task directly approved.");
+                    Debug.WriteLine("AsyncLock: Task -1 directly approved.");
                 }
                 else
                 {
                     releaser = new Releaser(this, new TaskCompletionSource<IDisposable>(), cancellationToken);
-                    Debug.WriteLine($"AsyncLock: Task {releaser.Id} queued.");
                 }
 
                 _queuedTasks.Add(releaser);
@@ -173,7 +154,7 @@ namespace MQTTnet.Internal
             {
                 return releaser.Task;
             }
-            
+
             return _releaserTaskWithDirectApproval;
         }
 
@@ -195,7 +176,7 @@ namespace MQTTnet.Internal
 
                 _queuedTasks.RemoveAt(0);
                 _queuedTasksCount--;
-                
+
                 while (_queuedTasksCount > 0)
                 {
                     var nextTask = _queuedTasks[0];
@@ -219,8 +200,10 @@ namespace MQTTnet.Internal
         {
             readonly AsyncLock _asyncLock;
             readonly CancellationToken _cancellationToken;
+            readonly int _id;
             readonly TaskCompletionSource<IDisposable> _promise;
 
+            // ReSharper disable once FieldCanBeMadeReadOnly.Local
             CancellationTokenRegistration _cancellationTokenRegistration;
 
             internal Releaser(AsyncLock asyncLock, TaskCompletionSource<IDisposable> promise, CancellationToken cancellationToken)
@@ -233,9 +216,11 @@ namespace MQTTnet.Internal
                 {
                     _cancellationTokenRegistration = cancellationToken.Register(Cancel);
                 }
-            }
 
-            public int Id => _promise?.Task?.Id ?? -1;
+                _id = promise?.Task.Id ?? -1;
+
+                Debug.WriteLine($"AsyncLock: Task {_id} queued.");
+            }
 
             public bool IsPending => _promise != null && !_promise.Task.IsCanceled && !_promise.Task.IsFaulted && !_promise.Task.IsCompleted;
 
@@ -244,8 +229,8 @@ namespace MQTTnet.Internal
             public void Approve()
             {
                 _promise?.TrySetResult(this);
-                
-                Debug.WriteLine($"AsyncLock: Task {Id} approved.");
+
+                Debug.WriteLine($"AsyncLock: Task {_id} approved.");
             }
 
             public void Dispose()
@@ -255,8 +240,8 @@ namespace MQTTnet.Internal
                     _cancellationTokenRegistration.Dispose();
                 }
 
-                Debug.WriteLine($"AsyncLock: Task {Id} completed.");
-                
+                Debug.WriteLine($"AsyncLock: Task {_id} completed.");
+
                 _asyncLock.Release(this);
             }
 
@@ -264,14 +249,14 @@ namespace MQTTnet.Internal
             {
                 _promise?.TrySetException(exception);
 
-                Debug.WriteLine($"AsyncLock: Task {Id} failed ({exception.GetType().Name}).");
+                Debug.WriteLine($"AsyncLock: Task {_id} failed ({exception.GetType().Name}).");
             }
 
             void Cancel()
             {
                 _promise?.TrySetCanceled();
-                
-                Debug.WriteLine($"AsyncLock: Task {Id} canceled.");
+
+                Debug.WriteLine($"AsyncLock: Task {_id} canceled.");
             }
         }
     }

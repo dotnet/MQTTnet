@@ -221,7 +221,7 @@ namespace MQTTnet.Internal
             readonly CancellationToken _cancellationToken;
             readonly TaskCompletionSource<IDisposable> _promise;
 
-            readonly CancellationTokenRegistration _cancellationTokenRegistration;
+            CancellationTokenRegistration _cancellationTokenRegistration;
 
             internal Releaser(AsyncLock asyncLock, TaskCompletionSource<IDisposable> promise, CancellationToken cancellationToken)
             {
@@ -237,7 +237,7 @@ namespace MQTTnet.Internal
 
             public int Id => _promise?.Task?.Id ?? -1;
 
-            public bool IsPending => _promise != null && !(_promise.Task.IsCanceled && !_promise.Task.IsFaulted && !_promise.Task.IsCompleted);
+            public bool IsPending => _promise != null && !_promise.Task.IsCanceled && !_promise.Task.IsFaulted && !_promise.Task.IsCompleted;
 
             public Task<IDisposable> Task => _promise?.Task;
 
@@ -257,7 +257,7 @@ namespace MQTTnet.Internal
 
                 Debug.WriteLine($"AsyncLock: Task {Id} completed.");
                 
-                _asyncLock?.Release(this);
+                _asyncLock.Release(this);
             }
 
             public void Fail(Exception exception)

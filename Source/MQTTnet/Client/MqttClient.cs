@@ -91,7 +91,7 @@ namespace MQTTnet.Client
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);
         }
-        
+
         public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
         public MqttClientOptions Options { get; private set; }
@@ -101,6 +101,11 @@ namespace MQTTnet.Client
             if (options == null)
             {
                 throw new ArgumentNullException(nameof(options));
+            }
+
+            if (options.ValidateFeatures)
+            {
+                MqttClientOptionsValidator.ThrowIfNotSupported(options);
             }
 
             if (options.ChannelOptions == null)
@@ -245,6 +250,11 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
             ThrowIfNotConnected();
+
+            if (Options.ValidateFeatures)
+            {
+                MqttApplicationMessageValidator.ThrowIfNotSupported(applicationMessage, Options.ProtocolVersion);
+            }
 
             var publishPacket = _packetFactories.Publish.Create(applicationMessage);
 

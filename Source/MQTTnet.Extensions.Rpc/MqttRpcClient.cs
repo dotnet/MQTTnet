@@ -9,6 +9,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.Extensions.Rpc
@@ -72,13 +73,15 @@ namespace MQTTnet.Extensions.Rpc
                 throw new MqttProtocolViolationException("RPC response topic is empty.");
             }
 
-            var requestMessage = new MqttApplicationMessageBuilder()
-                .WithTopic(requestTopic)
-                .WithPayload(payload)
-                .WithQualityOfServiceLevel(qualityOfServiceLevel)
-                .WithResponseTopic(responseTopic)
-                .Build();
+            var requestMessageBuilder = new MqttApplicationMessageBuilder().WithTopic(requestTopic).WithPayload(payload).WithQualityOfServiceLevel(qualityOfServiceLevel);
 
+            if (_mqttClient.Options.ProtocolVersion == MqttProtocolVersion.V500)
+            {
+                requestMessageBuilder.WithResponseTopic(responseTopic);
+            }
+
+            var requestMessage = requestMessageBuilder.Build();
+            
             try
             {
 #if NET452
@@ -108,7 +111,7 @@ namespace MQTTnet.Extensions.Rpc
             {
                 _waitingCalls.TryRemove(responseTopic, out _);
                 
-                await _mqttClient.UnsubscribeAsync(responseTopic).ConfigureAwait(false);
+                await _mqttClient.UnsubscribeAsync(responseTopic, cancellationToken).ConfigureAwait(false);
             }
         }
 

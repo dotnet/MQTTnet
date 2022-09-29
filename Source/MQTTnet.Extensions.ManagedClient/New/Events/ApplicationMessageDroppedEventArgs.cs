@@ -6,9 +6,9 @@ using System;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public sealed class ApplicationMessageSkippedEventArgs : EventArgs
+    public sealed class ApplicationMessageDroppedEventArgs : EventArgs
     {
-        public ApplicationMessageSkippedEventArgs(ManagedMqttApplicationMessage applicationMessage)
+        public ApplicationMessageDroppedEventArgs(ManagedMqttApplicationMessage applicationMessage)
         {
             ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
         }

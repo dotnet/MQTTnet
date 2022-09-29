@@ -18,6 +18,13 @@ namespace MQTTnet.Diagnostics
 
             return new MqttNetSourceLogger(logger, source);
         }
+        
+        public static MqttNetSourceLogger WithSource<TSource>(this IMqttNetLogger logger)
+        {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            return new MqttNetSourceLogger(logger, typeof(TSource).Name);
+        }
 
         public static void Verbose<TParameter1>(this MqttNetSourceLogger logger, string message, TParameter1 parameter1)
         {

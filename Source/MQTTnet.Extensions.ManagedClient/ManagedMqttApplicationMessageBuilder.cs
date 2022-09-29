@@ -6,15 +6,19 @@ using System;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public class ManagedMqttApplicationMessageBuilder
+    public sealed class ManagedMqttApplicationMessageBuilder
     {
-        private Guid _id = Guid.NewGuid();
-        private MqttApplicationMessage _applicationMessage;
+        MqttApplicationMessage _applicationMessage;
+        string _id = Guid.NewGuid().ToString();
 
-        public ManagedMqttApplicationMessageBuilder WithId(Guid id)
+        public ManagedMqttApplicationMessage Build()
         {
-            _id = id;
-            return this;
+            if (_applicationMessage == null)
+            {
+                throw new InvalidOperationException("The ApplicationMessage cannot be null.");
+            }
+
+            return new ManagedMqttApplicationMessage(_id, _applicationMessage);
         }
 
         public ManagedMqttApplicationMessageBuilder WithApplicationMessage(MqttApplicationMessage applicationMessage)
@@ -25,7 +29,10 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public ManagedMqttApplicationMessageBuilder WithApplicationMessage(Action<MqttApplicationMessageBuilder> builder)
         {
-            if (builder == null) throw new ArgumentNullException(nameof(builder));
+            if (builder == null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
 
             var internalBuilder = new MqttApplicationMessageBuilder();
             builder(internalBuilder);
@@ -34,18 +41,16 @@ namespace MQTTnet.Extensions.ManagedClient
             return this;
         }
 
-        public ManagedMqttApplicationMessage Build()
+        public ManagedMqttApplicationMessageBuilder WithId(Guid id)
         {
-            if (_applicationMessage == null)
-            {
-                throw new InvalidOperationException("The ApplicationMessage cannot be null.");
-            }
+            _id = id.ToString();
+            return this;
+        }
 
-            return new ManagedMqttApplicationMessage
-            {
-                Id = _id,
-                ApplicationMessage = _applicationMessage
-            };
+        public ManagedMqttApplicationMessageBuilder WithId(string id)
+        {
+            _id = id ?? throw new ArgumentNullException(nameof(id));
+            return this;
         }
     }
 }

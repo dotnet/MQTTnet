@@ -10,6 +10,15 @@ namespace MQTTnet.Extensions.ManagedClient
 {
     public sealed class ManagedMqttClientOptions
     {
+        public ManagedMqttClientOptions()
+        {
+        }
+
+        public ManagedMqttClientOptions(MqttClientOptions clientOptions)
+        {
+            ClientOptions = clientOptions;
+        }
+        
         public MqttClientOptions ClientOptions { get; set; }
 
         public TimeSpan AutoReconnectDelay { get; set; } = TimeSpan.FromSeconds(5);

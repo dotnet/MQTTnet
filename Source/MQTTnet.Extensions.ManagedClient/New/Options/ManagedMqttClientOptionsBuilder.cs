@@ -8,7 +8,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public class ManagedMqttClientOptionsBuilder
+    public sealed class ManagedMqttClientOptionsBuilder
     {
         readonly ManagedMqttClientOptions _options = new ManagedMqttClientOptions();
         MqttClientOptionsBuilder _clientOptionsBuilder;

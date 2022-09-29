@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#region
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,12 +13,15 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
+using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.LowLevelClient;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+
+#endregion
 
 namespace MQTTnet.Tests.Mockups
 {
@@ -27,6 +32,7 @@ namespace MQTTnet.Tests.Mockups
 
         readonly List<Exception> _exceptions = new List<Exception>();
         readonly List<ILowLevelMqttClient> _lowLevelClients = new List<ILowLevelMqttClient>();
+        readonly List<IManagedMqttClient> _managedClients = new List<IManagedMqttClient>();
         readonly MqttProtocolVersion _protocolVersion;
         readonly List<string> _serverErrors = new List<string>();
 
@@ -88,7 +94,11 @@ namespace MQTTnet.Tests.Mockups
 
         public int ServerPort { get; set; }
 
+        public List<MqttApplicationMessage> ServerReceivedApplicationMessages { get; } = new List<MqttApplicationMessage>();
+
         public TestContext TestContext { get; }
+
+        public bool TrackServerReceivedApplicationMessages { get; set; }
 
         public Task<IMqttClient> ConnectClient()
         {
@@ -109,7 +119,7 @@ namespace MQTTnet.Tests.Mockups
             configureOptions.Invoke(optionsBuilder);
 
             var options = optionsBuilder.Build();
-            
+
             var client = CreateClient();
 
             if (timeout == TimeSpan.Zero)
@@ -137,7 +147,7 @@ namespace MQTTnet.Tests.Mockups
             options = options.WithTcpServer("127.0.0.1", ServerPort);
 
             var client = CreateClient();
-            
+
             if (timeout == TimeSpan.Zero)
             {
                 await client.ConnectAsync(options.Build()).ConfigureAwait(false);
@@ -161,7 +171,7 @@ namespace MQTTnet.Tests.Mockups
             }
 
             var client = CreateClient();
-            
+
             if (timeout == TimeSpan.Zero)
             {
                 await client.ConnectAsync(options).ConfigureAwait(false);
@@ -227,6 +237,11 @@ namespace MQTTnet.Tests.Mockups
             }
         }
 
+        public ManagedMqttClientOptions CreateDefaultManagedMqttClientOptions()
+        {
+            return Factory.CreateManagedMqttClientOptionsBuilder().WithClientOptions(Factory.CreateClientOptionsBuilder().WithTcpServer("localhost", ServerPort).Build()).Build();
+        }
+
         public ILowLevelMqttClient CreateLowLevelClient()
         {
             lock (_clients)
@@ -236,6 +251,21 @@ namespace MQTTnet.Tests.Mockups
 
                 return client;
             }
+        }
+
+        public IManagedMqttClient CreateManagedClient()
+        {
+            return Factory.CreateManagedMqttClient(CreateClient());
+        }
+
+        public IManagedMqttClient CreateManagedMqttClient()
+        {
+            return Factory.CreateManagedMqttClient(CreateClient(), ClientLogger);
+        }
+
+        public IManagedMqttClient CreateManagedMqttClient(IMqttClient client)
+        {
+            return Factory.CreateManagedMqttClient(client, ClientLogger);
         }
 
         public MqttServer CreateServer(MqttServerOptions options)
@@ -248,6 +278,11 @@ namespace MQTTnet.Tests.Mockups
             var logger = EnableLogger ? (IMqttNetLogger)ServerLogger : new MqttNetNullLogger();
 
             Server = Factory.CreateMqttServer(options, logger);
+
+            if (TrackServerReceivedApplicationMessages)
+            {
+                Server.InterceptingPublishAsync += ServerOnInterceptingPublishAsync;
+            }
 
             Server.ValidatingConnectionAsync += e =>
             {
@@ -285,6 +320,18 @@ namespace MQTTnet.Tests.Mockups
                 }
             }
 
+            foreach (var managedMqttClient in _managedClients)
+            {
+                try
+                {
+                    managedMqttClient.StopAsync().Wait();
+                }
+                finally
+                {
+                    managedMqttClient.Dispose();
+                }
+            }
+
             foreach (var lowLevelMqttClient in _lowLevelClients)
             {
                 lowLevelMqttClient.Dispose();
@@ -311,6 +358,13 @@ namespace MQTTnet.Tests.Mockups
             }
         }
 
+        public async Task<IManagedMqttClient> StartManagedClient()
+        {
+            var managedClient = Factory.CreateManagedMqttClient(CreateClient());
+            await managedClient.StartAsync(CreateDefaultManagedMqttClientOptions());
+            return managedClient;
+        }
+
         public Task<MqttServer> StartServer()
         {
             return StartServer(Factory.CreateServerOptionsBuilder());
@@ -325,7 +379,7 @@ namespace MQTTnet.Tests.Mockups
             var options = optionsBuilder.Build();
             var server = CreateServer(options);
             await server.StartAsync();
-            
+
             // The OS has chosen the port to we have to properly expose it to the tests.
             ServerPort = options.DefaultEndpointOptions.Port;
             return server;
@@ -344,7 +398,7 @@ namespace MQTTnet.Tests.Mockups
             var options = optionsBuilder.Build();
             var server = CreateServer(options);
             await server.StartAsync();
-            
+
             // The OS has chosen the port to we have to properly expose it to the tests.
             ServerPort = options.DefaultEndpointOptions.Port;
             return server;
@@ -379,6 +433,16 @@ namespace MQTTnet.Tests.Mockups
             {
                 _exceptions.Add(exception);
             }
+        }
+
+        Task ServerOnInterceptingPublishAsync(InterceptingPublishEventArgs arg)
+        {
+            lock (ServerReceivedApplicationMessages)
+            {
+                ServerReceivedApplicationMessages.Add(arg.ApplicationMessage);
+            }
+
+            return PlatformAbstractionLayer.CompletedTask;
         }
     }
 }

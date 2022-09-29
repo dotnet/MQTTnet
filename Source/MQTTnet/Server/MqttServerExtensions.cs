@@ -10,20 +10,60 @@ namespace MQTTnet.Server
 {
     public static class MqttServerExtensions
     {
+        public static Task InjectApplicationMessage(this MqttServer server, MqttApplicationMessage applicationMessage)
+        {
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+
+            if (applicationMessage == null)
+            {
+                throw new ArgumentNullException(nameof(applicationMessage));
+            }
+
+            return server.InjectApplicationMessage(new InjectedMqttApplicationMessage(applicationMessage)
+            {
+                SenderClientId = string.Empty
+            });
+        }
+
         public static Task SubscribeAsync(this MqttServer server, string clientId, params MqttTopicFilter[] topicFilters)
         {
-            if (server == null) throw new ArgumentNullException(nameof(server));
-            if (clientId == null) throw new ArgumentNullException(nameof(clientId));
-            if (topicFilters == null) throw new ArgumentNullException(nameof(topicFilters));
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+
+            if (clientId == null)
+            {
+                throw new ArgumentNullException(nameof(clientId));
+            }
+
+            if (topicFilters == null)
+            {
+                throw new ArgumentNullException(nameof(topicFilters));
+            }
 
             return server.SubscribeAsync(clientId, topicFilters);
         }
-        
+
         public static Task SubscribeAsync(this MqttServer server, string clientId, string topic)
         {
-            if (server == null) throw new ArgumentNullException(nameof(server));
-            if (clientId == null) throw new ArgumentNullException(nameof(clientId));
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+
+            if (clientId == null)
+            {
+                throw new ArgumentNullException(nameof(clientId));
+            }
+
+            if (topic == null)
+            {
+                throw new ArgumentNullException(nameof(topic));
+            }
 
             return server.SubscribeAsync(clientId, new MqttTopicFilterBuilder().WithTopic(topic).Build());
         }

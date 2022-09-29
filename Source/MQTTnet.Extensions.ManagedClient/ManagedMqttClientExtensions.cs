@@ -3,8 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -38,6 +39,32 @@ namespace MQTTnet.Extensions.ManagedClient
             return managedMqttClient.EnqueueAsync(applicationMessage);
         }
 
+        public static Task StopAsync(this IManagedMqttClient managedMqttClient, CancellationToken cancellationToken = default)
+        {
+            if (managedMqttClient == null)
+            {
+                throw new ArgumentNullException(nameof(managedMqttClient));
+            }
+
+            return managedMqttClient.StopAsync(new MqttClientDisconnectOptions(), cancellationToken);
+        }
+
+        public static Task SubscribeAsync(this IManagedMqttClient managedMqttClient, MqttTopicFilter topicFilter)
+        {
+            if (managedMqttClient == null)
+            {
+                throw new ArgumentNullException(nameof(managedMqttClient));
+            }
+
+            if (topicFilter == null)
+            {
+                throw new ArgumentNullException(nameof(topicFilter));
+            }
+
+            var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topicFilter).Build();
+            return managedMqttClient.SubscribeAsync(subscribeOptions);
+        }
+
         public static Task SubscribeAsync(
             this IManagedMqttClient managedMqttClient,
             string topic,
@@ -53,11 +80,8 @@ namespace MQTTnet.Extensions.ManagedClient
                 throw new ArgumentNullException(nameof(topic));
             }
 
-            return managedMqttClient.SubscribeAsync(
-                new List<MqttTopicFilter>
-                {
-                    new MqttTopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(qualityOfServiceLevel).Build()
-                });
+            var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topic, qualityOfServiceLevel).Build();
+            return managedMqttClient.SubscribeAsync(subscribeOptions);
         }
 
         public static Task UnsubscribeAsync(this IManagedMqttClient managedMqttClient, string topic)
@@ -72,7 +96,8 @@ namespace MQTTnet.Extensions.ManagedClient
                 throw new ArgumentNullException(nameof(topic));
             }
 
-            return managedMqttClient.UnsubscribeAsync(new List<string> { topic });
+            var unsubscribeOptions = new MqttClientUnsubscribeOptionsBuilder().WithTopicFilter(topic).Build();
+            return managedMqttClient.UnsubscribeAsync(unsubscribeOptions);
         }
     }
 }

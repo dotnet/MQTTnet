@@ -10,22 +10,22 @@ namespace MQTTnet.Client
     public sealed class MqttClientSubscribeResult
     {
         public IReadOnlyCollection<MqttClientSubscribeResultItem> Items { get; internal set; }
-        
+
         /// <summary>
-        /// Gets the user properties which were part of the SUBACK packet.
-        /// MQTTv5 only.
+        ///     Gets the packet identifier which was used.
         /// </summary>
-        public IReadOnlyCollection<MqttUserProperty> UserProperties { get; internal set; }
-        
+        public ushort PacketIdentifier { get; internal set; }
+
         /// <summary>
-        /// Gets the reason string.
-        /// MQTTv5 only.
+        ///     Gets the reason string.
+        ///     MQTTv5 only.
         /// </summary>
         public string ReasonString { get; internal set; }
 
         /// <summary>
-        /// Gets the packet identifier which was used.
+        ///     Gets the user properties which were part of the SUBACK packet.
+        ///     MQTTv5 only.
         /// </summary>
-        public ushort PacketIdentifier { get; internal set; }
+        public IReadOnlyCollection<MqttUserProperty> UserProperties { get; internal set; }
     }
 }

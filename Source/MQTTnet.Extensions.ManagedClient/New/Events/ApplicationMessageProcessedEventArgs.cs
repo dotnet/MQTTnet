@@ -15,10 +15,12 @@ namespace MQTTnet.Extensions.ManagedClient
         }
 
         public ManagedMqttApplicationMessage ApplicationMessage { get; }
-        
+
         /// <summary>
-        /// Then this is _null_ the message was processed successfully without any error.
+        ///     Gets or sets the exception which was thrown while sending the message.
         /// </summary>
         public Exception Exception { get; }
+
+        public bool HasFailed => Exception != null;
     }
 }

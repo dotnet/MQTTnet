@@ -10,24 +10,54 @@ namespace MQTTnet.Extensions.ManagedClient
 {
     public static class MqttFactoryExtensions
     {
-        public static IManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttClient mqttClient = null)
+        public static IManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttClient mqttClient, IMqttNetLogger logger)
         {
-            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            if (factory == null)
+            {
+                throw new ArgumentNullException(nameof(factory));
+            }
 
             if (mqttClient == null)
             {
-                return new ManagedMqttClient(factory.CreateMqttClient(), factory.DefaultLogger);    
+                return new NewManagedMqttClient(factory.CreateMqttClient(), logger);
             }
-            
-            return new ManagedMqttClient(mqttClient, factory.DefaultLogger);
+
+            return new NewManagedMqttClient(mqttClient, logger);
         }
-        
+
+        public static IManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttClient mqttClient = null)
+        {
+            if (factory == null)
+            {
+                throw new ArgumentNullException(nameof(factory));
+            }
+
+            if (mqttClient == null)
+            {
+                return new NewManagedMqttClient(factory.CreateMqttClient(), factory.DefaultLogger);
+            }
+
+            return new NewManagedMqttClient(mqttClient, factory.DefaultLogger);
+        }
+
         public static IManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttNetLogger logger)
         {
-            if (factory == null) throw new ArgumentNullException(nameof(factory));
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (factory == null)
+            {
+                throw new ArgumentNullException(nameof(factory));
+            }
 
-            return new ManagedMqttClient(factory.CreateMqttClient(logger), logger);
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
+            return new NewManagedMqttClient(factory.CreateMqttClient(logger), logger);
+        }
+
+        public static ManagedMqttClientOptionsBuilder CreateManagedMqttClientOptionsBuilder(this MqttFactory factory)
+        {
+            return new ManagedMqttClientOptionsBuilder();
         }
     }
 }

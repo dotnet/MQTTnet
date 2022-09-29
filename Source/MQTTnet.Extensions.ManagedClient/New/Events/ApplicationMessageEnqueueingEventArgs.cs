@@ -6,16 +6,16 @@ using System;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public sealed class ManagedMqttApplicationMessage
+    public sealed class ApplicationMessageEnqueueingEventArgs : EventArgs
     {
-        public ManagedMqttApplicationMessage(string id, MqttApplicationMessage applicationMessage)
+        public ApplicationMessageEnqueueingEventArgs(ManagedMqttApplicationMessage applicationMessage, ushort packetIdentifier)
         {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
             ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
+            PacketIdentifier = packetIdentifier;
         }
-        
-        public string Id { get; }
 
-        public MqttApplicationMessage ApplicationMessage { get; }
+        public ManagedMqttApplicationMessage ApplicationMessage { get; }
+
+        public ushort PacketIdentifier { get; }
     }
 }

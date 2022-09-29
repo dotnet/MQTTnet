@@ -64,7 +64,7 @@ namespace MQTTnet.Internal
                     // So we can approve the current task directly.
                     releaser = _releaserWithDirectApproval;
                     hasDirectApproval = true;
-                    Debug.WriteLine("AsyncLock: Task -1 directly approved.");
+                    //Debug.WriteLine("AsyncLock: Task -1 directly approved.");
                 }
                 else
                 {
@@ -114,7 +114,7 @@ namespace MQTTnet.Internal
                     return;
                 }
 
-                Debug.WriteLine("AsyncLock: No Task pending.");
+                //Debug.WriteLine("AsyncLock: No Task pending.");
             }
         }
 
@@ -141,7 +141,7 @@ namespace MQTTnet.Internal
 
                 _id = promise?.Task.Id ?? -1;
 
-                Debug.WriteLine($"AsyncLock: Task {_id} queued.");
+                //Debug.WriteLine($"AsyncLock: Task {_id} queued.");
             }
 
             public bool IsPending => _promise != null && !_promise.Task.IsCanceled && !_promise.Task.IsFaulted && !_promise.Task.IsCompleted;
@@ -152,7 +152,7 @@ namespace MQTTnet.Internal
             {
                 _promise?.TrySetResult(this);
 
-                Debug.WriteLine($"AsyncLock: Task {_id} approved.");
+                //Debug.WriteLine($"AsyncLock: Task {_id} approved.");
             }
 
             public void Dispose()
@@ -162,7 +162,7 @@ namespace MQTTnet.Internal
                     _cancellationTokenRegistration.Dispose();
                 }
 
-                Debug.WriteLine($"AsyncLock: Task {_id} completed.");
+                //Debug.WriteLine($"AsyncLock: Task {_id} completed.");
 
                 _asyncLock.Release(this);
             }
@@ -171,14 +171,14 @@ namespace MQTTnet.Internal
             {
                 _promise?.TrySetException(exception);
 
-                Debug.WriteLine($"AsyncLock: Task {_id} failed ({exception.GetType().Name}).");
+                //Debug.WriteLine($"AsyncLock: Task {_id} failed ({exception.GetType().Name}).");
             }
 
             void Cancel()
             {
                 _promise?.TrySetCanceled();
 
-                Debug.WriteLine($"AsyncLock: Task {_id} canceled.");
+                //Debug.WriteLine($"AsyncLock: Task {_id} canceled.");
             }
         }
     }

@@ -91,8 +91,8 @@ namespace MQTTnet.Client
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);
         }
-        
-        public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
+
+        public bool IsConnected => _adapter != null && (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
         public MqttClientOptions Options { get; private set; }
 
@@ -125,7 +125,7 @@ namespace MQTTnet.Client
 
                 if (_connectingEvent.HasHandlers)
                 {
-                    await _connectingEvent.InvokeAsync(new MqttClientConnectingEventArgs(options));
+                    await _connectingEvent.InvokeAsync(new MqttClientConnectingEventArgs(options)).ConfigureAwait(false);
                 }
 
                 _packetIdentifierProvider.Reset();
@@ -182,7 +182,10 @@ namespace MQTTnet.Client
             {
                 _disconnectReason = MqttClientDisconnectReason.UnspecifiedError;
 
-                _logger.Error(exception, "Error while connecting with server.");
+                if (!(exception is OperationCanceledException))
+                {
+                    _logger.Error(exception, "Error while connecting with server.");
+                }
 
                 await DisconnectInternalAsync(null, exception, connectResult).ConfigureAwait(false);
 
@@ -517,7 +520,8 @@ namespace MQTTnet.Client
                         connectionStatus = curStatus;
                         break;
                 }
-            } while (true);
+            }
+            while (true);
         }
 
         void EnqueueReceivedPublishPacket(MqttPublishPacket publishPacket)
@@ -646,6 +650,7 @@ namespace MQTTnet.Client
         async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttPacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttPacket
         {
             cancellationToken.ThrowIfCancellationRequested();
+            ThrowIfNoAdapter();
 
             ushort packetIdentifier = 0;
             if (requestPacket is MqttPacketWithIdentifier packetWithIdentifier)
@@ -684,9 +689,9 @@ namespace MQTTnet.Client
         Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            ThrowIfNoAdapter();
 
             _lastPacketSentTimestamp = DateTime.UtcNow;
-
             return _adapter.SendPacketAsync(packet, cancellationToken);
         }
 
@@ -698,12 +703,27 @@ namespace MQTTnet.Client
             }
         }
 
+        void ThrowIfNoAdapter()
+        {
+            // Having no adapter indicates that the connection is closed or still being created.
+            // Thus the client is disconnected.
+            if (_adapter == null)
+            {
+                ThrowNotConnected();
+            }
+        }
+
         void ThrowIfNotConnected()
         {
             if (!IsConnected)
             {
-                throw new MqttCommunicationException("The client is not connected.");
+                ThrowNotConnected();
             }
+        }
+
+        void ThrowNotConnected()
+        {
+            throw new MqttCommunicationException("The client is not connected.");
         }
 
         void TryInitiateDisconnect()

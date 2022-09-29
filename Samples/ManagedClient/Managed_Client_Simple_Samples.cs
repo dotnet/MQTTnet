@@ -44,9 +44,9 @@ public sealed class Managed_Client_Simple_Samples
             Console.WriteLine("The managed MQTT client is connected.");
             
             // Wait until the queue is fully processed.
-            SpinWait.SpinUntil(() => managedMqttClient.PendingApplicationMessagesCount == 0, 10000);
+            SpinWait.SpinUntil(() => managedMqttClient.EnqueuedApplicationMessagesCount == 0, 10000);
             
-            Console.WriteLine($"Pending messages = {managedMqttClient.PendingApplicationMessagesCount}");
+            Console.WriteLine($"Pending messages = {managedMqttClient.EnqueuedApplicationMessagesCount}");
         }
     }
 }

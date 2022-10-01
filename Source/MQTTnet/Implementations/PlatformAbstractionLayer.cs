@@ -11,11 +11,11 @@ namespace MQTTnet.Implementations
     public static class PlatformAbstractionLayer
     {
 #if NET452
-        public static Task CompletedTask => Task.FromResult(0);
+        public static Task CompletedTask { get; } = Task.FromResult(0);
 
         public static byte[] EmptyByteArray { get; } = new byte[0];
 #else
-        public static Task CompletedTask => Task.CompletedTask;
+        public static Task CompletedTask { get; } = Task.CompletedTask;
 
         public static byte[] EmptyByteArray { get; } = Array.Empty<byte>();
 #endif

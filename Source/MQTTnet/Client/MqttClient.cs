@@ -313,6 +313,11 @@ namespace MQTTnet.Client
                 MqttTopicValidator.ThrowIfInvalidSubscribe(topicFilter.Topic);
             }
 
+            if (Options.ValidateFeatures)
+            {
+                MqttClientSubscribeOptionsValidator.ThrowIfNotSupported(options, Options.ProtocolVersion);
+            }
+
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
@@ -331,8 +336,18 @@ namespace MQTTnet.Client
                 throw new ArgumentNullException(nameof(options));
             }
 
+            foreach (var topicFilter in options.TopicFilters)
+            {
+                MqttTopicValidator.ThrowIfInvalidSubscribe(topicFilter);
+            }
+            
             ThrowIfDisposed();
             ThrowIfNotConnected();
+            
+            if (Options.ValidateFeatures)
+            {
+                MqttClientUnsubscribeOptionsValidator.ThrowIfNotSupported(options, Options.ProtocolVersion);
+            }
 
             var unsubscribePacket = _packetFactories.Unsubscribe.Create(options);
             unsubscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();

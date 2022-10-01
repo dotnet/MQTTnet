@@ -202,6 +202,11 @@ namespace MQTTnet.Client
                 throw new ArgumentNullException(nameof(options));
             }
 
+            if (Options.ValidateFeatures)
+            {
+                MqttClientDisconnectOptionsValidator.ThrowIfNotSupported(options, Options.ProtocolVersion);
+            }
+
             ThrowIfDisposed();
 
             var clientWasConnected = IsConnected;

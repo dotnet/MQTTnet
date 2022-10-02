@@ -14,26 +14,6 @@ namespace MQTTnet.Client
 {
     public static class MqttClientExtensions
     {
-        public static async Task<bool> TryPingAsync(this IMqttClient client, CancellationToken cancellationToken = default)
-        {
-            if (client == null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
-
-            try
-            {
-                await client.PingAsync(cancellationToken).ConfigureAwait(false);
-                return true;
-            }
-            catch
-            {
-                // Ignore errors.
-            }
-
-            return false;
-        }
-        
         public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectReason reason = MqttClientDisconnectReason.NormalDisconnection, string reasonString = null)
         {
             if (client == null)
@@ -135,6 +115,26 @@ namespace MQTTnet.Client
             var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topic, qualityOfServiceLevel).Build();
 
             return mqttClient.SubscribeAsync(subscribeOptions, cancellationToken);
+        }
+
+        public static async Task<bool> TryPingAsync(this IMqttClient client, CancellationToken cancellationToken = default)
+        {
+            if (client == null)
+            {
+                throw new ArgumentNullException(nameof(client));
+            }
+
+            try
+            {
+                await client.PingAsync(cancellationToken).ConfigureAwait(false);
+                return true;
+            }
+            catch
+            {
+                // Ignore errors.
+            }
+
+            return false;
         }
 
         public static Task<MqttClientUnsubscribeResult> UnsubscribeAsync(this IMqttClient mqttClient, string topic, CancellationToken cancellationToken = default)

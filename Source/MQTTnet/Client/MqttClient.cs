@@ -98,23 +98,8 @@ namespace MQTTnet.Client
 
         public async Task<MqttClientConnectResult> ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken = default)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
-
-            if (options.ValidateFeatures)
-            {
-                MqttClientOptionsValidator.ThrowIfNotSupported(options);
-            }
-
-            if (options.ChannelOptions == null)
-            {
-                throw new ArgumentException("ChannelOptions are not set.");
-            }
-
+            ThrowIfOptionsInvalid(options);
             ThrowIfConnected("It is not allowed to connect with a server after the connection is established.");
-
             ThrowIfDisposed();
 
             if (CompareExchangeConnectionStatus(MqttClientConnectionStatus.Connecting, MqttClientConnectionStatus.Disconnected) != MqttClientConnectionStatus.Disconnected)
@@ -202,11 +187,6 @@ namespace MQTTnet.Client
                 throw new ArgumentNullException(nameof(options));
             }
 
-            if (Options.ValidateFeatures)
-            {
-                MqttClientDisconnectOptionsValidator.ThrowIfNotSupported(options, Options.ProtocolVersion);
-            }
-
             ThrowIfDisposed();
 
             var clientWasConnected = IsConnected;
@@ -214,7 +194,7 @@ namespace MQTTnet.Client
             {
                 return;
             }
-
+            
             try
             {
                 _disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
@@ -222,6 +202,11 @@ namespace MQTTnet.Client
 
                 if (clientWasConnected)
                 {
+                    if (Options.ValidateFeatures)
+                    {
+                        MqttClientDisconnectOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
+                    }
+                    
                     var disconnectPacket = _packetFactories.Disconnect.Create(options);
                     await SendAsync(disconnectPacket, cancellationToken).ConfigureAwait(false);
                 }
@@ -258,7 +243,7 @@ namespace MQTTnet.Client
 
             if (Options.ValidateFeatures)
             {
-                MqttApplicationMessageValidator.ThrowIfNotSupported(applicationMessage, Options.ProtocolVersion);
+                MqttApplicationMessageValidator.ThrowIfNotSupported(applicationMessage, _adapter.PacketFormatterAdapter.ProtocolVersion);
             }
 
             var publishPacket = _packetFactories.Publish.Create(applicationMessage);
@@ -320,7 +305,7 @@ namespace MQTTnet.Client
 
             if (Options.ValidateFeatures)
             {
-                MqttClientSubscribeOptionsValidator.ThrowIfNotSupported(options, Options.ProtocolVersion);
+                MqttClientSubscribeOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
             }
 
             ThrowIfDisposed();
@@ -345,13 +330,13 @@ namespace MQTTnet.Client
             {
                 MqttTopicValidator.ThrowIfInvalidSubscribe(topicFilter);
             }
-            
+
             ThrowIfDisposed();
             ThrowIfNotConnected();
-            
+
             if (Options.ValidateFeatures)
             {
-                MqttClientUnsubscribeOptionsValidator.ThrowIfNotSupported(options, Options.ProtocolVersion);
+                MqttClientUnsubscribeOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
             }
 
             var unsubscribePacket = _packetFactories.Unsubscribe.Create(options);
@@ -413,7 +398,7 @@ namespace MQTTnet.Client
                 var connAckPacket = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
 
                 var clientConnectResultFactory = new MqttClientConnectResultFactory();
-                result = clientConnectResultFactory.Create(connAckPacket, options.ProtocolVersion);
+                result = clientConnectResultFactory.Create(connAckPacket, _adapter.PacketFormatterAdapter.ProtocolVersion);
             }
             catch (Exception exception)
             {
@@ -733,6 +718,24 @@ namespace MQTTnet.Client
             if (!IsConnected)
             {
                 throw new MqttCommunicationException("The client is not connected.");
+            }
+        }
+
+        static void ThrowIfOptionsInvalid(MqttClientOptions options)
+        {
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
+            if (options.ChannelOptions == null)
+            {
+                throw new ArgumentException("ChannelOptions are not set.");
+            }
+
+            if (options.ValidateFeatures)
+            {
+                MqttClientOptionsValidator.ThrowIfNotSupported(options);
             }
         }
 

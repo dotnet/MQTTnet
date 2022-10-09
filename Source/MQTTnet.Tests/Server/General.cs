@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
-using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -637,7 +636,7 @@ namespace MQTTnet.Tests.Server
                 // nothing
 
                 Assert.AreEqual(false, c1.IsConnected);
-                await c1.DisconnectAsync();
+                await c1.TryDisconnectAsync();
                 Assert.AreEqual(false, c1.IsConnected);
 
                 await Task.Delay(500);

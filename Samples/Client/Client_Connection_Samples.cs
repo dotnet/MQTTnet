@@ -16,6 +16,28 @@ namespace MQTTnet.Samples.Client;
 
 public static class Client_Connection_Samples
 {
+    public static async Task Clean_Disconnect()
+    {
+        /*
+         * This sample disconnects in a clean way. This will send a MQTT DISCONNECT packet
+         * to the server and close the connection afterwards.
+         *
+         * See sample _Connect_Client_ for more details.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
+            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            // This will send the DISCONNECT packet. Calling _Dispose_ without DisconnectAsync the 
+            // connection is closed in a "not clean" way. See MQTT specification for more details.
+            await mqttClient.DisconnectAsync(new MqttClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectReason.NormalDisconnection).Build());
+        }
+    }
+
     public static async Task Connect_Client()
     {
         /*
@@ -119,7 +141,7 @@ public static class Client_Connection_Samples
                         // The used public broker sometimes has invalid certificates. This sample accepts all
                         // certificates. This should not be used in live environments.
                         o.CertificateValidationHandler = _ => true;
-                        
+
                         // The default value is determined by the OS. Set manually to force version.
                         o.SslProtocol = SslProtocols.Tls12;
                     })
@@ -134,15 +156,17 @@ public static class Client_Connection_Samples
         }
     }
 
-    public static async Task Connect_Client_Using_WebSockets()
+    public static async Task Connect_Client_Using_WebSocket4Net()
     {
         /*
          * This sample creates a simple MQTT client and connects to a public broker using a WebSocket connection.
+         * Instead of the .NET implementation of WebSockets the implementaion from WebSocket4Net is used. It provides more
+         * encryption algorithms and supports more platforms.
          * 
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttFactory().UseWebSocket4Net();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -155,18 +179,16 @@ public static class Client_Connection_Samples
             response.DumpToConsole();
         }
     }
-    
-    public static async Task Connect_Client_Using_WebSocket4Net()
+
+    public static async Task Connect_Client_Using_WebSockets()
     {
         /*
          * This sample creates a simple MQTT client and connects to a public broker using a WebSocket connection.
-         * Instead of the .NET implementation of WebSockets the implementaion from WebSocket4Net is used. It provides more
-         * encryption algorithms and supports more platforms.
          * 
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
-        var mqttFactory = new MqttFactory().UseWebSocket4Net();
+        var mqttFactory = new MqttFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -206,7 +228,7 @@ public static class Client_Connection_Samples
             using (var timeout = new CancellationTokenSource(5000))
             {
                 var response = await mqttClient.ConnectAsync(mqttClientOptions, timeout.Token);
-                
+
                 Console.WriteLine("The MQTT client is connected.");
 
                 response.DumpToConsole();
@@ -248,7 +270,7 @@ public static class Client_Connection_Samples
             }
         }
     }
-    
+
     public static async Task Ping_Server()
     {
         /*

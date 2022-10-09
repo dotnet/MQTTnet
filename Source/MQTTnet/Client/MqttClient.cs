@@ -91,7 +91,7 @@ namespace MQTTnet.Client
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);
         }
-        
+
         public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
         public MqttClientOptions Options { get; private set; }
@@ -145,8 +145,8 @@ namespace MQTTnet.Client
 
                     _publishPacketReceiverQueue?.Dispose();
                     _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
-                    _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
 
+                    _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
                     _packetReceiverTask = Task.Run(() => TryReceivePacketsAsync(backgroundCancellationToken), backgroundCancellationToken);
 
                     connectResult = await AuthenticateAsync(options, effectiveCancellationToken.Token).ConfigureAwait(false);
@@ -200,19 +200,24 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
 
             var clientWasConnected = IsConnected;
-            if (DisconnectIsPendingOrFinished())
-            {
-                return;
-            }
 
             try
             {
+                ThrowIfNotConnected();
+                
                 _disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
                 _cleanDisconnectInitiated = true;
 
-                if (clientWasConnected)
+                var disconnectPacket = _packetFactories.Disconnect.Create(options);
+                if (!cancellationToken.CanBeCanceled)
                 {
-                    var disconnectPacket = _packetFactories.Disconnect.Create(options);
+                    using (var timeout = new CancellationTokenSource(Options.Timeout))
+                    {
+                        await SendAsync(disconnectPacket, timeout.Token).ConfigureAwait(false);
+                    }
+                }
+                else
+                {
                     await SendAsync(disconnectPacket, cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -448,9 +453,9 @@ namespace MQTTnet.Client
 
             try
             {
-                var receiverTask = WaitForTaskAsync(_packetReceiverTask, sender);
-                var publishPacketReceiverTask = WaitForTaskAsync(_publishPacketReceiverTask, sender);
-                var keepAliveTask = WaitForTaskAsync(_keepAlivePacketsSenderTask, sender);
+                var receiverTask = _packetReceiverTask.WaitAsync(sender, _logger);
+                var publishPacketReceiverTask = _publishPacketReceiverTask.WaitAsync(sender, _logger);
+                var keepAliveTask = _keepAlivePacketsSenderTask.WaitAsync(sender, _logger);
 
                 await Task.WhenAll(receiverTask, publishPacketReceiverTask, keepAliveTask).ConfigureAwait(false);
             }
@@ -904,37 +909,6 @@ namespace MQTTnet.Client
             finally
             {
                 _logger.Verbose("Stopped sending keep alive packets.");
-            }
-        }
-
-        async Task WaitForTaskAsync(Task task, Task sender)
-        {
-            if (task == null)
-            {
-                return;
-            }
-
-            if (task == sender)
-            {
-                // Return here to avoid deadlocks, but first any eventual exception in the task
-                // must be handled to avoid not getting an unhandled task exception
-                if (!task.IsFaulted)
-                {
-                    return;
-                }
-
-                // By accessing the Exception property the exception is considered handled and will
-                // not result in an unhandled task exception later by the finalizer
-                _logger.Warning(task.Exception, "Error while waiting for background task.");
-                return;
-            }
-
-            try
-            {
-                await task.ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
             }
         }
     }

@@ -2,32 +2,55 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
+using MQTTnet.Packets;
+
 namespace MQTTnet.Client
 {
     public sealed class MqttClientDisconnectOptionsBuilder
     {
         MqttClientDisconnectReason _reason = MqttClientDisconnectReason.NormalDisconnection;
         string _reasonString;
-        
-        public MqttClientDisconnectOptionsBuilder WithReasonString(string value)
-        {
-            _reasonString = value;
-            return this;
-        }
-        
-        public MqttClientDisconnectOptionsBuilder WithReason(MqttClientDisconnectReason value)
-        {
-            _reason = value;
-            return this;
-        }
-        
+        uint _sessionExpiryInterval;
+        List<MqttUserProperty> _userProperties;
+
         public MqttClientDisconnectOptions Build()
         {
             return new MqttClientDisconnectOptions
             {
                 Reason = _reason,
-                ReasonString = _reasonString
+                ReasonString = _reasonString,
+                UserProperties = _userProperties,
+                SessionExpiryInterval = _sessionExpiryInterval
             };
+        }
+
+        public MqttClientDisconnectOptionsBuilder WithReason(MqttClientDisconnectReason value)
+        {
+            _reason = value;
+            return this;
+        }
+
+        public MqttClientDisconnectOptionsBuilder WithReasonString(string value)
+        {
+            _reasonString = value;
+            return this;
+        }
+
+        public MqttClientDisconnectOptionsBuilder WithSessionExpiryInterval(uint value)
+        {
+            _sessionExpiryInterval = value;
+            return this;
+        }
+
+        public void WithUserProperty(string name, string value)
+        {
+            if (_userProperties == null)
+            {
+                _userProperties = new List<MqttUserProperty>();
+            }
+
+            _userProperties.Add(new MqttUserProperty(name, value));
         }
     }
 }

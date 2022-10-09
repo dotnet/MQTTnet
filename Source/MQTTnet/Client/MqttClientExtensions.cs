@@ -33,6 +33,29 @@ namespace MQTTnet.Client
 
             return false;
         }
+
+        public static async Task<bool> TryDisconnectAsync(
+            this IMqttClient client,
+            MqttClientDisconnectReason reason = MqttClientDisconnectReason.NormalDisconnection,
+            string reasonString = null)
+        {
+            if (client == null)
+            {
+                throw new ArgumentNullException(nameof(client));
+            }
+
+            try
+            {
+                await client.DisconnectAsync(reason, reasonString).ConfigureAwait(false);
+                return true;
+            }
+            catch
+            {
+                // Ignore all errors.
+            }
+            
+            return false;
+        }
         
         public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectReason reason = MqttClientDisconnectReason.NormalDisconnection, string reasonString = null)
         {

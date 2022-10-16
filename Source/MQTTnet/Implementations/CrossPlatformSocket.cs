@@ -137,11 +137,16 @@ namespace MQTTnet.Implementations
 
             try
             {
-                _networkStream?.Dispose();
-
 #if NET5_0_OR_GREATER
+                if (_networkStream != null)
+                {
+                    await _networkStream.DisposeAsync().ConfigureAwait(false);
+                }
+
                 await _socket.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
 #else
+                 _networkStream?.Dispose();
+
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(_socketDisposeAction))
                 {

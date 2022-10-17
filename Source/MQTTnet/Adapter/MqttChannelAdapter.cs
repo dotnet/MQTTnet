@@ -23,7 +23,7 @@ namespace MQTTnet.Adapter
     {
         const uint ErrorOperationAborted = 0x800703E3;
         const int ReadBufferSize = 4096;
-        
+
         readonly IMqttChannel _channel;
         readonly byte[] _fixedHeaderBuffer = new byte[2];
         readonly MqttNetSourceLogger _logger;
@@ -71,9 +71,25 @@ namespace MQTTnet.Adapter
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
 
+            /*
+             * We have to implement a small workaround here to support connecting in Xamarin
+             * with a disabled WiFi network. If the WiFi is disabled the connect method will
+             * block forever. Even a cancellation token is not supported properly.
+             */
+
             try
             {
-                await _channel.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                var connectTask = _channel.ConnectAsync(cancellationToken);
+                
+                var timeout = new TaskCompletionSource<object>();
+                using (cancellationToken.Register(() => timeout.TrySetResult(null)))
+                {
+                    await Task.WhenAny(connectTask, timeout.Task).ConfigureAwait(false);
+                    if (timeout.Task.IsCompleted)
+                    {
+                        throw new OperationCanceledException("MQTT connect cancelled.", cancellationToken);
+                    }
+                }
             }
             catch (Exception exception)
             {

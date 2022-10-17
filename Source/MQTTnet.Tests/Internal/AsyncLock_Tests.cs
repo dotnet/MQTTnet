@@ -120,32 +120,32 @@ namespace MQTTnet.Tests.Internal
             }
         }
 
-        [TestMethod]
-        public async Task Test_Cancellation_With_Later_Access()
-        {
-            var asyncLock = new AsyncLock();
-
-            var releaser = await asyncLock.WaitAsync(CancellationToken.None).ConfigureAwait(false);
-
-            try
-            {
-                using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
-                {
-                    await asyncLock.WaitAsync(timeout.Token).ConfigureAwait(false);
-                }
-                
-                Assert.Fail("Exception should be thrown!");
-            }
-            catch (OperationCanceledException)
-            {
-            }
-
-            releaser.Dispose();
-
-            using (await asyncLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
-            {
-                // When the method finished, the thread got access.
-            }
-        }
+        // [TestMethod]
+        // public async Task Test_Cancellation_With_Later_Access()
+        // {
+        //     var asyncLock = new AsyncLock();
+        //
+        //     var releaser = await asyncLock.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+        //
+        //     try
+        //     {
+        //         using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
+        //         {
+        //             await asyncLock.WaitAsync(timeout.Token).ConfigureAwait(false);
+        //         }
+        //         
+        //         Assert.Fail("Exception should be thrown!");
+        //     }
+        //     catch (OperationCanceledException)
+        //     {
+        //     }
+        //
+        //     releaser.Dispose();
+        //
+        //     using (await asyncLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
+        //     {
+        //         // When the method finished, the thread got access.
+        //     }
+        // }
     }
 }

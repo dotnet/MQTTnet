@@ -70,7 +70,7 @@ namespace MQTTnet.Adapter
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
-            
+
             try
             {
                 /*

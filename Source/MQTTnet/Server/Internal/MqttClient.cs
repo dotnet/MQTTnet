@@ -181,7 +181,7 @@ namespace MQTTnet.Server
                 return _eventContainer.ClientAcknowledgedPublishPacketEvent.TryInvokeAsync(eventArgs, _logger);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         Task HandleIncomingPubAckPacket(MqttPubAckPacket pubAckPacket)
@@ -193,7 +193,7 @@ namespace MQTTnet.Server
                 return ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubAckPacket);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         Task HandleIncomingPubCompPacket(MqttPubCompPacket pubCompPacket)
@@ -205,7 +205,7 @@ namespace MQTTnet.Server
                 return ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubCompPacket);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         async Task HandleIncomingPublishPacket(MqttPublishPacket publishPacket, CancellationToken cancellationToken)

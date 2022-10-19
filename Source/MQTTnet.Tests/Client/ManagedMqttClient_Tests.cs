@@ -11,12 +11,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
-using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.Tests.Client
 {
@@ -39,7 +37,7 @@ namespace MQTTnet.Tests.Client
                 managedClient.ConnectingFailedAsync += args =>
                 {
                     connectingFailedEventArgs = args;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.StartAsync(
@@ -117,7 +115,7 @@ namespace MQTTnet.Tests.Client
                 receivingClient.ApplicationMessageReceivedAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await receivingClient.SubscribeAsync("My/last/will");
@@ -294,7 +292,7 @@ namespace MQTTnet.Tests.Client
                 managedClient.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedManagedMessages.Add(e.ApplicationMessage);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.SubscribeAsync("topic");
@@ -428,7 +426,7 @@ namespace MQTTnet.Tests.Client
             managedClient.ConnectedAsync += e =>
             {
                 connected.TrySetResult(true);
-                return PlatformAbstractionLayer.CompletedTask;
+                return CompletedTask.Instance;
             };
 
             return connected.Task;
@@ -457,7 +455,7 @@ namespace MQTTnet.Tests.Client
                     result.TrySetResult(receivedMessages);
                 }
 
-                return PlatformAbstractionLayer.CompletedTask;
+                return CompletedTask.Instance;
             };
 
             return result.Task;

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Tests.Server
 {
@@ -50,7 +50,7 @@ namespace MQTTnet.Tests.Server
                         receivedTopics.Add(e.ApplicationMessage.Topic);
                     }
                     
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await c1.SubscribeAsync("#");

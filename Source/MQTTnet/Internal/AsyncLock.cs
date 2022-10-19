@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,73 +12,148 @@ namespace MQTTnet.Internal
 {
     public sealed class AsyncLock : IDisposable
     {
-        readonly Task<IDisposable> _releaser;
+        readonly Task<IDisposable> _completedTask;
+        readonly IDisposable _releaser;
         readonly object _syncRoot = new object();
 
-        SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        readonly Queue<AsyncLockWaiter> _waiters = new Queue<AsyncLockWaiter>();
+        bool _isDisposed;
+
+        bool _isLocked;
 
         public AsyncLock()
         {
-            _releaser = Task.FromResult((IDisposable)new Releaser(this));
+            _releaser = new Releaser(this);
+            _completedTask = Task.FromResult(_releaser);
         }
 
         public void Dispose()
         {
             lock (_syncRoot)
             {
-                _semaphore?.Dispose();
-                _semaphore = null;
+                _isDisposed = true;
+
+                while (_waiters.Any())
+                {
+                    _waiters.Dequeue().Dispose();
+                }
             }
         }
 
-        public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
+        public Task<IDisposable> EnterAsync(CancellationToken cancellationToken = default)
         {
-            Task task;
+            if (_isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(AsyncLock));
+            }
 
-            // This lock is required to avoid ObjectDisposedExceptions.
-            // These are fired when this lock gets disposed (and thus the semaphore)
-            // and a worker thread tries to call this method at the same time.
-            // Another way would be catching all ObjectDisposedExceptions but this situation happens
-            // quite often when clients are disconnecting.
             lock (_syncRoot)
             {
-                task = _semaphore?.WaitAsync(cancellationToken);
-            }
+                if (!_isLocked)
+                {
+                    _isLocked = true;
+                    return _completedTask;
+                }
 
-            if (task == null)
-            {
-                throw new ObjectDisposedException("The AsyncLock is disposed.");
-            }
+                var waiter = new AsyncLockWaiter(cancellationToken);
+                _waiters.Enqueue(waiter);
 
-            if (task.Status == TaskStatus.RanToCompletion)
-            {
-                return _releaser;
+                return waiter.Task;
             }
-
-            // Wait for the _WaitAsync_ method and return the releaser afterwards.
-            return task.ContinueWith((_, state) => (IDisposable)state, _releaser.Result, cancellationToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
         void Release()
         {
             lock (_syncRoot)
             {
-                _semaphore?.Release();
+                if (_isDisposed)
+                {
+                    // All waiters have been canceled with a ObjectDisposedException.
+                    // So there is nothing left to do.
+                    return;
+                }
+
+                // Assume that there is no waiter left first.
+                _isLocked = false;
+
+                // Try to find the next waiter which can be approved.
+                // Some of them might be canceled already so it is not
+                // guaranteed that the very next waiter is the correct one.
+                while (_waiters.Any())
+                {
+                    var waiter = _waiters.Dequeue();
+                    var isApproved = waiter.Approve(_releaser);
+                    waiter.Dispose();
+				
+                    if (isApproved)
+                    {
+                        _isLocked = true;
+                        return;
+                    }
+                }
             }
         }
 
-        sealed class Releaser : IDisposable
+        sealed class AsyncLockWaiter : IDisposable
         {
-            readonly AsyncLock _lock;
+            readonly CancellationTokenRegistration _cancellationRegistration;
+            readonly bool _hasCancellationRegistration;
+            readonly AsyncTaskCompletionSource<IDisposable> _promise = new AsyncTaskCompletionSource<IDisposable>();
 
-            internal Releaser(AsyncLock @lock)
+            public AsyncLockWaiter(CancellationToken cancellationToken)
             {
-                _lock = @lock;
+                if (cancellationToken.CanBeCanceled)
+                {
+                    _cancellationRegistration = cancellationToken.Register(Cancel);
+                    _hasCancellationRegistration = true;
+                }
+            }
+
+            public Task<IDisposable> Task => _promise.Task;
+
+            public bool Approve(IDisposable scope)
+            {
+                if (scope == null)
+                {
+                    throw new ArgumentNullException(nameof(scope));
+                }
+
+                if (_promise.Task.IsCompleted)
+                {
+                    return false;
+                }
+                
+                return _promise.TrySetResult(scope);
             }
 
             public void Dispose()
             {
-                _lock.Release();
+                if (_hasCancellationRegistration)
+                {
+                    _cancellationRegistration.Dispose();
+                }
+
+                _promise.TrySetException(new ObjectDisposedException(nameof(AsyncLockWaiter)));
+            }
+
+            void Cancel()
+            {
+                _promise.TrySetCanceled();
+            }
+        }
+
+        readonly struct Releaser : IDisposable
+        {
+            readonly AsyncLock _asyncLock;
+
+            public Releaser(AsyncLock asyncLock)
+            {
+                _asyncLock = asyncLock ?? throw new ArgumentNullException(nameof(asyncLock));
+            }
+
+            public void Dispose()
+            {
+                _asyncLock.Release();
             }
         }
     }

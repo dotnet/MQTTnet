@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Internal
@@ -22,7 +23,7 @@ namespace MQTTnet.Internal
 
         public Task<TResult> Task => _taskCompletionSource.Task;
 
-        public bool TrySetCanceled()
+        public void TrySetCanceled()
         {
 #if NET452
             // To prevent deadlocks it is required to call the _TrySetCanceled_ method
@@ -31,19 +32,14 @@ namespace MQTTnet.Internal
             // do it. But _this_ thread is also reading incoming packets -> deadlock.
             // NET452 does not support RunContinuationsAsynchronously
             System.Threading.Tasks.Task.Run(() => _taskCompletionSource.TrySetCanceled());
-            return true;
+            SpinWait.SpinUntil(() => _taskCompletionSource.Task.IsCompleted);
 #else
-            return _taskCompletionSource.TrySetCanceled();
+            _taskCompletionSource.TrySetCanceled();
 #endif
         }
 
-        public bool TrySetException(Exception exception)
+        public void TrySetException(Exception exception)
         {
-            if (exception == null)
-            {
-                throw new ArgumentNullException(nameof(exception));
-            }
-
 #if NET452
             // To prevent deadlocks it is required to call the _TrySetException_ method
             // from a new thread because the awaiting code will not(!) be executed in
@@ -51,9 +47,9 @@ namespace MQTTnet.Internal
             // do it. But _this_ thread is also reading incoming packets -> deadlock.
             // NET452 does not support RunContinuationsAsynchronously
             System.Threading.Tasks.Task.Run(() => _taskCompletionSource.TrySetException(exception));
-            return true;
+            SpinWait.SpinUntil(() => _taskCompletionSource.Task.IsCompleted);
 #else
-            return _taskCompletionSource.TrySetException(exception);
+            _taskCompletionSource.TrySetException(exception);
 #endif
         }
 
@@ -65,7 +61,14 @@ namespace MQTTnet.Internal
             // a new thread automatically (due to await). Furthermore _this_ thread will
             // do it. But _this_ thread is also reading incoming packets -> deadlock.
             // NET452 does not support RunContinuationsAsynchronously
+            if (_taskCompletionSource.Task.IsCompleted)
+            {
+                return false;
+            }
+            
             System.Threading.Tasks.Task.Run(() => _taskCompletionSource.TrySetResult(result));
+            SpinWait.SpinUntil(() => _taskCompletionSource.Task.IsCompleted);
+
             return true;
 #else
             return _taskCompletionSource.TrySetResult(result);

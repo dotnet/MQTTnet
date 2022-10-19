@@ -71,7 +71,7 @@ namespace MQTTnet.Tests.Internal
         Task OnTestEventAsync(EventArgs arg)
         {
             Interlocked.Increment(ref _testEventAsyncCount);
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         sealed class TestClass

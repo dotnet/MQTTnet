@@ -306,6 +306,9 @@ namespace MQTTnet.Server
 
                 await client.RunAsync().ConfigureAwait(false);
             }
+            catch (ObjectDisposedException)
+            {
+            }
             catch (OperationCanceledException)
             {
             }
@@ -479,7 +482,7 @@ namespace MQTTnet.Server
                 sessionShouldPersist = !connectPacket.CleanSession;
             }
 
-            using (await _createConnectionSyncRoot.WaitAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _createConnectionSyncRoot.EnterAsync().ConfigureAwait(false))
             {
                 MqttSession session;
                 lock (_sessionsManagementLock)

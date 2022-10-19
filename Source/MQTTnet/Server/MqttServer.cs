@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -172,7 +171,7 @@ namespace MQTTnet.Server
         {
             ThrowIfNotStarted();
 
-            return _retainedMessagesManager?.ClearMessages() ?? PlatformAbstractionLayer.CompletedTask;
+            return _retainedMessagesManager?.ClearMessages() ?? CompletedTask.Instance;
         }
 
         public Task DisconnectClientAsync(string id, MqttDisconnectReasonCode reasonCode)

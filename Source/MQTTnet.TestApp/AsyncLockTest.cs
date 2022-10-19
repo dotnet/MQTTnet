@@ -18,7 +18,7 @@ namespace MQTTnet.TestApp
             {
                 for (var i = 0; i < 100000; i++)
                 {
-                    using (await asyncLock.WaitAsync(cancellationToken.Token).ConfigureAwait(false))
+                    using (await asyncLock.EnterAsync(cancellationToken.Token).ConfigureAwait(false))
                     {
                     }
                 } 

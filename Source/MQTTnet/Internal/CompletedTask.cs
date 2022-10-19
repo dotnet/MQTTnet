@@ -9,9 +9,9 @@ namespace MQTTnet.Internal
     public static class CompletedTask
     {
 #if NET452
-        public static Task Instance => Task.FromResult(0);
+        public static readonly Task Instance = Task.FromResult(true);
 #else
-        public static Task Instance => Task.CompletedTask;
+        public static readonly Task Instance = Task.CompletedTask;
 #endif
     }
 }

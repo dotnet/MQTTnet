@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
@@ -26,7 +26,7 @@ namespace MQTTnet.Tests.Server
                 server.ClientAcknowledgedPublishPacketAsync += args =>
                 {
                     eventArgs = args;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var client1 = await testEnvironment.ConnectClient();
@@ -53,7 +53,7 @@ namespace MQTTnet.Tests.Server
                 server.ClientAcknowledgedPublishPacketAsync += args =>
                 {
                     eventArgs = args;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var client1 = await testEnvironment.ConnectClient();
@@ -88,7 +88,7 @@ namespace MQTTnet.Tests.Server
                         eventArgs.Add(args);
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var client1 = await testEnvironment.ConnectClient();

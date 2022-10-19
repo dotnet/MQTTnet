@@ -8,10 +8,12 @@ namespace MQTTnet.Internal
 {
     public static class EmptyBuffer
     {
-        // ReSharper disable once UseArrayEmptyMethod
-        public static byte[] Array { get; } = new byte[0];
+#if NET452
+        public static readonly byte[] Array = new byte[0];
+#else
+        public static readonly byte[] Array = System.Array.Empty<byte>();
+#endif
 
-        // ReSharper disable once UseArrayEmptyMethod
-        public static ArraySegment<byte> ArraySegment { get; } = new ArraySegment<byte>(new byte[0], 0, 0);
+        public static readonly ArraySegment<byte> ArraySegment = new ArraySegment<byte>(Array, 0, 0);
     }
 }

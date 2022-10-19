@@ -13,6 +13,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations
 {
@@ -56,13 +57,13 @@ namespace MQTTnet.Implementations
                 RegisterListeners(options.TlsEndpointOptions, tlsCertificate, logger, _cancellationTokenSource.Token);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         public Task StopAsync()
         {
             Cleanup();
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         public void Dispose()

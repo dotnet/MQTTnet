@@ -7,7 +7,7 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp
@@ -40,7 +40,7 @@ namespace MQTTnet.TestApp
                     Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
                     Console.WriteLine();
                     
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 client.ConnectedAsync += async e =>

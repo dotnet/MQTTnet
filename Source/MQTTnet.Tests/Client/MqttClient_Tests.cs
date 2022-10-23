@@ -123,7 +123,7 @@ namespace MQTTnet.Tests.Client
                     //Assert.IsInstanceOfType(exception.InnerException, typeof(SocketException));
                 }
 
-                await Task.Delay(100); // disconnected handler is called async
+                await LongTestDelay(); // disconnected handler is called async
                 Assert.IsTrue(disconnectHandlerCalled);
             }
         }

@@ -15,14 +15,20 @@ namespace MQTTnet.Implementations
     public sealed class CrossPlatformSocket : IDisposable
     {
         readonly Socket _socket;
+
+#if !NET5_0_OR_GREATER
         readonly Action _socketDisposeAction;
+#endif
 
         NetworkStream _networkStream;
 
         public CrossPlatformSocket(AddressFamily addressFamily)
         {
             _socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+#if !NET5_0_OR_GREATER
             _socketDisposeAction = _socket.Dispose;
+#endif
         }
 
         public CrossPlatformSocket()
@@ -31,16 +37,75 @@ namespace MQTTnet.Implementations
             // will make use of dual mode in the .net framework.
             _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
+#if !NET5_0_OR_GREATER
             _socketDisposeAction = _socket.Dispose;
+#endif
         }
 
-        public CrossPlatformSocket(Socket socket)
+        CrossPlatformSocket(Socket socket)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _networkStream = new NetworkStream(socket, true);
 
+#if !NET5_0_OR_GREATER
             _socketDisposeAction = _socket.Dispose;
+#endif
         }
+
+        public bool DualMode
+        {
+            get => _socket.DualMode;
+            set => _socket.DualMode = value;
+        }
+
+        public bool IsConnected => _socket.Connected;
+
+        public bool KeepAlive
+        {
+            get => _socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive) as int? == 1;
+            set => _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, value ? 1 : 0);
+        }
+
+        public int TcpKeepAliveInterval
+        {
+#if NETCOREAPP3_0_OR_GREATER
+            get => _socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval) as int? ?? 0;
+            set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval, value);
+#else
+            get { throw new NotSupportedException("TcpKeepAliveInterval requires at least net5.0."); }
+            set { throw new NotSupportedException("TcpKeepAliveInterval requires at least net5.0."); }
+#endif
+        }
+
+        public int TcpKeepAliveRetryCount
+        {
+#if NETCOREAPP3_0_OR_GREATER
+            get => _socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveRetryCount) as int? ?? 0;
+            set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveRetryCount, value);
+#else
+            get { throw new NotSupportedException("TcpKeepAliveRetryCount requires at least net5.0."); }
+            set { throw new NotSupportedException("TcpKeepAliveRetryCount requires at least net5.0."); }
+#endif
+        }
+
+        public int TcpKeepAliveTime
+        {
+#if NETCOREAPP3_0_OR_GREATER
+            get => _socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime) as int? ?? 0;
+            set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, value);
+#else
+            get { throw new NotSupportedException("TcpKeepAliveTime requires at least net5.0."); }
+            set { throw new NotSupportedException("TcpKeepAliveTime requires at least net5.0."); }
+#endif
+        }
+
+        public LingerOption LingerState
+        {
+            get => _socket.LingerState;
+            set => _socket.LingerState = value;
+        }
+
+        public EndPoint LocalEndPoint => _socket.LocalEndPoint;
 
         public bool NoDelay
         {
@@ -51,22 +116,18 @@ namespace MQTTnet.Implementations
             set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, value ? 1 : 0);
         }
 
-        public LingerOption LingerState
-        {
-            get => _socket.LingerState;
-            set => _socket.LingerState = value;
-        }
-
-        public bool DualMode
-        {
-            get => _socket.DualMode;
-            set => _socket.DualMode = value;
-        }
-
         public int ReceiveBufferSize
         {
             get => _socket.ReceiveBufferSize;
             set => _socket.ReceiveBufferSize = value;
+        }
+
+        public EndPoint RemoteEndPoint => _socket.RemoteEndPoint;
+
+        public bool ReuseAddress
+        {
+            get => _socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) as int? != 0;
+            set => _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, value ? 1 : 0);
         }
 
         public int SendBufferSize
@@ -80,16 +141,6 @@ namespace MQTTnet.Implementations
             get => _socket.SendTimeout;
             set => _socket.SendTimeout = value;
         }
-
-        public EndPoint RemoteEndPoint => _socket.RemoteEndPoint;
-
-        public bool ReuseAddress
-        {
-            get => (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
-            set => _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, value ? 1 : 0);
-        }
-
-        public bool IsConnected => _socket.Connected;
 
         public async Task<CrossPlatformSocket> AcceptAsync()
         {
@@ -109,8 +160,6 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public EndPoint LocalEndPoint => _socket.LocalEndPoint;
-
         public void Bind(EndPoint localEndPoint)
         {
             if (localEndPoint is null)
@@ -119,11 +168,6 @@ namespace MQTTnet.Implementations
             }
 
             _socket.Bind(localEndPoint);
-        }
-
-        public void Listen(int connectionBacklog)
-        {
-            _socket.Listen(connectionBacklog);
         }
 
         public async Task ConnectAsync(string host, int port, CancellationToken cancellationToken)
@@ -137,11 +181,17 @@ namespace MQTTnet.Implementations
 
             try
             {
-                _networkStream?.Dispose();
-
 #if NET5_0_OR_GREATER
+
+                if (_networkStream != null)
+                {
+                    await _networkStream.DisposeAsync().ConfigureAwait(false);
+                }
+
                 await _socket.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
 #else
+                _networkStream?.Dispose();
+
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(_socketDisposeAction))
                 {
@@ -175,20 +225,26 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public async Task SendAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
+        public void Dispose()
         {
-            try
+            _networkStream?.Dispose();
+            _socket?.Dispose();
+        }
+
+        public NetworkStream GetStream()
+        {
+            var networkStream = _networkStream;
+            if (networkStream == null)
             {
-#if NET452 || NET461
-                await Task.Factory.FromAsync(SocketWrapper.BeginSend, _socket.EndSend, new SocketWrapper(_socket, buffer, socketFlags)).ConfigureAwait(false);
-#else
-                await _socket.SendAsync(buffer, socketFlags).ConfigureAwait(false);
-#endif
+                throw new IOException("The socket is not connected.");
             }
-            catch (ObjectDisposedException)
-            {
-                // This will happen when _socket.EndConnect gets called by Task library but the socket is already disposed.
-            }
+
+            return networkStream;
+        }
+
+        public void Listen(int connectionBacklog)
+        {
+            _socket.Listen(connectionBacklog);
         }
 
         public async Task<int> ReceiveAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
@@ -208,28 +264,27 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public NetworkStream GetStream()
+        public async Task SendAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
         {
-            var networkStream = _networkStream;
-            if (networkStream == null)
+            try
             {
-                throw new IOException("The socket is not connected.");
+#if NET452 || NET461
+                await Task.Factory.FromAsync(SocketWrapper.BeginSend, _socket.EndSend, new SocketWrapper(_socket, buffer, socketFlags)).ConfigureAwait(false);
+#else
+                await _socket.SendAsync(buffer, socketFlags).ConfigureAwait(false);
+#endif
             }
-
-            return networkStream;
-        }
-
-        public void Dispose()
-        {
-            _networkStream?.Dispose();
-            _socket?.Dispose();
+            catch (ObjectDisposedException)
+            {
+                // This will happen when _socket.EndConnect gets called by Task library but the socket is already disposed.
+            }
         }
 
 #if NET452 || NET461
         sealed class SocketWrapper
         {
-            readonly Socket _socket;
             readonly ArraySegment<byte> _buffer;
+            readonly Socket _socket;
             readonly SocketFlags _socketFlags;
 
             public SocketWrapper(Socket socket, ArraySegment<byte> buffer, SocketFlags socketFlags)
@@ -239,16 +294,28 @@ namespace MQTTnet.Implementations
                 _socketFlags = socketFlags;
             }
 
-            public static IAsyncResult BeginSend(AsyncCallback callback, object state)
-            {
-                var socketWrapper = (SocketWrapper)state;
-                return socketWrapper._socket.BeginSend(socketWrapper._buffer.Array, socketWrapper._buffer.Offset, socketWrapper._buffer.Count, socketWrapper._socketFlags, callback, state);
-            }
-
             public static IAsyncResult BeginReceive(AsyncCallback callback, object state)
             {
                 var socketWrapper = (SocketWrapper)state;
-                return socketWrapper._socket.BeginReceive(socketWrapper._buffer.Array, socketWrapper._buffer.Offset, socketWrapper._buffer.Count, socketWrapper._socketFlags, callback, state);
+                return socketWrapper._socket.BeginReceive(
+                    socketWrapper._buffer.Array,
+                    socketWrapper._buffer.Offset,
+                    socketWrapper._buffer.Count,
+                    socketWrapper._socketFlags,
+                    callback,
+                    state);
+            }
+
+            public static IAsyncResult BeginSend(AsyncCallback callback, object state)
+            {
+                var socketWrapper = (SocketWrapper)state;
+                return socketWrapper._socket.BeginSend(
+                    socketWrapper._buffer.Array,
+                    socketWrapper._buffer.Offset,
+                    socketWrapper._buffer.Count,
+                    socketWrapper._socketFlags,
+                    callback,
+                    state);
             }
         }
 #endif

@@ -29,7 +29,7 @@ namespace MQTTnet.Benchmarks
                 tasks[i] = Task.Run(
                     async () =>
                     {
-                        using (await asyncLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
+                        using (await asyncLock.EnterAsync().ConfigureAwait(false))
                         {
                             var localI = globalI;
                             await Task.Delay(5).ConfigureAwait(false); // Increase the chance for wrong data.
@@ -56,7 +56,7 @@ namespace MQTTnet.Benchmarks
             {
                 for (var i = 0; i < 100000; i++)
                 {
-                    using (await asyncLock.WaitAsync(cancellationToken.Token).ConfigureAwait(false))
+                    using (await asyncLock.EnterAsync(cancellationToken.Token).ConfigureAwait(false))
                     {
                     }
                 }

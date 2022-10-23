@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp
@@ -42,7 +42,7 @@ namespace MQTTnet.TestApp
                 managedClient.ApplicationMessageReceivedAsync += e =>
                 {
                     Console.WriteLine(">> RECEIVED: " + e.ApplicationMessage.Topic);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.StartAsync(options);
@@ -85,7 +85,7 @@ namespace MQTTnet.TestApp
             public Task SaveQueuedMessagesAsync(IList<ManagedMqttApplicationMessage> messages)
             {
                 File.WriteAllText(Filename, JsonConvert.SerializeObject(messages));
-                return Task.FromResult(0);
+                return CompletedTask.Instance;
             }
 
             public Task<IList<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync()

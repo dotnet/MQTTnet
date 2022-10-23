@@ -195,7 +195,7 @@ namespace MQTTnet.Adapter
             // This lock makes sure that multiple threads can send packets at the same time.
             // This is required when a disconnect is sent from another thread while the 
             // worker thread is still sending publish packets etc.
-            using (await _syncRoot.WaitAsync(cancellationToken).ConfigureAwait(false))
+            using (await _syncRoot.EnterAsync(cancellationToken).ConfigureAwait(false))
             {
                 // Check for cancellation here again because "WaitAsync" might take some time.
                 cancellationToken.ThrowIfCancellationRequested();
@@ -363,7 +363,7 @@ namespace MQTTnet.Adapter
                 var fixedHeader = readFixedHeaderResult.FixedHeader;
                 if (fixedHeader.RemainingLength == 0)
                 {
-                    return new ReceivedMqttPacket(fixedHeader.Flags, PlatformAbstractionLayer.EmptyByteArraySegment, 2);
+                    return new ReceivedMqttPacket(fixedHeader.Flags, EmptyBuffer.ArraySegment, 2);
                 }
 
                 var bodyLength = fixedHeader.RemainingLength;

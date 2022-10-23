@@ -8,6 +8,7 @@ namespace MQTTnet.Client
     public interface IMqttClient : IDisposable
     {
         event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync;
+        
         event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync;
 
         event Func<MqttClientConnectingEventArgs, Task> ConnectingAsync;

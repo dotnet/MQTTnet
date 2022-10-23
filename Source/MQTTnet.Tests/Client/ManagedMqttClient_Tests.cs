@@ -484,7 +484,7 @@ namespace MQTTnet.Tests.Client
         public Task SaveQueuedMessagesAsync(IList<ManagedMqttApplicationMessage> messages)
         {
             _messages = messages;
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
     }
 }

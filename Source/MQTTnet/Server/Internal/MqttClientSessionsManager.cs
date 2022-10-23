@@ -540,6 +540,7 @@ namespace MQTTnet.Server
                             MqttClientDisconnectType.Takeover,
                             existingClient.Endpoint,
                             existingClient.Session.Items);
+                        
                         await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
                 }

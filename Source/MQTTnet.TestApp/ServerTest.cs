@@ -67,13 +67,13 @@ namespace MQTTnet.TestApp
                     }
 
                     File.WriteAllText(Filename, JsonConvert.SerializeObject(e.StoredRetainedMessages));
-                    return Task.FromResult(0);
+                    return CompletedTask.Instance;
                 };
                 
                 mqttServer.RetainedMessagesClearedAsync += e =>
                 {
                     File.Delete(Filename);
-                    return Task.FromResult(0);
+                    return CompletedTask.Instance;
                 };
                 
                 mqttServer.LoadingRetainedMessageAsync += e =>
@@ -91,7 +91,7 @@ namespace MQTTnet.TestApp
 
                     e.LoadedRetainedMessages = retainedMessages;
 
-                    return Task.FromResult(0);
+                    return CompletedTask.Instance;
                 };
 
                 mqttServer.InterceptingPublishAsync += e =>

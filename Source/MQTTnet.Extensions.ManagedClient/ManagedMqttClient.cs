@@ -296,7 +296,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
             _subscriptionsQueuedSignal.Release();
 
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         public Task UnsubscribeAsync(ICollection<string> topics)
@@ -319,7 +319,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
             _subscriptionsQueuedSignal.Release();
 
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         protected override void Dispose(bool disposing)

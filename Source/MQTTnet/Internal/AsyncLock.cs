@@ -15,10 +15,9 @@ namespace MQTTnet.Internal
         readonly Task<IDisposable> _completedTask;
         readonly IDisposable _releaser;
         readonly object _syncRoot = new object();
+        readonly Queue<AsyncLockWaiter> _waiters = new Queue<AsyncLockWaiter>(64);
 
-        readonly Queue<AsyncLockWaiter> _waiters = new Queue<AsyncLockWaiter>();
-        bool _isDisposed;
-
+        volatile bool _isDisposed;
         bool _isLocked;
 
         public AsyncLock()
@@ -42,6 +41,8 @@ namespace MQTTnet.Internal
 
         public Task<IDisposable> EnterAsync(CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
             if (_isDisposed)
             {
                 throw new ObjectDisposedException(nameof(AsyncLock));
@@ -84,7 +85,7 @@ namespace MQTTnet.Internal
                     var waiter = _waiters.Dequeue();
                     var isApproved = waiter.Approve(_releaser);
                     waiter.Dispose();
-				
+
                     if (isApproved)
                     {
                         _isLocked = true;
@@ -102,6 +103,8 @@ namespace MQTTnet.Internal
 
             public AsyncLockWaiter(CancellationToken cancellationToken)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                
                 if (cancellationToken.CanBeCanceled)
                 {
                     _cancellationRegistration = cancellationToken.Register(Cancel);
@@ -122,7 +125,7 @@ namespace MQTTnet.Internal
                 {
                     return false;
                 }
-                
+
                 return _promise.TrySetResult(scope);
             }
 

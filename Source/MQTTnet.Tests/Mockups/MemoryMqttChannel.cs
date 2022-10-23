@@ -8,6 +8,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Tests.Mockups
 {
@@ -33,12 +34,12 @@ namespace MQTTnet.Tests.Mockups
 
         public Task ConnectAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         public Task DisconnectAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)

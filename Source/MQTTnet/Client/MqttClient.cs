@@ -9,7 +9,6 @@ using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
@@ -224,16 +223,16 @@ namespace MQTTnet.Client
 
         public async Task PingAsync(CancellationToken cancellationToken = default)
         {
-            if (!cancellationToken.CanBeCanceled)
+            if (cancellationToken.CanBeCanceled)
+            {
+                await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
+            }
+            else
             {
                 using (var timeout = new CancellationTokenSource(Options.Timeout))
                 {
                     await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, timeout.Token).ConfigureAwait(false);
                 }
-            }
-            else
-            {
-                await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
             }
         }
 

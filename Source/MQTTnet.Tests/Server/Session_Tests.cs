@@ -28,7 +28,7 @@ namespace MQTTnet.Tests.Server
 
                 await testEnvironment.StartServer(o => o.WithPersistentSessions());
 
-                const string ClientId = "Client1";
+                const string clientId = "Client1";
 
                 // Create client with clean session and long session expiry interval
 
@@ -37,7 +37,7 @@ namespace MQTTnet.Tests.Server
                         .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                         .WithSessionExpiryInterval(9999) // not relevant for v311 but testing impact
                         .WithCleanSession() // start and end with clean session
-                        .WithClientId(ClientId)
+                        .WithClientId(clientId)
                         .Build());
 
                 // Disconnect; empty session should be removed from server
@@ -56,7 +56,7 @@ namespace MQTTnet.Tests.Server
                     .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                     .WithSessionExpiryInterval(9999) // not relevant for v311 but testing impact
                     .WithCleanSession(false) // see if there is a session
-                    .WithClientId(ClientId)
+                    .WithClientId(clientId)
                     .Build();
 
 
@@ -122,6 +122,8 @@ namespace MQTTnet.Tests.Server
             }
         }
 
+        #if !NET452
+        
         [TestMethod]
         [DataRow(MqttProtocolVersion.V311)]
         [DataRow(MqttProtocolVersion.V500)]
@@ -133,7 +135,7 @@ namespace MQTTnet.Tests.Server
 
                 await testEnvironment.StartServer();
 
-                var options = new MqttClientOptionsBuilder().WithClientId("1").WithTimeout(TimeSpan.FromSeconds(1)).WithProtocolVersion(protocolVersion).WithKeepAlivePeriod(TimeSpan.FromSeconds(5));
+                var options = new MqttClientOptionsBuilder().WithClientId("1").WithTimeout(TimeSpan.FromSeconds(1)).WithProtocolVersion(protocolVersion);
 
                 var hasReceive = false;
 
@@ -148,13 +150,13 @@ namespace MQTTnet.Tests.Server
                 // Try to connect 50 clients at the same time.
                 var clients = await Task.WhenAll(Enumerable.Range(0, 50).Select(i => ConnectAndSubscribe(testEnvironment, options, OnReceive)));
 
+                await Task.Delay(5000);
+                
+                var connectedClients = clients.Where(c => c?.TryPingAsync().GetAwaiter().GetResult() == true).ToList();
+
                 await LongTestDelay();
                 
-                var connectedClients = clients.Where(c => c != null).Where(c => c.TryPingAsync().GetAwaiter().GetResult()).ToList();
-
                 Assert.AreEqual(1, connectedClients.Count);
-
-                await Task.Delay(5000);
 
                 var option2 = new MqttClientOptionsBuilder().WithClientId("2").WithKeepAlivePeriod(TimeSpan.FromSeconds(10));
                 var sendClient = await testEnvironment.ConnectClient(option2);
@@ -165,6 +167,7 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(true, hasReceive);
             }
         }
+#endif
         
         [DataTestMethod]
         [DataRow(MqttQualityOfServiceLevel.ExactlyOnce)]
@@ -334,10 +337,10 @@ namespace MQTTnet.Tests.Server
                 // C2 has the last will defined.
                 var clientOptions = new MqttClientOptionsBuilder().WithWillTopic("My/last/will").WithClientId("WillOwner");
 
-                var c2 = await testEnvironment.ConnectClient(clientOptions);
+                await testEnvironment.ConnectClient(clientOptions);
 
                 // C3 will do the connection takeover.
-                var c3 = await testEnvironment.ConnectClient(clientOptions);
+                await testEnvironment.ConnectClient(clientOptions);
 
                 await Task.Delay(1000);
 
@@ -349,22 +352,22 @@ namespace MQTTnet.Tests.Server
         {
             try
             {
-                var sendClient = await testEnvironment.ConnectClient(options);
+                var client = await testEnvironment.ConnectClient(options).ConfigureAwait(false);
 
-                sendClient.ApplicationMessageReceivedAsync += e =>
+                client.ApplicationMessageReceivedAsync += e =>
                 {
                     onReceive();
                     return CompletedTask.Instance;
                 };
-
-                using (var subscribeTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                
+                using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
                 {
-                    await sendClient.SubscribeAsync("aaa", MqttQualityOfServiceLevel.AtMostOnce, subscribeTimeout.Token).ConfigureAwait(false);
+                    await client.SubscribeAsync("aaa", MqttQualityOfServiceLevel.AtMostOnce, timeout.Token).ConfigureAwait(false);
                 }
 
-                return sendClient;
+                return client;
             }
-            catch
+            catch (Exception)
             {
                 return null;
             }

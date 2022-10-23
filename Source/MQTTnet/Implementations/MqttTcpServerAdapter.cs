@@ -125,7 +125,7 @@ namespace MQTTnet.Implementations
             var clientHandler = ClientHandler;
             if (clientHandler == null)
             {
-                return Task.FromResult(0);
+                return CompletedTask.Instance;
             }
 
             return clientHandler(channelAdapter);

@@ -85,7 +85,7 @@ namespace MQTTnet.TestApp
             public Task SaveQueuedMessagesAsync(IList<ManagedMqttApplicationMessage> messages)
             {
                 File.WriteAllText(Filename, JsonConvert.SerializeObject(messages));
-                return Task.FromResult(0);
+                return CompletedTask.Instance;
             }
 
             public Task<IList<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync()

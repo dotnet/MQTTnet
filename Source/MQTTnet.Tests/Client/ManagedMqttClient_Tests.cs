@@ -279,7 +279,7 @@ namespace MQTTnet.Tests.Client
                     });
 
                 // Wait a bit for the retained message to be available
-                await Task.Delay(1000);
+                await LongTestDelay();
 
                 await sendingClient.DisconnectAsync();
 
@@ -288,7 +288,8 @@ namespace MQTTnet.Tests.Client
                 var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort);
 
                 var receivedManagedMessages = new List<MqttApplicationMessage>();
-                var managedClient = new ManagedMqttClient(testEnvironment.CreateClient(), new MqttNetEventLogger());
+                
+                var managedClient = testEnvironment.Factory.CreateManagedMqttClient(testEnvironment.CreateClient());
                 managedClient.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedManagedMessages.Add(e.ApplicationMessage);
@@ -299,17 +300,17 @@ namespace MQTTnet.Tests.Client
 
                 await managedClient.StartAsync(new ManagedMqttClientOptionsBuilder().WithClientOptions(clientOptions).WithAutoReconnectDelay(TimeSpan.FromSeconds(1)).Build());
 
-                await Task.Delay(1000);
+                await LongTestDelay();
 
                 Assert.AreEqual(1, receivedManagedMessages.Count);
 
                 await managedClient.StopAsync();
 
-                await Task.Delay(500);
+                await LongTestDelay();
 
                 await managedClient.StartAsync(new ManagedMqttClientOptionsBuilder().WithClientOptions(clientOptions).WithAutoReconnectDelay(TimeSpan.FromSeconds(1)).Build());
 
-                await Task.Delay(1000);
+                await LongTestDelay();
 
                 // After reconnect and then some delay, the retained message must not be received,
                 // showing that the subscriptions were cleared
@@ -317,7 +318,9 @@ namespace MQTTnet.Tests.Client
 
                 // Make sure that it gets received after subscribing again.
                 await managedClient.SubscribeAsync("topic");
-                await Task.Delay(500);
+                
+                await LongTestDelay();
+                
                 Assert.AreEqual(2, receivedManagedMessages.Count);
             }
         }

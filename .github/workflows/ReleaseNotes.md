@@ -1,0 +1,1 @@
+* [Client] Fixed connection freeze when using Xamarin etc.

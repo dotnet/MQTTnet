@@ -99,7 +99,7 @@ namespace MQTTnet.Tests.Server
 
                 await LongTestDelay();
 
-                Assert.AreEqual(2, eventArgs.Count);
+                Assert.AreEqual(1, eventArgs.Count);
 
                 var firstEvent = eventArgs[0];
 

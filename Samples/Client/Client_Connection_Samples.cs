@@ -34,7 +34,7 @@ public static class Client_Connection_Samples
 
             // This will send the DISCONNECT packet. Calling _Dispose_ without DisconnectAsync the 
             // connection is closed in a "not clean" way. See MQTT specification for more details.
-            await mqttClient.DisconnectAsync(new MqttClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectReason.NormalDisconnection).Build());
+            await mqttClient.DisconnectAsync(new MqttClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.NormalDisconnection).Build());
         }
     }
 
@@ -254,7 +254,7 @@ public static class Client_Connection_Samples
 
             // Calling _DisconnectAsync_ will send a DISCONNECT packet before closing the connection.
             // Using a reason code requires MQTT version 5.0.0!
-            await mqttClient.DisconnectAsync(MqttClientDisconnectReason.ImplementationSpecificError);
+            await mqttClient.DisconnectAsync(MqttClientDisconnectOptionsReason.ImplementationSpecificError);
         }
     }
 

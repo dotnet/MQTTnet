@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -42,18 +43,19 @@ namespace MQTTnet.Client
         bool _cleanDisconnectInitiated;
         volatile int _connectionStatus;
 
-        MqttClientDisconnectReason _disconnectReason;
+        // The value for this field can be set from two different enums.
+        // They contain the same values but the set is reduced in one case.
+        int _disconnectReason;
         string _disconnectReasonString;
+        List<MqttUserProperty> _disconnectUserProperties;
+        
         Task _keepAlivePacketsSenderTask;
-
         DateTime _lastPacketSentTimestamp;
-
         CancellationTokenSource _mqttClientAlive;
         Task _packetReceiverTask;
-
         AsyncQueue<MqttPublishPacket> _publishPacketReceiverQueue;
         Task _publishPacketReceiverTask;
-
+        
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
             _adapterFactory = channelFactory ?? throw new ArgumentNullException(nameof(channelFactory));
@@ -180,7 +182,7 @@ namespace MQTTnet.Client
             }
             catch (Exception exception)
             {
-                _disconnectReason = MqttClientDisconnectReason.UnspecifiedError;
+                _disconnectReason = (int)MqttClientDisconnectOptionsReason.UnspecifiedError;
 
                 _logger.Error(exception, "Error while connecting with server.");
 
@@ -213,7 +215,7 @@ namespace MQTTnet.Client
                     ThrowNotConnected();
                 }
 
-                _disconnectReason = options.Reason;
+                _disconnectReason = (int)options.Reason;
                 _cleanDisconnectInitiated = true;
 
                 // Sending the DISCONNECT may fail due to connection issues. The resulting exception
@@ -524,14 +526,13 @@ namespace MQTTnet.Client
 
                 _logger.Info("Disconnected.");
 
-                var eventArgs = new MqttClientDisconnectedEventArgs
-                {
-                    ClientWasConnected = clientWasConnected,
-                    Exception = exception,
-                    ConnectResult = connectResult,
-                    Reason = _disconnectReason,
-                    ReasonString = _disconnectReasonString
-                };
+                var eventArgs = new MqttClientDisconnectedEventArgs(
+                    clientWasConnected,
+                    connectResult,
+                    (MqttClientDisconnectReason)_disconnectReason,
+                    _disconnectReasonString,
+                    _disconnectUserProperties,
+                    exception);
 
                 // This handler must be executed in a new thread because otherwise a dead lock may happen
                 // when trying to reconnect in that handler etc.
@@ -613,8 +614,9 @@ namespace MQTTnet.Client
 
         Task ProcessReceivedDisconnectPacket(MqttDisconnectPacket disconnectPacket)
         {
-            _disconnectReason = (MqttClientDisconnectReason)disconnectPacket.ReasonCode;
+            _disconnectReason = (int)disconnectPacket.ReasonCode;
             _disconnectReasonString = disconnectPacket.ReasonString;
+            _disconnectUserProperties = disconnectPacket.UserProperties;
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
             _packetDispatcher.FailAll(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));

@@ -36,7 +36,7 @@ namespace MQTTnet.Client
 
         public static async Task<bool> TryDisconnectAsync(
             this IMqttClient client,
-            MqttClientDisconnectReason reason = MqttClientDisconnectReason.NormalDisconnection,
+            MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection,
             string reasonString = null)
         {
             if (client == null)
@@ -57,7 +57,7 @@ namespace MQTTnet.Client
             return false;
         }
         
-        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectReason reason = MqttClientDisconnectReason.NormalDisconnection, string reasonString = null)
+        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection, string reasonString = null)
         {
             if (client == null)
             {

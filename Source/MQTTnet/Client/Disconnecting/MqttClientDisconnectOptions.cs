@@ -13,7 +13,7 @@ namespace MQTTnet.Client
         ///     Gets or sets the reason code.
         ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        public MqttClientDisconnectReason Reason { get; set; } = MqttClientDisconnectReason.NormalDisconnection;
+        public MqttClientDisconnectOptionsReason Reason { get; set; } = MqttClientDisconnectOptionsReason.NormalDisconnection;
 
         /// <summary>
         ///     Gets or sets the reason string.

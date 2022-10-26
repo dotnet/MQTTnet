@@ -216,17 +216,19 @@ namespace MQTTnet.Client
                 _disconnectReason = options.Reason;
                 _cleanDisconnectInitiated = true;
 
+                // Sending the DISCONNECT may fail due to connection issues. The resulting exception
+                // must be throw to let the caller know that the disconnect is not a clean one.
                 var disconnectPacket = _packetFactories.Disconnect.Create(options);
-                if (!cancellationToken.CanBeCanceled)
+                if (cancellationToken.CanBeCanceled)
+                {
+                    await SendAsync(disconnectPacket, cancellationToken).ConfigureAwait(false);
+                }
+                else
                 {
                     using (var timeout = new CancellationTokenSource(Options.Timeout))
                     {
                         await SendAsync(disconnectPacket, timeout.Token).ConfigureAwait(false);
                     }
-                }
-                else
-                {
-                    await SendAsync(disconnectPacket, cancellationToken).ConfigureAwait(false);
                 }
             }
             finally

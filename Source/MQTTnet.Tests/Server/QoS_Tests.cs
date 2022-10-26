@@ -106,18 +106,9 @@ namespace MQTTnet.Tests.Server
                 Assert.IsNotNull(firstEvent);
                 Assert.IsNotNull(firstEvent.PublishPacket);
                 Assert.IsNotNull(firstEvent.AcknowledgePacket);
-                Assert.IsFalse(firstEvent.IsCompleted);
+                Assert.IsTrue(firstEvent.IsCompleted);
 
                 Assert.AreEqual("A", firstEvent.PublishPacket.Topic);
-
-                var secondEvent = eventArgs[1];
-
-                Assert.IsNotNull(secondEvent);
-                Assert.IsNotNull(secondEvent.PublishPacket);
-                Assert.IsNotNull(secondEvent.AcknowledgePacket);
-                Assert.IsTrue(secondEvent.IsCompleted);
-
-                Assert.AreEqual("A", secondEvent.PublishPacket.Topic);
             }
         }
     }

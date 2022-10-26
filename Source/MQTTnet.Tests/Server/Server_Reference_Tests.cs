@@ -8,6 +8,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests.Server
@@ -28,7 +29,7 @@ namespace MQTTnet.Tests.Server
                 {
                     e.ReasonCode = MqttConnectReasonCode.ServerMoved;
                     e.ServerReference = "new_server";
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 try

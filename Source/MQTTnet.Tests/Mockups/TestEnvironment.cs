@@ -13,7 +13,7 @@ using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.LowLevelClient;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -220,7 +220,7 @@ namespace MQTTnet.Tests.Mockups
                         }
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 return client;
@@ -271,7 +271,7 @@ namespace MQTTnet.Tests.Mockups
                     }
                 }
 
-                return PlatformAbstractionLayer.CompletedTask;
+                return CompletedTask.Instance;
             };
 
             return Server;

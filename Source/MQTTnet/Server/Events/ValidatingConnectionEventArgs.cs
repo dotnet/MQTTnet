@@ -10,6 +10,7 @@ using System.Text;
 using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -88,7 +89,7 @@ namespace MQTTnet.Server
         /// </summary>
         public uint MaximumPacketSize => _connectPacket.MaximumPacketSize;
 
-        public string Password => Encoding.UTF8.GetString(RawPassword ?? PlatformAbstractionLayer.EmptyByteArray);
+        public string Password => Encoding.UTF8.GetString(RawPassword ?? EmptyBuffer.Array);
 
         public MqttProtocolVersion ProtocolVersion => ChannelAdapter.PacketFormatterAdapter.ProtocolVersion;
 

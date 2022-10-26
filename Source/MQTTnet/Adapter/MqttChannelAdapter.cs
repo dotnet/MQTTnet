@@ -23,7 +23,7 @@ namespace MQTTnet.Adapter
     {
         const uint ErrorOperationAborted = 0x800703E3;
         const int ReadBufferSize = 4096;
-        
+
         readonly IMqttChannel _channel;
         readonly byte[] _fixedHeaderBuffer = new byte[2];
         readonly MqttNetSourceLogger _logger;
@@ -73,7 +73,26 @@ namespace MQTTnet.Adapter
 
             try
             {
-                await _channel.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                /*
+                 * We have to implement a small workaround here to support connecting in Xamarin
+                 * with a disabled WiFi network. If the WiFi is disabled the connect method will
+                 * block forever. Even a cancellation token is not supported properly.
+                 */
+
+                var connectTask = _channel.ConnectAsync(cancellationToken);
+
+                var timeout = new TaskCompletionSource<object>();
+                using (cancellationToken.Register(() => timeout.TrySetResult(null)))
+                {
+                    await Task.WhenAny(connectTask, timeout.Task).ConfigureAwait(false);
+                    if (timeout.Task.IsCompleted && !connectTask.IsCompleted)
+                    {
+                        throw new OperationCanceledException("MQTT connect cancelled.", cancellationToken);
+                    }
+
+                    // Make sure that the exception from the connect task gets thrown.
+                    await connectTask.ConfigureAwait(false);
+                }
             }
             catch (Exception exception)
             {
@@ -176,7 +195,7 @@ namespace MQTTnet.Adapter
             // This lock makes sure that multiple threads can send packets at the same time.
             // This is required when a disconnect is sent from another thread while the 
             // worker thread is still sending publish packets etc.
-            using (await _syncRoot.WaitAsync(cancellationToken).ConfigureAwait(false))
+            using (await _syncRoot.EnterAsync(cancellationToken).ConfigureAwait(false))
             {
                 // Check for cancellation here again because "WaitAsync" might take some time.
                 cancellationToken.ThrowIfCancellationRequested();
@@ -344,7 +363,7 @@ namespace MQTTnet.Adapter
                 var fixedHeader = readFixedHeaderResult.FixedHeader;
                 if (fixedHeader.RemainingLength == 0)
                 {
-                    return new ReceivedMqttPacket(fixedHeader.Flags, PlatformAbstractionLayer.EmptyByteArraySegment, 2);
+                    return new ReceivedMqttPacket(fixedHeader.Flags, EmptyBuffer.ArraySegment, 2);
                 }
 
                 var bodyLength = fixedHeader.RemainingLength;

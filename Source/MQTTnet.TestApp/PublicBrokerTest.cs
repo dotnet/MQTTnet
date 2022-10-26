@@ -8,7 +8,7 @@ using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.TestApp
@@ -144,7 +144,7 @@ namespace MQTTnet.TestApp
                 client.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedMessage = e.ApplicationMessage;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await client.ConnectAsync(options);

@@ -236,6 +236,49 @@ public static class Client_Connection_Samples
         }
     }
 
+    public static async Task Disconnect_Clean()
+    {
+        /*
+         * This sample disconnects from the server with sending a DISCONNECT packet.
+         * This way of disconnecting is treated as a clean disconnect which will not
+         * trigger sending the last will etc.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
+
+            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            // Calling _DisconnectAsync_ will send a DISCONNECT packet before closing the connection.
+            // Using a reason code requires MQTT version 5.0.0!
+            await mqttClient.DisconnectAsync(MqttClientDisconnectReason.ImplementationSpecificError);
+        }
+    }
+
+    public static async Task Disconnect_Non_Clean()
+    {
+        /*
+         * This sample disconnects from the server without sending a DISCONNECT packet.
+         * This way of disconnecting is treated as a non clean disconnect which will
+         * trigger sending the last will etc.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        var mqttClient = mqttFactory.CreateMqttClient();
+
+        var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
+
+        await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+        // Calling _Dispose_ or use of a _using_ statement will close the transport connection
+        // without sending a DISCONNECT packet to the server.
+        mqttClient.Dispose();
+    }
+
     public static async Task Inspect_Certificate_Validation_Errors()
     {
         /*

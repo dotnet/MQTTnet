@@ -9,7 +9,6 @@ using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
@@ -238,16 +237,16 @@ namespace MQTTnet.Client
 
         public async Task PingAsync(CancellationToken cancellationToken = default)
         {
-            if (!cancellationToken.CanBeCanceled)
+            if (cancellationToken.CanBeCanceled)
+            {
+                await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
+            }
+            else
             {
                 using (var timeout = new CancellationTokenSource(Options.Timeout))
                 {
                     await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, timeout.Token).ConfigureAwait(false);
                 }
-            }
-            else
-            {
-                await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -405,7 +404,7 @@ namespace MQTTnet.Client
                 throw new MqttProtocolViolationException("Received a not supported QoS level.");
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         async Task<MqttClientConnectResult> AuthenticateAsync(MqttClientOptions options, CancellationToken cancellationToken)
@@ -547,7 +546,7 @@ namespace MQTTnet.Client
                 return DisconnectCoreAsync(sender, exception, connectResult, clientWasConnected);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         bool DisconnectIsPendingOrFinished()
@@ -607,7 +606,7 @@ namespace MQTTnet.Client
                 return extendedAuthenticationExchangeHandler.HandleRequestAsync(new MqttExtendedAuthenticationExchangeContext(authPacket, this));
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         Task ProcessReceivedDisconnectPacket(MqttDisconnectPacket disconnectPacket)
@@ -661,7 +660,7 @@ namespace MQTTnet.Client
                 return SendAsync(pubRelPacket, cancellationToken);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)

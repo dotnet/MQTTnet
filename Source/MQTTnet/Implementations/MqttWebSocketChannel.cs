@@ -117,7 +117,7 @@ namespace MQTTnet.Implementations
                 return;
             }
 
-            using (await _sendLock.WaitAsync(cancellationToken).ConfigureAwait(false))
+            using (await _sendLock.EnterAsync(cancellationToken).ConfigureAwait(false))
             {
                 await _webSocket.SendAsync(buffer, WebSocketMessageType.Binary, isEndOfPacket, cancellationToken).ConfigureAwait(false);
             }

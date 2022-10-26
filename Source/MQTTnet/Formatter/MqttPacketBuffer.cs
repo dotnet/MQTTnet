@@ -5,12 +5,13 @@
 using System;
 using System.Linq;
 using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Formatter
 {
     public readonly struct MqttPacketBuffer
     {
-        static readonly ArraySegment<byte> EmptyPayload = PlatformAbstractionLayer.EmptyByteArraySegment;
+        static readonly ArraySegment<byte> EmptyPayload = EmptyBuffer.ArraySegment;
         
         public MqttPacketBuffer(ArraySegment<byte> packet, ArraySegment<byte> payload)
         {

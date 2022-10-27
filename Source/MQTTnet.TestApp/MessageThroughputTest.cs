@@ -5,6 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using MQTTnet.Internal;
 
 namespace MQTTnet.TestApp
 {
@@ -124,7 +125,7 @@ namespace MQTTnet.TestApp
             {
                 _cancellationTokenSource.Cancel();
             }
-            return Implementations.PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         public async Task Cleanup()

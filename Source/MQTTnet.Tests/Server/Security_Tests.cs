@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests.Server
@@ -33,7 +33,7 @@ namespace MQTTnet.Tests.Server
                         publishedApplicationMessages.Add(eventArgs.ApplicationMessage);
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 testEnvironment.Server.ValidatingConnectionAsync += eventArgs =>
@@ -47,7 +47,7 @@ namespace MQTTnet.Tests.Server
                         eventArgs.ReasonCode = MqttConnectReasonCode.NotAuthorized;
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 using (var validClient = testEnvironment.CreateClient())
@@ -157,7 +157,7 @@ namespace MQTTnet.Tests.Server
                         e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var client = testEnvironment.CreateClient();

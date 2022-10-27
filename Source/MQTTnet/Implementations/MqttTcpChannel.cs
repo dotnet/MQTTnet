@@ -14,6 +14,7 @@ using System.Runtime.ExceptionServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations
 {
@@ -154,7 +155,7 @@ namespace MQTTnet.Implementations
         public Task DisconnectAsync(CancellationToken cancellationToken)
         {
             Dispose();
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         public void Dispose()

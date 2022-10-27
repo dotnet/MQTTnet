@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Extensions.Rpc
 {
@@ -119,7 +120,7 @@ namespace MQTTnet.Extensions.Rpc
         {
             if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var awaitable))
             {
-                return PlatformAbstractionLayer.CompletedTask;
+                return CompletedTask.Instance;
             }
 
 #if NET452
@@ -131,7 +132,7 @@ namespace MQTTnet.Extensions.Rpc
             // Set this message to handled to that other code can avoid execution etc.
             eventArgs.IsHandled = true;
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         public void Dispose()

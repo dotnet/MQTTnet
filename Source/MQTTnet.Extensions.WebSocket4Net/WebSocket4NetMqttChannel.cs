@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using MQTTnet.Channel;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using SuperSocket.ClientEngine;
 using WebSocket4Net;
 
@@ -124,7 +125,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
                 _webSocket.Close();
             }
             
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -157,7 +158,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
         public Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
             _webSocket.Send(buffer.Array, buffer.Offset, buffer.Count);
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         public void Dispose()

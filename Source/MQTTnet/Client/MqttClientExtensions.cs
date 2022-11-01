@@ -14,63 +14,26 @@ namespace MQTTnet.Client
 {
     public static class MqttClientExtensions
     {
-        public static async Task<bool> TryPingAsync(this IMqttClient client, CancellationToken cancellationToken = default)
-        {
-            if (client == null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
-
-            try
-            {
-                await client.PingAsync(cancellationToken).ConfigureAwait(false);
-                return true;
-            }
-            catch
-            {
-                // Ignore errors.
-            }
-
-            return false;
-        }
-
-        public static async Task<bool> TryDisconnectAsync(
+        public static Task DisconnectAsync(
             this IMqttClient client,
             MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection,
-            string reasonString = null)
+            string reasonString = null,
+            uint sessionExpiryInterval = 0,
+            CancellationToken cancellationToken = default)
         {
             if (client == null)
             {
                 throw new ArgumentNullException(nameof(client));
             }
 
-            try
+            var disconnectOptions = new MqttClientDisconnectOptions
             {
-                await client.DisconnectAsync(reason, reasonString).ConfigureAwait(false);
-                return true;
-            }
-            catch
-            {
-                // Ignore all errors.
-            }
-            
-            return false;
-        }
-        
-        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection, string reasonString = null)
-        {
-            if (client == null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
+                Reason = reason,
+                ReasonString = reasonString,
+                SessionExpiryInterval = sessionExpiryInterval
+            };
 
-            return client.DisconnectAsync(
-                new MqttClientDisconnectOptions
-                {
-                    Reason = reason,
-                    ReasonString = reasonString
-                },
-                CancellationToken.None);
+            return client.DisconnectAsync(disconnectOptions, cancellationToken);
         }
 
         public static Task<MqttClientPublishResult> PublishBinaryAsync(
@@ -158,6 +121,49 @@ namespace MQTTnet.Client
             var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topic, qualityOfServiceLevel).Build();
 
             return mqttClient.SubscribeAsync(subscribeOptions, cancellationToken);
+        }
+
+        public static async Task<bool> TryDisconnectAsync(
+            this IMqttClient client,
+            MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection,
+            string reasonString = null)
+        {
+            if (client == null)
+            {
+                throw new ArgumentNullException(nameof(client));
+            }
+
+            try
+            {
+                await client.DisconnectAsync(reason, reasonString).ConfigureAwait(false);
+                return true;
+            }
+            catch
+            {
+                // Ignore all errors.
+            }
+
+            return false;
+        }
+
+        public static async Task<bool> TryPingAsync(this IMqttClient client, CancellationToken cancellationToken = default)
+        {
+            if (client == null)
+            {
+                throw new ArgumentNullException(nameof(client));
+            }
+
+            try
+            {
+                await client.PingAsync(cancellationToken).ConfigureAwait(false);
+                return true;
+            }
+            catch
+            {
+                // Ignore errors.
+            }
+
+            return false;
         }
 
         public static Task<MqttClientUnsubscribeResult> UnsubscribeAsync(this IMqttClient mqttClient, string topic, CancellationToken cancellationToken = default)

@@ -43,7 +43,13 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public void WithUserProperty(string name, string value)
+        public MqttClientDisconnectOptionsBuilder WithUserProperties(List<MqttUserProperty> userProperties)
+        {
+            _userProperties = userProperties;
+            return this;
+        }
+
+        public MqttClientDisconnectOptionsBuilder WithUserProperty(string name, string value)
         {
             if (_userProperties == null)
             {
@@ -51,6 +57,7 @@ namespace MQTTnet.Client
             }
 
             _userProperties.Add(new MqttUserProperty(name, value));
+            return this;
         }
     }
 }

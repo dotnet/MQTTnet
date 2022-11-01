@@ -11,7 +11,6 @@ using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
@@ -64,11 +63,11 @@ namespace MQTTnet.Server
 
         public IMqttChannelAdapter ChannelAdapter { get; }
 
+        public MqttDisconnectPacket DisconnectPacket { get; set; }
+
         public string Endpoint { get; }
 
         public string Id => _connectPacket.ClientId;
-
-        public bool IsCleanDisconnect { get; private set; }
 
         public bool IsRunning { get; private set; }
 
@@ -98,7 +97,8 @@ namespace MQTTnet.Server
 
                 try
                 {
-                    _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
+                    _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default)
+                        .ConfigureAwait(false);
 
                     IsRunning = true;
 
@@ -115,7 +115,9 @@ namespace MQTTnet.Server
 
             _packetDispatcher.CancelAll();
 
-            if (!IsTakenOver && !IsCleanDisconnect && Session.LatestConnectPacket.WillFlag && !Session.WillMessageSent)
+            var isCleanDisconnect = DisconnectPacket != null;
+
+            if (!IsTakenOver && !isCleanDisconnect && Session.LatestConnectPacket.WillFlag && !Session.WillMessageSent)
             {
                 var willPublishPacket = _packetFactories.Publish.Create(Session.LatestConnectPacket);
                 var willApplicationMessage = _applicationMessageFactory.Create(willPublishPacket);
@@ -391,7 +393,7 @@ namespace MQTTnet.Server
                     {
                         return;
                     }
-                    
+
                     // Check for cancellation again because receive packet might block some time.
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -404,7 +406,7 @@ namespace MQTTnet.Server
                     {
                         return;
                     }
-                    
+
                     var processPacket = true;
 
                     if (_eventContainer.InterceptingInboundPacketEvent.HasHandlers)
@@ -460,9 +462,9 @@ namespace MQTTnet.Server
                     {
                         throw new MqttProtocolViolationException("A PINGRESP Packet is sent by the Server to the Client in response to a PINGREQ Packet only.");
                     }
-                    else if (packet is MqttDisconnectPacket)
+                    else if (packet is MqttDisconnectPacket disconnectPacket)
                     {
-                        IsCleanDisconnect = true;
+                        DisconnectPacket = disconnectPacket;
                         return;
                     }
                     else

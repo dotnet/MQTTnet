@@ -341,8 +341,8 @@ namespace MQTTnet.Server
 
                     if (client.Id != null && !client.IsTakenOver && _eventContainer.ClientDisconnectedEvent.HasHandlers)
                     {
-                        var disconnectType = client.IsCleanDisconnect ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean;
-                        var eventArgs = new ClientDisconnectedEventArgs(client.Id, disconnectType, endpoint, client.Session.Items);
+                        var disconnectType = client.DisconnectPacket != null ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean;
+                        var eventArgs = new ClientDisconnectedEventArgs(client.Id, client.DisconnectPacket, disconnectType, endpoint, client.Session.Items);
 
                         await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
@@ -537,6 +537,7 @@ namespace MQTTnet.Server
                     {
                         var eventArgs = new ClientDisconnectedEventArgs(
                             existingClient.Id,
+                            null,
                             MqttClientDisconnectType.Takeover,
                             existingClient.Endpoint,
                             existingClient.Session.Items);

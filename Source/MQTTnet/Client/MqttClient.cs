@@ -447,6 +447,8 @@ namespace MQTTnet.Client
 
             try
             {
+                _packetDispatcher.FailAll(new MqttClientDisconnectedException(exception));
+                
                 var receiverTask = WaitForTaskAsync(_packetReceiverTask, sender);
                 var publishPacketReceiverTask = WaitForTaskAsync(_publishPacketReceiverTask, sender);
                 var keepAliveTask = WaitForTaskAsync(_keepAlivePacketsSenderTask, sender);
@@ -558,7 +560,7 @@ namespace MQTTnet.Client
             _disconnectReasonString = disconnectPacket.ReasonString;
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
-            _packetDispatcher.FailAll(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));
+            _packetDispatcher.FailAll(new MqttClientUnexpectedDisconnectReceivedException(disconnectPacket));
 
             return DisconnectInternalAsync(_packetReceiverTask, null, null);
         }

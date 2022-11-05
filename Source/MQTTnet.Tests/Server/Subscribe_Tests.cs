@@ -47,6 +47,22 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
+        [ExpectedException(typeof(MqttClientDisconnectedException))]
+        public async Task Disconnect_While_Subscribing()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var server = await testEnvironment.StartServer();
+
+                // The client will be disconnect directly after subscribing!
+                server.ClientSubscribedTopicAsync += ev => server.DisconnectClientAsync(ev.ClientId, MqttDisconnectReasonCode.NormalDisconnection);
+
+                var client = await testEnvironment.ConnectClient();
+                await client.SubscribeAsync("#");
+            }
+        }
+        
+        [TestMethod]
         public async Task Enqueue_Message_After_Subscription()
         {
             using (var testEnvironment = CreateTestEnvironment())

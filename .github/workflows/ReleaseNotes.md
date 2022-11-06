@@ -1,2 +1,1 @@
-* [Core] Fixed dead lock and race conditions in new _AsyncLock_ implementation (#1542).
-* [Client] Fixed connection freeze when using Xamarin etc.
+* [Server] Fixed duplicated invocation of the event _ClientAcknowledgedPublishPacketAsync_ for QoS level 2 (#1550)

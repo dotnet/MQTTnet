@@ -90,7 +90,7 @@ namespace MQTTnet.Tests.Internal
                 Assert.IsTrue(stopwatch.ElapsedMilliseconds > 900);
             }
         }
-        
+
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task Fail_For_Two_Waiters()

@@ -90,5 +90,25 @@ namespace MQTTnet.Tests.Internal
                 Assert.IsTrue(stopwatch.ElapsedMilliseconds > 900);
             }
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task Fail_For_Two_Waiters()
+        {
+            var asyncSignal = new AsyncSignal();
+
+            // This thread will wait properly because it is the first waiter.
+            _ = Task.Run(
+                async () =>
+                {
+                    await asyncSignal.WaitAsync();
+                },
+                CancellationToken.None);
+
+            await Task.Delay(1000);
+            
+            // Now the current thread must fail because there is already a waiter.
+            await asyncSignal.WaitAsync();
+        }
     }
 }

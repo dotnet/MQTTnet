@@ -827,6 +827,11 @@ namespace MQTTnet.Client
                     return;
                 }
 
+                if (exception is AggregateException aggregateException)
+                {
+                    exception = aggregateException.GetBaseException();
+                }
+                
                 if (exception is OperationCanceledException)
                 {
                 }

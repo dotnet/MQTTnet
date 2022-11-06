@@ -169,14 +169,7 @@ namespace MQTTnet.Server
         {
             if (_eventContainer.ClientAcknowledgedPublishPacketEvent.HasHandlers)
             {
-                var eventArgs = new ClientAcknowledgedPublishPacketEventArgs
-                {
-                    PublishPacket = publishPacket,
-                    AcknowledgePacket = acknowledgePacket,
-                    ClientId = Id,
-                    SessionItems = Session.Items
-                };
-
+                var eventArgs = new ClientAcknowledgedPublishPacketEventArgs(Id, Session.Items, publishPacket, acknowledgePacket);
                 return _eventContainer.ClientAcknowledgedPublishPacketEvent.TryInvokeAsync(eventArgs, _logger);
             }
 
@@ -271,17 +264,14 @@ namespace MQTTnet.Server
             }
         }
 
-        async Task HandleIncomingPubRecPacket(MqttPubRecPacket pubRecPacket)
+        Task HandleIncomingPubRecPacket(MqttPubRecPacket pubRecPacket)
         {
-            var acknowledgedPublishPacket = Session.PeekAcknowledgePublishPacket(pubRecPacket.PacketIdentifier);
-
-            if (acknowledgedPublishPacket != null)
-            {
-                await ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubRecPacket).ConfigureAwait(false);
-            }
-
+            // Do not fire the event _ClientAcknowledgedPublishPacket_ here because the QoS 2 process is only finished
+            // properly when the client has sent the PUBCOMP packet.
             var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
             Session.EnqueueControlPacket(new MqttPacketBusItem(pubRelPacket));
+
+            return CompletedTask.Instance;
         }
 
         void HandleIncomingPubRelPacket(MqttPubRelPacket pubRelPacket)

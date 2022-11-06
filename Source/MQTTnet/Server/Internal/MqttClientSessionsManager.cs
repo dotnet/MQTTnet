@@ -418,9 +418,9 @@ namespace MQTTnet.Server
 
             if (subscribeResult.RetainedMessages != null)
             {
-                foreach (var retainedApplicationMessage in subscribeResult.RetainedMessages)
+                foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
                 {
-                    var publishPacket = _packetFactories.Publish.Create(retainedApplicationMessage.ApplicationMessage);
+                    var publishPacket = _packetFactories.Publish.Create(retainedMessageMatch);
                     clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
                 }
             }
@@ -485,9 +485,10 @@ namespace MQTTnet.Server
             using (await _createConnectionSyncRoot.EnterAsync().ConfigureAwait(false))
             {
                 MqttSession session;
+                MqttSession oldSession;
                 lock (_sessionsManagementLock)
                 {
-                    if (!_sessions.TryGetValue(connectPacket.ClientId, out session))
+                    if (!_sessions.TryGetValue(connectPacket.ClientId, out oldSession))
                     {
                         session = CreateSession(connectPacket.ClientId, validatingConnectionEventArgs.SessionItems, sessionShouldPersist);
                     }
@@ -496,11 +497,14 @@ namespace MQTTnet.Server
                         if (connectPacket.CleanSession)
                         {
                             _logger.Verbose("Deleting existing session of client '{0}' due to clean start.", connectPacket.ClientId);
+                            _subscriberSessions.Remove(oldSession);
                             session = CreateSession(connectPacket.ClientId, validatingConnectionEventArgs.SessionItems, sessionShouldPersist);
                         }
                         else
                         {
                             _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
+                            session = oldSession;
+                            oldSession = null;
                             // Session persistence could change for MQTT 5 clients that reconnect with different SessionExpiryInterval
                             session.IsPersistent = sessionShouldPersist;
                             connAckPacket.IsSessionPresent = true;
@@ -533,7 +537,7 @@ namespace MQTTnet.Server
                     existingClient.IsTakenOver = true;
                     await existingClient.StopAsync(MqttDisconnectReasonCode.SessionTakenOver).ConfigureAwait(false);
 
-                    if (_eventContainer.ClientConnectedEvent.HasHandlers)
+                    if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                     {
                         var eventArgs = new ClientDisconnectedEventArgs(
                             existingClient.Id,
@@ -544,6 +548,8 @@ namespace MQTTnet.Server
                         await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
                 }
+
+                oldSession?.Dispose();
             }
 
             return client;

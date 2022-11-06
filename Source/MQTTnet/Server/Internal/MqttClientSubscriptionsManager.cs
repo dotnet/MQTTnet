@@ -169,10 +169,7 @@ namespace MQTTnet.Server
             }
 
             var retainedApplicationMessages = await _retainedMessagesManager.GetMessages().ConfigureAwait(false);
-            var result = new SubscribeResult
-            {
-                ReasonCodes = new List<MqttSubscribeReasonCode>(subscribePacket.TopicFilters.Count)
-            };
+            var result = new SubscribeResult(subscribePacket.TopicFilters.Count);
 
             var addedSubscriptions = new List<string>();
             var finalTopicFilters = new List<MqttTopicFilter>();
@@ -412,14 +409,14 @@ namespace MQTTnet.Server
         }
 
         static void FilterRetainedApplicationMessages(
-            IList<MqttApplicationMessage> retainedApplicationMessages,
+            IList<MqttApplicationMessage> retainedMessages,
             CreateSubscriptionResult createSubscriptionResult,
             SubscribeResult subscribeResult)
         {
-            for (var index = retainedApplicationMessages.Count - 1; index >= 0; index--)
+            for (var index = retainedMessages.Count - 1; index >= 0; index--)
             {
-                var retainedApplicationMessage = retainedApplicationMessages[index];
-                if (retainedApplicationMessage == null)
+                var retainedMessage = retainedMessages[index];
+                if (retainedMessage == null)
                 {
                     continue;
                 }
@@ -436,16 +433,21 @@ namespace MQTTnet.Server
                     continue;
                 }
 
-                if (MqttTopicFilterComparer.Compare(retainedApplicationMessage.Topic, createSubscriptionResult.Subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
+                if (MqttTopicFilterComparer.Compare(retainedMessage.Topic, createSubscriptionResult.Subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
                 {
                     continue;
                 }
 
-                var retainedMessageMatch = new MqttRetainedMessageMatch
+                var retainedMessageMatch = new MqttRetainedMessageMatch(retainedMessage, createSubscriptionResult.Subscription.GrantedQualityOfServiceLevel);
+                if (retainedMessageMatch.SubscriptionQualityOfServiceLevel > retainedMessageMatch.ApplicationMessage.QualityOfServiceLevel)
                 {
-                    ApplicationMessage = retainedApplicationMessage,
-                    SubscriptionQualityOfServiceLevel = createSubscriptionResult.Subscription.GrantedQualityOfServiceLevel
-                };
+                    // UPGRADING the QoS is not allowed! 
+                    // From MQTT spec: Subscribing to a Topic Filter at QoS 2 is equivalent to saying
+                    // "I would like to receive Messages matching this filter at the QoS with which they were published".
+                    // This means a publisher is responsible for determining the maximum QoS a Message can be delivered at,
+                    // but a subscriber is able to require that the Server downgrades the QoS to one more suitable for its usage.
+                    retainedMessageMatch.SubscriptionQualityOfServiceLevel = retainedMessageMatch.ApplicationMessage.QualityOfServiceLevel;
+                }
 
                 if (subscribeResult.RetainedMessages == null)
                 {
@@ -456,7 +458,7 @@ namespace MQTTnet.Server
 
                 // Clear the retained message from the list because the client should receive every message only 
                 // one time even if multiple subscriptions affect them.
-                retainedApplicationMessages[index] = null;
+                retainedMessages[index] = null;
             }
         }
 

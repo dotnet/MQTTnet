@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -13,11 +11,11 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public class Subscription_TopicHash_Tests
+    public sealed class SubscriptionTopicHashTests
     {
         enum TopicHashSelector {  NoWildcard, SingleWildcard, MultiWildcard };
 
-        MQTTnet.Server.MqttSession _clientSession;
+        MqttSession _clientSession;
 
         [TestMethod]
         public void Match_Hash_Test_SingleWildCard()
@@ -26,13 +24,9 @@ namespace MQTTnet.Tests.Server
             var l1 = "topic1";
             var l2 = "+";
             var l3 = "prop1";
-            var topic = string.Format("{0}/{1}/{2}/{3}", l0, l1, l2, l3);
+            var topic = $"{l0}/{l1}/{l2}/{l3}";
 
-
-            UInt64 topicHash;
-            UInt64 topicHashMask;
-            bool topicHasWildcard;
-            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out var topicHashMask, out var topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
 
@@ -65,13 +59,9 @@ namespace MQTTnet.Tests.Server
             var l1 = "topic1";
             var l2 = "sub1";
             var l3 = "#";
-            var topic = string.Format("{0}/{1}/{2}/{3}", l0, l1, l2, l3);
+            var topic = $"{l0}/{l1}/{l2}/{l3}";
 
-            UInt64 topicHash;
-            UInt64 topicHashMask;
-            bool topicHasWildcard;
-
-            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out var topicHashMask, out var topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
 
@@ -104,13 +94,9 @@ namespace MQTTnet.Tests.Server
             var l1 = "topic1";
             var l2 = "sub1";
             var l3 = "prop1";
-            var topic = string.Format("{0}/{1}/{2}/{3}", l0, l1, l2, l3);
+            var topic = $"{l0}/{l1}/{l2}/{l3}";
 
-            UInt64 topicHash;
-            UInt64 topicHashMask;
-            bool topicHasWildcard;
-
-            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out var topicHashMask, out var topicHasWildcard);
 
             Assert.IsFalse(topicHasWildcard, "Wildcard detected when not wildcard present");
 
@@ -144,14 +130,14 @@ namespace MQTTnet.Tests.Server
         public void Match_Hash_Test_LongTopic_MultiWildcard()
         {
             var sb = new StringBuilder();
-            const int NumLevels = 8;
-            var levelNames = new string[NumLevels];
-            for (var i = 0; i < NumLevels; ++i)
+            const int numLevels = 8;
+            var levelNames = new string[numLevels];
+            for (var i = 0; i < numLevels; ++i)
             {
                 if (i > 0)
                     sb.Append("/");
                 string levelName;
-                if (i == NumLevels - 1)
+                if (i == numLevels - 1)
                 {
                     // last one is #
                     levelName = "#";
@@ -167,11 +153,7 @@ namespace MQTTnet.Tests.Server
             
             // UInt64 is limited to 8 levels
 
-            UInt64 topicHash;
-            UInt64 topicHashMask;
-            bool topicHasWildcard;
-
-            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out var topicHashMask, out var topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
 
@@ -214,14 +196,14 @@ namespace MQTTnet.Tests.Server
         public void Match_Hash_Test_LongTopic_SingleWildCard()
         {
             var sb = new StringBuilder();
-            const int NumLevels = 8;
-            var levelNames = new string[NumLevels];
-            for (var i = 0; i < NumLevels; ++i)
+            const int numLevels = 8;
+            var levelNames = new string[numLevels];
+            for (var i = 0; i < numLevels; ++i)
             {
                 if (i > 0)
                     sb.Append("/");
                 string levelName;
-                if (i == NumLevels - 1)
+                if (i == numLevels - 1)
                 {
                     // last one is +
                     levelName = "+";
@@ -235,11 +217,7 @@ namespace MQTTnet.Tests.Server
             }
             var topic = sb.ToString();
 
-            UInt64 topicHash;
-            UInt64 topicHashMask;
-            bool topicHasWildcard;
-
-            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out var topicHashMask, out var topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
 
@@ -284,9 +262,9 @@ namespace MQTTnet.Tests.Server
         public void Match_Hash_Test_LongTopic_NoWildCard()
         {
             var sb = new StringBuilder();
-            const int NumLevels = 9;
-            var levelNames = new string[NumLevels];
-            for(var i=0; i < NumLevels; ++i)
+            const int numLevels = 9;
+            var levelNames = new string[numLevels];
+            for(var i=0; i < numLevels; ++i)
             {
                 if (i > 0)
                     sb.Append("/");
@@ -296,11 +274,7 @@ namespace MQTTnet.Tests.Server
             }
             var topic = sb.ToString();
 
-            UInt64 topicHash;
-            UInt64 topicHashMask;
-            bool topicHasWildcard;
-
-            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out var topicHashMask, out var topicHasWildcard);
 
             Assert.IsFalse(topicHasWildcard, "Wildcard detected when not present");
 
@@ -332,11 +306,7 @@ namespace MQTTnet.Tests.Server
         {
             var topic = "asdfasdf/asdfasdf/asdfasdf/asdfasdf/asdfas/dfaf/assfdgsdfgdf/+";
 
-            UInt64 topicHash;
-            UInt64 topicHashMask;
-            bool topicHasWildcard;
-
-            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out var topicHashMask, out var topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
         }
@@ -349,11 +319,7 @@ namespace MQTTnet.Tests.Server
         {
             var topic = "asdfasdf/asdfasdf/asdfasdf/asdfasdf/asdfas/dfaf/assfdgsdfgdf/#";
 
-            UInt64 topicHash;
-            UInt64 topicHashMask;
-            bool topicHasWildcard;
-
-            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out topicHashMask, out topicHasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out var topicHashMask, out var topicHasWildcard);
 
             Assert.IsTrue(topicHasWildcard, "Wildcard not detected");
         }
@@ -422,14 +388,10 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public void Check_Hash_Bucket_Depth()
         {
-            Dictionary<string, List<string>> topicsByPublisher;
-            Dictionary<string, List<string>> singleWildcardTopicsByPublisher;
-            Dictionary<string, List<string>> multiWildcardTopicsByPublisher;
+            const int numPublishers = 5000;
+            const int numTopicsPerPublisher = 10;
 
-            const int NumPublishers = 5000;
-            const int NumTopicsPerPublisher = 10;
-
-            TopicGenerator.Generate(NumPublishers, NumTopicsPerPublisher, out topicsByPublisher, out singleWildcardTopicsByPublisher, out multiWildcardTopicsByPublisher);
+            TopicGenerator.Generate(numPublishers, numTopicsPerPublisher, out var topicsByPublisher, out var singleWildcardTopicsByPublisher, out var multiWildcardTopicsByPublisher);
 
             // There will be many 'similar' topics ending with, i.e. "sensor100", "sensor101", ...
             // Hash bucket depths should remain low.
@@ -444,10 +406,7 @@ namespace MQTTnet.Tests.Server
                 var topics = t.Value;
                 foreach (var topic in topics)
                 {
-                    UInt64 topicHash;
-                    UInt64 hashMask;
-                    bool hasWildcard;
-                    MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out hashMask, out hasWildcard);
+                    MqttSubscription.CalculateTopicHash(topic, out var topicHash, out var hashMask, out var hasWildcard);
 
                     bucketDepths.TryGetValue(topicHash, out var currentValue);
                     ++currentValue;
@@ -489,16 +448,12 @@ namespace MQTTnet.Tests.Server
 
         void CheckTopicHash(string topic, ulong expectedHash, ulong expectedHashMask)
         {
-            ulong topicHash;
-            ulong hashMask;
-            bool hasWildcard;
-
-            MQTTnet.Server.MqttSubscription.CalculateTopicHash(topic, out topicHash, out hashMask, out hasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out var hashMask, out var hasWildcard);
 
             Console.WriteLine();
             Console.WriteLine("Topic: " + topic);
-            Console.WriteLine(string.Format("Hash: {0:X8}", topicHash));
-            Console.WriteLine(string.Format("Hash Mask: {0:X8}", hashMask));
+            Console.WriteLine($"Hash: {topicHash:X8}");
+            Console.WriteLine($"Hash Mask: {hashMask:X8}");
 
             Assert.AreEqual(expectedHash, topicHash, "Topic hash not as expected. Has the hash function changed?");
             Assert.AreEqual(expectedHashMask, hashMask, "Topic hash mask not as expected");
@@ -507,27 +462,23 @@ namespace MQTTnet.Tests.Server
 
         async Task<List<string>> PrepareTopicHashSubscriptions(TopicHashSelector selector)
         {
-            Dictionary<string, List<string>> topicsByPublisher;
-            Dictionary<string, List<string>> singleWildcardTopicsByPublisher;
-            Dictionary<string, List<string>> multiWildcardTopicsByPublisher;
+            const int numPublishers = 1;
+            const int numTopicsPerPublisher = 10000;
 
-            const int NumPublishers = 1;
-            const int NumTopicsPerPublisher = 10000;
-
-            TopicGenerator.Generate(NumPublishers, NumTopicsPerPublisher, out topicsByPublisher, out singleWildcardTopicsByPublisher, out multiWildcardTopicsByPublisher);
+            TopicGenerator.Generate(numPublishers, numTopicsPerPublisher, out var topicsByPublisher, out var singleWildcardTopicsByPublisher, out var multiWildcardTopicsByPublisher);
 
             var topics = topicsByPublisher.FirstOrDefault().Value;
             var singleWildcardTopics = singleWildcardTopicsByPublisher.FirstOrDefault().Value;
             var multiWildcardTopics = multiWildcardTopicsByPublisher.FirstOrDefault().Value;
 
-            const string ClientId = "Client1";
-            var logger = new Mockups.TestLogger();
-            var serverOptions = new MQTTnet.Server.MqttServerOptions();
-            var eventContainer = new MQTTnet.Server.MqttServerEventContainer();
+            const string clientId = "Client1";
+            var logger = new TestLogger();
+            var serverOptions = new MqttServerOptions();
+            var eventContainer = new MqttServerEventContainer();
             var retainedMessagesManager = new MqttRetainedMessagesManager(eventContainer, logger);
             var sessionManager = new MqttClientSessionsManager(serverOptions, retainedMessagesManager, eventContainer, logger);
-            _clientSession = new MQTTnet.Server.MqttSession(
-                        ClientId,
+            _clientSession = new MqttSession(
+                        clientId,
                         false,
                         new Dictionary<object, object>(),
                         serverOptions,
@@ -553,16 +504,18 @@ namespace MQTTnet.Tests.Server
             foreach (var t in topicsToSubscribe)
             {
                 var subPacket = new Packets.MqttSubscribePacket();
-                var filter = new Packets.MqttTopicFilter();
-                filter.Topic = t;
+                var filter = new Packets.MqttTopicFilter
+                {
+                    Topic = t
+                };
                 subPacket.TopicFilters.Add(filter);
-                await _clientSession.SubscriptionsManager.Subscribe(subPacket, default(CancellationToken));
+                await _clientSession.SubscriptionsManager.Subscribe(subPacket, default);
             }
 
             return topics;
         }
 
-        int CheckTopicSubscriptions(MQTTnet.Server.MqttSession clientSession, List<string> topicsToFind, string subject)
+        int CheckTopicSubscriptions(MqttSession clientSession, List<string> topicsToFind, string subject)
         {
             var matchCount = 0;
 
@@ -577,12 +530,9 @@ namespace MQTTnet.Tests.Server
                 {
                     var topicToFind = topicsToFind[countDown];
 
-                    UInt64 topicHash;
-                    UInt64 hashMask;
-                    bool hasWildcard;
-                    MQTTnet.Server.MqttSubscription.CalculateTopicHash((string)topicToFind, out topicHash, out hashMask, out hasWildcard);
+                    MqttSubscription.CalculateTopicHash(topicToFind, out var topicHash, out var hashMask, out var hasWildcard);
 
-                    var result = clientSession.SubscriptionsManager.CheckSubscriptions((string)topicToFind, topicHash, MqttQualityOfServiceLevel.AtMostOnce, "OtherClient");
+                    var result = clientSession.SubscriptionsManager.CheckSubscriptions(topicToFind, topicHash, MqttQualityOfServiceLevel.AtMostOnce, "OtherClient");
                     if (result.IsSubscribed)
                     {
                         ++matchCount;

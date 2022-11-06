@@ -55,7 +55,7 @@ namespace MQTTnet.Tests.Server
                             });
                     }
 
-                    SpinWait.SpinUntil(() => receivedMessages == 100000, TimeSpan.FromSeconds(60));
+                    SpinWait.SpinUntil(() => receivedMessages == 100000, TimeSpan.FromSeconds(90));
 
                     Assert.AreEqual(100000, receivedMessages);
                 }

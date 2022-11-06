@@ -10,8 +10,13 @@ namespace MQTTnet.Server
 {
     public sealed class SubscribeResult
     {
+        public SubscribeResult(int topicsCount)
+        {
+            ReasonCodes = new List<MqttSubscribeReasonCode>(topicsCount);
+        }
+        
         public bool CloseConnection { get; set; }
-
+        
         public List<MqttSubscribeReasonCode> ReasonCodes { get; set; }
 
         public string ReasonString { get; set; }

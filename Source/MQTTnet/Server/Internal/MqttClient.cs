@@ -11,7 +11,6 @@ using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
@@ -307,14 +306,13 @@ namespace MQTTnet.Server
 
             if (subscribeResult.RetainedMessages != null)
             {
-                foreach (var retainedApplicationMessage in subscribeResult.RetainedMessages)
+                foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
                 {
-                    var publishPacket = _packetFactories.Publish.Create(retainedApplicationMessage.ApplicationMessage);
+                    var publishPacket = _packetFactories.Publish.Create(retainedMessageMatch);
                     Session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
                 }
             }
         }
-
 
         async Task HandleIncomingUnsubscribePacket(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {

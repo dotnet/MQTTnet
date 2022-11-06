@@ -418,9 +418,9 @@ namespace MQTTnet.Server
 
             if (subscribeResult.RetainedMessages != null)
             {
-                foreach (var retainedApplicationMessage in subscribeResult.RetainedMessages)
+                foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
                 {
-                    var publishPacket = _packetFactories.Publish.Create(retainedApplicationMessage.ApplicationMessage);
+                    var publishPacket = _packetFactories.Publish.Create(retainedMessageMatch);
                     clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
                 }
             }

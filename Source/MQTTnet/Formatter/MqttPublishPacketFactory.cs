@@ -5,6 +5,7 @@
 using System;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
+using MQTTnet.Server;
 
 namespace MQTTnet.Formatter
 {
@@ -79,6 +80,18 @@ namespace MQTTnet.Formatter
             };
 
             return packet;
+        }
+
+        public MqttPublishPacket Create(MqttRetainedMessageMatch retainedMessage)
+        {
+            if (retainedMessage == null)
+            {
+                throw new ArgumentNullException(nameof(retainedMessage));
+            }
+
+            var publishPacket = Create(retainedMessage.ApplicationMessage);
+            publishPacket.QualityOfServiceLevel = retainedMessage.SubscriptionQualityOfServiceLevel;
+            return publishPacket;
         }
     }
 }

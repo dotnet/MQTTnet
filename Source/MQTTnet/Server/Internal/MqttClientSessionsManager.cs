@@ -150,11 +150,17 @@ namespace MQTTnet.Server
 
                 foreach (var session in subscriberSessions)
                 {
-                    var checkSubscriptionsResult = session.SubscriptionsManager.CheckSubscriptions(
+                    if(!session.TryCheckSubscriptions(
                         applicationMessage.Topic,
                         topicHash,
                         applicationMessage.QualityOfServiceLevel,
-                        senderId);
+                        senderId,
+                        out var checkSubscriptionsResult))
+                    {
+                        // Checking the subscriptions has failed for the session. The session
+                        // will be ignored.
+                        continue;
+                    }
 
                     if (!checkSubscriptionsResult.IsSubscribed)
                     {
@@ -301,7 +307,7 @@ namespace MQTTnet.Server
                         channelAdapter.Endpoint,
                         client.Session.Items);
 
-                    await _eventContainer.ClientConnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                    await _eventContainer.ClientConnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
                 }
 
                 await client.RunAsync().ConfigureAwait(false);
@@ -414,7 +420,7 @@ namespace MQTTnet.Server
 
             var clientSession = GetClientSession(clientId);
 
-            var subscribeResult = await clientSession.SubscriptionsManager.Subscribe(fakeSubscribePacket, CancellationToken.None).ConfigureAwait(false);
+            var subscribeResult = await clientSession.Subscribe(fakeSubscribePacket, CancellationToken.None).ConfigureAwait(false);
 
             if (subscribeResult.RetainedMessages != null)
             {
@@ -441,7 +447,7 @@ namespace MQTTnet.Server
             var fakeUnsubscribePacket = new MqttUnsubscribePacket();
             fakeUnsubscribePacket.TopicFilters.AddRange(topicFilters);
 
-            return GetClientSession(clientId).SubscriptionsManager.Unsubscribe(fakeUnsubscribePacket, CancellationToken.None);
+            return GetClientSession(clientId).Unsubscribe(fakeUnsubscribePacket, CancellationToken.None);
         }
 
         MqttClient CreateClient(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, MqttSession session)
@@ -484,10 +490,14 @@ namespace MQTTnet.Server
 
             using (await _createConnectionSyncRoot.EnterAsync().ConfigureAwait(false))
             {
-                MqttSession session;
                 MqttSession oldSession;
+                MqttClient oldClient;
+                
                 lock (_sessionsManagementLock)
                 {
+                    MqttSession session;
+                    
+                    // Create a new session (if required).
                     if (!_sessions.TryGetValue(connectPacket.ClientId, out oldSession))
                     {
                         session = CreateSession(connectPacket.ClientId, validatingConnectionEventArgs.SessionItems, sessionShouldPersist);
@@ -505,6 +515,7 @@ namespace MQTTnet.Server
                             _logger.Verbose("Reusing existing session of client '{0}'.", connectPacket.ClientId);
                             session = oldSession;
                             oldSession = null;
+                            
                             // Session persistence could change for MQTT 5 clients that reconnect with different SessionExpiryInterval
                             session.IsPersistent = sessionShouldPersist;
                             connAckPacket.IsSessionPresent = true;
@@ -513,39 +524,41 @@ namespace MQTTnet.Server
                     }
 
                     _sessions[connectPacket.ClientId] = session;
+                    
+                    // Create a new client (always required).
+                    _clients.TryGetValue(connectPacket.ClientId, out oldClient);
+                    if (oldClient != null)
+                    {
+                        // This will stop the current client from sending and receiving but remains the connection active
+                        // for a later DISCONNECT packet.
+                        oldClient.IsTakenOver = true;
+                    }
+                    
+                    client = CreateClient(connectPacket, channelAdapter, session);
+
+                    _clients[connectPacket.ClientId] = client;
                 }
 
                 if (!connAckPacket.IsSessionPresent)
                 {
                     // TODO: This event is not yet final. It can already be used but restoring sessions from storage will be added later!
                     var preparingSessionEventArgs = new PreparingSessionEventArgs();
-                    await _eventContainer.PreparingSessionEvent.InvokeAsync(preparingSessionEventArgs).ConfigureAwait(false);
+                    await _eventContainer.PreparingSessionEvent.TryInvokeAsync(preparingSessionEventArgs, _logger).ConfigureAwait(false);
                 }
-
-                MqttClient existingClient;
-
-                lock (_clients)
+                
+                if (oldClient != null)
                 {
-                    _clients.TryGetValue(connectPacket.ClientId, out existingClient);
-                    client = CreateClient(connectPacket, channelAdapter, session);
-
-                    _clients[connectPacket.ClientId] = client;
-                }
-
-                if (existingClient != null)
-                {
-                    existingClient.IsTakenOver = true;
-                    await existingClient.StopAsync(MqttDisconnectReasonCode.SessionTakenOver).ConfigureAwait(false);
+                    await oldClient.StopAsync(MqttDisconnectReasonCode.SessionTakenOver).ConfigureAwait(false);
 
                     if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                     {
                         var eventArgs = new ClientDisconnectedEventArgs(
-                            existingClient.Id,
+                            oldClient.Id,
                             MqttClientDisconnectType.Takeover,
-                            existingClient.Endpoint,
-                            existingClient.Session.Items);
+                            oldClient.Endpoint,
+                            oldClient.Session.Items);
                         
-                        await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                        await _eventContainer.ClientDisconnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
                     }
                 }
 

@@ -6,7 +6,7 @@ using System.Buffers;
 
 namespace MQTTnet.AspNetCore.Tests.Mockups
 {
-    public class LimitedMemoryPool : MemoryPool<byte>
+    public sealed class LimitedMemoryPool : MemoryPool<byte>
     {
         protected override void Dispose(bool disposing)
         {

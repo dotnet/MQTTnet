@@ -13,8 +13,8 @@ namespace MQTTnet.Client
     public sealed class MqttClientOptionsBuilderTlsParameters
     {
         public bool UseTls { get; set; }
-        
-        public Func<MqttClientCertificateValidationEventArgs, bool> CertificateValidationHandler { get; set; }
+
+        public Func<MqttClientCertificateValidationEventArgs, bool> CertificateValidationHandler { get; set; } = MqttClientDefaultCertificateValidationHandler.Handle;
 
 #if NET48 || NETCOREAPP3_1 || NET5 || NET6
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;

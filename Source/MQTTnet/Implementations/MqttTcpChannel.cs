@@ -264,25 +264,13 @@ namespace MQTTnet.Implementations
             }
         }
 
-        bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        bool InternalUserCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             var certificateValidationHandler = _tcpOptions?.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)
             {
-                var eventArgs = new MqttClientCertificateValidationEventArgs
-                {
-                    Certificate = x509Certificate,
-                    Chain = chain,
-                    SslPolicyErrors = sslPolicyErrors,
-                    ClientOptions = _tcpOptions
-                };
-
+                var eventArgs = new MqttClientCertificateValidationEventArgs(certificate, chain, sslPolicyErrors, _tcpOptions);
                 return certificateValidationHandler(eventArgs);
-            }
-
-            if (_tcpOptions?.TlsOptions?.IgnoreCertificateChainErrors ?? false)
-            {
-                sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateChainErrors;
             }
 
             return sslPolicyErrors == SslPolicyErrors.None;

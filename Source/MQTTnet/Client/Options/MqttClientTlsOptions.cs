@@ -11,7 +11,7 @@ namespace MQTTnet.Client
 {
     public sealed class MqttClientTlsOptions
     {
-        public Func<MqttClientCertificateValidationEventArgs, bool> CertificateValidationHandler { get; set; }
+        public Func<MqttClientCertificateValidationEventArgs, bool> CertificateValidationHandler { get; set; } = MqttClientDefaultCertificateValidationHandler.Handle;
 
         public bool UseTls { get; set; }
 

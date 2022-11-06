@@ -12,11 +12,18 @@ namespace MQTTnet.Client
     {
         public static bool Handle(MqttClientCertificateValidationEventArgs eventArgs)
         {
-            if (eventArgs.SslPolicyErrors == SslPolicyErrors.None)
+            var sslPolicyErrors = eventArgs.SslPolicyErrors;
+            
+            if (eventArgs.ClientOptions?.TlsOptions?.IgnoreCertificateChainErrors ?? false)
+            {
+                sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateChainErrors;
+            }
+            
+            if (sslPolicyErrors == SslPolicyErrors.None)
             {
                 return true;
             }
-
+            
             if (eventArgs.Chain.ChainStatus.Any(c =>
                     c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.OfflineRevocation))
             {

@@ -29,7 +29,7 @@ namespace MQTTnet.Internal
         {
             lock (_syncRoot)
             {
-                _signal?.Dispose();
+                _signal.Dispose();
 
                 _isDisposed = true;
             }
@@ -48,10 +48,10 @@ namespace MQTTnet.Internal
         {
             if (_queue.TryDequeue(out var item))
             {
-                return new AsyncQueueDequeueResult<TItem>(true, item);
+                return AsyncQueueDequeueResult<TItem>.Success(item);
             }
 
-            return new AsyncQueueDequeueResult<TItem>(false, default);
+            return AsyncQueueDequeueResult<TItem>.NonSuccess;
         }
 
         public async Task<AsyncQueueDequeueResult<TItem>> TryDequeueAsync(CancellationToken cancellationToken)
@@ -60,36 +60,42 @@ namespace MQTTnet.Internal
             {
                 try
                 {
-                    Task task;
+                    Task task = null;
                     lock (_syncRoot)
                     {
                         if (_isDisposed)
                         {
-                            return new AsyncQueueDequeueResult<TItem>(false, default);
+                            return AsyncQueueDequeueResult<TItem>.NonSuccess;
                         }
 
-                        task = _signal.WaitAsync(cancellationToken);
+                        if (_queue.IsEmpty)
+                        {
+                            task = _signal.WaitAsync(cancellationToken);
+                        }
                     }
 
-                    await task.ConfigureAwait(false);
-
+                    if (task != null)
+                    {
+                        await task.ConfigureAwait(false);    
+                    }
+                    
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        return new AsyncQueueDequeueResult<TItem>(false, default);
+                        return AsyncQueueDequeueResult<TItem>.NonSuccess;
                     }
 
                     if (_queue.TryDequeue(out var item))
                     {
-                        return new AsyncQueueDequeueResult<TItem>(true, item);
+                        return AsyncQueueDequeueResult<TItem>.Success(item);
                     }
                 }
                 catch (OperationCanceledException)
                 {
-                    return new AsyncQueueDequeueResult<TItem>(false, default);
+                    return AsyncQueueDequeueResult<TItem>.NonSuccess;
                 }
             }
 
-            return new AsyncQueueDequeueResult<TItem>(false, default);
+            return AsyncQueueDequeueResult<TItem>.NonSuccess;
         }
     }
 }

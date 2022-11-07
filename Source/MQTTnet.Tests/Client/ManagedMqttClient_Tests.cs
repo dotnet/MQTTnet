@@ -22,6 +22,52 @@ namespace MQTTnet.Tests.Client
     public sealed class ManagedMqttClient_Tests : BaseTestClass
     {
         [TestMethod]
+        public async Task Subscribe_When_Offline_But_Existing_Session()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
+                
+                // The connected client will crate a new session.
+                var mqttClient = await testEnvironment.ConnectClient();
+                mqttClient.Dispose();
+                
+                mqttClient = testEnvironment.CreateClient();
+                var managedClient = testEnvironment.Factory.CreateManagedMqttClient(mqttClient);
+                
+                // Subscribe before starting!
+                await managedClient.SubscribeAsync("a");
+
+                MqttApplicationMessage applicationMessage = null;
+                managedClient.ApplicationMessageReceivedAsync += e =>
+                {
+                    applicationMessage = e.ApplicationMessage;
+                    return CompletedTask.Instance;
+                };
+                
+                // Now the client must send the new subscription. 
+                await managedClient.StartAsync(
+                    new ManagedMqttClientOptions
+                    {
+                        ClientOptions = testEnvironment.Factory.CreateClientOptionsBuilder().WithCleanSession(false).WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build()
+                    });
+
+                await LongTestDelay();
+                
+                await server.InjectApplicationMessage(
+                    new InjectedMqttApplicationMessage(
+                        new MqttApplicationMessage
+                        {
+                            Topic = "a"
+                        }));
+
+                await LongTestDelay();
+                
+                Assert.IsNotNull(applicationMessage);
+            }
+        }
+        
+        [TestMethod]
         public async Task Connect_To_Invalid_Server()
         {
             using (var testEnvironment = CreateTestEnvironment())
@@ -29,7 +75,6 @@ namespace MQTTnet.Tests.Client
                 testEnvironment.IgnoreClientLogErrors = true;
 
                 var mqttClient = testEnvironment.CreateClient();
-
                 var managedClient = testEnvironment.Factory.CreateManagedMqttClient(mqttClient);
 
                 ConnectingFailedEventArgs connectingFailedEventArgs = null;

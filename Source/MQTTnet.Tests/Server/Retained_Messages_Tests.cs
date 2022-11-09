@@ -66,6 +66,66 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
+        public async Task Downgrade_QoS_Level()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var c1 = await testEnvironment.ConnectClient();
+
+                // Add the retained message with QoS 2!
+                await c1.PublishAsync(
+                    new MqttApplicationMessageBuilder().WithTopic("retained")
+                        .WithPayload(new byte[3])
+                        .WithRetainFlag()
+                        .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+                        .Build());
+
+                // The second client uses QoS 1 so a downgrade is required.
+                var c2 = await testEnvironment.ConnectClient();
+                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+                await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+
+                await LongTestDelay();
+
+                messageHandler.AssertReceivedCountEquals(1);
+
+                Assert.AreEqual(MqttQualityOfServiceLevel.AtLeastOnce, messageHandler.ReceivedEventArgs.First().ApplicationMessage.QualityOfServiceLevel);
+            }
+        }
+
+        [TestMethod]
+        public async Task No_Upgrade_QoS_Level()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var c1 = await testEnvironment.ConnectClient();
+
+                // Add the retained message with QoS 1!
+                await c1.PublishAsync(
+                    new MqttApplicationMessageBuilder().WithTopic("retained")
+                        .WithPayload(new byte[3])
+                        .WithRetainFlag()
+                        .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                        .Build());
+
+                // The second client uses QoS 2 so an upgrade is expected but according to the MQTT spec this is not supported!
+                var c2 = await testEnvironment.ConnectClient();
+                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+                await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce });
+
+                await LongTestDelay();
+
+                messageHandler.AssertReceivedCountEquals(1);
+
+                Assert.AreEqual(MqttQualityOfServiceLevel.AtLeastOnce, messageHandler.ReceivedEventArgs.First().ApplicationMessage.QualityOfServiceLevel);
+            }
+        }
+
+        [TestMethod]
         public async Task Receive_No_Retained_Message_After_Subscribe()
         {
             using (var testEnvironment = CreateTestEnvironment())
@@ -124,7 +184,7 @@ namespace MQTTnet.Tests.Server
                         .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                         .WithRetainFlag()
                         .Build());
-                
+
                 await c1.DisconnectAsync();
 
                 // Subscribe using a new client.

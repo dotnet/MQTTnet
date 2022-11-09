@@ -14,6 +14,7 @@ using System.Runtime.ExceptionServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations
 {
@@ -154,7 +155,7 @@ namespace MQTTnet.Implementations
         public Task DisconnectAsync(CancellationToken cancellationToken)
         {
             Dispose();
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         public void Dispose()
@@ -225,7 +226,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public async Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -239,12 +240,12 @@ namespace MQTTnet.Implementations
                 }
 
 #if NETCOREAPP3_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-                await stream.WriteAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+                await stream.WriteAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
 #else
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(_disposeAction))
                 {
-                    await stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+                    await stream.WriteAsync(buffer.Array, buffer.Offset, buffer.Count, cancellationToken).ConfigureAwait(false);
                 }
 #endif
             }

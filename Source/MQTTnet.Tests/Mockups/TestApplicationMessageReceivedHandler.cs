@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Tests.Mockups
 {
@@ -46,7 +46,7 @@ namespace MQTTnet.Tests.Mockups
                 _receivedEventArgs.Add(eventArgs);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
     }
 }

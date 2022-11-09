@@ -23,6 +23,7 @@ namespace MQTTnet.Server
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
 
         readonly MqttServerOptions _serverOptions;
+        readonly MqttClientSubscriptionsManager _subscriptionsManager;
 
         readonly ConcurrentDictionary<ushort, MqttPublishPacket> _unacknowledgedPublishPackets = new ConcurrentDictionary<ushort, MqttPublishPacket>();
 
@@ -45,7 +46,7 @@ namespace MQTTnet.Server
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
 
-            SubscriptionsManager = new MqttClientSubscriptionsManager(this, eventContainer, retainedMessagesManager, clientSessionsManager);
+            _subscriptionsManager = new MqttClientSubscriptionsManager(this, eventContainer, retainedMessagesManager, clientSessionsManager);
         }
 
         public DateTime CreatedTimestamp { get; } = DateTime.UtcNow;
@@ -67,18 +68,8 @@ namespace MQTTnet.Server
 
         public long PendingDataPacketsCount => _packetBus.PartitionItemsCount(MqttPacketBusPartition.Data);
 
-        public MqttClientSubscriptionsManager SubscriptionsManager { get; }
-
         public bool WillMessageSent { get; set; }
 
-        public MqttPublishPacket PeekAcknowledgePublishPacket(ushort packetIdentifier)
-        {
-            // This will only return the matching PUBLISH packet but does not remove it.
-            // This is required for QoS 2.
-            _unacknowledgedPublishPackets.TryGetValue(packetIdentifier, out var publishPacket);
-            return publishPacket;
-        }
-        
         public MqttPublishPacket AcknowledgePublishPacket(ushort packetIdentifier)
         {
             _unacknowledgedPublishPackets.TryRemove(packetIdentifier, out var publishPacket);
@@ -107,8 +98,8 @@ namespace MQTTnet.Server
 
         public void Dispose()
         {
-            _packetBus?.Dispose();
-            SubscriptionsManager.Dispose();
+            _packetBus.Dispose();
+            _subscriptionsManager.Dispose();
         }
 
         public void EnqueueControlPacket(MqttPacketBusItem packetBusItem)
@@ -150,6 +141,14 @@ namespace MQTTnet.Server
             _packetBus.EnqueueItem(packetBusItem, MqttPacketBusPartition.Health);
         }
 
+        public MqttPublishPacket PeekAcknowledgePublishPacket(ushort packetIdentifier)
+        {
+            // This will only return the matching PUBLISH packet but does not remove it.
+            // This is required for QoS 2.
+            _unacknowledgedPublishPackets.TryGetValue(packetIdentifier, out var publishPacket);
+            return publishPacket;
+        }
+
         public void Recover()
         {
             // TODO: Keep the bus and only insert pending items again.
@@ -166,6 +165,31 @@ namespace MQTTnet.Server
         public void RemoveSubscribedTopic(string topic)
         {
             _subscribedTopics?.Remove(topic);
+        }
+
+        public Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
+        {
+            return _subscriptionsManager.Subscribe(subscribePacket, cancellationToken);
+        }
+
+        public bool TryCheckSubscriptions(string topic, ulong topicHash, MqttQualityOfServiceLevel qualityOfServiceLevel, string senderId, out CheckSubscriptionsResult result)
+        {
+            result = null;
+
+            try
+            {
+                result = _subscriptionsManager.CheckSubscriptions(topic, topicHash, qualityOfServiceLevel, senderId);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public Task<UnsubscribeResult> Unsubscribe(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
+        {
+            return _subscriptionsManager.Unsubscribe(unsubscribePacket, cancellationToken);
         }
     }
 }

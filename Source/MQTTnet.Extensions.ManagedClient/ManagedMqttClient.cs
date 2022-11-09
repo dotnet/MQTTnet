@@ -160,14 +160,14 @@ namespace MQTTnet.Extensions.ManagedClient
                 throw new InvalidOperationException("call StartAsync before publishing messages");
             }
 
-            MqttTopicValidator.ThrowIfInvalid(applicationMessage.ApplicationMessage.Topic);
+            MqttTopicValidator.ThrowIfInvalid(applicationMessage.ApplicationMessage);
 
             ManagedMqttApplicationMessage removedMessage = null;
             ApplicationMessageSkippedEventArgs applicationMessageSkippedEventArgs = null;
 
             try
             {
-                using (await _messageQueueLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
+                using (await _messageQueueLock.EnterAsync().ConfigureAwait(false))
                 {
                     if (_messageQueue.Count >= Options.MaxPendingMessages)
                     {
@@ -296,7 +296,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
             _subscriptionsQueuedSignal.Release();
 
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         public Task UnsubscribeAsync(ICollection<string> topics)
@@ -319,7 +319,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
             _subscriptionsQueuedSignal.Release();
 
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         protected override void Dispose(bool disposing)
@@ -693,7 +693,7 @@ namespace MQTTnet.Extensions.ManagedClient
             {
                 await InternalClient.PublishAsync(message.ApplicationMessage).ConfigureAwait(false);
 
-                using (await _messageQueueLock.WaitAsync(CancellationToken.None).ConfigureAwait(false)) //lock to avoid conflict with this.PublishAsync
+                using (await _messageQueueLock.EnterAsync().ConfigureAwait(false)) //lock to avoid conflict with this.PublishAsync
                 {
                     // While publishing this message, this.PublishAsync could have booted this
                     // message off the queue to make room for another (when using a cap
@@ -724,7 +724,7 @@ namespace MQTTnet.Extensions.ManagedClient
                     //contradict the expected behavior of QoS 1 and 2, that's also true
                     //for the usage of a message queue cap, so it's still consistent
                     //with prior behavior in that way.
-                    using (await _messageQueueLock.WaitAsync(CancellationToken.None).ConfigureAwait(false)) //lock to avoid conflict with this.PublishAsync
+                    using (await _messageQueueLock.EnterAsync().ConfigureAwait(false)) //lock to avoid conflict with this.PublishAsync
                     {
                         _messageQueue.RemoveFirst(i => i.Id.Equals(message.Id));
 

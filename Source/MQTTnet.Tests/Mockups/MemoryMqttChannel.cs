@@ -2,11 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Tests.Mockups
 {
@@ -32,12 +34,12 @@ namespace MQTTnet.Tests.Mockups
 
         public Task ConnectAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         public Task DisconnectAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(0);
+            return CompletedTask.Instance;
         }
 
         public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -45,9 +47,9 @@ namespace MQTTnet.Tests.Mockups
             return _stream.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
-        public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
-            return _stream.WriteAsync(buffer, offset, count, cancellationToken);
+            return _stream.WriteAsync(buffer.Array, buffer.Offset, buffer.Count, cancellationToken);
         }
 
         public void Dispose()

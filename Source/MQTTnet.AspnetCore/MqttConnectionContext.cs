@@ -171,7 +171,7 @@ namespace MQTTnet.AspNetCore
         {
             var formatter = PacketFormatterAdapter;
             
-            using (await _writerLock.WaitAsync(cancellationToken).ConfigureAwait(false))
+            using (await _writerLock.EnterAsync(cancellationToken).ConfigureAwait(false))
             {
                 var buffer = formatter.Encode(packet);
                 var msg = buffer.Join().AsMemory();

@@ -11,7 +11,6 @@ using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
@@ -34,6 +33,7 @@ namespace MQTTnet.Server
         readonly Dictionary<ushort, string> _topicAlias = new Dictionary<ushort, string>();
 
         CancellationTokenSource _cancellationToken;
+        bool _disconnectPacketSent;
 
         public MqttClient(
             MqttConnectPacket connectPacket,
@@ -98,7 +98,7 @@ namespace MQTTnet.Server
 
                 try
                 {
-                    Task.Run(() => SendPacketsLoop(cancellationToken), cancellationToken).RunInBackground(_logger);
+                    _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
 
                     IsRunning = true;
 
@@ -147,13 +147,23 @@ namespace MQTTnet.Server
         {
             IsRunning = false;
 
-            if (reason == MqttDisconnectReasonCode.SessionTakenOver || reason == MqttDisconnectReasonCode.KeepAliveTimeout)
+            if (!_disconnectPacketSent)
             {
-                // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
-                // token because the entire connection is closed (disposed) as soon as the cancellation
-                // token is cancelled. To there is no chance that the DISCONNECT packet will ever arrive
-                // at the client!
-                await TrySendDisconnectPacket(reason).ConfigureAwait(false);
+                // Sending DISCONNECT packets from the server to the client is only supported when using MQTTv5+.
+                if (ChannelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500)
+                {
+                    // The Client or Server MAY send a DISCONNECT packet before closing the Network Connection.
+                    // This library does not sent a DISCONNECT packet for a normal disconnection. Maybe adding
+                    // a configuration option is requested in the future.
+                    if (reason != MqttDisconnectReasonCode.NormalDisconnection)
+                    {
+                        // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
+                        // token because the entire connection is closed (disposed) as soon as the cancellation
+                        // token is cancelled. To there is no chance that the DISCONNECT packet will ever arrive
+                        // at the client!
+                        await TrySendDisconnectPacket(reason).ConfigureAwait(false);
+                    }
+                }
             }
 
             StopInternal();
@@ -163,18 +173,11 @@ namespace MQTTnet.Server
         {
             if (_eventContainer.ClientAcknowledgedPublishPacketEvent.HasHandlers)
             {
-                var eventArgs = new ClientAcknowledgedPublishPacketEventArgs
-                {
-                    PublishPacket = publishPacket,
-                    AcknowledgePacket = acknowledgePacket,
-                    ClientId = Id,
-                    SessionItems = Session.Items
-                };
-
+                var eventArgs = new ClientAcknowledgedPublishPacketEventArgs(Id, Session.Items, publishPacket, acknowledgePacket);
                 return _eventContainer.ClientAcknowledgedPublishPacketEvent.TryInvokeAsync(eventArgs, _logger);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         Task HandleIncomingPubAckPacket(MqttPubAckPacket pubAckPacket)
@@ -186,7 +189,7 @@ namespace MQTTnet.Server
                 return ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubAckPacket);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         Task HandleIncomingPubCompPacket(MqttPubCompPacket pubCompPacket)
@@ -198,7 +201,7 @@ namespace MQTTnet.Server
                 return ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubCompPacket);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         async Task HandleIncomingPublishPacket(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
@@ -266,17 +269,14 @@ namespace MQTTnet.Server
             }
         }
 
-        async Task HandleIncomingPubRecPacket(MqttPubRecPacket pubRecPacket)
+        Task HandleIncomingPubRecPacket(MqttPubRecPacket pubRecPacket)
         {
-            var acknowledgedPublishPacket = Session.PeekAcknowledgePublishPacket(pubRecPacket.PacketIdentifier);
-
-            if (acknowledgedPublishPacket != null)
-            {
-                await ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubRecPacket).ConfigureAwait(false);
-            }
-
+            // Do not fire the event _ClientAcknowledgedPublishPacket_ here because the QoS 2 process is only finished
+            // properly when the client has sent the PUBCOMP packet.
             var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
             Session.EnqueueControlPacket(new MqttPacketBusItem(pubRelPacket));
+
+            return CompletedTask.Instance;
         }
 
         void HandleIncomingPubRelPacket(MqttPubRelPacket pubRelPacket)
@@ -287,7 +287,7 @@ namespace MQTTnet.Server
 
         async Task HandleIncomingSubscribePacket(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
-            var subscribeResult = await Session.SubscriptionsManager.Subscribe(subscribePacket, cancellationToken).ConfigureAwait(false);
+            var subscribeResult = await Session.Subscribe(subscribePacket, cancellationToken).ConfigureAwait(false);
 
             var subAckPacket = _packetFactories.SubAck.Create(subscribePacket, subscribeResult);
 
@@ -301,18 +301,17 @@ namespace MQTTnet.Server
 
             if (subscribeResult.RetainedMessages != null)
             {
-                foreach (var retainedApplicationMessage in subscribeResult.RetainedMessages)
+                foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
                 {
-                    var publishPacket = _packetFactories.Publish.Create(retainedApplicationMessage.ApplicationMessage);
+                    var publishPacket = _packetFactories.Publish.Create(retainedMessageMatch);
                     Session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
                 }
             }
         }
 
-
         async Task HandleIncomingUnsubscribePacket(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
-            var unsubscribeResult = await Session.SubscriptionsManager.Unsubscribe(unsubscribePacket, cancellationToken).ConfigureAwait(false);
+            var unsubscribeResult = await Session.Unsubscribe(unsubscribePacket, cancellationToken).ConfigureAwait(false);
 
             var unsubAckPacket = _packetFactories.UnsubAck.Create(unsubscribePacket, unsubscribeResult);
 
@@ -385,7 +384,20 @@ namespace MQTTnet.Server
                     {
                         return;
                     }
+                    
+                    // Check for cancellation again because receive packet might block some time.
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
 
+                    // The TCP connection of this client may be still open but the client has already been taken over by
+                    // a new TCP connection. So we must exit here to make sure to no longer process any message.
+                    if (IsTakenOver || !IsRunning)
+                    {
+                        return;
+                    }
+                    
                     var processPacket = true;
 
                     if (_eventContainer.InterceptingInboundPacketEvent.HasHandlers)
@@ -477,12 +489,17 @@ namespace MQTTnet.Server
 
             try
             {
-                while (!cancellationToken.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested && !IsTakenOver && IsRunning)
                 {
                     packetBusItem = await Session.DequeuePacketAsync(cancellationToken).ConfigureAwait(false);
 
                     // Also check the cancellation token here because the dequeue is blocking and may take some time.
                     if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    if (IsTakenOver || !IsRunning)
                     {
                         return;
                     }
@@ -554,6 +571,9 @@ namespace MQTTnet.Server
         {
             try
             {
+                // This also indicates that it was tried at least!
+                _disconnectPacketSent = true;
+                
                 var disconnectPacket = _packetFactories.Disconnect.Create(reasonCode);
 
                 using (var timeout = new CancellationTokenSource(_serverOptions.DefaultCommunicationTimeout))

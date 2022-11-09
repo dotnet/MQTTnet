@@ -13,79 +13,82 @@ namespace MQTTnet.Client
     public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     {
         readonly Func<MqttApplicationMessageReceivedEventArgs, CancellationToken, Task> _acknowledgeHandler;
-        
+
         int _isAcknowledged;
-        
+
         public MqttApplicationMessageReceivedEventArgs(
-            string clientId, 
+            string clientId,
             MqttApplicationMessage applicationMessage,
             MqttPublishPacket publishPacket,
             Func<MqttApplicationMessageReceivedEventArgs, CancellationToken, Task> acknowledgeHandler)
         {
             ClientId = clientId;
             ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
-            PublishPacket = publishPacket;
-            PacketIdentifier = publishPacket.PacketIdentifier;
+            PublishPacket = publishPacket ?? throw new ArgumentNullException(nameof(publishPacket));
             _acknowledgeHandler = acknowledgeHandler;
         }
 
-        internal MqttPublishPacket PublishPacket { get; set; }
-        
+        public MqttApplicationMessage ApplicationMessage { get; }
+
         /// <summary>
-        /// Gets the client identifier.
-        /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
+        ///     Gets or sets whether the library should send MQTT ACK packets automatically if required.
+        /// </summary>
+        public bool AutoAcknowledge { get; set; } = true;
+
+        /// <summary>
+        ///     Gets the client identifier.
+        ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
         public string ClientId { get; }
 
-        public MqttApplicationMessage ApplicationMessage { get; }
-
-        public bool ProcessingFailed { get; set; }
-
         /// <summary>
-        /// Gets or sets the reason code which will be sent to the server.
-        /// </summary>
-        public MqttApplicationMessageReceivedReasonCode ReasonCode { get; set; } = MqttApplicationMessageReceivedReasonCode.Success;
-
-        /// <summary>
-        /// Gets or sets the user properties which will be sent to the server in the ACK packet etc.
-        /// </summary>
-        public List<MqttUserProperty> ResponseUserProperties { get; } = new List<MqttUserProperty>();
-
-        /// <summary>
-        /// Gets or sets the reason string which will be sent to the server in the ACK packet.
-        /// </summary>
-        public string ResponseReasonString { get; set; }
-        
-        /// <summary>
-        /// Gets or sets whether this message was handled.
-        /// This value can be used in user code for custom control flow.
+        ///     Gets or sets whether this message was handled.
+        ///     This value can be used in user code for custom control flow.
         /// </summary>
         public bool IsHandled { get; set; }
 
         /// <summary>
-        /// Gets or sets whether the library should send MQTT ACK packets automatically if required.
+        ///     Gets the identifier of the MQTT packet
         /// </summary>
-        public bool AutoAcknowledge { get; set; } = true;
-        
-        public object Tag { get; set; }
+        public ushort PacketIdentifier => PublishPacket.PacketIdentifier;
 
         /// <summary>
-        /// Gets the indentifier of MQTT packet
+        ///     Indicates if the processing of this PUBLISH packet has failed.
+        ///     If the processing has failed the client will not send an ACK packet etc.
         /// </summary>
-        public ushort PacketIdentifier { get; }
+        public bool ProcessingFailed { get; set; }
 
-        public Task AcknowledgeAsync(CancellationToken cancellationToken) 
+        /// <summary>
+        ///     Gets or sets the reason code which will be sent to the server.
+        /// </summary>
+        public MqttApplicationMessageReceivedReasonCode ReasonCode { get; set; } = MqttApplicationMessageReceivedReasonCode.Success;
+
+        /// <summary>
+        ///     Gets or sets the reason string which will be sent to the server in the ACK packet.
+        /// </summary>
+        public string ResponseReasonString { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the user properties which will be sent to the server in the ACK packet etc.
+        /// </summary>
+        public List<MqttUserProperty> ResponseUserProperties { get; } = new List<MqttUserProperty>();
+
+        public object Tag { get; set; }
+
+        internal MqttPublishPacket PublishPacket { get; set; }
+
+        public Task AcknowledgeAsync(CancellationToken cancellationToken)
         {
             if (_acknowledgeHandler == null)
             {
                 throw new NotSupportedException("Deferred acknowledgement of application message is not yet supported in MQTTnet server.");
             }
-            
+
             if (Interlocked.CompareExchange(ref _isAcknowledged, 1, 0) == 0)
             {
                 return _acknowledgeHandler(this, cancellationToken);
             }
-            
+
             throw new InvalidOperationException("The application message is already acknowledged.");
         }
     }

@@ -130,9 +130,7 @@ namespace MQTTnet.Tests.Server
 
         CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel applicationMessageQoSLevel, string senderClientId)
         {
-            ulong topicHashMask; // not needed
-            bool hasWildcard; // not needed
-            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out topicHashMask, out hasWildcard);
+            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out _, out _);
             return _subscriptionsManager.CheckSubscriptions(topic, topicHash, applicationMessageQoSLevel, senderClientId);
         }
     }

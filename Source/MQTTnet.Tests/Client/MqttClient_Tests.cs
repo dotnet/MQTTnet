@@ -14,15 +14,17 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Tests.Mockups;
 
+// ReSharper disable InconsistentNaming
+
 namespace MQTTnet.Tests.Client
 {
     [TestClass]
-    public sealed class Client_Tests : BaseTestClass
+    public sealed class MqttClient_Tests : BaseTestClass
     {
         [DataTestMethod]
         [DataRow(MqttQualityOfServiceLevel.ExactlyOnce)]
@@ -56,7 +58,7 @@ namespace MQTTnet.Tests.Client
                     }
 
                     _ = InvokeInternal();
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var publishes = Task.WhenAll(publisher.PublishStringAsync("a", null, qos), publisher.PublishStringAsync("b", null, qos));
@@ -107,7 +109,7 @@ namespace MQTTnet.Tests.Client
                     client.DisconnectedAsync += args =>
                     {
                         disconnectHandlerCalled = true;
-                        return PlatformAbstractionLayer.CompletedTask;
+                        return CompletedTask.Instance;
                     };
 
                     await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build());
@@ -121,7 +123,7 @@ namespace MQTTnet.Tests.Client
                     //Assert.IsInstanceOfType(exception.InnerException, typeof(SocketException));
                 }
 
-                await Task.Delay(100); // disconnected handler is called async
+                await LongTestDelay(); // disconnected handler is called async
                 Assert.IsTrue(disconnectHandlerCalled);
             }
         }
@@ -136,7 +138,7 @@ namespace MQTTnet.Tests.Client
                 client.DisconnectedAsync += e =>
                 {
                     ex = e.Exception;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 try
@@ -145,6 +147,7 @@ namespace MQTTnet.Tests.Client
                 }
                 catch
                 {
+                    // Ignore errors.
                 }
 
                 await Task.Delay(500);
@@ -167,7 +170,7 @@ namespace MQTTnet.Tests.Client
                 server.InterceptingPublishAsync += c =>
                 {
                     i++;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await client.SendAsync(
@@ -208,7 +211,7 @@ namespace MQTTnet.Tests.Client
                 client.DisconnectedAsync += e =>
                 {
                     handlerFired = true;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await server.StopAsync();
@@ -239,10 +242,10 @@ namespace MQTTnet.Tests.Client
 
                 for (var i = 0; i < 98; i++)
                 {
-                    Assert.IsFalse(clients[i].IsConnected, $"clients[{i}] is not connected");
+                    Assert.IsFalse(clients[i].TryPingAsync().GetAwaiter().GetResult(), $"clients[{i}] is not connected");
                 }
 
-                Assert.IsTrue(clients[99].IsConnected);
+                Assert.IsTrue(clients[99].TryPingAsync().GetAwaiter().GetResult());
 
                 Assert.AreEqual(1, clientStatus.Count);
                 Assert.AreEqual(1, sessionStatus.Count);
@@ -252,7 +255,7 @@ namespace MQTTnet.Tests.Client
                 receiveClient.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedPayload = e.ApplicationMessage.ConvertPayloadToString();
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await receiveClient.SubscribeAsync("x");
@@ -310,7 +313,7 @@ namespace MQTTnet.Tests.Client
                 receiver.ApplicationMessageReceivedAsync += e =>
                 {
                     receivedMessage = e.ApplicationMessage;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await sender.PublishAsync(message.Build(), CancellationToken.None);
@@ -332,7 +335,7 @@ namespace MQTTnet.Tests.Client
 
                 var client = await testEnvironment.ConnectClient();
 
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(client.TryPingAsync().GetAwaiter().GetResult());
             }
         }
 
@@ -343,11 +346,11 @@ namespace MQTTnet.Tests.Client
             {
                 await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(client.TryPingAsync().GetAwaiter().GetResult());
 
                 await client.DisconnectAsync();
 
-                Assert.IsFalse(client.IsConnected);
+                Assert.IsFalse(client.TryPingAsync().GetAwaiter().GetResult());
             }
         }
 
@@ -453,7 +456,7 @@ namespace MQTTnet.Tests.Client
                         receivedValues.Add(value);
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 }
 
                 client1.ApplicationMessageReceivedAsync += Handler1;
@@ -531,7 +534,7 @@ namespace MQTTnet.Tests.Client
                 client2.ApplicationMessageReceivedAsync += e =>
                 {
                     client2TopicResults.Add(Encoding.UTF8.GetString(e.ApplicationMessage.Payload));
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await client2.SubscribeAsync(client2Topic);
@@ -566,7 +569,7 @@ namespace MQTTnet.Tests.Client
                         receivedMessages.Add(e.ApplicationMessage);
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await client1.SubscribeAsync("a");
@@ -591,17 +594,17 @@ namespace MQTTnet.Tests.Client
                 var client = await testEnvironment.ConnectClient();
 
                 await Task.Delay(500);
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(await client.TryPingAsync());
 
                 await server.StopAsync();
                 await Task.Delay(500);
-                Assert.IsFalse(client.IsConnected);
+                Assert.IsFalse(await client.TryPingAsync());
 
                 await server.StartAsync();
                 await Task.Delay(500);
 
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(await client.TryPingAsync());
             }
         }
 
@@ -637,6 +640,7 @@ namespace MQTTnet.Tests.Client
                 }
                 catch
                 {
+                    // Ignore errors.
                 }
 
                 SpinWait.SpinUntil(() => tries >= maxTries, 10000);
@@ -656,11 +660,11 @@ namespace MQTTnet.Tests.Client
                 var client = await testEnvironment.ConnectClient();
 
                 await Task.Delay(500);
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(client.TryPingAsync().GetAwaiter().GetResult());
 
                 await server.StopAsync();
                 await Task.Delay(500);
-                Assert.IsFalse(client.IsConnected);
+                Assert.IsFalse(client.TryPingAsync().GetAwaiter().GetResult());
 
                 for (var i = 0; i < 5; i++)
                 {
@@ -671,6 +675,7 @@ namespace MQTTnet.Tests.Client
                     }
                     catch
                     {
+                        // Ignore errors.
                     }
                 }
 
@@ -678,7 +683,7 @@ namespace MQTTnet.Tests.Client
                 await Task.Delay(500);
 
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
-                Assert.IsTrue(client.IsConnected);
+                await client.PingAsync();
             }
         }
 
@@ -723,7 +728,7 @@ namespace MQTTnet.Tests.Client
                         replies.Add(eventArgs.ApplicationMessage.Topic);
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 }
 
                 client2.ApplicationMessageReceivedAsync += Handler2;
@@ -761,7 +766,7 @@ namespace MQTTnet.Tests.Client
                         replyReceived = true;
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 client2.ApplicationMessageReceivedAsync += async e =>
@@ -812,7 +817,7 @@ namespace MQTTnet.Tests.Client
                         replyReceived = true;
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await client.PublishStringAsync("request", null, MqttQualityOfServiceLevel.AtLeastOnce);
@@ -828,14 +833,14 @@ namespace MQTTnet.Tests.Client
         {
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
-                var server = await testEnvironment.StartServer();
+                await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
 
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(client.TryPingAsync().GetAwaiter().GetResult());
                 client.DisconnectedAsync += e =>
                 {
                     Assert.IsTrue(e.ClientWasConnected);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await client.DisconnectAsync();
@@ -851,11 +856,11 @@ namespace MQTTnet.Tests.Client
                 var server = await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
 
-                Assert.IsTrue(client.IsConnected);
+                Assert.IsTrue(client.TryPingAsync().GetAwaiter().GetResult());
                 client.DisconnectedAsync += e =>
                 {
                     Assert.IsTrue(e.ClientWasConnected);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await server.StopAsync();
@@ -892,7 +897,7 @@ namespace MQTTnet.Tests.Client
                         receivedMessages.Add(e.ApplicationMessage);
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("localhost", testEnvironment.ServerPort).Build());
@@ -917,14 +922,14 @@ namespace MQTTnet.Tests.Client
                 client1.DisconnectedAsync += c =>
                 {
                     disconnectedFired = true;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var messageReceived = false;
                 client1.ApplicationMessageReceivedAsync += e =>
                 {
                     messageReceived = true;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await client1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("topic1").WithExactlyOnceQoS().Build());
@@ -941,7 +946,7 @@ namespace MQTTnet.Tests.Client
                 await Task.Delay(500);
 
                 Assert.IsTrue(messageReceived);
-                Assert.IsTrue(client1.IsConnected);
+                Assert.IsTrue(client1.TryPingAsync().GetAwaiter().GetResult());
                 Assert.IsFalse(disconnectedFired);
             }
         }

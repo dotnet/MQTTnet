@@ -6,7 +6,6 @@ using System;
 using System.Collections;
 using System.Threading.Tasks;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 
 namespace MQTTnet.Server
@@ -34,8 +33,8 @@ namespace MQTTnet.Server
             
             var publishPacketFactory = new MqttPublishPacketFactory();
             _session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketFactory.Create(applicationMessage)));
-            
-            return PlatformAbstractionLayer.CompletedTask;
+
+            return CompletedTask.Instance;
         }
 
         public Task DeliverApplicationMessageAsync(MqttApplicationMessage applicationMessage)

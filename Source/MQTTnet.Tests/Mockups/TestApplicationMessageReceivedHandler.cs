@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
@@ -43,6 +44,24 @@ namespace MQTTnet.Tests.Mockups
             {
                 Assert.AreEqual(expectedCount, _receivedEventArgs.Count);
             }
+        }
+
+        public string GeneratePayloadSequence()
+        {
+            var sequence = new StringBuilder();
+
+            lock (_receivedEventArgs)
+            {
+                foreach (var receivedEventArg in _receivedEventArgs)
+                {
+                    var payload = receivedEventArg.ApplicationMessage.ConvertPayloadToString();
+
+                    // An empty payload is not part of the sequence!
+                    sequence.Append(payload);
+                }
+            }
+
+            return sequence.ToString();
         }
 
         Task OnApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)

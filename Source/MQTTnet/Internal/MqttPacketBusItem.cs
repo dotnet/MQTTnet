@@ -10,40 +10,83 @@ namespace MQTTnet.Internal
 {
     public sealed class MqttPacketBusItem
     {
-        readonly AsyncTaskCompletionSource<int> _promise = new AsyncTaskCompletionSource<int>();
+        AsyncTaskCompletionSource<bool> _promise;
+        Exception _exception;
+        bool _isCanceled;
+        bool _isCompleted;
 
         public MqttPacketBusItem(MqttPacket packet)
         {
             Packet = packet ?? throw new ArgumentNullException(nameof(packet));
         }
-        
+
+        public event EventHandler Completed;
+
         public MqttPacket Packet { get; }
 
-        public event EventHandler Delivered;
-
-        public Task WaitForDeliveryAsync()
+        public void Cancel()
         {
-            return _promise.Task;
-        }
-        
-        public void MarkAsDelivered()
-        {
-            if (_promise.TrySetResult(0))
+            if (_isCanceled)
             {
-                Delivered?.Invoke(this, EventArgs.Empty);
+                throw new InvalidOperationException("The packet bus item is already canceled.");
             }
+
+            _isCanceled = true;
+            _promise?.TrySetCanceled();
         }
 
-        public void MarkAsFailed(Exception exception)
+        public void Complete()
         {
-            if (exception == null) throw new ArgumentNullException(nameof(exception));
-            
-            _promise.TrySetException(exception);
+            if (_isCompleted)
+            {
+                throw new InvalidOperationException("The packet bus item is already delivered.");
+            }
+
+            _isCompleted = true;
+
+            _promise?.TrySetResult(true);
+            Completed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void MarkAsCancelled()
+        public void Fail(Exception exception)
         {
-            _promise.TrySetCanceled();
+            if (_exception != null)
+            {
+                throw new InvalidOperationException("The packet bus item is already failed.");
+            }
+
+            _exception = exception ?? throw new ArgumentNullException(nameof(exception));
+
+            _promise?.TrySetException(exception);
+        }
+
+        public Task WaitAsync()
+        {
+            // The task is being created on demand. The intention is to avoid allocations without any use.
+            // This results in the fact that the operation may already be completed / failed / canceled
+            // when the task is being created.
+
+            if (_promise == null)
+            {
+                _promise = new AsyncTaskCompletionSource<bool>();
+
+                if (_exception != null)
+                {
+                    _promise.TrySetException(_exception);
+                }
+
+                if (_isCanceled)
+                {
+                    _promise.TrySetCanceled();
+                }
+
+                if (_isCompleted)
+                {
+                    _promise.TrySetResult(true);
+                }
+            }
+
+            return _promise.Task;
         }
     }
 }

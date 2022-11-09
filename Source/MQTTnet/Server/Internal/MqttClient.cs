@@ -157,7 +157,7 @@ namespace MQTTnet.Server
                 {
                     // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
                     // token because the entire connection is closed (disposed) as soon as the cancellation
-                    // token is cancelled. To there is no chance that the DISCONNECT packet will ever arrive
+                    // token is canceled. To there is no chance that the DISCONNECT packet will ever arrive
                     // at the client!
                     await TrySendDisconnectPacket(reason).ConfigureAwait(false);
                 }
@@ -514,15 +514,15 @@ namespace MQTTnet.Server
                     try
                     {
                         await SendPacketAsync(packetBusItem.Packet, cancellationToken).ConfigureAwait(false);
-                        packetBusItem.MarkAsDelivered();
+                        packetBusItem.Complete();
                     }
                     catch (OperationCanceledException)
                     {
-                        packetBusItem.MarkAsCancelled();
+                        packetBusItem.Cancel();
                     }
                     catch (Exception exception)
                     {
-                        packetBusItem.MarkAsFailed(exception);
+                        packetBusItem.Fail(exception);
                     }
                     finally
                     {
@@ -570,7 +570,7 @@ namespace MQTTnet.Server
             catch (ObjectDisposedException)
             {
                 // This can happen when connections are created and dropped very quickly.
-                // It is not an issue if the cancellation token cannot be cancelled multiple times.
+                // It is not an issue if the cancellation token cannot be canceled multiple times.
             }
         }
 

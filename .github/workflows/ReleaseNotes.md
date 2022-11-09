@@ -1,2 +1,1 @@
-* [Core] Fixed dead lock and race conditions in new _AsyncLock_ implementation (#1542).
-* [Client] Fixed connection freeze when using Xamarin etc.
+* [Server] Fix sending of duplicate messages with QoS > 0 when session is recovered and session is reused (#1546)

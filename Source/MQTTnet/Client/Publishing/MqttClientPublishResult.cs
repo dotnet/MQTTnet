@@ -11,8 +11,7 @@ namespace MQTTnet.Client
     {
         /// <summary>
         ///     Returns if the overall status of the publish is a success. This can be the reason code _Success_ or
-        ///     _NoMatchingSubscribers_.
-        ///     _NoMatchingSubscribers_ usually indicates only that no other client is interested in the topic but overall transmit
+        ///     _NoMatchingSubscribers_. _NoMatchingSubscribers_ usually indicates only that no other client is interested in the topic but overall transmit
         ///     to the server etc. was a success.
         /// </summary>
         public bool IsSuccess => ReasonCode == MqttClientPublishReasonCode.Success || ReasonCode == MqttClientPublishReasonCode.NoMatchingSubscribers;

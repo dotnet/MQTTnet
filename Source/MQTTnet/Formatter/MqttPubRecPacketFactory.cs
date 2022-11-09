@@ -41,6 +41,11 @@ namespace MQTTnet.Formatter
                 ReasonCode = MqttPubRecReasonCode.Success
             };
 
+            if (dispatchApplicationMessageResult.MatchingSubscribersCount == 0)
+            {
+                pubRecPacket.ReasonCode = MqttPubRecReasonCode.NoMatchingSubscribers;
+            }
+
             if (interceptingPublishEventArgs != null)
             {
                 pubRecPacket.ReasonCode = (MqttPubRecReasonCode)(int)interceptingPublishEventArgs.Response.ReasonCode;

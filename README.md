@@ -12,7 +12,7 @@
 
 # MQTTnet
 
-MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports the MQTT protocol up to version 5.
+MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports the MQTT protocol up to version 5. It is compatible with mostly any supported .NET Framework version and CPU architecture.
 
 ## Features
 
@@ -49,39 +49,6 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * WebSockets supported (via ASP.NET Core 2.0, separate nuget)
 * A custom message interceptor can be added which allows transforming or extending every received application message
 * Validate subscriptions and deny subscribing of certain topics depending on requesting clients
-
-## Supported frameworks
-
-| Framwork           | Version     |
-| ------------------ | ----------- |
-|.NET                | 5.0+        |
-|.NET Framework      | 4.5.2+      |
-|.NET Standard       | 1.3+        |
-|.NET Core           | 1.1+        |
-|.NET Core App       | 1.1+        |
-| Mono               | 5.2+        |
-| UWP                | 10.0.10240+ |
-| Xamarin.Android    | 7.5+        |
-| Xamarin.iOS        | 10.14+      |
-| Blazor WebAssembly | 3.2.0+      |
-
-## References
-
-This library is used in the following projects:
-
-* Azure Functions MQTT Bindings, <https://github.com/keesschollaart81/CaseOnline.Azure.WebJobs.Extensions.Mqtt>)
-* HA4IoT (Open Source Home Automation system for .NET, <https://github.com/chkr1011/HA4IoT>)
-* MQTT Client Rx (Wrapper for Reactive Extensions, <https://github.com/1iveowl/MQTTClient.rx>)
-* MQTT Client Rx (Managed Client Wrapper for Reactive Extensions, <https://github.com/mmuecke/RxMQTTnet>)
-* MQTT Tester (MQTT client test app for [Android](https://play.google.com/store/apps/details?id=com.liveowl.mqtttester) and [iOS](https://itunes.apple.com/us/app/mqtt-tester/id1278621826?mt=8))
-* MQTTnet App (Cross platform client application for MQTT debugging, inspection etc., <https://github.com/chkr1011/MQTTnetApp>)
-* Wirehome.Core (Open Source Home Automation system for .NET Core, <https://github.com/chkr1011/Wirehome.Core>)
-* SparkplugNet (Sparkplug library for .Net, <https://github.com/SeppPenner/SparkplugNet>)
-* Silverback (Framework to build event-driven applications - support for MQTT, Kafka & RabbitMQ) <https://github.com/BEagle1984/silverback>
-
-Further projects using this project can be found under https://github.com/dotnet/MQTTnet/network/dependents.
-
-If you use this library and want to see your project here please create a pull request.
 
 ## Code of Conduct
 

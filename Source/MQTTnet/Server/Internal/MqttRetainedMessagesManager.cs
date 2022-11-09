@@ -5,10 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 
 namespace MQTTnet.Server
@@ -85,7 +83,7 @@ namespace MQTTnet.Server
                         }
                         else
                         {
-                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? PlatformAbstractionLayer.EmptyByteArray))
+                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? EmptyBuffer.Array))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage;
                                 saveIsRequired = true;
@@ -103,7 +101,7 @@ namespace MQTTnet.Server
 
                 if (saveIsRequired)
                 {
-                    using (await _storageAccessLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
+                    using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
                     {
                         var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessage, messagesForSave);
                         await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
@@ -132,7 +130,7 @@ namespace MQTTnet.Server
                 _messages.Clear();
             }
 
-            using (await _storageAccessLock.WaitAsync(CancellationToken.None).ConfigureAwait(false))
+            using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
             {
                 await _eventContainer.RetainedMessagesClearedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
             }

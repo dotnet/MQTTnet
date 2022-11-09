@@ -108,12 +108,12 @@ namespace MQTTnet.Implementations
             return _readStream.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
-        public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
             // In the write method only the internal buffer will be filled. So here is no
             // async/await required. The real network transmit is done when calling the
             // Flush method.
-            _writeStream.Write(buffer, offset, count);
+            _writeStream.Write(buffer.Array, buffer.Offset, buffer.Count);
             return _writeStream.FlushAsync(cancellationToken);
         }
 

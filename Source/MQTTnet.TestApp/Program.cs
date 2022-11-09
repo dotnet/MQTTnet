@@ -28,6 +28,7 @@ namespace MQTTnet.TestApp
             Console.WriteLine("c = Start QoS 0 benchmark");
             Console.WriteLine("d = Start server with logging");
             Console.WriteLine("e = Start Message Throughput Test");
+            Console.WriteLine("f = Start AsyncLock Test");
 
             var pressedKey = Console.ReadKey(true);
             if (pressedKey.KeyChar == '1')
@@ -87,6 +88,10 @@ namespace MQTTnet.TestApp
             else if (pressedKey.KeyChar == 'e')
             {
                 Task.Run(new MessageThroughputTest().Run);
+            }
+            else if (pressedKey.KeyChar == 'f')
+            {
+                Task.Run(new AsyncLockTest().Run);
             }
 
             Thread.Sleep(Timeout.Infinite);

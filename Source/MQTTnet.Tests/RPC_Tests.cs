@@ -13,6 +13,7 @@ using MQTTnet.Extensions.Rpc;
 using MQTTnet.Protocol;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Tests
 {
@@ -189,7 +190,7 @@ namespace MQTTnet.Tests
                 responseSender.ApplicationMessageReceivedAsync += async e =>
                 {
                     Assert.IsNull(e.ApplicationMessage.ResponseTopic);
-                    await PlatformAbstractionLayer.CompletedTask;
+                    await CompletedTask.Instance;
                 };
 
                 var requestSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));

@@ -12,7 +12,7 @@ using MQTTnet.Packets;
 namespace MQTTnet.AspNetCore.Tests
 {
     [TestClass]
-    public class ReaderExtensionsTest
+    public sealed class ReaderExtensionsTest
     {
         [TestMethod]
         public void TestTryDeserialize()

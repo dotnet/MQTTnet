@@ -15,7 +15,7 @@ namespace MQTTnet.Tests.Internal
     public sealed class MqttPacketBus_Tests
     {
         [TestMethod]
-        [ExpectedException(typeof(OperationCanceledException))]
+        [ExpectedException(typeof(TaskCanceledException))]
         public async Task Wait_With_Empty_Bus()
         {
             var bus = new MqttPacketBus();

@@ -14,6 +14,26 @@ namespace MQTTnet.Client
 {
     public static class MqttClientExtensions
     {
+        public static async Task<bool> TryPingAsync(this IMqttClient client, CancellationToken cancellationToken = default)
+        {
+            if (client == null)
+            {
+                throw new ArgumentNullException(nameof(client));
+            }
+
+            try
+            {
+                await client.PingAsync(cancellationToken).ConfigureAwait(false);
+                return true;
+            }
+            catch
+            {
+                // Ignore errors.
+            }
+
+            return false;
+        }
+        
         public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectReason reason = MqttClientDisconnectReason.NormalDisconnection, string reasonString = null)
         {
             if (client == null)

@@ -12,14 +12,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+        <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
         <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' != 'net5.0'">
-        <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
-    </ItemGroup>
-
+    
     <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
         <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
     </ItemGroup>

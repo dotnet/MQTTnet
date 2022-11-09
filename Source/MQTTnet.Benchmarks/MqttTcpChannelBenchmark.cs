@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using BenchmarkDotNet.Attributes;
 using MQTTnet.Channel;
 using MQTTnet.Implementations;
@@ -70,8 +71,8 @@ namespace MQTTnet.Benchmarks
 
             while (read < expected)
             {
-                var readresult = await _clientChannel.ReadAsync(new byte[size], 0, size, CancellationToken.None).ConfigureAwait(false);
-                read += readresult;
+                var readResult = await _clientChannel.ReadAsync(new byte[size], 0, size, CancellationToken.None).ConfigureAwait(false);
+                read += readResult;
             }
         }
 
@@ -79,9 +80,11 @@ namespace MQTTnet.Benchmarks
         {
             await Task.Yield();
 
+            var buffer = new ArraySegment<byte>(new byte[size]);
+            
             for (var i = 0; i < iterations; i++)
             {
-                await _serverChannel.WriteAsync(new byte[size], 0, size, CancellationToken.None).ConfigureAwait(false);
+                await _serverChannel.WriteAsync(buffer, true, CancellationToken.None).ConfigureAwait(false);
             }
         }
     }

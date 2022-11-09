@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -33,7 +33,7 @@ namespace MQTTnet.Tests.Server
                         e.Response.ReasonCode = MqttSubscribeReasonCode.TopicFilterInvalid;
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var client = await testEnvironment.ConnectClient();
@@ -47,6 +47,22 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
+        [ExpectedException(typeof(MqttClientDisconnectedException))]
+        public async Task Disconnect_While_Subscribing()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var server = await testEnvironment.StartServer();
+
+                // The client will be disconnect directly after subscribing!
+                server.ClientSubscribedTopicAsync += ev => server.DisconnectClientAsync(ev.ClientId, MqttDisconnectReasonCode.NormalDisconnection);
+
+                var client = await testEnvironment.ConnectClient();
+                await client.SubscribeAsync("#");
+            }
+        }
+        
+        [TestMethod]
         public async Task Enqueue_Message_After_Subscription()
         {
             using (var testEnvironment = CreateTestEnvironment())
@@ -56,7 +72,7 @@ namespace MQTTnet.Tests.Server
                 server.ClientSubscribedTopicAsync += e =>
                 {
                     server.InjectApplicationMessage(new InjectedMqttApplicationMessage(new MqttApplicationMessageBuilder().WithTopic("test_topic").Build()));
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var client = await testEnvironment.ConnectClient();
@@ -81,7 +97,7 @@ namespace MQTTnet.Tests.Server
                 {
                     // Set the topic to "a" regards what the client wants to subscribe.
                     e.TopicFilter.Topic = "a";
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var topicAReceived = false;
@@ -99,7 +115,7 @@ namespace MQTTnet.Tests.Server
                         topicBReceived = true;
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await client.SubscribeAsync("b");
@@ -146,7 +162,7 @@ namespace MQTTnet.Tests.Server
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 for (var i = 0; i < 500; i++)
@@ -189,7 +205,7 @@ namespace MQTTnet.Tests.Server
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var optionsBuilder = new MqttClientSubscribeOptionsBuilder();
@@ -229,7 +245,7 @@ namespace MQTTnet.Tests.Server
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder().WithTopicFilter("a").Build());
@@ -267,7 +283,7 @@ namespace MQTTnet.Tests.Server
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await c1.SubscribeAsync(new MqttClientSubscribeOptionsBuilder().WithTopicFilter("a").WithTopicFilter("b").WithTopicFilter("c").Build());
@@ -301,7 +317,7 @@ namespace MQTTnet.Tests.Server
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("c2"));
@@ -316,7 +332,7 @@ namespace MQTTnet.Tests.Server
                 server.ClientSubscribedTopicAsync += e =>
                 {
                     subscribeEventCalled = e.TopicFilter.Topic == "a" && e.ClientId == c1.Options.ClientId;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await c1.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
@@ -331,7 +347,7 @@ namespace MQTTnet.Tests.Server
                 server.ClientUnsubscribedTopicAsync += e =>
                 {
                     unsubscribeEventCalled = e.TopicFilter == "a" && e.ClientId == c1.Options.ClientId;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await c1.UnsubscribeAsync("a");

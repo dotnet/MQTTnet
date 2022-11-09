@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests.Server
@@ -47,20 +47,20 @@ namespace MQTTnet.Tests.Server
                         e.ReasonCode = MqttConnectReasonCode.Success;
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
                 
                 testEnvironment.Server.ClientConnectedAsync += args =>
                 {
                     serverConnectedClientId = args.ClientId;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 testEnvironment.Server.ClientDisconnectedAsync += args =>
                 {
                     serverDisconnectedClientId = args.ClientId;
                     disconnectedMre.Set();
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 // Arrange client
@@ -68,7 +68,7 @@ namespace MQTTnet.Tests.Server
                 client.ConnectedAsync += args =>
                 {
                     clientAssignedClientId = args.ConnectResult.AssignedClientIdentifier;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 // Act

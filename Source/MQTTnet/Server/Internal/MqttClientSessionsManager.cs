@@ -127,21 +127,20 @@ namespace MQTTnet.Server
 
             _logger.Verbose("Session for client '{0}' deleted.", clientId);
         }
-
-        public async Task DispatchApplicationMessage(string senderId, MqttApplicationMessage applicationMessage)
+        
+        public async Task<DispatchApplicationMessageResult> DispatchApplicationMessage(string senderId, MqttApplicationMessage applicationMessage)
         {
+            var matchingSubscribersCount = 0;
             try
             {
                 if (applicationMessage.Retain)
                 {
                     await _retainedMessagesManager.UpdateMessage(senderId, applicationMessage).ConfigureAwait(false);
                 }
-
-                var deliveryCount = 0;
+                
                 List<MqttSession> subscriberSessions;
                 lock (_sessionsManagementLock)
                 {
-                    // only subscriber clients are of interest here.
                     subscriberSessions = _subscriberSessions.ToList();
                 }
 
@@ -187,17 +186,22 @@ namespace MQTTnet.Server
                     }
 
                     session.EnqueueDataPacket(new MqttPacketBusItem(newPublishPacket));
-                    deliveryCount++;
+                    matchingSubscribersCount++;
 
                     _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'.", session.Id, applicationMessage.Topic);
                 }
 
-                await FireApplicationMessageNotConsumedEvent(applicationMessage, deliveryCount, senderId);
+                if (matchingSubscribersCount == 0)
+                {
+                    await FireApplicationMessageNotConsumedEvent(applicationMessage, senderId).ConfigureAwait(false);
+                }
             }
             catch (Exception exception)
             {
                 _logger.Error(exception, "Unhandled exception while processing next queued application message.");
             }
+
+            return new DispatchApplicationMessageResult(matchingSubscribersCount);
         }
 
         public void Dispose()
@@ -575,13 +579,8 @@ namespace MQTTnet.Server
             return new MqttSession(clientId, isPersistent, sessionItems, _options, _eventContainer, _retainedMessagesManager, this);
         }
 
-        async Task FireApplicationMessageNotConsumedEvent(MqttApplicationMessage applicationMessage, int deliveryCount, string senderId)
+        async Task FireApplicationMessageNotConsumedEvent(MqttApplicationMessage applicationMessage, string senderId)
         {
-            if (deliveryCount > 0)
-            {
-                return;
-            }
-
             if (!_eventContainer.ApplicationMessageNotConsumedEvent.HasHandlers)
             {
                 return;

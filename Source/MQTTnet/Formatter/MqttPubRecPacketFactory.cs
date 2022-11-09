@@ -25,7 +25,10 @@ namespace MQTTnet.Formatter
             return pubRecPacket;
         }
 
-        public MqttPacket Create(MqttPublishPacket publishPacket, InterceptingPublishEventArgs interceptingPublishEventArgs)
+        public MqttPacket Create(
+            MqttPublishPacket publishPacket,
+            InterceptingPublishEventArgs interceptingPublishEventArgs,
+            DispatchApplicationMessageResult dispatchApplicationMessageResult)
         {
             if (publishPacket == null)
             {
@@ -37,6 +40,11 @@ namespace MQTTnet.Formatter
                 PacketIdentifier = publishPacket.PacketIdentifier,
                 ReasonCode = MqttPubRecReasonCode.Success
             };
+
+            if (dispatchApplicationMessageResult.MatchingSubscribersCount == 0)
+            {
+                pubRecPacket.ReasonCode = MqttPubRecReasonCode.NoMatchingSubscribers;
+            }
 
             if (interceptingPublishEventArgs != null)
             {

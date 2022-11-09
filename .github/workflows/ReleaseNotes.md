@@ -4,3 +4,4 @@
 * [Server] Fixed duplicated invocation of the event _ClientAcknowledgedPublishPacketAsync_ for QoS level 2 (#1550)
 * [Server] Fixed issue in upgrading and downgrading of QoS levels for subscriptions and retained messages (#1560)
 * [Server] Fixed memory leak when old sessions are discarded (#1553)
+* [Server] When using MQTTv5 the reason code _NoMatchingSubscribers_ is returned when no client is subscribed to a published topic (#802)

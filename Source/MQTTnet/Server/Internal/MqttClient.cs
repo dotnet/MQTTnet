@@ -237,9 +237,10 @@ namespace MQTTnet.Server
                 return;
             }
 
+            DispatchApplicationMessageResult dispatchResult = null;
             if (processPublish && applicationMessage != null)
             {
-                await _sessionsManager.DispatchApplicationMessage(Id, applicationMessage).ConfigureAwait(false);
+                dispatchResult = await _sessionsManager.DispatchApplicationMessage(Id, applicationMessage).ConfigureAwait(false);
             }
 
             switch (publishPacket.QualityOfServiceLevel)
@@ -251,13 +252,13 @@ namespace MQTTnet.Server
                 }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                 {
-                    var pubAckPacket = _packetFactories.PubAck.Create(publishPacket, interceptingPublishEventArgs);
+                    var pubAckPacket = _packetFactories.PubAck.Create(publishPacket, interceptingPublishEventArgs, dispatchResult);
                     Session.EnqueueControlPacket(new MqttPacketBusItem(pubAckPacket));
                     break;
                 }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                 {
-                    var pubRecPacket = _packetFactories.PubRec.Create(publishPacket, interceptingPublishEventArgs);
+                    var pubRecPacket = _packetFactories.PubRec.Create(publishPacket, interceptingPublishEventArgs, dispatchResult);
                     Session.EnqueueControlPacket(new MqttPacketBusItem(pubRecPacket));
                     break;
                 }

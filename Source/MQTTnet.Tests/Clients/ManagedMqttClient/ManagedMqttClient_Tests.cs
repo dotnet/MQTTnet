@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
+using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -21,6 +22,65 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
     [TestClass]
     public sealed class ManagedMqttClient_Tests : BaseTestClass
     {
+        [TestMethod]
+        public async Task Receive_While_Not_Cleanly_Disconnected()
+        {
+            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            {
+                await testEnvironment.StartServer(o => o.WithPersistentSessions());
+
+                var senderClient = await testEnvironment.ConnectClient();
+
+                // Prepare managed client.
+                var managedClient = testEnvironment.Factory.CreateManagedMqttClient();
+                await managedClient.SubscribeAsync("#");
+                var receivedMessages = testEnvironment.CreateApplicationMessageHandler(managedClient);
+                
+                var managedClientOptions = new ManagedMqttClientOptions
+                {
+                    ClientOptions = testEnvironment.Factory.CreateClientOptionsBuilder()
+                        .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
+                        .WithClientId(nameof(Receive_While_Not_Cleanly_Disconnected) + "_managed")
+                        .WithCleanSession(false)
+                        .Build()
+                };
+
+                await managedClient.StartAsync(managedClientOptions);
+                await LongTestDelay();
+                
+                // Send test data.
+                await senderClient.PublishStringAsync("topic1");
+                await LongTestDelay();
+                
+                receivedMessages.AssertReceivedCountEquals(1);
+
+                // Stop the managed client but keep session at server (not clean disconnect required).
+                await managedClient.StopAsync(false);
+                await LongTestDelay();
+                
+                // Send new messages in the meantime.
+                await senderClient.PublishStringAsync("topic2", qualityOfServiceLevel: MqttQualityOfServiceLevel.ExactlyOnce);
+                await LongTestDelay();
+                
+                // Start the managed client, it should receive the new message.
+                await managedClient.StartAsync(managedClientOptions);
+                await LongTestDelay();
+                
+                receivedMessages.AssertReceivedCountEquals(2);
+                
+                // Stop and start again, no new message should be received.
+                for (var i = 0; i < 3; i++)
+                {
+                    await managedClient.StopAsync(false);
+                    await LongTestDelay();
+                    await managedClient.StartAsync(managedClientOptions);
+                    await LongTestDelay();
+                }
+
+                receivedMessages.AssertReceivedCountEquals(2);
+            }
+        }
+
         [TestMethod]
         public async Task Connect_To_Invalid_Server()
         {
@@ -33,7 +93,6 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                 var managedClient = testEnvironment.Factory.CreateManagedMqttClient(mqttClient);
 
                 ConnectingFailedEventArgs connectingFailedEventArgs = null;
-
                 managedClient.ConnectingFailedAsync += args =>
                 {
                     connectingFailedEventArgs = args;

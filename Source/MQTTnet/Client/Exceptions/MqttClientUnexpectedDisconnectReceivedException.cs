@@ -3,14 +3,15 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Exceptions
+namespace MQTTnet.Client
 {
-    public class MqttUnexpectedDisconnectReceivedException : MqttCommunicationException
+    public sealed class MqttClientUnexpectedDisconnectReceivedException : MqttCommunicationException
     {
-        public MqttUnexpectedDisconnectReceivedException(MqttDisconnectPacket disconnectPacket) 
+        public MqttClientUnexpectedDisconnectReceivedException(MqttDisconnectPacket disconnectPacket) 
             : base($"Unexpected DISCONNECT (Reason code={disconnectPacket.ReasonCode}) received.")
         {
             ReasonCode = disconnectPacket.ReasonCode;

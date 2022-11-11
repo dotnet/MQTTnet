@@ -6,9 +6,9 @@ namespace MQTTnet.Formatter
 {
     public struct ReadFixedHeaderResult
     {
-        public static ReadFixedHeaderResult Cancelled { get; } = new ReadFixedHeaderResult
+        public static ReadFixedHeaderResult Canceled { get; } = new ReadFixedHeaderResult
         {
-            IsCancelled = true
+            IsCanceled = true
         };
         
         public static ReadFixedHeaderResult ConnectionClosed { get; } = new ReadFixedHeaderResult
@@ -16,7 +16,7 @@ namespace MQTTnet.Formatter
             IsConnectionClosed = true
         };
         
-        public bool IsCancelled { get; set; }
+        public bool IsCanceled { get; set; }
         
         public bool IsConnectionClosed { get; set; }
 

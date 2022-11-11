@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
+using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -197,6 +198,16 @@ namespace MQTTnet.Tests.Mockups
         public TestApplicationMessageReceivedHandler CreateApplicationMessageHandler(IMqttClient mqttClient)
         {
             return new TestApplicationMessageReceivedHandler(mqttClient);
+        }
+
+        public TestApplicationMessageReceivedHandler CreateApplicationMessageHandler(IManagedMqttClient managedClient)
+        {
+            if (managedClient == null)
+            {
+                throw new ArgumentNullException(nameof(managedClient));
+            }
+
+            return new TestApplicationMessageReceivedHandler(managedClient.InternalClient);
         }
 
         public IMqttClient CreateClient()

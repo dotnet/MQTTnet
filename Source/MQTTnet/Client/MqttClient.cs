@@ -33,13 +33,13 @@ namespace MQTTnet.Client
         readonly object _disconnectLock = new object();
         readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();
         readonly MqttNetSourceLogger _logger;
-        readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
 
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         readonly IMqttNetLogger _rootLogger;
 
         IMqttChannelAdapter _adapter;
+
         bool _cleanDisconnectInitiated;
         volatile int _connectionStatus;
 
@@ -48,14 +48,16 @@ namespace MQTTnet.Client
         int _disconnectReason;
         string _disconnectReasonString;
         List<MqttUserProperty> _disconnectUserProperties;
-        
+
         Task _keepAlivePacketsSenderTask;
         DateTime _lastPacketSentTimestamp;
+
         CancellationTokenSource _mqttClientAlive;
+        MqttPacketDispatcher _packetDispatcher;
         Task _packetReceiverTask;
         AsyncQueue<MqttPublishPacket> _publishPacketReceiverQueue;
         Task _publishPacketReceiverTask;
-        
+
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
             _adapterFactory = channelFactory ?? throw new ArgumentNullException(nameof(channelFactory));
@@ -130,7 +132,7 @@ namespace MQTTnet.Client
                 }
 
                 _packetIdentifierProvider.Reset();
-                _packetDispatcher.CancelAll();
+                _packetDispatcher = new MqttPacketDispatcher();
 
                 Cleanup();
 
@@ -455,6 +457,9 @@ namespace MQTTnet.Client
 
                 _adapter?.Dispose();
                 _adapter = null;
+
+                _packetDispatcher?.Dispose();
+                _packetDispatcher = null;
             }
         }
 
@@ -508,6 +513,8 @@ namespace MQTTnet.Client
 
             try
             {
+                _packetDispatcher.Dispose(new MqttClientDisconnectedException(exception));
+
                 var receiverTask = _packetReceiverTask.WaitAsync(sender, _logger);
                 var publishPacketReceiverTask = _publishPacketReceiverTask.WaitAsync(sender, _logger);
                 var keepAliveTask = _keepAlivePacketsSenderTask.WaitAsync(sender, _logger);
@@ -618,7 +625,7 @@ namespace MQTTnet.Client
             _disconnectUserProperties = disconnectPacket.UserProperties;
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
-            _packetDispatcher.FailAll(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));
+            _packetDispatcher.Dispose(new MqttClientUnexpectedDisconnectReceivedException(disconnectPacket));
 
             return DisconnectInternalAsync(_packetReceiverTask, null, null);
         }
@@ -840,7 +847,7 @@ namespace MQTTnet.Client
                 }
                 else
                 {
-                    _logger.Error(exception, "Error while receiving packets.");
+                    _logger.Error(exception, $"Error while processing received packet ({packet.GetType().Name}).");
                 }
 
                 _packetDispatcher.FailAll(exception);
@@ -889,6 +896,11 @@ namespace MQTTnet.Client
                 if (_cleanDisconnectInitiated)
                 {
                     return;
+                }
+
+                if (exception is AggregateException aggregateException)
+                {
+                    exception = aggregateException.GetBaseException();
                 }
 
                 if (exception is OperationCanceledException)

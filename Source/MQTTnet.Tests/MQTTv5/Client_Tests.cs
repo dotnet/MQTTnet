@@ -154,7 +154,7 @@ namespace MQTTnet.Tests.MQTTv5
                 var result = await client.PublishStringAsync("a", "b", MqttQualityOfServiceLevel.AtLeastOnce);
                 await client.DisconnectAsync();
 
-                Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
+                Assert.AreEqual(MqttClientPublishReasonCode.NoMatchingSubscribers, result.ReasonCode);
             }
         }
 
@@ -169,7 +169,7 @@ namespace MQTTnet.Tests.MQTTv5
                 var result = await client.PublishStringAsync("a", "b", MqttQualityOfServiceLevel.ExactlyOnce);
                 await client.DisconnectAsync();
 
-                Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
+                Assert.AreEqual(MqttClientPublishReasonCode.NoMatchingSubscribers, result.ReasonCode);
             }
         }
 

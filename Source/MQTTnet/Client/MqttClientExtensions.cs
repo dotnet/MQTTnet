@@ -19,6 +19,7 @@ namespace MQTTnet.Client
             MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection,
             string reasonString = null,
             uint sessionExpiryInterval = 0,
+            List<MqttUserProperty> userProperties = null,
             CancellationToken cancellationToken = default)
         {
             if (client == null)
@@ -30,7 +31,8 @@ namespace MQTTnet.Client
             {
                 Reason = reason,
                 ReasonString = reasonString,
-                SessionExpiryInterval = sessionExpiryInterval
+                SessionExpiryInterval = sessionExpiryInterval,
+                UserProperties = userProperties
             };
 
             return client.DisconnectAsync(disconnectOptions, cancellationToken);
@@ -73,6 +75,17 @@ namespace MQTTnet.Client
         {
             var payloadBuffer = Encoding.UTF8.GetBytes(payload ?? string.Empty);
             return mqttClient.PublishBinaryAsync(topic, payloadBuffer, qualityOfServiceLevel, retain, cancellationToken);
+        }
+
+        public static Task ReconnectAsync(this IMqttClient client, CancellationToken cancellationToken = default)
+        {
+            if (client.Options == null)
+            {
+                throw new InvalidOperationException(
+                    "The MQTT client was not connected before. A reconnect is only permitted when the client was already connected or at least tried to.");
+            }
+
+            return client.ConnectAsync(client.Options, cancellationToken);
         }
 
         public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)

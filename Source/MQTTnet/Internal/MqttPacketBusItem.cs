@@ -10,40 +10,36 @@ namespace MQTTnet.Internal
 {
     public sealed class MqttPacketBusItem
     {
-        readonly AsyncTaskCompletionSource<int> _promise = new AsyncTaskCompletionSource<int>();
-
+        readonly AsyncTaskCompletionSource<bool> _promise = new AsyncTaskCompletionSource<bool>();
+        
         public MqttPacketBusItem(MqttPacket packet)
         {
             Packet = packet ?? throw new ArgumentNullException(nameof(packet));
         }
-        
+
+        public event EventHandler Completed;
+
         public MqttPacket Packet { get; }
 
-        public event EventHandler Delivered;
-
-        public Task WaitForDeliveryAsync()
+        public void Cancel()
         {
-            return _promise.Task;
-        }
-        
-        public void MarkAsDelivered()
-        {
-            if (_promise.TrySetResult(0))
-            {
-                Delivered?.Invoke(this, EventArgs.Empty);
-            }
+            _promise.TrySetCanceled();
         }
 
-        public void MarkAsFailed(Exception exception)
+        public void Complete()
         {
-            if (exception == null) throw new ArgumentNullException(nameof(exception));
-            
+            _promise.TrySetResult(true);
+            Completed?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void Fail(Exception exception)
+        {
             _promise.TrySetException(exception);
         }
 
-        public void MarkAsCancelled()
+        public Task WaitAsync()
         {
-            _promise.TrySetCanceled();
+            return _promise.Task;
         }
     }
 }

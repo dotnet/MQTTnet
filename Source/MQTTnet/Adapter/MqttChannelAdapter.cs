@@ -298,7 +298,7 @@ namespace MQTTnet.Adapter
                 // Check two times for cancellation because the call to _ReadAsync_ might block for some time.
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    return ReadFixedHeaderResult.Cancelled;
+                    return ReadFixedHeaderResult.Canceled;
                 }
 
                 int bytesRead;
@@ -308,7 +308,7 @@ namespace MQTTnet.Adapter
                 }
                 catch (OperationCanceledException)
                 {
-                    return ReadFixedHeaderResult.Cancelled;
+                    return ReadFixedHeaderResult.Canceled;
                 }
                 catch (SocketException)
                 {

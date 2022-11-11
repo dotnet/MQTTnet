@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -25,7 +24,8 @@ namespace MQTTnet.Server
         readonly MqttServerOptions _serverOptions;
         readonly MqttClientSubscriptionsManager _subscriptionsManager;
 
-        readonly ConcurrentDictionary<ushort, MqttPublishPacket> _unacknowledgedPublishPackets = new ConcurrentDictionary<ushort, MqttPublishPacket>();
+        // Do not use a dictionary in order to keep the ordering of the messages.
+        readonly List<MqttPublishPacket> _unacknowledgedPublishPackets = new List<MqttPublishPacket>();
 
         // Bookkeeping to know if this is a subscribing client; lazy initialize later.
         HashSet<string> _subscribedTopics;
@@ -72,7 +72,14 @@ namespace MQTTnet.Server
 
         public MqttPublishPacket AcknowledgePublishPacket(ushort packetIdentifier)
         {
-            _unacknowledgedPublishPackets.TryRemove(packetIdentifier, out var publishPacket);
+            MqttPublishPacket publishPacket;
+
+            lock (_unacknowledgedPublishPackets)
+            {
+                publishPacket = _unacknowledgedPublishPackets.FirstOrDefault(p => p.PacketIdentifier.Equals(packetIdentifier));
+                _unacknowledgedPublishPackets.Remove(publishPacket);
+            }
+
             return publishPacket;
         }
 
@@ -130,7 +137,10 @@ namespace MQTTnet.Server
             {
                 publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
-                _unacknowledgedPublishPackets[publishPacket.PacketIdentifier] = publishPacket;
+                lock (_unacknowledgedPublishPackets)
+                {
+                    _unacknowledgedPublishPackets.Add(publishPacket);
+                }
             }
 
             _packetBus.EnqueueItem(packetBusItem, MqttPacketBusPartition.Data);
@@ -145,8 +155,10 @@ namespace MQTTnet.Server
         {
             // This will only return the matching PUBLISH packet but does not remove it.
             // This is required for QoS 2.
-            _unacknowledgedPublishPackets.TryGetValue(packetIdentifier, out var publishPacket);
-            return publishPacket;
+            lock (_unacknowledgedPublishPackets)
+            {
+                return _unacknowledgedPublishPackets.FirstOrDefault(p => p.PacketIdentifier.Equals(packetIdentifier));
+            }
         }
 
         public void Recover()
@@ -154,9 +166,33 @@ namespace MQTTnet.Server
             // TODO: Keep the bus and only insert pending items again.
             // TODO: Check if packet identifier must be restarted or not.
             // TODO: Recover package identifier.
+            
+            /*
+                The Session state in the Client consists of:
+                ·         QoS 1 and QoS 2 messages which have been sent to the Server, but have not been completely acknowledged.
+                ·         QoS 2 messages which have been received from the Server, but have not been completely acknowledged. 
+
+                The Session state in the Server consists of:
+                ·         The existence of a Session, even if the rest of the Session state is empty.
+                ·         The Client’s subscriptions.
+                ·         QoS 1 and QoS 2 messages which have been sent to the Client, but have not been completely acknowledged.
+                ·         QoS 1 and QoS 2 messages pending transmission to the Client.
+                ·         QoS 2 messages which have been received from the Client, but have not been completely acknowledged.
+                ·         Optionally, QoS 0 messages pending transmission to the Client. 
+             */
+
+            // Create a copy of all currently unacknowledged publish packets and clear the storage.
+            // We must re-enqueue them in order to trigger other code.
+            List<MqttPublishPacket> unacknowledgedPublishPackets;
+            lock (_unacknowledgedPublishPackets)
+            {
+                unacknowledgedPublishPackets = _unacknowledgedPublishPackets.ToList();
+                _unacknowledgedPublishPackets.Clear();    
+            }
+
             _packetBus.Clear();
 
-            foreach (var publishPacket in _unacknowledgedPublishPackets.Values.ToList())
+            foreach (var publishPacket in unacknowledgedPublishPackets)
             {
                 EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
             }

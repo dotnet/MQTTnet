@@ -2,8 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
@@ -17,7 +19,12 @@ namespace MQTTnet.Tests.Mockups
 
         public TestApplicationMessageReceivedHandler(IMqttClient mqttClient)
         {
-            mqttClient.ApplicationMessageReceivedAsync += MqttClientOnApplicationMessageReceivedAsync;
+            if (mqttClient == null)
+            {
+                throw new ArgumentNullException(nameof(mqttClient));
+            }
+
+            mqttClient.ApplicationMessageReceivedAsync += OnApplicationMessageReceivedAsync;
         }
 
         public List<MqttApplicationMessageReceivedEventArgs> ReceivedEventArgs
@@ -39,7 +46,25 @@ namespace MQTTnet.Tests.Mockups
             }
         }
 
-        Task MqttClientOnApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
+        public string GeneratePayloadSequence()
+        {
+            var sequence = new StringBuilder();
+
+            lock (_receivedEventArgs)
+            {
+                foreach (var receivedEventArg in _receivedEventArgs)
+                {
+                    var payload = receivedEventArg.ApplicationMessage.ConvertPayloadToString();
+
+                    // An empty payload is not part of the sequence!
+                    sequence.Append(payload);
+                }
+            }
+
+            return sequence.ToString();
+        }
+
+        Task OnApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
             lock (_receivedEventArgs)
             {

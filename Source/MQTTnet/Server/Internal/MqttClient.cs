@@ -507,15 +507,15 @@ namespace MQTTnet.Server
                     try
                     {
                         await SendPacketAsync(packetBusItem.Packet, cancellationToken).ConfigureAwait(false);
-                        packetBusItem.MarkAsDelivered();
+                        packetBusItem.Complete();
                     }
                     catch (OperationCanceledException)
                     {
-                        packetBusItem.MarkAsCancelled();
+                        packetBusItem.Cancel();
                     }
                     catch (Exception exception)
                     {
-                        packetBusItem.MarkAsFailed(exception);
+                        packetBusItem.Fail(exception);
                     }
                     finally
                     {
@@ -563,7 +563,7 @@ namespace MQTTnet.Server
             catch (ObjectDisposedException)
             {
                 // This can happen when connections are created and dropped very quickly.
-                // It is not an issue if the cancellation token cannot be cancelled multiple times.
+                // It is not an issue if the cancellation token cannot be canceled multiple times.
             }
         }
 

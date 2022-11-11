@@ -45,7 +45,7 @@ namespace MQTTnet.Server
             var packetBusItem = new MqttPacketBusItem(publishPacketFactory.Create(applicationMessage));
             _session.EnqueueDataPacket(packetBusItem);
 
-            return packetBusItem.WaitForDeliveryAsync();
+            return packetBusItem.WaitAsync();
         }
         
         public Task DeleteAsync()

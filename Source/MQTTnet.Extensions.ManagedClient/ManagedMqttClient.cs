@@ -62,6 +62,7 @@ namespace MQTTnet.Extensions.ManagedClient
         CancellationTokenSource _publishingCancellationToken;
 
         ManagedMqttClientStorageManager _storageManager;
+        bool _isCleanDisconnect;
 
         public ManagedMqttClient(IMqttClient mqttClient, IMqttNetLogger logger)
         {
@@ -255,10 +256,12 @@ namespace MQTTnet.Extensions.ManagedClient
             _logger.Info("Started");
         }
 
-        public async Task StopAsync()
+        public async Task StopAsync(bool cleanDisconnect = true)
         {
             ThrowIfDisposed();
 
+            _isCleanDisconnect = cleanDisconnect;
+            
             StopPublishing();
             StopMaintainingConnection();
 
@@ -382,9 +385,12 @@ namespace MQTTnet.Extensions.ManagedClient
                 {
                     try
                     {
-                        using (var disconnectTimeout = new CancellationTokenSource(Options.ClientOptions.Timeout))
+                        if (_isCleanDisconnect)
                         {
-                            await InternalClient.DisconnectAsync(new MqttClientDisconnectOptions(), disconnectTimeout.Token).ConfigureAwait(false);
+                            using (var disconnectTimeout = new CancellationTokenSource(Options.ClientOptions.Timeout))
+                            {
+                                await InternalClient.DisconnectAsync(new MqttClientDisconnectOptions(), disconnectTimeout.Token).ConfigureAwait(false);
+                            }
                         }
                     }
                     catch (OperationCanceledException)

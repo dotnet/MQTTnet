@@ -22,6 +22,7 @@ namespace MQTTnet.Server
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
 
         readonly MqttServerOptions _serverOptions;
+        readonly MqttClientSubscriptionsManager _subscriptionsManager;
 
         // Do not use a dictionary in order to keep the ordering of the messages.
         readonly List<MqttPublishPacket> _unacknowledgedPublishPackets = new List<MqttPublishPacket>();
@@ -45,7 +46,7 @@ namespace MQTTnet.Server
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
 
-            SubscriptionsManager = new MqttClientSubscriptionsManager(this, eventContainer, retainedMessagesManager, clientSessionsManager);
+            _subscriptionsManager = new MqttClientSubscriptionsManager(this, eventContainer, retainedMessagesManager, clientSessionsManager);
         }
 
         public DateTime CreatedTimestamp { get; } = DateTime.UtcNow;
@@ -66,8 +67,6 @@ namespace MQTTnet.Server
         public MqttPacketIdentifierProvider PacketIdentifierProvider { get; } = new MqttPacketIdentifierProvider();
 
         public long PendingDataPacketsCount => _packetBus.PartitionItemsCount(MqttPacketBusPartition.Data);
-
-        public MqttClientSubscriptionsManager SubscriptionsManager { get; }
 
         public bool WillMessageSent { get; set; }
 
@@ -106,8 +105,8 @@ namespace MQTTnet.Server
 
         public void Dispose()
         {
-            _packetBus?.Dispose();
-            SubscriptionsManager.Dispose();
+            _packetBus.Dispose();
+            _subscriptionsManager.Dispose();
         }
 
         public void EnqueueControlPacket(MqttPacketBusItem packetBusItem)
@@ -202,6 +201,31 @@ namespace MQTTnet.Server
         public void RemoveSubscribedTopic(string topic)
         {
             _subscribedTopics?.Remove(topic);
+        }
+
+        public Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
+        {
+            return _subscriptionsManager.Subscribe(subscribePacket, cancellationToken);
+        }
+
+        public bool TryCheckSubscriptions(string topic, ulong topicHash, MqttQualityOfServiceLevel qualityOfServiceLevel, string senderId, out CheckSubscriptionsResult result)
+        {
+            result = null;
+
+            try
+            {
+                result = _subscriptionsManager.CheckSubscriptions(topic, topicHash, qualityOfServiceLevel, senderId);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public Task<UnsubscribeResult> Unsubscribe(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
+        {
+            return _subscriptionsManager.Unsubscribe(unsubscribePacket, cancellationToken);
         }
     }
 }

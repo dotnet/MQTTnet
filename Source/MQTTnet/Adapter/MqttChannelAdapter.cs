@@ -13,7 +13,6 @@ using MQTTnet.Channel;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 
@@ -296,8 +295,26 @@ namespace MQTTnet.Adapter
 
             while (totalBytesRead < buffer.Length)
             {
-                var bytesRead = await _channel.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
+                // Check two times for cancellation because the call to _ReadAsync_ might block for some time.
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return ReadFixedHeaderResult.Cancelled;
+                }
 
+                int bytesRead;
+                try
+                {
+                    bytesRead = await _channel.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead, cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    return ReadFixedHeaderResult.Cancelled;
+                }
+                catch (SocketException)
+                {
+                    return ReadFixedHeaderResult.ConnectionClosed;
+                }
+               
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return ReadFixedHeaderResult.Canceled;

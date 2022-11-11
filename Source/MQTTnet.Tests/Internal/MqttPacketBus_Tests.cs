@@ -13,7 +13,7 @@ namespace MQTTnet.Tests.Internal
 {
     [TestClass]
     public sealed class MqttPacketBus_Tests
-    {
+    {       
         [TestMethod]
         public void Alternate_Priorities()
         {

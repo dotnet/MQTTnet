@@ -69,6 +69,17 @@ namespace MQTTnet.Client
             return mqttClient.PublishBinaryAsync(topic, payloadBuffer, qualityOfServiceLevel, retain, cancellationToken);
         }
 
+        public static Task ReconnectAsync(this IMqttClient client, CancellationToken cancellationToken = default)
+        {
+            if (client.Options == null)
+            {
+                throw new InvalidOperationException(
+                    "The MQTT client was not connected before. A reconnect is only permitted when the client was already connected or at least tried to.");
+            }
+
+            return client.ConnectAsync(client.Options, cancellationToken);
+        }
+
         public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)
         {
             if (client == null)

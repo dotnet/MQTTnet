@@ -123,7 +123,7 @@ namespace MQTTnet.Internal
             }
             catch (Exception exception)
             {
-                logger.Warning(exception, $"Error while invoking event ({typeof(TEventArgs)}).");
+                logger.Warning(exception, $"Error while invoking event with arguments of type {typeof(TEventArgs)}.");
             }
         }
     }

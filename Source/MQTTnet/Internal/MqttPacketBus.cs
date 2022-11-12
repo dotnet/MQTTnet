@@ -20,7 +20,7 @@ namespace MQTTnet.Internal
             new LinkedList<MqttPacketBusItem>()
         };
 
-        readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0, 1);
+        readonly AsyncSignal _signal = new AsyncSignal();
         readonly object _syncRoot = new object();
 
         int _activePartition = (int)MqttPacketBusPartition.Health;
@@ -82,7 +82,16 @@ namespace MQTTnet.Internal
 
                 // No partition contains data so that we have to wait and put
                 // the worker back to the thread pool.
-                await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // The cancelled token should "hide" the disposal of the signal.
+                    cancellationToken.ThrowIfCancellationRequested();
+                    throw;
+                }
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -92,7 +101,7 @@ namespace MQTTnet.Internal
 
         public void Dispose()
         {
-            _semaphore?.Dispose();
+            _signal.Dispose();
         }
 
         public void DropFirstItem(MqttPacketBusPartition partition)
@@ -118,11 +127,7 @@ namespace MQTTnet.Internal
             lock (_syncRoot)
             {
                 _partitions[(int)partition].AddLast(item);
-
-                if (_semaphore.CurrentCount == 0)
-                {
-                    _semaphore.Release();
-                }
+                _signal.Set();
             }
         }
 

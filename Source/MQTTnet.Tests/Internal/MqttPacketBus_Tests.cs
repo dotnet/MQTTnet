@@ -137,7 +137,7 @@ namespace MQTTnet.Tests.Internal
         }
 
         [TestMethod]
-        [ExpectedException(typeof(OperationCanceledException))]
+        [ExpectedException(typeof(TaskCanceledException))]
         public async Task Wait_With_Empty_Bus()
         {
             var bus = new MqttPacketBus();

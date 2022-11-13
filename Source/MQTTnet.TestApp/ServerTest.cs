@@ -4,13 +4,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
-using MQTTnet.Extensions.ManagedClient;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using Newtonsoft.Json;
@@ -69,13 +67,13 @@ namespace MQTTnet.TestApp
                     }
 
                     File.WriteAllText(Filename, JsonConvert.SerializeObject(e.StoredRetainedMessages));
-                    return Task.FromResult(0);
+                    return CompletedTask.Instance;
                 };
                 
                 mqttServer.RetainedMessagesClearedAsync += e =>
                 {
                     File.Delete(Filename);
-                    return Task.FromResult(0);
+                    return CompletedTask.Instance;
                 };
                 
                 mqttServer.LoadingRetainedMessageAsync += e =>
@@ -93,7 +91,7 @@ namespace MQTTnet.TestApp
 
                     e.LoadedRetainedMessages = retainedMessages;
 
-                    return Task.FromResult(0);
+                    return CompletedTask.Instance;
                 };
 
                 mqttServer.InterceptingPublishAsync += e =>
@@ -111,7 +109,7 @@ namespace MQTTnet.TestApp
                         e.CloseConnection = true;
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
                 
                 mqttServer.ValidatingConnectionAsync += e =>
@@ -124,7 +122,7 @@ namespace MQTTnet.TestApp
                         }
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 mqttServer.InterceptingSubscriptionAsync += e =>
@@ -140,7 +138,7 @@ namespace MQTTnet.TestApp
                         e.CloseConnection = true;
                     }
 
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
                 
                 mqttServer.InterceptingPublishAsync += e =>
@@ -149,7 +147,7 @@ namespace MQTTnet.TestApp
                         $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0])}'",
                         ConsoleColor.Magenta);
                     
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 //options.ApplicationMessageInterceptor = c =>
@@ -177,7 +175,7 @@ namespace MQTTnet.TestApp
                 mqttServer.ClientConnectedAsync += e =>
                 {
                     Console.Write("Client disconnected event fired.");
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await mqttServer.StartAsync();

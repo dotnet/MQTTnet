@@ -6,7 +6,7 @@ using System.IO.Pipelines;
 
 namespace MQTTnet.AspNetCore.Tests.Mockups
 {
-    public class DuplexPipeMockup : IDuplexPipe
+    public sealed class DuplexPipeMockup : IDuplexPipe
     {
         public DuplexPipeMockup()
         {
@@ -20,9 +20,8 @@ namespace MQTTnet.AspNetCore.Tests.Mockups
 
         PipeWriter IDuplexPipe.Output => Send.Writer;
 
+        public Pipe Receive { get; } 
 
-        public Pipe Receive { get; set; } 
-
-        public Pipe Send { get; set; }
+        public Pipe Send { get; }
     }
 }

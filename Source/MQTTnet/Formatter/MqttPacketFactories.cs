@@ -7,6 +7,7 @@ namespace MQTTnet.Formatter
     public sealed class MqttPacketFactories
     {
         public MqttConnAckPacketFactory ConnAck { get; } = new MqttConnAckPacketFactory();
+        
         public MqttConnectPacketFactory Connect { get; } = new MqttConnectPacketFactory();
 
         public MqttDisconnectPacketFactory Disconnect { get; } = new MqttDisconnectPacketFactory();

@@ -6,13 +6,13 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Text;
 using MQTTnet.Exceptions;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Formatter
 {
     public sealed class MqttBufferReader
     {
-        byte[] _buffer = PlatformAbstractionLayer.EmptyByteArray;
+        byte[] _buffer = EmptyBuffer.Array;
         int _initialPosition;
         int _length;
         int _position;
@@ -29,7 +29,7 @@ namespace MQTTnet.Formatter
 
             if (length == 0)
             {
-                return PlatformAbstractionLayer.EmptyByteArray;
+                return EmptyBuffer.Array;
             }
 
             ValidateReceiveBuffer(length);
@@ -66,7 +66,7 @@ namespace MQTTnet.Formatter
 
             if (bufferLength == 0)
             {
-                return PlatformAbstractionLayer.EmptyByteArray;
+                return EmptyBuffer.Array;
             }
             
             var buffer = new byte[bufferLength];

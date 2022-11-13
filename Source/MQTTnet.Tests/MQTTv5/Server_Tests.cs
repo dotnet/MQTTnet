@@ -8,7 +8,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Tests.Mockups;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests.MQTTv5
@@ -31,7 +31,7 @@ namespace MQTTnet.Tests.MQTTv5
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessagesCount);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
                 
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
@@ -171,7 +171,6 @@ namespace MQTTnet.Tests.MQTTv5
                 // Session should be present
 
                 Assert.IsTrue(!result3.IsSessionPresent, "Session is present when it should not");
-
             }
         }
 
@@ -180,7 +179,7 @@ namespace MQTTnet.Tests.MQTTv5
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
-                var disconnectReason = MQTTnet.Client.MqttClientDisconnectReason.UnspecifiedError;
+                var disconnectReason = MqttClientDisconnectReason.UnspecifiedError;
 
                 string testClientId = null;
 
@@ -189,15 +188,15 @@ namespace MQTTnet.Tests.MQTTv5
                 testEnvironment.Server.ClientConnectedAsync += e =>
                 {
                     testClientId = e.ClientId;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
-                var client = await testEnvironment.ConnectClient(new MQTTnet.Client.MqttClientOptionsBuilder().WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V500));
+                var client = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
 
                 client.DisconnectedAsync += e =>
                 {
                     disconnectReason = e.Reason;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await LongTestDelay();
@@ -208,17 +207,17 @@ namespace MQTTnet.Tests.MQTTv5
 
                 // Have the server disconnect the client with AdministrativeAction reason
 
-                await testEnvironment.Server.DisconnectClientAsync(testClientId, Protocol.MqttDisconnectReasonCode.AdministrativeAction);
+                await testEnvironment.Server.DisconnectClientAsync(testClientId, MqttDisconnectReasonCode.AdministrativeAction);
 
                 await LongTestDelay();
 
                 // The reason should be returned to the client in the DISCONNECT packet
 
-                Assert.AreEqual(MQTTnet.Client.MqttClientDisconnectReason.AdministrativeAction, disconnectReason);
+                Assert.AreEqual(MqttClientDisconnectReason.AdministrativeAction, disconnectReason);
             }
         }
 
-        MqttClientOptions CreateClientOptions(TestEnvironment testEnvironment, string clientId, bool cleanSession, uint sessionExpiryInterval)
+        static MqttClientOptions CreateClientOptions(TestEnvironment testEnvironment, string clientId, bool cleanSession, uint sessionExpiryInterval)
         {
             return testEnvironment.Factory.CreateClientOptionsBuilder()
                 .WithProtocolVersion(MqttProtocolVersion.V500)

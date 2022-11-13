@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
 
@@ -37,7 +36,7 @@ namespace MQTTnet.Internal
                 _handlers.Add(new AsyncEventInvocator<TEventArgs>(null, handler));
 
                 HasHandlers = true;
-                _handlersForInvoke = new List<AsyncEventInvocator<TEventArgs>>(_handlers.ToList());
+                _handlersForInvoke = new List<AsyncEventInvocator<TEventArgs>>(_handlers);
             }
         }
 
@@ -53,7 +52,7 @@ namespace MQTTnet.Internal
                 _handlers.Add(new AsyncEventInvocator<TEventArgs>(handler, null));
 
                 HasHandlers = true;
-                _handlersForInvoke = new List<AsyncEventInvocator<TEventArgs>>(_handlers.ToList());
+                _handlersForInvoke = new List<AsyncEventInvocator<TEventArgs>>(_handlers);
             }
         }
 
@@ -86,7 +85,7 @@ namespace MQTTnet.Internal
                 _handlers.RemoveAll(h => h.WrapsHandler(handler));
 
                 HasHandlers = _handlers.Count > 0;
-                _handlersForInvoke = new List<AsyncEventInvocator<TEventArgs>>(_handlers.ToList());
+                _handlersForInvoke = new List<AsyncEventInvocator<TEventArgs>>(_handlers);
             }
         }
 
@@ -102,7 +101,7 @@ namespace MQTTnet.Internal
                 _handlers.RemoveAll(h => h.WrapsHandler(handler));
 
                 HasHandlers = _handlers.Count > 0;
-                _handlersForInvoke = new List<AsyncEventInvocator<TEventArgs>>(_handlers.ToList());
+                _handlersForInvoke = new List<AsyncEventInvocator<TEventArgs>>(_handlers);
             }
         }
 
@@ -124,7 +123,7 @@ namespace MQTTnet.Internal
             }
             catch (Exception exception)
             {
-                logger.Warning(exception, $"Error while invoking event ({typeof(TEventArgs)}).");
+                logger.Warning(exception, $"Error while invoking event with arguments of type {typeof(TEventArgs)}.");
             }
         }
     }

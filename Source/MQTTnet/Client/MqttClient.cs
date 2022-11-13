@@ -9,7 +9,6 @@ using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
@@ -33,25 +32,21 @@ namespace MQTTnet.Client
         readonly object _disconnectLock = new object();
         readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();
         readonly MqttNetSourceLogger _logger;
-        readonly MqttPacketDispatcher _packetDispatcher = new MqttPacketDispatcher();
         readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
 
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         readonly IMqttNetLogger _rootLogger;
 
         IMqttChannelAdapter _adapter;
-
         CancellationTokenSource _backgroundCancellationTokenSource;
         bool _cleanDisconnectInitiated;
         volatile int _connectionStatus;
-
         MqttClientDisconnectReason _disconnectReason;
         string _disconnectReasonString;
         Task _keepAlivePacketsSenderTask;
-
         DateTime _lastPacketSentTimestamp;
+        MqttPacketDispatcher _packetDispatcher;
         Task _packetReceiverTask;
-
         AsyncQueue<MqttPublishPacket> _publishPacketReceiverQueue;
         Task _publishPacketReceiverTask;
 
@@ -129,7 +124,7 @@ namespace MQTTnet.Client
                 }
 
                 _packetIdentifierProvider.Reset();
-                _packetDispatcher.CancelAll();
+                _packetDispatcher = new MqttPacketDispatcher();
 
                 _backgroundCancellationTokenSource = new CancellationTokenSource();
                 var backgroundCancellationToken = _backgroundCancellationTokenSource.Token;
@@ -227,16 +222,16 @@ namespace MQTTnet.Client
 
         public async Task PingAsync(CancellationToken cancellationToken = default)
         {
-            if (!cancellationToken.CanBeCanceled)
+            if (cancellationToken.CanBeCanceled)
+            {
+                await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
+            }
+            else
             {
                 using (var timeout = new CancellationTokenSource(Options.Timeout))
                 {
                     await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, timeout.Token).ConfigureAwait(false);
                 }
-            }
-            else
-            {
-                await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -372,7 +367,7 @@ namespace MQTTnet.Client
                 throw new MqttProtocolViolationException("Received a not supported QoS level.");
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         async Task<MqttClientConnectResult> AuthenticateAsync(MqttClientOptions options, CancellationToken cancellationToken)
@@ -418,6 +413,10 @@ namespace MQTTnet.Client
                 _publishPacketReceiverQueue = null;
 
                 _adapter?.Dispose();
+                _adapter = null;
+                
+                _packetDispatcher?.Dispose();
+                _packetDispatcher = null;
             }
         }
 
@@ -451,6 +450,8 @@ namespace MQTTnet.Client
 
             try
             {
+                _packetDispatcher.Dispose(new MqttClientDisconnectedException(exception));
+                
                 var receiverTask = WaitForTaskAsync(_packetReceiverTask, sender);
                 var publishPacketReceiverTask = WaitForTaskAsync(_publishPacketReceiverTask, sender);
                 var keepAliveTask = WaitForTaskAsync(_keepAlivePacketsSenderTask, sender);
@@ -493,7 +494,7 @@ namespace MQTTnet.Client
                 return DisconnectCoreAsync(sender, exception, connectResult, clientWasConnected);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         bool DisconnectIsPendingOrFinished()
@@ -554,7 +555,7 @@ namespace MQTTnet.Client
                 return extendedAuthenticationExchangeHandler.HandleRequestAsync(new MqttExtendedAuthenticationExchangeContext(authPacket, this));
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         Task ProcessReceivedDisconnectPacket(MqttDisconnectPacket disconnectPacket)
@@ -563,7 +564,7 @@ namespace MQTTnet.Client
             _disconnectReasonString = disconnectPacket.ReasonString;
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
-            _packetDispatcher.FailAll(new MqttUnexpectedDisconnectReceivedException(disconnectPacket));
+            _packetDispatcher.Dispose(new MqttClientUnexpectedDisconnectReceivedException(disconnectPacket));
 
             return DisconnectInternalAsync(_packetReceiverTask, null, null);
         }
@@ -608,7 +609,7 @@ namespace MQTTnet.Client
                 return SendAsync(pubRelPacket, cancellationToken);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
@@ -797,7 +798,7 @@ namespace MQTTnet.Client
                 }
                 else
                 {
-                    _logger.Error(exception, "Error while receiving packets.");
+                    _logger.Error(exception, $"Error while processing received packet ({packet.GetType().Name}).");
                 }
 
                 _packetDispatcher.FailAll(exception);
@@ -848,6 +849,11 @@ namespace MQTTnet.Client
                     return;
                 }
 
+                if (exception is AggregateException aggregateException)
+                {
+                    exception = aggregateException.GetBaseException();
+                }
+                
                 if (exception is OperationCanceledException)
                 {
                 }

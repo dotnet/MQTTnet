@@ -14,7 +14,6 @@
         <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net461</TargetFrameworks>
         <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">$(TargetFrameworks);uap10.0</TargetFrameworks>
         <LangVersion>7.3</LangVersion>
-        
         <AssemblyName>MQTTnet</AssemblyName>
         <RootNamespace>MQTTnet</RootNamespace>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>

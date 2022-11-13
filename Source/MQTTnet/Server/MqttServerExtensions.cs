@@ -3,14 +3,23 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Text;
 using System.Threading.Tasks;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
     public static class MqttServerExtensions
     {
         public static Task InjectApplicationMessage(this MqttServer server, MqttApplicationMessage applicationMessage)
+        public static Task InjectApplicationMessage(
+            this MqttServer server,
+            string topic,
+            string payload = null,
+            MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+            bool retain = false)
         {
             if (server == null)
             {
@@ -26,6 +35,26 @@ namespace MQTTnet.Server
             {
                 SenderClientId = string.Empty
             });
+            if (topic == null)
+            {
+                throw new ArgumentNullException(nameof(topic));
+            }
+
+            var payloadBuffer = EmptyBuffer.Array;
+            if (payload is string stringPayload)
+            {
+                payloadBuffer = Encoding.UTF8.GetBytes(stringPayload);
+            }
+
+            return server.InjectApplicationMessage(
+                new InjectedMqttApplicationMessage(
+                    new MqttApplicationMessage
+                    {
+                        Topic = topic,
+                        Payload = payloadBuffer,
+                        QualityOfServiceLevel = qualityOfServiceLevel,
+                        Retain = retain
+                    }));
         }
 
         public static Task SubscribeAsync(this MqttServer server, string clientId, params MqttTopicFilter[] topicFilters)
@@ -65,7 +94,8 @@ namespace MQTTnet.Server
                 throw new ArgumentNullException(nameof(topic));
             }
 
-            return server.SubscribeAsync(clientId, new MqttTopicFilterBuilder().WithTopic(topic).Build());
+            var topicFilters = new MqttTopicFilterBuilder().WithTopic(topic).Build();
+            return server.SubscribeAsync(clientId, topicFilters);
         }
     }
 }

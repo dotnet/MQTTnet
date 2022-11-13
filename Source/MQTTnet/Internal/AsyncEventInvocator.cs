@@ -36,7 +36,7 @@ namespace MQTTnet.Internal
             if (_handler != null)
             {
                 _handler.Invoke(eventArgs);
-                return PlatformAbstractionLayer.CompletedTask;
+                return CompletedTask.Instance;
             }
 
             if (_asyncHandler != null)

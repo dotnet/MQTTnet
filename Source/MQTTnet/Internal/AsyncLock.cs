@@ -4,7 +4,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,173 +12,151 @@ namespace MQTTnet.Internal
 {
     public sealed class AsyncLock : IDisposable
     {
-        /*
-         * This async supporting lock does not support reentrancy!
-         */
-
-        readonly List<Releaser> _queuedTasks = new List<Releaser>(64);
-        readonly Task<IDisposable> _releaserTaskWithDirectApproval;
-
-        readonly Releaser _releaserWithDirectApproval;
-
+        readonly Task<IDisposable> _completedTask;
+        readonly IDisposable _releaser;
         readonly object _syncRoot = new object();
+        readonly Queue<AsyncLockWaiter> _waiters = new Queue<AsyncLockWaiter>(64);
 
-        bool _isDisposed;
-        
+        volatile bool _isDisposed;
+        bool _isLocked;
+
         public AsyncLock()
         {
-            _releaserWithDirectApproval = new Releaser(this, null, CancellationToken.None);
-            _releaserTaskWithDirectApproval = Task.FromResult((IDisposable)_releaserWithDirectApproval);
+            _releaser = new Releaser(this);
+            _completedTask = Task.FromResult(_releaser);
         }
 
         public void Dispose()
         {
             lock (_syncRoot)
             {
-                foreach (var waitingTask in _queuedTasks)
-                {
-                    waitingTask.Fail(new ObjectDisposedException(nameof(AsyncLock)));
-                }
-
-                _queuedTasks.Clear();
-                
                 _isDisposed = true;
+
+                while (_waiters.Any())
+                {
+                    _waiters.Dequeue().Dispose();
+                }
             }
         }
 
-        public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
+        public Task<IDisposable> EnterAsync(CancellationToken cancellationToken = default)
         {
-            var hasDirectApproval = false;
-            Releaser releaser;
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            if (_isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(AsyncLock));
+            }
 
             lock (_syncRoot)
             {
-                if (_isDisposed)
+                if (!_isLocked)
                 {
-                    throw new ObjectDisposedException(nameof(AsyncLock));
-                }
-                
-                if (_queuedTasks.Count == 0)
-                {
-                    // There is no other waiting task apart from the current one.
-                    // So we can approve the current task directly.
-                    releaser = _releaserWithDirectApproval;
-                    hasDirectApproval = true;
-                    //Debug.WriteLine("AsyncLock: Task -1 directly approved.");
-                }
-                else
-                {
-                    releaser = new Releaser(this, new TaskCompletionSource<IDisposable>(), cancellationToken);
+                    _isLocked = true;
+                    return _completedTask;
                 }
 
-                _queuedTasks.Add(releaser);
+                var waiter = new AsyncLockWaiter(cancellationToken);
+                _waiters.Enqueue(waiter);
+
+                return waiter.Task;
             }
-
-            if (!hasDirectApproval)
-            {
-                return releaser.Task;
-            }
-
-            return _releaserTaskWithDirectApproval;
         }
 
-        void Release(Releaser releaser)
+        void Release()
         {
             lock (_syncRoot)
             {
                 if (_isDisposed)
                 {
-                    // There is no much left to do!
+                    // All waiters have been canceled with a ObjectDisposedException.
+                    // So there is nothing left to do.
                     return;
                 }
 
-                var activeTask = _queuedTasks[0];
-                if (!ReferenceEquals(activeTask, releaser))
-                {
-                    throw new InvalidOperationException("The active task must be the current releaser.");
-                }
+                // Assume that there is no waiter left first.
+                _isLocked = false;
 
-                _queuedTasks.RemoveAt(0);
-                
-                while (_queuedTasks.Count > 0)
+                // Try to find the next waiter which can be approved.
+                // Some of them might be canceled already so it is not
+                // guaranteed that the very next waiter is the correct one.
+                while (_waiters.Any())
                 {
-                    var nextTask = _queuedTasks[0];
-                    if (!nextTask.IsPending)
+                    var waiter = _waiters.Dequeue();
+                    var isApproved = waiter.Approve(_releaser);
+                    waiter.Dispose();
+
+                    if (isApproved)
                     {
-                        // Dequeue all canceled or failed tasks.
-                        _queuedTasks.RemoveAt(0);
-                        continue;
+                        _isLocked = true;
+                        return;
                     }
-
-                    nextTask.Approve();
-                    return;
                 }
-
-                //Debug.WriteLine("AsyncLock: No Task pending.");
             }
         }
 
-        sealed class Releaser : IDisposable
+        sealed class AsyncLockWaiter : IDisposable
         {
-            readonly AsyncLock _asyncLock;
-            readonly CancellationToken _cancellationToken;
-            readonly int _id;
-            readonly TaskCompletionSource<IDisposable> _promise;
+            readonly CancellationTokenRegistration _cancellationRegistration;
+            readonly bool _hasCancellationRegistration;
+            readonly AsyncTaskCompletionSource<IDisposable> _promise = new AsyncTaskCompletionSource<IDisposable>();
 
-            // ReSharper disable once FieldCanBeMadeReadOnly.Local
-            CancellationTokenRegistration _cancellationTokenRegistration;
-
-            internal Releaser(AsyncLock asyncLock, TaskCompletionSource<IDisposable> promise, CancellationToken cancellationToken)
+            public AsyncLockWaiter(CancellationToken cancellationToken)
             {
-                _asyncLock = asyncLock ?? throw new ArgumentNullException(nameof(asyncLock));
-                _promise = promise;
-                _cancellationToken = cancellationToken;
-
+                cancellationToken.ThrowIfCancellationRequested();
+                
                 if (cancellationToken.CanBeCanceled)
                 {
-                    _cancellationTokenRegistration = cancellationToken.Register(Cancel);
+                    _cancellationRegistration = cancellationToken.Register(Cancel);
+                    _hasCancellationRegistration = true;
                 }
-
-                _id = promise?.Task.Id ?? -1;
-
-                //Debug.WriteLine($"AsyncLock: Task {_id} queued.");
             }
 
-            public bool IsPending => _promise != null && !_promise.Task.IsCanceled && !_promise.Task.IsFaulted && !_promise.Task.IsCompleted;
+            public Task<IDisposable> Task => _promise.Task;
 
-            public Task<IDisposable> Task => _promise?.Task;
-
-            public void Approve()
+            public bool Approve(IDisposable scope)
             {
-                _promise?.TrySetResult(this);
+                if (scope == null)
+                {
+                    throw new ArgumentNullException(nameof(scope));
+                }
 
-                //Debug.WriteLine($"AsyncLock: Task {_id} approved.");
+                if (_promise.Task.IsCompleted)
+                {
+                    return false;
+                }
+
+                return _promise.TrySetResult(scope);
             }
 
             public void Dispose()
             {
-                if (_cancellationToken.CanBeCanceled)
+                if (_hasCancellationRegistration)
                 {
-                    _cancellationTokenRegistration.Dispose();
+                    _cancellationRegistration.Dispose();
                 }
 
-                //Debug.WriteLine($"AsyncLock: Task {_id} completed.");
-
-                _asyncLock.Release(this);
-            }
-
-            public void Fail(Exception exception)
-            {
-                _promise?.TrySetException(exception);
-
-                //Debug.WriteLine($"AsyncLock: Task {_id} failed ({exception.GetType().Name}).");
+                _promise.TrySetException(new ObjectDisposedException(nameof(AsyncLockWaiter)));
             }
 
             void Cancel()
             {
-                _promise?.TrySetCanceled();
+                _promise.TrySetCanceled();
+            }
+        }
 
-                //Debug.WriteLine($"AsyncLock: Task {_id} canceled.");
+        readonly struct Releaser : IDisposable
+        {
+            readonly AsyncLock _asyncLock;
+
+            public Releaser(AsyncLock asyncLock)
+            {
+                _asyncLock = asyncLock ?? throw new ArgumentNullException(nameof(asyncLock));
+            }
+
+            public void Dispose()
+            {
+                _asyncLock.Release();
             }
         }
     }

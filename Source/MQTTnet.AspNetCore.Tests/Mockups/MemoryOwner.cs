@@ -7,9 +7,9 @@ using System.Buffers;
 
 namespace MQTTnet.AspNetCore.Tests.Mockups
 {
-    public class MemoryOwner : IMemoryOwner<byte>
+    public sealed class MemoryOwner : IMemoryOwner<byte>
     {
-        private readonly byte[] _raw;
+        readonly byte[] _raw;
 
         public MemoryOwner(int size)
         {
@@ -27,11 +27,11 @@ namespace MQTTnet.AspNetCore.Tests.Mockups
             Memory = _raw;
         }
 
+        public Memory<byte> Memory { get; }
+
         public void Dispose()
         {
             ArrayPool<byte>.Shared.Return(_raw);
         }
-
-        public Memory<byte> Memory { get; }
     }
 }

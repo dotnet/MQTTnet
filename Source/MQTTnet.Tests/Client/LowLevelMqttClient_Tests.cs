@@ -64,7 +64,7 @@ namespace MQTTnet.Tests.Client
 
             await client.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
         }
-        
+
         [TestMethod]
         [ExpectedException(typeof(MqttCommunicationException))]
         public async Task Connect_To_Wrong_Host()
@@ -80,6 +80,8 @@ namespace MQTTnet.Tests.Client
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
+                testEnvironment.IgnoreServerLogErrors = true;
+
                 testEnvironment.ServerPort = 8364;
                 var server = await testEnvironment.StartServer();
 
@@ -116,6 +118,8 @@ namespace MQTTnet.Tests.Client
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
+                testEnvironment.IgnoreServerLogErrors = true;
+
                 var server = await testEnvironment.StartServer();
 
                 using (var lowLevelClient = testEnvironment.CreateLowLevelClient())
@@ -123,7 +127,7 @@ namespace MQTTnet.Tests.Client
                     Assert.IsFalse(lowLevelClient.IsConnected);
 
                     var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).WithTimeout(TimeSpan.FromSeconds(1)).Build();
-                    
+
                     await lowLevelClient.ConnectAsync(clientOptions, CancellationToken.None);
 
                     Assert.IsTrue(lowLevelClient.IsConnected);
@@ -148,7 +152,7 @@ namespace MQTTnet.Tests.Client
                     catch
                     {
                     }
-           
+
                     Assert.IsFalse(lowLevelClient.IsConnected);
                 }
             }

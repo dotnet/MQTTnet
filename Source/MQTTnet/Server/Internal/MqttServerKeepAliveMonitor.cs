@@ -6,7 +6,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
@@ -14,16 +13,20 @@ namespace MQTTnet.Server
 {
     public sealed class MqttServerKeepAliveMonitor
     {
+        readonly MqttNetSourceLogger _logger;
         readonly MqttServerOptions _options;
         readonly MqttClientSessionsManager _sessionsManager;
-        readonly MqttNetSourceLogger _logger;
 
         public MqttServerKeepAliveMonitor(MqttServerOptions options, MqttClientSessionsManager sessionsManager, IMqttNetLogger logger)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
-            
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
             _logger = logger.WithSource(nameof(MqttServerKeepAliveMonitor));
         }
 
@@ -45,7 +48,7 @@ namespace MQTTnet.Server
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     TryProcessClients();
-                    PlatformAbstractionLayer.Sleep(_options.KeepAliveMonitorInterval);
+                    Sleep(_options.KeepAliveMonitorInterval);
                 }
             }
             catch (OperationCanceledException)
@@ -61,13 +64,22 @@ namespace MQTTnet.Server
             }
         }
 
-        void TryProcessClients()
+        static void Sleep(TimeSpan timeout)
         {
-            var now = DateTime.UtcNow;
-            foreach (var client in _sessionsManager.GetClients())
+#if !NETSTANDARD1_3 && !WINDOWS_UWP
+            try
             {
-                TryProcessClient(client, now);
+                Thread.Sleep(timeout);
             }
+            catch (ThreadAbortException)
+            {
+                // The ThreadAbortException is not actively catched in this project.
+                // So we use a one which is similar and will be catched properly.
+                throw new OperationCanceledException();
+            }
+#else
+            Task.Delay(timeout).Wait();
+#endif
         }
 
         void TryProcessClient(MqttClient connection, DateTime now)
@@ -117,6 +129,15 @@ namespace MQTTnet.Server
             catch (Exception exception)
             {
                 _logger.Error(exception, "Client {0}: Unhandled exception while checking keep alive timeouts.", connection.Id);
+            }
+        }
+
+        void TryProcessClients()
+        {
+            var now = DateTime.UtcNow;
+            foreach (var client in _sessionsManager.GetClients())
+            {
+                TryProcessClient(client, now);
             }
         }
     }

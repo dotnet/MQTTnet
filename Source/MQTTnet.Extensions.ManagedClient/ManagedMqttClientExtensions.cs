@@ -39,16 +39,19 @@ namespace MQTTnet.Extensions.ManagedClient
             return managedMqttClient.EnqueueAsync(applicationMessage);
         }
 
-        public static Task StopAsync(this IManagedMqttClient managedMqttClient, CancellationToken cancellationToken = default)
+        public static Task StopAsync(this IManagedMqttClient managedMqttClient, bool isClean = true, CancellationToken cancellationToken = default)
         {
             if (managedMqttClient == null)
             {
                 throw new ArgumentNullException(nameof(managedMqttClient));
             }
 
-            return managedMqttClient.StopAsync(new MqttClientDisconnectOptions(), cancellationToken);
+            return managedMqttClient.StopAsync(new MqttClientDisconnectOptions
+            {
+                IsClean = isClean
+            }, cancellationToken);
         }
-
+        
         public static Task SubscribeAsync(this IManagedMqttClient managedMqttClient, MqttTopicFilter topicFilter)
         {
             if (managedMqttClient == null)

@@ -452,7 +452,7 @@ namespace MQTTnet.Tests.Mockups
                 ServerReceivedApplicationMessages.Add(arg.ApplicationMessage);
             }
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
     }
 }

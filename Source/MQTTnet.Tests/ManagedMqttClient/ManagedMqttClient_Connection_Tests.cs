@@ -9,10 +9,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
+using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
 
@@ -86,11 +86,9 @@ namespace MQTTnet.Tests.ManagedMqttClient
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
-                var managedClient = await testEnvironment.StartManagedClient();
-
                 await LongTestDelay();
 
-                var managedClient = testEnvironment.Factory.CreateManagedMqttClient(mqttClient);
+                var managedClient = testEnvironment.Factory.CreateManagedMqttClient(testEnvironment.CreateClient());
 
                 ConnectingFailedEventArgs connectingFailedEventArgs = null;
                 managedClient.ConnectingFailedAsync += args =>
@@ -314,7 +312,6 @@ namespace MQTTnet.Tests.ManagedMqttClient
                 await server.InjectApplicationMessage(testEnvironment.Factory.CreateApplicationMessageBuilder().WithTopic("topic").WithPayload("payload").WithRetainFlag().Build());
                 
                 // Now use the managed client and check if subscriptions get cleared properly.
-                var managedClient = testEnvironment.CreateManagedMqttClient();
                 var receivedManagedMessages = new List<MqttApplicationMessage>();
                 
                 var managedClient = testEnvironment.Factory.CreateManagedMqttClient(testEnvironment.CreateClient());
@@ -453,7 +450,7 @@ namespace MQTTnet.Tests.ManagedMqttClient
 
             managedClient.ConnectedAsync += e =>
             {
-                connected.TrySetResult(true);
+                promise.TrySetResult(true);
                 return CompletedTask.Instance;
             };
 

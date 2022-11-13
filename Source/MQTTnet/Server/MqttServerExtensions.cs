@@ -14,6 +14,19 @@ namespace MQTTnet.Server
     public static class MqttServerExtensions
     {
         public static Task InjectApplicationMessage(this MqttServer server, MqttApplicationMessage applicationMessage)
+        {
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+
+            return server.InjectApplicationMessage(
+                new InjectedMqttApplicationMessage(applicationMessage)
+                {
+                    SenderClientId = string.Empty
+                });
+        }
+
         public static Task InjectApplicationMessage(
             this MqttServer server,
             string topic,
@@ -26,15 +39,6 @@ namespace MQTTnet.Server
                 throw new ArgumentNullException(nameof(server));
             }
 
-            if (applicationMessage == null)
-            {
-                throw new ArgumentNullException(nameof(applicationMessage));
-            }
-
-            return server.InjectApplicationMessage(new InjectedMqttApplicationMessage(applicationMessage)
-            {
-                SenderClientId = string.Empty
-            });
             if (topic == null)
             {
                 throw new ArgumentNullException(nameof(topic));
@@ -47,14 +51,13 @@ namespace MQTTnet.Server
             }
 
             return server.InjectApplicationMessage(
-                new InjectedMqttApplicationMessage(
-                    new MqttApplicationMessage
-                    {
-                        Topic = topic,
-                        Payload = payloadBuffer,
-                        QualityOfServiceLevel = qualityOfServiceLevel,
-                        Retain = retain
-                    }));
+                new MqttApplicationMessage
+                {
+                    Topic = topic,
+                    Payload = payloadBuffer,
+                    QualityOfServiceLevel = qualityOfServiceLevel,
+                    Retain = retain
+                });
         }
 
         public static Task SubscribeAsync(this MqttServer server, string clientId, params MqttTopicFilter[] topicFilters)

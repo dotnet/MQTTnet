@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Extensions.ManagedClient;
-using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
 namespace MQTTnet.Tests.ManagedMqttClient
 {
@@ -27,7 +27,7 @@ namespace MQTTnet.Tests.ManagedMqttClient
                 managedClient.ConnectedAsync += e =>
                 {
                     eventFired = true;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.StartAsync(testEnvironment.CreateDefaultManagedMqttClientOptions());
@@ -51,7 +51,7 @@ namespace MQTTnet.Tests.ManagedMqttClient
                 managedClient.ConnectingFailedAsync += args =>
                 {
                     connectingFailedEventArgs = args;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.StartAsync(
@@ -82,7 +82,7 @@ namespace MQTTnet.Tests.ManagedMqttClient
                 managedClient.DisconnectedAsync += e =>
                 {
                     eventFired = true;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.StartAsync(testEnvironment.CreateDefaultManagedMqttClientOptions());
@@ -110,7 +110,7 @@ namespace MQTTnet.Tests.ManagedMqttClient
                 managedClient.ApplicationMessageEnqueueingAsync += e =>
                 {
                     eventFired = true;
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.EnqueueAsync("A");
@@ -134,7 +134,7 @@ namespace MQTTnet.Tests.ManagedMqttClient
                 managedClient.SubscribeProcessedAsync += e =>
                 {
                     eventFired = e.Options.TopicFilters[0].Topic == "A";
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.StartAsync(testEnvironment.CreateDefaultManagedMqttClientOptions());
@@ -160,7 +160,7 @@ namespace MQTTnet.Tests.ManagedMqttClient
                 managedClient.UnsubscribeProcessedAsync += e =>
                 {
                     eventFired = e.Options.TopicFilters[0] == "A";
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.StartAsync(testEnvironment.CreateDefaultManagedMqttClientOptions());

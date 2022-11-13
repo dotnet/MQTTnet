@@ -7,6 +7,11 @@ namespace MQTTnet.Client
     public sealed class MqttClientDisconnectOptions
     {
         /// <summary>
+        /// Gets or sets whether this disconnect is a clean disconnect.
+        /// </summary>
+        public bool IsClean { get; set; }
+        
+        /// <summary>
         ///     Gets or sets the reason code.
         ///     Hint: MQTT 5 feature only.
         /// </summary>

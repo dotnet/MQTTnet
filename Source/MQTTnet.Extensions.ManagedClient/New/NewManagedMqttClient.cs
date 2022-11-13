@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 
 namespace MQTTnet.Extensions.ManagedClient
@@ -145,7 +144,7 @@ namespace MQTTnet.Extensions.ManagedClient
 
             _workSignal.Set();
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         public async Task StopAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken = default)
@@ -183,7 +182,7 @@ namespace MQTTnet.Extensions.ManagedClient
             _subscriptionsManager.Subscribe(options);
             _workSignal.Set();
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         public Task UnsubscribeAsync(MqttClientUnsubscribeOptions options)
@@ -193,7 +192,7 @@ namespace MQTTnet.Extensions.ManagedClient
             _subscriptionsManager.Unsubscribe(options);
             _workSignal.Set();
 
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         protected override void Dispose(bool disposing)
@@ -208,7 +207,7 @@ namespace MQTTnet.Extensions.ManagedClient
         Task OnInternalClientDisconnected(MqttClientDisconnectedEventArgs eventArgs)
         {
             _workSignal.Set();
-            return PlatformAbstractionLayer.CompletedTask;
+            return CompletedTask.Instance;
         }
 
         async Task UpdateConnectionStatus(MaintainConnectionResult maintainConnectionResult)

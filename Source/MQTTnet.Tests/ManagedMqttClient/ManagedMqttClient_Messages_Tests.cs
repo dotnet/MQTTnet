@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Implementations;
+using MQTTnet.Internal;
 using MQTTnet.Server;
 
 namespace MQTTnet.Tests.ManagedMqttClient
@@ -93,7 +94,7 @@ namespace MQTTnet.Tests.ManagedMqttClient
                 managedClient.ApplicationMessageReceivedAsync += e =>
                 {
                     applicationMessages.Add(e.ApplicationMessage);
-                    return PlatformAbstractionLayer.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.SubscribeAsync("B");

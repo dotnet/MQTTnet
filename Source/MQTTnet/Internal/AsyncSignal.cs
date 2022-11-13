@@ -33,9 +33,17 @@ namespace MQTTnet.Internal
             {
                 _isSignaled = true;
 
+                Cleanup();
+                
                 // If there is already a waiting task let it run.
-                _waiter?.Approve();
-                _waiter = null;
+                if (_waiter != null)
+                {
+                    _waiter.Approve();
+                    _waiter = null;
+
+                    // Since we already got a waiter the signal must be reset right now!
+                    _isSignaled = false;
+                }
             }
         }
 
@@ -47,8 +55,11 @@ namespace MQTTnet.Internal
             {
                 ThrowIfDisposed();
 
+                Cleanup();
+
                 if (_isSignaled)
                 {
+                    _isSignaled = false;
                     return CompletedTask.Instance;
                 }
 
@@ -58,12 +69,21 @@ namespace MQTTnet.Internal
                     {
                         throw new InvalidOperationException("Only one waiting task is permitted per async signal.");
                     }
-                    
+
                     _waiter.Dispose();
                 }
 
                 _waiter = new AsyncSignalWaiter(cancellationToken);
                 return _waiter.Task;
+            }
+        }
+
+        void Cleanup()
+        {
+            // Cleanup if the previous waiter was cancelled.
+            if (_waiter != null && _waiter.Task.IsCanceled)
+            {
+                _waiter = null;
             }
         }
 

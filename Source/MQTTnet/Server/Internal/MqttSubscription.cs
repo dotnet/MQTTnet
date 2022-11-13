@@ -179,7 +179,7 @@ namespace MQTTnet.Server
             RetainAsPublished = retainAsPublished;
             GrantedQualityOfServiceLevel = qualityOfServiceLevel;
             Identifier = identifier;
-            
+
             CalculateTopicHash(Topic, out var hash, out var hashMask, out var hasWildcard);
             TopicHash = hash;
             TopicHashMask = hashMask;

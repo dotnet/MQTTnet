@@ -86,7 +86,7 @@ namespace MQTTnet.Adapter
                     await Task.WhenAny(connectTask, timeout.Task).ConfigureAwait(false);
                     if (timeout.Task.IsCompleted && !connectTask.IsCompleted)
                     {
-                        throw new OperationCanceledException("MQTT connect cancelled.", cancellationToken);
+                        throw new OperationCanceledException("MQTT connect canceled.", cancellationToken);
                     }
 
                     // Make sure that the exception from the connect task gets thrown.
@@ -298,7 +298,7 @@ namespace MQTTnet.Adapter
                 // Check two times for cancellation because the call to _ReadAsync_ might block for some time.
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    return ReadFixedHeaderResult.Cancelled;
+                    return ReadFixedHeaderResult.Canceled;
                 }
 
                 int bytesRead;
@@ -308,7 +308,7 @@ namespace MQTTnet.Adapter
                 }
                 catch (OperationCanceledException)
                 {
-                    return ReadFixedHeaderResult.Cancelled;
+                    return ReadFixedHeaderResult.Canceled;
                 }
                 catch (SocketException)
                 {
@@ -317,7 +317,7 @@ namespace MQTTnet.Adapter
                
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    return ReadFixedHeaderResult.Cancelled;
+                    return ReadFixedHeaderResult.Canceled;
                 }
 
                 if (bytesRead == 0)

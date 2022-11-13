@@ -52,12 +52,26 @@ namespace MQTTnet.Tests.Internal
         }
 
         [TestMethod]
-        public async Task Loop_Signal()
+        public async Task Reset_Signal()
         {
             var asyncSignal = new AsyncSignal();
 
+            // WaitAsync should fail because no signal is available.
             for (var i = 0; i < 10; i++)
             {
+                try
+                {
+                    using (var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(100)))
+                    {
+                        await asyncSignal.WaitAsync(timeout.Token);
+                    }
+                    
+                    Assert.Fail("This must fail because the signal is not yet set.");
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                
                 asyncSignal.Set();
                 
                 // WaitAsync should return directly because the signal is available.

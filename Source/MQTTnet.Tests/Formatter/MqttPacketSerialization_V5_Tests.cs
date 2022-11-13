@@ -9,7 +9,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Formatter
 {
     [TestClass]
     public sealed class MqttPacketSerialization_V5_Tests

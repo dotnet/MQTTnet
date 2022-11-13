@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace MQTTnet.Tests.Server
+namespace MQTTnet.Tests
 {
     public class TopicGenerator
     {

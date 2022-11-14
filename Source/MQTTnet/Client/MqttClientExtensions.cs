@@ -80,6 +80,23 @@ namespace MQTTnet.Client
             return client.ConnectAsync(client.Options, cancellationToken);
         }
 
+        public static Task<MqttClientReleasePublishPacketResult> ReleasePublishPacketAsync(
+            this IMqttClient mqttClient,
+            ushort packetIdentifier,
+            string reasonString = null,
+            List<MqttUserProperty> userProperties = null,
+            CancellationToken cancellationToken = default)
+        {
+            var options = new MqttClientReleasePublishPacketOptions
+            {
+                PacketIdentifier = packetIdentifier,
+                ReasonString = reasonString,
+                UserProperties = userProperties
+            };
+
+            return mqttClient.ReleasePublishPacketAsync(options, cancellationToken);
+        }
+
         public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)
         {
             if (client == null)

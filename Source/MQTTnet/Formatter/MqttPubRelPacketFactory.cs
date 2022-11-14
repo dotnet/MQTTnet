@@ -24,5 +24,21 @@ namespace MQTTnet.Formatter
                 ReasonCode = (MqttPubRelReasonCode)(int)reasonCode
             };
         }
+
+        public MqttPubRelPacket Create(MqttClientReleasePublishPacketOptions options)
+        {
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
+            return new MqttPubRelPacket
+            {
+                PacketIdentifier = options.PacketIdentifier,
+                ReasonCode = options.ReasonCode,
+                ReasonString = options.ReasonString,
+                UserProperties = options.UserProperties
+            };
+        }
     }
 }

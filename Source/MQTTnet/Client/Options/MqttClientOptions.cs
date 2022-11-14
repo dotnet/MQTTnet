@@ -24,6 +24,11 @@ namespace MQTTnet.Client
         /// </summary>
         public string AuthenticationMethod { get; set; }
 
+        /// <summary>
+        ///     Gets or sets whether PUBLISH packets with QoS level 2 should be released automatically.
+        /// </summary>
+        public bool AutoReleasePublishPackets { get; set; } = true;
+
         public IMqttClientChannelOptions ChannelOptions { get; set; }
 
         /// <summary>
@@ -107,6 +112,14 @@ namespace MQTTnet.Client
         ///     properly.
         /// </summary>
         public bool TryPrivate { get; set; } = true;
+
+        /// <summary>
+        ///     Gets or sets whether the sending of keep alive packets (PINGREQ, PINGRESP) is handled externally (False by
+        ///     default).
+        ///     If set to true the user of this library must make sure that PINGREQ packets are sent according to the sent keep
+        ///     alive interval.
+        /// </summary>
+        public bool UseExternalKeepAliveManagement { get; set; }
 
         /// <summary>
         ///     Gets or sets the user properties.

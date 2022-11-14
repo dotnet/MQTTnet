@@ -86,7 +86,7 @@ namespace MQTTnet.Client
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);
         }
-        
+
         public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
         public MqttClientOptions Options { get; private set; }
@@ -149,17 +149,7 @@ namespace MQTTnet.Client
 
                 _lastPacketSentTimestamp = DateTime.UtcNow;
 
-                var keepAliveInterval = Options.KeepAlivePeriod;
-                if (connectResult.ServerKeepAlive > 0)
-                {
-                    _logger.Info($"Using keep alive value ({connectResult.ServerKeepAlive}) sent from the server.");
-                    keepAliveInterval = TimeSpan.FromSeconds(connectResult.ServerKeepAlive);
-                }
-
-                if (keepAliveInterval != TimeSpan.Zero)
-                {
-                    _keepAlivePacketsSenderTask = Task.Run(() => TrySendKeepAliveMessagesAsync(backgroundCancellationToken), backgroundCancellationToken);
-                }
+                SetupKeepAliveHandling(connectResult, _backgroundCancellationTokenSource.Token);
 
                 CompareExchangeConnectionStatus(MqttClientConnectionStatus.Connected, MqttClientConnectionStatus.Connecting);
 
@@ -234,6 +224,11 @@ namespace MQTTnet.Client
 
         public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken = default)
         {
+            if (applicationMessage == null)
+            {
+                throw new ArgumentNullException(nameof(applicationMessage));
+            }
+
             cancellationToken.ThrowIfCancellationRequested();
 
             MqttTopicValidator.ThrowIfInvalid(applicationMessage);
@@ -262,6 +257,34 @@ namespace MQTTnet.Client
                     throw new NotSupportedException();
                 }
             }
+        }
+
+        public async Task<MqttClientReleasePublishPacketResult> ReleasePublishPacketAsync(MqttClientReleasePublishPacketOptions options, CancellationToken cancellationToken = default)
+        {
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            ThrowIfDisposed();
+            ThrowIfNotConnected();
+
+            if (options.PacketIdentifier == 0)
+            {
+                throw new MqttProtocolViolationException("Releasing a PUBLISH packet requires a valid packet identifier.");
+            }
+
+            if (Options.AutoReleasePublishPackets)
+            {
+                throw new InvalidOperationException("Manually releasing PUBLISH packets requires the feature _AutoReleasePublishPackets_ disabled in the client options.");
+            }
+
+            var pubRelPacket = _packetFactories.PubRel.Create(options);
+            var pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
+
+            return new MqttClientReleasePublishPacketResult(pubCompPacket.PacketIdentifier, pubCompPacket.ReasonString, pubCompPacket.UserProperties);
         }
 
         public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken = default)
@@ -411,7 +434,7 @@ namespace MQTTnet.Client
 
                 _adapter?.Dispose();
                 _adapter = null;
-                
+
                 _packetDispatcher?.Dispose();
                 _packetDispatcher = null;
             }
@@ -448,7 +471,7 @@ namespace MQTTnet.Client
             try
             {
                 _packetDispatcher.Dispose(new MqttClientDisconnectedException(exception));
-                
+
                 var receiverTask = WaitForTaskAsync(_packetReceiverTask, sender);
                 var publishPacketReceiverTask = WaitForTaskAsync(_publishPacketReceiverTask, sender);
                 var keepAliveTask = WaitForTaskAsync(_keepAlivePacketsSenderTask, sender);
@@ -504,9 +527,12 @@ namespace MQTTnet.Client
                 {
                     case MqttClientConnectionStatus.Disconnected:
                     case MqttClientConnectionStatus.Disconnecting:
+                    {
                         return true;
+                    }
                     case MqttClientConnectionStatus.Connected:
                     case MqttClientConnectionStatus.Connecting:
+                    {
                         // This will compare the _connectionStatus to old value and set it to "MqttClientConnectionStatus.Disconnecting" afterwards.
                         // So the first caller will get a "false" and all subsequent ones will get "true".
                         var curStatus = CompareExchangeConnectionStatus(MqttClientConnectionStatus.Disconnecting, connectionStatus);
@@ -517,6 +543,7 @@ namespace MQTTnet.Client
 
                         connectionStatus = curStatus;
                         break;
+                    }
                 }
             } while (true);
         }
@@ -628,7 +655,7 @@ namespace MQTTnet.Client
             // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
             await SendAsync(publishPacket, cancellationToken).ConfigureAwait(false);
 
-            return _clientPublishResultFactory.Create(null);
+            return _clientPublishResultFactory.Create((MqttPubAckPacket)null);
         }
 
         async Task<MqttClientPublishResult> PublishExactlyOnceAsync(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
@@ -637,10 +664,13 @@ namespace MQTTnet.Client
 
             var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
 
+            if (!Options.AutoReleasePublishPackets)
+            {
+                return _clientPublishResultFactory.Create(pubRecPacket);
+            }
+
             var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
-
             var pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
-
             return _clientPublishResultFactory.Create(pubRecPacket, pubCompPacket);
         }
 
@@ -689,6 +719,32 @@ namespace MQTTnet.Client
             _lastPacketSentTimestamp = DateTime.UtcNow;
 
             return _adapter.SendPacketAsync(packet, cancellationToken);
+        }
+
+        void SetupKeepAliveHandling(MqttClientConnectResult connectResult, CancellationToken cancellationToken)
+        {
+            if (Options.UseExternalKeepAliveManagement)
+            {
+                _logger.Info("Using external keep alive management.");
+                return;
+            }
+
+            var keepAliveInterval = Options.KeepAlivePeriod;
+
+            if (connectResult.ServerKeepAlive > 0)
+            {
+                _logger.Info("Using keep alive value {0} sent from the server.", connectResult.ServerKeepAlive);
+                keepAliveInterval = TimeSpan.FromSeconds(connectResult.ServerKeepAlive);
+            }
+
+            if (keepAliveInterval != TimeSpan.Zero)
+            {
+                _keepAlivePacketsSenderTask = Task.Factory.StartNew(
+                    () => TrySendKeepAliveMessagesAsync(cancellationToken),
+                    cancellationToken,
+                    TaskCreationOptions.PreferFairness,
+                    TaskScheduler.Default);
+            }
         }
 
         void ThrowIfConnected(string message)
@@ -833,7 +889,7 @@ namespace MQTTnet.Client
                 {
                     exception = aggregateException.GetBaseException();
                 }
-                
+
                 if (exception is OperationCanceledException)
                 {
                 }

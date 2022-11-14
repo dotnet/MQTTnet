@@ -33,6 +33,17 @@ namespace MQTTnet.Client
             return result;
         }
 
+        public MqttClientPublishResult Create(MqttPubRecPacket pubRecPacket)
+        {
+            return new MqttClientPublishResult
+            {
+                PacketIdentifier = pubRecPacket.PacketIdentifier,
+                ReasonCode = (MqttClientPublishReasonCode)(int)pubRecPacket.ReasonCode,
+                ReasonString = pubRecPacket.ReasonString,
+                UserProperties = pubRecPacket.UserProperties
+            };
+        }
+        
         public MqttClientPublishResult Create(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
         {
             if (pubRecPacket == null || pubCompPacket == null)

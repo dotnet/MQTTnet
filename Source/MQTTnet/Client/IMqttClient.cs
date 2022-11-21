@@ -9,13 +9,15 @@ namespace MQTTnet.Client
     {
         event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync;
 
+        event Func<MqttClientBeforeReleasePublishPacketEventArgs, Task> BeforeReleasePublishPacketAsync;
+
         event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync;
 
         event Func<MqttClientConnectingEventArgs, Task> ConnectingAsync;
 
         event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync;
 
-        event Func<InspectMqttPacketEventArgs, Task> InspectPackage;
+        event Func<InspectMqttPacketEventArgs, Task> InspectPackageAsync;
 
         bool IsConnected { get; }
 

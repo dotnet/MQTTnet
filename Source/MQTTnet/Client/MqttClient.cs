@@ -21,6 +21,7 @@ namespace MQTTnet.Client
         readonly IMqttClientAdapterFactory _adapterFactory;
         readonly MqttApplicationMessageFactory _applicationMessageFactory = new MqttApplicationMessageFactory();
         readonly AsyncEvent<MqttApplicationMessageReceivedEventArgs> _applicationMessageReceivedEvent = new AsyncEvent<MqttApplicationMessageReceivedEventArgs>();
+        readonly AsyncEvent<MqttClientBeforeReleasePublishPacketEventArgs> _beforeReleasePublishPacketEvent = new AsyncEvent<MqttClientBeforeReleasePublishPacketEventArgs>();
 
         readonly MqttClientPublishResultFactory _clientPublishResultFactory = new MqttClientPublishResultFactory();
         readonly MqttClientSubscribeResultFactory _clientSubscribeResultFactory = new MqttClientSubscribeResultFactory();
@@ -63,6 +64,12 @@ namespace MQTTnet.Client
             remove => _applicationMessageReceivedEvent.RemoveHandler(value);
         }
 
+        public event Func<MqttClientBeforeReleasePublishPacketEventArgs, Task> BeforeReleasePublishPacketAsync
+        {
+            add => _beforeReleasePublishPacketEvent.AddHandler(value);
+            remove => _beforeReleasePublishPacketEvent.RemoveHandler(value);
+        }
+
         public event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync
         {
             add => _connectedEvent.AddHandler(value);
@@ -81,7 +88,7 @@ namespace MQTTnet.Client
             remove => _disconnectedEvent.RemoveHandler(value);
         }
 
-        public event Func<InspectMqttPacketEventArgs, Task> InspectPackage
+        public event Func<InspectMqttPacketEventArgs, Task> InspectPackageAsync
         {
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);
@@ -259,7 +266,9 @@ namespace MQTTnet.Client
             }
         }
 
-        public async Task<MqttClientReleasePublishPacketResult> ReleasePublishPacketAsync(MqttClientReleasePublishPacketOptions options, CancellationToken cancellationToken = default)
+        public async Task<MqttClientReleasePublishPacketResult> ReleasePublishPacketAsync(
+            MqttClientReleasePublishPacketOptions options,
+            CancellationToken cancellationToken = default)
         {
             if (options == null)
             {
@@ -281,8 +290,23 @@ namespace MQTTnet.Client
                 throw new InvalidOperationException("Manually releasing PUBLISH packets requires the feature _AutoReleasePublishPackets_ disabled in the client options.");
             }
 
+            var eventArgs = new MqttClientBeforeReleasePublishPacketEventArgs(options.PacketIdentifier);
+            await _beforeReleasePublishPacketEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+            
             var pubRelPacket = _packetFactories.PubRel.Create(options);
-            var pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
+                
+            MqttPubCompPacket pubCompPacket;
+            if (cancellationToken.CanBeCanceled)
+            {
+                pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                using (var timeout = new CancellationTokenSource(Options.Timeout))
+                {
+                    pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, timeout.Token).ConfigureAwait(false);
+                }
+            }
 
             return new MqttClientReleasePublishPacketResult(pubCompPacket.PacketIdentifier, pubCompPacket.ReasonString, pubCompPacket.UserProperties);
         }
@@ -628,7 +652,7 @@ namespace MQTTnet.Client
             {
                 // The packet is unknown. Probably due to a restart of the client.
                 // So wen send this to the server to trigger a full resend of the message.
-                var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.PacketIdentifierNotFound);
+                var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttPubRelReasonCode.PacketIdentifierNotFound);
                 return SendAsync(pubRelPacket, cancellationToken);
             }
 
@@ -669,7 +693,10 @@ namespace MQTTnet.Client
                 return _clientPublishResultFactory.Create(pubRecPacket);
             }
 
-            var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            var eventArgs = new MqttClientBeforeReleasePublishPacketEventArgs(pubRecPacket.PacketIdentifier);
+            await _beforeReleasePublishPacketEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+            
+            var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttPubRelReasonCode.Success);
             var pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
             return _clientPublishResultFactory.Create(pubRecPacket, pubCompPacket);
         }

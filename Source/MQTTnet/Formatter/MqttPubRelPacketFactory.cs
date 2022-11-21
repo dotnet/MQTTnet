@@ -11,7 +11,7 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttPubRelPacketFactory
     {
-        public MqttPubRelPacket Create(MqttPubRecPacket pubRecPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
+        public MqttPubRelPacket Create(MqttPubRecPacket pubRecPacket, MqttPubRelReasonCode reasonCode)
         {
             if (pubRecPacket == null)
             {
@@ -21,7 +21,7 @@ namespace MQTTnet.Formatter
             return new MqttPubRelPacket
             {
                 PacketIdentifier = pubRecPacket.PacketIdentifier,
-                ReasonCode = (MqttPubRelReasonCode)(int)reasonCode
+                ReasonCode = reasonCode
             };
         }
 

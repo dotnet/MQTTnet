@@ -273,7 +273,7 @@ namespace MQTTnet.Server
         {
             // Do not fire the event _ClientAcknowledgedPublishPacket_ here because the QoS 2 process is only finished
             // properly when the client has sent the PUBCOMP packet.
-            var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttPubRelReasonCode.Success);
             Session.EnqueueControlPacket(new MqttPacketBusItem(pubRelPacket));
 
             return CompletedTask.Instance;

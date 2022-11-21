@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -10,8 +11,8 @@ namespace MQTTnet.Client
 {
     public sealed class MqttClientPublishResultFactory
     {
-        static readonly MqttClientPublishResult EmptySuccessResult = new MqttClientPublishResult();
         static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = new List<MqttUserProperty>();
+        static readonly MqttClientPublishResult EmptySuccessResult = new MqttClientPublishResult(null, MqttClientPublishReasonCode.Success, null, EmptyUserProperties);
 
         public MqttClientPublishResult Create(MqttPubAckPacket pubAckPacket)
         {
@@ -21,70 +22,55 @@ namespace MQTTnet.Client
                 return EmptySuccessResult;
             }
 
-            var result = new MqttClientPublishResult
-            {
-                // Both enums have the same values. So it can be easily converted.
-                ReasonCode = (MqttClientPublishReasonCode)(int)pubAckPacket.ReasonCode,
-                PacketIdentifier = pubAckPacket.PacketIdentifier,
-                ReasonString = pubAckPacket.ReasonString,
-                UserProperties = pubAckPacket.UserProperties ?? EmptyUserProperties
-            };
+            var result = new MqttClientPublishResult(
+                pubAckPacket.PacketIdentifier,
+                (MqttClientPublishReasonCode)(int)pubAckPacket.ReasonCode,
+                pubAckPacket.ReasonString,
+                pubAckPacket.UserProperties ?? EmptyUserProperties);
 
             return result;
         }
 
         public MqttClientPublishResult Create(MqttPubRecPacket pubRecPacket)
         {
-            return new MqttClientPublishResult
+            if (pubRecPacket == null)
             {
-                PacketIdentifier = pubRecPacket.PacketIdentifier,
-                ReasonCode = (MqttClientPublishReasonCode)(int)pubRecPacket.ReasonCode,
-                ReasonString = pubRecPacket.ReasonString,
-                UserProperties = pubRecPacket.UserProperties
-            };
+                throw new ArgumentNullException(nameof(pubRecPacket));
+            }
+
+            return new MqttClientPublishResult(
+                pubRecPacket.PacketIdentifier,
+                (MqttClientPublishReasonCode)(int)pubRecPacket.ReasonCode,
+                pubRecPacket.ReasonString,
+                pubRecPacket.UserProperties ?? EmptyUserProperties);
         }
-        
+
         public MqttClientPublishResult Create(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
         {
             if (pubRecPacket == null || pubCompPacket == null)
             {
-                return new MqttClientPublishResult
-                {
-                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError
-                };
+                return new MqttClientPublishResult(null, MqttClientPublishReasonCode.UnspecifiedError, null, EmptyUserProperties);
             }
-
-            MqttClientPublishResult result;
 
             // The PUBCOMP is the last packet in QoS 2. So we use the results from that instead of PUBREC.
             if (pubCompPacket.ReasonCode == MqttPubCompReasonCode.PacketIdentifierNotFound)
             {
-                result = new MqttClientPublishResult
-                {
-                    PacketIdentifier = pubCompPacket.PacketIdentifier,
-                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError,
-                    ReasonString = pubCompPacket.ReasonString,
-                    UserProperties = pubCompPacket.UserProperties ?? EmptyUserProperties
-                };
-
-                return result;
+                return new MqttClientPublishResult(
+                    pubCompPacket.PacketIdentifier,
+                    MqttClientPublishReasonCode.UnspecifiedError,
+                    pubCompPacket.ReasonString,
+                    pubCompPacket.UserProperties ?? EmptyUserProperties);
             }
 
-            result = new MqttClientPublishResult
-            {
-                PacketIdentifier = pubCompPacket.PacketIdentifier,
-                ReasonCode = MqttClientPublishReasonCode.Success,
-                ReasonString = pubCompPacket.ReasonString,
-                UserProperties = pubCompPacket.UserProperties ?? EmptyUserProperties
-            };
+            var reasonCode = MqttClientPublishReasonCode.Success;
 
             if (pubRecPacket.ReasonCode != MqttPubRecReasonCode.Success)
             {
                 // Both enums share the same values.
-                result.ReasonCode = (MqttClientPublishReasonCode)pubRecPacket.ReasonCode;
+                reasonCode = (MqttClientPublishReasonCode)pubRecPacket.ReasonCode;
             }
 
-            return result;
+            return new MqttClientPublishResult(pubCompPacket.PacketIdentifier, reasonCode, pubCompPacket.ReasonString, pubCompPacket.UserProperties ?? EmptyUserProperties);
         }
     }
 }

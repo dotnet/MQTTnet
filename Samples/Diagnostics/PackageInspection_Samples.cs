@@ -26,7 +26,7 @@ public static class PackageInspection_Samples
                 .WithTcpServer("broker.hivemq.com")
                 .Build();
             
-            mqttClient.InspectPackage += OnInspectPackage;
+            mqttClient.InspectPackageAsync += OnInspectPackage;
             
             await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
             

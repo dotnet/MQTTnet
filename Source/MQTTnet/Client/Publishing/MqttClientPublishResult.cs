@@ -9,6 +9,14 @@ namespace MQTTnet.Client
 {
     public sealed class MqttClientPublishResult
     {
+        public MqttClientPublishResult(ushort? packetIdentifier, MqttClientPublishReasonCode reasonCode, string reasonString, IReadOnlyCollection<MqttUserProperty> userProperties)
+        {
+            PacketIdentifier = packetIdentifier;
+            ReasonCode = reasonCode;
+            ReasonString = reasonString;
+            UserProperties = userProperties;
+        }
+
         /// <summary>
         ///     Returns if the overall status of the publish is a success. This can be the reason code _Success_ or
         ///     _NoMatchingSubscribers_. _NoMatchingSubscribers_ usually indicates only that no other client is interested in the topic but overall transmit
@@ -19,19 +27,19 @@ namespace MQTTnet.Client
         /// <summary>
         ///     Gets the packet identifier which was used for this publish.
         /// </summary>
-        public ushort? PacketIdentifier { get; set; }
+        public ushort? PacketIdentifier { get; }
 
         /// <summary>
         ///     Gets or sets the reason code.
         ///     Hint: MQTT 5 feature only.
         /// </summary>
-        public MqttClientPublishReasonCode ReasonCode { get; set; } = MqttClientPublishReasonCode.Success;
+        public MqttClientPublishReasonCode ReasonCode { get; }
 
         /// <summary>
         ///     Gets or sets the reason string.
         ///     Hint: MQTT 5 feature only.
         /// </summary>
-        public string ReasonString { get; set; }
+        public string ReasonString { get; }
 
         /// <summary>
         ///     Gets or sets the user properties.
@@ -42,6 +50,6 @@ namespace MQTTnet.Client
         ///     The feature is very similar to the HTTP header concept.
         ///     Hint: MQTT 5 feature only.
         /// </summary>
-        public IReadOnlyCollection<MqttUserProperty> UserProperties { get; internal set; }
+        public IReadOnlyCollection<MqttUserProperty> UserProperties { get; }
     }
 }

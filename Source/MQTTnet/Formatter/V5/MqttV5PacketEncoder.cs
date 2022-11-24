@@ -35,9 +35,11 @@ namespace MQTTnet.Formatter.V5
             var remainingLength = (uint)_bufferWriter.Length - 5;
 
             var publishPacket = packet as MqttPublishPacket;
-            if (publishPacket?.Payload != null)
+            var payloadSegment = publishPacket?.GetPayloadSegment();
+
+            if (payloadSegment != null)
             {
-                remainingLength += (uint)publishPacket.Payload.Length;
+                remainingLength += (uint)payloadSegment.Value.Count;
             }
 
             var remainingLengthSize = MqttBufferWriter.GetLengthOfVariableInteger(remainingLength);
@@ -51,18 +53,13 @@ namespace MQTTnet.Formatter.V5
             _bufferWriter.WriteVariableByteInteger(remainingLength);
 
             var buffer = _bufferWriter.GetBuffer();
-
             var firstSegment = new ArraySegment<byte>(buffer, headerOffset, _bufferWriter.Length - headerOffset);
 
-            if (publishPacket?.Payload != null)
-            {
-                var payloadSegment = new ArraySegment<byte>(publishPacket.Payload, 0, publishPacket.Payload.Length);
-                return new MqttPacketBuffer(firstSegment, payloadSegment);
-            }
-
-            return new MqttPacketBuffer(firstSegment);
+            return payloadSegment == null
+               ? new MqttPacketBuffer(firstSegment)
+               : new MqttPacketBuffer(firstSegment, payloadSegment.Value);
         }
-        
+
         byte EncodeAuthPacket(MqttAuthPacket packet)
         {
             _bufferWriter.WriteByte((byte)packet.ReasonCode);

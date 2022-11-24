@@ -2,12 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using MQTTnet.Protocol;
+using System;
+using System.Collections.Generic;
 
 namespace MQTTnet.Packets
 {
-    public sealed class MqttPublishPacket : MqttPacketWithIdentifier
+    public sealed class MqttPublishPacket : MqttPacketWithIdentifier, IPayloadSegmentable
     {
         public string ContentType { get; set; }
 
@@ -18,6 +19,10 @@ namespace MQTTnet.Packets
         public uint MessageExpiryInterval { get; set; }
 
         public byte[] Payload { get; set; }
+      
+        public int PayloadOffset { get; set; }
+       
+        public int? PayloadCount { get; set; }
 
         public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
@@ -38,7 +43,7 @@ namespace MQTTnet.Packets
         public override string ToString()
         {
             return
-                $"Publish: [Topic={Topic}] [Payload.Length={Payload?.Length}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
+                $"Publish: [Topic={Topic}] [PayloadCount={this.GetPayloadCount()}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
         }
     }
 }

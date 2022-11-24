@@ -17,6 +17,8 @@ namespace MQTTnet.Formatter
             {
                 Topic = publishPacket.Topic,
                 Payload = publishPacket.Payload,
+                PayloadOffset = publishPacket.PayloadOffset,
+                PayloadCount = publishPacket.PayloadCount,
                 Retain = publishPacket.Retain,
                 QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
                 Dup = publishPacket.Dup,
@@ -37,6 +39,8 @@ namespace MQTTnet.Formatter
             {
                 Topic = applicationMessage.Topic,
                 Payload = applicationMessage.Payload,
+                PayloadOffset = applicationMessage.PayloadOffset,
+                PayloadCount = applicationMessage.PayloadCount,
                 QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
                 Retain = applicationMessage.Retain,
                 Dup = applicationMessage.Dup,

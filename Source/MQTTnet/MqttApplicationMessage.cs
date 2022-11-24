@@ -2,13 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using System;
+using System.Collections.Generic;
 
 namespace MQTTnet
 {
-    public sealed class MqttApplicationMessage
+    public sealed class MqttApplicationMessage: IPayloadSegmentable
     {
         /// <summary>
         ///     Gets or sets the content type.
@@ -48,11 +49,21 @@ namespace MQTTnet
         public uint MessageExpiryInterval { get; set; }
 
         /// <summary>
-        ///     Gets or sets the payload.
-        ///     The payload is the data bytes sent via the MQTT protocol.
+        /// Get or set Payload array
         /// </summary>
         public byte[] Payload { get; set; }
 
+        /// <summary>
+        /// Get or set the offset of Payload
+        /// </summary>
+        public int PayloadOffset { get; set; }
+
+        /// <summary>
+        /// Get or set the effective number of bytes of Payload
+        /// Leaving null means equal to the total length of Payload minus PayloadOffset
+        /// </summary>
+        public int? PayloadCount { get; set; } 
+      
         /// <summary>
         ///     Gets or sets the payload format indicator.
         ///     The payload format indicator is part of any MQTT packet that can contain a payload. The indicator is an optional

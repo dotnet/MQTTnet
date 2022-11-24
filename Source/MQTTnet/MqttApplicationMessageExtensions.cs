@@ -18,12 +18,13 @@ namespace MQTTnet
                 return null;
             }
 
-            if (applicationMessage.Payload.Length == 0)
+            var payloadSegment = applicationMessage.GetPayloadSegment();
+            if (payloadSegment.Count == 0)
             {
                 return string.Empty;
             }
 
-            return Encoding.UTF8.GetString(applicationMessage.Payload, 0, applicationMessage.Payload.Length);
+            return Encoding.UTF8.GetString(payloadSegment.Array, payloadSegment.Offset, payloadSegment.Count);
         }
     }
 }

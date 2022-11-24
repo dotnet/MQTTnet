@@ -2,9 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
@@ -18,6 +20,9 @@ namespace MQTTnet
         byte[] _correlationData;
         uint _messageExpiryInterval;
         byte[] _payload;
+        int _payloadOffset;
+        int? _payloadLength;
+
         MqttPayloadFormatIndicator _payloadFormatIndicator;
         MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
         string _responseTopic;
@@ -38,6 +43,8 @@ namespace MQTTnet
             {
                 Topic = _topic,
                 Payload = _payload,
+                PayloadOffset = _payloadOffset,
+                PayloadCount = _payloadLength,
                 QualityOfServiceLevel = _qualityOfServiceLevel,
                 Retain = _retain,
                 ContentType = _contentType,
@@ -115,6 +122,26 @@ namespace MQTTnet
             return this;
         }
 
+        public MqttApplicationMessageBuilder WithPayload(ArraySegment<byte> payload)
+        {
+            _payload = payload.Array;
+            _payloadOffset = payload.Offset;
+            _payloadLength = payload.Count;
+            return this;
+        }
+
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
+        public MqttApplicationMessageBuilder WithPayload(ReadOnlyMemory<byte> payload)
+        {
+            if (MemoryMarshal.TryGetArray(payload, out var segment))
+            {
+                return WithPayload(segment);
+            }
+
+            _payload = payload.ToArray();
+            return this;
+        }
+#endif
         public MqttApplicationMessageBuilder WithPayload(IEnumerable<byte> payload)
         {
             if (payload == null)

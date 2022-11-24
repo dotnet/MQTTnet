@@ -21,7 +21,7 @@ namespace MQTTnet
         uint _messageExpiryInterval;
         byte[] _payload;
         int _payloadOffset;
-        int? _payloadLength;
+        int? _payloadCount;
 
         MqttPayloadFormatIndicator _payloadFormatIndicator;
         MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
@@ -44,7 +44,7 @@ namespace MQTTnet
                 Topic = _topic,
                 Payload = _payload,
                 PayloadOffset = _payloadOffset,
-                PayloadCount = _payloadLength,
+                PayloadCount = _payloadCount,
                 QualityOfServiceLevel = _qualityOfServiceLevel,
                 Retain = _retain,
                 ContentType = _contentType,
@@ -126,7 +126,7 @@ namespace MQTTnet
         {
             _payload = payload.Array;
             _payloadOffset = payload.Offset;
-            _payloadLength = payload.Count;
+            _payloadCount = payload.Count;
             return this;
         }
 

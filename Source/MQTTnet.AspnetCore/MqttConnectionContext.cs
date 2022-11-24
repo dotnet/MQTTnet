@@ -171,16 +171,22 @@ namespace MQTTnet.AspNetCore
         {
             using (await _writerLock.EnterAsync(cancellationToken).ConfigureAwait(false))
             {
-                var buffer = PacketFormatterAdapter.Encode(packet);
-                await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
-
-                if (buffer.Payload.Count > 0)
+                try
                 {
-                    await _output.WriteAsync(buffer.Payload, cancellationToken).ConfigureAwait(false);
-                }
+                    var buffer = PacketFormatterAdapter.Encode(packet);
+                    await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
 
-                BytesSent += buffer.Length;
-                PacketFormatterAdapter.Cleanup();
+                    if (buffer.Payload.Count > 0)
+                    {
+                        await _output.WriteAsync(buffer.Payload, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    BytesSent += buffer.Length;
+                }
+                finally
+                {
+                    PacketFormatterAdapter.Cleanup();
+                }
             }
         }
 

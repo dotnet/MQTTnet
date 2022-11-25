@@ -16,6 +16,6 @@ namespace MQTTnet
         /// Get or set the effective number of bytes of Payload
         /// Leaving null means equal to the total length of Payload minus PayloadOffset
         /// </summary>
-        int? PayloadCount { get; set; }
+        int? PayloadLength { get; set; }
     }
 }

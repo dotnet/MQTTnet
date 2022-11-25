@@ -19,9 +19,9 @@ namespace MQTTnet.Packets
         public uint MessageExpiryInterval { get; set; }
 
         public byte[] Payload { get; set; }
-      
+
         public int PayloadOffset { get; set; }
-       
+
         public int? PayloadCount { get; set; }
 
         public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
@@ -43,7 +43,7 @@ namespace MQTTnet.Packets
         public override string ToString()
         {
             return
-                $"Publish: [Topic={Topic}] [PayloadCount={this.GetPayloadCount()}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
+                $"Publish: [Topic={Topic}] [PayloadCount={this.GetPayloadSegment().Count}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
         }
     }
 }

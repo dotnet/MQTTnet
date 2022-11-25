@@ -1,6 +1,6 @@
 namespace MQTTnet
 {
-    interface IPayloadSegmentable
+    public interface IPayloadSegmentable
     {
         /// <summary>
         /// Get or set Payload array

@@ -21,7 +21,7 @@ namespace MQTTnet.Formatter
                 Topic = publishPacket.Topic,
                 Payload = publishPacket.Payload,
                 PayloadOffset = publishPacket.PayloadOffset,
-                PayloadCount = publishPacket.PayloadCount,
+                PayloadLength = publishPacket.PayloadLength,
                 QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
                 Retain = publishPacket.Retain,
                 Dup = publishPacket.Dup,

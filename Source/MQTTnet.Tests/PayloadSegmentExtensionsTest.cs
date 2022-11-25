@@ -19,11 +19,11 @@ namespace MQTTnet.Tests
             message.Payload = new byte[] { 1, 2, 3 };
             Assert.AreEqual(3, message.GetPayloadSegment().Count);
 
-            message.PayloadCount = 1;
+            message.PayloadLength = 1;
             Assert.AreEqual(1, message.GetPayloadSegment().Count);
             Assert.IsTrue(message.GetPayloadSegment().SequenceEqual(new byte[] { 1 }));
 
-            message.PayloadCount = null;
+            message.PayloadLength = null;
             message.PayloadOffset = 1;
             Assert.AreEqual(2, message.GetPayloadSegment().Count);
             Assert.IsTrue(message.GetPayloadSegment().SequenceEqual(new byte[] { 2, 3 }));
@@ -39,7 +39,7 @@ namespace MQTTnet.Tests
         {
             public byte[] Payload { get; set; }
             public int PayloadOffset { get; set; }
-            public int? PayloadCount { get; set; }
+            public int? PayloadLength { get; set; }
         }
     }
 }

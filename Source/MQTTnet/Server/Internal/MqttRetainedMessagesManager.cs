@@ -141,7 +141,7 @@ namespace MQTTnet.Server
         private static bool SequenceEqual(ArraySegment<byte> source, ArraySegment<byte> target)
         {
 #if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
-            return source.Count == target.Count && source.AsSpan().SequenceEqual(target);
+            return source.AsSpan().SequenceEqual(target);
 #else
             return source.Count == target.Count && Enumerable.SequenceEqual(source, target);
 #endif

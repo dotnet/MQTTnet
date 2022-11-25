@@ -20,15 +20,15 @@ namespace MQTTnet
                 return emptySegment;
             }
 
-            var payloadCount = segmentable.PayloadCount == null
+            var payloadLength = segmentable.PayloadLength == null
                 ? segmentable.Payload.Length - segmentable.PayloadOffset
-                : segmentable.PayloadCount.Value;
+                : segmentable.PayloadLength.Value;
 
-            return new ArraySegment<byte>(segmentable.Payload, segmentable.PayloadOffset, payloadCount);
+            return new ArraySegment<byte>(segmentable.Payload, segmentable.PayloadOffset, payloadLength);
         }
 
         /// <summary>
-        /// Set payloadSegment to Payload, PayloadOffset and PayloadCount
+        /// Set payloadSegment to Payload, PayloadOffset and PayloadLength
         /// </summary>
         /// <param name="segmentable"></param>
         /// <param name="payloadSegment"></param>
@@ -36,12 +36,12 @@ namespace MQTTnet
         {
             segmentable.Payload = payloadSegment.Array;
             segmentable.PayloadOffset = payloadSegment.Offset;
-            segmentable.PayloadCount = payloadSegment.Count;
+            segmentable.PayloadLength = payloadSegment.Count;
         }
 
 #if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
         /// <summary>
-        /// Set payloadSegment to Payload, PayloadOffset and PayloadCount
+        /// Set payloadSegment to Payload, PayloadOffset and PayloadLength
         /// </summary>
         /// <param name="segmentable"></param>
         /// <param name="payloadSegment"></param>
@@ -55,7 +55,7 @@ namespace MQTTnet
             {
                 segmentable.Payload = payloadSegment.ToArray();
                 segmentable.PayloadOffset = 0;
-                segmentable.PayloadCount = null;
+                segmentable.PayloadLength = null;
             }
         }
 #endif

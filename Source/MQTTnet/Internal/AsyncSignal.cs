@@ -39,6 +39,7 @@ namespace MQTTnet.Internal
                 if (_waiter != null)
                 {
                     _waiter.Approve();
+                    _waiter.Dispose();
                     _waiter = null;
 
                     // Since we already got a waiter the signal must be reset right now!

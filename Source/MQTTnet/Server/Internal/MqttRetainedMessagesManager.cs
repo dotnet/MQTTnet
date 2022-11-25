@@ -84,7 +84,8 @@ namespace MQTTnet.Server
                         }
                         else
                         {
-                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.GetPayloadSegment().SequenceEqual(payloadSegment))
+                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel ||
+                                !SequenceEqual(existingMessage.GetPayloadSegment(), payloadSegment))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage;
                                 saveIsRequired = true;
@@ -135,6 +136,15 @@ namespace MQTTnet.Server
             {
                 await _eventContainer.RetainedMessagesClearedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
             }
+        }
+
+        private static bool SequenceEqual(ArraySegment<byte> source, ArraySegment<byte> target)
+        {
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
+            return source.Count == target.Count && source.AsSpan().SequenceEqual(target);
+#else
+            return source.Count == target.Count && Enumerable.SequenceEqual(source, target);
+#endif
         }
     }
 }

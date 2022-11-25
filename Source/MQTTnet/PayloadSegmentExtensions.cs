@@ -1,7 +1,5 @@
-using MQTTnet;
 using MQTTnet.Internal;
 using System;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace MQTTnet
@@ -62,14 +60,5 @@ namespace MQTTnet
         }
 #endif
 
-
-        internal static bool SequenceEqual(this ArraySegment<byte> x, ArraySegment<byte> y)
-        {
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
-            return x.Count == y.Count && x.AsSpan().SequenceEqual(y.AsSpan());
-#else
-            return x.Count == y.Count && Enumerable.SequenceEqual(x, y);
-#endif
-        }
     }
 }

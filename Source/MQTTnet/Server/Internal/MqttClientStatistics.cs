@@ -73,7 +73,13 @@ namespace MQTTnet.Server
                 LastNonKeepAlivePacketReceivedTimestamp = LastPacketReceivedTimestamp;
             }
         }
-
+        public void ResetStatistics(){
+            Interlocked.Exchange(ref _sentApplicationMessagesCount,0);
+            Interlocked.Exchange(ref _receivedApplicationMessagesCount,0);
+            Interlocked.Exchange(ref _sentPacketsCount,0);
+            Interlocked.Exchange(ref _receivedPacketsCount,0);
+        }
+        
         public void HandleSentPacket(MqttPacket packet)
         {
             if (packet == null)

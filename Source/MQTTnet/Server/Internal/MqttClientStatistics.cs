@@ -43,13 +43,13 @@ namespace MQTTnet.Server
         
         public DateTime LastNonKeepAlivePacketReceivedTimestamp { get; private set; }
 
-        public long SentApplicationMessagesCount => Interlocked.Read(ref _sentApplicationMessagesCount);
+        public long SentApplicationMessagesCount => Volatile.Read(ref _sentApplicationMessagesCount);
         
-        public long ReceivedApplicationMessagesCount => Interlocked.Read(ref _receivedApplicationMessagesCount);
+        public long ReceivedApplicationMessagesCount => Volatile.Read(ref _receivedApplicationMessagesCount);
         
-        public long SentPacketsCount => Interlocked.Read(ref _sentPacketsCount);
+        public long SentPacketsCount => Volatile.Read(ref _sentPacketsCount);
         
-        public long ReceivedPacketsCount => Interlocked.Read(ref _receivedPacketsCount);
+        public long ReceivedPacketsCount => Volatile.Read(ref _receivedPacketsCount);
         
         public void HandleReceivedPacket(MqttPacket packet)
         {

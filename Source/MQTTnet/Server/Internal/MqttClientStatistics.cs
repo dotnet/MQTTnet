@@ -30,6 +30,7 @@ namespace MQTTnet.Server
         }
 
         public DateTime ConnectedTimestamp { get; }
+        public DateTime LastNonKeepAlivePacketReceivedTimestamp { get; private set; }
 
         /// <summary>
         ///     Timestamp of the last package that has been sent to the client ("received" from the client's perspective)
@@ -40,8 +41,6 @@ namespace MQTTnet.Server
         ///     Timestamp of the last package that has been received from the client ("sent" from the client's perspective)
         /// </summary>
         public DateTime LastPacketSentTimestamp { get; private set; }
-
-        public DateTime LastNonKeepAlivePacketReceivedTimestamp { get; private set; }
 
         public long SentApplicationMessagesCount => Volatile.Read(ref _statistics._sentApplicationMessagesCount);
 

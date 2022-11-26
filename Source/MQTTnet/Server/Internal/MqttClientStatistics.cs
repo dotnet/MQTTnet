@@ -28,36 +28,36 @@ namespace MQTTnet.Server
 
             LastNonKeepAlivePacketReceivedTimestamp = ConnectedTimestamp;
         }
-        
+
         public DateTime ConnectedTimestamp { get; }
 
         /// <summary>
-        /// Timestamp of the last package that has been sent to the client ("received" from the client's perspective)
+        ///     Timestamp of the last package that has been sent to the client ("received" from the client's perspective)
         /// </summary>
         public DateTime LastPacketReceivedTimestamp { get; private set; }
-                
+
         /// <summary>
-        /// Timestamp of the last package that has been received from the client ("sent" from the client's perspective)
+        ///     Timestamp of the last package that has been received from the client ("sent" from the client's perspective)
         /// </summary>
         public DateTime LastPacketSentTimestamp { get; private set; }
-        
+
         public DateTime LastNonKeepAlivePacketReceivedTimestamp { get; private set; }
 
         public long SentApplicationMessagesCount => Volatile.Read(ref _statistics._sentApplicationMessagesCount);
-        
+
         public long ReceivedApplicationMessagesCount => Volatile.Read(ref _statistics._receivedApplicationMessagesCount);
-        
+
         public long SentPacketsCount => Volatile.Read(ref _statistics._sentPacketsCount);
-        
+
         public long ReceivedPacketsCount => Volatile.Read(ref _statistics._receivedPacketsCount);
-        
+
         public void HandleReceivedPacket(MqttPacket packet)
         {
             if (packet == null)
             {
                 throw new ArgumentNullException(nameof(packet));
             }
-            
+
             // This class is tracking all values from Clients perspective!
             LastPacketSentTimestamp = DateTime.UtcNow;
 
@@ -81,7 +81,7 @@ namespace MQTTnet.Server
             {
                 throw new ArgumentNullException(nameof(packet));
             }
-            
+
             // This class is tracking all values from Clients perspective!
             LastPacketReceivedTimestamp = DateTime.UtcNow;
 

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Threading;
 
 namespace MQTTnet.Server
 {
@@ -13,8 +12,8 @@ namespace MQTTnet.Server
         {
             ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
         }
-        
-        public string SenderClientId { get; set; }
+
+        public string SenderClientId { get; set; } = string.Empty;
 
         public MqttApplicationMessage ApplicationMessage { get; set; }
     }

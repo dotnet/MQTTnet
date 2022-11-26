@@ -131,10 +131,10 @@ namespace MQTTnet.Client
                     await _connectingEvent.InvokeAsync(new MqttClientConnectingEventArgs(options));
                 }
 
+                Cleanup();
+                
                 _packetIdentifierProvider.Reset();
                 _packetDispatcher = new MqttPacketDispatcher();
-
-                Cleanup();
 
                 _mqttClientAlive = new CancellationTokenSource();
                 var mqttClientAliveToken = _mqttClientAlive.Token;

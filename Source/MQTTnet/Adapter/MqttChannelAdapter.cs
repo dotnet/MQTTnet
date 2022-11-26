@@ -180,11 +180,7 @@ namespace MQTTnet.Adapter
             return null;
         }
 
-        public void ResetStatistics()
-        {
-            Volatile.Write(ref _statistics._bytesReceived, 0);
-            Volatile.Write(ref _statistics._bytesSent, 0);
-        }
+        public void ResetStatistics() => _statistics.Reset();
 
         public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
@@ -463,6 +459,12 @@ namespace MQTTnet.Adapter
         {
             public long _bytesReceived;
             public long _bytesSent;
+
+            public void Reset()
+            {
+                Volatile.Write(ref _bytesReceived, 0);
+                Volatile.Write(ref _bytesSent, 0);
+            }
         }
     }
 }

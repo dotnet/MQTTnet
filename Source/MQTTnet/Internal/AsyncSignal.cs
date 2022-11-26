@@ -34,11 +34,12 @@ namespace MQTTnet.Internal
                 _isSignaled = true;
 
                 Cleanup();
-                
+
                 // If there is already a waiting task let it run.
                 if (_waiter != null)
                 {
                     _waiter.Approve();
+                    _waiter.Dispose();
                     _waiter = null;
 
                     // Since we already got a waiter the signal must be reset right now!
@@ -102,6 +103,8 @@ namespace MQTTnet.Internal
             // ReSharper disable once FieldCanBeMadeReadOnly.Local
             CancellationTokenRegistration _cancellationTokenRegistration;
 
+            volatile bool _isCompleted;
+
             public AsyncSignalWaiter(CancellationToken cancellationToken)
             {
                 if (cancellationToken.CanBeCanceled)
@@ -114,18 +117,37 @@ namespace MQTTnet.Internal
 
             public void Approve()
             {
+                if (_isCompleted)
+                {
+                    return;
+                }
+
+                _isCompleted = true;
                 _promise.TrySetResult(true);
             }
 
             public void Dispose()
             {
                 _cancellationTokenRegistration.Dispose();
+                
+                if (_isCompleted)
+                {
+                    // Avoid allocation of _ObjectDisposedException_ which may not be used.
+                    return;
+                }
 
+                _isCompleted = true;
                 _promise.TrySetException(new ObjectDisposedException(nameof(AsyncSignalWaiter)));
             }
 
             void Cancel()
             {
+                if (_isCompleted)
+                {
+                    return;
+                }
+
+                _isCompleted = true;
                 _promise.TrySetCanceled();
             }
         }

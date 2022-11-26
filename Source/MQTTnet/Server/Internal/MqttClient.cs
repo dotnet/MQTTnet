@@ -83,6 +83,7 @@ namespace MQTTnet.Server
         public void ResetStatistics()
         {
             ChannelAdapter.ResetStatistics();
+            Statistics.ResetStatistics();
         }
 
         public async Task RunAsync()

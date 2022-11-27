@@ -21,7 +21,7 @@ namespace MQTTnet.AspNetCore
     public sealed class MqttConnectionContext : IMqttChannelAdapter
     {
         readonly AsyncLock _writerLock = new AsyncLock();
-
+        readonly bool? _isOverWebSocket;
         PipeReader _input;
         PipeWriter _output;
 
@@ -29,6 +29,12 @@ namespace MQTTnet.AspNetCore
         {
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
+
+            var feature = connection.Features.Get<IHttpContextFeature>();
+            if (feature != null)
+            {
+                _isOverWebSocket = feature.HttpContext.WebSockets.IsWebSocketRequest;
+            }
 
             if (Connection.Transport != null)
             {
@@ -174,11 +180,18 @@ namespace MQTTnet.AspNetCore
                 try
                 {
                     var buffer = PacketFormatterAdapter.Encode(packet);
-                    await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
-
-                    if (buffer.Payload.Count > 0)
+                    if (_isOverWebSocket == false)
                     {
-                        await _output.WriteAsync(buffer.Payload, cancellationToken).ConfigureAwait(false);
+                        await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
+                        if (buffer.Payload.Count > 0)
+                        {
+                            await _output.WriteAsync(buffer.Payload, cancellationToken).ConfigureAwait(false);
+                        }
+                    }
+                    else
+                    {
+                        var bufferSegment = buffer.Join();
+                        await _output.WriteAsync(bufferSegment, cancellationToken).ConfigureAwait(false);
                     }
 
                     BytesSent += buffer.Length;

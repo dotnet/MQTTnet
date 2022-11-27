@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
@@ -19,9 +20,7 @@ namespace MQTTnet
         string _contentType;
         byte[] _correlationData;
         uint _messageExpiryInterval;
-        byte[] _payload;
-        int _payloadOffset;
-        int? _payloadLength;
+        ArraySegment<byte> _payloadSegment;
 
         MqttPayloadFormatIndicator _payloadFormatIndicator;
         MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
@@ -42,9 +41,7 @@ namespace MQTTnet
             var applicationMessage = new MqttApplicationMessage
             {
                 Topic = _topic,
-                Payload = _payload,
-                PayloadOffset = _payloadOffset,
-                PayloadLength = _payloadLength,
+                PayloadSegment = _payloadSegment,
                 QualityOfServiceLevel = _qualityOfServiceLevel,
                 Retain = _retain,
                 ContentType = _contentType,
@@ -118,17 +115,15 @@ namespace MQTTnet
 
         public MqttApplicationMessageBuilder WithPayload(byte[] payload)
         {
-            _payload = payload;
-            _payloadOffset = 0;
-            _payloadLength = null;
+            _payloadSegment = payload == null || payload.Length == 0
+                ? EmptyBuffer.ArraySegment
+                : new ArraySegment<byte>(payload);
             return this;
         }
 
-        public MqttApplicationMessageBuilder WithPayload(ArraySegment<byte> payload)
+        public MqttApplicationMessageBuilder WithPayloadSegment(ArraySegment<byte> payloadSegment)
         {
-            _payload = payload.Array;
-            _payloadOffset = payload.Offset;
-            _payloadLength = payload.Count;
+            _payloadSegment = payloadSegment;
             return this;
         }
 
@@ -146,7 +141,7 @@ namespace MQTTnet
 
             if (payload is ArraySegment<byte> arraySegment)
             {
-                return WithPayload(arraySegment);
+                return WithPayloadSegment(arraySegment);
             }
 
             return WithPayload(payload.ToArray());
@@ -191,15 +186,15 @@ namespace MQTTnet
 
             var payloadBuffer = Encoding.UTF8.GetBytes(payload);
             return WithPayload(payloadBuffer);
-        } 
-  
+        }
+
 
 #if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
-        public MqttApplicationMessageBuilder WithPayload(ReadOnlyMemory<byte> payload)
+        public MqttApplicationMessageBuilder WithPayloadSegment(ReadOnlyMemory<byte> payloadSegment)
         {
-            return MemoryMarshal.TryGetArray(payload, out var segment)
-                ? WithPayload(segment)
-                : WithPayload(payload.ToArray());
+            return MemoryMarshal.TryGetArray(payloadSegment, out var segment)
+                ? WithPayloadSegment(segment)
+                : WithPayload(payloadSegment.ToArray());
         }
 #endif
 

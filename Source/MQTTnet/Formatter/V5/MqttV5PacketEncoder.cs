@@ -35,7 +35,7 @@ namespace MQTTnet.Formatter.V5
             var remainingLength = (uint)_bufferWriter.Length - 5;
 
             var publishPacket = packet as MqttPublishPacket;
-            var payloadSegment = publishPacket?.GetPayloadSegment();
+            var payloadSegment = publishPacket?.PayloadSegment;
 
             if (payloadSegment != null)
             {

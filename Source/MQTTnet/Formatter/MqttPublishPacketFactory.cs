@@ -16,9 +16,7 @@ namespace MQTTnet.Formatter
             return new MqttPublishPacket
             {
                 Topic = publishPacket.Topic,
-                Payload = publishPacket.Payload,
-                PayloadOffset = publishPacket.PayloadOffset,
-                PayloadLength = publishPacket.PayloadLength,
+                PayloadSegment = publishPacket.PayloadSegment, 
                 Retain = publishPacket.Retain,
                 QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
                 Dup = publishPacket.Dup,
@@ -38,9 +36,7 @@ namespace MQTTnet.Formatter
             var packet = new MqttPublishPacket
             {
                 Topic = applicationMessage.Topic,
-                Payload = applicationMessage.Payload,
-                PayloadOffset = applicationMessage.PayloadOffset,
-                PayloadLength = applicationMessage.PayloadLength,
+                PayloadSegment = applicationMessage.PayloadSegment, 
                 QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
                 Retain = applicationMessage.Retain,
                 Dup = applicationMessage.Dup,

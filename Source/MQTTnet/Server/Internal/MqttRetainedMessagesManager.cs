@@ -67,7 +67,7 @@ namespace MQTTnet.Server
 
                 lock (_messages)
                 {
-                    var payloadSegment = applicationMessage.GetPayloadSegment();
+                    var payloadSegment = applicationMessage.PayloadSegment;
                     var hasPayload = payloadSegment.Count > 0;
 
                     if (!hasPayload)
@@ -85,7 +85,7 @@ namespace MQTTnet.Server
                         else
                         {
                             if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel ||
-                                !SequenceEqual(existingMessage.GetPayloadSegment(), payloadSegment))
+                                !SequenceEqual(existingMessage.PayloadSegment, payloadSegment))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage;
                                 saveIsRequired = true;

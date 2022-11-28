@@ -63,17 +63,24 @@ namespace MQTTnet.Formatter
             return _buffer;
         }
 
-        public static int GetLengthOfVariableInteger(uint value)
+        public static int GetVariableByteIntegerSize(uint value)
         {
-            var result = 0;
-            var x = value;
-            do
+            if (value <= 127)
             {
-                x /= 128;
-                result++;
-            } while (x > 0);
+                return 1;
+            }
 
-            return result;
+            if (value <= 16383)
+            {
+                return 2;
+            }
+
+            if (value <= 2097151)
+            {
+                return 3;
+            }
+
+            return 4;
         }
 
         public void Reset(int length)
@@ -180,7 +187,7 @@ namespace MQTTnet.Formatter
 
                 _buffer[_position] = (byte)(writtenBytes >> 8);
                 _buffer[_position + 1] = (byte)writtenBytes;
-                
+
                 IncreasePosition(writtenBytes + 2);
             }
         }

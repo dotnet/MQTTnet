@@ -73,6 +73,8 @@ namespace MQTTnet.Formatter
             var buffer = new byte[bufferLength];
             Array.Copy(_buffer, Position + _offset, buffer, 0, bufferLength);
 
+            Position += bufferLength;
+
             return buffer;
         }
 
@@ -133,7 +135,7 @@ namespace MQTTnet.Formatter
 
         public void SetBuffer(byte[] buffer, int offset, int length)
         {
-            _buffer = buffer;
+            _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
             _offset = offset;
 
             Position = 0;
@@ -143,7 +145,9 @@ namespace MQTTnet.Formatter
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ValidateReceiveBuffer(int length)
         {
-            if (_maxPosition < Position + _offset + length)
+            var newPosition = Position + _offset + length;
+
+            if (_maxPosition < newPosition)
             {
                 throw new MqttProtocolViolationException($"Expected at least {Position + length} bytes but there are only {_maxPosition} bytes");
             }

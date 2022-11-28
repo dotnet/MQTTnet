@@ -47,9 +47,11 @@ namespace MQTTnet.Tests.Client
 
                 await managedClient.StartAsync(managedClientOptions);
                 await LongTestDelay();
+                await LongTestDelay();
                 
                 // Send test data.
                 await senderClient.PublishStringAsync("topic1");
+                await LongTestDelay();
                 await LongTestDelay();
                 
                 receivedMessages.AssertReceivedCountEquals(1);

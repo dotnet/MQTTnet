@@ -31,7 +31,7 @@ namespace MQTTnet.AspNetCore
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
 
             var feature = connection.Features.Get<IHttpContextFeature>();
-            if (feature != null)
+            if (feature != null && feature.HttpContext != null)
             {
                 _isOverWebSocket = feature.HttpContext.WebSockets.IsWebSocketRequest;
             }

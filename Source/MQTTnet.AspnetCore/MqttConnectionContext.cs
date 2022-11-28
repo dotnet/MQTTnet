@@ -2,6 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.IO.Pipelines;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using MQTTnet.Adapter;
@@ -10,18 +15,13 @@ using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
-using System;
-using System.IO.Pipelines;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore
 {
     public sealed class MqttConnectionContext : IMqttChannelAdapter
     {
-        readonly AsyncLock _writerLock = new AsyncLock();
         readonly bool? _isOverWebSocket;
+        readonly AsyncLock _writerLock = new AsyncLock();
         PipeReader _input;
         PipeWriter _output;
 
@@ -31,17 +31,22 @@ namespace MQTTnet.AspNetCore
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
 
             var feature = connection.Features.Get<IHttpContextFeature>();
-            if (feature != null && feature.HttpContext != null)
+            if (feature?.HttpContext != null)
             {
                 _isOverWebSocket = feature.HttpContext.WebSockets.IsWebSocketRequest;
             }
 
-            if (Connection.Transport != null)
-            {
-                _input = Connection.Transport.Input;
-                _output = Connection.Transport.Output;
-            }
+            _input = Connection.Transport.Input;
+            _output = Connection.Transport.Output;
         }
+
+        public long BytesReceived { get; private set; }
+
+        public long BytesSent { get; private set; }
+
+        public X509Certificate2 ClientCertificate => Http?.HttpContext?.Connection?.ClientCertificate;
+
+        public ConnectionContext Connection { get; }
 
         public string Endpoint
         {
@@ -63,19 +68,11 @@ namespace MQTTnet.AspNetCore
             }
         }
 
-        public bool IsSecureConnection => Http?.HttpContext?.Request?.IsHttps ?? false;
+        public bool IsReadingPacket { get; private set; }
 
-        public X509Certificate2 ClientCertificate => Http?.HttpContext?.Connection?.ClientCertificate;
-
-        public ConnectionContext Connection { get; }
+        public bool IsSecureConnection => Http?.HttpContext?.Request.IsHttps ?? false;
 
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
-
-        public long BytesSent { get; set; }
-
-        public long BytesReceived { get; set; }
-
-        public bool IsReadingPacket { get; private set; }
 
         IHttpContextFeature Http => Connection.Features.Get<IHttpContextFeature>();
 
@@ -96,6 +93,10 @@ namespace MQTTnet.AspNetCore
             _output?.Complete();
 
             return Task.CompletedTask;
+        }
+
+        public void Dispose()
+        {
         }
 
         public async Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken)
@@ -151,11 +152,11 @@ namespace MQTTnet.AspNetCore
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
                 // completing the channel makes sure that there is no more data read after a protocol error
-                _input?.Complete(e);
-                _output?.Complete(e);
+                _input?.Complete(exception);
+                _output?.Complete(exception);
                 throw;
             }
             finally
@@ -180,6 +181,7 @@ namespace MQTTnet.AspNetCore
                 try
                 {
                     var buffer = PacketFormatterAdapter.Encode(packet);
+                    
                     if (_isOverWebSocket == false)
                     {
                         await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
@@ -201,10 +203,6 @@ namespace MQTTnet.AspNetCore
                     PacketFormatterAdapter.Cleanup();
                 }
             }
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

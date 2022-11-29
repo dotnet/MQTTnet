@@ -108,7 +108,7 @@ namespace MQTTnet.Formatter.V3
                 remainingLength += (uint)publishPacket.Payload.Length;
             }
 
-            var remainingLengthSize = MqttBufferWriter.GetLengthOfVariableInteger(remainingLength);
+            var remainingLengthSize = MqttBufferWriter.GetVariableByteIntegerSize(remainingLength);
 
             var headerSize = FixedHeaderSize + remainingLengthSize;
             var headerOffset = 5 - headerSize;

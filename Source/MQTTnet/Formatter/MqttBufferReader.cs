@@ -51,14 +51,20 @@ namespace MQTTnet.Formatter
         {
             ValidateReceiveBuffer(4);
 
+#if NETCOREAPP3_0_OR_GREATER
+            var value = System.Runtime.InteropServices.MemoryMarshal.Read<uint>(_buffer.AsSpan().Slice(Position));
+            value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+#else
             var byte0 = _buffer[_offset + Position];
             var byte1 = _buffer[_offset + Position + 1];
             var byte2 = _buffer[_offset + Position + 2];
             var byte3 = _buffer[_offset + Position + 3];
 
-            Position += 4;
+            var value = (uint)((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3);
+#endif
 
-            return (uint)((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3);
+            Position += 4;
+            return value;
         }
 
         public byte[] ReadRemainingData()
@@ -89,7 +95,13 @@ namespace MQTTnet.Formatter
 
             ValidateReceiveBuffer(length);
 
-            var result = Encoding.UTF8.GetString(_buffer, Position + _offset, length);
+#if NETCOREAPP3_0_OR_GREATER
+            // AsSpan() version is slightly faster. Not much but at least a little bit.
+            var result = Encoding.UTF8.GetString(_buffer.AsSpan(_offset + Position, length));
+#else
+            var result = Encoding.UTF8.GetString(_buffer, _offset + Position, length);
+#endif            
+
             Position += length;
             return result;
         }
@@ -98,12 +110,18 @@ namespace MQTTnet.Formatter
         {
             ValidateReceiveBuffer(2);
 
-            var msb = _buffer[Position + _offset];
-            var lsb = _buffer[Position + _offset + 1];
+#if NETCOREAPP3_0_OR_GREATER
+            var value = System.Runtime.InteropServices.MemoryMarshal.Read<ushort>(_buffer.AsSpan().Slice(Position));
+            value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+#else
+            var msb = _buffer[_offset + Position];
+            var lsb = _buffer[_offset + Position + 1];
 
+            var value = (ushort)((msb << 8) | lsb);
+#endif
+            
             Position += 2;
-
-            return (ushort)((msb << 8) | lsb);
+            return value;
         }
 
         public uint ReadVariableByteInteger()

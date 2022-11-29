@@ -2,14 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Buffers;
-using System.Linq;
-using System.Runtime.InteropServices;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
+using System;
+using System.Buffers;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace MQTTnet.AspNetCore
 {
@@ -35,20 +35,21 @@ namespace MQTTnet.AspNetCore
                 return false;
             }
 
-            var fixedHeader = copy.First.Span[0];
             if (!TryReadBodyLength(ref copy, out var headerLength, out var bodyLength))
             {
                 return false;
             }
 
+            copy = copy.Slice(headerLength);
             if (copy.Length < bodyLength)
             {
                 return false;
             }
 
             var bodySlice = copy.Slice(0, bodyLength);
-            var bodySegment = AsArraySegment(ref bodySlice);
+            var bodySegment = GetArraySegment(ref bodySlice);
 
+            var fixedHeader = copy.First.Span[0];
             var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySegment, headerLength + bodyLength);
             if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
             {
@@ -62,7 +63,7 @@ namespace MQTTnet.AspNetCore
             return true;
         }
 
-        static ArraySegment<byte> AsArraySegment(ref ReadOnlySequence<byte> input)
+        static ArraySegment<byte> GetArraySegment(ref ReadOnlySequence<byte> input)
         {
             if (input.IsSingleSegment && MemoryMarshal.TryGetArray(input.First, out var segment))
             {
@@ -76,6 +77,28 @@ namespace MQTTnet.AspNetCore
 
         static bool TryReadBodyLength(ref ReadOnlySequence<byte> input, out int headerLength, out int bodyLength)
         {
+            var valueSequence = input.Slice(0, Math.Min(5, input.Length));
+            if (valueSequence.IsSingleSegment)
+            {
+                var valueSpan =
+#if NET5_0_OR_GREATER
+                    valueSequence.FirstSpan;
+#else
+                    valueSequence.First.Span;
+#endif
+                return TryReadBodyLength(valueSpan, out headerLength, out bodyLength);
+            }
+            else
+            {
+                Span<byte> valueSpan = stackalloc byte[8];
+                valueSequence.CopyTo(valueSpan);
+                valueSpan = valueSpan.Slice(0, (int)valueSequence.Length);
+                return TryReadBodyLength(valueSpan, out headerLength, out bodyLength);
+            }
+        }
+
+        static bool TryReadBodyLength(ReadOnlySpan<byte> span, out int headerLength, out int bodyLength)
+        {
             // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
             var multiplier = 1;
             var value = 0;
@@ -84,33 +107,34 @@ namespace MQTTnet.AspNetCore
             headerLength = 0;
             bodyLength = 0;
 
-            var valueSequence = input.Slice(0, Math.Min(5, input.Length));
-            var valueSpan = valueSequence.IsSingleSegment ? valueSequence.First.Span : valueSequence.ToArray();
-
             do
             {
-                if (index == valueSpan.Length)
+                if (index == span.Length)
                 {
                     return false;
                 }
 
-                encodedByte = valueSpan[index];
+                encodedByte = span[index];
                 index++;
 
                 value += (byte)(encodedByte & 127) * multiplier;
                 if (multiplier > 128 * 128 * 128)
                 {
-                    throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", valueSpan.Slice(1, index).ToArray())}).");
+                    ThrowProtocolViolationException(span, index);
                 }
 
                 multiplier *= 128;
             } while ((encodedByte & 128) != 0);
 
-            input = input.Slice(index);
-
             headerLength = index;
             bodyLength = value;
             return true;
+        }
+
+
+        static void ThrowProtocolViolationException(ReadOnlySpan<byte> valueSpan, int index)
+        {
+            throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", valueSpan.Slice(1, index).ToArray())}).");
         }
     }
 }

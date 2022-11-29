@@ -30,6 +30,7 @@ namespace MQTTnet.Benchmarks
             Console.WriteLine("d = UnsubscribeBenchmark");
             Console.WriteLine("e = MessageDeliveryBenchmark");
             Console.WriteLine("f = AsyncLockBenchmark");
+            Console.WriteLine("g = ReaderExtensionsBenchmark");
 
             var pressedKey = Console.ReadKey(true);
             switch (pressedKey.KeyChar)
@@ -78,6 +79,9 @@ namespace MQTTnet.Benchmarks
                     break;
                 case 'f':
                     BenchmarkRunner.Run<AsyncLockBenchmark>();
+                    break;
+                case 'g':
+                    BenchmarkRunner.Run<ReaderExtensionsBenchmark>();
                     break;
             }
 

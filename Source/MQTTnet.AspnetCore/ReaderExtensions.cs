@@ -40,6 +40,7 @@ namespace MQTTnet.AspNetCore
                 return false;
             }
 
+            var fixedHeader = copy.First.Span[0];
             copy = copy.Slice(headerLength);
             if (copy.Length < bodyLength)
             {
@@ -47,9 +48,8 @@ namespace MQTTnet.AspNetCore
             }
 
             var bodySlice = copy.Slice(0, bodyLength);
-            var bodySegment = GetArraySegment(ref bodySlice);
-
-            var fixedHeader = copy.First.Span[0];
+            var bodySegment = GetArraySegment(ref bodySlice); 
+    
             var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySegment, headerLength + bodyLength);
             if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
             {

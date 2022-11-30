@@ -1,6 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Adapter;
+using MQTTnet.AspNetCore;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
@@ -9,7 +10,6 @@ using System.Buffers;
 using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Benchmarks
@@ -48,7 +48,7 @@ namespace MQTTnet.Benchmarks
             var input = PipeReader.Create(stream);
 
             while (true)
-            {               
+            {
                 ReadResult readResult;
                 var readTask = input.ReadAsync();
                 if (readTask.IsCompleted)
@@ -117,7 +117,7 @@ namespace MQTTnet.Benchmarks
                 {
                     if (!buffer.IsEmpty)
                     {
-                        if (ReaderExtensions_After.TryDecode(mqttPacketFormatter, buffer, out var packet, out consumed, out observed, out var received))
+                        if (ReaderExtensions.TryDecode(mqttPacketFormatter, buffer, out var packet, out consumed, out observed, out var received))
                         {
                             break;
                         }
@@ -180,8 +180,7 @@ namespace MQTTnet.Benchmarks
                     formatter.DetectProtocolVersion(receivedMqttPacket);
                 }
 
-                // https://github.com/dotnet/MQTTnet/issues/1592
-                // packet = formatter.Decode(receivedMqttPacket);
+                packet = formatter.Decode(receivedMqttPacket);
                 consumed = bodySlice.End;
                 observed = bodySlice.End;
                 bytesRead = headerLength + bodyLength;
@@ -238,131 +237,5 @@ namespace MQTTnet.Benchmarks
             }
         }
 
-
-        public static class ReaderExtensions_After
-        {
-            public static bool TryDecode(MqttPacketFormatterAdapter formatter,
-                in ReadOnlySequence<byte> input,
-                out MqttPacket packet,
-                out SequencePosition consumed,
-                out SequencePosition observed,
-                out int bytesRead)
-            {
-                if (formatter == null) throw new ArgumentNullException(nameof(formatter));
-
-                packet = null;
-                consumed = input.Start;
-                observed = input.End;
-                bytesRead = 0;
-                var copy = input;
-
-                if (copy.Length < 2)
-                {
-                    return false;
-                }
-
-                if (!TryReadBodyLength(ref copy, out var headerLength, out var bodyLength))
-                {
-                    return false;
-                }
-
-                copy = copy.Slice(headerLength);
-                if (copy.Length < bodyLength)
-                {
-                    return false;
-                }
-
-                var bodySlice = copy.Slice(0, bodyLength);
-                var bodySegment = GetArraySegment(ref bodySlice);
-
-                var fixedHeader = copy.First.Span[0];
-                var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySegment, headerLength + bodyLength);
-                if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
-                {
-                    formatter.DetectProtocolVersion(receivedMqttPacket);
-                }
-
-                // https://github.com/dotnet/MQTTnet/issues/1592
-                //  packet = formatter.Decode(receivedMqttPacket);
-                consumed = bodySlice.End;
-                observed = bodySlice.End;
-                bytesRead = headerLength + bodyLength;
-                return true;
-            }
-
-            static ArraySegment<byte> GetArraySegment(ref ReadOnlySequence<byte> input)
-            {
-                if (input.IsSingleSegment && MemoryMarshal.TryGetArray(input.First, out var segment))
-                {
-                    return segment;
-                }
-
-                // Should be rare
-                var array = input.ToArray();
-                return new ArraySegment<byte>(array);
-            }
-
-            static bool TryReadBodyLength(ref ReadOnlySequence<byte> input, out int headerLength, out int bodyLength)
-            {
-                var valueSequence = input.Slice(0, Math.Min(5, input.Length));
-                if (valueSequence.IsSingleSegment)
-                {
-                    var valueSpan =
-#if NET5_0_OR_GREATER
-                        valueSequence.FirstSpan;
-#else
-                    valueSequence.First.Span;
-#endif
-                    return TryReadBodyLength(valueSpan, out headerLength, out bodyLength);
-                }
-                else
-                {
-                    Span<byte> valueSpan = stackalloc byte[8];
-                    valueSequence.CopyTo(valueSpan);
-                    valueSpan = valueSpan.Slice(0, (int)valueSequence.Length);
-                    return TryReadBodyLength(valueSpan, out headerLength, out bodyLength);
-                }
-            }
-
-            static bool TryReadBodyLength(ReadOnlySpan<byte> span, out int headerLength, out int bodyLength)
-            {
-                // Alorithm taken from https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html.
-                var multiplier = 1;
-                var value = 0;
-                byte encodedByte;
-                var index = 1;
-                headerLength = 0;
-                bodyLength = 0;
-
-                do
-                {
-                    if (index == span.Length)
-                    {
-                        return false;
-                    }
-
-                    encodedByte = span[index];
-                    index++;
-
-                    value += (byte)(encodedByte & 127) * multiplier;
-                    if (multiplier > 128 * 128 * 128)
-                    {
-                        ThrowProtocolViolationException(span, index);
-                    }
-
-                    multiplier *= 128;
-                } while ((encodedByte & 128) != 0);
-
-                headerLength = index;
-                bodyLength = value;
-                return true;
-            }
-
-
-            static void ThrowProtocolViolationException(ReadOnlySpan<byte> valueSpan, int index)
-            {
-                throw new MqttProtocolViolationException($"Remaining length is invalid (Data={string.Join(",", valueSpan.Slice(1, index).ToArray())}).");
-            }
-        }
     }
 }

@@ -34,7 +34,7 @@ namespace MQTTnet.Formatter
             ValidateReceiveBuffer(length);
 
             var result = new byte[length];
-            Array.Copy(_buffer, Position + _offset, result, 0, length);
+            Memory.Copy(_buffer, Position + _offset, result, 0, length);
             Position += length;
 
             return result;
@@ -77,7 +77,7 @@ namespace MQTTnet.Formatter
             }
 
             var buffer = new byte[bufferLength];
-            Array.Copy(_buffer, Position + _offset, buffer, 0, bufferLength);
+            Memory.Copy(_buffer, Position + _offset, buffer, 0, bufferLength);
 
             Position += bufferLength;
 

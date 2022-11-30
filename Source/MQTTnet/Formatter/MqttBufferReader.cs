@@ -157,6 +157,11 @@ namespace MQTTnet.Formatter
             _position = _offset + position;
         }
 
+        public void SetBuffer(ArraySegment<byte> buffer)
+        {
+            SetBuffer(buffer.Array, buffer.Offset, buffer.Count);
+        }
+
         public void SetBuffer(byte[] buffer, int offset, int length)
         {
             _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));

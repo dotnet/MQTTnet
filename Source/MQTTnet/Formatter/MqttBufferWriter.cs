@@ -63,17 +63,30 @@ namespace MQTTnet.Formatter
             return _buffer;
         }
 
-        public static int GetLengthOfVariableInteger(uint value)
+        public static int GetVariableByteIntegerSize(uint value)
         {
-            var result = 0;
-            var x = value;
-            do
-            {
-                x /= 128;
-                result++;
-            } while (x > 0);
+            // From RFC: Table 2.4 Size of Remaining Length field
 
-            return result;
+            // 0 (0x00) to 127 (0x7F)
+            if (value <= 127)
+            {
+                return 1;
+            }
+
+            // 128 (0x80, 0x01) to 16 383 (0xFF, 0x7F)
+            if (value <= 16383)
+            {
+                return 2;
+            }
+
+            // 16 384 (0x80, 0x80, 0x01) to 2 097 151 (0xFF, 0xFF, 0x7F)
+            if (value <= 2097151)
+            {
+                return 3;
+            }
+
+            // 2 097 152 (0x80, 0x80, 0x80, 0x01) to 268 435 455 (0xFF, 0xFF, 0xFF, 0x7F)
+            return 4;
         }
 
         public void Reset(int length)
@@ -90,18 +103,12 @@ namespace MQTTnet.Formatter
 
         public void Write(MqttBufferWriter propertyWriter)
         {
-            if (propertyWriter is MqttBufferWriter writer)
-            {
-                WriteBinary(writer._buffer, 0, writer.Length);
-                return;
-            }
-
             if (propertyWriter == null)
             {
                 throw new ArgumentNullException(nameof(propertyWriter));
             }
 
-            throw new InvalidOperationException($"{nameof(propertyWriter)} must be of type {nameof(MqttBufferWriter)}");
+            WriteBinary(propertyWriter._buffer, 0, propertyWriter.Length);
         }
 
         public void WriteBinary(byte[] buffer, int offset, int count)
@@ -180,7 +187,7 @@ namespace MQTTnet.Formatter
 
                 _buffer[_position] = (byte)(writtenBytes >> 8);
                 _buffer[_position + 1] = (byte)writtenBytes;
-                
+
                 IncreasePosition(writtenBytes + 2);
             }
         }

@@ -8,7 +8,7 @@ namespace MQTTnet.Benchmarks
     [SimpleJob(RuntimeMoniker.Net60)]
     [RPlotExporter, RankColumn]
     [MemoryDiagnoser]
-    public class RoundtripProcessingBenchmark
+    public class RoundtripProcessingBenchmark : BaseBenchmark
     {
         [GlobalSetup]
         public void GlobalSetup()

@@ -2,54 +2,25 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using BenchmarkDotNet.Attributes;
-using MQTTnet.Adapter;
-using MQTTnet.Internal;
-using MQTTnet.Packets;
 using System;
 using System.IO;
 using System.Threading;
+using BenchmarkDotNet.Attributes;
+using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
+using MQTTnet.Packets;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Benchmarks
 {
     [MemoryDiagnoser]
-    public sealed class ChannelAdapterBenchmark
+    public sealed class ChannelAdapterBenchmark : BaseBenchmark
     {
         MqttChannelAdapter _channelAdapter;
         int _iterations;
-        MemoryStream _stream;
         MqttPublishPacket _packet;
-
-        [GlobalSetup]
-        public void Setup()
-        {
-            _packet = new MqttPublishPacket
-            {
-                Topic = "A"
-            };
-
-            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
-            
-            var serializedPacket = Join(serializer.Encode(_packet).Join());
-
-            _iterations = 10000;
-
-            _stream = new MemoryStream(_iterations * serializedPacket.Length);
-
-            for (var i = 0; i < _iterations; i++)
-            {
-                _stream.Write(serializedPacket, 0, serializedPacket.Length);
-            }
-
-            _stream.Position = 0;
-
-            var channel = new MemoryMqttChannel(_stream);
-            
-            _channelAdapter = new MqttChannelAdapter(channel, serializer, null, new MqttNetEventLogger());
-        }
+        MemoryStream _stream;
 
         [Benchmark]
         public void Receive_10000_Messages()
@@ -75,6 +46,34 @@ namespace MQTTnet.Benchmarks
             }
 
             _stream.Position = 0;
+        }
+
+        [GlobalSetup]
+        public void Setup()
+        {
+            _packet = new MqttPublishPacket
+            {
+                Topic = "A"
+            };
+
+            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
+
+            var serializedPacket = Join(serializer.Encode(_packet).Join());
+
+            _iterations = 10000;
+
+            _stream = new MemoryStream(_iterations * serializedPacket.Length);
+
+            for (var i = 0; i < _iterations; i++)
+            {
+                _stream.Write(serializedPacket, 0, serializedPacket.Length);
+            }
+
+            _stream.Position = 0;
+
+            var channel = new MemoryMqttChannel(_stream);
+
+            _channelAdapter = new MqttChannelAdapter(channel, serializer, null, new MqttNetEventLogger());
         }
 
         static byte[] Join(params ArraySegment<byte>[] chunks)

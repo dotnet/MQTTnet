@@ -37,7 +37,7 @@ namespace MQTTnet.Formatter
 
         public byte[] ToArray()
         {
-            if (Packet.Count == 0)
+            if (Payload.Count == 0)
             {
                 return Packet.ToArray();
             }
@@ -51,7 +51,7 @@ namespace MQTTnet.Formatter
         
         public ArraySegment<byte> Join()
         {
-            if (Packet.Count == 0)
+            if (Payload.Count == 0)
             {
                 return Packet;
             }

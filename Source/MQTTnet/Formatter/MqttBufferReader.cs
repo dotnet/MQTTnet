@@ -16,7 +16,7 @@ namespace MQTTnet.Formatter
         int _maxPosition;
         int _offset;
 
-        public int BytesLeft => _maxPosition - Position;
+        public int BytesLeft => _maxPosition - _offset - Position;
 
         public bool EndOfStream => BytesLeft == 0;
 
@@ -44,7 +44,7 @@ namespace MQTTnet.Formatter
         {
             ValidateReceiveBuffer(1);
 
-            return _buffer[Position++];
+            return _buffer[_offset + Position++];
         }
 
         public uint ReadFourByteInteger()
@@ -52,8 +52,11 @@ namespace MQTTnet.Formatter
             ValidateReceiveBuffer(4);
 
 #if NETCOREAPP3_0_OR_GREATER
-            var value = System.Runtime.InteropServices.MemoryMarshal.Read<uint>(_buffer.AsSpan().Slice(Position));
-            value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+            var value = System.Runtime.InteropServices.MemoryMarshal.Read<uint>(_buffer.AsSpan(_offset + Position));
+            if (BitConverter.IsLittleEndian)
+            {
+                value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+            }
 #else
             var byte0 = _buffer[_offset + Position];
             var byte1 = _buffer[_offset + Position + 1];
@@ -111,15 +114,18 @@ namespace MQTTnet.Formatter
             ValidateReceiveBuffer(2);
 
 #if NETCOREAPP3_0_OR_GREATER
-            var value = System.Runtime.InteropServices.MemoryMarshal.Read<ushort>(_buffer.AsSpan().Slice(Position));
-            value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+            var value = System.Runtime.InteropServices.MemoryMarshal.Read<ushort>(_buffer.AsSpan(_offset + Position));
+            if (BitConverter.IsLittleEndian)
+            {
+                value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+            }
 #else
             var msb = _buffer[_offset + Position];
             var lsb = _buffer[_offset + Position + 1];
 
             var value = (ushort)((msb << 8) | lsb);
 #endif
-            
+
             Position += 2;
             return value;
         }
@@ -157,7 +163,7 @@ namespace MQTTnet.Formatter
             _offset = offset;
 
             Position = 0;
-            _maxPosition = length;
+            _maxPosition = offset + length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -160,10 +160,6 @@ namespace MQTTnet.Tests.Formatter
 
                     for (var i = 0; i < NumBufferElements; i++)
                     {
-                        if (i > 654)
-                        {
-                            int x = 0;
-                        }
                         var nextElementType = (ElementReference.BufferElementType)rnd.Next(ElementReference.NumBufferElementTypes);
 
                         byte[] elementBytes = null;

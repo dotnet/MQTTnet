@@ -67,7 +67,7 @@ namespace MQTTnet.Formatter
         public static int GetVariableByteIntegerSize(uint value)
         {
             // From RFC: Table 2.4 Size of Remaining Length field
-        
+
             // 0 (0x00) to 127 (0x7F)
             if (value <= 127)
             {
@@ -104,18 +104,12 @@ namespace MQTTnet.Formatter
 
         public void Write(MqttBufferWriter propertyWriter)
         {
-            if (propertyWriter is MqttBufferWriter writer)
-            {
-                WriteBinary(writer._buffer, 0, writer.Length);
-                return;
-            }
-
             if (propertyWriter == null)
             {
                 throw new ArgumentNullException(nameof(propertyWriter));
             }
 
-            throw new InvalidOperationException($"{nameof(propertyWriter)} must be of type {nameof(MqttBufferWriter)}");
+            WriteBinary(propertyWriter._buffer, 0, propertyWriter.Length);
         }
 
         public void WriteBinary(byte[] buffer, int offset, int count)

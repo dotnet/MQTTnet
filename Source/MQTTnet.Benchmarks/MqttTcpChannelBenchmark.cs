@@ -17,7 +17,7 @@ namespace MQTTnet.Benchmarks
 {
     [SimpleJob(RuntimeMoniker.Net60)]
     [MemoryDiagnoser]
-    public sealed class MqttTcpChannelBenchmark
+    public class MqttTcpChannelBenchmark : BaseBenchmark
     {
         MqttServer _mqttServer;
         IMqttChannel _serverChannel;

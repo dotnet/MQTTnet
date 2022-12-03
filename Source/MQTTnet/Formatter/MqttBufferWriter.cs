@@ -6,6 +6,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Text;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter
@@ -125,7 +126,7 @@ namespace MQTTnet.Formatter
 
             EnsureAdditionalCapacity(count);
 
-            Array.Copy(buffer, offset, _buffer, _position, count);
+            Memory.Copy(buffer, offset, _buffer, _position, count);
             IncreasePosition(count);
         }
 
@@ -149,7 +150,7 @@ namespace MQTTnet.Formatter
                 _buffer[_position] = (byte)(valueLength >> 8);
                 _buffer[_position + 1] = (byte)valueLength;
 
-                Array.Copy(value, 0, _buffer, _position + 2, valueLength);
+                Memory.Copy(value, 0, _buffer, _position + 2, valueLength);
                 IncreasePosition(valueLength + 2);
             }
         }

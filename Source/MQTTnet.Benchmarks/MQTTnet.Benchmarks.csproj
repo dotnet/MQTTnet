@@ -1,6 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputType>Exe</OutputType>
         <DebugType>Full</DebugType>
         <TargetFrameworks>net6.0</TargetFrameworks>

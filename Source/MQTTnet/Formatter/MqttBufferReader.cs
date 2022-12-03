@@ -2,25 +2,27 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Runtime.CompilerServices;
-using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
+using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MQTTnet.Formatter
 {
     public sealed class MqttBufferReader
     {
         byte[] _buffer = EmptyBuffer.Array;
-        int _maxPosition;
         int _offset;
+        int _position;
+        int _maxPosition;
 
-        public int BytesLeft => _maxPosition - Position;
+        public int BytesLeft => _maxPosition - _position;
 
         public bool EndOfStream => BytesLeft == 0;
 
-        public int Position { get; private set; }
+        public int Position => _position - _offset;
 
         public byte[] ReadBinaryData()
         {
@@ -34,8 +36,8 @@ namespace MQTTnet.Formatter
             ValidateReceiveBuffer(length);
 
             var result = new byte[length];
-            Array.Copy(_buffer, Position + _offset, result, 0, length);
-            Position += length;
+            Memory.Copy(_buffer, _position, result, 0, length);
+            _position += length;
 
             return result;
         }
@@ -43,8 +45,7 @@ namespace MQTTnet.Formatter
         public byte ReadByte()
         {
             ValidateReceiveBuffer(1);
-
-            return _buffer[Position++];
+            return _buffer[_position++];
         }
 
         public uint ReadFourByteInteger()
@@ -52,34 +53,35 @@ namespace MQTTnet.Formatter
             ValidateReceiveBuffer(4);
 
 #if NETCOREAPP3_0_OR_GREATER
-            var value = System.Runtime.InteropServices.MemoryMarshal.Read<uint>(_buffer.AsSpan().Slice(Position));
-            value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+            var value = MemoryMarshal.Read<uint>(_buffer.AsSpan(_position));
+            if (BitConverter.IsLittleEndian)
+            {
+                value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+            }
 #else
-            var byte0 = _buffer[_offset + Position];
-            var byte1 = _buffer[_offset + Position + 1];
-            var byte2 = _buffer[_offset + Position + 2];
-            var byte3 = _buffer[_offset + Position + 3];
+            var byte0 = _buffer[_position];
+            var byte1 = _buffer[_position + 1];
+            var byte2 = _buffer[_position + 2];
+            var byte3 = _buffer[_position + 3];
 
             var value = (uint)((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3);
 #endif
 
-            Position += 4;
+            _position += 4;
             return value;
         }
 
         public byte[] ReadRemainingData()
         {
-            var bufferLength = _maxPosition - Position - _offset;
-
+            var bufferLength = BytesLeft;
             if (bufferLength == 0)
             {
                 return EmptyBuffer.Array;
             }
 
             var buffer = new byte[bufferLength];
-            Array.Copy(_buffer, Position + _offset, buffer, 0, bufferLength);
-
-            Position += bufferLength;
+            Memory.Copy(_buffer, _position, buffer, 0, bufferLength);
+            _position += bufferLength;
 
             return buffer;
         }
@@ -97,12 +99,12 @@ namespace MQTTnet.Formatter
 
 #if NETCOREAPP3_0_OR_GREATER
             // AsSpan() version is slightly faster. Not much but at least a little bit.
-            var result = Encoding.UTF8.GetString(_buffer.AsSpan(_offset + Position, length));
+            var result = Encoding.UTF8.GetString(_buffer.AsSpan(_position, length));
 #else
-            var result = Encoding.UTF8.GetString(_buffer, _offset + Position, length);
+            var result = Encoding.UTF8.GetString(_buffer, _position, length);
 #endif            
 
-            Position += length;
+            _position += length;
             return result;
         }
 
@@ -111,16 +113,19 @@ namespace MQTTnet.Formatter
             ValidateReceiveBuffer(2);
 
 #if NETCOREAPP3_0_OR_GREATER
-            var value = System.Runtime.InteropServices.MemoryMarshal.Read<ushort>(_buffer.AsSpan().Slice(Position));
-            value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+            var value = MemoryMarshal.Read<ushort>(_buffer.AsSpan(_position));
+            if (BitConverter.IsLittleEndian)
+            {
+                value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+            }
 #else
-            var msb = _buffer[_offset + Position];
-            var lsb = _buffer[_offset + Position + 1];
+            var msb = _buffer[_position];
+            var lsb = _buffer[_position + 1];
 
             var value = (ushort)((msb << 8) | lsb);
 #endif
-            
-            Position += 2;
+
+            _position += 2;
             return value;
         }
 
@@ -148,26 +153,29 @@ namespace MQTTnet.Formatter
 
         public void Seek(int position)
         {
-            Position = position;
+            _position = _offset + position;
+        }
+
+        public void SetBuffer(ArraySegment<byte> buffer)
+        {
+            SetBuffer(buffer.Array, buffer.Offset, buffer.Count);
         }
 
         public void SetBuffer(byte[] buffer, int offset, int length)
         {
             _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
             _offset = offset;
-
-            Position = 0;
-            _maxPosition = length;
+            _position = offset;
+            _maxPosition = offset + length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ValidateReceiveBuffer(int length)
         {
-            var newPosition = Position + _offset + length;
-
+            var newPosition = _position + length;
             if (_maxPosition < newPosition)
             {
-                throw new MqttProtocolViolationException($"Expected at least {Position + length} bytes but there are only {_maxPosition} bytes");
+                throw new MqttProtocolViolationException($"Expected at least {newPosition} bytes but there are only {_maxPosition} bytes");
             }
         }
     }

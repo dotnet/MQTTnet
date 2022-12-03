@@ -126,7 +126,7 @@ namespace MQTTnet.Formatter
 
             EnsureAdditionalCapacity(count);
 
-            Memory.Copy(buffer, offset, _buffer, _position, count);
+            MqttMemoryHelper.Copy(buffer, offset, _buffer, _position, count);
             IncreasePosition(count);
         }
 
@@ -150,7 +150,7 @@ namespace MQTTnet.Formatter
                 _buffer[_position] = (byte)(valueLength >> 8);
                 _buffer[_position + 1] = (byte)valueLength;
 
-                Memory.Copy(value, 0, _buffer, _position + 2, valueLength);
+                MqttMemoryHelper.Copy(value, 0, _buffer, _position + 2, valueLength);
                 IncreasePosition(valueLength + 2);
             }
         }

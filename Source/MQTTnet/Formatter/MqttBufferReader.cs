@@ -2,21 +2,23 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
+using MQTTnet.Exceptions;
+using MQTTnet.Internal;
+#if NETCOREAPP3_0_OR_GREATER
+using System.Buffers.Binary;
+#endif
 
 namespace MQTTnet.Formatter
 {
     public sealed class MqttBufferReader
     {
         byte[] _buffer = EmptyBuffer.Array;
+        int _maxPosition;
         int _offset;
         int _position;
-        int _maxPosition;
 
         public int BytesLeft => _maxPosition - _position;
 
@@ -36,7 +38,7 @@ namespace MQTTnet.Formatter
             ValidateReceiveBuffer(length);
 
             var result = new byte[length];
-            Memory.Copy(_buffer, _position, result, 0, length);
+            MqttMemoryHelper.Copy(_buffer, _position, result, 0, length);
             _position += length;
 
             return result;
@@ -53,11 +55,7 @@ namespace MQTTnet.Formatter
             ValidateReceiveBuffer(4);
 
 #if NETCOREAPP3_0_OR_GREATER
-            var value = MemoryMarshal.Read<uint>(_buffer.AsSpan(_position));
-            if (BitConverter.IsLittleEndian)
-            {
-                value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
-            }
+            var value = BinaryPrimitives.ReadUInt32BigEndian(_buffer.AsSpan(_position));
 #else
             var byte0 = _buffer[_position];
             var byte1 = _buffer[_position + 1];
@@ -80,7 +78,7 @@ namespace MQTTnet.Formatter
             }
 
             var buffer = new byte[bufferLength];
-            Memory.Copy(_buffer, _position, buffer, 0, bufferLength);
+            MqttMemoryHelper.Copy(_buffer, _position, buffer, 0, bufferLength);
             _position += bufferLength;
 
             return buffer;
@@ -102,7 +100,7 @@ namespace MQTTnet.Formatter
             var result = Encoding.UTF8.GetString(_buffer.AsSpan(_position, length));
 #else
             var result = Encoding.UTF8.GetString(_buffer, _position, length);
-#endif            
+#endif
 
             _position += length;
             return result;
@@ -113,11 +111,7 @@ namespace MQTTnet.Formatter
             ValidateReceiveBuffer(2);
 
 #if NETCOREAPP3_0_OR_GREATER
-            var value = MemoryMarshal.Read<ushort>(_buffer.AsSpan(_position));
-            if (BitConverter.IsLittleEndian)
-            {
-                value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
-            }
+            var value = BinaryPrimitives.ReadUInt16BigEndian(_buffer.AsSpan(_position));
 #else
             var msb = _buffer[_position];
             var lsb = _buffer[_position + 1];

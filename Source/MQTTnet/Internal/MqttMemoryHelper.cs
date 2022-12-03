@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace MQTTnet.Internal
 {
-    public static class Memory
+    public static class MqttMemoryHelper
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Copy(byte[] source, int sourceIndex, byte[] destination, int destinationIndex, int length)
@@ -13,11 +13,11 @@ namespace MQTTnet.Internal
 #elif NET461_OR_GREATER || NETSTANDARD1_3_OR_GREATER
             unsafe
             {
-                fixed (byte* pSoure = &source[sourceIndex])
+                fixed (byte* sourceHandle = &source[sourceIndex])
                 {
-                    fixed (byte* pDestination = &destination[destinationIndex])
+                    fixed (byte* destinationHandle = &destination[destinationIndex])
                     {
-                        System.Buffer.MemoryCopy(pSoure, pDestination, length, length);
+                        System.Buffer.MemoryCopy(sourceHandle, destinationHandle, length, length);
                     }
                 }
             }

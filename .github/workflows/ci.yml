@@ -56,7 +56,7 @@ jobs:
         run: vstest.console.exe Source\MQTTnet.Tests\bin\Release\net6.0\MQTTnet.Tests.dll
 
       - name: ASP.NET Tests
-        run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\net6.0\MQTTnet.AspNetCore.Tests.dll
+        run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
 
       - name: Publish MyGet nugets
         if: ${{ github.event_name == 'push' }}

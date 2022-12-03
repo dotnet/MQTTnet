@@ -43,8 +43,8 @@ namespace MQTTnet.Formatter
             }
 
             var buffer = new byte[Length];
-            Array.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
-            Array.Copy(Payload.Array, Payload.Offset, buffer, Packet.Count, Payload.Count);
+            Memory.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
+            Memory.Copy(Payload.Array, Payload.Offset, buffer, Packet.Count, Payload.Count);
 
             return buffer;
         }
@@ -57,8 +57,8 @@ namespace MQTTnet.Formatter
             }
 
             var buffer = new byte[Length];
-            Array.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
-            Array.Copy(Payload.Array, Payload.Offset, buffer, Packet.Count, Payload.Count);
+            Memory.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
+            Memory.Copy(Payload.Array, Payload.Offset, buffer, Packet.Count, Payload.Count);
 
             return new ArraySegment<byte>(buffer);
         }

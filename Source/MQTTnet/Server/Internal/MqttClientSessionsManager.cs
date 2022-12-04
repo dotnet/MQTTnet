@@ -28,7 +28,6 @@ namespace MQTTnet.Server
         readonly MqttServerEventContainer _eventContainer;
         readonly MqttNetSourceLogger _logger;
         readonly MqttServerOptions _options;
-        readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
 
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttNetLogger _rootLogger;
@@ -166,7 +165,7 @@ namespace MQTTnet.Server
                         continue;
                     }
 
-                    var newPublishPacket = _packetFactories.Publish.Create(applicationMessage);
+                    var newPublishPacket = MqttPacketFactories.Publish.Create(applicationMessage);
                     newPublishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
                     newPublishPacket.SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers;
 
@@ -288,7 +287,7 @@ namespace MQTTnet.Server
                 }
 
                 var validatingConnectionEventArgs = await ValidateConnection(connectPacket, channelAdapter).ConfigureAwait(false);
-                var connAckPacket = _packetFactories.ConnAck.Create(validatingConnectionEventArgs);
+                var connAckPacket = MqttPacketFactories.ConnAck.Create(validatingConnectionEventArgs);
 
                 if (validatingConnectionEventArgs.ReasonCode != MqttConnectReasonCode.Success)
                 {
@@ -430,7 +429,7 @@ namespace MQTTnet.Server
             {
                 foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
                 {
-                    var publishPacket = _packetFactories.Publish.Create(retainedMessageMatch);
+                    var publishPacket = MqttPacketFactories.Publish.Create(retainedMessageMatch);
                     clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
                 }
             }

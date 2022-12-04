@@ -39,14 +39,13 @@ namespace MQTTnet.Server
             IMqttNetLogger logger)
         {
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
-            _eventContainer = eventContainer;
+            _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
-
+            _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
+            
             ChannelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
             Endpoint = channelAdapter.Endpoint;
-
             Session = session ?? throw new ArgumentNullException(nameof(session));
-            _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
 
             if (logger == null)
             {
@@ -91,11 +90,11 @@ namespace MQTTnet.Server
 
             Session.LatestConnectPacket = _connectPacket;
             Session.WillMessageSent = false;
-
-            var cancellationToken = _cancellationToken.Token;
-
+            
             try
             {
+                var cancellationToken = _cancellationToken.Token;
+                
                 _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default)
                     .ConfigureAwait(false);
 
@@ -107,7 +106,7 @@ namespace MQTTnet.Server
             {
                 IsRunning = false;
 
-                _cancellationToken?.Cancel();
+                _cancellationToken?.TryCancel();
                 _cancellationToken?.Dispose();
                 _cancellationToken = null;
             }
@@ -550,15 +549,7 @@ namespace MQTTnet.Server
 
         void StopInternal()
         {
-            try
-            {
-                _cancellationToken?.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-                // This can happen when connections are created and dropped very quickly.
-                // It is not an issue if the cancellation token cannot be canceled multiple times.
-            }
+            _cancellationToken?.TryCancel();
         }
 
         async Task TrySendDisconnectPacket(MqttDisconnectReasonCode reasonCode)

@@ -26,6 +26,8 @@ namespace MQTTnet.Tests.Server
                 var dummyClient = await testEnvironment.ConnectClient(o => o.WithClientId("A").WithCleanSession(false));
                 await dummyClient.SubscribeAsync("#", MqttQualityOfServiceLevel.AtLeastOnce);
                 dummyClient.Dispose();
+
+                await LongTestDelay();
                 
                 // Now inject messages which are appended to the queue of the client.
                 await server.InjectApplicationMessage("T", "0", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);

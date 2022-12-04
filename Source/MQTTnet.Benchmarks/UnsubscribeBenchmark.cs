@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using BenchmarkDotNet.Attributes;
 using MQTTnet.Client;
 using MQTTnet.Server;
@@ -7,7 +11,7 @@ using System.Linq;
 namespace MQTTnet.Benchmarks
 {
     [MemoryDiagnoser]
-    public class UnsubscribeBenchmark
+    public class UnsubscribeBenchmark : BaseBenchmark 
     {
         MqttServer _mqttServer;
         IMqttClient _mqttClient;

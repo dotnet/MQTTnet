@@ -2,40 +2,51 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.IO.Pipelines;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
-using MQTTnet.Packets;
-using System;
-using System.IO.Pipelines;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 using MQTTnet.Internal;
+using MQTTnet.Packets;
 
 namespace MQTTnet.AspNetCore
 {
     public sealed class MqttConnectionContext : IMqttChannelAdapter
     {
+        readonly bool? _isOverWebSocket;
         readonly AsyncLock _writerLock = new AsyncLock();
-        
         PipeReader _input;
         PipeWriter _output;
-        
+
         public MqttConnectionContext(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
         {
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
 
-            if (Connection.Transport != null)
+            var feature = connection.Features.Get<IHttpContextFeature>();
+            if (feature?.HttpContext != null)
             {
-                _input = Connection.Transport.Input;
-                _output = Connection.Transport.Output;
+                _isOverWebSocket = feature.HttpContext.WebSockets.IsWebSocketRequest;
             }
+
+            _input = Connection.Transport.Input;
+            _output = Connection.Transport.Output;
         }
+
+        public long BytesReceived { get; private set; }
+
+        public long BytesSent { get; private set; }
+
+        public X509Certificate2 ClientCertificate => Http?.HttpContext?.Connection?.ClientCertificate;
+
+        public ConnectionContext Connection { get; }
 
         public string Endpoint
         {
@@ -57,19 +68,11 @@ namespace MQTTnet.AspNetCore
             }
         }
 
-        public bool IsSecureConnection => Http?.HttpContext?.Request?.IsHttps ?? false;
-
-        public X509Certificate2 ClientCertificate => Http?.HttpContext?.Connection?.ClientCertificate;
-
-        public ConnectionContext Connection { get; }
-        
-        public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
-
-        public long BytesSent { get; set; }
-
-        public long BytesReceived { get; set; }
-
         public bool IsReadingPacket { get; private set; }
+
+        public bool IsSecureConnection => Http?.HttpContext?.Request.IsHttps ?? false;
+
+        public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
         IHttpContextFeature Http => Connection.Features.Get<IHttpContextFeature>();
 
@@ -90,6 +93,10 @@ namespace MQTTnet.AspNetCore
             _output?.Complete();
 
             return Task.CompletedTask;
+        }
+
+        public void Dispose()
+        {
         }
 
         public async Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken)
@@ -145,11 +152,11 @@ namespace MQTTnet.AspNetCore
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
                 // completing the channel makes sure that there is no more data read after a protocol error
-                _input?.Complete(e);
-                _output?.Complete(e);
+                _input?.Complete(exception);
+                _output?.Complete(exception);
                 throw;
             }
             finally
@@ -169,25 +176,33 @@ namespace MQTTnet.AspNetCore
 
         public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
-            var formatter = PacketFormatterAdapter;
-            
             using (await _writerLock.EnterAsync(cancellationToken).ConfigureAwait(false))
             {
-                var buffer = formatter.Encode(packet);
-                var msg = buffer.Join().AsMemory();
-                var output = _output;
-                var result = await output.WriteAsync(msg, cancellationToken).ConfigureAwait(false);
-                if (result.IsCompleted)
+                try
                 {
-                    BytesSent += msg.Length;
+                    var buffer = PacketFormatterAdapter.Encode(packet);
+                    
+                    if (_isOverWebSocket == false)
+                    {
+                        await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
+                        if (buffer.Payload.Count > 0)
+                        {
+                            await _output.WriteAsync(buffer.Payload, cancellationToken).ConfigureAwait(false);
+                        }
+                    }
+                    else
+                    {
+                        var bufferSegment = buffer.Join();
+                        await _output.WriteAsync(bufferSegment, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    BytesSent += buffer.Length;
                 }
-
-                PacketFormatterAdapter.Cleanup();
+                finally
+                {
+                    PacketFormatterAdapter.Cleanup();
+                }
             }
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

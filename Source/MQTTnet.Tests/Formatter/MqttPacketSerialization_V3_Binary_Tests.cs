@@ -15,7 +15,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Tests.Extensions;
+using MQTTnet.Tests.Helpers;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Formatter

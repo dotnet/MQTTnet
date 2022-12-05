@@ -17,8 +17,9 @@ namespace MQTTnet.Extensions.Rpc
     {
         readonly IMqttClient _mqttClient;
         readonly MqttRpcClientOptions _options;
+        
         readonly ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>>();
-
+        
         public MqttRpcClient(IMqttClient mqttClient, MqttRpcClientOptions options)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
@@ -66,14 +67,8 @@ namespace MQTTnet.Extensions.Rpc
                 throw new ArgumentNullException(nameof(methodName));
             }
 
-            var topicNames = _options.TopicGenerationStrategy.CreateRpcTopics(
-                new TopicGenerationContext
-                {
-                    MethodName = methodName,
-                    QualityOfServiceLevel = qualityOfServiceLevel,
-                    MqttClient = _mqttClient,
-                    Options = _options
-                });
+            var context = new TopicGenerationContext(_mqttClient, _options, methodName, qualityOfServiceLevel);
+            var topicNames = _options.TopicGenerationStrategy.CreateRpcTopics(context);
 
             var requestTopic = topicNames.RequestTopic;
             var responseTopic = topicNames.ResponseTopic;

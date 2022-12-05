@@ -17,8 +17,9 @@ namespace MQTTnet.Extensions.Rpc
     {
         readonly IMqttClient _mqttClient;
         readonly MqttRpcClientOptions _options;
-        readonly ConcurrentDictionary<string, TaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, TaskCompletionSource<byte[]>>();
-
+        
+        readonly ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>>();
+        
         public MqttRpcClient(IMqttClient mqttClient, MqttRpcClientOptions options)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
@@ -90,11 +91,7 @@ namespace MQTTnet.Extensions.Rpc
 
             try
             {
-#if NET452
-                var awaitable = new TaskCompletionSource<byte[]>();
-#else
-                var awaitable = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
-#endif
+                var awaitable = new AsyncTaskCompletionSource<byte[]>();
 
                 if (!_waitingCalls.TryAdd(responseTopic, awaitable))
                 {
@@ -119,7 +116,7 @@ namespace MQTTnet.Extensions.Rpc
             {
                 _waitingCalls.TryRemove(responseTopic, out _);
 
-                await _mqttClient.UnsubscribeAsync(responseTopic).ConfigureAwait(false);
+                await _mqttClient.UnsubscribeAsync(responseTopic, CancellationToken.None).ConfigureAwait(false);
             }
         }
 
@@ -130,11 +127,7 @@ namespace MQTTnet.Extensions.Rpc
                 return CompletedTask.Instance;
             }
 
-#if NET452
-            Task.Run(() => awaitable.TrySetResult(eventArgs.ApplicationMessage.Payload));
-#else
             awaitable.TrySetResult(eventArgs.ApplicationMessage.Payload);
-#endif
 
             // Set this message to handled to that other code can avoid execution etc.
             eventArgs.IsHandled = true;

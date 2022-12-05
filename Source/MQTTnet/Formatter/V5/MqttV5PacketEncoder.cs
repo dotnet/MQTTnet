@@ -524,7 +524,7 @@ namespace MQTTnet.Formatter.V5
                 _bufferWriter.WriteString(topicFilter);
             }
 
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Unsubscibe, 0x02);
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Unsubscribe, 0x02);
         }
 
         static void ThrowIfPacketIdentifierIsInvalid(ushort packetIdentifier, MqttPacket packet)

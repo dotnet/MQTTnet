@@ -121,10 +121,9 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(true, session.Items["can_subscribe_x"]);
             }
         }
-
-        #if !NET452
         
         [TestMethod]
+        [DataRow(MqttProtocolVersion.V310)]
         [DataRow(MqttProtocolVersion.V311)]
         [DataRow(MqttProtocolVersion.V500)]
         public async Task Handle_Parallel_Connection_Attempts(MqttProtocolVersion protocolVersion)
@@ -150,8 +149,6 @@ namespace MQTTnet.Tests.Server
                 // Try to connect 50 clients at the same time.
                 var clients = await Task.WhenAll(Enumerable.Range(0, 50).Select(i => ConnectAndSubscribe(testEnvironment, options, OnReceive)));
 
-                await Task.Delay(TimeSpan.FromSeconds(10));
-                
                 var connectedClients = clients.Where(c => c?.TryPingAsync().GetAwaiter().GetResult() == true).ToList();
 
                 await LongTestDelay();
@@ -162,13 +159,12 @@ namespace MQTTnet.Tests.Server
                 var sendClient = await testEnvironment.ConnectClient(option2);
                 await sendClient.PublishStringAsync("aaa", "1");
 
-                await Task.Delay(TimeSpan.FromSeconds(5));
+                await LongTestDelay();
 
                 Assert.AreEqual(true, hasReceive);
             }
         }
-#endif
-        
+ 
         [DataTestMethod]
         [DataRow(MqttQualityOfServiceLevel.ExactlyOnce)]
         [DataRow(MqttQualityOfServiceLevel.AtLeastOnce)]

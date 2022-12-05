@@ -2,11 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.IO.Pipelines;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using MQTTnet.Adapter;
@@ -15,12 +10,16 @@ using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
+using System;
+using System.IO.Pipelines;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore
 {
     public sealed class MqttConnectionContext : IMqttChannelAdapter
     {
-        readonly bool? _isOverWebSocket;
         readonly AsyncLock _writerLock = new AsyncLock();
         PipeReader _input;
         PipeWriter _output;
@@ -29,12 +28,6 @@ namespace MQTTnet.AspNetCore
         {
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             Connection = connection ?? throw new ArgumentNullException(nameof(connection));
-
-            var feature = connection.Features.Get<IHttpContextFeature>();
-            if (feature?.HttpContext != null)
-            {
-                _isOverWebSocket = feature.HttpContext.WebSockets.IsWebSocketRequest;
-            }
 
             _input = Connection.Transport.Input;
             _output = Connection.Transport.Output;
@@ -181,20 +174,9 @@ namespace MQTTnet.AspNetCore
                 try
                 {
                     var buffer = PacketFormatterAdapter.Encode(packet);
-                    
-                    if (_isOverWebSocket == false)
-                    {
-                        await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
-                        if (buffer.Payload.Count > 0)
-                        {
-                            await _output.WriteAsync(buffer.Payload, cancellationToken).ConfigureAwait(false);
-                        }
-                    }
-                    else
-                    {
-                        var bufferSegment = buffer.Join();
-                        await _output.WriteAsync(bufferSegment, cancellationToken).ConfigureAwait(false);
-                    }
+
+                    WritePacketBuffer(_output, buffer);
+                    await _output.FlushAsync(cancellationToken).ConfigureAwait(false);
 
                     BytesSent += buffer.Length;
                 }
@@ -203,6 +185,22 @@ namespace MQTTnet.AspNetCore
                     PacketFormatterAdapter.Cleanup();
                 }
             }
+        }
+
+        /// <summary>
+        /// copy MqttPacketBuffer's Packet and Payload to the same buffer block of PipeWriter
+        /// MqttPacket will be transmitted within the bounds of a WebSocket frame after PipeWriter.FlushAsync
+        /// </summary>
+        /// <param name="output"></param>
+        /// <param name="buffer"></param>
+        private static void WritePacketBuffer(PipeWriter output, MqttPacketBuffer buffer)
+        {
+            var span = output.GetSpan(buffer.Length);
+
+            buffer.Packet.AsSpan().CopyTo(span);
+            buffer.Payload.AsSpan().CopyTo(span.Slice(buffer.Packet.Count));
+
+            output.Advance(buffer.Length);
         }
     }
 }

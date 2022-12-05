@@ -2,6 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.IO.Pipelines;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using MQTTnet.Adapter;
@@ -10,11 +15,6 @@ using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
-using System;
-using System.IO.Pipelines;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore
 {
@@ -187,14 +187,11 @@ namespace MQTTnet.AspNetCore
             }
         }
 
-        /// <summary>
-        /// copy MqttPacketBuffer's Packet and Payload to the same buffer block of PipeWriter
-        /// MqttPacket will be transmitted within the bounds of a WebSocket frame after PipeWriter.FlushAsync
-        /// </summary>
-        /// <param name="output"></param>
-        /// <param name="buffer"></param>
-        private static void WritePacketBuffer(PipeWriter output, MqttPacketBuffer buffer)
+        static void WritePacketBuffer(PipeWriter output, MqttPacketBuffer buffer)
         {
+            // copy MqttPacketBuffer's Packet and Payload to the same buffer block of PipeWriter
+            // MqttPacket will be transmitted within the bounds of a WebSocket frame after PipeWriter.FlushAsync
+
             var span = output.GetSpan(buffer.Length);
 
             buffer.Packet.AsSpan().CopyTo(span);

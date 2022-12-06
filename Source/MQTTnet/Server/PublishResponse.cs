@@ -14,6 +14,6 @@ namespace MQTTnet.Server
         
         public string ReasonString { get; set; }
 
-        public List<MqttUserProperty> UserProperties { get; }
+        public List<MqttUserProperty> UserProperties { get; set; }
     }
 }

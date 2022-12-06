@@ -5,3 +5,4 @@
 * [Server] Now using an empty string as the sender client ID for injected application messages (#1583, thanks to @xljiulang).
 * [Server] Improved memory usage for ASP.NET connections (#1582, thanks to @xljiulang).
 * [Server] Improved memory usage and performance for ASP.NET integration (#1596, thanks to @xljiulang).
+* [Server] Add support for interception of will messages (#1613).

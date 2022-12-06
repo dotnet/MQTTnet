@@ -116,7 +116,7 @@ namespace MQTTnet.Server
                 var willPublishPacket = MqttPacketFactories.Publish.Create(Session.LatestConnectPacket);
                 var willApplicationMessage = MqttApplicationMessageFactory.Create(willPublishPacket);
 
-                _ = _sessionsManager.DispatchApplicationMessage(Id, willApplicationMessage);
+                _ = _sessionsManager.DispatchApplicationMessage(Id, Session.Items, willApplicationMessage, CancellationToken.None);
                 Session.WillMessageSent = true;
 
                 _logger.Info("Client '{0}': Published will message", Id);
@@ -210,39 +210,15 @@ namespace MQTTnet.Server
         {
             HandleTopicAlias(publishPacket);
 
-            InterceptingPublishEventArgs interceptingPublishEventArgs = null;
             var applicationMessage = MqttApplicationMessageFactory.Create(publishPacket);
-            var closeConnection = false;
-            var processPublish = true;
 
-            if (_eventContainer.InterceptingPublishEvent.HasHandlers)
-            {
-                interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, Id, Session.Items);
-                if (string.IsNullOrEmpty(interceptingPublishEventArgs.ApplicationMessage.Topic))
-                {
-                    // This can happen if a topic alias us used but the topic is
-                    // unknown to the server.
-                    interceptingPublishEventArgs.Response.ReasonCode = MqttPubAckReasonCode.TopicNameInvalid;
-                    interceptingPublishEventArgs.ProcessPublish = false;
-                }
+            var dispatchApplicationMessageResult =
+                await _sessionsManager.DispatchApplicationMessage(Id, Session.Items, applicationMessage, cancellationToken).ConfigureAwait(false);
 
-                await _eventContainer.InterceptingPublishEvent.InvokeAsync(interceptingPublishEventArgs).ConfigureAwait(false);
-
-                applicationMessage = interceptingPublishEventArgs.ApplicationMessage;
-                closeConnection = interceptingPublishEventArgs.CloseConnection;
-                processPublish = interceptingPublishEventArgs.ProcessPublish;
-            }
-
-            if (closeConnection)
+            if (dispatchApplicationMessageResult.CloseConnection)
             {
                 await StopAsync(MqttDisconnectReasonCode.UnspecifiedError);
                 return;
-            }
-
-            DispatchApplicationMessageResult dispatchResult = null;
-            if (processPublish && applicationMessage != null)
-            {
-                dispatchResult = await _sessionsManager.DispatchApplicationMessage(Id, applicationMessage).ConfigureAwait(false);
             }
 
             switch (publishPacket.QualityOfServiceLevel)
@@ -254,13 +230,13 @@ namespace MQTTnet.Server
                 }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                 {
-                    var pubAckPacket = MqttPacketFactories.PubAck.Create(publishPacket, interceptingPublishEventArgs, dispatchResult);
+                    var pubAckPacket = MqttPacketFactories.PubAck.Create(publishPacket, dispatchApplicationMessageResult);
                     Session.EnqueueControlPacket(new MqttPacketBusItem(pubAckPacket));
                     break;
                 }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                 {
-                    var pubRecPacket = MqttPacketFactories.PubRec.Create(publishPacket, interceptingPublishEventArgs, dispatchResult);
+                    var pubRecPacket = MqttPacketFactories.PubRec.Create(publishPacket, dispatchApplicationMessageResult);
                     Session.EnqueueControlPacket(new MqttPacketBusItem(pubRecPacket));
                     break;
                 }
@@ -478,16 +454,16 @@ namespace MQTTnet.Server
                 }
 
                 var logLevel = MqttNetLogLevel.Error;
-                
+
                 if (!IsRunning)
                 {
                     // There was an exception but the connection is already closed. So there is no chance to send a response to the client etc.
                     logLevel = MqttNetLogLevel.Warning;
                 }
-                
+
                 if (currentPacket == null)
                 {
-                    _logger.Publish(logLevel, exception, "Client '{0}': Error while receiving packets", Id);    
+                    _logger.Publish(logLevel, exception, "Client '{0}': Error while receiving packets", Id);
                 }
                 else
                 {

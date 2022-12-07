@@ -60,13 +60,16 @@ namespace MQTTnet.Server
 
                 foreach (var wcs in _wildcardSubscriptionsByTopicHash)
                 {
-                    var wildcardSubscriptions = wcs.Value;
                     var subscriptionHash = wcs.Key;
-                    var subscriptionHashMask = wildcardSubscriptions.HashMask;
-
-                    if ((topicHash & subscriptionHashMask) == subscriptionHash)
+                    var subscriptionsByHashMask = wcs.Value.SubscriptionsByHashMask;
+                    foreach (var shm in subscriptionsByHashMask)
                     {
-                        possibleSubscriptions.AddRange(wildcardSubscriptions.Subscriptions.ToList());
+                        var subscriptionHashMask = shm.Key;
+                        if ((topicHash & subscriptionHashMask) == subscriptionHash)
+                        {
+                            var subscriptions = shm.Value;
+                            possibleSubscriptions.AddRange(subscriptions.ToList());
+                        }
                     }
                 }
             }
@@ -265,8 +268,8 @@ namespace MQTTnet.Server
                             {
                                 if (_wildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var subscriptions))
                                 {
-                                    subscriptions.Subscriptions.Remove(existingSubscription);
-                                    if (subscriptions.Subscriptions.Count == 0)
+                                    subscriptions.RemoveSubscription(existingSubscription);
+                                    if (subscriptions.SubscriptionsByHashMask.Count == 0)
                                     {
                                         _wildcardSubscriptionsByTopicHash.Remove(topicHash);
                                     }
@@ -346,9 +349,9 @@ namespace MQTTnet.Server
                     // must remove object from topic hash dictionary first
                     if (hasWildcard)
                     {
-                        if (_wildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var subs))
+                        if (_wildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var subscriptions))
                         {
-                            subs.Subscriptions.Remove(existingSubscription);
+                            subscriptions.RemoveSubscription(existingSubscription);
                             // no need to remove empty entry because we'll be adding subscription again below
                         }
                     }
@@ -370,11 +373,11 @@ namespace MQTTnet.Server
                 {
                     if (!_wildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var subscriptions))
                     {
-                        subscriptions = new TopicHashMaskSubscriptions(topicHashMask);
+                        subscriptions = new TopicHashMaskSubscriptions();
                         _wildcardSubscriptionsByTopicHash.Add(topicHash, subscriptions);
                     }
 
-                    subscriptions.Subscriptions.Add(subscription);
+                    subscriptions.AddSubscription(subscription);
                 }
                 else
                 {

@@ -6,3 +6,4 @@
 * [Server] Improved memory usage for ASP.NET connections (#1582, thanks to @xljiulang).
 * [Server] Improved memory usage and performance for ASP.NET integration (#1596, thanks to @xljiulang).
 * [Server] Add support for interception of will messages (#1613).
+* [Server] Fixed wrong topic filter detections (#1615, thanks to @logicaloud).

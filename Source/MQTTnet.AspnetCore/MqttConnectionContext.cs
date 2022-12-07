@@ -2,6 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.IO.Pipelines;
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.Http.Features;
@@ -11,19 +17,14 @@ using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
-using System;
-using System.IO.Pipelines;
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore
 {
     public sealed class MqttConnectionContext : IMqttChannelAdapter
     {
-        readonly AsyncLock _writerLock = new AsyncLock();
         readonly ConnectionContext _connection;
+        readonly AsyncLock _writerLock = new AsyncLock();
+
         PipeReader _input;
         PipeWriter _output;
 
@@ -31,6 +32,7 @@ namespace MQTTnet.AspNetCore
         {
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+
             _input = connection.Transport.Input;
             _output = connection.Transport.Output;
         }
@@ -52,14 +54,9 @@ namespace MQTTnet.AspNetCore
 
                 // mqtt over websocket
                 var httpFeature = _connection.Features.Get<IHttpContextFeature>();
-                if (httpFeature != null && httpFeature.HttpContext != null)
-                {
-                    return httpFeature.HttpContext.Connection.ClientCertificate;
-                }
-                return null;
+                return httpFeature?.HttpContext?.Connection.ClientCertificate;
             }
         }
-
 
         public string Endpoint
         {
@@ -74,7 +71,7 @@ namespace MQTTnet.AspNetCore
 #endif
                 // mqtt over websocket
                 var httpFeature = _connection.Features.Get<IHttpConnectionFeature>();
-                if (httpFeature != null && httpFeature.RemoteIpAddress != null)
+                if (httpFeature?.RemoteIpAddress != null)
                 {
                     return new IPEndPoint(httpFeature.RemoteIpAddress, httpFeature.RemotePort).ToString();
                 }
@@ -82,6 +79,8 @@ namespace MQTTnet.AspNetCore
                 return null;
             }
         }
+
+        public bool IsReadingPacket { get; private set; }
 
         public bool IsSecureConnection
         {
@@ -96,19 +95,16 @@ namespace MQTTnet.AspNetCore
 
                 // mqtt over websocket
                 var httpFeature = _connection.Features.Get<IHttpContextFeature>();
-                if (httpFeature != null && httpFeature.HttpContext != null)
+                if (httpFeature?.HttpContext != null)
                 {
                     return httpFeature.HttpContext.Request.IsHttps;
                 }
+
                 return false;
             }
         }
 
-
-        public bool IsReadingPacket { get; private set; }
-
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
-
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
@@ -131,6 +127,7 @@ namespace MQTTnet.AspNetCore
 
         public void Dispose()
         {
+            _writerLock.Dispose();
         }
 
         public async Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken)

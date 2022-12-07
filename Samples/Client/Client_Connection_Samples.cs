@@ -138,7 +138,7 @@ public static class Client_Connection_Samples
     {
         /*
          * This sample creates a simple MQTT client and connects to a public broker using a WebSocket connection.
-         * Instead of the .NET implementation of WebSockets the implementaion from WebSocket4Net is used. It provides more
+         * Instead of the .NET implementation of WebSockets the implementation from WebSocket4Net is used. It provides more
          * encryption algorithms and supports more platforms.
          * 
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.

@@ -10,6 +10,7 @@
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
+        <NoWarn>1591;NETSDK1138</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -27,9 +28,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
-
-        <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
-        <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />
         <ProjectReference Include="..\MQTTnet.Tests\MQTTnet.Tests.csproj" />
     </ItemGroup>
 

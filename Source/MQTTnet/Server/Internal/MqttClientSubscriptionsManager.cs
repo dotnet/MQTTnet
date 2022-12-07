@@ -55,7 +55,7 @@ namespace MQTTnet.Server
             {
                 if (_noWildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var noWildcardSubscriptions))
                 {
-                    possibleSubscriptions.AddRange(noWildcardSubscriptions.ToList());
+                    possibleSubscriptions.AddRange(noWildcardSubscriptions);
                 }
 
                 foreach (var wcs in _wildcardSubscriptionsByTopicHash)
@@ -68,7 +68,7 @@ namespace MQTTnet.Server
                         if ((topicHash & subscriptionHashMask) == subscriptionHash)
                         {
                             var subscriptions = shm.Value;
-                            possibleSubscriptions.AddRange(subscriptions.ToList());
+                            possibleSubscriptions.AddRange(subscriptions);
                         }
                     }
                 }

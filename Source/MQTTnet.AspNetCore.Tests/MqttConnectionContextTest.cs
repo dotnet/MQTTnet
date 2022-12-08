@@ -18,7 +18,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Tests.Extensions;
+using MQTTnet.Tests.Helpers;
 
 namespace MQTTnet.AspNetCore.Tests
 {
@@ -35,7 +35,7 @@ namespace MQTTnet.AspNetCore.Tests
             connection.Transport = pipe;
             var ctx = new MqttConnectionContext(serializer, connection);
 
-            await pipe.Receive.Writer.WriteAsync(writer.AddMqttHeader(MqttControlPacketType.Connect, new byte[0]));
+            await pipe.Receive.Writer.WriteAsync(writer.AddMqttHeader(MqttControlPacketType.Connect, Array.Empty<byte>()));
 
             await Assert.ThrowsExceptionAsync<MqttProtocolViolationException>(() => ctx.ReceivePacketAsync(CancellationToken.None));
 

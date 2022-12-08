@@ -3,7 +3,7 @@ name: CI
 on: [push, pull_request]
 
 env:
-  VERSION: "4.1.3.${{github.run_number}}"
+  VERSION: "4.1.4.${{github.run_number}}"
 
 jobs:
   build:
@@ -61,7 +61,3 @@ jobs:
       - name: Publish MyGet nugets
         if: ${{ github.event_name == 'push' }}
         run: dotnet nuget push **/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
-
-#      - name: Publish nugets
-#        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-#        run: dotnet nuget push **/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate

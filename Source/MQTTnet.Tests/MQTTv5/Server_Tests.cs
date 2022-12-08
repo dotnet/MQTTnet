@@ -37,9 +37,9 @@ namespace MQTTnet.Tests.MQTTv5
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
                 var c2 = await testEnvironment.ConnectClient(clientOptions);
-                c2.Dispose(); // Dispose will not send a DISCONNECT pattern first so the will message must be sent.
+                c2.Dispose(); // Dispose will not send a DISCONNECT packet first so the will message must be sent.
 
-                await Task.Delay(1000);
+                await LongTestDelay();
 
                 Assert.AreEqual(1, receivedMessagesCount);
             }

@@ -36,7 +36,7 @@ namespace MQTTnet.Packets
                 if (_payloadCache == null)
                 {
                     _payloadCache = new byte[_payloadSegment.Count];
-                    Array.Copy(_payloadSegment.Array, _payloadSegment.Offset, _payloadCache, 0, _payloadCache.Length);
+                    MqttMemoryHelper.Copy(_payloadSegment.Array, _payloadSegment.Offset, _payloadCache, 0, _payloadCache.Length);
                 }
                 return _payloadCache;
             }

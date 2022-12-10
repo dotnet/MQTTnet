@@ -211,8 +211,17 @@ namespace MQTTnet.AspNetCore
                 {
                     var buffer = PacketFormatterAdapter.Encode(packet);
 
-                    WritePacketBuffer(_output, buffer);
-                    await _output.FlushAsync(cancellationToken).ConfigureAwait(false);
+                    if (buffer.Payload.Count == 0)
+                    {
+                        // zero copy
+                        // https://github.com/dotnet/runtime/blob/main/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamPipeWriter.cs#L279
+                        await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        WritePacketBuffer(_output, buffer);
+                        await _output.FlushAsync(cancellationToken).ConfigureAwait(false);
+                    }
 
                     BytesSent += buffer.Length;
                 }

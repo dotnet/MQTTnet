@@ -214,7 +214,7 @@ namespace MQTTnet.AspNetCore
                     if (buffer.Payload.Count == 0)
                     {
                         // zero copy
-                        // https://github.com/dotnet/runtime/blob/main/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamPipeWriter.cs#L279
+                        // https://github.com/dotnet/runtime/blob/e31ddfdc4f574b26231233dc10c9a9c402f40590/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamPipeWriter.cs#L279
                         await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
                     }
                     else

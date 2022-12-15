@@ -297,7 +297,7 @@ public static class Client_Connection_Samples
         /*
          * This sample sends a PINGREQ packet to the server and waits for a reply.
          *
-         * This is only supported in METTv5.0.0+.
+         * This is only supported in MQTTv5.0.0+.
          */
 
         var mqttFactory = new MqttFactory();

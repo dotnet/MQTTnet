@@ -207,7 +207,15 @@ namespace MQTTnet.Server
             return _clientSessionsManager.GetSessionStatusAsync();
         }
 
-        public Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage, CancellationToken cancellationToken = default)
+        public Task InjectApplicationMessage(
+            InjectedMqttApplicationMessage injectedApplicationMessage,
+            CancellationToken cancellationToken = default) =>
+            InjectApplicationMessage(
+                injectedApplicationMessage,
+                _sessionItems,
+                cancellationToken);
+
+        public Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage, ConcurrentDictionary<object, object> sessionItems, CancellationToken cancellationToken = default)
         {
             if (injectedApplicationMessage == null)
             {
@@ -230,7 +238,7 @@ namespace MQTTnet.Server
 
             return _clientSessionsManager.DispatchApplicationMessage(
                 injectedApplicationMessage.SenderClientId,
-                _sessionItems,
+                sessionItems,
                 injectedApplicationMessage.ApplicationMessage,
                 cancellationToken);
         }

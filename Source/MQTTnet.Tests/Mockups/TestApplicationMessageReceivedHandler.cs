@@ -27,6 +27,17 @@ namespace MQTTnet.Tests.Mockups
             mqttClient.ApplicationMessageReceivedAsync += OnApplicationMessageReceivedAsync;
         }
 
+        public int Count
+        {
+            get
+            {
+                lock (_receivedEventArgs)
+                {
+                    return _receivedEventArgs.Count;
+                }
+            }
+        }
+
         public List<MqttApplicationMessageReceivedEventArgs> ReceivedEventArgs
         {
             get

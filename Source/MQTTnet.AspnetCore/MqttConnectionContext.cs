@@ -4,11 +4,13 @@
 
 using System;
 using System.IO.Pipelines;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
+using Microsoft.AspNetCore.Http.Features;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Exceptions;
@@ -20,71 +22,99 @@ namespace MQTTnet.AspNetCore
 {
     public sealed class MqttConnectionContext : IMqttChannelAdapter
     {
-        readonly bool? _isOverWebSocket;
+        readonly ConnectionContext _connection;
         readonly AsyncLock _writerLock = new AsyncLock();
+
         PipeReader _input;
         PipeWriter _output;
 
         public MqttConnectionContext(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
         {
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
-            Connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
 
-            var feature = connection.Features.Get<IHttpContextFeature>();
-            if (feature?.HttpContext != null)
-            {
-                _isOverWebSocket = feature.HttpContext.WebSockets.IsWebSocketRequest;
-            }
-
-            _input = Connection.Transport.Input;
-            _output = Connection.Transport.Output;
+            _input = connection.Transport.Input;
+            _output = connection.Transport.Output;
         }
 
         public long BytesReceived { get; private set; }
 
         public long BytesSent { get; private set; }
 
-        public X509Certificate2 ClientCertificate => Http?.HttpContext?.Connection?.ClientCertificate;
+        public X509Certificate2 ClientCertificate
+        {
+            get
+            {
+                // mqtt over tcp
+                var tlsFeature = _connection.Features.Get<ITlsConnectionFeature>();
+                if (tlsFeature != null)
+                {
+                    return tlsFeature.ClientCertificate;
+                }
 
-        public ConnectionContext Connection { get; }
+                // mqtt over websocket
+                var httpFeature = _connection.Features.Get<IHttpContextFeature>();
+                return httpFeature?.HttpContext?.Connection.ClientCertificate;
+            }
+        }
 
         public string Endpoint
         {
             get
             {
-#if NETCOREAPP3_1
-                if (Connection?.RemoteEndPoint != null)
+                // mqtt over tcp 
+#if NETCOREAPP3_1_OR_GREATER
+                if (_connection.RemoteEndPoint != null)
                 {
-                    return Connection.RemoteEndPoint.ToString();
+                    return _connection.RemoteEndPoint.ToString();
                 }
 #endif
-                var connection = Http?.HttpContext?.Connection;
-                if (connection == null)
+                // mqtt over websocket
+                var httpFeature = _connection.Features.Get<IHttpConnectionFeature>();
+                if (httpFeature?.RemoteIpAddress != null)
                 {
-                    return Connection.ConnectionId;
+                    return new IPEndPoint(httpFeature.RemoteIpAddress, httpFeature.RemotePort).ToString();
                 }
 
-                return $"{connection.RemoteIpAddress}:{connection.RemotePort}";
+                return null;
             }
         }
 
         public bool IsReadingPacket { get; private set; }
 
-        public bool IsSecureConnection => Http?.HttpContext?.Request.IsHttps ?? false;
+        public bool IsSecureConnection
+        {
+            get
+            {
+                // mqtt over tcp
+                var tlsFeature = _connection.Features.Get<ITlsConnectionFeature>();
+                if (tlsFeature != null)
+                {
+                    return true;
+                }
+
+                // mqtt over websocket
+                var httpFeature = _connection.Features.Get<IHttpContextFeature>();
+                if (httpFeature?.HttpContext != null)
+                {
+                    return httpFeature.HttpContext.Request.IsHttps;
+                }
+
+                return false;
+            }
+        }
 
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
-        IHttpContextFeature Http => Connection.Features.Get<IHttpContextFeature>();
-
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
-            if (Connection is TcpConnection tcp && !tcp.IsConnected)
+            if (_connection is TcpConnection tcp && !tcp.IsConnected)
             {
                 await tcp.StartAsync().ConfigureAwait(false);
             }
 
-            _input = Connection.Transport.Input;
-            _output = Connection.Transport.Output;
+            _input = _connection.Transport.Input;
+            _output = _connection.Transport.Output;
         }
 
         public Task DisconnectAsync(CancellationToken cancellationToken)
@@ -97,18 +127,17 @@ namespace MQTTnet.AspNetCore
 
         public void Dispose()
         {
+            _writerLock.Dispose();
         }
 
         public async Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken)
         {
-            var input = Connection.Transport.Input;
-
             try
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     ReadResult readResult;
-                    var readTask = input.ReadAsync(cancellationToken);
+                    var readTask = _input.ReadAsync(cancellationToken);
                     if (readTask.IsCompleted)
                     {
                         readResult = readTask.Result;
@@ -148,7 +177,7 @@ namespace MQTTnet.AspNetCore
                         // The buffer was sliced up to where it was consumed, so we can just advance to the start.
                         // We mark examined as buffer.End so that if we didn't receive a full frame, we'll wait for more data
                         // before yielding the read again.
-                        input.AdvanceTo(consumed, observed);
+                        _input.AdvanceTo(consumed, observed);
                     }
                 }
             }
@@ -181,19 +210,17 @@ namespace MQTTnet.AspNetCore
                 try
                 {
                     var buffer = PacketFormatterAdapter.Encode(packet);
-                    
-                    if (_isOverWebSocket == false)
+
+                    if (buffer.Payload.Count == 0)
                     {
+                        // zero copy
+                        // https://github.com/dotnet/runtime/blob/e31ddfdc4f574b26231233dc10c9a9c402f40590/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamPipeWriter.cs#L279
                         await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
-                        if (buffer.Payload.Count > 0)
-                        {
-                            await _output.WriteAsync(buffer.Payload, cancellationToken).ConfigureAwait(false);
-                        }
                     }
                     else
                     {
-                        var bufferSegment = buffer.Join();
-                        await _output.WriteAsync(bufferSegment, cancellationToken).ConfigureAwait(false);
+                        WritePacketBuffer(_output, buffer);
+                        await _output.FlushAsync(cancellationToken).ConfigureAwait(false);
                     }
 
                     BytesSent += buffer.Length;
@@ -203,6 +230,19 @@ namespace MQTTnet.AspNetCore
                     PacketFormatterAdapter.Cleanup();
                 }
             }
+        }
+
+        static void WritePacketBuffer(PipeWriter output, MqttPacketBuffer buffer)
+        {
+            // copy MqttPacketBuffer's Packet and Payload to the same buffer block of PipeWriter
+            // MqttPacket will be transmitted within the bounds of a WebSocket frame after PipeWriter.FlushAsync
+
+            var span = output.GetSpan(buffer.Length);
+
+            buffer.Packet.AsSpan().CopyTo(span);
+            buffer.Payload.AsSpan().CopyTo(span.Slice(buffer.Packet.Count));
+
+            output.Advance(buffer.Length);
         }
     }
 }

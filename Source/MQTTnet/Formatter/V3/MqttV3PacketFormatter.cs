@@ -78,7 +78,7 @@ namespace MQTTnet.Formatter.V3
                     return DecodeSubscribePacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.SubAck:
                     return DecodeSubAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Unsubscibe:
+                case MqttControlPacketType.Unsubscribe:
                     return DecodeUnsubscribePacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.UnsubAck:
                     return DecodeUnsubAckPacket(receivedMqttPacket.Body);
@@ -783,7 +783,7 @@ namespace MQTTnet.Formatter.V3
                 }
             }
 
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Unsubscibe, 0x02);
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Unsubscribe, 0x02);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

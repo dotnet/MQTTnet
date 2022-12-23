@@ -9,12 +9,11 @@
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
+        <NoWarn>1591;NETSDK1138</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-        <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
-        <PackageReference Include="Microsoft.Net.Compilers" Version="4.0.1" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     </ItemGroup>
 
     <ItemGroup>

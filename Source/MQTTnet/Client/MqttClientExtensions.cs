@@ -14,20 +14,28 @@ namespace MQTTnet.Client
 {
     public static class MqttClientExtensions
     {
-        public static Task DisconnectAsync(this IMqttClient client, MqttClientDisconnectReason reason = MqttClientDisconnectReason.NormalDisconnection, string reasonString = null)
+        public static Task DisconnectAsync(
+            this IMqttClient client,
+            MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection,
+            string reasonString = null,
+            uint sessionExpiryInterval = 0,
+            List<MqttUserProperty> userProperties = null,
+            CancellationToken cancellationToken = default)
         {
             if (client == null)
             {
                 throw new ArgumentNullException(nameof(client));
             }
 
-            return client.DisconnectAsync(
-                new MqttClientDisconnectOptions
-                {
-                    Reason = reason,
-                    ReasonString = reasonString
-                },
-                CancellationToken.None);
+            var disconnectOptions = new MqttClientDisconnectOptions
+            {
+                Reason = reason,
+                ReasonString = reasonString,
+                SessionExpiryInterval = sessionExpiryInterval,
+                UserProperties = userProperties
+            };
+
+            return client.DisconnectAsync(disconnectOptions, cancellationToken);
         }
 
         public static Task<MqttClientPublishResult> PublishBinaryAsync(
@@ -126,6 +134,29 @@ namespace MQTTnet.Client
             var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topic, qualityOfServiceLevel).Build();
 
             return mqttClient.SubscribeAsync(subscribeOptions, cancellationToken);
+        }
+
+        public static async Task<bool> TryDisconnectAsync(
+            this IMqttClient client,
+            MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection,
+            string reasonString = null)
+        {
+            if (client == null)
+            {
+                throw new ArgumentNullException(nameof(client));
+            }
+
+            try
+            {
+                await client.DisconnectAsync(reason, reasonString).ConfigureAwait(false);
+                return true;
+            }
+            catch
+            {
+                // Ignore all errors.
+            }
+
+            return false;
         }
 
         public static async Task<bool> TryPingAsync(this IMqttClient client, CancellationToken cancellationToken = default)

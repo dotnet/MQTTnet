@@ -4,30 +4,30 @@
 
 namespace MQTTnet.Formatter
 {
-    public sealed class MqttPacketFactories
+    public static class MqttPacketFactories
     {
-        public MqttConnAckPacketFactory ConnAck { get; } = new MqttConnAckPacketFactory();
+        public static MqttConnAckPacketFactory ConnAck { get; } = new MqttConnAckPacketFactory();
         
-        public MqttConnectPacketFactory Connect { get; } = new MqttConnectPacketFactory();
+        public static MqttConnectPacketFactory Connect { get; } = new MqttConnectPacketFactory();
 
-        public MqttDisconnectPacketFactory Disconnect { get; } = new MqttDisconnectPacketFactory();
+        public static MqttDisconnectPacketFactory Disconnect { get; } = new MqttDisconnectPacketFactory();
 
-        public MqttPubAckPacketFactory PubAck { get; } = new MqttPubAckPacketFactory();
+        public static MqttPubAckPacketFactory PubAck { get; } = new MqttPubAckPacketFactory();
 
-        public MqttPubCompPacketFactory PubComp { get; } = new MqttPubCompPacketFactory();
+        public static MqttPubCompPacketFactory PubComp { get; } = new MqttPubCompPacketFactory();
 
-        public MqttPublishPacketFactory Publish { get; } = new MqttPublishPacketFactory();
+        public static MqttPublishPacketFactory Publish { get; } = new MqttPublishPacketFactory();
 
-        public MqttPubRecPacketFactory PubRec { get; } = new MqttPubRecPacketFactory();
+        public static MqttPubRecPacketFactory PubRec { get; } = new MqttPubRecPacketFactory();
 
-        public MqttPubRelPacketFactory PubRel { get; } = new MqttPubRelPacketFactory();
+        public static MqttPubRelPacketFactory PubRel { get; } = new MqttPubRelPacketFactory();
 
-        public MqttSubAckPacketFactory SubAck { get; } = new MqttSubAckPacketFactory();
+        public static MqttSubAckPacketFactory SubAck { get; } = new MqttSubAckPacketFactory();
 
-        public MqttSubscribePacketFactory Subscribe { get; } = new MqttSubscribePacketFactory();
+        public static MqttSubscribePacketFactory Subscribe { get; } = new MqttSubscribePacketFactory();
 
-        public MqttUnsubAckPacketFactory UnsubAck { get; } = new MqttUnsubAckPacketFactory();
+        public static MqttUnsubAckPacketFactory UnsubAck { get; } = new MqttUnsubAckPacketFactory();
 
-        public MqttUnsubscribePacketFactory Unsubscribe { get; } = new MqttUnsubscribePacketFactory();
+        public static MqttUnsubscribePacketFactory Unsubscribe { get; } = new MqttUnsubscribePacketFactory();
     }
 }

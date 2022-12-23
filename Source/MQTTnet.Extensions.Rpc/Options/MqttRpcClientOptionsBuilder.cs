@@ -10,19 +10,19 @@ namespace MQTTnet.Extensions.Rpc
     {
         IMqttRpcClientTopicGenerationStrategy _topicGenerationStrategy = new DefaultMqttRpcClientTopicGenerationStrategy();
 
-        public MqttRpcClientOptionsBuilder WithTopicGenerationStrategy(IMqttRpcClientTopicGenerationStrategy value)
-        {
-            _topicGenerationStrategy = value ?? throw new ArgumentNullException(nameof(value));
-
-            return this;
-        }
-
         public MqttRpcClientOptions Build()
         {
             return new MqttRpcClientOptions
             {
                 TopicGenerationStrategy = _topicGenerationStrategy
             };
+        }
+
+        public MqttRpcClientOptionsBuilder WithTopicGenerationStrategy(IMqttRpcClientTopicGenerationStrategy value)
+        {
+            _topicGenerationStrategy = value ?? throw new ArgumentNullException(nameof(value));
+
+            return this;
         }
     }
 }

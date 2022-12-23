@@ -19,8 +19,8 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class ReaderExtensionsBenchmark
     {
-        private MqttPacketFormatterAdapter mqttPacketFormatter;
-        private MemoryStream stream;
+        MqttPacketFormatterAdapter mqttPacketFormatter;
+        MemoryStream stream;
 
         [GlobalSetup]
         public void GlobalSetup()
@@ -31,8 +31,7 @@ namespace MQTTnet.Benchmarks
             .WithPayload(new byte[10 * 1024])
             .Build();
 
-            var packetFactories = new MqttPacketFactories();
-            var packet = packetFactories.Publish.Create(mqttMessage);
+            var packet = MqttPacketFactories.Publish.Create(mqttMessage);
 
             var buffer = mqttPacketFormatter.Encode(packet);
             stream = new MemoryStream();

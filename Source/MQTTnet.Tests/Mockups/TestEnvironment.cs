@@ -238,6 +238,16 @@ namespace MQTTnet.Tests.Mockups
             }
         }
 
+        public MqttClientOptions CreateDefaultClientOptions()
+        {
+            return CreateDefaultClientOptionsBuilder().Build();
+        }
+
+        public MqttClientOptionsBuilder CreateDefaultClientOptionsBuilder()
+        {
+            return Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort);
+        }
+
         public ILowLevelMqttClient CreateLowLevelClient()
         {
             lock (_clients)

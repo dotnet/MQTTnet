@@ -11,7 +11,10 @@ namespace MQTTnet.Protocol
     {
         public static void ThrowIfInvalid(MqttApplicationMessage applicationMessage)
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
+            if (applicationMessage == null)
+            {
+                throw new ArgumentNullException(nameof(applicationMessage));
+            }
 
             if (applicationMessage.TopicAlias == 0)
             {
@@ -26,7 +29,7 @@ namespace MQTTnet.Protocol
                 throw new MqttProtocolViolationException("Topic should not be empty.");
             }
 
-            foreach(var @char in topic)
+            foreach (var @char in topic)
             {
                 if (@char == '+')
                 {

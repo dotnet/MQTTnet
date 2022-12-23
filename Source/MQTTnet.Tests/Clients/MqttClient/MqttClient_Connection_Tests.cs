@@ -81,7 +81,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Disconnect_Clean()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
             {
                 var server = await testEnvironment.StartServer();
 

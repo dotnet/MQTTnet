@@ -200,7 +200,7 @@ namespace MQTTnet.Client
                         MqttClientDisconnectOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
                     }
                     
-                    var disconnectPacket = _packetFactories.Disconnect.Create(options);
+                    var disconnectPacket = MqttPacketFactories.Disconnect.Create(options);
                     await SendAsync(disconnectPacket, cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -239,7 +239,7 @@ namespace MQTTnet.Client
                 MqttApplicationMessageValidator.ThrowIfNotSupported(applicationMessage, _adapter.PacketFormatterAdapter.ProtocolVersion);
             }
 
-            var publishPacket = _packetFactories.Publish.Create(applicationMessage);
+            var publishPacket = MqttPacketFactories.Publish.Create(applicationMessage);
 
             switch (applicationMessage.QualityOfServiceLevel)
             {
@@ -332,7 +332,7 @@ namespace MQTTnet.Client
                 MqttClientUnsubscribeOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
             }
 
-            var unsubscribePacket = _packetFactories.Unsubscribe.Create(options);
+            var unsubscribePacket = MqttPacketFactories.Unsubscribe.Create(options);
             unsubscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
             var unsubAckPacket = await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, cancellationToken).ConfigureAwait(false);

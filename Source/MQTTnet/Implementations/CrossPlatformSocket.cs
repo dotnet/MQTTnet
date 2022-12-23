@@ -72,8 +72,8 @@ namespace MQTTnet.Implementations
             get => _socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval) as int? ?? 0;
             set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval, value);
 #else
-            get { throw new NotSupportedException("TcpKeepAliveInterval requires at least net5.0."); }
-            set { throw new NotSupportedException("TcpKeepAliveInterval requires at least net5.0."); }
+            get { throw new NotSupportedException("TcpKeepAliveInterval requires at least netcoreapp3.0."); }
+            set { throw new NotSupportedException("TcpKeepAliveInterval requires at least netcoreapp3.0."); }
 #endif
         }
 
@@ -83,8 +83,8 @@ namespace MQTTnet.Implementations
             get => _socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveRetryCount) as int? ?? 0;
             set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveRetryCount, value);
 #else
-            get { throw new NotSupportedException("TcpKeepAliveRetryCount requires at least net5.0."); }
-            set { throw new NotSupportedException("TcpKeepAliveRetryCount requires at least net5.0."); }
+            get { throw new NotSupportedException("TcpKeepAliveRetryCount requires at least netcoreapp3.0."); }
+            set { throw new NotSupportedException("TcpKeepAliveRetryCount requires at least netcoreapp3.0."); }
 #endif
         }
 
@@ -94,8 +94,8 @@ namespace MQTTnet.Implementations
             get => _socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime) as int? ?? 0;
             set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, value);
 #else
-            get { throw new NotSupportedException("TcpKeepAliveTime requires at least net5.0."); }
-            set { throw new NotSupportedException("TcpKeepAliveTime requires at least net5.0."); }
+            get { throw new NotSupportedException("TcpKeepAliveTime requires at least netcoreapp3.0."); }
+            set { throw new NotSupportedException("TcpKeepAliveTime requires at least netcoreapp3.0."); }
 #endif
         }
 
@@ -155,7 +155,7 @@ namespace MQTTnet.Implementations
             }
             catch (ObjectDisposedException)
             {
-                // This will happen when _socket.EndAccept gets called by Task library but the socket is already disposed.
+                // This will happen when _socket.EndAccept_ gets called by Task library but the socket is already disposed.
                 return null;
             }
         }
@@ -181,16 +181,18 @@ namespace MQTTnet.Implementations
 
             try
             {
-#if NET5_0_OR_GREATER
+#if NETCOREAPP3_0_OR_GREATER
                 if (_networkStream != null)
                 {
                     await _networkStream.DisposeAsync().ConfigureAwait(false);
                 }
-
-                await _socket.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
 #else
                 _networkStream?.Dispose();
+#endif
 
+#if NET5_0_OR_GREATER
+                await _socket.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+#else
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(_socketDisposeAction))
                 {
@@ -219,7 +221,7 @@ namespace MQTTnet.Implementations
             }
             catch (ObjectDisposedException)
             {
-                // This will happen when _socket.EndConnect gets called by Task library but the socket is already disposed.
+                // This will happen when _socket.EndConnect_ gets called by Task library but the socket is already disposed.
                 cancellationToken.ThrowIfCancellationRequested();
             }
         }
@@ -246,38 +248,44 @@ namespace MQTTnet.Implementations
             _socket.Listen(connectionBacklog);
         }
 
+#if NET452 || NET461
         public async Task<int> ReceiveAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
         {
             try
             {
-#if NET452 || NET461
                 return await Task.Factory.FromAsync(SocketWrapper.BeginReceive, _socket.EndReceive, new SocketWrapper(_socket, buffer, socketFlags)).ConfigureAwait(false);
-#else
-                return await _socket.ReceiveAsync(buffer, socketFlags).ConfigureAwait(false);
-#endif
             }
             catch (ObjectDisposedException)
             {
-                // This will happen when _socket.EndReceive gets called by Task library but the socket is already disposed.
+                // This will happen when _socket.EndReceive_ gets called by Task library but the socket is already disposed.
                 return -1;
             }
         }
+#else
+        public Task<int> ReceiveAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
+        {
+            return _socket.ReceiveAsync(buffer, socketFlags);
+        }
+#endif
 
+#if NET452 || NET461
         public async Task SendAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
         {
             try
             {
-#if NET452 || NET461
                 await Task.Factory.FromAsync(SocketWrapper.BeginSend, _socket.EndSend, new SocketWrapper(_socket, buffer, socketFlags)).ConfigureAwait(false);
-#else
-                await _socket.SendAsync(buffer, socketFlags).ConfigureAwait(false);
-#endif
             }
             catch (ObjectDisposedException)
             {
-                // This will happen when _socket.EndConnect gets called by Task library but the socket is already disposed.
+                // This will happen when _socket.EndSend_ gets called by Task library but the socket is already disposed.
             }
         }
+#else
+        public Task SendAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
+        {
+            return _socket.SendAsync(buffer, socketFlags);
+        }
+#endif
 
 #if NET452 || NET461
         sealed class SocketWrapper

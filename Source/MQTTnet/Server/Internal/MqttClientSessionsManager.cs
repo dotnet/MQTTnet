@@ -240,6 +240,132 @@ namespace MQTTnet.Server
             return new DispatchApplicationMessageResult(reasonCode, closeConnection, reasonString, userProperties);
         }
 
+        public async Task<DispatchApplicationMessageResult> DispatchApplicationMessageToClient(
+            string clientId,
+            string senderId,
+            IDictionary senderSessionItems,
+            MqttApplicationMessage applicationMessage,
+            CancellationToken cancellationToken)
+        {
+            var processPublish = true;
+            var closeConnection = false;
+            string reasonString = null;
+            List<MqttUserProperty> userProperties = null;
+            var reasonCode = 0; // The reason code is later converted into several different but compatible enums!
+
+            // Allow the user to intercept application message...
+            if (_eventContainer.InterceptingPublishEvent.HasHandlers)
+            {
+                var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, senderId, senderSessionItems);
+                if (string.IsNullOrEmpty(interceptingPublishEventArgs.ApplicationMessage.Topic))
+                {
+                    // This can happen if a topic alias us used but the topic is
+                    // unknown to the server.
+                    interceptingPublishEventArgs.Response.ReasonCode = MqttPubAckReasonCode.TopicNameInvalid;
+                    interceptingPublishEventArgs.ProcessPublish = false;
+                }
+
+                await _eventContainer.InterceptingPublishEvent.InvokeAsync(interceptingPublishEventArgs).ConfigureAwait(false);
+
+                applicationMessage = interceptingPublishEventArgs.ApplicationMessage;
+                closeConnection = interceptingPublishEventArgs.CloseConnection;
+                processPublish = interceptingPublishEventArgs.ProcessPublish;
+                reasonString = interceptingPublishEventArgs.Response.ReasonString;
+                userProperties = interceptingPublishEventArgs.Response.UserProperties;
+                reasonCode = (int)interceptingPublishEventArgs.Response.ReasonCode;
+            }
+
+            // Process the application message...
+            if (processPublish && applicationMessage != null)
+            {
+                try
+                {
+                    if (applicationMessage.Retain)
+                    {
+                        await _retainedMessagesManager.UpdateMessage(senderId, applicationMessage).ConfigureAwait(false);
+                    }
+
+                    MqttSession session;
+                    bool foundSession;
+                    lock (_sessionsManagementLock)
+                    {
+                        foundSession = _sessions.TryGetValue(clientId, out session);
+                    }
+                    if (!foundSession)
+                    {
+                        await FireApplicationMessageNotConsumedEvent(applicationMessage, senderId).ConfigureAwait(false);
+
+                        return new DispatchApplicationMessageResult(
+                                (int)MqttPubAckReasonCode.NoMatchingSubscribers,
+                                false,
+                                reasonString,
+                                userProperties);
+                    }
+
+                    // Calculate application message topic hash once for subscription checks
+                    MqttSubscription.CalculateTopicHash(applicationMessage.Topic, out var topicHash, out _, out _);
+                    
+                    if (!session.TryCheckSubscriptions(
+                            applicationMessage.Topic,
+                            topicHash,
+                            applicationMessage.QualityOfServiceLevel,
+                            senderId,
+                            out var checkSubscriptionsResult))
+                    {
+                        await FireApplicationMessageNotConsumedEvent(applicationMessage, senderId).ConfigureAwait(false);
+
+                        // Checking the subscriptions has failed for the session. The session
+                        // will be ignored.
+                        return new DispatchApplicationMessageResult(
+                            (int)MqttPubAckReasonCode.NoMatchingSubscribers,
+                            false,
+                            reasonString,
+                            userProperties);
+                    }
+
+                    if (!checkSubscriptionsResult.IsSubscribed)
+                    {
+                        await FireApplicationMessageNotConsumedEvent(applicationMessage, senderId).ConfigureAwait(false);
+
+                        return new DispatchApplicationMessageResult(
+                            (int)MqttPubAckReasonCode.NoMatchingSubscribers,
+                            false,
+                            reasonString,
+                            userProperties);
+                    }
+
+                    var publishPacketCopy = MqttPacketFactories.Publish.Create(applicationMessage);
+                    publishPacketCopy.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
+                    publishPacketCopy.SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers;
+
+                    if (publishPacketCopy.QualityOfServiceLevel > 0)
+                    {
+                        publishPacketCopy.PacketIdentifier = session.PacketIdentifierProvider.GetNextPacketIdentifier();
+                    }
+
+                    if (checkSubscriptionsResult.RetainAsPublished)
+                    {
+                        // Transfer the original retain state from the publisher. This is a MQTTv5 feature.
+                        publishPacketCopy.Retain = applicationMessage.Retain;
+                    }
+                    else
+                    {
+                        publishPacketCopy.Retain = false;
+                    }
+
+                    session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketCopy));
+                    
+                    _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'.", session.Id, applicationMessage.Topic);
+                }
+                catch (Exception exception)
+                {
+                    _logger.Error(exception, "Unhandled exception while processing next queued application message.");
+                }
+            }
+
+            return new DispatchApplicationMessageResult(reasonCode, closeConnection, reasonString, userProperties);
+        }
+
         public void Dispose()
         {
             _createConnectionSyncRoot.Dispose();

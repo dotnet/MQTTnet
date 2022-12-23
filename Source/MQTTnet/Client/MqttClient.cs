@@ -120,7 +120,7 @@ namespace MQTTnet.Client
                 }
 
                 Cleanup();
-                
+
                 _packetIdentifierProvider.Reset();
                 _packetDispatcher = new MqttPacketDispatcher();
 
@@ -197,7 +197,7 @@ namespace MQTTnet.Client
             {
                 return;
             }
-            
+
             try
             {
                 if (!clientWasConnected)
@@ -215,7 +215,7 @@ namespace MQTTnet.Client
 
                 // Sending the DISCONNECT may fail due to connection issues. The resulting exception
                 // must be throw to let the caller know that the disconnect is not a clean one.
-                var disconnectPacket = _packetFactories.Disconnect.Create(options);
+                var disconnectPacket = MqttPacketFactories.Disconnect.Create(options);
 
                 if (cancellationToken.CanBeCanceled)
                 {
@@ -785,11 +785,6 @@ namespace MQTTnet.Client
             }
         }
 
-        static void ThrowNotConnected()
-        {
-            throw new MqttCommunicationException("The client is not connected.");
-        }
-        
         static void ThrowIfOptionsInvalid(MqttClientOptions options)
         {
             if (options == null)
@@ -806,6 +801,11 @@ namespace MQTTnet.Client
             {
                 MqttClientOptionsValidator.ThrowIfNotSupported(options);
             }
+        }
+
+        static void ThrowNotConnected()
+        {
+            throw new MqttCommunicationException("The client is not connected.");
         }
 
         void TryInitiateDisconnect()

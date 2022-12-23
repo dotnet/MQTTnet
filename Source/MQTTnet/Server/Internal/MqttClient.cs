@@ -432,7 +432,7 @@ namespace MQTTnet.Server
                     {
                         throw new MqttProtocolViolationException("A PINGRESP Packet is sent by the Server to the Client in response to a PINGREQ Packet only.");
                     }
-                    else if (packet is MqttDisconnectPacket disconnectPacket)
+                    else if (currentPacket is MqttDisconnectPacket disconnectPacket)
                     {
                         DisconnectPacket = disconnectPacket;
                         return;

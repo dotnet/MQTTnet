@@ -74,6 +74,8 @@ namespace MQTTnet.Client
 
             _options.ChannelOptions = (IMqttClientChannelOptions)_tcpOptions ?? _webSocketOptions;
 
+            MqttClientOptionsValidator.ThrowIfNotSupported(_options);
+            
             return _options;
         }
 

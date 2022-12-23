@@ -19,7 +19,6 @@ namespace MQTTnet.Client
     public sealed class MqttClient : Disposable, IMqttClient
     {
         readonly IMqttClientAdapterFactory _adapterFactory;
-        readonly MqttApplicationMessageFactory _applicationMessageFactory = new MqttApplicationMessageFactory();
         readonly AsyncEvent<MqttApplicationMessageReceivedEventArgs> _applicationMessageReceivedEvent = new AsyncEvent<MqttApplicationMessageReceivedEventArgs>();
 
         readonly MqttClientPublishResultFactory _clientPublishResultFactory = new MqttClientPublishResultFactory();
@@ -32,7 +31,6 @@ namespace MQTTnet.Client
         readonly object _disconnectLock = new object();
         readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();
         readonly MqttNetSourceLogger _logger;
-        readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
 
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         readonly IMqttNetLogger _rootLogger;
@@ -306,7 +304,7 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
-            var subscribePacket = _packetFactories.Subscribe.Create(options);
+            var subscribePacket = MqttPacketFactories.Subscribe.Create(options);
             subscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
             var subAckPacket = await SendAndReceiveAsync<MqttSubAckPacket>(subscribePacket, cancellationToken).ConfigureAwait(false);
@@ -362,7 +360,7 @@ namespace MQTTnet.Client
             {
                 if (!eventArgs.ProcessingFailed)
                 {
-                    var pubAckPacket = _packetFactories.PubAck.Create(eventArgs);
+                    var pubAckPacket = MqttPacketFactories.PubAck.Create(eventArgs);
                     return SendAsync(pubAckPacket, cancellationToken);
                 }
             }
@@ -370,7 +368,7 @@ namespace MQTTnet.Client
             {
                 if (!eventArgs.ProcessingFailed)
                 {
-                    var pubRecPacket = _packetFactories.PubRec.Create(eventArgs);
+                    var pubRecPacket = MqttPacketFactories.PubRec.Create(eventArgs);
                     return SendAsync(pubRecPacket, cancellationToken);
                 }
             }
@@ -388,7 +386,7 @@ namespace MQTTnet.Client
 
             try
             {
-                var connectPacket = _packetFactories.Connect.Create(options);
+                var connectPacket = MqttPacketFactories.Connect.Create(options);
 
                 var connAckPacket = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
 
@@ -550,7 +548,7 @@ namespace MQTTnet.Client
 
         async Task<MqttApplicationMessageReceivedEventArgs> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket)
         {
-            var applicationMessage = _applicationMessageFactory.Create(publishPacket);
+            var applicationMessage = MqttApplicationMessageFactory.Create(publishPacket);
             var eventArgs = new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage, publishPacket, AcknowledgeReceivedPublishPacket);
 
             await _applicationMessageReceivedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
@@ -616,7 +614,7 @@ namespace MQTTnet.Client
             {
                 // The packet is unknown. Probably due to a restart of the client.
                 // So wen send this to the server to trigger a full resend of the message.
-                var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.PacketIdentifierNotFound);
+                var pubRelPacket = MqttPacketFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.PacketIdentifierNotFound);
                 return SendAsync(pubRelPacket, cancellationToken);
             }
 
@@ -625,7 +623,7 @@ namespace MQTTnet.Client
 
         Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
         {
-            var pubCompPacket = _packetFactories.PubComp.Create(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            var pubCompPacket = MqttPacketFactories.PubComp.Create(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
             return SendAsync(pubCompPacket, cancellationToken);
         }
 
@@ -652,7 +650,7 @@ namespace MQTTnet.Client
 
             var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
 
-            var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            var pubRelPacket = MqttPacketFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
 
             var pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
 

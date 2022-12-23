@@ -6,36 +6,49 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Tests.Mockups;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.Rpc;
-using MQTTnet.Protocol;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
+using MQTTnet.Protocol;
+using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests.Extensions
 {
     [TestClass]
-    public sealed class RPC_Tests : BaseTestClass
+    public sealed class Rpc_Tests : BaseTestClass
     {
+        [TestMethod]
+        public async Task Execute_Success_MQTT_V5_Mixed_Clients()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+                var responseSender = await testEnvironment.ConnectClient();
+                await responseSender.SubscribeAsync("MQTTnet.RPC/+/ping");
+
+                responseSender.ApplicationMessageReceivedAsync += async e =>
+                {
+                    Assert.IsNull(e.ApplicationMessage.ResponseTopic);
+                    await responseSender.PublishStringAsync(e.ApplicationMessage.Topic + "/response", "pong");
+                };
+
+                var requestSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
+
+                using (var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build()))
+                {
+                    var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
+
+                    Assert.AreEqual("pong", Encoding.UTF8.GetString(response));
+                }
+            }
+        }
+
         [TestMethod]
         public Task Execute_Success_With_QoS_0()
         {
             return Execute_Success(MqttQualityOfServiceLevel.AtMostOnce, MqttProtocolVersion.V311);
-        }
-
-        [TestMethod]
-        public Task Execute_Success_With_QoS_1()
-        {
-            return Execute_Success(MqttQualityOfServiceLevel.AtLeastOnce, MqttProtocolVersion.V311);
-        }
-
-        [TestMethod]
-        public Task Execute_Success_With_QoS_2()
-        {
-            return Execute_Success(MqttQualityOfServiceLevel.ExactlyOnce, MqttProtocolVersion.V311);
         }
 
         [TestMethod]
@@ -45,27 +58,39 @@ namespace MQTTnet.Tests
         }
 
         [TestMethod]
-        public Task Execute_Success_With_QoS_1_MQTT_V5()
-        {
-            return Execute_Success(MqttQualityOfServiceLevel.AtLeastOnce, MqttProtocolVersion.V500);
-        }
-
-        [TestMethod]
-        public Task Execute_Success_With_QoS_2_MQTT_V5()
-        {
-            return Execute_Success(MqttQualityOfServiceLevel.ExactlyOnce, MqttProtocolVersion.V500);
-        }
-
-        [TestMethod]
         public Task Execute_Success_With_QoS_0_MQTT_V5_Use_ResponseTopic()
         {
             return Execute_Success_MQTT_V5(MqttQualityOfServiceLevel.AtMostOnce);
         }
 
         [TestMethod]
+        public Task Execute_Success_With_QoS_1()
+        {
+            return Execute_Success(MqttQualityOfServiceLevel.AtLeastOnce, MqttProtocolVersion.V311);
+        }
+
+        [TestMethod]
+        public Task Execute_Success_With_QoS_1_MQTT_V5()
+        {
+            return Execute_Success(MqttQualityOfServiceLevel.AtLeastOnce, MqttProtocolVersion.V500);
+        }
+
+        [TestMethod]
         public Task Execute_Success_With_QoS_1_MQTT_V5_Use_ResponseTopic()
         {
             return Execute_Success_MQTT_V5(MqttQualityOfServiceLevel.AtLeastOnce);
+        }
+
+        [TestMethod]
+        public Task Execute_Success_With_QoS_2()
+        {
+            return Execute_Success(MqttQualityOfServiceLevel.ExactlyOnce, MqttProtocolVersion.V311);
+        }
+
+        [TestMethod]
+        public Task Execute_Success_With_QoS_2_MQTT_V5()
+        {
+            return Execute_Success(MqttQualityOfServiceLevel.ExactlyOnce, MqttProtocolVersion.V500);
         }
 
         [TestMethod]
@@ -92,17 +117,52 @@ namespace MQTTnet.Tests
 
         [TestMethod]
         [ExpectedException(typeof(MqttCommunicationTimedOutException))]
+        public async Task Execute_Timeout_MQTT_V5_Mixed_Clients()
+        {
+            using (var testEnvironment = new TestEnvironment(TestContext))
+            {
+                await testEnvironment.StartServer();
+                var responseSender = await testEnvironment.ConnectClient();
+                await responseSender.SubscribeAsync("MQTTnet.RPC/+/ping");
+
+                responseSender.ApplicationMessageReceivedAsync += async e =>
+                {
+                    Assert.IsNull(e.ApplicationMessage.ResponseTopic);
+                    await CompletedTask.Instance;
+                };
+
+                var requestSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
+
+                using (var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build()))
+                {
+                    var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
+                }
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(MqttCommunicationTimedOutException))]
         public async Task Execute_With_Custom_Topic_Names()
         {
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
 
-                var requestSender = await testEnvironment.ConnectClient();
-
                 var rpcClient = await testEnvironment.ConnectRpcClient(new MqttRpcClientOptionsBuilder().WithTopicGenerationStrategy(new TestTopicStrategy()).Build());
 
                 await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
+            }
+        }
+
+        [TestMethod]
+        public void Use_Factory()
+        {
+            var factory = new MqttFactory();
+            using (var client = factory.CreateMqttClient())
+            {
+                var rpcClient = factory.CreateMqttRpcClient(client);
+
+                Assert.IsNotNull(rpcClient);
             }
         }
 
@@ -147,57 +207,6 @@ namespace MQTTnet.Tests
                     var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), "ping", "", qosLevel);
 
                     Assert.AreEqual("pong", Encoding.UTF8.GetString(response));
-                }
-            }
-        }
-
-        [TestMethod]
-        public async Task Execute_Success_MQTT_V5_Mixed_Clients()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                await testEnvironment.StartServer();
-                var responseSender = await testEnvironment.ConnectClient();
-                await responseSender.SubscribeAsync("MQTTnet.RPC/+/ping", MqttQualityOfServiceLevel.AtMostOnce);
-
-                responseSender.ApplicationMessageReceivedAsync += async e =>
-                {
-                    Assert.IsNull(e.ApplicationMessage.ResponseTopic);
-                    await responseSender.PublishStringAsync(e.ApplicationMessage.Topic + "/response", "pong");
-                };
-
-                var requestSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
-
-                using (var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build()))
-                {
-                    var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
-
-                    Assert.AreEqual("pong", Encoding.UTF8.GetString(response));
-                }
-            }
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(MqttCommunicationTimedOutException))]
-        public async Task Execute_Timeout_MQTT_V5_Mixed_Clients()
-        {
-            using (var testEnvironment = new TestEnvironment(TestContext))
-            {
-                await testEnvironment.StartServer();
-                var responseSender = await testEnvironment.ConnectClient();
-                await responseSender.SubscribeAsync("MQTTnet.RPC/+/ping", MqttQualityOfServiceLevel.AtMostOnce);
-
-                responseSender.ApplicationMessageReceivedAsync += async e =>
-                {
-                    Assert.IsNull(e.ApplicationMessage.ResponseTopic);
-                    await CompletedTask.Instance;
-                };
-
-                var requestSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
-
-                using (var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build()))
-                {
-                    var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
                 }
             }
         }

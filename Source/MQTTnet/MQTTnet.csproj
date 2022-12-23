@@ -41,7 +41,8 @@
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <NoWarn>1591</NoWarn>
+        <NoWarn>1591;NETSDK1138</NoWarn>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(TargetFramework)'=='uap10.0'">

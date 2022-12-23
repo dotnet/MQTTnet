@@ -39,6 +39,8 @@ namespace MQTTnet.Formatter
             else
             {
                 packet.ReasonCode = (MqttDisconnectReasonCode)clientDisconnectOptions.Reason;
+                packet.UserProperties = clientDisconnectOptions.UserProperties;
+                packet.SessionExpiryInterval = clientDisconnectOptions.SessionExpiryInterval;
             }
 
             return packet;

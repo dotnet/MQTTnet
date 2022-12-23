@@ -182,7 +182,6 @@ namespace MQTTnet.Implementations
             try
             {
 #if NET5_0_OR_GREATER
-
                 if (_networkStream != null)
                 {
                     await _networkStream.DisposeAsync().ConfigureAwait(false);

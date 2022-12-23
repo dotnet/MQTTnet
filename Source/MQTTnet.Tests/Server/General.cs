@@ -636,7 +636,7 @@ namespace MQTTnet.Tests.Server
                 // nothing
 
                 Assert.AreEqual(false, c1.IsConnected);
-                await c1.DisconnectAsync();
+                await c1.TryDisconnectAsync();
                 Assert.AreEqual(false, c1.IsConnected);
 
                 await Task.Delay(500);

@@ -14,7 +14,7 @@ using MQTTnet.LowLevelClient;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Tests.Client
+namespace MQTTnet.Tests.Clients.LowLevelMqttClient
 {
     [TestClass]
     public sealed class LowLevelMqttClient_Tests : BaseTestClass

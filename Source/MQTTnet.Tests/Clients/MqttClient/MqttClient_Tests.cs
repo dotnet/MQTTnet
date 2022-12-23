@@ -21,7 +21,7 @@ using MQTTnet.Tests.Mockups;
 
 // ReSharper disable InconsistentNaming
 
-namespace MQTTnet.Tests.Client
+namespace MQTTnet.Tests.Clients.MqttClient
 {
     [TestClass]
     public sealed class MqttClient_Tests : BaseTestClass
@@ -71,60 +71,34 @@ namespace MQTTnet.Tests.Client
         }
 
         [TestMethod]
-        [ExpectedException(typeof(MqttCommunicationException))]
-        public async Task Connect_To_Invalid_Server_Port_Not_Opened()
+        public async Task Connect_Disconnect_Connect()
         {
-            var client = new MqttFactory().CreateMqttClient();
-            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", 12345).WithTimeout(TimeSpan.FromSeconds(5)).Build());
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(OperationCanceledException))]
-        public async Task Connect_To_Invalid_Server_Wrong_IP()
-        {
-            var client = new MqttFactory().CreateMqttClient();
-            using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2)))
+            using (var testEnvironment = CreateTestEnvironment())
             {
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build(), timeout.Token);
+                await testEnvironment.StartServer();
+
+                var clientOptions = testEnvironment.CreateDefaultClientOptions();
+                var client = testEnvironment.CreateClient();
+
+                await client.ConnectAsync(clientOptions);
+                await client.DisconnectAsync();
+                await client.ConnectAsync(clientOptions);
             }
         }
-
+        
         [TestMethod]
-        [ExpectedException(typeof(MqttCommunicationException))]
-        public async Task Connect_To_Invalid_Server_Wrong_Protocol()
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task Connect_Multiple_Times_Should_Fail()
         {
-            var client = new MqttFactory().CreateMqttClient();
-            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("http://127.0.0.1", 12345).WithTimeout(TimeSpan.FromSeconds(2)).Build());
-        }
-
-        [TestMethod]
-        public async Task ConnectTimeout_Throws_Exception()
-        {
-            var factory = new MqttFactory();
-            using (var client = factory.CreateMqttClient())
+            using (var testEnvironment = CreateTestEnvironment())
             {
-                var disconnectHandlerCalled = false;
-                try
-                {
-                    client.DisconnectedAsync += args =>
-                    {
-                        disconnectHandlerCalled = true;
-                        return CompletedTask.Instance;
-                    };
+                await testEnvironment.StartServer();
 
-                    await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build());
+                var clientOptions = testEnvironment.CreateDefaultClientOptions();
+                var client = testEnvironment.CreateClient();
 
-                    Assert.Fail("Must fail!");
-                }
-                catch (Exception exception)
-                {
-                    Assert.IsNotNull(exception);
-                    Assert.IsInstanceOfType(exception, typeof(MqttCommunicationException));
-                    //Assert.IsInstanceOfType(exception.InnerException, typeof(SocketException));
-                }
-
-                await LongTestDelay(); // disconnected handler is called async
-                Assert.IsTrue(disconnectHandlerCalled);
+                await client.ConnectAsync(clientOptions);
+                await client.ConnectAsync(clientOptions);
             }
         }
 

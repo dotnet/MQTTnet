@@ -339,16 +339,6 @@ namespace MQTTnet.Client
 
         public MqttClientOptionsBuilder WithUserProperty(string name, string value)
         {
-            if (name is null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
             if (_options.UserProperties == null)
             {
                 _options.UserProperties = new List<MqttUserProperty>();

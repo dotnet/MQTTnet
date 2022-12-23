@@ -37,28 +37,28 @@ namespace MQTTnet.Formatter
 
         public byte[] ToArray()
         {
-            if (Packet.Count == 0)
+            if (Payload.Count == 0)
             {
                 return Packet.ToArray();
             }
 
             var buffer = new byte[Length];
-            Array.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
-            Array.Copy(Payload.Array, Payload.Offset, buffer, Packet.Count, Payload.Count);
+            MqttMemoryHelper.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
+            MqttMemoryHelper.Copy(Payload.Array, Payload.Offset, buffer, Packet.Count, Payload.Count);
 
             return buffer;
         }
         
         public ArraySegment<byte> Join()
         {
-            if (Packet.Count == 0)
+            if (Payload.Count == 0)
             {
                 return Packet;
             }
 
             var buffer = new byte[Length];
-            Array.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
-            Array.Copy(Payload.Array, Payload.Offset, buffer, Packet.Count, Payload.Count);
+            MqttMemoryHelper.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
+            MqttMemoryHelper.Copy(Payload.Array, Payload.Offset, buffer, Packet.Count, Payload.Count);
 
             return new ArraySegment<byte>(buffer);
         }

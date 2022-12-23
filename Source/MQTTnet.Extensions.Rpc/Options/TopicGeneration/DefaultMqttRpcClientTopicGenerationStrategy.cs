@@ -10,6 +10,11 @@ namespace MQTTnet.Extensions.Rpc
     {
         public MqttRpcTopicPair CreateRpcTopics(TopicGenerationContext context)
         {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             if (context.MethodName.Contains("/") || context.MethodName.Contains("+") || context.MethodName.Contains("#"))
             {
                 throw new ArgumentException("The method name cannot contain /, + or #.");

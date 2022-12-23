@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Security.Authentication;
@@ -17,14 +18,14 @@ using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using SuperSocket.ClientEngine;
 using WebSocket4Net;
+using DataReceivedEventArgs = WebSocket4Net.DataReceivedEventArgs;
 
 namespace MQTTnet.Extensions.WebSocket4Net
 {
     public sealed class WebSocket4NetMqttChannel : IMqttChannel
     {
-        readonly BlockingCollection<byte> _receiveBuffer = new BlockingCollection<byte>();
-
         readonly MqttClientOptions _clientOptions;
+        readonly BlockingCollection<byte> _receiveBuffer = new BlockingCollection<byte>();
         readonly MqttClientWebSocketOptions _webSocketOptions;
 
         WebSocket _webSocket;
@@ -35,13 +36,13 @@ namespace MQTTnet.Extensions.WebSocket4Net
             _webSocketOptions = webSocketOptions ?? throw new ArgumentNullException(nameof(webSocketOptions));
         }
 
+        public X509Certificate2 ClientCertificate { get; }
+
         public string Endpoint => _webSocketOptions.Uri;
 
         public bool IsSecureConnection { get; private set; }
 
-        public X509Certificate2 ClientCertificate { get; }
-
-        public async Task ConnectAsync(CancellationToken cancellationToken)
+        public Task ConnectAsync(CancellationToken cancellationToken)
         {
             var uri = _webSocketOptions.Uri;
             if (!uri.StartsWith("ws://", StringComparison.OrdinalIgnoreCase) && !uri.StartsWith("wss://", StringComparison.OrdinalIgnoreCase))
@@ -55,11 +56,13 @@ namespace MQTTnet.Extensions.WebSocket4Net
                     uri = "wss://" + uri;
                 }
             }
+            
+            IsSecureConnection = uri.StartsWith("wss://", StringComparison.OrdinalIgnoreCase);
 
-#if NET48 || NETCOREAPP3_1 || NET5 || NET6
-            var sslProtocols = _webSocketOptions?.TlsOptions?.SslProtocol ?? SslProtocols.Tls12 | SslProtocols.Tls13;
+#if NET48 || NETCOREAPP3_0_OR_GREATER
+            var sslProtocols = _webSocketOptions.TlsOptions?.SslProtocol ?? SslProtocols.Tls12 | SslProtocols.Tls13;
 #else
-            var sslProtocols = _webSocketOptions?.TlsOptions?.SslProtocol ?? SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;
+            var sslProtocols = _webSocketOptions.TlsOptions?.SslProtocol ?? SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;
 #endif
 
             var subProtocol = _webSocketOptions.SubProtocols.FirstOrDefault() ?? string.Empty;
@@ -90,7 +93,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
             var receiveBufferSize = 0;
 
             var certificates = new X509CertificateCollection();
-            if (_webSocketOptions?.TlsOptions?.Certificates != null)
+            if (_webSocketOptions.TlsOptions?.Certificates != null)
             {
                 foreach (var certificate in _webSocketOptions.TlsOptions.Certificates)
                 {
@@ -107,15 +110,13 @@ namespace MQTTnet.Extensions.WebSocket4Net
                 NoDelay = true,
                 Security =
                 {
-                    AllowUnstrustedCertificate = _webSocketOptions?.TlsOptions?.AllowUntrustedCertificates == true,
-                    AllowCertificateChainErrors = _webSocketOptions?.TlsOptions?.IgnoreCertificateChainErrors == true,
+                    AllowUnstrustedCertificate = _webSocketOptions.TlsOptions?.AllowUntrustedCertificates == true,
+                    AllowCertificateChainErrors = _webSocketOptions.TlsOptions?.IgnoreCertificateChainErrors == true,
                     Certificates = certificates
                 }
             };
 
-            await ConnectInternalAsync(cancellationToken).ConfigureAwait(false);
-            
-            IsSecureConnection = uri.StartsWith("wss://", StringComparison.OrdinalIgnoreCase);
+            return ConnectInternalAsync(cancellationToken);
         }
 
         public Task DisconnectAsync(CancellationToken cancellationToken)
@@ -124,8 +125,21 @@ namespace MQTTnet.Extensions.WebSocket4Net
             {
                 _webSocket.Close();
             }
-            
+
             return CompletedTask.Instance;
+        }
+
+        public void Dispose()
+        {
+            if (_webSocket == null)
+            {
+                return;
+            }
+
+            _webSocket.DataReceived -= OnDataReceived;
+            _webSocket.Error -= OnError;
+            _webSocket.Dispose();
+            _webSocket = null;
         }
 
         public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -161,75 +175,55 @@ namespace MQTTnet.Extensions.WebSocket4Net
             return CompletedTask.Instance;
         }
 
-        public void Dispose()
-        {
-            if (_webSocket == null)
-            {
-                return;
-            }
-
-            _webSocket.DataReceived -= OnDataReceived;
-            _webSocket.Error -= OnError;
-            _webSocket.Dispose();
-            _webSocket = null;
-        }
-
-        static void OnError(object sender, ErrorEventArgs e)
-        {
-            System.Diagnostics.Debug.Write(e.Exception.ToString());
-        }
-
-        void OnDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            foreach (var @byte in e.Data)
-            {
-                _receiveBuffer.Add(@byte);
-            }
-        }
-
         async Task ConnectInternalAsync(CancellationToken cancellationToken)
         {
             _webSocket.Error += OnError;
             _webSocket.DataReceived += OnDataReceived;
 
-            var taskCompletionSource = new TaskCompletionSource<Exception>();
+            var promise = new AsyncTaskCompletionSource<bool>();
 
             void ErrorHandler(object sender, ErrorEventArgs e)
             {
-                taskCompletionSource.TrySetResult(e.Exception);
+                promise.TrySetException(e.Exception);
             }
 
-            void SuccessHandler(object sender, EventArgs e)
+            void OpenedHandler(object sender, EventArgs e)
             {
-                taskCompletionSource.TrySetResult(null);
+                promise.TrySetResult(true);
+            }
+
+            void ClosedHandler(object sender, EventArgs e)
+            {
+                promise.TrySetException(new MqttCommunicationException("Connection closed."));
             }
 
             try
             {
-                _webSocket.Opened += SuccessHandler;
+                _webSocket.Opened += OpenedHandler;
+                _webSocket.Closed += ClosedHandler;
                 _webSocket.Error += ErrorHandler;
 
-#pragma warning disable AsyncFixer02 // Long-running or blocking operations inside an async method
-                _webSocket.Open();
-#pragma warning restore AsyncFixer02 // Long-running or blocking operations inside an async method
-
-                using (var timeoutCts = new CancellationTokenSource(_clientOptions.Timeout))
-                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken))
+                using (var timeout = new CancellationTokenSource(_clientOptions.Timeout))
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
                 {
-                    using (linkedCts.Token.Register(() => taskCompletionSource.TrySetCanceled()))
+                    using (linkedCts.Token.Register(() => promise.TrySetCanceled()))
                     {
                         try
                         {
-                            await taskCompletionSource.Task.ConfigureAwait(false);
+                            // OpenAsync does basically the same but without support for a cancellation token.
+                            // So we do it on our own!
+                            _webSocket.Open();
+
+                            await promise.Task.ConfigureAwait(false);
                         }
                         catch (Exception exception)
                         {
-                            var timeoutReached = timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested;
+                            var timeoutReached = timeout.IsCancellationRequested && !cancellationToken.IsCancellationRequested;
                             if (timeoutReached)
                             {
                                 throw new MqttCommunicationTimedOutException(exception);
                             }
-                            
+
                             if (exception is AuthenticationException authenticationException)
                             {
                                 throw new MqttCommunicationException(authenticationException.InnerException);
@@ -251,9 +245,23 @@ namespace MQTTnet.Extensions.WebSocket4Net
             }
             finally
             {
-                _webSocket.Opened -= SuccessHandler;
+                _webSocket.Opened -= OpenedHandler;
+                _webSocket.Closed -= ClosedHandler;
                 _webSocket.Error -= ErrorHandler;
             }
+        }
+
+        void OnDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            foreach (var @byte in e.Data)
+            {
+                _receiveBuffer.Add(@byte);
+            }
+        }
+
+        static void OnError(object sender, ErrorEventArgs e)
+        {
+            Debug.Write(e.Exception.ToString());
         }
     }
 }

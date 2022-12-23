@@ -14,7 +14,6 @@ namespace MQTTnet.Formatter
     {
         public MqttPubAckPacket Create(
             MqttPublishPacket publishPacket,
-            InterceptingPublishEventArgs interceptingPublishEventArgs,
             DispatchApplicationMessageResult dispatchApplicationMessageResult)
         {
             if (publishPacket == null)
@@ -22,28 +21,19 @@ namespace MQTTnet.Formatter
                 throw new ArgumentNullException(nameof(publishPacket));
             }
 
+            if (dispatchApplicationMessageResult == null)
+            {
+                throw new ArgumentNullException(nameof(dispatchApplicationMessageResult));
+            }
+
             var pubAckPacket = new MqttPubAckPacket
             {
-                PacketIdentifier = publishPacket.PacketIdentifier
+                PacketIdentifier = publishPacket.PacketIdentifier,
+                ReasonCode = (MqttPubAckReasonCode)dispatchApplicationMessageResult.ReasonCode,
+                ReasonString = dispatchApplicationMessageResult.ReasonString,
+                UserProperties = dispatchApplicationMessageResult.UserProperties
             };
-
-            if (dispatchApplicationMessageResult.MatchingSubscribersCount == 0)
-            {
-                // NoMatchingSubscribers is ONLY sent by the server!
-                pubAckPacket.ReasonCode = MqttPubAckReasonCode.NoMatchingSubscribers;
-            }
-            else
-            {
-                pubAckPacket.ReasonCode = MqttPubAckReasonCode.Success;
-            }
-
-            if (interceptingPublishEventArgs != null)
-            {
-                pubAckPacket.ReasonCode = (MqttPubAckReasonCode)(int)interceptingPublishEventArgs.Response.ReasonCode;
-                pubAckPacket.ReasonString = interceptingPublishEventArgs.Response.ReasonString;
-                pubAckPacket.UserProperties = interceptingPublishEventArgs.Response.UserProperties;
-            }
-
+            
             return pubAckPacket;
         }
 

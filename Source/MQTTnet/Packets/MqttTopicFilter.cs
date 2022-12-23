@@ -10,8 +10,8 @@ namespace MQTTnet.Packets
     {
         /// <summary>
         ///     Gets or sets a value indicating whether the sender will not receive its own published application messages.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        /// Hint: MQTT 5 feature only.
         public bool NoLocal { get; set; }
 
         /// <summary>
@@ -27,15 +27,15 @@ namespace MQTTnet.Packets
 
         /// <summary>
         ///     Gets or sets a value indicating whether messages are retained as published or not.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public bool RetainAsPublished { get; set; }
 
         /// <summary>
         ///     Gets or sets the retain handling.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        public MqttRetainHandling RetainHandling { get; set; }
+        public MqttRetainHandling RetainHandling { get; set; } = MqttRetainHandling.SendAtSubscribe;
 
         /// <summary>
         ///     Gets or sets the MQTT topic.

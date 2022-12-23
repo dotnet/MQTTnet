@@ -5,7 +5,7 @@
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Tests.Extensions
+namespace MQTTnet.Tests.Helpers
 {
     public static class MqttPacketWriterExtensions
     {

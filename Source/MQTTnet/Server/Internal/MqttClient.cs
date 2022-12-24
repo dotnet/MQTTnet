@@ -57,11 +57,11 @@ namespace MQTTnet.Server
 
         public IMqttChannelAdapter ChannelAdapter { get; }
 
+        public MqttDisconnectPacket DisconnectPacket { get; set; }
+
         public string Endpoint { get; }
 
         public string Id => _connectPacket.ClientId;
-
-        public bool IsCleanDisconnect { get; private set; }
 
         public bool IsRunning { get; private set; }
 
@@ -95,8 +95,7 @@ namespace MQTTnet.Server
             {
                 var cancellationToken = _cancellationToken.Token;
 
-                _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default)
-                    .ConfigureAwait(false);
+                _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
 
                 IsRunning = true;
 
@@ -111,7 +110,9 @@ namespace MQTTnet.Server
                 _cancellationToken = null;
             }
 
-            if (!IsTakenOver && !IsCleanDisconnect && Session.LatestConnectPacket.WillFlag && !Session.WillMessageSent)
+            var isCleanDisconnect = DisconnectPacket != null;
+
+            if (!IsTakenOver && !isCleanDisconnect && Session.LatestConnectPacket.WillFlag && !Session.WillMessageSent)
             {
                 var willPublishPacket = MqttPacketFactories.Publish.Create(Session.LatestConnectPacket);
                 var willApplicationMessage = MqttApplicationMessageFactory.Create(willPublishPacket);
@@ -431,9 +432,9 @@ namespace MQTTnet.Server
                     {
                         throw new MqttProtocolViolationException("A PINGRESP Packet is sent by the Server to the Client in response to a PINGREQ Packet only.");
                     }
-                    else if (currentPacket is MqttDisconnectPacket)
+                    else if (currentPacket is MqttDisconnectPacket disconnectPacket)
                     {
-                        IsCleanDisconnect = true;
+                        DisconnectPacket = disconnectPacket;
                         return;
                     }
                     else

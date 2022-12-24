@@ -28,8 +28,6 @@ namespace MQTTnet.Server
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttNetLogger _rootLogger;
 
-        readonly IDictionary _sessionItems = new ConcurrentDictionary<object, object>();
-
         CancellationTokenSource _cancellationTokenSource;
 
         public MqttServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
@@ -167,6 +165,12 @@ namespace MQTTnet.Server
 
         public bool IsStarted => _cancellationTokenSource != null;
 
+        /// <summary>
+        ///     Gives access to the session items which belong to this server. This session items are passed
+        ///     to several events instead of the client session items if the event is caused by the server instead of a client.
+        /// </summary>
+        public IDictionary ServerSessionItems { get; } = new ConcurrentDictionary<object, object>();
+
         public Task DeleteRetainedMessagesAsync()
         {
             ThrowIfNotStarted();
@@ -230,7 +234,7 @@ namespace MQTTnet.Server
 
             return _clientSessionsManager.DispatchApplicationMessage(
                 injectedApplicationMessage.SenderClientId,
-                _sessionItems,
+                ServerSessionItems,
                 injectedApplicationMessage.ApplicationMessage,
                 cancellationToken);
         }

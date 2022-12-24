@@ -120,7 +120,7 @@ namespace MQTTnet.Internal
                     return;
                 }
             }
-            while (_readWaiters.Any())
+            while (_readWaiters.Count > 0)
             {
                 var waiter = _readWaiters.Dequeue();
                 var isApproved = waiter.Approve(_readReleaser);

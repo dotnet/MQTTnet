@@ -16,6 +16,28 @@ namespace MQTTnet.Samples.Client;
 
 public static class Client_Connection_Samples
 {
+    public static async Task Clean_Disconnect()
+    {
+        /*
+         * This sample disconnects in a clean way. This will send a MQTT DISCONNECT packet
+         * to the server and close the connection afterwards.
+         *
+         * See sample _Connect_Client_ for more details.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
+            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            // This will send the DISCONNECT packet. Calling _Dispose_ without DisconnectAsync the 
+            // connection is closed in a "not clean" way. See MQTT specification for more details.
+            await mqttClient.DisconnectAsync(new MqttClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.NormalDisconnection).Build());
+        }
+    }
+
     public static async Task Connect_Client()
     {
         /*
@@ -232,7 +254,7 @@ public static class Client_Connection_Samples
 
             // Calling _DisconnectAsync_ will send a DISCONNECT packet before closing the connection.
             // Using a reason code requires MQTT version 5.0.0!
-            await mqttClient.DisconnectAsync(MqttClientDisconnectReason.ImplementationSpecificError);
+            await mqttClient.DisconnectAsync(MqttClientDisconnectOptionsReason.ImplementationSpecificError);
         }
     }
 

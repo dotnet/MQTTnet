@@ -55,14 +55,8 @@ namespace MQTTnet
 
         /// <summary>
         ///     Adds the content type to the message.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        /// <returns>
-        ///     A new instance of the
-        ///     <see
-        ///         cref="MqttApplicationMessageBuilder" />
-        ///     class.
-        /// </returns>
         public MqttApplicationMessageBuilder WithContentType(string contentType)
         {
             _contentType = contentType;
@@ -71,18 +65,8 @@ namespace MQTTnet
 
         /// <summary>
         ///     Adds the correlation data to the message.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        /// <param
-        ///     name="correlationData">
-        ///     The correlation data.
-        /// </param>
-        /// <returns>
-        ///     A new instance of the
-        ///     <see
-        ///         cref="MqttApplicationMessageBuilder" />
-        ///     class.
-        /// </returns>
         public MqttApplicationMessageBuilder WithCorrelationData(byte[] correlationData)
         {
             _correlationData = correlationData;
@@ -91,18 +75,8 @@ namespace MQTTnet
 
         /// <summary>
         ///     Adds the message expiry interval in seconds to the message.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        /// <param
-        ///     name="messageExpiryInterval">
-        ///     The message expiry interval.
-        /// </param>
-        /// <returns>
-        ///     A new instance of the
-        ///     <see
-        ///         cref="MqttApplicationMessageBuilder" />
-        ///     class.
-        /// </returns>
         public MqttApplicationMessageBuilder WithMessageExpiryInterval(uint messageExpiryInterval)
         {
             _messageExpiryInterval = messageExpiryInterval;
@@ -185,18 +159,8 @@ namespace MQTTnet
 
         /// <summary>
         ///     Adds the payload format indicator to the message.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        /// <param
-        ///     name="payloadFormatIndicator">
-        ///     The payload format indicator.
-        /// </param>
-        /// <returns>
-        ///     A new instance of the
-        ///     <see
-        ///         cref="MqttApplicationMessageBuilder" />
-        ///     class.
-        /// </returns>
         public MqttApplicationMessageBuilder WithPayloadFormatIndicator(MqttPayloadFormatIndicator payloadFormatIndicator)
         {
             _payloadFormatIndicator = payloadFormatIndicator;
@@ -220,18 +184,8 @@ namespace MQTTnet
 
         /// <summary>
         ///     Adds the response topic to the message.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        /// <param
-        ///     name="responseTopic">
-        ///     The response topic.
-        /// </param>
-        /// <returns>
-        ///     A new instance of the
-        ///     <see
-        ///         cref="MqttApplicationMessageBuilder" />
-        ///     class.
-        /// </returns>
         public MqttApplicationMessageBuilder WithResponseTopic(string responseTopic)
         {
             _responseTopic = responseTopic;
@@ -251,18 +205,8 @@ namespace MQTTnet
 
         /// <summary>
         ///     Adds the subscription identifier to the message.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        /// <param
-        ///     name="subscriptionIdentifier">
-        ///     The subscription identifier.
-        /// </param>
-        /// <returns>
-        ///     A new instance of the
-        ///     <see
-        ///         cref="MqttApplicationMessageBuilder" />
-        ///     class.
-        /// </returns>
         public MqttApplicationMessageBuilder WithSubscriptionIdentifier(uint subscriptionIdentifier)
         {
             if (_subscriptionIdentifiers == null)
@@ -289,18 +233,8 @@ namespace MQTTnet
 
         /// <summary>
         ///     Adds the topic alias to the message.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        /// <param
-        ///     name="topicAlias">
-        ///     The topic alias.
-        /// </param>
-        /// <returns>
-        ///     A new instance of the
-        ///     <see
-        ///         cref="MqttApplicationMessageBuilder" />
-        ///     class.
-        /// </returns>
         public MqttApplicationMessageBuilder WithTopicAlias(ushort topicAlias)
         {
             _topicAlias = topicAlias;
@@ -309,22 +243,8 @@ namespace MQTTnet
 
         /// <summary>
         ///     Adds the user property to the message.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        /// <param
-        ///     name="name">
-        ///     The property name.
-        /// </param>
-        /// <param
-        ///     name="value">
-        ///     The property value.
-        /// </param>
-        /// <returns>
-        ///     A new instance of the
-        ///     <see
-        ///         cref="MqttApplicationMessageBuilder" />
-        ///     class.
-        /// </returns>
         public MqttApplicationMessageBuilder WithUserProperty(string name, string value)
         {
             if (_userProperties == null)

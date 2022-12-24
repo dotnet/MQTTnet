@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
@@ -17,9 +18,9 @@ namespace MQTTnet.Extensions.Rpc
     {
         readonly IMqttClient _mqttClient;
         readonly MqttRpcClientOptions _options;
-        
+
         readonly ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>>();
-        
+
         public MqttRpcClient(IMqttClient mqttClient, MqttRpcClientOptions options)
         {
             _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
@@ -83,11 +84,14 @@ namespace MQTTnet.Extensions.Rpc
                 throw new MqttProtocolViolationException("RPC response topic is empty.");
             }
 
-            var requestMessage = new MqttApplicationMessageBuilder().WithTopic(requestTopic)
-                .WithPayload(payload)
-                .WithQualityOfServiceLevel(qualityOfServiceLevel)
-                .WithResponseTopic(responseTopic)
-                .Build();
+            var requestMessageBuilder = new MqttApplicationMessageBuilder().WithTopic(requestTopic).WithPayload(payload).WithQualityOfServiceLevel(qualityOfServiceLevel);
+
+            if (_mqttClient.Options.ProtocolVersion == MqttProtocolVersion.V500)
+            {
+                requestMessageBuilder.WithResponseTopic(responseTopic);
+            }
+
+            var requestMessage = requestMessageBuilder.Build();
 
             try
             {

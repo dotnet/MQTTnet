@@ -39,7 +39,7 @@ namespace MQTTnet.Internal
 
             lock (_syncRoot)
             {
-                if (!_isLockedForWrite && !_writeWaiters.Any())
+                if (!_isLockedForWrite && _writeWaiters.Count == 0)
                 {
                     _readLockCount++;
                     return _readCompletedTask;

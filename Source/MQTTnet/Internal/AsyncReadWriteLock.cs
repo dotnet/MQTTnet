@@ -108,7 +108,7 @@ namespace MQTTnet.Internal
 
         private void ApproveNextWaiter()
         {
-            while (_writeWaiters.Any())
+            while (_writeWaiters.Count > 0)
             {
                 var waiter = _writeWaiters.Dequeue();
                 var isApproved = waiter.Approve(_writeReleaser);

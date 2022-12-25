@@ -14,11 +14,10 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {
-    public class MqttServer : Disposable, IMqttServerExtensibility
+    public class MqttServer : Disposable
     {
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttClientSessionsManager _clientSessionsManager;
@@ -167,10 +166,6 @@ namespace MQTTnet.Server
         }
 
         public bool IsStarted => _cancellationTokenSource != null;
-
-        MqttClientSessionsManager IMqttServerExtensibility.MqttClientSessionsManager => _clientSessionsManager;
-
-        IDictionary IMqttServerExtensibility.SessionItems => _sessionItems;
 
         public Task DeleteRetainedMessagesAsync()
         {

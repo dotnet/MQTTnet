@@ -170,6 +170,8 @@ namespace MQTTnet.Server
 
         MqttClientSessionsManager IMqttServerExtensibility.MqttClientSessionsManager => _clientSessionsManager;
 
+        IDictionary IMqttServerExtensibility.SessionItems => _sessionItems;
+
         public Task DeleteRetainedMessagesAsync()
         {
             ThrowIfNotStarted();

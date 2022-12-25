@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,6 +9,8 @@ namespace MQTTnet.Server.Internal
     {
 
         MqttClientSessionsManager MqttClientSessionsManager { get; }
+
+        IDictionary SessionItems { get; }
 
     }
 }

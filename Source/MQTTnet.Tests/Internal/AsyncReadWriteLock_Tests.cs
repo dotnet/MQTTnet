@@ -353,8 +353,8 @@ namespace MQTTnet.Tests.Internal
 
             Task.WaitAll(tasks);
             Assert.AreEqual(taskCount * 2, globalWrittenI);
-            Assert.AreEqual(taskCount * 3, globalReadI);
-            Assert.AreNotEqual(taskCount * 3, globalParallelI);
+            Assert.AreEqual(taskCount * 3, globalReadI); // Validates that all reads occurred.
+            Assert.AreNotEqual(taskCount * 3, globalParallelI); // Ensures the reads happened in parallel.
         }
 
         [TestMethod]

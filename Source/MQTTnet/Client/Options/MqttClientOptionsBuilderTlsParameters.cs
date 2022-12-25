@@ -15,7 +15,7 @@ namespace MQTTnet.Client
 
         public Func<MqttClientCertificateValidationEventArgs, bool> CertificateValidationHandler { get; set; }
 
-#if NET48 || NETCOREAPP3_1 || NET5 || NET6 || NET7_0
+#if NET48 || NETCOREAPP3_1 || NET5 || NET6
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;
 #else
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;

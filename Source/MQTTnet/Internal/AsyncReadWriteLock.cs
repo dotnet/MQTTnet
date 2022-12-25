@@ -63,7 +63,7 @@ namespace MQTTnet.Internal
 
             lock (_syncRoot)
             {
-                if (!_isLockedForWrite && _readLockCount <= 0)
+                if (!_isLockedForWrite && _readLockCount == 0)
                 {
                     _isLockedForWrite = true;
                     return _writeCompletedTask;
@@ -85,9 +85,13 @@ namespace MQTTnet.Internal
                     return;
                 }
 
-                _readLockCount = Math.Max(_readLockCount - 1, 0);
+                _readLockCount--;
 
-                ApproveNextWaiter();
+                if (_readLockCount <= 0)
+                {
+                    _readLockCount = 0;
+                    ApproveNextWaiter();
+                }
             }
         }
 
@@ -127,10 +131,7 @@ namespace MQTTnet.Internal
                 waiter.Dispose();
 
                 if (isApproved)
-                {
                     _readLockCount++;
-                    return;
-                }
             }
         }
 

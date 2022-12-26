@@ -137,7 +137,7 @@ namespace MQTTnet.Internal
 
         public void Dispose()
         {
-            _isDisposed = true;
+            Volatile.Write(ref _isDisposed, true);
         }
 
         sealed class ReadWriteLockWaiter : IDisposable

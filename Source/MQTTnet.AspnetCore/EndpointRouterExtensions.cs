@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 
-#if NETCOREAPP3_1 || NET5_0_OR_GREATER
+#if NETCOREAPP3_1_OR_GREATER
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;

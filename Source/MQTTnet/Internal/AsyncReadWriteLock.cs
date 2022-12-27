@@ -56,7 +56,7 @@ namespace MQTTnet.Internal
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (_isDisposed)
+            if (Volatile.Read(ref _isDisposed))
             {
                 throw new ObjectDisposedException(nameof(AsyncReadWriteLock));
             }

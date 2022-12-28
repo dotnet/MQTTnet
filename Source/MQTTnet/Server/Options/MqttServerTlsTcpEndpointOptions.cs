@@ -24,8 +24,8 @@ namespace MQTTnet.Server
         public bool CheckCertificateRevocation { get; set; }
 
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
-        
-#if NETCOREAPP3_1 || NET5_0_OR_GREATER
+
+#if NETCOREAPP3_1_OR_GREATER
         public System.Net.Security.CipherSuitesPolicy CipherSuitesPolicy { get; set; }
 #endif
     }

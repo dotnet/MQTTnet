@@ -54,7 +54,7 @@ namespace MQTTnet.Formatter.V5
                     return DecodeSubscribePacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.SubAck:
                     return DecodeSubAckPacket(receivedMqttPacket.Body);
-                case MqttControlPacketType.Unsubscibe:
+                case MqttControlPacketType.Unsubscribe:
                     return DecodeUnsubscribePacket(receivedMqttPacket.Body);
                 case MqttControlPacketType.UnsubAck:
                     return DecodeUnsubAckPacket(receivedMqttPacket.Body);

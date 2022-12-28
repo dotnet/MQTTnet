@@ -9,19 +9,13 @@ using MQTTnet.Protocol;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttTopicValidator_Tests
+    public sealed class MqttTopicValidator_Tests
     {
         [TestMethod]
-        public void Valid_Topic()
-        {
-            MqttTopicValidator.ThrowIfInvalid("/a/b/c");
-        }
-
-        [TestMethod]
         [ExpectedException(typeof(MqttProtocolViolationException))]
-        public void Invalid_Topic_Plus()
+        public void Invalid_Topic_Empty()
         {
-            MqttTopicValidator.ThrowIfInvalid("/a/+/c");
+            MqttTopicValidator.ThrowIfInvalid(string.Empty);
         }
 
         [TestMethod]
@@ -33,9 +27,15 @@ namespace MQTTnet.Tests
 
         [TestMethod]
         [ExpectedException(typeof(MqttProtocolViolationException))]
-        public void Invalid_Topic_Empty()
+        public void Invalid_Topic_Plus()
         {
-            MqttTopicValidator.ThrowIfInvalid(string.Empty);
+            MqttTopicValidator.ThrowIfInvalid("/a/+/c");
+        }
+
+        [TestMethod]
+        public void Valid_Topic()
+        {
+            MqttTopicValidator.ThrowIfInvalid("/a/b/c");
         }
     }
 }

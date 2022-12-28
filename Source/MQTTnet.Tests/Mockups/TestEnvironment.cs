@@ -249,7 +249,17 @@ namespace MQTTnet.Tests.Mockups
 
         public ManagedMqttClientOptions CreateDefaultManagedMqttClientOptions()
         {
-            return Factory.CreateManagedMqttClientOptionsBuilder().WithClientOptions(Factory.CreateClientOptionsBuilder().WithTcpServer("localhost", ServerPort).Build()).Build();
+            return Factory.CreateManagedMqttClientOptionsBuilder().WithClientOptions(Factory.CreateClientOptionsBuilder().WithTcpServer("127.0.0.1", ServerPort).Build()).Build();
+        }
+
+        public MqttClientOptions CreateDefaultClientOptions()
+        {
+            return CreateDefaultClientOptionsBuilder().Build();
+        }
+
+        public MqttClientOptionsBuilder CreateDefaultClientOptionsBuilder()
+        {
+            return Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort);
         }
 
         public ILowLevelMqttClient CreateLowLevelClient()

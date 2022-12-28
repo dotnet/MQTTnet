@@ -19,16 +19,16 @@ namespace MQTTnet.Server
 {
     public class MqttServer : Disposable
     {
-        readonly MqttServerEventContainer _eventContainer = new MqttServerEventContainer();
-
-        readonly IDictionary _sessionItems = new ConcurrentDictionary<object, object>();
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttClientSessionsManager _clientSessionsManager;
+        readonly MqttServerEventContainer _eventContainer = new MqttServerEventContainer();
         readonly MqttServerKeepAliveMonitor _keepAliveMonitor;
         readonly MqttNetSourceLogger _logger;
         readonly MqttServerOptions _options;
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttNetLogger _rootLogger;
+
+        readonly IDictionary _sessionItems = new ConcurrentDictionary<object, object>();
 
         CancellationTokenSource _cancellationTokenSource;
 
@@ -207,7 +207,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.GetSessionStatusAsync();
         }
 
-        public async Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage)
+        public Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage, CancellationToken cancellationToken = default)
         {
             if (injectedApplicationMessage == null)
             {
@@ -223,34 +223,16 @@ namespace MQTTnet.Server
 
             ThrowIfNotStarted();
 
-            var processPublish = true;
-            var applicationMessage = injectedApplicationMessage.ApplicationMessage;
-
-            if (_eventContainer.InterceptingPublishEvent.HasHandlers)
-            {
-                var interceptingPublishEventArgs = new InterceptingPublishEventArgs(
-                    applicationMessage,
-                    _cancellationTokenSource.Token,
-                    injectedApplicationMessage.SenderClientId,
-                    _sessionItems);
-
-                await _eventContainer.InterceptingPublishEvent.InvokeAsync(interceptingPublishEventArgs).ConfigureAwait(false);
-
-                applicationMessage = interceptingPublishEventArgs.ApplicationMessage;
-                processPublish = interceptingPublishEventArgs.ProcessPublish;
-            }
-
-            if (!processPublish)
-            {
-                return;
-            }
-            
-            if (string.IsNullOrEmpty(applicationMessage.Topic))
+            if (string.IsNullOrEmpty(injectedApplicationMessage.ApplicationMessage.Topic))
             {
                 throw new NotSupportedException("Injected application messages must contain a topic. Topic alias is not supported.");
             }
-            
-            await _clientSessionsManager.DispatchApplicationMessage(injectedApplicationMessage.SenderClientId, applicationMessage).ConfigureAwait(false);
+
+            return _clientSessionsManager.DispatchApplicationMessage(
+                injectedApplicationMessage.SenderClientId,
+                _sessionItems,
+                injectedApplicationMessage.ApplicationMessage,
+                cancellationToken);
         }
 
         public async Task StartAsync()

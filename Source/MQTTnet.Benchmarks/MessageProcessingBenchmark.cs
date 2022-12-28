@@ -12,7 +12,7 @@ namespace MQTTnet.Benchmarks
     [SimpleJob(RuntimeMoniker.Net60)]
     [RPlotExporter, RankColumn]
     [MemoryDiagnoser]
-    public class MessageProcessingBenchmark
+    public class MessageProcessingBenchmark : BaseBenchmark
     {
         MqttServer _mqttServer;
         IMqttClient _mqttClient;

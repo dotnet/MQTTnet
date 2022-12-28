@@ -12,6 +12,8 @@ namespace MQTTnet.Formatter.V5
 {
     public sealed class MqttV5PacketEncoder
     {
+        const int FixedHeaderSize = 1;
+        
         readonly MqttBufferWriter _bufferWriter;
         readonly MqttV5PropertiesWriter _propertiesWriter = new MqttV5PropertiesWriter(new MqttBufferWriter(1024, 4096));
 
@@ -40,9 +42,9 @@ namespace MQTTnet.Formatter.V5
                 remainingLength += (uint)publishPacket.Payload.Length;
             }
 
-            var remainingLengthSize = MqttBufferWriter.GetLengthOfVariableInteger(remainingLength);
+            var remainingLengthSize = MqttBufferWriter.GetVariableByteIntegerSize(remainingLength);
 
-            var headerSize = 1 + remainingLengthSize;
+            var headerSize = FixedHeaderSize + remainingLengthSize;
             var headerOffset = 5 - headerSize;
 
             // Position cursor on correct offset on beginning of array (has leading 0x0)
@@ -522,7 +524,7 @@ namespace MQTTnet.Formatter.V5
                 _bufferWriter.WriteString(topicFilter);
             }
 
-            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Unsubscibe, 0x02);
+            return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Unsubscribe, 0x02);
         }
 
         static void ThrowIfPacketIdentifierIsInvalid(ushort packetIdentifier, MqttPacket packet)

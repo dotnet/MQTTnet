@@ -3,27 +3,47 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Client
 {
     public sealed class MqttClientDisconnectedEventArgs : EventArgs
     {
-        public bool ClientWasConnected { get; internal set; }
+        public MqttClientDisconnectedEventArgs(
+            bool clientWasConnected,
+            MqttClientConnectResult connectResult,
+            MqttClientDisconnectReason reason,
+            string reasonString,
+            List<MqttUserProperty> userProperties,
+            Exception exception)
+        {
+            ClientWasConnected = clientWasConnected;
+            ConnectResult = connectResult;
+            Exception = exception;
+            Reason = reason;
+            ReasonString = reasonString;
+            UserProperties = userProperties;
+        }
+
+        public bool ClientWasConnected { get; }
 
         /// <summary>
         ///     Gets the authentication result.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        public MqttClientConnectResult ConnectResult { get; internal set; }
+        public MqttClientConnectResult ConnectResult { get; }
 
-        public Exception Exception { get; internal set; }
+        public Exception Exception { get; }
 
         /// <summary>
         ///     Gets or sets the reason.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        public MqttClientDisconnectReason Reason { get; internal set; }
+        public MqttClientDisconnectReason Reason { get; }
 
-        public string ReasonString { get; internal set; }
+        public string ReasonString { get; }
+
+        public List<MqttUserProperty> UserProperties { get; }
     }
 }

@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
+using MQTTnet.Internal;
 using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Server
@@ -58,6 +59,29 @@ namespace MQTTnet.Tests.Server
 
                 Assert.AreEqual(1, messageReceivedHandler.ReceivedEventArgs.Count);
                 Assert.AreEqual("InjectedOne", messageReceivedHandler.ReceivedEventArgs[0].ApplicationMessage.Topic);
+            }
+        }
+
+        [TestMethod]
+        public async Task Intercept_Injected_Application_Message()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var server = await testEnvironment.StartServer();
+
+                MqttApplicationMessage interceptedMessage = null;
+                server.InterceptingPublishAsync += eventArgs =>
+                {
+                    interceptedMessage = eventArgs.ApplicationMessage;
+                    return CompletedTask.Instance;
+                };
+
+                var injectedApplicationMessage = new MqttApplicationMessageBuilder().WithTopic("InjectedOne").Build();
+                await server.InjectApplicationMessage(new InjectedMqttApplicationMessage(injectedApplicationMessage));
+
+                await LongTestDelay();
+
+                Assert.IsNotNull(interceptedMessage);
             }
         }
     }

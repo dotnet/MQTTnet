@@ -14,13 +14,13 @@ namespace MQTTnet.Client
     {
         /// <summary>
         ///     Gets or sets the authentication data.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public byte[] AuthenticationData { get; set; }
 
         /// <summary>
         ///     Gets or sets the authentication method.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public string AuthenticationMethod { get; set; }
 
@@ -58,6 +58,10 @@ namespace MQTTnet.Client
         /// </summary>
         public TimeSpan KeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(15);
 
+        /// <summary>
+        ///     Gets or sets the maximum packet size.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+        /// </summary>
         public uint MaximumPacketSize { get; set; }
 
         public MqttProtocolVersion ProtocolVersion { get; set; } = MqttProtocolVersion.V311;
@@ -65,24 +69,26 @@ namespace MQTTnet.Client
         /// <summary>
         ///     Gets or sets the receive maximum.
         ///     This gives the maximum length of the receive messages.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public ushort ReceiveMaximum { get; set; }
 
         /// <summary>
         ///     Gets or sets the request problem information.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public bool RequestProblemInformation { get; set; } = true;
 
         /// <summary>
         ///     Gets or sets the request response information.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public bool RequestResponseInformation { get; set; }
 
         /// <summary>
         ///     Gets or sets the session expiry interval.
         ///     The time after a session expires when it's not actively used.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public uint SessionExpiryInterval { get; set; }
 
@@ -95,6 +101,7 @@ namespace MQTTnet.Client
         /// <summary>
         ///     Gets or sets the topic alias maximum.
         ///     This gives the maximum length of the topic alias.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public ushort TopicAliasMaximum { get; set; }
 
@@ -103,8 +110,10 @@ namespace MQTTnet.Client
         ///     client.
         ///     If successful, this means that loop detection will be more effective and that retained messages will be propagated
         ///     correctly.
-        ///     Not all brokers support this feature so it may be necessary to set it to false if your bridge does not connect
-        ///     properly.
+        ///     <remarks>
+        ///         Not all brokers support this feature so it may be necessary to set it to false if your bridge does not
+        ///         connect properly.
+        ///     </remarks>
         /// </summary>
         public bool TryPrivate { get; set; } = true;
 
@@ -115,28 +124,41 @@ namespace MQTTnet.Client
         ///     As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
         ///     metadata to MQTT messages and pass information between publisher, broker, and subscriber.
         ///     The feature is very similar to the HTTP header concept.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
 
         /// <summary>
+        ///     When this feature is enabled the client will check if used properties are supported in the selected protocol
+        ///     version.
+        ///     This feature can be validated if an application message is generated one time but sent via different protocol
+        ///     versions.
+        ///     Default values are applied if the validation is off and features are not supported.
+        /// </summary>
+        public bool ValidateFeatures { get; set; } = true;
+
+        /// <summary>
         ///     Gets or sets the content type of the will message.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public string WillContentType { get; set; }
 
         /// <summary>
         ///     Gets or sets the correlation data of the will message.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public byte[] WillCorrelationData { get; set; }
 
         /// <summary>
         ///     Gets or sets the will delay interval.
         ///     This is the time between the client disconnect and the time the will message will be sent.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public uint WillDelayInterval { get; set; }
 
         /// <summary>
         ///     Gets or sets the message expiry interval of the will message.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public uint WillMessageExpiryInterval { get; set; }
 
@@ -147,8 +169,9 @@ namespace MQTTnet.Client
 
         /// <summary>
         ///     Gets or sets the payload format indicator of the will message.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        public MqttPayloadFormatIndicator WillPayloadFormatIndicator { get; set; }
+        public MqttPayloadFormatIndicator WillPayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
         /// <summary>
         ///     Gets or sets the QoS level of the will message.
@@ -157,6 +180,7 @@ namespace MQTTnet.Client
 
         /// <summary>
         ///     Gets or sets the response topic of the will message.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public string WillResponseTopic { get; set; }
 
@@ -172,6 +196,7 @@ namespace MQTTnet.Client
 
         /// <summary>
         ///     Gets or sets the user properties of the will message.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public List<MqttUserProperty> WillUserProperties { get; set; }
 

@@ -16,7 +16,7 @@ namespace MQTTnet.Client
         ///     when successfully create or modify subscription.
         ///     The broker will return the subscription identifier associated with this PUBLISH packet and the PUBLISH packet to
         ///     the client when need to forward PUBLISH packets matching this subscription to this client.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public uint SubscriptionIdentifier { get; set; }
 
@@ -33,7 +33,7 @@ namespace MQTTnet.Client
         ///     As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
         ///     metadata to MQTT messages and pass information between publisher, broker, and subscriber.
         ///     The feature is very similar to the HTTP header concept.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
     }

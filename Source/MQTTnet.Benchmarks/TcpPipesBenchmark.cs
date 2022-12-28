@@ -15,7 +15,7 @@ namespace MQTTnet.Benchmarks
 {
     [SimpleJob(RuntimeMoniker.Net60)]
     [MemoryDiagnoser]
-    public class TcpPipesBenchmark
+    public class TcpPipesBenchmark : BaseBenchmark
     {
         IDuplexPipe _client;
         IDuplexPipe _server;

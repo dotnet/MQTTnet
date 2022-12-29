@@ -15,7 +15,7 @@ namespace MQTTnet.Client
 
         /// <summary>
         ///     Gets the authentication result.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public MqttClientConnectResult ConnectResult { get; }
     }

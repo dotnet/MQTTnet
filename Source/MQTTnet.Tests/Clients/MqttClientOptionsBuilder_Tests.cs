@@ -6,9 +6,8 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
-using MQTTnet.Extensions;
 
-namespace MQTTnet.Tests.Client
+namespace MQTTnet.Tests.Clients
 {
     [TestClass]
     public class MqttClientOptionsBuilder_Tests

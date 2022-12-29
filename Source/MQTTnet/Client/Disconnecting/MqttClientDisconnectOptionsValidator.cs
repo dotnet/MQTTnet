@@ -28,7 +28,7 @@ namespace MQTTnet.Client
                 Throw(nameof(options.ReasonString));
             }
 
-            if (options.Reason != MqttClientDisconnectReason.NormalDisconnection)
+            if (options.Reason != MqttClientDisconnectOptionsReason.NormalDisconnection)
             {
                 Throw(nameof(options.Reason));
             }

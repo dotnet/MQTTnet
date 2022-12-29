@@ -86,6 +86,26 @@ namespace MQTTnet.Implementations
                     _socket.LingerState = _options.LingerState;
                 }
 
+                if (_options.KeepAlive.HasValue)
+                {
+                    _socket.KeepAlive = _options.KeepAlive.Value;
+                }
+                
+                if (_options.TcpKeepAliveInterval.HasValue)
+                {
+                    _socket.TcpKeepAliveInterval = _options.TcpKeepAliveInterval.Value;
+                }
+                
+                if (_options.TcpKeepAliveRetryCount.HasValue)
+                {
+                    _socket.TcpKeepAliveInterval = _options.TcpKeepAliveRetryCount.Value;
+                }
+                
+                if (_options.TcpKeepAliveTime.HasValue)
+                {
+                    _socket.TcpKeepAliveTime = _options.TcpKeepAliveTime.Value;
+                }
+                
                 _socket.Bind(_localEndPoint);
                 
                 // Get the local endpoint back from the socket. The port may have changed.
@@ -178,7 +198,7 @@ namespace MQTTnet.Implementations
                 {
                     var sslStream = new SslStream(stream, false, _tlsOptions.RemoteCertificateValidationCallback);
 
-                    #if NETCOREAPP3_1 || NET5_0_OR_GREATER
+                    #if NETCOREAPP3_1_OR_GREATER
                         await sslStream.AuthenticateAsServerAsync(
                             new SslServerAuthenticationOptions()
                             {

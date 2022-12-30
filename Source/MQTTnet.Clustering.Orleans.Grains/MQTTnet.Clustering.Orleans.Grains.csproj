@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Orleans.Runtime" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Orleans.Sdk" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MQTTnet.Clustering.Orleans.Interfaces\MQTTnet.Clustering.Orleans.Interfaces.csproj" />
+    <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+  </ItemGroup>
+
+</Project>

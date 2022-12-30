@@ -9,24 +9,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Server
+namespace Microsoft.AspNetCore.Builder;
+
+public static class MqttServerOrleansClusteringApplicationBuilderExtensions
 {
-    public static class MqttServerOrleansClusteringApplicationBuilderExtensions
+
+    public static IApplicationBuilder UseMqttOrleansClustering(this IApplicationBuilder applicationBuilder, Action<OrleansClusteringConfigurationBuilder> config)
     {
-
-        public static IApplicationBuilder UseMqttOrleansClustering(this IApplicationBuilder applicationBuilder, Action<OrleansClusteringConfigurationBuilder> config)
+        var builder = new OrleansClusteringConfigurationBuilder(applicationBuilder);
+        var clusteredTopicRelayService = applicationBuilder.ApplicationServices.GetRequiredService<ClusteredTopicRelayService>();
+        applicationBuilder.UseMqttServer(mqttServer =>
         {
-            var builder = new OrleansClusteringConfigurationBuilder(applicationBuilder);
-            var clusteredTopicRelayService = applicationBuilder.ApplicationServices.GetRequiredService<ClusteredTopicRelayService>();
-            applicationBuilder.UseMqttServer(mqttServer =>
-            {
-                mqttServer.InterceptingPublishAsync += clusteredTopicRelayService.OnInterceptingPublishAsync;
-                mqttServer.ClientSubscribedTopicAsync += clusteredTopicRelayService.OnClientSubscribedTopicAsync;
-                mqttServer.ClientUnsubscribedTopicAsync += clusteredTopicRelayService.OnClientUnsubscribedTopicAsync;
-            });
-            config(builder);
-            return applicationBuilder;
-        }
-
+            mqttServer.InterceptingPublishAsync += clusteredTopicRelayService.OnInterceptingPublishAsync;
+            mqttServer.ClientSubscribedTopicAsync += clusteredTopicRelayService.OnClientSubscribedTopicAsync;
+            mqttServer.ClientUnsubscribedTopicAsync += clusteredTopicRelayService.OnClientUnsubscribedTopicAsync;
+        });
+        config(builder);
+        return applicationBuilder;
     }
+
 }

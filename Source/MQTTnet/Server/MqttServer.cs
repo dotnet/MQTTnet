@@ -17,7 +17,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public class MqttServer : Disposable
+    public class MqttServer : Disposable, IMqttServerExtensibility
     {
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttClientSessionsManager _clientSessionsManager;
@@ -166,6 +166,11 @@ namespace MQTTnet.Server
         }
 
         public bool IsStarted => _cancellationTokenSource != null;
+
+        MqttClientSessionsManager IMqttServerExtensibility.MqttClientSessionsManager => _clientSessionsManager;
+
+        IDictionary IMqttServerExtensibility.SessionItems => _sessionItems;
+
 
         public Task DeleteRetainedMessagesAsync()
         {

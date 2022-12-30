@@ -89,4 +89,8 @@
         <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.10" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Clustering\" />
+    </ItemGroup>
+
 </Project>

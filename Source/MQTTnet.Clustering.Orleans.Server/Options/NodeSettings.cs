@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Clustering.Orleans.Server
+namespace MQTTnet.Clustering.Orleans.Server.Options
 {
-    public enum OrleansClusteringRelayStrategy
+    public class NodeSettings
     {
-        SendToAllNodes
+
+        public string? GroupName { get; set; }
+
     }
 }

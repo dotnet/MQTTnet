@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Clustering.Orleans
 {
-    public class MqttApplicationMessage
+    public interface IPublishMessageGrain : IGrainWithIntegerKey
     {
+
+        ValueTask<PublishMessageResult> PublishMessageAcrossNodes(ClusterApplicationMessage message);
+
     }
 }

@@ -136,5 +136,15 @@ namespace MQTTnet.Clustering.Orleans.Server.Services
             }
         }
 
+        internal async Task OnClientSubscribedTopicAsync(ClientSubscribedTopicEventArgs arg)
+        {
+            
+        }
+
+        internal async Task OnClientUnsubscribedTopicAsync(ClientUnsubscribedTopicEventArgs arg)
+        {
+            
+        }
+
     }
 }

@@ -21,6 +21,8 @@ namespace MQTTnet.Server
             applicationBuilder.UseMqttServer(mqttServer =>
             {
                 mqttServer.InterceptingPublishAsync += clusteredTopicRelayService.OnInterceptingPublishAsync;
+                mqttServer.ClientSubscribedTopicAsync += clusteredTopicRelayService.OnClientSubscribedTopicAsync;
+                mqttServer.ClientUnsubscribedTopicAsync += clusteredTopicRelayService.OnClientUnsubscribedTopicAsync;
             });
             config(builder);
             return applicationBuilder;

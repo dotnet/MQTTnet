@@ -38,6 +38,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Clustering.Orleans.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Clustering.Orleans.Server", "Source\MQTTnet.Clustering.Orleans.Server\MQTTnet.Clustering.Orleans.Server.csproj", "{679C3DE7-9EAD-47C8-A030-E952FD5E2077}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Clustering.Orleans.Grains", "MQTTnet.Clustering.Orleans.Grains\MQTTnet.Clustering.Orleans.Grains.csproj", "{8F817405-0EC8-4AD0-857F-1F0817B49E07}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +102,10 @@ Global
 		{679C3DE7-9EAD-47C8-A030-E952FD5E2077}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{679C3DE7-9EAD-47C8-A030-E952FD5E2077}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{679C3DE7-9EAD-47C8-A030-E952FD5E2077}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F817405-0EC8-4AD0-857F-1F0817B49E07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F817405-0EC8-4AD0-857F-1F0817B49E07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F817405-0EC8-4AD0-857F-1F0817B49E07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F817405-0EC8-4AD0-857F-1F0817B49E07}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

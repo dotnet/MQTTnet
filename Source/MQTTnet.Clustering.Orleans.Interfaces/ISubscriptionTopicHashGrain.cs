@@ -1,13 +1,13 @@
+using Orleans;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Clustering.Orleans.Server
+namespace MQTTnet.Clustering.Orleans
 {
-    public enum OrleansClusteringRelayStrategy
+    public interface ISubscriptionTopicHashGrain : IGrainWithGuidKey
     {
-        SendToAllNodes
     }
 }

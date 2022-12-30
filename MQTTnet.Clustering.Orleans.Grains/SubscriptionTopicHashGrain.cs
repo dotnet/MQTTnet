@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Clustering.Orleans.Server
+namespace MQTTnet.Clustering.Orleans.Grains
 {
-    public enum OrleansClusteringRelayStrategy
+    public class SubscriptionTopicHashGrain : Grain, ISubscriptionTopicHashGrain
     {
-        SendToAllNodes
+
     }
 }

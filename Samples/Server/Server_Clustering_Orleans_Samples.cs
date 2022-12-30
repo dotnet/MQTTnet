@@ -7,6 +7,7 @@ using MQTTnet.Clustering.Orleans.Server.Services;
 using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -51,6 +52,22 @@ namespace MQTTnet.Samples.Server
 
         class Startup
         {
+            public void ConfigureServices(IServiceCollection services)
+            {
+                services.AddHostedMqttServer(
+                    optionsBuilder =>
+                    {
+                        optionsBuilder
+                            .WithDefaultEndpoint();
+                    })
+                    .AddMqttServerOrleansClustering();
+
+                services.AddMqttConnectionHandler();
+                services.AddConnections();
+
+                services.AddSingleton<MqttController>();
+            }
+
             public void Configure(IApplicationBuilder app, IWebHostEnvironment environment, MqttController mqttController)
             {
                 app.UseRouting();
@@ -76,28 +93,94 @@ namespace MQTTnet.Samples.Server
                     .UseMqttOrleansClustering(clustering =>
                     {
                         clustering
-                            .DefaultTopicBehavior(topic => topic.RelayToAll())
-                            .ForTopic("clients/c2d/{clientId}/{deviceId}/command", topic => topic.OneToOne());
+                            // By default, if no other topic route is matched, the message will be relayed to all nodes in the cluster
+                            .DefaultTopicBehavior(topic => topic.RelayAll())
+
+                            // For this topic, route the message directly to the single client that has subscribed to the topic
+                            .ForTopic("clients/c2d/{unitId}/{deviceId}/message",
+                                topic => topic.RestrictToSingleClient())
+
+                            // For this topic, route the message to many clients, using grains to route to necessary subscribers
+                            .ForTopic("clients/d2c/{unitId}/{deviceId}/telemetry/{*topic}",
+                                topic => topic.RelayToManyClients("units/{unitId}/{deviceId}/telemetry/{topic}"))
+
+                            // For this topic, route the message to a grain call, using the client id as the grain key
+                            .ForTopic("clients/d2c/{unitId}/{deviceId}/app-route/a/{*topic}",
+                                topic =>
+                                    topic.RestrictToGrain<IMyGrain>(async context =>
+                                    {
+                                        await context.Grain.SendMessage(new GrainApplicationMessage
+                                        {
+                                            Topic = $"units/{context.Arguments["unitId"]}:{context.Arguments["deviceId"]}/telemetry/{context.Arguments["topic"]}",
+                                            Data = context.Message.Payload
+                                        });
+                                    }))
+
+                            // For this topic, route the message to a grain call, using a formatted client id for the grain key
+                            .ForTopic("clients/d2c/{unitId}/{deviceId}/app-route/b/{*topic}",
+                                topic =>
+                                    topic.RestrictToGrain<IMyGrain>(b => $"client_{b.ClientId}", async context =>
+                                    {
+                                        await context.Grain.SendMessage(new GrainApplicationMessage
+                                        {
+                                            Topic = $"units/{context.Arguments["unitId"]}:{context.Arguments["deviceId"]}/telemetry/{context.Arguments["topic"]}",
+                                            Data = context.Message.Payload
+                                        });
+                                    }))
+
+                            // For this topic, route the message to a grain call, using a formatted client id for the grain key
+                            .ForTopic("clients/d2c/{unitId}/{deviceId}/app-route/c/{*topic}",
+                                topic =>
+                                    topic.RestrictToGrain<IMyGrain>(b => $"{b.SessionItems["type"]}:{b.SessionItems["name"]}", async context =>
+                                    {
+                                        await context.Grain.SendMessage(new GrainApplicationMessage
+                                        {
+                                            Topic = $"units/{context.Arguments["unitId"]}:{context.Arguments["deviceId"]}/telemetry/{context.Arguments["topic"]}",
+                                            Data = context.Message.Payload
+                                        });
+                                    }))
+
+                            // For this topic, aggregate messages and route the list to a grain call, using the client id as the grain key
+                            .ForTopic("clients/d2c/{unitId}/{deviceId}/app-route/d/{*topic}",
+                                topic =>
+                                    topic.AggregateToGrain<IMyGrain>(async context =>
+                                    {
+                                        var messages = new List<GrainApplicationMessage>(context.Items.Count);
+                                        foreach (var messageContext in context.Items)
+                                        {
+                                            messages.Add(
+                                                new GrainApplicationMessage
+                                                {
+                                                    Topic = $"units/{messageContext.Arguments["unitId"]}:{messageContext.Arguments["deviceId"]}/telemetry/{messageContext.Arguments["topic"]}",
+                                                    Data = messageContext.Message.Payload
+                                                });
+                                        }
+
+                                        await context.Grain.SendMessages(messages);
+                                    }));
                     });
             }
 
 
+        }
 
-            public void ConfigureServices(IServiceCollection services)
-            {
-                services.AddHostedMqttServer(
-                    optionsBuilder =>
-                    {
-                        optionsBuilder
-                            .WithDefaultEndpoint();
-                    })
-                    .AddMqttServerOrleansClustering();
+        public interface IMyGrain : IGrainWithStringKey
+        {
 
-                services.AddMqttConnectionHandler();
-                services.AddConnections();
+            ValueTask SendMessage(GrainApplicationMessage message);
 
-                services.AddSingleton<MqttController>();
-            }
+            ValueTask SendMessages(List<GrainApplicationMessage> messages);
+
+        }
+
+        public class GrainApplicationMessage
+        {
+            [MaybeNull]
+            public string Topic { get; set; }
+
+            [MaybeNull]
+            public byte[] Data { get; set; }
+
         }
 
     }

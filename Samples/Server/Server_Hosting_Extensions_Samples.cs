@@ -8,17 +8,18 @@
 // ReSharper disable EmptyConstructor
 // ReSharper disable MemberCanBeMadeStatic.Local
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MQTTnet.AspNetCore;
+//using MQTTnet.AspNetCore;
 using MQTTnet.Server;
 
 namespace MQTTnet.Samples.Server;
 
 public static class Server_Hosting_Extensions_Samples
 {
+
+    // This could be called as a top-level statement in a Program.cs file
+    public static Task Start_Single_Line_Server()
+        => new HostBuilder().UseMqttServer().Build().RunAsync();
 
     public static Task Start_Simple_Server()
     {

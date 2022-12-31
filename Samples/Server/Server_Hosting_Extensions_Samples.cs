@@ -1,0 +1,98 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+// ReSharper disable UnusedType.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable InconsistentNaming
+// ReSharper disable EmptyConstructor
+// ReSharper disable MemberCanBeMadeStatic.Local
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using MQTTnet.AspNetCore;
+using MQTTnet.Server;
+
+namespace MQTTnet.Samples.Server;
+
+public static class Server_Hosting_Extensions_Samples
+{
+    public static Task Start_Server()
+    {
+        var builder = new HostBuilder();
+
+        builder
+            .UseHostedMqttServerWithServices(mqttServer =>
+            {
+                
+            });
+
+        var host = builder.Build();
+        return host.RunAsync();        
+    }
+
+    //sealed class MqttController
+    //{
+    //    public MqttController()
+    //    {
+    //        // Inject other services via constructor.
+    //    }
+        
+    //    public Task OnClientConnected(ClientConnectedEventArgs eventArgs)
+    //    {
+    //        Console.WriteLine($"Client '{eventArgs.ClientId}' connected.");
+    //        return Task.CompletedTask;
+    //    }
+
+
+    //    public Task ValidateConnection(ValidatingConnectionEventArgs eventArgs)
+    //    {
+    //        Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Accepting!");
+    //        return Task.CompletedTask;
+    //    }
+    //}
+
+    sealed class Startup
+    {
+        //public void Configure(IApplicationBuilder app, IWebHostEnvironment environment, MqttController mqttController)
+        //{
+        //    app.UseRouting();
+
+        //    app.UseEndpoints(
+        //        endpoints =>
+        //        {
+        //            endpoints.MapConnectionHandler<MqttConnectionHandler>(
+        //                "/mqtt",
+        //                httpConnectionDispatcherOptions => httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector =
+        //                    protocolList => protocolList.FirstOrDefault() ?? string.Empty);
+        //        });
+
+        //    app.UseMqttServer(
+        //        server =>
+        //        {
+        //            /*
+        //             * Attach event handlers etc. if required.
+        //             */
+
+        //            server.ValidatingConnectionAsync += mqttController.ValidateConnection;
+        //            server.ClientConnectedAsync += mqttController.OnClientConnected;
+        //        });
+        //}
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddHostedMqttServer(
+                optionsBuilder =>
+                {
+                    optionsBuilder.WithDefaultEndpoint();
+                });
+
+            services.AddMqttConnectionHandler();
+            services.AddConnections();
+
+            //services.AddSingleton<MqttController>();
+        }
+    }
+}

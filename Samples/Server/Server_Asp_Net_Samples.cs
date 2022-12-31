@@ -87,7 +87,7 @@ public static class Server_Asp_Net_Samples
                     /*
                      * Attach event handlers etc. if required.
                      */
-
+                    
                     server.ValidatingConnectionAsync += mqttController.ValidateConnection;
                     server.ClientConnectedAsync += mqttController.OnClientConnected;
                 });

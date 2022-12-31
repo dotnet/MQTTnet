@@ -24,75 +24,12 @@ public static class Server_Hosting_Extensions_Samples
         var builder = new HostBuilder();
 
         builder
-            .UseHostedMqttServerWithServices(mqttServer =>
+            .UseMqttServer(mqtt =>
             {
-                
+                mqtt.WithDefaultEndpoint();
             });
 
         var host = builder.Build();
-        return host.RunAsync();        
-    }
-
-    //sealed class MqttController
-    //{
-    //    public MqttController()
-    //    {
-    //        // Inject other services via constructor.
-    //    }
-        
-    //    public Task OnClientConnected(ClientConnectedEventArgs eventArgs)
-    //    {
-    //        Console.WriteLine($"Client '{eventArgs.ClientId}' connected.");
-    //        return Task.CompletedTask;
-    //    }
-
-
-    //    public Task ValidateConnection(ValidatingConnectionEventArgs eventArgs)
-    //    {
-    //        Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Accepting!");
-    //        return Task.CompletedTask;
-    //    }
-    //}
-
-    sealed class Startup
-    {
-        //public void Configure(IApplicationBuilder app, IWebHostEnvironment environment, MqttController mqttController)
-        //{
-        //    app.UseRouting();
-
-        //    app.UseEndpoints(
-        //        endpoints =>
-        //        {
-        //            endpoints.MapConnectionHandler<MqttConnectionHandler>(
-        //                "/mqtt",
-        //                httpConnectionDispatcherOptions => httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector =
-        //                    protocolList => protocolList.FirstOrDefault() ?? string.Empty);
-        //        });
-
-        //    app.UseMqttServer(
-        //        server =>
-        //        {
-        //            /*
-        //             * Attach event handlers etc. if required.
-        //             */
-
-        //            server.ValidatingConnectionAsync += mqttController.ValidateConnection;
-        //            server.ClientConnectedAsync += mqttController.OnClientConnected;
-        //        });
-        //}
-
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddHostedMqttServer(
-                optionsBuilder =>
-                {
-                    optionsBuilder.WithDefaultEndpoint();
-                });
-
-            services.AddMqttConnectionHandler();
-            services.AddConnections();
-
-            //services.AddSingleton<MqttController>();
-        }
+        return host.RunAsync();
     }
 }

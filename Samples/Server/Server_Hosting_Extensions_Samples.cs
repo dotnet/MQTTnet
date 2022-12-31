@@ -19,6 +19,16 @@ namespace MQTTnet.Samples.Server;
 
 public static class Server_Hosting_Extensions_Samples
 {
+
+    public static Task Start_Simple_Server()
+    {
+        var host = new HostBuilder()
+            .UseMqttServer()
+            .Build();
+
+        return host.RunAsync();
+    }
+
     public static Task Start_Server()
     {
         var builder = new HostBuilder();

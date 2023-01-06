@@ -252,16 +252,16 @@ namespace MQTTnet.Server.Internal
                     if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
                     {
                         await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-                        queuedApplicationMessage = null;    // mark this sent in case an exception is thrown
+                        queuedApplicationMessage = null;        // mark this sent in case an exception is thrown
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
                     {
                         using (var awaitable = _packetDispatcher.AddAwaitable<MqttPubAckPacket>(publishPacket.PacketIdentifier))
                         {
                             await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-                            queuedApplicationMessage = null;    // mark this sent in case an exception is thrown
 
                             await awaitable.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
+                            queuedApplicationMessage = null;    // mark this sent in case an exception is thrown
                         }
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
@@ -274,9 +274,9 @@ namespace MQTTnet.Server.Internal
 
                             var pubRelPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePubRelPacket(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
                             await SendPacketAsync(pubRelPacket, cancellationToken).ConfigureAwait(false);
-                            queuedApplicationMessage = null;    // mark this sent in case an exception is thrown
 
                             await awaitableComp.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
+                            queuedApplicationMessage = null;    // mark this sent in case an exception is thrown
                         }
                     }
 

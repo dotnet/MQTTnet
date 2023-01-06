@@ -252,7 +252,6 @@ namespace MQTTnet.Server.Internal
                     if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
                     {
                         await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
-                        queuedApplicationMessage = null;        // mark this sent in case an exception is thrown
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
                     {
@@ -261,7 +260,6 @@ namespace MQTTnet.Server.Internal
                             await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
 
                             await awaitable.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
-                            queuedApplicationMessage = null;    // mark this sent in case an exception is thrown
                         }
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.ExactlyOnce)
@@ -276,7 +274,6 @@ namespace MQTTnet.Server.Internal
                             await SendPacketAsync(pubRelPacket, cancellationToken).ConfigureAwait(false);
 
                             await awaitableComp.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
-                            queuedApplicationMessage = null;    // mark this sent in case an exception is thrown
                         }
                     }
 

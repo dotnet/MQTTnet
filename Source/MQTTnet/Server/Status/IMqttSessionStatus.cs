@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Server.Status
@@ -17,8 +17,6 @@ namespace MQTTnet.Server.Status
         long PendingApplicationMessagesCount { get; }
 
         IDictionary<object, object> Items { get; }
-
-        Task ClearPendingApplicationMessagesAsync();
 
         Task DeleteAsync();
     }

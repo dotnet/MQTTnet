@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Internal;
@@ -50,11 +50,6 @@ namespace MQTTnet.Server.Internal
             }
 
             return dequeueResult.Item;
-        }
-
-        public void Clear()
-        {
-            _messageQueue.Clear();
         }
 
         public void Dispose()

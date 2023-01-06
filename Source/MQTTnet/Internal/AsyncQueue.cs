@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
@@ -65,17 +65,18 @@ namespace MQTTnet.Internal
 
         public AsyncQueueDequeueResult<TItem> TryDequeue()
         {
-            if (_queue.TryDequeue(out var item))
+            if (_semaphore.Wait(0))
             {
-                return new AsyncQueueDequeueResult<TItem>(true, item);
+                if (_queue.TryDequeue(out var item))
+                {
+                    return new AsyncQueueDequeueResult<TItem>(true, item);
+                }
+
+                // need to reset semaphore
+                _semaphore.Release();
             }
 
             return new AsyncQueueDequeueResult<TItem>(false, default);
-        }
-
-        public void Clear()
-        {
-            Interlocked.Exchange(ref _queue, new ConcurrentQueue<TItem>());
         }
 
         public void Dispose()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MQTTnet.Server.Internal;
@@ -34,12 +34,6 @@ namespace MQTTnet.Server.Status
         public Task DeleteAsync()
         {
             return _sessionsManager.DeleteSessionAsync(ClientId);
-        }
-
-        public Task ClearPendingApplicationMessagesAsync()
-        {
-            _session.ApplicationMessagesQueue.Clear();
-            return Task.FromResult(0);
         }
     }
 }

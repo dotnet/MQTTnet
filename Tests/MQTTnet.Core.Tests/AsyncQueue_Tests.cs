@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -119,23 +119,6 @@ namespace MQTTnet.Tests
             Assert.AreEqual("1", queue.TryDequeue().Item);
             Assert.AreEqual("2", queue.TryDequeue().Item);
             Assert.AreEqual("3", queue.TryDequeue().Item);
-        }
-
-        [TestMethod]
-        public void Clear()
-        {
-            var queue = new AsyncQueue<string>();
-            queue.Enqueue("1");
-            queue.Enqueue("2");
-            queue.Enqueue("3");
-
-            queue.Clear();
-            Assert.AreEqual(0, queue.Count);
-
-            queue.Enqueue("4");
-
-            Assert.AreEqual(1, queue.Count);
-            Assert.AreEqual("4", queue.TryDequeue().Item);
         }
     }
 }

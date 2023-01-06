@@ -41,15 +41,13 @@ namespace MQTTnet.Internal
                     
                     await task.ConfigureAwait(false);
 
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return new AsyncQueueDequeueResult<TItem>(false, default);
-                    }
-
                     if (_queue.TryDequeue(out var item))
                     {
                         return new AsyncQueueDequeueResult<TItem>(true, item);
                     }
+
+                    // need to reset semaphore
+                    _semaphore.Release();
                 }
                 catch (ArgumentNullException)
                 {

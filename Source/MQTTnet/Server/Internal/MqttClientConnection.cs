@@ -234,17 +234,14 @@ namespace MQTTnet.Server.Internal
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     queuedApplicationMessage = await Session.ApplicationMessagesQueue.Dequeue(cancellationToken).ConfigureAwait(false);
-                    
-                    // Also check the cancellation token here because the dequeue is blocking and may take some time.
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
-                    
+
                     if (queuedApplicationMessage == null)
                     {
                         continue;
                     }
+
+                    // Also check the cancellation token here because the dequeue is blocking and may take some time.
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     publishPacket = await CreatePublishPacket(queuedApplicationMessage).ConfigureAwait(false);
                     if (publishPacket == null)
@@ -255,12 +252,15 @@ namespace MQTTnet.Server.Internal
                     if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
                     {
                         await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
+                        queuedApplicationMessage = null;    // mark this sent in case an exception is thrown
                     }
                     else if (publishPacket.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtLeastOnce)
                     {
                         using (var awaitable = _packetDispatcher.AddAwaitable<MqttPubAckPacket>(publishPacket.PacketIdentifier))
                         {
                             await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
+                            queuedApplicationMessage = null;    // mark this sent in case an exception is thrown
+
                             await awaitable.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
                         }
                     }
@@ -274,6 +274,7 @@ namespace MQTTnet.Server.Internal
 
                             var pubRelPacket = _channelAdapter.PacketFormatterAdapter.DataConverter.CreatePubRelPacket(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
                             await SendPacketAsync(pubRelPacket, cancellationToken).ConfigureAwait(false);
+                            queuedApplicationMessage = null;    // mark this sent in case an exception is thrown
 
                             await awaitableComp.WaitOneAsync(_serverOptions.DefaultCommunicationTimeout).ConfigureAwait(false);
                         }
@@ -282,34 +283,32 @@ namespace MQTTnet.Server.Internal
                     _logger.Verbose("Client '{0}': Queued application message sent.", ClientId);
                 }
             }
-            catch (OperationCanceledException)
-            {
-            }
             catch (Exception exception)
             {
-                if (exception is MqttCommunicationTimedOutException)
+                if ((queuedApplicationMessage != null) && (queuedApplicationMessage.SubscriptionQualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce))
                 {
-                    _logger.Warning(exception, "Client '{0}': Sending publish packet failed: Timeout.", ClientId);
-                }
-                else if (exception is MqttCommunicationException)
-                {
-                    _logger.Warning(exception, "Client '{0}': Sending publish packet failed: Communication exception.", ClientId);
-                }
-                else
-                {
-                    _logger.Error(exception, "Client '{0}': Sending publish packet failed.", ClientId);
+                    // TODO: losing the order here, need to put back in front of queue
+                    queuedApplicationMessage.IsDuplicate = true;
+                    Session.ApplicationMessagesQueue.Enqueue(queuedApplicationMessage);
                 }
 
-                if (publishPacket?.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
+                if (!(exception is OperationCanceledException))
                 {
-                    if (queuedApplicationMessage != null)
+                    if (exception is MqttCommunicationTimedOutException)
                     {
-                        queuedApplicationMessage.IsDuplicate = true;
-                        Session.ApplicationMessagesQueue.Enqueue(queuedApplicationMessage);
+                        _logger.Warning(exception, "Client '{0}': Sending publish packet failed: Timeout.", ClientId);
                     }
-                }
+                    else if (exception is MqttCommunicationException)
+                    {
+                        _logger.Warning(exception, "Client '{0}': Sending publish packet failed: Communication exception.", ClientId);
+                    }
+                    else
+                    {
+                        _logger.Error(exception, "Client '{0}': Sending publish packet failed.", ClientId);
+                    }
 
-                StopInternal();
+                    StopInternal();
+                }
             }
         }
 

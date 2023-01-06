@@ -5,11 +5,12 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Internal
 {
+    // TODO: System.Threading.Channels.Channel would be a better fit here, once 452 is dropped
     public sealed class AsyncQueue<TItem> : IDisposable
     {
-        readonly object _syncRoot = new object();
-        SemaphoreSlim _semaphore = new SemaphoreSlim(0);
-        ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
+        private readonly object _syncRoot = new object();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
 
         public int Count => _queue.Count;
 
@@ -18,7 +19,7 @@ namespace MQTTnet.Internal
             lock (_syncRoot)
             {
                 _queue.Enqueue(item);
-                _semaphore?.Release();
+                _semaphore.Release();
             }
         }
 
@@ -83,8 +84,7 @@ namespace MQTTnet.Internal
         {
             lock (_syncRoot)
             {
-                _semaphore?.Dispose();
-                _semaphore = null;
+                _semaphore.Dispose();
             }
         }
     }

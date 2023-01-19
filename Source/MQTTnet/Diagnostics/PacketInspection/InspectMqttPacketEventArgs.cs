@@ -8,8 +8,14 @@ namespace MQTTnet.Diagnostics
 {
     public sealed class InspectMqttPacketEventArgs : EventArgs
     {
-        public MqttPacketFlowDirection Direction { get; internal set; }
+        public InspectMqttPacketEventArgs(MqttPacketFlowDirection direction, byte[] buffer)
+        {
+            Direction = direction;
+            Buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
+        }
 
-        public byte[] Buffer { get; set; }
+        public byte[] Buffer { get; }
+
+        public MqttPacketFlowDirection Direction { get; }
     }
 }

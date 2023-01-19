@@ -10,7 +10,7 @@ namespace MQTTnet.Server
 {
     public sealed class PreparingSessionEventArgs : EventArgs
     {
-        public string Id { get; internal set; }
+        public string Id { get; set; }
 
         // TODO: Allow adding of packets to the queue etc.
 

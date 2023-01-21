@@ -4,6 +4,7 @@
 
 #if !WINDOWS_UWP
 using MQTTnet.Adapter;
+using MQTTnet.Certificates;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -26,29 +27,29 @@ namespace MQTTnet.Implementations
         readonly AddressFamily _addressFamily;
         readonly MqttServerOptions _serverOptions;
         readonly MqttServerTcpEndpointBaseOptions _options;
+        private readonly ICertificateProvider _certificateProvider;
         readonly MqttServerTlsTcpEndpointOptions _tlsOptions;
-        readonly X509Certificate2 _tlsCertificate;
 
         CrossPlatformSocket _socket;
         IPEndPoint _localEndPoint;
+        private X509Certificate2 _tlsCertificate;
 
         public MqttTcpServerListener(
             AddressFamily addressFamily,
             MqttServerOptions serverOptions,
             MqttServerTcpEndpointBaseOptions tcpEndpointOptions,
-            X509Certificate2 tlsCertificate,
             IMqttNetLogger logger)
         {
             _addressFamily = addressFamily;
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _options = tcpEndpointOptions ?? throw new ArgumentNullException(nameof(tcpEndpointOptions));
-            _tlsCertificate = tlsCertificate;
             _rootLogger = logger;
             _logger = logger.WithSource(nameof(MqttTcpServerListener));
 
             if (_options is MqttServerTlsTcpEndpointOptions tlsOptions)
             {
                 _tlsOptions = tlsOptions;
+                _tlsCertificate = _tlsOptions.CertificateProvider.GetCertificate();
             }
         }
 
@@ -194,8 +195,26 @@ namespace MQTTnet.Implementations
                 stream = clientSocket.GetStream();
                 X509Certificate2 clientCertificate = null;
 
+                if (_tlsOptions.CertificateProvider != null)
+                {
+                    var tlsCertificate = _tlsOptions.CertificateProvider.GetCertificate();
+                    if (tlsCertificate != _tlsCertificate)
+                    {
+                        var oldTlsCertificate = _tlsCertificate;
+                        _tlsCertificate = tlsCertificate;
+#if !NET452
+                        oldTlsCertificate.Dispose();
+#endif
+                    }
+                }
+
                 if (_tlsCertificate != null)
                 {
+                    if (!_tlsCertificate.HasPrivateKey)
+                    {
+                        throw new InvalidOperationException("The certificate for TLS encryption must contain the private key.");
+                    }
+
                     var sslStream = new SslStream(stream, false, _tlsOptions.RemoteCertificateValidationCallback);
 
                     #if NETCOREAPP3_1_OR_GREATER

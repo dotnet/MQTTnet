@@ -33,8 +33,7 @@ namespace MQTTnet.Adapter
 
         readonly AsyncLock _syncRoot = new AsyncLock();
 
-        long _bytesReceived;
-        long _bytesSent;
+        Statistics _statistics;     // mutable struct, don't make readonly!
 
         public MqttChannelAdapter(IMqttChannel channel, MqttPacketFormatterAdapter packetFormatterAdapter, MqttPacketInspector packetInspector, IMqttNetLogger logger)
         {
@@ -51,9 +50,9 @@ namespace MQTTnet.Adapter
             _logger = logger.WithSource(nameof(MqttChannelAdapter));
         }
 
-        public long BytesReceived => Interlocked.Read(ref _bytesReceived);
+        public long BytesReceived => Volatile.Read(ref _statistics._bytesReceived);
 
-        public long BytesSent => Interlocked.Read(ref _bytesSent);
+        public long BytesSent => Volatile.Read(ref _statistics._bytesSent);
 
         public X509Certificate2 ClientCertificate => _channel.ClientCertificate;
 
@@ -147,7 +146,7 @@ namespace MQTTnet.Adapter
 
                 _packetInspector?.EndReceivePacket();
 
-                Interlocked.Add(ref _bytesSent, receivedPacket.TotalLength);
+                Interlocked.Add(ref _statistics._bytesSent, receivedPacket.TotalLength);
 
                 if (PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.Unknown)
                 {
@@ -181,11 +180,7 @@ namespace MQTTnet.Adapter
             return null;
         }
 
-        public void ResetStatistics()
-        {
-            Interlocked.Exchange(ref _bytesReceived, 0L);
-            Interlocked.Exchange(ref _bytesSent, 0L);
-        }
+        public void ResetStatistics() => _statistics.Reset();
 
         public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
@@ -216,7 +211,7 @@ namespace MQTTnet.Adapter
                         await _channel.WriteAsync(packetBuffer.Packet, true, cancellationToken).ConfigureAwait(false);
                     }
 
-                    Interlocked.Add(ref _bytesReceived, packetBuffer.Length);
+                    Interlocked.Add(ref _statistics._bytesReceived, packetBuffer.Length);
                 }
                 catch (Exception exception)
                 {
@@ -458,6 +453,18 @@ namespace MQTTnet.Adapter
             }
 
             throw new MqttCommunicationException(exception);
+        }
+
+        private struct Statistics
+        {
+            public long _bytesReceived;
+            public long _bytesSent;
+
+            public void Reset()
+            {
+                Volatile.Write(ref _bytesReceived, 0);
+                Volatile.Write(ref _bytesSent, 0);
+            }
         }
     }
 }

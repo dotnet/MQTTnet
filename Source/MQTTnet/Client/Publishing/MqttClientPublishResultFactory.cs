@@ -10,25 +10,23 @@ namespace MQTTnet.Client
 {
     public sealed class MqttClientPublishResultFactory
     {
-        static readonly MqttClientPublishResult EmptySuccessResult = new MqttClientPublishResult();
         static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = new List<MqttUserProperty>();
+        static readonly MqttClientPublishResult AtMostOnceSuccessResult = new MqttClientPublishResult(null, MqttClientPublishReasonCode.Success, null, EmptyUserProperties);
 
         public MqttClientPublishResult Create(MqttPubAckPacket pubAckPacket)
         {
             // QoS 0 has no response. So we treat it as a success always.
             if (pubAckPacket == null)
             {
-                return EmptySuccessResult;
+                return AtMostOnceSuccessResult;
             }
 
-            var result = new MqttClientPublishResult
-            {
+            var result = new MqttClientPublishResult(
+                pubAckPacket.PacketIdentifier,
                 // Both enums have the same values. So it can be easily converted.
-                ReasonCode = (MqttClientPublishReasonCode)(int)pubAckPacket.ReasonCode,
-                PacketIdentifier = pubAckPacket.PacketIdentifier,
-                ReasonString = pubAckPacket.ReasonString,
-                UserProperties = pubAckPacket.UserProperties ?? EmptyUserProperties
-            };
+                (MqttClientPublishReasonCode)(int)pubAckPacket.ReasonCode,
+                pubAckPacket.ReasonString,
+                pubAckPacket.UserProperties ?? EmptyUserProperties);
 
             return result;
         }
@@ -37,43 +35,28 @@ namespace MQTTnet.Client
         {
             if (pubRecPacket == null || pubCompPacket == null)
             {
-                return new MqttClientPublishResult
-                {
-                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError
-                };
+                var packetIdentifier = pubRecPacket?.PacketIdentifier ?? pubCompPacket?.PacketIdentifier;
+                return new MqttClientPublishResult(packetIdentifier, MqttClientPublishReasonCode.ImplementationSpecificError, null, EmptyUserProperties);
             }
-
-            MqttClientPublishResult result;
 
             // The PUBCOMP is the last packet in QoS 2. So we use the results from that instead of PUBREC.
             if (pubCompPacket.ReasonCode == MqttPubCompReasonCode.PacketIdentifierNotFound)
             {
-                result = new MqttClientPublishResult
-                {
-                    PacketIdentifier = pubCompPacket.PacketIdentifier,
-                    ReasonCode = MqttClientPublishReasonCode.UnspecifiedError,
-                    ReasonString = pubCompPacket.ReasonString,
-                    UserProperties = pubCompPacket.UserProperties ?? EmptyUserProperties
-                };
-
-                return result;
+                return new MqttClientPublishResult(
+                    pubCompPacket.PacketIdentifier,
+                    MqttClientPublishReasonCode.UnspecifiedError,
+                    pubCompPacket.ReasonString,
+                    pubCompPacket.UserProperties ?? EmptyUserProperties);
             }
 
-            result = new MqttClientPublishResult
-            {
-                PacketIdentifier = pubCompPacket.PacketIdentifier,
-                ReasonCode = MqttClientPublishReasonCode.Success,
-                ReasonString = pubCompPacket.ReasonString,
-                UserProperties = pubCompPacket.UserProperties ?? EmptyUserProperties
-            };
-
+            var reasonCode = MqttClientPublishReasonCode.Success;
             if (pubRecPacket.ReasonCode != MqttPubRecReasonCode.Success)
             {
                 // Both enums share the same values.
-                result.ReasonCode = (MqttClientPublishReasonCode)pubRecPacket.ReasonCode;
+                reasonCode = (MqttClientPublishReasonCode)pubRecPacket.ReasonCode;
             }
 
-            return result;
+            return new MqttClientPublishResult(pubCompPacket.PacketIdentifier, reasonCode, null, pubCompPacket.UserProperties ?? EmptyUserProperties);
         }
     }
 }

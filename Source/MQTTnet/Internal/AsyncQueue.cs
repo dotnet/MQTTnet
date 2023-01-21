@@ -37,7 +37,7 @@ namespace MQTTnet.Internal
 
                 _isDisposed = true;
 
-#if !NETSTANDARD1_3
+#if !NETSTANDARD1_3 && !WINDOWS_UWP
                 if (typeof(IDisposable).IsAssignableFrom(typeof(TItem)))
                 {
                     while (_queue.TryDequeue(out TItem item))

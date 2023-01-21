@@ -27,7 +27,6 @@ namespace MQTTnet.Implementations
         readonly AddressFamily _addressFamily;
         readonly MqttServerOptions _serverOptions;
         readonly MqttServerTcpEndpointBaseOptions _options;
-        private readonly ICertificateProvider _certificateProvider;
         readonly MqttServerTlsTcpEndpointOptions _tlsOptions;
 
         CrossPlatformSocket _socket;

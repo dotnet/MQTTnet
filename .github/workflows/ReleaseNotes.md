@@ -5,3 +5,4 @@
 * [Server] Exposed MQTT v5 sent properties from the affected client in _ClientDisconnectedAsync_ event.
 * [Server] Fixed wrong client ID passed to _InterceptingUnsubscriptionEventArgs_ (#1631, thanks to @ghord). 
 * [Server] Exposed socket settings for TCP keep alive in TCP options (#1544).
+* [Server] Exposed server session items at server level and allow custom session items for injected application messages (#1638).

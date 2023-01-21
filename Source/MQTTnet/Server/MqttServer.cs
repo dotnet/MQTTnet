@@ -234,7 +234,7 @@ namespace MQTTnet.Server
                 throw new NotSupportedException("Injected application messages must contain a topic. Topic alias is not supported.");
             }
 
-            var sessionItems = injectedApplicationMessage.CustomSessionItems ?? ServerSessionItems;
+            var sessionItems = ServerSessionItems;
             
             return _clientSessionsManager.DispatchApplicationMessage(
                 injectedApplicationMessage.SenderClientId,

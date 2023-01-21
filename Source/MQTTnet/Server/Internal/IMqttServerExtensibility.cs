@@ -10,7 +10,5 @@ namespace MQTTnet.Server
 
         MqttClientSessionsManager MqttClientSessionsManager { get; }
 
-        IDictionary SessionItems { get; }
-
     }
 }

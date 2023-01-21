@@ -54,7 +54,7 @@ namespace MQTTnet.Tests.Server
                 var injectedApplicationMessage = new MqttApplicationMessageBuilder().WithTopic("InjectedOne").Build();
 
                 var serverEx = (IMqttServerExtensibility)server;
-                await serverEx.MqttClientSessionsManager.DispatchApplicationMessageToClient(receiver.Options.ClientId, "InjectionSender", serverEx.SessionItems, injectedApplicationMessage, default);
+                await serverEx.MqttClientSessionsManager.DispatchApplicationMessageToClient(receiver.Options.ClientId, "InjectionSender", server.ServerSessionItems, injectedApplicationMessage, default);
 
                 await LongTestDelay();
 

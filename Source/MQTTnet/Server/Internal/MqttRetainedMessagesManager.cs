@@ -54,6 +54,10 @@ namespace MQTTnet.Server
             }
         }
 
+        public async Task Stop()
+        {
+        }
+
         public async Task UpdateMessage(string clientId, MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null)

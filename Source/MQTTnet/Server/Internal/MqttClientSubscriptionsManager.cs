@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {

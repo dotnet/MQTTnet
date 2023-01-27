@@ -12,6 +12,7 @@ using MQTTnet.Client;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {

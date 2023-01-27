@@ -19,7 +19,9 @@ namespace MQTTnet.Server
         public int MaxPendingMessagesPerClient { get; set; } = 250;
 
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage;
+
         public IMqttRetainedMessagesManager RetainedMessagesManager { get; set; }
+
         public MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsTcpEndpointOptions();
 
         /// <summary>

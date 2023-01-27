@@ -287,7 +287,7 @@ namespace MQTTnet.Server
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
             }
-
+            await _retainedMessagesManager.Stop().ConfigureAwait(false);
             await _eventContainer.StoppedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
 
             _logger.Info("Stopped.");

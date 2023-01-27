@@ -54,8 +54,14 @@ namespace MQTTnet.Server
             }
         }
 
-        public async Task Stop()
+        public Task Stop()
         {
+#if NET461_OR_GREATER
+            return Task.CompletedTask;
+#else
+            return Task.FromResult(0);
+#endif
+
         }
 
         public async Task UpdateMessage(string clientId, MqttApplicationMessage applicationMessage)

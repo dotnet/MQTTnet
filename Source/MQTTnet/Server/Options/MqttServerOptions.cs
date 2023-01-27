@@ -9,7 +9,7 @@ namespace MQTTnet.Server
     public sealed class MqttServerOptions
     {
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(100);
-        
+
         public MqttServerTcpEndpointOptions DefaultEndpointOptions { get; } = new MqttServerTcpEndpointOptions();
 
         public bool EnablePersistentSessions { get; set; }
@@ -19,7 +19,7 @@ namespace MQTTnet.Server
         public int MaxPendingMessagesPerClient { get; set; } = 250;
 
         public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage;
-
+        public IMqttRetainedMessagesManager RetainedMessagesManager { get; set; }
         public MqttServerTlsTcpEndpointOptions TlsEndpointOptions { get; } = new MqttServerTlsTcpEndpointOptions();
 
         /// <summary>

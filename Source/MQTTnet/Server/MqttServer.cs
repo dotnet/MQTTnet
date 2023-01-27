@@ -25,7 +25,7 @@ namespace MQTTnet.Server
         readonly MqttServerKeepAliveMonitor _keepAliveMonitor;
         readonly MqttNetSourceLogger _logger;
         readonly MqttServerOptions _options;
-        readonly MqttRetainedMessagesManager _retainedMessagesManager;
+        readonly IMqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttNetLogger _rootLogger;
 
         CancellationTokenSource _cancellationTokenSource;
@@ -44,7 +44,7 @@ namespace MQTTnet.Server
             _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
             _logger = logger.WithSource(nameof(MqttServer));
 
-            _retainedMessagesManager = new MqttRetainedMessagesManager(_eventContainer, _rootLogger);
+            _retainedMessagesManager = options.RetainedMessagesManager ?? new MqttRetainedMessagesManager(_eventContainer, _rootLogger);
             _clientSessionsManager = new MqttClientSessionsManager(options, _retainedMessagesManager, _eventContainer, _rootLogger);
             _keepAliveMonitor = new MqttServerKeepAliveMonitor(options, _clientSessionsManager, _rootLogger);
         }

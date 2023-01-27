@@ -4,7 +4,7 @@
 
 using System;
 using MQTTnet.Packets;
-using MQTTnet.Server;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Formatter
 {

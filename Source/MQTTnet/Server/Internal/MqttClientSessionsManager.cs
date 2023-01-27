@@ -29,7 +29,7 @@ namespace MQTTnet.Server
         readonly MqttNetSourceLogger _logger;
         readonly MqttServerOptions _options;
 
-        readonly MqttRetainedMessagesManager _retainedMessagesManager;
+        readonly IMqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttNetLogger _rootLogger;
 
         // The _sessions dictionary contains all session, the _subscriberSessions hash set contains subscriber sessions only.
@@ -41,7 +41,7 @@ namespace MQTTnet.Server
 
         public MqttClientSessionsManager(
             MqttServerOptions options,
-            MqttRetainedMessagesManager retainedMessagesManager,
+            IMqttRetainedMessagesManager retainedMessagesManager,
             MqttServerEventContainer eventContainer,
             IMqttNetLogger logger)
         {

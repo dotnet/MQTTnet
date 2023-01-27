@@ -36,7 +36,7 @@ namespace MQTTnet.Server
             IDictionary items,
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
-            MqttRetainedMessagesManager retainedMessagesManager,
+            IMqttRetainedMessagesManager retainedMessagesManager,
             MqttClientSessionsManager clientSessionsManager)
         {
             Id = clientId ?? throw new ArgumentNullException(nameof(clientId));

@@ -15,11 +15,9 @@ namespace MQTTnet.Server
 {
     public sealed class MqttClientSubscriptionsManager : IDisposable
     {
-        static readonly List<uint> EmptySubscriptionIdentifiers = new List<uint>();
-
         readonly MqttServerEventContainer _eventContainer;
         readonly Dictionary<ulong, HashSet<MqttSubscription>> _noWildcardSubscriptionsByTopicHash = new Dictionary<ulong, HashSet<MqttSubscription>>();
-        readonly MqttRetainedMessagesManager _retainedMessagesManager;
+        readonly IMqttRetainedMessagesManager _retainedMessagesManager;
 
         readonly MqttSession _session;
 
@@ -37,7 +35,7 @@ namespace MQTTnet.Server
         public MqttClientSubscriptionsManager(
             MqttSession session,
             MqttServerEventContainer eventContainer,
-            MqttRetainedMessagesManager retainedMessagesManager,
+            IMqttRetainedMessagesManager retainedMessagesManager,
             ISubscriptionChangedNotification subscriptionChangedNotification)
         {
             _session = session ?? throw new ArgumentNullException(nameof(session));
@@ -85,7 +83,7 @@ namespace MQTTnet.Server
             var senderIsReceiver = string.Equals(senderId, _session.Id);
             var maxQoSLevel = -1; // Not subscribed.
 
-            HashSet<uint> subscriptionIdentifiers = null;
+            var subscriptionIdentifiers = new HashSet<uint>();
             var retainAsPublished = false;
 
             foreach (var subscription in possibleSubscriptions)
@@ -114,11 +112,6 @@ namespace MQTTnet.Server
 
                 if (subscription.Identifier > 0)
                 {
-                    if (subscriptionIdentifiers == null)
-                    {
-                        subscriptionIdentifiers = new HashSet<uint>();
-                    }
-
                     subscriptionIdentifiers.Add(subscription.Identifier);
                 }
             }
@@ -132,7 +125,7 @@ namespace MQTTnet.Server
             {
                 IsSubscribed = true,
                 RetainAsPublished = retainAsPublished,
-                SubscriptionIdentifiers = subscriptionIdentifiers?.ToList() ?? EmptySubscriptionIdentifiers,
+                SubscriptionIdentifiers = subscriptionIdentifiers.ToList(),
 
                 // Start with the same QoS as the publisher.
                 QualityOfServiceLevel = qualityOfServiceLevel
@@ -167,12 +160,11 @@ namespace MQTTnet.Server
                 throw new ArgumentNullException(nameof(subscribePacket));
             }
 
-            var retainedApplicationMessages = await _retainedMessagesManager.GetMessages().ConfigureAwait(false);
             var result = new SubscribeResult(subscribePacket.TopicFilters.Count);
 
-            var addedSubscriptions = new List<string>();
-            var finalTopicFilters = new List<MqttTopicFilter>();
-
+            var addedSubscriptions = new List<string>(subscribePacket.TopicFilters.Count);
+            var finalTopicFilters = new List<MqttTopicFilter>(subscribePacket.TopicFilters.Count);
+            var subscriptionRetainedMessages = new List<SubscriptionRetainedMessagesResult>();
             // The topic filters are order by its QoS so that the higher QoS will win over a
             // lower one.
             foreach (var topicFilterItem in subscribePacket.TopicFilters.OrderByDescending(f => f.QualityOfServiceLevel))
@@ -197,12 +189,46 @@ namespace MQTTnet.Server
                     continue;
                 }
 
-                var createSubscriptionResult = CreateSubscription(topicFilter, subscribePacket.SubscriptionIdentifier, subscriptionEventArgs.Response.ReasonCode);
+                var qualtityOfService = SubscribeReasonCodeToQualityOfServiceLevel(subscriptionEventArgs.Response.ReasonCode);
+                var createSubscriptionResult = CreateSubscription(topicFilter, subscribePacket.SubscriptionIdentifier, qualtityOfService);
 
                 addedSubscriptions.Add(topicFilter.Topic);
                 finalTopicFilters.Add(topicFilter);
 
-                FilterRetainedApplicationMessages(retainedApplicationMessages, createSubscriptionResult, result);
+                if (createSubscriptionResult.Subscription.RetainHandling == MqttRetainHandling.DoNotSendOnSubscribe)
+                {
+                    // This is a MQTT V5+ feature.
+                    continue;
+                }
+
+                if (createSubscriptionResult.Subscription.RetainHandling == MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly && !createSubscriptionResult.IsNewSubscription)
+                {
+                    // This is a MQTT V5+ feature.
+                    continue;
+                }
+
+                subscriptionRetainedMessages.Add(createSubscriptionResult);
+            }
+
+            await _retainedMessagesManager.LoadMessages(subscriptionRetainedMessages, cancellationToken);
+
+            foreach (var subscriptionRetainedMessage in subscriptionRetainedMessages)
+            {
+                foreach (var retainedMessage in subscriptionRetainedMessage.RetainedMessages)
+                {
+                    var retainedMessageMatch = new MqttRetainedMessageMatch(retainedMessage, subscriptionRetainedMessage.Subscription.GrantedQualityOfServiceLevel);
+                    if (retainedMessageMatch.SubscriptionQualityOfServiceLevel > retainedMessageMatch.ApplicationMessage.QualityOfServiceLevel)
+                    {
+                        // UPGRADING the QoS is not allowed! 
+                        // From MQTT spec: Subscribing to a Topic Filter at QoS 2 is equivalent to saying
+                        // "I would like to receive Messages matching this filter at the QoS with which they were published".
+                        // This means a publisher is responsible for determining the maximum QoS a Message can be delivered at,
+                        // but a subscriber is able to require that the Server downgrades the QoS to one more suitable for its usage.
+                        retainedMessageMatch.SubscriptionQualityOfServiceLevel = retainedMessageMatch.ApplicationMessage.QualityOfServiceLevel;
+                    }
+
+                    result.RetainedMessages.Add(retainedMessageMatch);
+                }
             }
 
             // This call will add the new subscription to the internal storage.
@@ -307,27 +333,8 @@ namespace MQTTnet.Server
             return result;
         }
 
-        CreateSubscriptionResult CreateSubscription(MqttTopicFilter topicFilter, uint subscriptionIdentifier, MqttSubscribeReasonCode reasonCode)
+        SubscriptionRetainedMessagesResult CreateSubscription(MqttTopicFilter topicFilter, uint subscriptionIdentifier, MqttQualityOfServiceLevel grantedQualityOfServiceLevel)
         {
-            MqttQualityOfServiceLevel grantedQualityOfServiceLevel;
-
-            if (reasonCode == MqttSubscribeReasonCode.GrantedQoS0)
-            {
-                grantedQualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
-            }
-            else if (reasonCode == MqttSubscribeReasonCode.GrantedQoS1)
-            {
-                grantedQualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce;
-            }
-            else if (reasonCode == MqttSubscribeReasonCode.GrantedQoS2)
-            {
-                grantedQualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce;
-            }
-            else
-            {
-                throw new InvalidOperationException();
-            }
-
             var subscription = new MqttSubscription(
                 topicFilter.Topic,
                 topicFilter.NoLocal,
@@ -339,7 +346,6 @@ namespace MQTTnet.Server
             bool isNewSubscription;
 
             // Add to subscriptions and maintain topic hash dictionaries
-
             using (_subscriptionsLock.EnterAsync(CancellationToken.None).GetAwaiter().GetResult())
             {
                 MqttSubscription.CalculateTopicHash(topicFilter.Topic, out var topicHash, out var topicHashMask, out var hasWildcard);
@@ -391,64 +397,21 @@ namespace MQTTnet.Server
                 }
             }
 
-            return new CreateSubscriptionResult
-            {
-                IsNewSubscription = isNewSubscription,
-                Subscription = subscription
-            };
+            return new SubscriptionRetainedMessagesResult(subscription, isNewSubscription);
         }
 
-        static void FilterRetainedApplicationMessages(
-            IList<MqttApplicationMessage> retainedMessages,
-            CreateSubscriptionResult createSubscriptionResult,
-            SubscribeResult subscribeResult)
+        private static MqttQualityOfServiceLevel SubscribeReasonCodeToQualityOfServiceLevel(MqttSubscribeReasonCode reasonCode)
         {
-            if (createSubscriptionResult.Subscription.RetainHandling == MqttRetainHandling.DoNotSendOnSubscribe)
+            switch (reasonCode)
             {
-                // This is a MQTT V5+ feature.
-                return;
-                }
-
-            if (createSubscriptionResult.Subscription.RetainHandling == MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly && !createSubscriptionResult.IsNewSubscription)
-                {
-                    // This is a MQTT V5+ feature.
-                return;
-                }
-
-            for (var index = retainedMessages.Count - 1; index >= 0; index--)
-            {
-                var retainedMessage = retainedMessages[index];
-                if (retainedMessage == null)
-                {
-                    continue;
-                }
-
-                if (MqttTopicFilterComparer.Compare(retainedMessage.Topic, createSubscriptionResult.Subscription.Topic) != MqttTopicFilterCompareResult.IsMatch)
-                {
-                    continue;
-                }
-
-                var retainedMessageMatch = new MqttRetainedMessageMatch(retainedMessage, createSubscriptionResult.Subscription.GrantedQualityOfServiceLevel);
-                if (retainedMessageMatch.SubscriptionQualityOfServiceLevel > retainedMessageMatch.ApplicationMessage.QualityOfServiceLevel)
-                {
-                    // UPGRADING the QoS is not allowed! 
-                    // From MQTT spec: Subscribing to a Topic Filter at QoS 2 is equivalent to saying
-                    // "I would like to receive Messages matching this filter at the QoS with which they were published".
-                    // This means a publisher is responsible for determining the maximum QoS a Message can be delivered at,
-                    // but a subscriber is able to require that the Server downgrades the QoS to one more suitable for its usage.
-                    retainedMessageMatch.SubscriptionQualityOfServiceLevel = retainedMessageMatch.ApplicationMessage.QualityOfServiceLevel;
-                }
-
-                if (subscribeResult.RetainedMessages == null)
-                {
-                    subscribeResult.RetainedMessages = new List<MqttRetainedMessageMatch>();
-                }
-
-                subscribeResult.RetainedMessages.Add(retainedMessageMatch);
-
-                // Clear the retained message from the list because the client should receive every message only 
-                // one time even if multiple subscriptions affect them.
-                retainedMessages[index] = null;
+                case MqttSubscribeReasonCode.GrantedQoS0:
+                    return MqttQualityOfServiceLevel.AtMostOnce;
+                case MqttSubscribeReasonCode.GrantedQoS1:
+                    return MqttQualityOfServiceLevel.AtLeastOnce;
+                case MqttSubscribeReasonCode.GrantedQoS2:
+                    return MqttQualityOfServiceLevel.ExactlyOnce;
+                default:
+                    throw new InvalidOperationException();
             }
         }
 
@@ -494,13 +457,6 @@ namespace MQTTnet.Server
             await _eventContainer.InterceptingUnsubscriptionEvent.InvokeAsync(clientUnsubscribingTopicEventArgs).ConfigureAwait(false);
 
             return clientUnsubscribingTopicEventArgs;
-        }
-
-        sealed class CreateSubscriptionResult
-        {
-            public bool IsNewSubscription { get; set; }
-
-            public MqttSubscription Subscription { get; set; }
         }
     }
 }

@@ -407,13 +407,13 @@ namespace MQTTnet.Server
             {
                 // This is a MQTT V5+ feature.
                 return;
-                }
+            }
 
             if (createSubscriptionResult.Subscription.RetainHandling == MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly && !createSubscriptionResult.IsNewSubscription)
-                {
-                    // This is a MQTT V5+ feature.
+            {
+                // This is a MQTT V5+ feature.
                 return;
-                }
+            }
 
             for (var index = retainedMessages.Count - 1; index >= 0; index--)
             {

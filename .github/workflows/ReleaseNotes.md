@@ -6,3 +6,5 @@
 * [Server] Fixed wrong client ID passed to _InterceptingUnsubscriptionEventArgs_ (#1631, thanks to @ghord). 
 * [Server] Exposed socket settings for TCP keep alive in TCP options (#1544).
 * [Server] Exposed server session items at server level and allow custom session items for injected application messages (#1638).
+* [Server] Improved performance for retained message handling when subscribing using "DoNotSendOnSubscribe" or "SendAtSubscribeIfNewSubscriptionOnly" (#1661, thanks to @Int32Overflow).
+* [Server] Added support for changing the used TLS certificate while the server is running (#1652, thanks to @YAJeff). The certificate provider will now be invoked for every new connection!

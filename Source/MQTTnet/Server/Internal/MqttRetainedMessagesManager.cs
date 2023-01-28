@@ -5,13 +5,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 
 namespace MQTTnet.Server
 {
-    public sealed class MqttRetainedMessagesManager
+    public sealed class MqttRetainedMessagesManager: IMqttRetainedMessagesManager
     {
         readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>(4096);
         readonly AsyncLock _storageAccessLock = new AsyncLock();
@@ -51,6 +52,16 @@ namespace MQTTnet.Server
             {
                 _logger.Error(exception, "Unhandled exception while loading retained messages.");
             }
+        }
+
+        public Task Stop()
+        {
+#if NET461_OR_GREATER
+            return Task.CompletedTask;
+#else
+            return Task.FromResult(0);
+#endif
+
         }
 
         public async Task UpdateMessage(string clientId, MqttApplicationMessage applicationMessage)
@@ -114,7 +125,7 @@ namespace MQTTnet.Server
             }
         }
         
-        public Task<IList<MqttApplicationMessage>> GetMessages()
+        public Task<IList<MqttApplicationMessage>> GetMessages(CancellationToken cancellationToken = default)
         {
             lock (_messages)
             {
@@ -133,6 +144,27 @@ namespace MQTTnet.Server
             using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
             {
                 await _eventContainer.RetainedMessagesClearedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
+            }
+        }
+
+        public async Task LoadMessages(IEnumerable<SubscriptionRetainedMessagesResult> subscriptions, CancellationToken cancellationToken = default)
+        {
+            var allRetainedMessages = await GetMessages(cancellationToken);
+
+            for (var i = allRetainedMessages.Count - 1; i >= 0; i--)
+            {
+                var retainedMessage = allRetainedMessages[i];
+                foreach (var subscription in subscriptions)
+                {
+                    if (MqttTopicFilterComparer.Compare(retainedMessage.Topic, subscription.Subscription.Topic) == MqttTopicFilterCompareResult.IsMatch)
+                    {
+                        subscription.RetainedMessages.Add(retainedMessage);
+
+                        // Skip the following subscriptions, as each message may only be sent once.
+                        // Following subscriptions do not have to be checked, as the message is sent anyway.
+                        break;
+                    }
+                }
             }
         }
     }

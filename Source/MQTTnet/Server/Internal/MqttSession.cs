@@ -12,6 +12,7 @@ using MQTTnet.Client;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server
 {
@@ -36,7 +37,7 @@ namespace MQTTnet.Server
             IDictionary items,
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
-            MqttRetainedMessagesManager retainedMessagesManager,
+            IMqttRetainedMessagesManager retainedMessagesManager,
             MqttClientSessionsManager clientSessionsManager)
         {
             Id = clientId ?? throw new ArgumentNullException(nameof(clientId));

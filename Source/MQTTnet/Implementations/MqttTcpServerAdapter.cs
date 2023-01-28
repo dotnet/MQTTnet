@@ -14,6 +14,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Internal;
+using MQTTnet.Certificates;
 
 namespace MQTTnet.Implementations
 {
@@ -38,7 +39,7 @@ namespace MQTTnet.Implementations
 
             if (options.DefaultEndpointOptions.IsEnabled)
             {
-                RegisterListeners(options.DefaultEndpointOptions, null, logger, _cancellationTokenSource.Token);
+                RegisterListeners(options.DefaultEndpointOptions, logger, _cancellationTokenSource.Token);
             }
 
             if (options.TlsEndpointOptions?.IsEnabled == true)
@@ -48,13 +49,7 @@ namespace MQTTnet.Implementations
                     throw new ArgumentException("TLS certificate is not set.");
                 }
 
-                var tlsCertificate = options.TlsEndpointOptions.CertificateProvider.GetCertificate();
-                if (!tlsCertificate.HasPrivateKey)
-                {
-                    throw new InvalidOperationException("The certificate for TLS encryption must contain the private key.");
-                }
-
-                RegisterListeners(options.TlsEndpointOptions, tlsCertificate, logger, _cancellationTokenSource.Token);
+                RegisterListeners(options.TlsEndpointOptions, logger, _cancellationTokenSource.Token);
             }
 
             return CompletedTask.Instance;
@@ -91,11 +86,12 @@ namespace MQTTnet.Implementations
             }
         }
 
-        void RegisterListeners(MqttServerTcpEndpointBaseOptions tcpEndpointOptions, X509Certificate2 tlsCertificate, IMqttNetLogger logger, CancellationToken cancellationToken)
+        void RegisterListeners(MqttServerTcpEndpointBaseOptions tcpEndpointOptions, IMqttNetLogger logger, CancellationToken cancellationToken)
         {
+
             if (!tcpEndpointOptions.BoundInterNetworkAddress.Equals(IPAddress.None))
             {
-                var listenerV4 = new MqttTcpServerListener(AddressFamily.InterNetwork, _serverOptions, tcpEndpointOptions, tlsCertificate, logger)
+                var listenerV4 = new MqttTcpServerListener(AddressFamily.InterNetwork, _serverOptions, tcpEndpointOptions, logger)
                 {
                     ClientHandler = OnClientAcceptedAsync
                 };
@@ -108,7 +104,7 @@ namespace MQTTnet.Implementations
 
             if (!tcpEndpointOptions.BoundInterNetworkV6Address.Equals(IPAddress.None))
             {
-                var listenerV6 = new MqttTcpServerListener(AddressFamily.InterNetworkV6, _serverOptions, tcpEndpointOptions, tlsCertificate, logger)
+                var listenerV6 = new MqttTcpServerListener(AddressFamily.InterNetworkV6, _serverOptions, tcpEndpointOptions, logger)
                 {
                     ClientHandler = OnClientAcceptedAsync
                 };

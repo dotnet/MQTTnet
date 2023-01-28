@@ -39,6 +39,31 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
+        public async Task Inject_ApplicationMessage_To_Client_At_Server_Level()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var server = await testEnvironment.StartServer();
+
+                var receiver = await testEnvironment.ConnectClient();
+
+                var messageReceivedHandler = testEnvironment.CreateApplicationMessageHandler(receiver);
+
+                await receiver.SubscribeAsync("#");
+
+                var injectedApplicationMessage = new MqttApplicationMessageBuilder().WithTopic("InjectedOne").Build();
+
+                var serverEx = (IMqttServerExtensibility)server;
+                await serverEx.MqttClientSessionsManager.DispatchApplicationMessageToClient(receiver.Options.ClientId, "InjectionSender", server.ServerSessionItems, injectedApplicationMessage, default);
+
+                await LongTestDelay();
+
+                Assert.AreEqual(1, messageReceivedHandler.ReceivedEventArgs.Count);
+                Assert.AreEqual("InjectedOne", messageReceivedHandler.ReceivedEventArgs[0].ApplicationMessage.Topic);
+            }
+        }
+
+        [TestMethod]
         public async Task Inject_ApplicationMessage_At_Server_Level()
         {
             using (var testEnvironment = CreateTestEnvironment())

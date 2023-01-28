@@ -17,7 +17,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Server
 {
-    public class MqttServer : Disposable
+    public class MqttServer : Disposable, IMqttServerExtensibility
     {
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttClientSessionsManager _clientSessionsManager;
@@ -165,6 +165,8 @@ namespace MQTTnet.Server
 
         public bool IsStarted => _cancellationTokenSource != null;
 
+        MqttClientSessionsManager IMqttServerExtensibility.MqttClientSessionsManager => _clientSessionsManager;
+
         /// <summary>
         ///     Gives access to the session items which belong to this server. This session items are passed
         ///     to several events instead of the client session items if the event is caused by the server instead of a client.
@@ -232,7 +234,7 @@ namespace MQTTnet.Server
                 throw new NotSupportedException("Injected application messages must contain a topic. Topic alias is not supported.");
             }
 
-            var sessionItems = injectedApplicationMessage.CustomSessionItems ?? ServerSessionItems;
+            var sessionItems = ServerSessionItems;
             
             return _clientSessionsManager.DispatchApplicationMessage(
                 injectedApplicationMessage.SenderClientId,

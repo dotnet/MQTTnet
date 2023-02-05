@@ -23,6 +23,11 @@ namespace MQTTnet.Server
 
         public MqttApplicationMessage ApplicationMessage { get; }
 
+        /// <summary>
+        ///     Indicates if the connection with the sender should be closed.
+        /// </summary>
+        public bool CloseSenderConnection { get; set; }
+
         public string ReceiverClientId { get; }
 
         public string SenderClientId { get; }

@@ -85,6 +85,12 @@ namespace MQTTnet.Server
             remove => _eventContainer.ClientUnsubscribedTopicEvent.RemoveHandler(value);
         }
 
+        public event Func<InterceptingClientApplicationMessageEnqueueEventArgs, Task> InterceptingClientEnqueueAsync
+        {
+            add => _eventContainer.InterceptingClientEnqueueEvent.AddHandler(value);
+            remove => _eventContainer.InterceptingClientEnqueueEvent.RemoveHandler(value);
+        }
+
         public event Func<InterceptingPacketEventArgs, Task> InterceptingInboundPacketAsync
         {
             add => _eventContainer.InterceptingInboundPacketEvent.AddHandler(value);
@@ -233,7 +239,7 @@ namespace MQTTnet.Server
             }
 
             var sessionItems = injectedApplicationMessage.CustomSessionItems ?? ServerSessionItems;
-            
+
             return _clientSessionsManager.DispatchApplicationMessage(
                 injectedApplicationMessage.SenderClientId,
                 sessionItems,

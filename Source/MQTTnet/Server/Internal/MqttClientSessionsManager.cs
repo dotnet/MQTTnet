@@ -199,16 +199,17 @@ namespace MQTTnet.Server
                         {
                             continue;
                         }
-
-                        if (_eventContainer.InterceptingClientApplicationMessageEnqueueEvent.HasHandlers)
+                        
+                        if (_eventContainer.InterceptingClientEnqueueEvent.HasHandlers)
                         {
-                            // TODO: Finish
                             var eventArgs = new InterceptingClientApplicationMessageEnqueueEventArgs(senderId, session.Id, applicationMessage);
-                            await _eventContainer.InterceptingClientApplicationMessageEnqueueEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                            await _eventContainer.InterceptingClientEnqueueEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
                             if (!eventArgs.AcceptEnqueue)
                             {
-                                return new DispatchApplicationMessageResult(reasonCode, false, null, null);
+                                // There will be no reason string and use properties because in this case the clients will
+                                // not receive a packet at all.
+                                return new DispatchApplicationMessageResult(reasonCode, eventArgs.CloseSenderConnection, null, null);
                             }
                         }
 

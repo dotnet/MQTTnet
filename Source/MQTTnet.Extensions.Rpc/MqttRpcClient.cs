@@ -7,6 +7,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Internal;
@@ -108,7 +109,7 @@ namespace MQTTnet.Extensions.Rpc
             {
                 _waitingCalls.TryRemove(responseTopic, out _);
                 
-                await _mqttClient.UnsubscribeAsync(responseTopic).ConfigureAwait(false);
+                await _mqttClient.UnsubscribeAsync(responseTopic, CancellationToken.None).ConfigureAwait(false);
             }
         }
 
@@ -119,10 +120,12 @@ namespace MQTTnet.Extensions.Rpc
                 return CompletedTask.Instance;
             }
 
+            var payloadBuffer = eventArgs.ApplicationMessage.PayloadSegment.ToArray();
+            
 #if NET452
-            Task.Run(() => awaitable.TrySetResult(eventArgs.ApplicationMessage.Payload));
+            Task.Run(() => awaitable.TrySetResult(payloadBuffer));
 #else
-            awaitable.TrySetResult(eventArgs.ApplicationMessage.Payload);
+            awaitable.TrySetResult(payloadBuffer);
 #endif
 
             // Set this message to handled to that other code can avoid execution etc.

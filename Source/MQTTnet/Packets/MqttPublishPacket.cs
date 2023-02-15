@@ -11,8 +11,8 @@ namespace MQTTnet.Packets
 {
     public sealed class MqttPublishPacket : MqttPacketWithIdentifier
     {
-        private byte[] _payloadCache = null;
-        private ArraySegment<byte> _payloadSegment = EmptyBuffer.ArraySegment;
+        byte[] _payloadCache;
+        ArraySegment<byte> _payloadSegment = EmptyBuffer.ArraySegment;
 
         public string ContentType { get; set; }
 
@@ -38,23 +38,19 @@ namespace MQTTnet.Packets
                     _payloadCache = new byte[_payloadSegment.Count];
                     Array.Copy(_payloadSegment.Array, _payloadSegment.Offset, _payloadCache, 0, _payloadCache.Length);
                 }
+
                 return _payloadCache;
             }
             set
             {
                 _payloadCache = null;
-                _payloadSegment = value == null || value.Length == 0
-                    ? EmptyBuffer.ArraySegment
-                    : new ArraySegment<byte>(value);
+                _payloadSegment = value == null || value.Length == 0 ? EmptyBuffer.ArraySegment : new ArraySegment<byte>(value);
             }
         }
 
         public ArraySegment<byte> PayloadSegment
         {
-            get
-            {
-                return _payloadSegment;
-            }
+            get => _payloadSegment;
             set
             {
                 _payloadCache = null;

@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
@@ -100,7 +101,7 @@ namespace MQTTnet.TestApp
                     {
                         // Replace the payload with the timestamp. But also extending a JSON 
                         // based payload with the timestamp is a suitable use case.
-                        e.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(DateTime.Now.ToString("O"));
+                        e.ApplicationMessage.PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(DateTime.Now.ToString("O")));
                     }
 
                     if (e.ApplicationMessage.Topic == "not_allowed_topic")
@@ -144,7 +145,7 @@ namespace MQTTnet.TestApp
                 mqttServer.InterceptingPublishAsync += e =>
                 {
                     MqttNetConsoleLogger.PrintToConsole(
-                        $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0])}'",
+                        $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? EmptyBuffer.Array)}'",
                         ConsoleColor.Magenta);
                     
                     return CompletedTask.Instance;

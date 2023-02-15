@@ -164,7 +164,7 @@ namespace MQTTnet.Tests.Server
 
                 var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).WithCredentials(userName, password).Build();
 
-                var ex = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(async () => await client.ConnectAsync(clientOptions));
+                var ex = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(() => client.ConnectAsync(clientOptions));
                 Assert.AreEqual(MqttClientConnectResultCode.BadUserNameOrPassword, ex.Result.ResultCode);
             }
         }

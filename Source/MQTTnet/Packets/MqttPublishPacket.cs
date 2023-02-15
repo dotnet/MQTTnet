@@ -2,18 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using MQTTnet.Internal;
-using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets
 {
     public sealed class MqttPublishPacket : MqttPacketWithIdentifier
     {
-        byte[] _payloadCache;
-        ArraySegment<byte> _payloadSegment = EmptyBuffer.ArraySegment;
-
         public string ContentType { get; set; }
 
         public byte[] CorrelationData { get; set; }
@@ -22,43 +18,9 @@ namespace MQTTnet.Packets
 
         public uint MessageExpiryInterval { get; set; }
 
-        public byte[] Payload
-        {
-            get
-            {
-                // just reference from _payloadSegment.Array
-                if (_payloadSegment.Count == _payloadSegment.Array.Length)
-                {
-                    return _payloadSegment.Array;
-                }
-
-                // copy from _payloadSegment
-                if (_payloadCache == null)
-                {
-                    _payloadCache = new byte[_payloadSegment.Count];
-                    MqttMemoryHelper.Copy(_payloadSegment.Array, _payloadSegment.Offset, _payloadCache, 0, _payloadCache.Length);
-                }
-
-                return _payloadCache;
-            }
-            set
-            {
-                _payloadCache = null;
-                _payloadSegment = value == null || value.Length == 0 ? EmptyBuffer.ArraySegment : new ArraySegment<byte>(value);
-            }
-        }
-
-        public ArraySegment<byte> PayloadSegment
-        {
-            get => _payloadSegment;
-            set
-            {
-                _payloadCache = null;
-                _payloadSegment = value;
-            }
-        }
-
         public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
+
+        public ArraySegment<byte> PayloadSegment { get; set; }
 
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; } = MqttQualityOfServiceLevel.AtMostOnce;
 
@@ -77,7 +39,7 @@ namespace MQTTnet.Packets
         public override string ToString()
         {
             return
-                $"Publish: [Topic={Topic}] [PayloadLength={this.PayloadSegment.Count}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
+                $"Publish: [Topic={Topic}] [PayloadLength={PayloadSegment.Count}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
         }
     }
 }

@@ -144,10 +144,16 @@ namespace MQTTnet.TestApp
                 
                 mqttServer.InterceptingPublishAsync += e =>
                 {
-                    MqttNetConsoleLogger.PrintToConsole(
-                        $"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? EmptyBuffer.Array)}'",
-                        ConsoleColor.Magenta);
+                    var payloadText = string.Empty;
+                    if (e.ApplicationMessage.PayloadSegment.Count > 0)
+                    {
+                        payloadText = Encoding.UTF8.GetString(
+                            e.ApplicationMessage.PayloadSegment.Array,
+                            e.ApplicationMessage.PayloadSegment.Offset,
+                            e.ApplicationMessage.PayloadSegment.Count);
+                    }
                     
+                    MqttNetConsoleLogger.PrintToConsole($"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{payloadText}'", ConsoleColor.Magenta);
                     return CompletedTask.Instance;
                 };
 

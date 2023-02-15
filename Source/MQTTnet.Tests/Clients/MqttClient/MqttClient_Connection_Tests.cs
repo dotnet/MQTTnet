@@ -150,6 +150,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 // Perform a clean disconnect.
                 await client.DisconnectAsync(disconnectOptions);
+
+                await LongTestDelay();
                 
                 Assert.IsNotNull(eventArgs);
                 Assert.IsNotNull(eventArgs.UserProperties);

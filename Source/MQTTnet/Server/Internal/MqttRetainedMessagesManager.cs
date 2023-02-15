@@ -23,7 +23,9 @@ namespace MQTTnet.Server
         {
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
 
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (logger == null)
+                throw new ArgumentNullException(nameof(logger));
+
             _logger = logger.WithSource(nameof(MqttRetainedMessagesManager));
         }
 
@@ -84,8 +86,7 @@ namespace MQTTnet.Server
                         }
                         else
                         {
-                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel ||
-                                !SequenceEqual(existingMessage.PayloadSegment, payloadSegment))
+                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !SequenceEqual(existingMessage.PayloadSegment, payloadSegment))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage;
                                 saveIsRequired = true;
@@ -122,6 +123,19 @@ namespace MQTTnet.Server
             {
                 var result = new List<MqttApplicationMessage>(_messages.Values);
                 return Task.FromResult((IList<MqttApplicationMessage>)result);
+            }
+        }
+
+        public Task<MqttApplicationMessage> GetMessage(string topic)
+        {
+            lock (_messages)
+            {
+                if (_messages.TryGetValue(topic, out var message))
+                {
+                    return Task.FromResult(message);
+                }
+
+                return null;
             }
         }
 

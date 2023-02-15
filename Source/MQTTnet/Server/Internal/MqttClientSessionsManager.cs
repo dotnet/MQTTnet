@@ -387,8 +387,8 @@ namespace MQTTnet.Server
 
                     if (client.Id != null && !client.IsTakenOver && _eventContainer.ClientDisconnectedEvent.HasHandlers)
                     {
-                        var disconnectType = client.IsCleanDisconnect ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean;
-                        var eventArgs = new ClientDisconnectedEventArgs(client.Id, disconnectType, endpoint, client.Session.Items);
+                        var disconnectType = client.DisconnectPacket != null ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean;
+                        var eventArgs = new ClientDisconnectedEventArgs(client.Id, client.DisconnectPacket, disconnectType, endpoint, client.Session.Items);
 
                         await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
@@ -592,8 +592,13 @@ namespace MQTTnet.Server
 
                     if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                     {
-                        var eventArgs = new ClientDisconnectedEventArgs(oldClient.Id, MqttClientDisconnectType.Takeover, oldClient.Endpoint, oldClient.Session.Items);
-
+                        var eventArgs = new ClientDisconnectedEventArgs(
+                            oldClient.Id,
+                            null,
+                            MqttClientDisconnectType.Takeover,
+                            oldClient.Endpoint,
+                            oldClient.Session.Items);
+                        
                         await _eventContainer.ClientDisconnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
                     }
                 }
@@ -664,11 +669,9 @@ namespace MQTTnet.Server
 
         async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter)
         {
-            var eventArgs = new ValidatingConnectionEventArgs(connectPacket, channelAdapter)
-            {
-                SessionItems = new ConcurrentDictionary<object, object>()
-            };
-
+            // TODO: Load session items from persisted sessions in the future.
+            var sessionItems = new ConcurrentDictionary<object, object>();
+            var eventArgs = new ValidatingConnectionEventArgs(connectPacket, channelAdapter, sessionItems);
             await _eventContainer.ValidatingConnectionEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
             // Check the client ID and set a random one if supported.

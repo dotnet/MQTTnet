@@ -9,7 +9,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using MQTTnet.Adapter;
 using MQTTnet.Formatter;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -20,10 +19,11 @@ namespace MQTTnet.Server
     {
         readonly MqttConnectPacket _connectPacket;
 
-        public ValidatingConnectionEventArgs(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter)
+        public ValidatingConnectionEventArgs(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter, IDictionary sessionItems)
         {
             _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
             ChannelAdapter = clientAdapter ?? throw new ArgumentNullException(nameof(clientAdapter));
+            SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
         }
 
         /// <summary>
@@ -34,13 +34,13 @@ namespace MQTTnet.Server
 
         /// <summary>
         ///     Gets or sets the authentication data.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public byte[] AuthenticationData => _connectPacket.AuthenticationData;
 
         /// <summary>
         ///     Gets or sets the authentication method.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public string AuthenticationMethod => _connectPacket.AuthenticationMethod;
 
@@ -99,7 +99,7 @@ namespace MQTTnet.Server
         ///     Gets or sets the reason code. When a MQTTv3 client connects the enum value must be one which is
         ///     also supported in MQTTv3. Otherwise the connection attempt will fail because not all codes can be
         ///     converted properly.
-        ///     MQTTv5 only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public MqttConnectReasonCode ReasonCode { get; set; } = MqttConnectReasonCode.Success;
 
@@ -114,19 +114,19 @@ namespace MQTTnet.Server
 
         /// <summary>
         ///     Gets the request problem information.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public bool RequestProblemInformation => _connectPacket.RequestProblemInformation;
 
         /// <summary>
         ///     Gets the request response information.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public bool RequestResponseInformation => _connectPacket.RequestResponseInformation;
 
         /// <summary>
         ///     Gets or sets the response authentication data.
-        ///     MQTTv5 only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public byte[] ResponseAuthenticationData { get; set; }
 
@@ -137,14 +137,14 @@ namespace MQTTnet.Server
         ///     As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
         ///     metadata to MQTT messages and pass information between publisher, broker, and subscriber.
         ///     The feature is very similar to the HTTP header concept.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public List<MqttUserProperty> ResponseUserProperties { get; set; }
 
         /// <summary>
         ///     Gets or sets the server reference. This can be used together with i.e. "Server Moved" to send
         ///     a different server address to the client.
-        ///     MQTTv5 only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public string ServerReference { get; set; }
 
@@ -158,7 +158,7 @@ namespace MQTTnet.Server
         /// <summary>
         ///     Gets or sets a key/value collection that can be used to share data within the scope of this session.
         /// </summary>
-        public IDictionary SessionItems { get; internal set; }
+        public IDictionary SessionItems { get; }
 
         /// <summary>
         ///     Gets or sets the topic alias maximum.
@@ -169,7 +169,7 @@ namespace MQTTnet.Server
 
         [Obsolete("This property name has a typo. Use 'UserName' instead. This one will be removed soon.")]
         public string Username => _connectPacket.Username;
-        
+
         public string UserName => _connectPacket.Username;
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace MQTTnet.Server
         ///     As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
         ///     metadata to MQTT messages and pass information between publisher, broker, and subscriber.
         ///     The feature is very similar to the HTTP header concept.
-        ///     Hint: MQTT 5 feature only.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public List<MqttUserProperty> UserProperties => _connectPacket.UserProperties;
 

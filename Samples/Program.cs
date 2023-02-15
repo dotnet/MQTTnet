@@ -4,7 +4,13 @@
 
 using System.Reflection;
 
-Console.WriteLine("Welcome to MQTTnet samples!");
+Console.BackgroundColor = ConsoleColor.White;
+Console.BackgroundColor = ConsoleColor.Red;
+Console.Title = "Samples - MQTTnet";
+Console.WriteLine("----------------------------------------------");
+Console.WriteLine("-         Welcome to MQTTnet samples!        -");
+Console.WriteLine("----------------------------------------------");
+Console.ResetColor();
 Console.WriteLine();
 
 var sampleClasses = Assembly.GetExecutingAssembly().GetExportedTypes().OrderBy(c => c.Name).ToList();
@@ -16,7 +22,11 @@ foreach (var sampleClass in sampleClasses)
     index++;
 }
 
+Console.WriteLine();
+Console.ForegroundColor = ConsoleColor.Green;
 Console.Write("Please choose sample class (press Enter to continue): ");
+Console.ResetColor();
+
 var input = Console.ReadLine();
 var selectedIndex = int.Parse(input ?? "0");
 var selectedSampleClass = sampleClasses[selectedIndex];
@@ -29,12 +39,19 @@ foreach (var sampleMethod in sampleMethods)
     index++;
 }
 
+Console.WriteLine();
+Console.ForegroundColor = ConsoleColor.Green;
 Console.Write("Please choose sample (press Enter to continue): ");
+Console.ResetColor();
+
 input = Console.ReadLine();
 selectedIndex = int.Parse(input ?? "0");
 var selectedSampleMethod = sampleMethods[selectedIndex];
 
+Console.WriteLine();
+Console.ForegroundColor = ConsoleColor.White;
 Console.WriteLine("Executing sample...");
+Console.ResetColor();
 Console.WriteLine();
 
 try

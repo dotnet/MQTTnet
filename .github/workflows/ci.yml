@@ -3,7 +3,7 @@ name: CI
 on: [push, pull_request]
 
 env:
-  VERSION: "4.1.4.${{github.run_number}}"
+  VERSION: "4.2.0.${{github.run_number}}"
 
 jobs:
   build:
@@ -22,6 +22,7 @@ jobs:
           dotnet-version: |
             3.1.x
             6.0.x
+            7.0.x
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.1

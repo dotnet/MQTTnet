@@ -1,9 +1,11 @@
-* [Core] Fixed a memory leak in _AsyncSignal_ implementation (#1586, thanks to @mario-zelger).
-* [Core] Fixed an issue with bounds handling in _MqttBufferReader_ (#1593).
-* [Core] Performance improvements and reduced memory usage due to improved buffer copies (#1599, thanks to @xljiulang).
-* [Server] Fix not properly reset statistics (#1587, thanks to @damikun).
-* [Server] Now using an empty string as the sender client ID for injected application messages (#1583, thanks to @xljiulang).
-* [Server] Improved memory usage for ASP.NET connections (#1582, thanks to @xljiulang).
-* [Server] Improved memory usage and performance for ASP.NET integration (#1596, thanks to @xljiulang).
-* [Server] Add support for interception of will messages (#1613).
-* [Server] Fixed wrong topic filter detections (#1615, thanks to @logicaloud).
+* [Core] Added net7.0 builds (#1635, thanks to @YAJeff).
+* [Client] Added support for passing MQTT v5 options (User properties etc.) for disconnects.
+* [Client] An internal exception is no longer caught silently when calling _DisconnectAsync_ to indicate that the disconnect is not clean (BREAKING CHANGE).
+* [Client] MQTTv5 features are now checked and an exception is thrown if they are used when using protocol version 3.1.1 and lower. These checks can be disabled in client options. (BREAKING CHANGE!).
+* [Server] Exposed MQTT v5 sent properties from the affected client in _ClientDisconnectedAsync_ event.
+* [Server] Fixed wrong client ID passed to _InterceptingUnsubscriptionEventArgs_ (#1631, thanks to @ghord). 
+* [Server] Exposed socket settings for TCP keep alive in TCP options (#1544).
+* [Server] Exposed server session items at server level and allow custom session items for injected application messages (#1638).
+* [Server] Improved performance for retained message handling when subscribing using "DoNotSendOnSubscribe" or "SendAtSubscribeIfNewSubscriptionOnly" (#1661, thanks to @Int32Overflow).
+* [Server] Added support for changing the used TLS certificate while the server is running (#1652, thanks to @YAJeff). The certificate provider will now be invoked for every new connection!
+* [Server] Added a new API method which allows reading a single retained message without the need to processing the entire set of retained messages (#1659).

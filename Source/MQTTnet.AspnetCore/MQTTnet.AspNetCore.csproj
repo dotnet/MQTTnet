@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;netcoreapp2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;netcoreapp2.1;netcoreapp3.1;net5.0;net6.0;net7.0</TargetFrameworks>
 
         <AssemblyName>MQTTnet.AspNetCore</AssemblyName>
         <RootNamespace>MQTTnet.AspNetCore</RootNamespace>
@@ -51,11 +51,11 @@
         <DefineConstants>RELEASE;NETSTANDARD2_0</DefineConstants>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' or '$(TargetFramework)' == 'net5.0' or '$(TargetFramework)' == 'net6.0' ">
+    <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' or '$(TargetFramework)' == 'net5.0' or '$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net7.0' ">
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1' and '$(TargetFramework)' != 'net5.0' and '$(TargetFramework)' != 'net6.0' ">
+    <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1' and '$(TargetFramework)' != 'net5.0' and '$(TargetFramework)' != 'net6.0' and '$(TargetFramework)' != 'net7.0' ">
         <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.1.0" />
     </ItemGroup>
 

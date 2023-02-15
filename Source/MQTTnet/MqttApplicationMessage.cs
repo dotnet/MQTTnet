@@ -13,8 +13,8 @@ namespace MQTTnet
 {
     public sealed class MqttApplicationMessage
     {
-        private byte[] _payloadCache = null;
-        private ArraySegment<byte> _payloadSegment = EmptyBuffer.ArraySegment;
+        byte[] _payloadCache;
+        ArraySegment<byte> _payloadSegment = EmptyBuffer.ArraySegment;
 
         /// <summary>
         ///     Gets or sets the content type.
@@ -57,10 +57,16 @@ namespace MQTTnet
         /// Gets or sets the payload.
         /// The payload is the data bytes sent via the MQTT protocol.
         /// </summary>
+        [Obsolete("Use PayloadSegment instead. This property will be removed in a future release.")]
         public byte[] Payload
         {
             get
             {
+                if (_payloadSegment.Array == null)
+                {
+                    return null;
+                }
+                
                 // just reference from _payloadSegment.Array
                 if (_payloadSegment.Count == _payloadSegment.Array.Length)
                 {
@@ -73,14 +79,13 @@ namespace MQTTnet
                     _payloadCache = new byte[_payloadSegment.Count];
                     Array.Copy(_payloadSegment.Array, _payloadSegment.Offset, _payloadCache, 0, _payloadCache.Length);
                 }
+
                 return _payloadCache;
             }
             set
             {
                 _payloadCache = null;
-                _payloadSegment = value == null || value.Length == 0
-                    ? EmptyBuffer.ArraySegment
-                    : new ArraySegment<byte>(value);
+                _payloadSegment = value == null || value.Length == 0 ? EmptyBuffer.ArraySegment : new ArraySegment<byte>(value);
             }
         }
 
@@ -89,10 +94,7 @@ namespace MQTTnet
         /// </summary>
         public ArraySegment<byte> PayloadSegment
         {
-            get
-            {
-                return _payloadSegment;
-            }
+            get => _payloadSegment;
             set
             {
                 _payloadCache = null;

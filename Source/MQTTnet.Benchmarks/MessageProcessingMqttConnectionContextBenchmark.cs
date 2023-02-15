@@ -15,7 +15,7 @@ namespace MQTTnet.Benchmarks
 {
     [SimpleJob(RuntimeMoniker.Net60)]
     [MemoryDiagnoser]
-    public class MessageProcessingMqttConnectionContextBenchmark
+    public class MessageProcessingMqttConnectionContextBenchmark : BaseBenchmark
     {
         IWebHost _host;
         IMqttClient _mqttClient;

@@ -46,7 +46,7 @@ namespace MQTTnet.Client
                         Certificates = _tlsParameters.Certificates?.ToList(),
 #endif
 
-#if NETCOREAPP3_1 || NET5_0_OR_GREATER
+#if NETCOREAPP3_1_OR_GREATER
                         ApplicationProtocols = _tlsParameters.ApplicationProtocols,
 #endif
                     };
@@ -74,6 +74,8 @@ namespace MQTTnet.Client
 
             _options.ChannelOptions = (IMqttClientChannelOptions)_tcpOptions ?? _webSocketOptions;
 
+            MqttClientOptionsValidator.ThrowIfNotSupported(_options);
+            
             return _options;
         }
 
@@ -337,16 +339,6 @@ namespace MQTTnet.Client
 
         public MqttClientOptionsBuilder WithUserProperty(string name, string value)
         {
-            if (name is null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
             if (_options.UserProperties == null)
             {
                 _options.UserProperties = new List<MqttUserProperty>();

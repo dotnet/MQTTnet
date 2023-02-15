@@ -13,12 +13,56 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Tests.Helpers;
 
 namespace MQTTnet.Tests.Server
 {
     [TestClass]
     public sealed class Subscribe_Tests : BaseTestClass
     {
+        [DataTestMethod]
+        [DataRow("A", "A", true)]
+        [DataRow("A", "B", false)]
+        [DataRow("A", "#", true)]
+        [DataRow("A", "+", true)]
+        [DataRow("A/B", "A/B", true)]
+        [DataRow("A/B", "A/+", true)]
+        [DataRow("A/B", "A/#", true)]
+        [DataRow("A/B/C", "A/B/C", true)]
+        [DataRow("A/B/C", "A/+/C", true)]
+        [DataRow("A/B/C", "A/+/+", true)]
+        [DataRow("A/B/C", "A/+/#", true)]
+        [DataRow("A/B/C/D", "A/B/C/D", true)]
+        [DataRow("A/B/C/D", "A/+/C/+", true)]
+        [DataRow("A/B/C/D", "A/+/C/#", true)]
+        [DataRow("A/B/C", "A/B/+", true)]
+        [DataRow("A/B1/B2/C", "A/+/C", false)]
+        public async Task Subscription_Roundtrip(string topic, string filter, bool shouldWork)
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer().ConfigureAwait(false);
+
+                var receiver = await testEnvironment.ConnectClient();
+                await receiver.SubscribeAsync(filter).ConfigureAwait(false);
+                var receivedMessages = receiver.TrackReceivedMessages();
+
+                var sender = await testEnvironment.ConnectClient();
+                await sender.PublishStringAsync(topic, "PAYLOAD").ConfigureAwait(false);
+
+                await LongTestDelay().ConfigureAwait(false);
+
+                if (shouldWork)
+                {
+                    Assert.AreEqual(1, receivedMessages.Count, message: "The filter should work!");
+                }
+                else
+                {
+                    Assert.AreEqual(0, receivedMessages.Count, message: "The filter should not work!");
+                }
+            }
+        }
+        
         [TestMethod]
         public async Task Deny_Invalid_Topic()
         {

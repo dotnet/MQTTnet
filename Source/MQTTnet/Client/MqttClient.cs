@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -19,7 +20,6 @@ namespace MQTTnet.Client
     public sealed class MqttClient : Disposable, IMqttClient
     {
         readonly IMqttClientAdapterFactory _adapterFactory;
-        readonly MqttApplicationMessageFactory _applicationMessageFactory = new MqttApplicationMessageFactory();
         readonly AsyncEvent<MqttApplicationMessageReceivedEventArgs> _applicationMessageReceivedEvent = new AsyncEvent<MqttApplicationMessageReceivedEventArgs>();
 
         readonly MqttClientPublishResultFactory _clientPublishResultFactory = new MqttClientPublishResultFactory();
@@ -32,19 +32,25 @@ namespace MQTTnet.Client
         readonly object _disconnectLock = new object();
         readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();
         readonly MqttNetSourceLogger _logger;
-        readonly MqttPacketFactories _packetFactories = new MqttPacketFactories();
 
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
         readonly IMqttNetLogger _rootLogger;
 
         IMqttChannelAdapter _adapter;
-        CancellationTokenSource _backgroundCancellationTokenSource;
+
         bool _cleanDisconnectInitiated;
         volatile int _connectionStatus;
-        MqttClientDisconnectReason _disconnectReason;
+
+        // The value for this field can be set from two different enums.
+        // They contain the same values but the set is reduced in one case.
+        int _disconnectReason;
         string _disconnectReasonString;
+        List<MqttUserProperty> _disconnectUserProperties;
+
         Task _keepAlivePacketsSenderTask;
         DateTime _lastPacketSentTimestamp;
+
+        CancellationTokenSource _mqttClientAlive;
         MqttPacketDispatcher _packetDispatcher;
         Task _packetReceiverTask;
         AsyncQueue<MqttPublishPacket> _publishPacketReceiverQueue;
@@ -86,25 +92,15 @@ namespace MQTTnet.Client
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);
         }
-        
+
         public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
         public MqttClientOptions Options { get; private set; }
 
         public async Task<MqttClientConnectResult> ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken = default)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
-
-            if (options.ChannelOptions == null)
-            {
-                throw new ArgumentException("ChannelOptions are not set.");
-            }
-
+            ThrowIfOptionsInvalid(options);
             ThrowIfConnected("It is not allowed to connect with a server after the connection is established.");
-
             ThrowIfDisposed();
 
             if (CompareExchangeConnectionStatus(MqttClientConnectionStatus.Connecting, MqttClientConnectionStatus.Disconnected) != MqttClientConnectionStatus.Disconnected)
@@ -123,28 +119,29 @@ namespace MQTTnet.Client
                     await _connectingEvent.InvokeAsync(new MqttClientConnectingEventArgs(options));
                 }
 
+                Cleanup();
+
                 _packetIdentifierProvider.Reset();
                 _packetDispatcher = new MqttPacketDispatcher();
 
-                _backgroundCancellationTokenSource = new CancellationTokenSource();
-                var backgroundCancellationToken = _backgroundCancellationTokenSource.Token;
+                _mqttClientAlive = new CancellationTokenSource();
+                var mqttClientAliveToken = _mqttClientAlive.Token;
 
                 var adapter = _adapterFactory.CreateClientAdapter(options, new MqttPacketInspector(_inspectPacketEvent, _rootLogger), _rootLogger);
                 _adapter = adapter;
 
-                using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))
+                if (cancellationToken.CanBeCanceled)
                 {
-                    _logger.Verbose("Trying to connect with server '{0}'.", options.ChannelOptions);
-                    await adapter.ConnectAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
-                    _logger.Verbose("Connection with server established.");
-
-                    _publishPacketReceiverQueue?.Dispose();
-                    _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
-                    _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
-
-                    _packetReceiverTask = Task.Run(() => TryReceivePacketsAsync(backgroundCancellationToken), backgroundCancellationToken);
-
-                    connectResult = await AuthenticateAsync(options, effectiveCancellationToken.Token).ConfigureAwait(false);
+                    connectResult = await ConnectInternal(cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    // Fall back to the general timeout specified in the options if the user passed
+                    // CancellationToken.None or similar.
+                    using (var timeout = new CancellationTokenSource(Options.Timeout))
+                    {
+                        connectResult = await ConnectInternal(timeout.Token).ConfigureAwait(false);
+                    }
                 }
 
                 _lastPacketSentTimestamp = DateTime.UtcNow;
@@ -158,7 +155,7 @@ namespace MQTTnet.Client
 
                 if (keepAliveInterval != TimeSpan.Zero)
                 {
-                    _keepAlivePacketsSenderTask = Task.Run(() => TrySendKeepAliveMessagesAsync(backgroundCancellationToken), backgroundCancellationToken);
+                    _keepAlivePacketsSenderTask = Task.Run(() => TrySendKeepAliveMessagesAsync(mqttClientAliveToken), mqttClientAliveToken);
                 }
 
                 CompareExchangeConnectionStatus(MqttClientConnectionStatus.Connected, MqttClientConnectionStatus.Connecting);
@@ -175,7 +172,7 @@ namespace MQTTnet.Client
             }
             catch (Exception exception)
             {
-                _disconnectReason = MqttClientDisconnectReason.UnspecifiedError;
+                _disconnectReason = (int)MqttClientDisconnectOptionsReason.UnspecifiedError;
 
                 _logger.Error(exception, "Error while connecting with server.");
 
@@ -195,6 +192,7 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
 
             var clientWasConnected = IsConnected;
+
             if (DisconnectIsPendingOrFinished())
             {
                 return;
@@ -202,13 +200,33 @@ namespace MQTTnet.Client
 
             try
             {
-                _disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
+                if (!clientWasConnected)
+                {
+                    ThrowNotConnected();
+                }
+
+                _disconnectReason = (int)options.Reason;
                 _cleanDisconnectInitiated = true;
 
-                if (clientWasConnected)
+                if (Options.ValidateFeatures)
                 {
-                    var disconnectPacket = _packetFactories.Disconnect.Create(options);
+                    MqttClientDisconnectOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
+                }
+
+                // Sending the DISCONNECT may fail due to connection issues. The resulting exception
+                // must be throw to let the caller know that the disconnect is not a clean one.
+                var disconnectPacket = MqttPacketFactories.Disconnect.Create(options);
+
+                if (cancellationToken.CanBeCanceled)
+                {
                     await SendAsync(disconnectPacket, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    using (var timeout = new CancellationTokenSource(Options.Timeout))
+                    {
+                        await SendAsync(disconnectPacket, timeout.Token).ConfigureAwait(false);
+                    }
                 }
             }
             finally
@@ -241,7 +259,12 @@ namespace MQTTnet.Client
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
-            var publishPacket = _packetFactories.Publish.Create(applicationMessage);
+            if (Options.ValidateFeatures)
+            {
+                MqttApplicationMessageValidator.ThrowIfNotSupported(applicationMessage, _adapter.PacketFormatterAdapter.ProtocolVersion);
+            }
+
+            var publishPacket = MqttPacketFactories.Publish.Create(applicationMessage);
 
             switch (applicationMessage.QualityOfServiceLevel)
             {
@@ -298,13 +321,29 @@ namespace MQTTnet.Client
                 MqttTopicValidator.ThrowIfInvalidSubscribe(topicFilter.Topic);
             }
 
+            if (Options.ValidateFeatures)
+            {
+                MqttClientSubscribeOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
+            }
+
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
-            var subscribePacket = _packetFactories.Subscribe.Create(options);
+            var subscribePacket = MqttPacketFactories.Subscribe.Create(options);
             subscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
-            var subAckPacket = await SendAndReceiveAsync<MqttSubAckPacket>(subscribePacket, cancellationToken).ConfigureAwait(false);
+            MqttSubAckPacket subAckPacket;
+            if (cancellationToken.CanBeCanceled)
+            {
+                subAckPacket = await SendAndReceiveAsync<MqttSubAckPacket>(subscribePacket, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                using (var timeout = new CancellationTokenSource(Options.Timeout))
+                {
+                    subAckPacket = await SendAndReceiveAsync<MqttSubAckPacket>(subscribePacket, timeout.Token).ConfigureAwait(false);
+                }
+            }
 
             return _clientSubscribeResultFactory.Create(subscribePacket, subAckPacket);
         }
@@ -316,13 +355,34 @@ namespace MQTTnet.Client
                 throw new ArgumentNullException(nameof(options));
             }
 
+            foreach (var topicFilter in options.TopicFilters)
+            {
+                MqttTopicValidator.ThrowIfInvalidSubscribe(topicFilter);
+            }
+
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
-            var unsubscribePacket = _packetFactories.Unsubscribe.Create(options);
+            if (Options.ValidateFeatures)
+            {
+                MqttClientUnsubscribeOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
+            }
+
+            var unsubscribePacket = MqttPacketFactories.Unsubscribe.Create(options);
             unsubscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
-            var unsubAckPacket = await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, cancellationToken).ConfigureAwait(false);
+            MqttUnsubAckPacket unsubAckPacket;
+            if (cancellationToken.CanBeCanceled)
+            {
+                unsubAckPacket = await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                using (var timeout = new CancellationTokenSource(Options.Timeout))
+                {
+                    unsubAckPacket = await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, timeout.Token).ConfigureAwait(false);
+                }
+            }
 
             return _clientUnsubscribeResultFactory.Create(unsubscribePacket, unsubAckPacket);
         }
@@ -347,7 +407,7 @@ namespace MQTTnet.Client
             {
                 if (!eventArgs.ProcessingFailed)
                 {
-                    var pubAckPacket = _packetFactories.PubAck.Create(eventArgs);
+                    var pubAckPacket = MqttPacketFactories.PubAck.Create(eventArgs);
                     return SendAsync(pubAckPacket, cancellationToken);
                 }
             }
@@ -355,7 +415,7 @@ namespace MQTTnet.Client
             {
                 if (!eventArgs.ProcessingFailed)
                 {
-                    var pubRecPacket = _packetFactories.PubRec.Create(eventArgs);
+                    var pubRecPacket = MqttPacketFactories.PubRec.Create(eventArgs);
                     return SendAsync(pubRecPacket, cancellationToken);
                 }
             }
@@ -373,12 +433,12 @@ namespace MQTTnet.Client
 
             try
             {
-                var connectPacket = _packetFactories.Connect.Create(options);
+                var connectPacket = MqttPacketFactories.Connect.Create(options);
 
                 var connAckPacket = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
 
                 var clientConnectResultFactory = new MqttClientConnectResultFactory();
-                result = clientConnectResultFactory.Create(connAckPacket, options.ProtocolVersion);
+                result = clientConnectResultFactory.Create(connAckPacket, _adapter.PacketFormatterAdapter.ProtocolVersion);
             }
             catch (Exception exception)
             {
@@ -399,19 +459,19 @@ namespace MQTTnet.Client
         {
             try
             {
-                _backgroundCancellationTokenSource?.Cancel(false);
+                _mqttClientAlive?.Cancel(false);
             }
             finally
             {
-                _backgroundCancellationTokenSource?.Dispose();
-                _backgroundCancellationTokenSource = null;
+                _mqttClientAlive?.Dispose();
+                _mqttClientAlive = null;
 
                 _publishPacketReceiverQueue?.Dispose();
                 _publishPacketReceiverQueue = null;
 
                 _adapter?.Dispose();
                 _adapter = null;
-                
+
                 _packetDispatcher?.Dispose();
                 _packetDispatcher = null;
             }
@@ -420,6 +480,26 @@ namespace MQTTnet.Client
         MqttClientConnectionStatus CompareExchangeConnectionStatus(MqttClientConnectionStatus value, MqttClientConnectionStatus comparand)
         {
             return (MqttClientConnectionStatus)Interlocked.CompareExchange(ref _connectionStatus, (int)value, (int)comparand);
+        }
+
+        async Task<MqttClientConnectResult> ConnectInternal(CancellationToken cancellationToken)
+        {
+            var backgroundCancellationToken = _mqttClientAlive.Token;
+
+            using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))
+            {
+                _logger.Verbose("Trying to connect with server '{0}'.", Options.ChannelOptions);
+                await _adapter.ConnectAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
+                _logger.Verbose("Connection with server established.");
+
+                _publishPacketReceiverQueue?.Dispose();
+                _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
+
+                _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
+                _packetReceiverTask = Task.Run(() => TryReceivePacketsAsync(backgroundCancellationToken), backgroundCancellationToken);
+
+                return await AuthenticateAsync(Options, effectiveCancellationToken.Token).ConfigureAwait(false);
+            }
         }
 
         async Task DisconnectCoreAsync(Task sender, Exception exception, MqttClientConnectResult connectResult, bool clientWasConnected)
@@ -448,10 +528,10 @@ namespace MQTTnet.Client
             try
             {
                 _packetDispatcher.Dispose(new MqttClientDisconnectedException(exception));
-                
-                var receiverTask = WaitForTaskAsync(_packetReceiverTask, sender);
-                var publishPacketReceiverTask = WaitForTaskAsync(_publishPacketReceiverTask, sender);
-                var keepAliveTask = WaitForTaskAsync(_keepAlivePacketsSenderTask, sender);
+
+                var receiverTask = _packetReceiverTask.WaitAsync(sender, _logger);
+                var publishPacketReceiverTask = _publishPacketReceiverTask.WaitAsync(sender, _logger);
+                var keepAliveTask = _keepAlivePacketsSenderTask.WaitAsync(sender, _logger);
 
                 await Task.WhenAll(receiverTask, publishPacketReceiverTask, keepAliveTask).ConfigureAwait(false);
             }
@@ -467,14 +547,13 @@ namespace MQTTnet.Client
 
                 _logger.Info("Disconnected.");
 
-                var eventArgs = new MqttClientDisconnectedEventArgs
-                {
-                    ClientWasConnected = clientWasConnected,
-                    Exception = exception,
-                    ConnectResult = connectResult,
-                    Reason = _disconnectReason,
-                    ReasonString = _disconnectReasonString
-                };
+                var eventArgs = new MqttClientDisconnectedEventArgs(
+                    clientWasConnected,
+                    connectResult,
+                    (MqttClientDisconnectReason)_disconnectReason,
+                    _disconnectReasonString,
+                    _disconnectUserProperties,
+                    exception);
 
                 // This handler must be executed in a new thread because otherwise a dead lock may happen
                 // when trying to reconnect in that handler etc.
@@ -535,9 +614,8 @@ namespace MQTTnet.Client
 
         async Task<MqttApplicationMessageReceivedEventArgs> HandleReceivedApplicationMessageAsync(MqttPublishPacket publishPacket)
         {
-            var applicationMessage = _applicationMessageFactory.Create(publishPacket);
+            var applicationMessage = MqttApplicationMessageFactory.Create(publishPacket);
             var eventArgs = new MqttApplicationMessageReceivedEventArgs(Options.ClientId, applicationMessage, publishPacket, AcknowledgeReceivedPublishPacket);
-
             await _applicationMessageReceivedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
             return eventArgs;
@@ -556,8 +634,9 @@ namespace MQTTnet.Client
 
         Task ProcessReceivedDisconnectPacket(MqttDisconnectPacket disconnectPacket)
         {
-            _disconnectReason = (MqttClientDisconnectReason)disconnectPacket.ReasonCode;
+            _disconnectReason = (int)disconnectPacket.ReasonCode;
             _disconnectReasonString = disconnectPacket.ReasonString;
+            _disconnectUserProperties = disconnectPacket.UserProperties;
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
             _packetDispatcher.Dispose(new MqttClientUnexpectedDisconnectReceivedException(disconnectPacket));
@@ -601,7 +680,7 @@ namespace MQTTnet.Client
             {
                 // The packet is unknown. Probably due to a restart of the client.
                 // So wen send this to the server to trigger a full resend of the message.
-                var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.PacketIdentifierNotFound);
+                var pubRelPacket = MqttPacketFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.PacketIdentifierNotFound);
                 return SendAsync(pubRelPacket, cancellationToken);
             }
 
@@ -610,7 +689,7 @@ namespace MQTTnet.Client
 
         Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
         {
-            var pubCompPacket = _packetFactories.PubComp.Create(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            var pubCompPacket = MqttPacketFactories.PubComp.Create(pubRelPacket, MqttApplicationMessageReceivedReasonCode.Success);
             return SendAsync(pubCompPacket, cancellationToken);
         }
 
@@ -619,7 +698,6 @@ namespace MQTTnet.Client
             publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
             var pubAckPacket = await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
-
             return _clientPublishResultFactory.Create(pubAckPacket);
         }
 
@@ -637,7 +715,7 @@ namespace MQTTnet.Client
 
             var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
 
-            var pubRelPacket = _packetFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
+            var pubRelPacket = MqttPacketFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
 
             var pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
 
@@ -695,7 +773,7 @@ namespace MQTTnet.Client
         {
             if (IsConnected)
             {
-                throw new MqttProtocolViolationException(message);
+                throw new InvalidOperationException(message);
             }
         }
 
@@ -703,8 +781,31 @@ namespace MQTTnet.Client
         {
             if (!IsConnected)
             {
-                throw new MqttCommunicationException("The client is not connected.");
+                ThrowNotConnected();
             }
+        }
+
+        static void ThrowIfOptionsInvalid(MqttClientOptions options)
+        {
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
+            if (options.ChannelOptions == null)
+            {
+                throw new ArgumentException("ChannelOptions are not set.");
+            }
+
+            if (options.ValidateFeatures)
+            {
+                MqttClientOptionsValidator.ThrowIfNotSupported(options);
+            }
+        }
+
+        static void ThrowNotConnected()
+        {
+            throw new MqttCommunicationException("The client is not connected.");
         }
 
         void TryInitiateDisconnect()
@@ -713,7 +814,7 @@ namespace MQTTnet.Client
             {
                 try
                 {
-                    _backgroundCancellationTokenSource?.Cancel(false);
+                    _mqttClientAlive?.Cancel(false);
                 }
                 catch (Exception exception)
                 {
@@ -833,7 +934,7 @@ namespace MQTTnet.Client
                 {
                     exception = aggregateException.GetBaseException();
                 }
-                
+
                 if (exception is OperationCanceledException)
                 {
                 }
@@ -910,37 +1011,6 @@ namespace MQTTnet.Client
             finally
             {
                 _logger.Verbose("Stopped sending keep alive packets.");
-            }
-        }
-
-        async Task WaitForTaskAsync(Task task, Task sender)
-        {
-            if (task == null)
-            {
-                return;
-            }
-
-            if (task == sender)
-            {
-                // Return here to avoid deadlocks, but first any eventual exception in the task
-                // must be handled to avoid not getting an unhandled task exception
-                if (!task.IsFaulted)
-                {
-                    return;
-                }
-
-                // By accessing the Exception property the exception is considered handled and will
-                // not result in an unhandled task exception later by the finalizer
-                _logger.Warning(task.Exception, "Error while waiting for background task.");
-                return;
-            }
-
-            try
-            {
-                await task.ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
             }
         }
     }

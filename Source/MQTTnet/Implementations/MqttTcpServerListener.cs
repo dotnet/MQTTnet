@@ -27,8 +27,7 @@ namespace MQTTnet.Implementations
         readonly MqttServerOptions _serverOptions;
         readonly MqttServerTcpEndpointBaseOptions _options;
         readonly MqttServerTlsTcpEndpointOptions _tlsOptions;
-        readonly X509Certificate2 _tlsCertificate;
-
+        
         CrossPlatformSocket _socket;
         IPEndPoint _localEndPoint;
 
@@ -36,13 +35,11 @@ namespace MQTTnet.Implementations
             AddressFamily addressFamily,
             MqttServerOptions serverOptions,
             MqttServerTcpEndpointBaseOptions tcpEndpointOptions,
-            X509Certificate2 tlsCertificate,
             IMqttNetLogger logger)
         {
             _addressFamily = addressFamily;
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _options = tcpEndpointOptions ?? throw new ArgumentNullException(nameof(tcpEndpointOptions));
-            _tlsCertificate = tlsCertificate;
             _rootLogger = logger;
             _logger = logger.WithSource(nameof(MqttTcpServerListener));
 
@@ -66,7 +63,7 @@ namespace MQTTnet.Implementations
 
                 _localEndPoint = new IPEndPoint(boundIp, _options.Port);
 
-                _logger.Info("Starting TCP listener (Endpoint='{0}', TLS={1}).", _localEndPoint, _tlsCertificate != null);
+                _logger.Info("Starting TCP listener (Endpoint={0}, TLS={1})", _localEndPoint, _tlsOptions?.CertificateProvider != null);
 
                 _socket = new CrossPlatformSocket(_addressFamily);
 
@@ -86,6 +83,26 @@ namespace MQTTnet.Implementations
                     _socket.LingerState = _options.LingerState;
                 }
 
+                if (_options.KeepAlive.HasValue)
+                {
+                    _socket.KeepAlive = _options.KeepAlive.Value;
+                }
+                
+                if (_options.TcpKeepAliveInterval.HasValue)
+                {
+                    _socket.TcpKeepAliveInterval = _options.TcpKeepAliveInterval.Value;
+                }
+                
+                if (_options.TcpKeepAliveRetryCount.HasValue)
+                {
+                    _socket.TcpKeepAliveInterval = _options.TcpKeepAliveRetryCount.Value;
+                }
+                
+                if (_options.TcpKeepAliveTime.HasValue)
+                {
+                    _socket.TcpKeepAliveTime = _options.TcpKeepAliveTime.Value;
+                }
+                
                 _socket.Bind(_localEndPoint);
                 
                 // Get the local endpoint back from the socket. The port may have changed.
@@ -95,7 +112,7 @@ namespace MQTTnet.Implementations
                 
                 _socket.Listen(_options.ConnectionBacklog);
                 
-                _logger.Verbose("TCP listener started (Endpoint='{0}'.", _localEndPoint);
+                _logger.Verbose("TCP listener started (Endpoint={0})", _localEndPoint);
                 
                 Task.Run(() => AcceptClientConnectionsAsync(cancellationToken), cancellationToken).RunInBackground(_logger);
 
@@ -108,7 +125,7 @@ namespace MQTTnet.Implementations
                     throw;
                 }
 
-                _logger.Warning(exception, "Error while creating listener socket for local end point '{0}'.", _localEndPoint);
+                _logger.Warning(exception, "Error while starting TCP listener (Endpoint={0})", _localEndPoint);
                 return false;
             }
         }
@@ -116,10 +133,6 @@ namespace MQTTnet.Implementations
         public void Dispose()
         {
             _socket?.Dispose();
-
-#if !NET452
-            _tlsCertificate?.Dispose();
-#endif
         }
 
         async Task AcceptClientConnectionsAsync(CancellationToken cancellationToken)
@@ -150,7 +163,7 @@ namespace MQTTnet.Implementations
                         }
                     }
 
-                    _logger.Error(exception, "Error while accepting connection at TCP listener {0} TLS={1}.", _localEndPoint, _tlsCertificate != null);
+                    _logger.Error(exception, "Error while accepting TCP connection (Endpoint={0})", _localEndPoint);
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -165,24 +178,26 @@ namespace MQTTnet.Implementations
             {
                 remoteEndPoint = clientSocket.RemoteEndPoint.ToString();
 
-                _logger.Verbose("Client '{0}' accepted by TCP listener '{1}, {2}'.",
-                    remoteEndPoint,
-                    _localEndPoint,
-                    _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
+                _logger.Verbose("TCP client '{0}' accepted (Local endpoint={1})", remoteEndPoint, _localEndPoint);
 
                 clientSocket.NoDelay = _options.NoDelay;
                 stream = clientSocket.GetStream();
-                X509Certificate2 clientCertificate = null;
-
-                if (_tlsCertificate != null)
+                var clientCertificate = _tlsOptions?.CertificateProvider?.GetCertificate();
+                
+                if (clientCertificate != null)
                 {
+                    if (!clientCertificate.HasPrivateKey)
+                    {
+                        throw new InvalidOperationException("The certificate for TLS encryption must contain the private key.");
+                    }
+
                     var sslStream = new SslStream(stream, false, _tlsOptions.RemoteCertificateValidationCallback);
 
-                    #if NETCOREAPP3_1 || NET5_0_OR_GREATER
+                    #if NETCOREAPP3_1_OR_GREATER
                         await sslStream.AuthenticateAsServerAsync(
-                            new SslServerAuthenticationOptions()
+                            new SslServerAuthenticationOptions
                             {
-                                ServerCertificate = _tlsCertificate,
+                                ServerCertificate = clientCertificate,
                                 ClientCertificateRequired = _tlsOptions.ClientCertificateRequired,
                                 EnabledSslProtocols = _tlsOptions.SslProtocol,
                                 CertificateRevocationCheckMode = _tlsOptions.CheckCertificateRevocation ? X509RevocationMode.Online : X509RevocationMode.NoCheck,
@@ -191,7 +206,7 @@ namespace MQTTnet.Implementations
                             }).ConfigureAwait(false);
                     #else
                         await sslStream.AuthenticateAsServerAsync(
-                            _tlsCertificate,
+                            clientCertificate,
                             _tlsOptions.ClientCertificateRequired,
                             _tlsOptions.SslProtocol,
                             _tlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
@@ -234,7 +249,7 @@ namespace MQTTnet.Implementations
                     return;
                 }
 
-                _logger.Error(exception, "Error while handling client connection.");
+                _logger.Error(exception, "Error while handling TCP client connection");
             }
             finally
             {
@@ -249,10 +264,7 @@ namespace MQTTnet.Implementations
                 }
             }
 
-            _logger.Verbose("Client '{0}' disconnected at TCP listener '{1}, {2}'.",
-                remoteEndPoint,
-                _localEndPoint,
-                _addressFamily == AddressFamily.InterNetwork ? "ipv4" : "ipv6");
+            _logger.Verbose("TCP client '{0}' disconnected (Local endpoint={1})", remoteEndPoint, _localEndPoint);
         }
     }
 }

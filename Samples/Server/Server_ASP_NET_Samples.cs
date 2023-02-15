@@ -17,7 +17,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Samples.Server;
 
-public static class Server_Asp_Net_Samples
+public static class Server_ASP_NET_Samples
 {
     public static Task Start_Server_With_WebSockets_Support()
     {

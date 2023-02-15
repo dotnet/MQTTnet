@@ -11,10 +11,12 @@ namespace MQTTnet.Extensions.Rpc
     {
         public static IMqttRpcClient CreateMqttRpcClient(this MqttFactory factory, IMqttClient mqttClient)
         {
-            return factory.CreateMqttRpcClient(mqttClient, new MqttRpcClientOptions
-            {
-                TopicGenerationStrategy = new DefaultMqttRpcClientTopicGenerationStrategy()
-            });
+            return factory.CreateMqttRpcClient(
+                mqttClient,
+                new MqttRpcClientOptions
+                {
+                    TopicGenerationStrategy = new DefaultMqttRpcClientTopicGenerationStrategy()
+                });
         }
 
         public static IMqttRpcClient CreateMqttRpcClient(this MqttFactory _, IMqttClient mqttClient, MqttRpcClientOptions rpcClientOptions)

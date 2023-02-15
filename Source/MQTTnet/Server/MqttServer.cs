@@ -19,11 +19,9 @@ namespace MQTTnet.Server
 {
     public class MqttServer : Disposable
     {
-        readonly MqttServerEventContainer _eventContainer = new MqttServerEventContainer();
-
-        readonly IDictionary _sessionItems = new ConcurrentDictionary<object, object>();
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttClientSessionsManager _clientSessionsManager;
+        readonly MqttServerEventContainer _eventContainer = new MqttServerEventContainer();
         readonly MqttServerKeepAliveMonitor _keepAliveMonitor;
         readonly MqttNetSourceLogger _logger;
         readonly MqttServerOptions _options;
@@ -167,6 +165,12 @@ namespace MQTTnet.Server
 
         public bool IsStarted => _cancellationTokenSource != null;
 
+        /// <summary>
+        ///     Gives access to the session items which belong to this server. This session items are passed
+        ///     to several events instead of the client session items if the event is caused by the server instead of a client.
+        /// </summary>
+        public IDictionary ServerSessionItems { get; } = new ConcurrentDictionary<object, object>();
+
         public Task DeleteRetainedMessagesAsync()
         {
             ThrowIfNotStarted();
@@ -200,6 +204,18 @@ namespace MQTTnet.Server
             return _retainedMessagesManager.GetMessages();
         }
 
+        public Task<MqttApplicationMessage> GetRetainedMessageAsync(string topic)
+        {
+            if (topic == null)
+            {
+                throw new ArgumentNullException(nameof(topic));
+            }
+
+            ThrowIfNotStarted();
+
+            return _retainedMessagesManager.GetMessage(topic);
+        }
+
         public Task<IList<MqttSessionStatus>> GetSessionsAsync()
         {
             ThrowIfNotStarted();
@@ -207,7 +223,7 @@ namespace MQTTnet.Server
             return _clientSessionsManager.GetSessionStatusAsync();
         }
 
-        public async Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage)
+        public Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage, CancellationToken cancellationToken = default)
         {
             if (injectedApplicationMessage == null)
             {
@@ -223,34 +239,18 @@ namespace MQTTnet.Server
 
             ThrowIfNotStarted();
 
-            var processPublish = true;
-            var applicationMessage = injectedApplicationMessage.ApplicationMessage;
-
-            if (_eventContainer.InterceptingPublishEvent.HasHandlers)
-            {
-                var interceptingPublishEventArgs = new InterceptingPublishEventArgs(
-                    applicationMessage,
-                    _cancellationTokenSource.Token,
-                    injectedApplicationMessage.SenderClientId,
-                    _sessionItems);
-
-                await _eventContainer.InterceptingPublishEvent.InvokeAsync(interceptingPublishEventArgs).ConfigureAwait(false);
-
-                applicationMessage = interceptingPublishEventArgs.ApplicationMessage;
-                processPublish = interceptingPublishEventArgs.ProcessPublish;
-            }
-
-            if (!processPublish)
-            {
-                return;
-            }
-            
-            if (string.IsNullOrEmpty(applicationMessage.Topic))
+            if (string.IsNullOrEmpty(injectedApplicationMessage.ApplicationMessage.Topic))
             {
                 throw new NotSupportedException("Injected application messages must contain a topic. Topic alias is not supported.");
             }
-            
-            await _clientSessionsManager.DispatchApplicationMessage(injectedApplicationMessage.SenderClientId, applicationMessage).ConfigureAwait(false);
+
+            var sessionItems = injectedApplicationMessage.CustomSessionItems ?? ServerSessionItems;
+
+            return _clientSessionsManager.DispatchApplicationMessage(
+                injectedApplicationMessage.SenderClientId,
+                sessionItems,
+                injectedApplicationMessage.ApplicationMessage,
+                cancellationToken);
         }
 
         public async Task StartAsync()

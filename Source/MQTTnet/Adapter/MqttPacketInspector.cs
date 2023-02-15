@@ -82,12 +82,7 @@ namespace MQTTnet.Adapter
         {
             try
             {
-                var eventArgs = new InspectMqttPacketEventArgs
-                {
-                    Buffer = buffer,
-                    Direction = direction
-                };
-
+                var eventArgs = new InspectMqttPacketEventArgs(direction, buffer);
                 _asyncEvent.InvokeAsync(eventArgs).GetAwaiter().GetResult();
             }
             catch (Exception exception)

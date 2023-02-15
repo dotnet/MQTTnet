@@ -3,17 +3,32 @@ using System.Collections.Generic;
 namespace MQTTnet.Server
 {
     /// <summary>
-    ///     Helper class that stores the topic hash mask common to all contained Subscriptions for direct access.
+    ///     Helper class that stores subscriptions by their topic hash mask.
     /// </summary>
     public sealed class TopicHashMaskSubscriptions
     {
-        public TopicHashMaskSubscriptions(ulong hashMask)
+        public Dictionary<ulong, HashSet<MqttSubscription>> SubscriptionsByHashMask { get; } = new Dictionary<ulong, HashSet<MqttSubscription>>();
+
+        public void AddSubscription(MqttSubscription subscription)
         {
-            HashMask = hashMask;
+            if (!SubscriptionsByHashMask.TryGetValue(subscription.TopicHashMask, out var subscriptions))
+            {
+                subscriptions = new HashSet<MqttSubscription>();
+                SubscriptionsByHashMask.Add(subscription.TopicHashMask, subscriptions);
+            }
+            subscriptions.Add(subscription);
         }
 
-        public ulong HashMask { get; }
-
-        public HashSet<MqttSubscription> Subscriptions { get; } = new HashSet<MqttSubscription>();
+        public void RemoveSubscription(MqttSubscription subscription)
+        {
+            if (SubscriptionsByHashMask.TryGetValue(subscription.TopicHashMask, out var subscriptions))
+            {
+                subscriptions.Remove(subscription);
+                if (subscriptions.Count == 0)
+                {
+                    SubscriptionsByHashMask.Remove(subscription.TopicHashMask);
+                }
+            }
+        }
     }
 }

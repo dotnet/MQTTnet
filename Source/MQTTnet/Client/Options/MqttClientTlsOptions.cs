@@ -29,13 +29,13 @@ namespace MQTTnet.Client
         public List<X509Certificate> Certificates { get; set; }
 #endif
 
-#if NETCOREAPP3_1 || NET5_0_OR_GREATER
+#if NETCOREAPP3_1_OR_GREATER
         public List<System.Net.Security.SslApplicationProtocol> ApplicationProtocols { get; set; }
         
         public System.Net.Security.CipherSuitesPolicy CipherSuitesPolicy { get; set; }
 #endif
 
-#if NET48 || NETCOREAPP3_1 || NET5 || NET6
+#if NET48 || NETCOREAPP3_1_OR_GREATER
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;
 #else
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;

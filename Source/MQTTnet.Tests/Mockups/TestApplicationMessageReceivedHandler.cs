@@ -51,10 +51,7 @@ namespace MQTTnet.Tests.Mockups
 
         public void AssertReceivedCountEquals(int expectedCount)
         {
-            lock (_receivedEventArgs)
-            {
-                Assert.AreEqual(expectedCount, _receivedEventArgs.Count);
-            }
+            Assert.AreEqual(expectedCount, Count);
         }
 
         public string GeneratePayloadSequence()

@@ -199,6 +199,19 @@ namespace MQTTnet.Server
                         {
                             continue;
                         }
+                        
+                        if (_eventContainer.InterceptingClientEnqueueEvent.HasHandlers)
+                        {
+                            var eventArgs = new InterceptingClientApplicationMessageEnqueueEventArgs(senderId, session.Id, applicationMessage);
+                            await _eventContainer.InterceptingClientEnqueueEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+
+                            if (!eventArgs.AcceptEnqueue)
+                            {
+                                // There will be no reason string and use properties because in this case the clients will
+                                // not receive a packet at all.
+                                return new DispatchApplicationMessageResult(reasonCode, eventArgs.CloseSenderConnection, null, null);
+                            }
+                        }
 
                         var publishPacketCopy = MqttPacketFactories.Publish.Create(applicationMessage);
                         publishPacketCopy.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
@@ -219,10 +232,10 @@ namespace MQTTnet.Server
                             publishPacketCopy.Retain = false;
                         }
 
-                        session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketCopy));
                         matchingSubscribersCount++;
 
-                        _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'.", session.Id, applicationMessage.Topic);
+                        session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketCopy));
+                        _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'", session.Id, applicationMessage.Topic);
                     }
 
                     if (matchingSubscribersCount == 0)
@@ -233,7 +246,7 @@ namespace MQTTnet.Server
                 }
                 catch (Exception exception)
                 {
-                    _logger.Error(exception, "Unhandled exception while processing next queued application message.");
+                    _logger.Error(exception, "Error while processing next queued application message");
                 }
             }
 
@@ -592,13 +605,8 @@ namespace MQTTnet.Server
 
                     if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                     {
-                        var eventArgs = new ClientDisconnectedEventArgs(
-                            oldClient.Id,
-                            null,
-                            MqttClientDisconnectType.Takeover,
-                            oldClient.Endpoint,
-                            oldClient.Session.Items);
-                        
+                        var eventArgs = new ClientDisconnectedEventArgs(oldClient.Id, null, MqttClientDisconnectType.Takeover, oldClient.Endpoint, oldClient.Session.Items);
+
                         await _eventContainer.ClientDisconnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
                     }
                 }

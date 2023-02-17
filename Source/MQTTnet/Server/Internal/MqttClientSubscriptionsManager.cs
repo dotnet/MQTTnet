@@ -342,7 +342,7 @@ namespace MQTTnet.Server
 
             using (_subscriptionsLock.EnterAsync(CancellationToken.None).GetAwaiter().GetResult())
             {
-                MqttSubscription.CalculateTopicHash(topicFilter.Topic, out var topicHash, out var topicHashMask, out var hasWildcard);
+                MqttSubscription.CalculateTopicHash(topicFilter.Topic, out var topicHash, out _, out var hasWildcard);
 
                 if (_subscriptions.TryGetValue(topicFilter.Topic, out var existingSubscription))
                 {

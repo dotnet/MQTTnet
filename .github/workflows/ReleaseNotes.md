@@ -9,4 +9,5 @@
 * [Server] Improved performance for retained message handling when subscribing using "DoNotSendOnSubscribe" or "SendAtSubscribeIfNewSubscriptionOnly" (#1661, thanks to @Int32Overflow).
 * [Server] Added support for changing the used TLS certificate while the server is running (#1652, thanks to @YAJeff). The certificate provider will now be invoked for every new connection!
 * [Server] Added a new API method which allows reading a single retained message without the need to processing the entire set of retained messages (#1659).
+* [Server] Added a new event (InterceptingClientEnqueueAsync) which allows intercepting when an application message is enqueued for a client (#1648).
 * [Server] Fixed race condition when handling connections which leads to stopped message transfers (#1677, thanks to @RazvanEmilR).

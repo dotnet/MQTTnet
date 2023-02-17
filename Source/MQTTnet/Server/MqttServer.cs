@@ -210,6 +210,18 @@ namespace MQTTnet.Server
             return _retainedMessagesManager.GetMessages();
         }
 
+        public Task<MqttApplicationMessage> GetRetainedMessageAsync(string topic)
+        {
+            if (topic == null)
+            {
+                throw new ArgumentNullException(nameof(topic));
+            }
+
+            ThrowIfNotStarted();
+
+            return _retainedMessagesManager.GetMessage(topic);
+        }
+
         public Task<IList<MqttSessionStatus>> GetSessionsAsync()
         {
             ThrowIfNotStarted();

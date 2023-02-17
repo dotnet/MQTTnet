@@ -94,10 +94,9 @@ namespace MQTTnet.Server
             try
             {
                 var cancellationToken = _cancellationToken.Token;
-
-                _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
-
                 IsRunning = true;
+                
+                _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
 
                 await ReceivePackagesLoop(cancellationToken).ConfigureAwait(false);
             }

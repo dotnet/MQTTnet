@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -429,14 +430,35 @@ namespace MQTTnet.Client
 
         async Task<MqttClientConnectResult> AuthenticateAsync(MqttClientOptions options, CancellationToken cancellationToken)
         {
+            // From the RFC:
+            // The CONNACK packet is the packet sent by the Server in response to a CONNECT packet received from a Client.
+            // The Server MUST send a CONNACK with a 0x00 (Success) Reason Code before sending any Packet other than AUTH [MQTT-3.2.0-1].
+            // The Server MUST NOT send more than one CONNACK in a Network Connection [MQTT-3.2.0-2].
+            
             MqttClientConnectResult result;
 
             try
             {
                 var connectPacket = MqttPacketFactories.Connect.Create(options);
+                await SendAsync(connectPacket, cancellationToken).ConfigureAwait(false);
+                
+                MqttConnAckPacket connAckPacket = null;
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    var receivedPacket = await _adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
 
-                var connAckPacket = await SendAndReceiveAsync<MqttConnAckPacket>(connectPacket, cancellationToken).ConfigureAwait(false);
-
+                    if (receivedPacket is MqttAuthPacket authPacket)
+                    {
+                        // MQTT v3.1.1 cannot send an AUTH packet.
+                        Options.ExtendedAuthenticationExchangeHandler
+                    }
+                    else if (receivedPacket is MqttConnAckPacket connAckPacketBuffer)
+                    {
+                        connAckPacket = connAckPacketBuffer;
+                        break;
+                    }
+                }
+                
                 var clientConnectResultFactory = new MqttClientConnectResultFactory();
                 result = clientConnectResultFactory.Create(connAckPacket, _adapter.PacketFormatterAdapter.ProtocolVersion);
             }
@@ -491,14 +513,19 @@ namespace MQTTnet.Client
                 _logger.Verbose("Trying to connect with server '{0}'.", Options.ChannelOptions);
                 await _adapter.ConnectAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
                 _logger.Verbose("Connection with server established.");
+                
+                var connectResult = await AuthenticateAsync(Options, effectiveCancellationToken.Token).ConfigureAwait(false);
 
-                _publishPacketReceiverQueue?.Dispose();
-                _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
+                if (connectResult.ResultCode == MqttClientConnectResultCode.Success)
+                {
+                    _publishPacketReceiverQueue?.Dispose();
+                    _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
+                    
+                    _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
+                    _packetReceiverTask = Task.Run(() => TryReceivePacketsAsync(backgroundCancellationToken), backgroundCancellationToken);
+                }
 
-                _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
-                _packetReceiverTask = Task.Run(() => TryReceivePacketsAsync(backgroundCancellationToken), backgroundCancellationToken);
-
-                return await AuthenticateAsync(Options, effectiveCancellationToken.Token).ConfigureAwait(false);
+                return connectResult;
             }
         }
 

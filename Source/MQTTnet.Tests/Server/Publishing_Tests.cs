@@ -87,6 +87,8 @@ namespace MQTTnet.Tests.Server
                 
                 await sender.PublishStringAsync("A", "Payload", MqttQualityOfServiceLevel.AtLeastOnce);
 
+                await LongTestDelay();
+                
                 receivedMessages.AssertReceivedCountEquals(1);
                 
                 server.InterceptingClientEnqueueAsync += e =>

@@ -16,7 +16,7 @@ namespace MQTTnet.Formatter
             return new MqttPublishPacket
             {
                 Topic = publishPacket.Topic,
-                Payload = publishPacket.Payload,
+                PayloadSegment = publishPacket.PayloadSegment, 
                 Retain = publishPacket.Retain,
                 QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
                 Dup = publishPacket.Dup,
@@ -36,7 +36,7 @@ namespace MQTTnet.Formatter
             var packet = new MqttPublishPacket
             {
                 Topic = applicationMessage.Topic,
-                Payload = applicationMessage.Payload,
+                PayloadSegment = applicationMessage.PayloadSegment, 
                 QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
                 Retain = applicationMessage.Retain,
                 Dup = applicationMessage.Dup,
@@ -65,10 +65,16 @@ namespace MQTTnet.Formatter
                 throw new MqttProtocolViolationException("The CONNECT packet contains no will message (WillFlag).");
             }
 
+            ArraySegment<byte> willMessageBuffer = default;
+            if (connectPacket.WillMessage?.Length > 0)
+            {
+                willMessageBuffer = new ArraySegment<byte>(connectPacket.WillMessage);
+            }
+
             var packet = new MqttPublishPacket
             {
                 Topic = connectPacket.WillTopic,
-                Payload = connectPacket.WillMessage,
+                PayloadSegment = willMessageBuffer,
                 QualityOfServiceLevel = connectPacket.WillQoS,
                 Retain = connectPacket.WillRetain,
                 ContentType = connectPacket.WillContentType,

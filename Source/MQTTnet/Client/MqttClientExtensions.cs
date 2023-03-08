@@ -87,17 +87,7 @@ namespace MQTTnet.Client
 
             return client.ConnectAsync(client.Options, cancellationToken);
         }
-
-        public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)
-        {
-            if (client == null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
-
-            return client.SendExtendedAuthenticationExchangeDataAsync(data, CancellationToken.None);
-        }
-
+        
         public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient mqttClient, MqttTopicFilter topicFilter, CancellationToken cancellationToken = default)
         {
             if (mqttClient == null)

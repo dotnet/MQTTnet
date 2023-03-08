@@ -6,6 +6,8 @@ namespace MQTTnet.Formatter
 {
     public static class MqttPacketFactories
     {
+        public static MqttAuthPacketFactory Auth { get; } = new MqttAuthPacketFactory();
+        
         public static MqttConnAckPacketFactory ConnAck { get; } = new MqttConnAckPacketFactory();
         
         public static MqttConnectPacketFactory Connect { get; } = new MqttConnectPacketFactory();

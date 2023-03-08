@@ -30,7 +30,7 @@ namespace MQTTnet.Tests.Diagnostics
 
                     var packets = new List<string>();
                     
-                    mqttClient.InspectPackage += eventArgs =>
+                    mqttClient.InspectPackageAsync += eventArgs =>
                     {
                         packets.Add(eventArgs.Direction + ":" + Convert.ToBase64String(eventArgs.Buffer));
                         return CompletedTask.Instance;

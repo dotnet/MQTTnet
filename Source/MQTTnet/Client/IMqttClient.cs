@@ -8,14 +8,14 @@ namespace MQTTnet.Client
     public interface IMqttClient : IDisposable
     {
         event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync;
-        
+
         event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync;
 
         event Func<MqttClientConnectingEventArgs, Task> ConnectingAsync;
 
         event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync;
 
-        event Func<InspectMqttPacketEventArgs, Task> InspectPackage;
+        event Func<InspectMqttPacketEventArgs, Task> InspectPackageAsync;
 
         bool IsConnected { get; }
 
@@ -27,9 +27,9 @@ namespace MQTTnet.Client
 
         Task PingAsync(CancellationToken cancellationToken = default);
 
-        Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken = default);
-
         Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken = default);
+
+        Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken = default);
 
         Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken = default);
 

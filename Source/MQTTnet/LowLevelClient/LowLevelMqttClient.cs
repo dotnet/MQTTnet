@@ -32,7 +32,7 @@ namespace MQTTnet.LowLevelClient
             _logger = logger.WithSource(nameof(LowLevelMqttClient));
         }
 
-        public event Func<InspectMqttPacketEventArgs, Task> InspectPackage
+        public event Func<InspectMqttPacketEventArgs, Task> InspectPackageAsync
         {
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);

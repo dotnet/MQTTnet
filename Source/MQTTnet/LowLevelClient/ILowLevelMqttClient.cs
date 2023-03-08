@@ -9,7 +9,7 @@ namespace MQTTnet.LowLevelClient
 {
     public interface ILowLevelMqttClient : IDisposable
     {
-        event Func<InspectMqttPacketEventArgs, Task> InspectPackage;
+        event Func<InspectMqttPacketEventArgs, Task> InspectPackageAsync;
         
         bool IsConnected { get; }
         

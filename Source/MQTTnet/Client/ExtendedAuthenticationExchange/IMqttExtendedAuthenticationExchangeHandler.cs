@@ -8,6 +8,6 @@ namespace MQTTnet.Client
 {
     public interface IMqttExtendedAuthenticationExchangeHandler
     {
-        Task HandleRequestAsync(MqttExtendedAuthenticationExchangeContext context);
+        Task HandleRequestAsync(MqttExtendedAuthenticationExchangeEventArgs eventArgs);
     }
 }

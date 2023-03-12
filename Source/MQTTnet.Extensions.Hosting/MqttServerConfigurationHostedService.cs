@@ -7,30 +7,34 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Hosting
+namespace MQTTnet.Extensions.Hosting
 {
     public class MqttServerConfigurationHostedService : IHostedService
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly List<Action<MqttServer>> _configureActions;
+        private readonly List<Action<MqttServer>> _startActions;
+        private readonly List<Action<MqttServer>> _stopActions;
 
-        public MqttServerConfigurationHostedService(IServiceProvider serviceProvider, List<Action<MqttServer>> configureActions)
+        public MqttServerConfigurationHostedService(IServiceProvider serviceProvider, List<Action<MqttServer>> startActions, List<Action<MqttServer>> stopActions)
         {
             _serviceProvider = serviceProvider;
-            _configureActions = configureActions;
+            _startActions = startActions;
+            _stopActions = stopActions;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             var server = _serviceProvider.GetRequiredService<MqttServer>();
-            _configureActions.ForEach(a => a(server));
+            _startActions.ForEach(a => a(server));
 
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            
+            var server = _serviceProvider.GetRequiredService<MqttServer>();
+            _stopActions.ForEach(a => a(server));
+
             return Task.CompletedTask;
         }
     }

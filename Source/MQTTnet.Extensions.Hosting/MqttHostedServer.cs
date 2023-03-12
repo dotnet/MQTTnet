@@ -8,19 +8,21 @@ using MQTTnet.Server;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 
-namespace MQTTnet.Hosting
+namespace MQTTnet.Extensions.Hosting
 {
     public sealed class MqttHostedServer : MqttServer, IHostedService
     {
-        public MqttHostedServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
+        public MqttHostedServer(IServiceProvider serviceProvider, MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger)
             : base(options, adapters, logger)
         {
+            ServiceProvider = serviceProvider;
         }
+
+        public IServiceProvider ServiceProvider { get; }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _ = StartAsync();
-            return Task.CompletedTask;
+            return StartAsync();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

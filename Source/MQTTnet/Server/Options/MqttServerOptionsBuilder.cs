@@ -198,6 +198,18 @@ namespace MQTTnet.Server
             _options.TlsEndpointOptions.CertificateProvider = new X509CertificateProvider(certificate);
             return this;
         }
+
+        public MqttServerOptionsBuilder WithEncryptionCertificate(ICertificateProvider certificateProvider)
+        {
+            if (certificateProvider == null)
+            {
+                throw new ArgumentNullException(nameof(certificateProvider));
+            }
+
+            _options.TlsEndpointOptions.CertificateProvider = certificateProvider;
+
+            return this;
+        }
 #endif
     }
 }

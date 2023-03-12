@@ -41,7 +41,7 @@ namespace MQTTnet.Server
                     new MqttApplicationMessage
                     {
                         Topic = topic,
-                        Payload = payloadBuffer,
+                        PayloadSegment = new ArraySegment<byte>(payloadBuffer),
                         QualityOfServiceLevel = qualityOfServiceLevel,
                         Retain = retain
                     }));

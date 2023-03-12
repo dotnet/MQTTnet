@@ -11,19 +11,13 @@ namespace MQTTnet
     {
         public static string ConvertPayloadToString(this MqttApplicationMessage applicationMessage)
         {
-            if (applicationMessage == null) throw new ArgumentNullException(nameof(applicationMessage));
-
-            if (applicationMessage.Payload == null)
+            if (applicationMessage == null)
             {
-                return null;
+                throw new ArgumentNullException(nameof(applicationMessage));
             }
 
-            if (applicationMessage.Payload.Length == 0)
-            {
-                return string.Empty;
-            }
-
-            return Encoding.UTF8.GetString(applicationMessage.Payload, 0, applicationMessage.Payload.Length);
+            var payloadSegment = applicationMessage.PayloadSegment;
+            return Encoding.UTF8.GetString(payloadSegment.Array, payloadSegment.Offset, payloadSegment.Count);
         }
     }
 }

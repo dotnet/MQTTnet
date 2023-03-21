@@ -43,7 +43,7 @@ namespace MQTTnet.Benchmarks
 
             if (globalI != tasksCount)
             {
-                throw new Exception($"Code is broken ({globalI})!");
+                throw new MqttException($"Code is broken ({globalI})!");
             }
         }
         

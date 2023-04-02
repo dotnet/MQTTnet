@@ -566,7 +566,6 @@ namespace MQTTnet.Tests.Formatter
                     using (var adapter = new MqttChannelAdapter(
                                channel,
                                new MqttPacketFormatterAdapter(protocolVersion, new MqttBufferWriter(4096, 65535)),
-                               null,
                                new MqttNetEventLogger()))
                     {
                         var receivedPacket = adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
@@ -582,17 +581,10 @@ namespace MQTTnet.Tests.Formatter
         MqttProtocolVersion DeserializeAndDetectVersion(MqttPacketFormatterAdapter packetFormatterAdapter, byte[] buffer)
         {
             var channel = new MemoryMqttChannel(buffer);
-            var adapter = new MqttChannelAdapter(channel, packetFormatterAdapter, null, new MqttNetEventLogger());
+            var adapter = new MqttChannelAdapter(channel, packetFormatterAdapter, new MqttNetEventLogger());
 
             adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
             return packetFormatterAdapter.ProtocolVersion;
-        }
-
-        MqttBufferReader ReaderFactory(byte[] data)
-        {
-            var reader = new MqttBufferReader();
-            reader.SetBuffer(data, 0, data.Length);
-            return reader;
         }
 
         TPacket Roundtrip<TPacket>(TPacket packet, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311, MqttBufferWriter bufferWriter = null) where TPacket : MqttPacket
@@ -603,7 +595,7 @@ namespace MQTTnet.Tests.Formatter
 
             using (var channel = new MemoryMqttChannel(buffer.Join().ToArray()))
             {
-                var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, new MqttBufferWriter(4096, 65535)), null, new MqttNetEventLogger());
+                var adapter = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(protocolVersion, new MqttBufferWriter(4096, 65535)), new MqttNetEventLogger());
                 return (TPacket)adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
             }
         }

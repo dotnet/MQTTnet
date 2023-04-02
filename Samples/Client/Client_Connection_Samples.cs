@@ -70,6 +70,28 @@ public static class Client_Connection_Samples
             await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
         }
     }
+    
+    public static async Task Connect_With_Amazon_AWS()
+    {
+        /*
+         * This sample creates a simple MQTT client and connects to an Amazon Web Services broker.
+         *
+         * The broker requires special settings which are set here.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("amazon.web.services.broker").WithAmazonWebServicesCompatibility().Build();
+            
+            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            Console.WriteLine("The MQTT client is connected.");
+
+            await mqttClient.DisconnectAsync();
+        }
+    }
 
     public static async Task Connect_Client_Timeout()
     {

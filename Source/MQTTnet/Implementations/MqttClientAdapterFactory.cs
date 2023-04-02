@@ -40,7 +40,12 @@ namespace MQTTnet.Implementations
 
             var bufferWriter = new MqttBufferWriter(options.WriterBufferSize, options.WriterBufferSizeMax);
             var packetFormatterAdapter = new MqttPacketFormatterAdapter(options.ProtocolVersion, bufferWriter);
-            return new MqttChannelAdapter(channel, packetFormatterAdapter, packetInspector, logger);
+
+            return new MqttChannelAdapter(channel, packetFormatterAdapter, logger)
+            {
+                AvoidPacketFragmentation = options.AvoidPacketFragmentation,
+                PacketInspector = packetInspector
+            };
         }
     }
 }

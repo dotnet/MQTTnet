@@ -62,8 +62,8 @@ namespace MQTTnet.Adapter
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
         public MqttPacketInspector PacketInspector { get; set; }
-        
-        public bool AvoidPacketFragmentation { get; set; }
+
+        public bool AllowPacketFragmentation { get; set; } = true;
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
@@ -205,7 +205,7 @@ namespace MQTTnet.Adapter
 
                     _logger.Verbose("TX ({0} bytes) >>> {1}", packetBuffer.Length, packet);
                     
-                    if (packetBuffer.Payload.Count == 0 || AvoidPacketFragmentation)
+                    if (packetBuffer.Payload.Count == 0 || !AllowPacketFragmentation)
                     {
                         await _channel.WriteAsync(packetBuffer.Join(), true, cancellationToken).ConfigureAwait(false);
                     }

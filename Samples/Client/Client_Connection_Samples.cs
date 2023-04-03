@@ -83,7 +83,11 @@ public static class Client_Connection_Samples
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
-            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("amazon.web.services.broker").WithAmazonWebServicesCompatibility().Build();
+            var mqttClientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("amazon.web.services.broker")
+                // Disabling packet fragmentation is very important!  
+                .WithoutPacketFragmentation()
+                .Build();
             
             await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 

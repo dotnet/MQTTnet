@@ -43,7 +43,7 @@ namespace MQTTnet.Implementations
 
             return new MqttChannelAdapter(channel, packetFormatterAdapter, logger)
             {
-                AvoidPacketFragmentation = options.AvoidPacketFragmentation,
+                AllowPacketFragmentation = options.AllowPacketFragmentation,
                 PacketInspector = packetInspector
             };
         }

@@ -4,18 +4,21 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
     public sealed class InterceptingUnsubscriptionEventArgs : EventArgs
     {
-        public InterceptingUnsubscriptionEventArgs(CancellationToken cancellationToken, string clientId, IDictionary sessionItems, string topic)
+        public InterceptingUnsubscriptionEventArgs(CancellationToken cancellationToken, string clientId, IDictionary sessionItems, string topic, List<MqttUserProperty> userProperties)
         {
             CancellationToken = cancellationToken;
             ClientId = clientId;
             SessionItems = sessionItems;
             Topic = topic;
+            UserProperties = userProperties;
         }
 
         /// <summary>
@@ -59,5 +62,11 @@ namespace MQTTnet.Server
         ///     separator).
         /// </summary>
         public string Topic { get; }
+
+        /// <summary>
+        ///     Gets or sets the user properties.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+        /// </summary>
+        public List<MqttUserProperty> UserProperties { get; set; }
     }
 }

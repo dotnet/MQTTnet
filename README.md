@@ -50,6 +50,22 @@ MQTTnet is a high performance .NET library for MQTT based communication. It prov
 * A custom message interceptor can be added which allows transforming or extending every received application message
 * Validate subscriptions and deny subscribing of certain topics depending on requesting clients
 
+## Getting Started
+
+MQTTnet is delivered via <b>NuGet</b> package manager. You can find the packages here: https://www.nuget.org/packages/MQTTnet/
+
+Use these command in the Package Manager console to install MQTTnet manually:
+```
+Install-Package MQTTnet
+```
+
+Samples for using MQTTnet are part of this repository. For starters these samples are recommended:
+
+- [Connect with a broker](https://github.com/dotnet/MQTTnet/blob/master/Samples/Client/Client_Connection_Samples.cs)
+- [Subscribing to data](https://github.com/dotnet/MQTTnet/blob/master/Samples/Client/Client_Subscribe_Samples.cs)
+- [Publishing data](https://github.com/dotnet/MQTTnet/blob/master/Samples/Client/Client_Publish_Samples.cs)
+- [Host own broker](https://github.com/dotnet/MQTTnet/blob/master/Samples/Server/Server_Simple_Samples.cs)
+
 ## Code of Conduct
 
 This project has adopted the code of conduct defined by the Contributor Covenant to clarify expected behavior in our community.

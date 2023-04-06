@@ -207,9 +207,8 @@ namespace MQTTnet.Server
 
                             if (!eventArgs.AcceptEnqueue)
                             {
-                                // There will be no reason string and use properties because in this case the clients will
-                                // not receive a packet at all.
-                                return new DispatchApplicationMessageResult(reasonCode, eventArgs.CloseSenderConnection, null, null);
+                                // Continue checking the other subscriptions
+                                continue;
                             }
                         }
 

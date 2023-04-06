@@ -42,6 +42,6 @@ namespace MQTTnet.Client
         ///     Gets the user properties which were part of the UNSUBACK packet.
         ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        public IReadOnlyCollection<MqttUserProperty> UserProperties { get; }
+        public IReadOnlyCollection<MqttUserProperty> UserProperties { get; set; }
     }
 }

@@ -16,12 +16,14 @@ namespace MQTTnet.Server
             CancellationToken cancellationToken,
             string clientId,
             MqttSessionStatus session,
-            MqttTopicFilter topicFilter)
+            MqttTopicFilter topicFilter,
+            List<MqttUserProperty> userProperties)
         {
             CancellationToken = cancellationToken;
             ClientId = clientId;
             Session = session;
             TopicFilter = topicFilter;
+            UserProperties = userProperties;
         }
 
         /// <summary>
@@ -75,6 +77,7 @@ namespace MQTTnet.Server
 
         /// <summary>
         ///     Gets or sets the user properties.
+        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
     }

@@ -3,6 +3,7 @@
 * [Client] Added support for passing MQTT v5 options (User properties etc.) for disconnects.
 * [Client] An internal exception is no longer caught silently when calling _DisconnectAsync_ to indicate that the disconnect is not clean (BREAKING CHANGE).
 * [Client] MQTTv5 features are now checked and an exception is thrown if they are used when using protocol version 3.1.1 and lower. These checks can be disabled in client options. (BREAKING CHANGE!).
+* [Client] Added support for disabling packet fragmentation (required for i.e. AWS, #1690, thanks to @logicaloud).
 * [Server] Exposed MQTT v5 sent properties from the affected client in _ClientDisconnectedAsync_ event.
 * [Server] Fixed wrong client ID passed to _InterceptingUnsubscriptionEventArgs_ (#1631, thanks to @ghord).
 * [Server] Exposed socket settings for TCP keep alive in TCP options (#1544).
@@ -13,3 +14,4 @@
 * [Server] Added a new event (InterceptingClientEnqueueAsync) which allows intercepting when an application message is enqueued for a client (#1648).
 * [Server] Fixed race condition when handling connections which leads to stopped message transfers (#1677, thanks to @RazvanEmilR).
 * [Server] Fixed not delivered packets to other sessions if the _InterceptingClientEnqueueEvent_ is used and accepting the packet is denied (#1685, thanks to @RossHNPC).
+* [Server] Added missing user properties to subscribe and unsubscribe interceptor (#1702).

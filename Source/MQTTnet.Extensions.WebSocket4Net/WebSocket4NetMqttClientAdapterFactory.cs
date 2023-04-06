@@ -27,8 +27,10 @@ namespace MQTTnet.Extensions.WebSocket4Net
                     return new MqttChannelAdapter(
                         new MqttTcpChannel(options),
                         new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(options.WriterBufferSize, options.WriterBufferSizeMax)),
-                        packetInspector,
-                        logger);
+                        logger)
+                    {
+                        PacketInspector = packetInspector
+                    };
                 }
 
                 case MqttClientWebSocketOptions webSocketOptions:
@@ -36,8 +38,10 @@ namespace MQTTnet.Extensions.WebSocket4Net
                     return new MqttChannelAdapter(
                         new WebSocket4NetMqttChannel(options, webSocketOptions),
                         new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(options.WriterBufferSize, options.WriterBufferSizeMax)),
-                        packetInspector,
-                        logger);
+                        logger)
+                    {
+                        PacketInspector = packetInspector
+                    };
                 }
 
                 default:

@@ -75,8 +75,20 @@ namespace MQTTnet.Client
             _options.ChannelOptions = (IMqttClientChannelOptions)_tcpOptions ?? _webSocketOptions;
 
             MqttClientOptionsValidator.ThrowIfNotSupported(_options);
-            
+
             return _options;
+        }
+
+        /// <summary>
+        ///     Usually the MQTT packets can be send partially. This is done by using multiple TCP packets
+        ///     or WebSocket frames etc. Unfortunately not all brokers (like Amazon Web Services (AWS)) do support this feature and
+        ///     will close the connection when receiving such packets. If such a service is used this flag must
+        ///     be set to _true_.
+        /// </summary>
+        public MqttClientOptionsBuilder WithoutPacketFragmentation()
+        {
+            _options.AllowPacketFragmentation = false;
+            return this;
         }
 
         public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data)
@@ -266,7 +278,7 @@ namespace MQTTnet.Client
 
             return this;
         }
-        
+
         public MqttClientOptionsBuilder WithTcpServer(Action<MqttClientTcpOptions> optionsBuilder)
         {
             if (optionsBuilder == null)
@@ -373,6 +385,18 @@ namespace MQTTnet.Client
             return this;
         }
 
+        public MqttClientOptionsBuilder WithWillContentType(string willContentType)
+        {
+            _options.WillContentType = willContentType;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWillCorrelationData(byte[] willCorrelationData)
+        {
+            _options.WillCorrelationData = willCorrelationData;
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithWillDelayInterval(uint willDelayInterval)
         {
             _options.WillDelayInterval = willDelayInterval;
@@ -384,15 +408,21 @@ namespace MQTTnet.Client
             _options.WillPayload = willPayload;
             return this;
         }
-        
+
         public MqttClientOptionsBuilder WithWillPayload(string willPayload)
         {
             if (string.IsNullOrEmpty(willPayload))
             {
                 return WithWillPayload((byte[])null);
             }
-            
+
             _options.WillPayload = Encoding.UTF8.GetBytes(willPayload);
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWillPayloadFormatIndicator(MqttPayloadFormatIndicator willPayloadFormatIndicator)
+        {
+            _options.WillPayloadFormatIndicator = willPayloadFormatIndicator;
             return this;
         }
 
@@ -402,9 +432,9 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithWillTopic(string willTopic)
+        public MqttClientOptionsBuilder WithWillResponseTopic(string willResponseTopic)
         {
-            _options.WillTopic = willTopic;
+            _options.WillResponseTopic = willResponseTopic;
             return this;
         }
 
@@ -413,38 +443,20 @@ namespace MQTTnet.Client
             _options.WillRetain = willRetain;
             return this;
         }
-        
-        public MqttClientOptionsBuilder WithWillContentType(string willContentType)
+
+        public MqttClientOptionsBuilder WithWillTopic(string willTopic)
         {
-            _options.WillContentType = willContentType;
+            _options.WillTopic = willTopic;
             return this;
         }
-        
-        public MqttClientOptionsBuilder WithWillCorrelationData(byte[] willCorrelationData)
-        {
-            _options.WillCorrelationData = willCorrelationData;
-            return this;
-        }
-        
-        public MqttClientOptionsBuilder WithWillResponseTopic(string willResponseTopic)
-        {
-            _options.WillResponseTopic = willResponseTopic;
-            return this;
-        }
-        
-        public MqttClientOptionsBuilder WithWillPayloadFormatIndicator(MqttPayloadFormatIndicator willPayloadFormatIndicator)
-        {
-            _options.WillPayloadFormatIndicator = willPayloadFormatIndicator;
-            return this;
-        }
-        
+
         public MqttClientOptionsBuilder WithWillUserProperty(string name, string value)
         {
             if (_options.WillUserProperties == null)
             {
                 _options.WillUserProperties = new List<MqttUserProperty>();
             }
-            
+
             _options.WillUserProperties.Add(new MqttUserProperty(name, value));
             return this;
         }

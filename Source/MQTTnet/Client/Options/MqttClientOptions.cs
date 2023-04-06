@@ -24,6 +24,14 @@ namespace MQTTnet.Client
         /// </summary>
         public string AuthenticationMethod { get; set; }
 
+        /// <summary>
+        ///     Usually the MQTT packets can be send partially. This is done by using multiple TCP packets
+        ///     or WebSocket frames etc. Unfortunately not all brokers (like Amazon Web Services (AWS)) do support this feature and
+        ///     will close the connection when receiving such packets. If such a service is used this flag must
+        ///     be set to _false_.
+        /// </summary>
+        public bool AllowPacketFragmentation { get; set; } = true;
+
         public IMqttClientChannelOptions ChannelOptions { get; set; }
 
         /// <summary>

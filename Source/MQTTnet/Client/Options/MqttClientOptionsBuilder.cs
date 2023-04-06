@@ -87,7 +87,7 @@ namespace MQTTnet.Client
         /// </summary>
         public MqttClientOptionsBuilder WithoutPacketFragmentation()
         {
-            _options.AllowPacketFragmentation = true;
+            _options.AllowPacketFragmentation = false;
             return this;
         }
 

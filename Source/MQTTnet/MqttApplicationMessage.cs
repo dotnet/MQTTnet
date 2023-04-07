@@ -2,14 +2,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using System;
+using System.Collections.Generic;
 
 namespace MQTTnet
 {
     public sealed class MqttApplicationMessage
     {
+        byte[] _payloadCache;
+        ArraySegment<byte> _payloadSegment = EmptyBuffer.ArraySegment;
+
         /// <summary>
         ///     Gets or sets the content type.
         ///     The content type must be a UTF-8 encoded string. The content type value identifies the kind of UTF-8 encoded
@@ -48,10 +53,53 @@ namespace MQTTnet
         public uint MessageExpiryInterval { get; set; }
 
         /// <summary>
-        ///     Gets or sets the payload.
-        ///     The payload is the data bytes sent via the MQTT protocol.
+        /// Gets or sets the payload.
+        /// The payload is the data bytes sent via the MQTT protocol.
         /// </summary>
-        public byte[] Payload { get; set; }
+        [Obsolete("Use PayloadSegment instead. This property will be removed in a future release.")]
+        public byte[] Payload
+        {
+            get
+            {
+                if (_payloadSegment.Array == null)
+                {
+                    return null;
+                }
+                
+                // just reference from _payloadSegment.Array
+                if (_payloadSegment.Count == _payloadSegment.Array.Length)
+                {
+                    return _payloadSegment.Array;
+                }
+
+                // copy from _payloadSegment
+                if (_payloadCache == null)
+                {
+                    _payloadCache = new byte[_payloadSegment.Count];
+                    MqttMemoryHelper.Copy(_payloadSegment.Array, _payloadSegment.Offset, _payloadCache, 0, _payloadCache.Length);
+                }
+
+                return _payloadCache;
+            }
+            set
+            {
+                _payloadCache = null;
+                _payloadSegment = value == null || value.Length == 0 ? EmptyBuffer.ArraySegment : new ArraySegment<byte>(value);
+            }
+        }
+
+        /// <summary>
+        /// Get or set ArraySegment style of Payload.
+        /// </summary>
+        public ArraySegment<byte> PayloadSegment
+        {
+            get => _payloadSegment;
+            set
+            {
+                _payloadCache = null;
+                _payloadSegment = value;
+            }
+        }
 
         /// <summary>
         ///     Gets or sets the payload format indicator.

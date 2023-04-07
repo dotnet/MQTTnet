@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
@@ -119,7 +120,6 @@ namespace MQTTnet.Extensions.Rpc
             finally
             {
                 _waitingCalls.TryRemove(responseTopic, out _);
-
                 await _mqttClient.UnsubscribeAsync(responseTopic, CancellationToken.None).ConfigureAwait(false);
             }
         }
@@ -131,7 +131,8 @@ namespace MQTTnet.Extensions.Rpc
                 return CompletedTask.Instance;
             }
 
-            awaitable.TrySetResult(eventArgs.ApplicationMessage.Payload);
+            var payloadBuffer = eventArgs.ApplicationMessage.PayloadSegment.ToArray();
+            awaitable.TrySetResult(payloadBuffer);
 
             // Set this message to handled to that other code can avoid execution etc.
             eventArgs.IsHandled = true;

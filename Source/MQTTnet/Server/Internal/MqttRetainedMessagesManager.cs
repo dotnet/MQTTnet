@@ -22,18 +22,20 @@ namespace MQTTnet.Server
         public MqttRetainedMessagesManager(MqttServerEventContainer eventContainer, IMqttNetLogger logger)
         {
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
-            
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            if (logger == null)
+                throw new ArgumentNullException(nameof(logger));
+
             _logger = logger.WithSource(nameof(MqttRetainedMessagesManager));
         }
-        
+
         public async Task Start()
         {
             try
             {
                 var eventArgs = new LoadingRetainedMessagesEventArgs();
                 await _eventContainer.LoadingRetainedMessagesEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
-                
+
                 lock (_messages)
                 {
                     _messages.Clear();
@@ -64,10 +66,11 @@ namespace MQTTnet.Server
             {
                 List<MqttApplicationMessage> messagesForSave = null;
                 var saveIsRequired = false;
-                
+
                 lock (_messages)
                 {
-                    var hasPayload = applicationMessage.Payload != null && applicationMessage.Payload.Length > 0;
+                    var payloadSegment = applicationMessage.PayloadSegment;
+                    var hasPayload = payloadSegment.Count > 0;
 
                     if (!hasPayload)
                     {
@@ -83,7 +86,7 @@ namespace MQTTnet.Server
                         }
                         else
                         {
-                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !existingMessage.Payload.SequenceEqual(applicationMessage.Payload ?? EmptyBuffer.Array))
+                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !SequenceEqual(existingMessage.PayloadSegment, payloadSegment))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage;
                                 saveIsRequired = true;
@@ -113,13 +116,26 @@ namespace MQTTnet.Server
                 _logger.Error(exception, "Unhandled exception while handling retained messages.");
             }
         }
-        
+
         public Task<IList<MqttApplicationMessage>> GetMessages()
         {
             lock (_messages)
             {
                 var result = new List<MqttApplicationMessage>(_messages.Values);
                 return Task.FromResult((IList<MqttApplicationMessage>)result);
+            }
+        }
+
+        public Task<MqttApplicationMessage> GetMessage(string topic)
+        {
+            lock (_messages)
+            {
+                if (_messages.TryGetValue(topic, out var message))
+                {
+                    return Task.FromResult(message);
+                }
+
+                return null;
             }
         }
 
@@ -134,6 +150,15 @@ namespace MQTTnet.Server
             {
                 await _eventContainer.RetainedMessagesClearedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
             }
+        }
+
+        private static bool SequenceEqual(ArraySegment<byte> source, ArraySegment<byte> target)
+        {
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
+            return source.AsSpan().SequenceEqual(target);
+#else
+            return source.Count == target.Count && Enumerable.SequenceEqual(source, target);
+#endif
         }
     }
 }

@@ -528,7 +528,7 @@ namespace MQTTnet.Formatter.V5
 
             if (!_bufferReader.EndOfStream)
             {
-                packet.Payload = _bufferReader.ReadRemainingData();
+                packet.PayloadSegment = new ArraySegment<byte>(_bufferReader.ReadRemainingData());
             }
 
             return packet;

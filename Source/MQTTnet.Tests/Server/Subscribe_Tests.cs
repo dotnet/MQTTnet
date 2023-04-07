@@ -62,7 +62,7 @@ namespace MQTTnet.Tests.Server
                 }
             }
         }
-        
+
         [TestMethod]
         public async Task Deny_Invalid_Topic()
         {
@@ -91,6 +91,29 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
+        public async Task Intercept_Subscribe_With_User_Properties()
+        {
+            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            {
+                var server = await testEnvironment.StartServer();
+
+                InterceptingSubscriptionEventArgs eventArgs = null;
+                server.InterceptingSubscriptionAsync += e =>
+                {
+                    eventArgs = e;
+                    return CompletedTask.Instance;
+                };
+
+                var client = await testEnvironment.ConnectClient();
+
+                var subscribeOptions = testEnvironment.Factory.CreateSubscribeOptionsBuilder().WithTopicFilter("X").WithUserProperty("A", "1").Build();
+                await client.SubscribeAsync(subscribeOptions);
+
+                CollectionAssert.AreEqual(subscribeOptions.UserProperties.ToList(), eventArgs.UserProperties);
+            }
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(MqttClientDisconnectedException))]
         public async Task Disconnect_While_Subscribing()
         {
@@ -105,7 +128,7 @@ namespace MQTTnet.Tests.Server
                 await client.SubscribeAsync("#");
             }
         }
-        
+
         [TestMethod]
         public async Task Enqueue_Message_After_Subscription()
         {

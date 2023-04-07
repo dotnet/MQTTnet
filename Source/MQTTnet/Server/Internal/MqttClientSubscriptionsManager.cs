@@ -177,15 +177,15 @@ namespace MQTTnet.Server
             // lower one.
             foreach (var topicFilterItem in subscribePacket.TopicFilters.OrderByDescending(f => f.QualityOfServiceLevel))
             {
-                var subscriptionEventArgs = await InterceptSubscribe(topicFilterItem, cancellationToken).ConfigureAwait(false);
-                var topicFilter = subscriptionEventArgs.TopicFilter;
-                var processSubscription = subscriptionEventArgs.ProcessSubscription && subscriptionEventArgs.Response.ReasonCode <= MqttSubscribeReasonCode.GrantedQoS2;
+                var interceptorEventArgs = await InterceptSubscribe(topicFilterItem, subscribePacket.UserProperties, cancellationToken).ConfigureAwait(false);
+                var topicFilter = interceptorEventArgs.TopicFilter;
+                var processSubscription = interceptorEventArgs.ProcessSubscription && interceptorEventArgs.Response.ReasonCode <= MqttSubscribeReasonCode.GrantedQoS2;
 
-                result.UserProperties = subscriptionEventArgs.UserProperties;
-                result.ReasonString = subscriptionEventArgs.ReasonString;
-                result.ReasonCodes.Add(subscriptionEventArgs.Response.ReasonCode);
+                result.UserProperties = interceptorEventArgs.UserProperties;
+                result.ReasonString = interceptorEventArgs.ReasonString;
+                result.ReasonCodes.Add(interceptorEventArgs.Response.ReasonCode);
 
-                if (subscriptionEventArgs.CloseConnection)
+                if (interceptorEventArgs.CloseConnection)
                 {
                     // When any of the interceptor calls leads to a connection close the connection
                     // must be closed. So do not revert to false!
@@ -197,7 +197,7 @@ namespace MQTTnet.Server
                     continue;
                 }
 
-                var createSubscriptionResult = CreateSubscription(topicFilter, subscribePacket.SubscriptionIdentifier, subscriptionEventArgs.Response.ReasonCode);
+                var createSubscriptionResult = CreateSubscription(topicFilter, subscribePacket.SubscriptionIdentifier, interceptorEventArgs.Response.ReasonCode);
 
                 addedSubscriptions.Add(topicFilter.Topic);
                 finalTopicFilters.Add(topicFilter);
@@ -238,12 +238,13 @@ namespace MQTTnet.Server
                 {
                     _subscriptions.TryGetValue(topicFilter, out var existingSubscription);
 
-                    var interceptorContext = await InterceptUnsubscribe(topicFilter, existingSubscription, cancellationToken).ConfigureAwait(false);
-                    var acceptUnsubscription = interceptorContext.Response.ReasonCode == MqttUnsubscribeReasonCode.Success;
+                    var interceptorEventArgs = await InterceptUnsubscribe(topicFilter, existingSubscription, unsubscribePacket.UserProperties, cancellationToken).ConfigureAwait(false);
+                    var acceptUnsubscription = interceptorEventArgs.Response.ReasonCode == MqttUnsubscribeReasonCode.Success;
 
-                    result.ReasonCodes.Add(interceptorContext.Response.ReasonCode);
+                    result.UserProperties = interceptorEventArgs.UserProperties;
+                    result.ReasonCodes.Add(interceptorEventArgs.Response.ReasonCode);
 
-                    if (interceptorContext.CloseConnection)
+                    if (interceptorEventArgs.CloseConnection)
                     {
                         // When any of the interceptor calls leads to a connection close the connection
                         // must be closed. So do not revert to false!
@@ -255,7 +256,7 @@ namespace MQTTnet.Server
                         continue;
                     }
 
-                    if (interceptorContext.ProcessUnsubscription)
+                    if (interceptorEventArgs.ProcessUnsubscription)
                     {
                         _subscriptions.Remove(topicFilter);
 
@@ -342,7 +343,7 @@ namespace MQTTnet.Server
 
             using (_subscriptionsLock.EnterAsync(CancellationToken.None).GetAwaiter().GetResult())
             {
-                MqttSubscription.CalculateTopicHash(topicFilter.Topic, out var topicHash, out var topicHashMask, out var hasWildcard);
+                MqttSubscription.CalculateTopicHash(topicFilter.Topic, out var topicHash, out _, out var hasWildcard);
 
                 if (_subscriptions.TryGetValue(topicFilter.Topic, out var existingSubscription))
                 {
@@ -452,9 +453,12 @@ namespace MQTTnet.Server
             }
         }
 
-        async Task<InterceptingSubscriptionEventArgs> InterceptSubscribe(MqttTopicFilter topicFilter, CancellationToken cancellationToken)
+        async Task<InterceptingSubscriptionEventArgs> InterceptSubscribe(
+            MqttTopicFilter topicFilter,
+            List<MqttUserProperty> userProperties,
+            CancellationToken cancellationToken)
         {
-            var eventArgs = new InterceptingSubscriptionEventArgs(cancellationToken, _session.Id, new MqttSessionStatus(_session), topicFilter);
+            var eventArgs = new InterceptingSubscriptionEventArgs(cancellationToken, _session.Id, new MqttSessionStatus(_session), topicFilter, userProperties);
 
             if (topicFilter.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
@@ -481,9 +485,13 @@ namespace MQTTnet.Server
             return eventArgs;
         }
 
-        async Task<InterceptingUnsubscriptionEventArgs> InterceptUnsubscribe(string topicFilter, MqttSubscription mqttSubscription, CancellationToken cancellationToken)
+        async Task<InterceptingUnsubscriptionEventArgs> InterceptUnsubscribe(
+            string topicFilter,
+            MqttSubscription mqttSubscription,
+            List<MqttUserProperty> userProperties,
+            CancellationToken cancellationToken)
         {
-            var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs(cancellationToken, _session.Id, _session.Items, topicFilter)
+            var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs(cancellationToken, _session.Id, _session.Items, topicFilter, userProperties)
             {
                 Response =
                 {

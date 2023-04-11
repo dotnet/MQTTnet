@@ -179,7 +179,7 @@ namespace MQTTnet.Server
                     }
 
                     // Calculate application message topic hash once for subscription checks
-                    MqttSubscription.CalculateTopicHash(applicationMessage.Topic, out var topicHash, out _, out _);
+                    MqttTopicHash.Calculate(applicationMessage.Topic, out var topicHash, out _, out _);
 
                     foreach (var session in subscriberSessions)
                     {

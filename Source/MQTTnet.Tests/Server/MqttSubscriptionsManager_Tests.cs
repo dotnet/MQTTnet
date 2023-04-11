@@ -228,7 +228,7 @@ namespace MQTTnet.Tests.Server
 
         CheckSubscriptionsResult CheckSubscriptions(string topic, MqttQualityOfServiceLevel applicationMessageQoSLevel, string senderClientId)
         {
-            MqttSubscription.CalculateTopicHash(topic, out var topicHash, out _, out _);
+            MqttTopicHash.Calculate(topic, out var topicHash, out _, out _);
             return _subscriptionsManager.CheckSubscriptions(topic, topicHash, applicationMessageQoSLevel, senderClientId);
         }
     }

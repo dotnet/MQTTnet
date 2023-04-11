@@ -79,18 +79,6 @@ namespace MQTTnet.Client
             return _options;
         }
 
-        /// <summary>
-        ///     Usually the MQTT packets can be send partially. This is done by using multiple TCP packets
-        ///     or WebSocket frames etc. Unfortunately not all brokers (like Amazon Web Services (AWS)) do support this feature and
-        ///     will close the connection when receiving such packets. If such a service is used this flag must
-        ///     be set to _true_.
-        /// </summary>
-        public MqttClientOptionsBuilder WithoutPacketFragmentation()
-        {
-            _options.AllowPacketFragmentation = false;
-            return this;
-        }
-
         public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data)
         {
             _options.AuthenticationMethod = method;
@@ -98,7 +86,19 @@ namespace MQTTnet.Client
             return this;
         }
 
+        /// <summary>
+        ///     Clean session is used in MQTT versions below 5.0.0. It is the same as setting "CleanStart".
+        /// </summary>
         public MqttClientOptionsBuilder WithCleanSession(bool value = true)
+        {
+            _options.CleanSession = value;
+            return this;
+        }
+
+        /// <summary>
+        ///     Clean start is used in MQTT versions 5.0.0 and higher. It is the same as setting "CleanSession".
+        /// </summary>
+        public MqttClientOptionsBuilder WithCleanStart(bool value = true)
         {
             _options.CleanSession = value;
             return this;
@@ -198,6 +198,18 @@ namespace MQTTnet.Client
         public MqttClientOptionsBuilder WithNoKeepAlive()
         {
             return WithKeepAlivePeriod(TimeSpan.Zero);
+        }
+
+        /// <summary>
+        ///     Usually the MQTT packets can be send partially. This is done by using multiple TCP packets
+        ///     or WebSocket frames etc. Unfortunately not all brokers (like Amazon Web Services (AWS)) do support this feature and
+        ///     will close the connection when receiving such packets. If such a service is used this flag must
+        ///     be set to _true_.
+        /// </summary>
+        public MqttClientOptionsBuilder WithoutPacketFragmentation()
+        {
+            _options.AllowPacketFragmentation = false;
+            return this;
         }
 
         public MqttClientOptionsBuilder WithProtocolVersion(MqttProtocolVersion value)

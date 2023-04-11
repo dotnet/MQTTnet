@@ -63,7 +63,7 @@ namespace MQTTnet.Implementations
 
                 await clientWebSocket.ConnectAsync(new Uri(uri), cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception)
+            catch
             {
                 // Prevent a memory leak when always creating new instance which will fail while connecting.
                 clientWebSocket.Dispose();
@@ -103,7 +103,7 @@ namespace MQTTnet.Implementations
         public async Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
 #if NET5_0_OR_GREATER
             // MQTT Control Packets MUST be sent in WebSocket binary data frames. If any other type of data frame is received the recipient MUST close the Network Connection [MQTT-6.0.0-1].
             // A single WebSocket data frame can contain multiple or partial MQTT Control Packets. The receiver MUST NOT assume that MQTT Control Packets are aligned on WebSocket frame boundaries [MQTT-6.0.0-2].

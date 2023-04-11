@@ -488,9 +488,9 @@ namespace MQTTnet.Client
 
             using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))
             {
-                _logger.Verbose("Trying to connect with server '{0}'.", Options.ChannelOptions);
+                _logger.Verbose("Trying to connect with server '{0}'", Options.ChannelOptions);
                 await _adapter.ConnectAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
-                _logger.Verbose("Connection with server established.");
+                _logger.Verbose("Connection with server established");
 
                 _publishPacketReceiverQueue?.Dispose();
                 _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();

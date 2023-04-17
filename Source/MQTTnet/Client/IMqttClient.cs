@@ -15,7 +15,7 @@ namespace MQTTnet.Client
 
         event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync;
 
-        event Func<InspectMqttPacketEventArgs, Task> InspectPackage;
+        event Func<InspectMqttPacketEventArgs, Task> InspectPacketAsync;
 
         bool IsConnected { get; }
 

@@ -87,7 +87,7 @@ namespace MQTTnet.Client
             remove => _disconnectedEvent.RemoveHandler(value);
         }
 
-        public event Func<InspectMqttPacketEventArgs, Task> InspectPackage
+        public event Func<InspectMqttPacketEventArgs, Task> InspectPacketAsync
         {
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);

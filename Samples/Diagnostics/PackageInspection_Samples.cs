@@ -26,7 +26,7 @@ public static class PackageInspection_Samples
                 .WithTcpServer("broker.hivemq.com")
                 .Build();
             
-            mqttClient.InspectPackage += OnInspectPackage;
+            mqttClient.InspectPacketAsync += OnInspectPacket;
             
             await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
             
@@ -39,7 +39,7 @@ public static class PackageInspection_Samples
         }
     }
 
-    static Task OnInspectPackage(InspectMqttPacketEventArgs eventArgs)
+    static Task OnInspectPacket(InspectMqttPacketEventArgs eventArgs)
     {
         if (eventArgs.Direction == MqttPacketFlowDirection.Inbound)
         {

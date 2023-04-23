@@ -5,6 +5,7 @@
 * [Client] MQTTv5 features are now checked and an exception is thrown if they are used when using protocol version 3.1.1 and lower. These checks can be disabled in client options. (BREAKING CHANGE!).
 * [Client] Added support for disabling packet fragmentation (required for i.e. AWS, #1690, thanks to @logicaloud).
 * [Client] Added new overloads for options builder.
+* [Client] Renamed _InspectPackage_ to _InspectPacketAsync_ (BREAKING CHANGE).
 * [ManagedClient] Exposed added and removed topics in _ManagedProcessFailedEventArgs_ (#1678, thanks to @scottbrogden-iheartmedia).
 * [Server] Exposed MQTT v5 sent properties from the affected client in _ClientDisconnectedAsync_ event.
 * [Server] Fixed wrong client ID passed to _InterceptingUnsubscriptionEventArgs_ (#1631, thanks to @ghord).

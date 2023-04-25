@@ -459,7 +459,7 @@ namespace MQTTnet.Formatter.V3
             if (packet.WillFlag)
             {
                 bufferWriter.WriteString(packet.WillTopic);
-                bufferWriter.WriteBinaryData(packet.WillMessage);
+                bufferWriter.WriteBinary(packet.WillMessage);
             }
 
             if (packet.Username != null)
@@ -469,7 +469,7 @@ namespace MQTTnet.Formatter.V3
 
             if (packet.Password != null)
             {
-                bufferWriter.WriteBinaryData(packet.Password);
+                bufferWriter.WriteBinary(packet.Password);
             }
 
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);
@@ -521,7 +521,7 @@ namespace MQTTnet.Formatter.V3
             if (packet.WillFlag)
             {
                 bufferWriter.WriteString(packet.WillTopic);
-                bufferWriter.WriteBinaryData(packet.WillMessage);
+                bufferWriter.WriteBinary(packet.WillMessage);
             }
 
             if (packet.Username != null)
@@ -531,7 +531,7 @@ namespace MQTTnet.Formatter.V3
 
             if (packet.Password != null)
             {
-                bufferWriter.WriteBinaryData(packet.Password);
+                bufferWriter.WriteBinary(packet.Password);
             }
 
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);

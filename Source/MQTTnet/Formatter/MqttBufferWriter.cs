@@ -19,7 +19,8 @@ namespace MQTTnet.Formatter
     /// </summary>
     public sealed class MqttBufferWriter
     {
-        public const uint VariableByteIntegerMaxValue = 268435455;
+        const uint VariableByteIntegerMaxValue = 268435455;
+        const int EncodedStringMaxLength = 65535;
 
         readonly int _maxBufferSize;
 
@@ -112,25 +113,7 @@ namespace MQTTnet.Formatter
             WriteBinary(propertyWriter._buffer, 0, propertyWriter.Length);
         }
 
-        public void WriteBinary(byte[] buffer, int offset, int count)
-        {
-            if (buffer == null)
-            {
-                throw new ArgumentNullException(nameof(buffer));
-            }
-
-            if (count == 0)
-            {
-                return;
-            }
-
-            EnsureAdditionalCapacity(count);
-
-            MqttMemoryHelper.Copy(buffer, offset, _buffer, _position, count);
-            IncreasePosition(count);
-        }
-
-        public void WriteBinaryData(byte[] value)
+        public void WriteBinary(byte[] value)
         {
             if (value == null || value.Length == 0)
             {
@@ -185,6 +168,13 @@ namespace MQTTnet.Formatter
                 EnsureAdditionalCapacity(byteCount + 2);
 
                 var writtenBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _position + 2);
+
+                // From RFC: 1.5.4 UTF-8 Encoded String
+                // Unless stated otherwise all UTF-8 encoded strings can have any length in the range 0 to 65,535 bytes.
+                if (writtenBytes > EncodedStringMaxLength)
+                {
+                    throw new MqttProtocolViolationException($"The maximum string length is 65535. The current string has a length of {writtenBytes}.");
+                }
 
                 _buffer[_position] = (byte)(writtenBytes >> 8);
                 _buffer[_position + 1] = (byte)writtenBytes;
@@ -273,8 +263,7 @@ namespace MQTTnet.Formatter
                 newBufferLength *= 2;
             }
 
-            // Array.Resize will create a new array and copy the existing
-            // data to the new one.
+            // Array.Resize will create a new array and copy the existing data to the new one.
             Array.Resize(ref _buffer, newBufferLength);
         }
 
@@ -285,8 +274,28 @@ namespace MQTTnet.Formatter
 
             if (_position > Length)
             {
+                // Also extend the position because we reached the end of the 
+                // pre allocated buffer.
                 Length = _position;
             }
+        }
+
+        void WriteBinary(byte[] buffer, int offset, int count)
+        {
+            if (buffer == null)
+            {
+                throw new ArgumentNullException(nameof(buffer));
+            }
+
+            if (count == 0)
+            {
+                return;
+            }
+
+            EnsureAdditionalCapacity(count);
+
+            MqttMemoryHelper.Copy(buffer, offset, _buffer, _position, count);
+            IncreasePosition(count);
         }
     }
 }

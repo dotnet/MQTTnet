@@ -24,10 +24,10 @@ namespace MQTTnet.Tests
             writer.WriteString("1234567890");
             Assert.AreEqual(10 + 2, writer.Length);
 
-            writer.WriteBinaryData(new byte[300]);
+            writer.WriteBinary(new byte[300]);
             Assert.AreEqual(300 + 2 + 12, writer.Length);
 
-            writer.WriteBinaryData(new byte[5000]);
+            writer.WriteBinary(new byte[5000]);
             Assert.AreEqual(5000 + 2 + 300 + 2 + 12, writer.Length);
         }
     }

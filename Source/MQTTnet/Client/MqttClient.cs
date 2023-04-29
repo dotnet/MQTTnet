@@ -98,7 +98,7 @@ namespace MQTTnet.Client
             remove => _authenticationHandler.ExtendedAuthenticationExchangeEvent.RemoveHandler(value);
         }
 
-        public event Func<InspectMqttPacketEventArgs, Task> InspectPackageAsync
+        public event Func<InspectMqttPacketEventArgs, Task> InspectPacketAsync
         {
             add => _inspectPacketEvent.AddHandler(value);
             remove => _inspectPacketEvent.RemoveHandler(value);

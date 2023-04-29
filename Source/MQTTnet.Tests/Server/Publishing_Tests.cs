@@ -87,6 +87,8 @@ namespace MQTTnet.Tests.Server
                 
                 await sender.PublishStringAsync("A", "Payload", MqttQualityOfServiceLevel.AtLeastOnce);
 
+                await LongTestDelay();
+                
                 receivedMessages.AssertReceivedCountEquals(1);
                 
                 server.InterceptingClientEnqueueAsync += e =>
@@ -101,6 +103,43 @@ namespace MQTTnet.Tests.Server
                 
                 // Do not increase because the internal enqueue to the target client is not accepted!
                 receivedMessages.AssertReceivedCountEquals(1);
+            }
+        }
+
+        [TestMethod]
+        public async Task Intercept_Client_Enqueue_Multiple_Clients_Subscribed_Messages_Are_Filtered()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var server = await testEnvironment.StartServer();
+
+                var sender = await testEnvironment.ConnectClient();
+
+                var receiverOne = await testEnvironment.ConnectClient(o => o.WithClientId("One"));
+                await receiverOne.SubscribeAsync("A");
+                var receivedMessagesOne = testEnvironment.CreateApplicationMessageHandler(receiverOne);
+
+                var receiverTwo = await testEnvironment.ConnectClient(o => o.WithClientId("Two"));
+                await receiverTwo.SubscribeAsync("A");
+                var receivedMessagesTwo = testEnvironment.CreateApplicationMessageHandler(receiverTwo);
+
+                var receiverThree = await testEnvironment.ConnectClient(o => o.WithClientId("Three"));
+                await receiverThree.SubscribeAsync("A");
+                var receivedMessagesThree = testEnvironment.CreateApplicationMessageHandler(receiverThree);
+
+                server.InterceptingClientEnqueueAsync += e =>
+                {
+                    if (e.ReceiverClientId.Contains("Two")) e.AcceptEnqueue = false;
+                    return CompletedTask.Instance;
+                };
+
+                await sender.PublishStringAsync("A", "Payload", MqttQualityOfServiceLevel.AtLeastOnce);
+
+                await LongTestDelay();
+
+                receivedMessagesOne.AssertReceivedCountEquals(1);
+                receivedMessagesTwo.AssertReceivedCountEquals(0);
+                receivedMessagesThree.AssertReceivedCountEquals(1);
             }
         }
     }

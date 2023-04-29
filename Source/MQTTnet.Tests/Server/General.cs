@@ -954,7 +954,7 @@ namespace MQTTnet.Tests.Server
 
                 var client = testEnvironment.CreateClient();
 
-                client.InspectPackageAsync += e =>
+                client.InspectPacketAsync += e =>
                 {
                     if (e.Buffer.Length > 0)
                     {

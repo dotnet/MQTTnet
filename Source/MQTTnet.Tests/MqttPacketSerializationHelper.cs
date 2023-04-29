@@ -31,7 +31,7 @@ namespace MQTTnet.Tests
             {
                 var formatterAdapter = new MqttPacketFormatterAdapter(_protocolVersion, new MqttBufferWriter(4096, 65535));
 
-                var adapter = new MqttChannelAdapter(channel, formatterAdapter, null, MqttNetNullLogger.Instance);
+                var adapter = new MqttChannelAdapter(channel, formatterAdapter, MqttNetNullLogger.Instance);
                 return adapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
             }
         }

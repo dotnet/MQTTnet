@@ -179,7 +179,7 @@ namespace MQTTnet.Server
                     }
 
                     // Calculate application message topic hash once for subscription checks
-                    MqttSubscription.CalculateTopicHash(applicationMessage.Topic, out var topicHash, out _, out _);
+                    MqttTopicHash.Calculate(applicationMessage.Topic, out var topicHash, out _, out _);
 
                     foreach (var session in subscriberSessions)
                     {
@@ -207,9 +207,8 @@ namespace MQTTnet.Server
 
                             if (!eventArgs.AcceptEnqueue)
                             {
-                                // There will be no reason string and use properties because in this case the clients will
-                                // not receive a packet at all.
-                                return new DispatchApplicationMessageResult(reasonCode, eventArgs.CloseSenderConnection, null, null);
+                                // Continue checking the other subscriptions
+                                continue;
                             }
                         }
 

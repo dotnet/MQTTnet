@@ -54,7 +54,7 @@ namespace MQTTnet.Formatter
             return _formatter.Encode(packet);
         }
 
-        static IMqttPacketFormatter GetMqttPacketFormatter(MqttProtocolVersion protocolVersion, MqttBufferWriter bufferWriter)
+        public static IMqttPacketFormatter GetMqttPacketFormatter(MqttProtocolVersion protocolVersion, MqttBufferWriter bufferWriter)
         {
             if (protocolVersion == MqttProtocolVersion.Unknown)
             {

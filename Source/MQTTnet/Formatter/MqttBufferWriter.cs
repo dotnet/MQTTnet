@@ -138,6 +138,24 @@ namespace MQTTnet.Formatter
             }
         }
 
+        public void WriteBinary(byte[] buffer, int offset, int count)
+        {
+            if (buffer == null)
+            {
+                throw new ArgumentNullException(nameof(buffer));
+            }
+
+            if (count == 0)
+            {
+                return;
+            }
+
+            EnsureAdditionalCapacity(count);
+
+            MqttMemoryHelper.Copy(buffer, offset, _buffer, _position, count);
+            IncreasePosition(count);
+        }
+
         public void WriteByte(byte @byte)
         {
             EnsureAdditionalCapacity(1);
@@ -278,24 +296,6 @@ namespace MQTTnet.Formatter
                 // pre allocated buffer.
                 Length = _position;
             }
-        }
-
-        void WriteBinary(byte[] buffer, int offset, int count)
-        {
-            if (buffer == null)
-            {
-                throw new ArgumentNullException(nameof(buffer));
-            }
-
-            if (count == 0)
-            {
-                return;
-            }
-
-            EnsureAdditionalCapacity(count);
-
-            MqttMemoryHelper.Copy(buffer, offset, _buffer, _position, count);
-            IncreasePosition(count);
         }
     }
 }

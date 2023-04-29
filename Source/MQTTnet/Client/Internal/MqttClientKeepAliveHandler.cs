@@ -97,7 +97,7 @@ namespace MQTTnet.Client.Internal
             }
             catch (Exception exception)
             {
-                if (_cleanDisconnectInitiated)
+                if (_client._cleanDisconnectInitiated)
                 {
                     return;
                 }

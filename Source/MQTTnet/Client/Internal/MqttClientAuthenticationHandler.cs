@@ -36,6 +36,16 @@ namespace MQTTnet.Client.Internal
 
         public async Task<MqttClientConnectResult> Authenticate(IMqttChannelAdapter channelAdapter, MqttClientOptions options, CancellationToken cancellationToken)
         {
+            if (channelAdapter == null)
+            {
+                throw new ArgumentNullException(nameof(channelAdapter));
+            }
+
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
             // From the RFC:
             // The CONNACK packet is the packet sent by the Server in response to a CONNECT packet received from a Client.
             // The Server MUST send a CONNACK with a 0x00 (Success) Reason Code before sending any Packet other than AUTH [MQTT-3.2.0-1].
@@ -83,10 +93,15 @@ namespace MQTTnet.Client.Internal
                 throw new MqttConnectingFailedException($"Error while authenticating. {exception.Message}", exception, null);
             }
 
-            // TODO: Remove because it is wrong.
-            if (result.ResultCode != MqttClientConnectResultCode.Success)
+            // This is no feature. It is basically a backward compatibility option and should be removed in the future.
+            // The client should not throw any exception if the transport layer connection was successful and the server
+            // did send a proper ACK packet.
+            if (options.ThrowOnNonSuccessfulResponseFromServer)
             {
-                throw new MqttConnectingFailedException($"Connecting with MQTT server failed ({result.ResultCode}).", null, result);
+                if (result.ResultCode != MqttClientConnectResultCode.Success)
+                {
+                    throw new MqttConnectingFailedException($"Connecting with MQTT server failed ({result.ResultCode}).", null, result);
+                }
             }
 
             _logger.Verbose("Authenticated MQTT connection with server established.");

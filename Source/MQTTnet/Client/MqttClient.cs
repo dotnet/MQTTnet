@@ -43,7 +43,7 @@ namespace MQTTnet.Client
 
         IMqttChannelAdapter _adapter;
 
-        bool _cleanDisconnectInitiated;
+        internal bool _cleanDisconnectInitiated;
 
         CancellationTokenSource _clientAlive;
         volatile int _connectionStatus;
@@ -234,13 +234,13 @@ namespace MQTTnet.Client
         {
             if (cancellationToken.CanBeCanceled)
             {
-                await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
+                await Request<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
             }
             else
             {
                 using (var timeout = new CancellationTokenSource(Options.Timeout))
                 {
-                    await SendAndReceiveAsync<MqttPingRespPacket>(MqttPingReqPacket.Instance, timeout.Token).ConfigureAwait(false);
+                    await Request<MqttPingRespPacket>(MqttPingReqPacket.Instance, timeout.Token).ConfigureAwait(false);
                 }
             }
         }
@@ -330,13 +330,13 @@ namespace MQTTnet.Client
             MqttSubAckPacket subAckPacket;
             if (cancellationToken.CanBeCanceled)
             {
-                subAckPacket = await SendAndReceiveAsync<MqttSubAckPacket>(subscribePacket, cancellationToken).ConfigureAwait(false);
+                subAckPacket = await Request<MqttSubAckPacket>(subscribePacket, cancellationToken).ConfigureAwait(false);
             }
             else
             {
                 using (var timeout = new CancellationTokenSource(Options.Timeout))
                 {
-                    subAckPacket = await SendAndReceiveAsync<MqttSubAckPacket>(subscribePacket, timeout.Token).ConfigureAwait(false);
+                    subAckPacket = await Request<MqttSubAckPacket>(subscribePacket, timeout.Token).ConfigureAwait(false);
                 }
             }
 
@@ -369,13 +369,13 @@ namespace MQTTnet.Client
             MqttUnsubAckPacket unsubAckPacket;
             if (cancellationToken.CanBeCanceled)
             {
-                unsubAckPacket = await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, cancellationToken).ConfigureAwait(false);
+                unsubAckPacket = await Request<MqttUnsubAckPacket>(unsubscribePacket, cancellationToken).ConfigureAwait(false);
             }
             else
             {
                 using (var timeout = new CancellationTokenSource(Options.Timeout))
                 {
-                    unsubAckPacket = await SendAndReceiveAsync<MqttUnsubAckPacket>(unsubscribePacket, timeout.Token).ConfigureAwait(false);
+                    unsubAckPacket = await Request<MqttUnsubAckPacket>(unsubscribePacket, timeout.Token).ConfigureAwait(false);
                 }
             }
 
@@ -701,7 +701,7 @@ namespace MQTTnet.Client
         {
             publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
-            var pubAckPacket = await SendAndReceiveAsync<MqttPubAckPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
+            var pubAckPacket = await Request<MqttPubAckPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
             return _clientPublishResultFactory.Create(pubAckPacket);
         }
 
@@ -717,16 +717,16 @@ namespace MQTTnet.Client
         {
             publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
-            var pubRecPacket = await SendAndReceiveAsync<MqttPubRecPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
+            var pubRecPacket = await Request<MqttPubRecPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
 
             var pubRelPacket = MqttPacketFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
 
-            var pubCompPacket = await SendAndReceiveAsync<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
+            var pubCompPacket = await Request<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
 
             return _clientPublishResultFactory.Create(pubRecPacket, pubCompPacket);
         }
 
-        async Task<TResponsePacket> SendAndReceiveAsync<TResponsePacket>(MqttPacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttPacket
+        async Task<TResponsePacket> Request<TResponsePacket>(MqttPacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttPacket
         {
             cancellationToken.ThrowIfCancellationRequested();
 

@@ -31,7 +31,6 @@ namespace MQTTnet.Server
         readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>();
 
         // Use subscription lock to maintain consistency across subscriptions and topic hash dictionaries
-        //readonly SemaphoreSlim _subscriptionsLock = new SemaphoreSlim(1);
         readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim();
         readonly Dictionary<ulong, TopicHashMaskSubscriptions> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, TopicHashMaskSubscriptions>();
 
@@ -52,7 +51,6 @@ namespace MQTTnet.Server
             var possibleSubscriptions = new List<MqttSubscription>();
 
             // Check for possible subscriptions. They might have collisions but this is fine.
-            //_subscriptionsLock.Wait();
             _subscriptionsLock.EnterReadLock();
             try
             {
@@ -78,7 +76,6 @@ namespace MQTTnet.Server
             }
             finally
             {
-                //_subscriptionsLock.Release();
                 _subscriptionsLock.ExitReadLock();
             }
 
@@ -165,7 +162,6 @@ namespace MQTTnet.Server
 
         public void Dispose()
         {
-            // _subscriptionsLock.Dispose();
             if (_subscriptionsLock != null)
             {
                 _subscriptionsLock.Dispose();
@@ -244,7 +240,6 @@ namespace MQTTnet.Server
 
             var removedSubscriptions = new List<string>();
 
-            //await _subscriptionsLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             _subscriptionsLock.EnterWriteLock();
             try
             {
@@ -309,7 +304,6 @@ namespace MQTTnet.Server
             }
             finally
             {
-                //_subscriptionsLock.Release();
                 _subscriptionsLock.ExitWriteLock();
                 _subscriptionChangedNotification?.OnSubscriptionsRemoved(_session, removedSubscriptions);
             }
@@ -359,7 +353,6 @@ namespace MQTTnet.Server
 
             // Add to subscriptions and maintain topic hash dictionaries
 
-            //_subscriptionsLock.Wait();
             _subscriptionsLock.EnterWriteLock();
             try
             {
@@ -413,7 +406,6 @@ namespace MQTTnet.Server
             }
             finally
             {
-                //_subscriptionsLock.Release();
                 _subscriptionsLock.ExitWriteLock();
             }
 

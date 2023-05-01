@@ -1,20 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Extensions.Hosting.Events;
 using MQTTnet.Extensions.Hosting.Options;
 using MQTTnet.Server;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MQTTnet.Extensions.Hosting
 {
     public class MqttServerHostingBuilder : MqttServerOptionsBuilder
     {
         readonly MqttServerHostingOptions _hostingOptions;
-
         readonly List<Action<MqttServer>> _startActions;
         readonly List<Action<MqttServer>> _stopActions;
 
@@ -32,7 +29,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.ApplicationMessageNotConsumedAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.ApplicationMessageNotConsumedAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.ApplicationMessageNotConsumedAsync -= value);
         }
@@ -43,7 +42,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.ClientAcknowledgedPublishPacketAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.ClientAcknowledgedPublishPacketAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.ClientAcknowledgedPublishPacketAsync -= value);
         }
@@ -54,7 +55,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.ClientConnectedAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.ClientConnectedAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.ClientConnectedAsync -= value);
         }
@@ -65,7 +68,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.ClientDisconnectedAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.ClientDisconnectedAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.ClientDisconnectedAsync -= value);
         }
@@ -76,7 +81,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.ClientSubscribedTopicAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.ClientSubscribedTopicAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.ClientSubscribedTopicAsync -= value);
         }
@@ -87,7 +94,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.ClientUnsubscribedTopicAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.ClientUnsubscribedTopicAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.ClientUnsubscribedTopicAsync -= value);
         }
@@ -98,7 +107,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.InterceptingInboundPacketAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.InterceptingInboundPacketAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.InterceptingInboundPacketAsync -= value);
         }
@@ -109,7 +120,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.InterceptingOutboundPacketAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.InterceptingOutboundPacketAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.InterceptingOutboundPacketAsync -= value);
         }
@@ -120,7 +133,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.InterceptingPublishAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.InterceptingPublishAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.InterceptingPublishAsync -= value);
         }
@@ -131,7 +146,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.InterceptingSubscriptionAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.InterceptingSubscriptionAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.InterceptingSubscriptionAsync -= value);
         }
@@ -142,7 +159,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.InterceptingUnsubscriptionAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.InterceptingUnsubscriptionAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.InterceptingUnsubscriptionAsync -= value);
         }
@@ -153,7 +172,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.LoadingRetainedMessageAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.LoadingRetainedMessageAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.LoadingRetainedMessageAsync -= value);
         }
@@ -164,7 +185,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.PreparingSessionAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.PreparingSessionAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.PreparingSessionAsync -= value);
         }
@@ -175,7 +198,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.RetainedMessageChangedAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.RetainedMessageChangedAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.RetainedMessageChangedAsync -= value);
         }
@@ -186,7 +211,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.RetainedMessagesClearedAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.RetainedMessagesClearedAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.RetainedMessagesClearedAsync -= value);
         }
@@ -197,7 +224,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.SessionDeletedAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.SessionDeletedAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.SessionDeletedAsync -= value);
         }
@@ -208,7 +237,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.StartedAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.StartedAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.StartedAsync -= value);
         }
@@ -219,7 +250,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.StoppedAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.StoppedAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.StoppedAsync -= value);
         }
@@ -230,7 +263,9 @@ namespace MQTTnet.Extensions.Hosting
             {
                 _startActions.Add(server => server.ValidatingConnectionAsync += value);
                 if (_hostingOptions.AutoRemoveEventHandlers)
+                {
                     _stopActions.Add(server => server.ValidatingConnectionAsync -= value);
+                }
             }
             remove => _startActions.Add(server => server.ValidatingConnectionAsync -= value);
         }
@@ -240,28 +275,14 @@ namespace MQTTnet.Extensions.Hosting
         public MqttServerHostingBuilder WithDefaultWebSocketEndpoint()
         {
             _hostingOptions.DefaultWebSocketEndpointOptions.IsEnabled = true;
-        
-            return this;
-        }
 
-        public MqttServerHostingBuilder WithoutDefaultWebSocketEndpoint()
-        {
-            _hostingOptions.DefaultWebSocketEndpointOptions.IsEnabled = false;
-
-            return this;
-        }
-
-        public MqttServerHostingBuilder WithDefaultWebSocketEndpointPort(int value)
-        {
-            _hostingOptions.DefaultWebSocketEndpointOptions.Port = value;
-            
             return this;
         }
 
         public MqttServerHostingBuilder WithDefaultWebSocketEndpointBoundIPAddress(IPAddress value)
         {
             _hostingOptions.DefaultWebSocketEndpointOptions.BoundInterNetworkAddress = value;
-            
+
             return this;
         }
 
@@ -272,16 +293,16 @@ namespace MQTTnet.Extensions.Hosting
             return this;
         }
 
-        public MqttServerHostingBuilder WithEncryptedWebSocketEndpoint()
+        public MqttServerHostingBuilder WithDefaultWebSocketEndpointPort(int value)
         {
-            _hostingOptions.DefaultTlsWebSocketEndpointOptions.IsEnabled = true;
+            _hostingOptions.DefaultWebSocketEndpointOptions.Port = value;
 
             return this;
         }
 
-        public MqttServerHostingBuilder WithEncryptedWebSocketEndpointPort(int value)
+        public MqttServerHostingBuilder WithEncryptedWebSocketEndpoint()
         {
-            _hostingOptions.DefaultTlsWebSocketEndpointOptions.Port = value;
+            _hostingOptions.DefaultTlsWebSocketEndpointOptions.IsEnabled = true;
 
             return this;
         }
@@ -300,9 +321,16 @@ namespace MQTTnet.Extensions.Hosting
             return this;
         }
 
-        public MqttServerHostingBuilder WithWebSocketRoute(string value)
+        public MqttServerHostingBuilder WithEncryptedWebSocketEndpointPort(int value)
         {
-            _hostingOptions.WebSocketRoute = value;
+            _hostingOptions.DefaultTlsWebSocketEndpointOptions.Port = value;
+
+            return this;
+        }
+
+        public MqttServerHostingBuilder WithoutDefaultWebSocketEndpoint()
+        {
+            _hostingOptions.DefaultWebSocketEndpointOptions.IsEnabled = false;
 
             return this;
         }
@@ -314,5 +342,11 @@ namespace MQTTnet.Extensions.Hosting
             return this;
         }
 
+        public MqttServerHostingBuilder WithWebSocketRoute(string value)
+        {
+            _hostingOptions.WebSocketRoute = value;
+
+            return this;
+        }
     }
 }

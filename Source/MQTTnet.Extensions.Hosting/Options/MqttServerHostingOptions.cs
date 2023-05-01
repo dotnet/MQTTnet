@@ -8,7 +8,6 @@ namespace MQTTnet.Extensions.Hosting.Options
 {
     public class MqttServerHostingOptions
     {
-
         public bool AutoRemoveEventHandlers { get; set; } = true;
 
         public MqttServerWebSocketEndpointOptions DefaultWebSocketEndpointOptions { get; } = new MqttServerWebSocketEndpointOptions();

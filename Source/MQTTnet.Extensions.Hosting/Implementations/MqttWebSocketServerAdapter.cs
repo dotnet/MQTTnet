@@ -4,18 +4,9 @@ using MQTTnet.Internal;
 using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Net.WebSockets;
-using System.Net.Http;
-using MQTTnet.Formatter;
-using MQTTnet.Extensions.Hosting;
 using MQTTnet.Extensions.Hosting.Options;
-using MQTTnet.Extensions.Hosting.Implementations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MQTTnet.Implementations

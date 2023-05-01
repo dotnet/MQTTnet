@@ -36,7 +36,7 @@ namespace MQTTnet.Server
         // See the MqttSubscription object for a detailed explanation.
         readonly Dictionary<string, MqttSession> _sessions = new Dictionary<string, MqttSession>(4096);
 
-        readonly object _sessionsManagementLock = new object();
+        readonly ReaderWriterLockSlim _sessionsManagementLock = new ReaderWriterLockSlim();
         readonly HashSet<MqttSession> _subscriberSessions = new HashSet<MqttSession>();
 
         public MqttClientSessionsManager(
@@ -86,7 +86,8 @@ namespace MQTTnet.Server
 
             MqttSession session;
 
-            lock (_sessionsManagementLock)
+            _sessionsManagementLock.EnterWriteLock();
+            try
             {
                 _sessions.TryGetValue(clientId, out session);
                 _sessions.Remove(clientId);
@@ -95,6 +96,10 @@ namespace MQTTnet.Server
                 {
                     _subscriberSessions.Remove(session);
                 }
+            }
+            finally
+            {
+                _sessionsManagementLock.ExitWriteLock();
             }
 
             try
@@ -173,9 +178,14 @@ namespace MQTTnet.Server
                     }
 
                     List<MqttSession> subscriberSessions;
-                    lock (_sessionsManagementLock)
+                    _sessionsManagementLock.EnterReadLock();
+                    try
                     {
                         subscriberSessions = _subscriberSessions.ToList();
+                    }
+                    finally
+                    {
+                        _sessionsManagementLock.ExitReadLock();
                     }
 
                     // Calculate application message topic hash once for subscription checks
@@ -256,12 +266,22 @@ namespace MQTTnet.Server
         {
             _createConnectionSyncRoot.Dispose();
 
-            lock (_sessionsManagementLock)
+            _sessionsManagementLock.EnterWriteLock();
+            try
             {
                 foreach (var sessionItem in _sessions)
                 {
                     sessionItem.Value.Dispose();
                 }
+            }
+            finally
+            {
+                _sessionsManagementLock.ExitWriteLock();
+            }
+
+            if (_sessionsManagementLock != null)
+            {
+                _sessionsManagementLock.Dispose();
             }
         }
 
@@ -310,13 +330,18 @@ namespace MQTTnet.Server
         {
             var result = new List<MqttSessionStatus>();
 
-            lock (_sessionsManagementLock)
+            _sessionsManagementLock.EnterReadLock();
+            try
             {
                 foreach (var sessionItem in _sessions)
                 {
                     var sessionStatus = new MqttSessionStatus(sessionItem.Value);
                     result.Add(sessionStatus);
                 }
+            }
+            finally
+            {
+                _sessionsManagementLock.ExitReadLock();
             }
 
             return Task.FromResult((IList<MqttSessionStatus>)result);
@@ -415,7 +440,8 @@ namespace MQTTnet.Server
 
         public void OnSubscriptionsAdded(MqttSession clientSession, List<string> topics)
         {
-            lock (_sessionsManagementLock)
+            _sessionsManagementLock.EnterWriteLock();
+            try
             {
                 if (!clientSession.HasSubscribedTopics)
                 {
@@ -428,11 +454,16 @@ namespace MQTTnet.Server
                     clientSession.AddSubscribedTopic(topic);
                 }
             }
+            finally
+            {
+                _sessionsManagementLock.ExitWriteLock();
+            }
         }
 
         public void OnSubscriptionsRemoved(MqttSession clientSession, List<string> subscriptionTopics)
         {
-            lock (_sessionsManagementLock)
+            _sessionsManagementLock.EnterWriteLock();
+            try
             {
                 foreach (var subscriptionTopic in subscriptionTopics)
                 {
@@ -444,6 +475,10 @@ namespace MQTTnet.Server
                     // last subscription removed
                     _subscriberSessions.Remove(clientSession);
                 }
+            }
+            finally
+            {
+                _sessionsManagementLock.ExitWriteLock();
             }
         }
 
@@ -545,7 +580,8 @@ namespace MQTTnet.Server
                 MqttSession oldSession;
                 MqttClient oldClient;
 
-                lock (_sessionsManagementLock)
+                _sessionsManagementLock.EnterWriteLock();
+                try
                 {
                     MqttSession session;
 
@@ -589,6 +625,10 @@ namespace MQTTnet.Server
                     client = CreateClient(connectPacket, channelAdapter, session);
 
                     _clients[connectPacket.ClientId] = client;
+                }
+                finally
+                {
+                    _sessionsManagementLock.ExitWriteLock();
                 }
 
                 if (!connAckPacket.IsSessionPresent)
@@ -636,7 +676,8 @@ namespace MQTTnet.Server
 
         MqttSession GetClientSession(string clientId)
         {
-            lock (_sessionsManagementLock)
+            _sessionsManagementLock.EnterReadLock();
+            try
             {
                 if (!_sessions.TryGetValue(clientId, out var session))
                 {
@@ -644,6 +685,10 @@ namespace MQTTnet.Server
                 }
 
                 return session;
+            }
+            finally
+            {
+                _sessionsManagementLock.ExitReadLock();
             }
         }
 

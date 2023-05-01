@@ -18,3 +18,4 @@
 * [Server] Fixed race condition when handling connections which leads to stopped message transfers (#1677, thanks to @RazvanEmilR).
 * [Server] Fixed not delivered packets to other sessions if the _InterceptingClientEnqueueEvent_ is used and accepting the packet is denied (#1685, thanks to @RossHNPC).
 * [Server] Added missing user properties to subscribe and unsubscribe interceptor (#1702).
+* [Server] Improved performance by changing internal locking strategy for subscriptions (#1716, thanks to @zeheng).

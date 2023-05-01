@@ -31,7 +31,7 @@ namespace MQTTnet.Server
         readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>();
 
         // Use subscription lock to maintain consistency across subscriptions and topic hash dictionaries
-        readonly AsyncLock _subscriptionsLock = new AsyncLock();
+        readonly AsyncReadWriteLock _subscriptionsLock = new AsyncReadWriteLock();
         readonly Dictionary<ulong, TopicHashMaskSubscriptions> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, TopicHashMaskSubscriptions>();
 
         public MqttClientSubscriptionsManager(
@@ -51,7 +51,7 @@ namespace MQTTnet.Server
             var possibleSubscriptions = new List<MqttSubscription>();
 
             // Check for possible subscriptions. They might have collisions but this is fine.
-            using (_subscriptionsLock.EnterAsync(CancellationToken.None).GetAwaiter().GetResult())
+            using (_subscriptionsLock.EnterReadAsync(CancellationToken.None).GetAwaiter().GetResult())
             {
                 if (_noWildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var noWildcardSubscriptions))
                 {
@@ -232,7 +232,7 @@ namespace MQTTnet.Server
 
             var removedSubscriptions = new List<string>();
 
-            using (await _subscriptionsLock.EnterAsync(cancellationToken).ConfigureAwait(false))
+            using (await _subscriptionsLock.EnterWriteAsync(cancellationToken).ConfigureAwait(false))
             {
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
@@ -341,7 +341,7 @@ namespace MQTTnet.Server
 
             // Add to subscriptions and maintain topic hash dictionaries
 
-            using (_subscriptionsLock.EnterAsync(CancellationToken.None).GetAwaiter().GetResult())
+            using (_subscriptionsLock.EnterWriteAsync(CancellationToken.None).GetAwaiter().GetResult())
             {
                 MqttTopicHash.Calculate(topicFilter.Topic, out var topicHash, out _, out var hasWildcard);
 

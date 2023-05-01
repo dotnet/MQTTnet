@@ -30,17 +30,17 @@ namespace MQTTnet.Benchmarks
             
             var writer = new MqttBufferWriter(4096, 65535);
             writer.WriteString("A relative short string.");
-            writer.WriteBinaryData(_demoPayload);
+            writer.WriteBinary(_demoPayload);
             writer.WriteByte(0x01);
             writer.WriteByte(0x02);
             writer.WriteVariableByteInteger(5647382);
             writer.WriteString("A relative short string.");
             writer.WriteVariableByteInteger(8574489);
-            writer.WriteBinaryData(_demoPayload);
+            writer.WriteBinary(_demoPayload);
             writer.WriteByte(2);
             writer.WriteByte(0x02);
             writer.WriteString("fjgffiogfhgfhoihgoireghreghreguhreguireoghreouighreouighreughreguiorehreuiohruiorehreuioghreug");
-            writer.WriteBinaryData(_demoPayload);
+            writer.WriteBinary(_demoPayload);
 
             _readPayload = new ArraySegment<byte>(writer.GetBuffer(), 0, writer.Length).ToArray();
         }
@@ -83,11 +83,11 @@ namespace MQTTnet.Benchmarks
                 writer.WriteVariableByteInteger(5647382);
                 writer.WriteString("A relative short string.");
                 writer.WriteVariableByteInteger(8574589);
-                writer.WriteBinaryData(_demoPayload);
+                writer.WriteBinary(_demoPayload);
                 writer.WriteByte(2);
                 writer.WriteByte(0x02);
                 writer.WriteString("fjgffiogfhgfhoihgoireghreghreguhreguireoghreouighreouighreughreguiorehreuiohruiorehreuioghreug");
-                writer.WriteBinaryData(_demoPayload);
+                writer.WriteBinary(_demoPayload);
 
                 writer.Reset(0);
             }

@@ -335,7 +335,7 @@ namespace MQTTnet.Formatter.V5
             }
 
             _bufferWriter.WriteByte((byte)id);
-            _bufferWriter.WriteBinaryData(value);
+            _bufferWriter.WriteBinary(value);
         }
 
         void WriteAsFourByteInteger(MqttPropertyId id, uint value)

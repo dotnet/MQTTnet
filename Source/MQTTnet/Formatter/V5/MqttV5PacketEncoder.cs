@@ -186,7 +186,7 @@ namespace MQTTnet.Formatter.V5
                 _propertiesWriter.Reset();
 
                 _bufferWriter.WriteString(packet.WillTopic);
-                _bufferWriter.WriteBinaryData(packet.WillMessage);
+                _bufferWriter.WriteBinary(packet.WillMessage);
             }
 
             if (packet.Username != null)
@@ -196,7 +196,7 @@ namespace MQTTnet.Formatter.V5
 
             if (packet.Password != null)
             {
-                _bufferWriter.WriteBinaryData(packet.Password);
+                _bufferWriter.WriteBinary(packet.Password);
             }
 
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);

@@ -26,7 +26,7 @@ namespace MQTTnet.Client.Options
         public List<SslApplicationProtocol> ApplicationProtocols { get; set; }
 #endif
 
-#if NET48 || NETCOREAPP3_1 || NET5 || NET6
+#if NET48 || NETCOREAPP3_1 || NET5_0
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;
 #else
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;

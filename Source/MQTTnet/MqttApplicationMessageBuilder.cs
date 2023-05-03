@@ -2,16 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using MQTTnet.Exceptions;
-using MQTTnet.Internal;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
+using MQTTnet.Exceptions;
+using MQTTnet.Internal;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet
 {
@@ -89,9 +88,13 @@ namespace MQTTnet
 
         public MqttApplicationMessageBuilder WithPayload(byte[] payload)
         {
-            _payloadSegment = payload == null || payload.Length == 0
-                ? EmptyBuffer.ArraySegment
-                : new ArraySegment<byte>(payload);
+            _payloadSegment = payload == null || payload.Length == 0 ? EmptyBuffer.ArraySegment : new ArraySegment<byte>(payload);
+            return this;
+        }
+
+        public MqttApplicationMessageBuilder WithPayload(ArraySegment<byte> payloadSegment)
+        {
+            _payloadSegment = payloadSegment;
             return this;
         }
 
@@ -123,9 +126,7 @@ namespace MQTTnet
 
         public MqttApplicationMessageBuilder WithPayload(Stream payload)
         {
-            return payload == null
-                ? WithPayload(default(byte[]))
-                : WithPayload(payload, payload.Length - payload.Position);
+            return payload == null ? WithPayload(default(byte[])) : WithPayload(payload, payload.Length - payload.Position);
         }
 
         public MqttApplicationMessageBuilder WithPayload(Stream payload, long length)

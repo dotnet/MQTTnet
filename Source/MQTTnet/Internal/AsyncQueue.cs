@@ -8,9 +8,10 @@ namespace MQTTnet.Internal
     // TODO: System.Threading.Channels.Channel would be a better fit here, once 452 is dropped
     public sealed class AsyncQueue<TItem> : IDisposable
     {
-        private readonly object _syncRoot = new object();
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
-        private readonly ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
+        readonly object _syncRoot = new object();
+        readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        
+        ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
 
         public int Count => _queue.Count;
 
@@ -78,6 +79,11 @@ namespace MQTTnet.Internal
             }
 
             return new AsyncQueueDequeueResult<TItem>(false, default);
+        }
+        
+        public void Clear()
+        {
+            Interlocked.Exchange(ref _queue, new ConcurrentQueue<TItem>());
         }
 
         public void Dispose()

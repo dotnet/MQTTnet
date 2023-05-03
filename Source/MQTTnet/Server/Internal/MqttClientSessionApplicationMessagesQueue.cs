@@ -51,7 +51,12 @@ namespace MQTTnet.Server.Internal
 
             return dequeueResult.Item;
         }
-
+        
+        public void Clear()
+        {
+            _messageQueue.Clear();
+        }
+        
         public void Dispose()
         {
             _messageQueue?.Dispose();

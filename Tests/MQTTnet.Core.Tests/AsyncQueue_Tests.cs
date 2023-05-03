@@ -120,7 +120,7 @@ namespace MQTTnet.Tests
             Assert.AreEqual("2", queue.TryDequeue().Item);
             Assert.AreEqual("3", queue.TryDequeue().Item);
         }
-        
+
         [TestMethod]
         public void Clear()
         {

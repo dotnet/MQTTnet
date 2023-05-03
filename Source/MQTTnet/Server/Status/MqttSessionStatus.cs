@@ -35,7 +35,7 @@ namespace MQTTnet.Server.Status
         {
             return _sessionsManager.DeleteSessionAsync(ClientId);
         }
-        
+
         public Task ClearPendingApplicationMessagesAsync()
         {
             _session.ApplicationMessagesQueue.Clear();

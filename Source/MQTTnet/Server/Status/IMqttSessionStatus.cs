@@ -19,7 +19,7 @@ namespace MQTTnet.Server.Status
         IDictionary<object, object> Items { get; }
 
         Task ClearPendingApplicationMessagesAsync();
-        
+
         Task DeleteAsync();
     }
 }

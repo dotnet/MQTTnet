@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
@@ -19,9 +20,9 @@ namespace MQTTnet
         string _contentType;
         byte[] _correlationData;
         uint _messageExpiryInterval;
-        ArraySegment<byte> _payloadSegment;
 
         MqttPayloadFormatIndicator _payloadFormatIndicator;
+        ArraySegment<byte> _payloadSegment;
         MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
         string _responseTopic;
         bool _retain;
@@ -98,12 +99,6 @@ namespace MQTTnet
             return this;
         }
 
-        public MqttApplicationMessageBuilder WithPayloadSegment(ArraySegment<byte> payloadSegment)
-        {
-            _payloadSegment = payloadSegment;
-            return this;
-        }
-
         public MqttApplicationMessageBuilder WithPayload(IEnumerable<byte> payload)
         {
             if (payload == null)
@@ -163,16 +158,6 @@ namespace MQTTnet
             return WithPayload(payloadBuffer);
         }
 
-
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
-        public MqttApplicationMessageBuilder WithPayloadSegment(ReadOnlyMemory<byte> payloadSegment)
-        {
-            return MemoryMarshal.TryGetArray(payloadSegment, out var segment)
-                ? WithPayloadSegment(segment)
-                : WithPayload(payloadSegment.ToArray());
-        }
-#endif
-
         /// <summary>
         ///     Adds the payload format indicator to the message.
         ///     <remarks>MQTT 5.0.0+ feature.</remarks>
@@ -182,6 +167,20 @@ namespace MQTTnet
             _payloadFormatIndicator = payloadFormatIndicator;
             return this;
         }
+
+        public MqttApplicationMessageBuilder WithPayloadSegment(ArraySegment<byte> payloadSegment)
+        {
+            _payloadSegment = payloadSegment;
+            return this;
+        }
+
+
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
+        public MqttApplicationMessageBuilder WithPayloadSegment(ReadOnlyMemory<byte> payloadSegment)
+        {
+            return MemoryMarshal.TryGetArray(payloadSegment, out var segment) ? WithPayloadSegment(segment) : WithPayload(payloadSegment.ToArray());
+        }
+#endif
 
         /// <summary>
         ///     The quality of service level.

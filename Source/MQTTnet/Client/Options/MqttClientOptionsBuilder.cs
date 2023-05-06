@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -418,6 +418,18 @@ namespace MQTTnet.Client
         public MqttClientOptionsBuilder WithWillPayload(byte[] willPayload)
         {
             _options.WillPayload = willPayload;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithWillPayload(ArraySegment<byte> willPayload)
+        {
+            if (willPayload.Count == 0)
+            {
+                _options.WillPayload = null;
+                return this;
+            }
+
+            _options.WillPayload = willPayload.ToArray();
             return this;
         }
 

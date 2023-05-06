@@ -19,7 +19,6 @@ namespace MQTTnet.Client.Internal
     {
         readonly MqttClient _client;
         readonly MqttNetSourceLogger _logger;
-        readonly MqttClientConnectResultFactory _clientConnectResultFactory = new MqttClientConnectResultFactory();
 
         public MqttClientAuthenticationHandler(MqttClient client, IMqttNetLogger logger)
         {
@@ -86,7 +85,7 @@ namespace MQTTnet.Client.Internal
                     }
                 }
 
-                result = _clientConnectResultFactory.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
+                result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
             }
             catch (Exception exception)
             {
@@ -98,6 +97,8 @@ namespace MQTTnet.Client.Internal
             // did send a proper ACK packet.
             if (options.ThrowOnNonSuccessfulResponseFromServer)
             {
+                _logger.Warning("Client will now throw an _MqttConnectingFailedException_. This is obsolete and will be removed in the future. Consider setting _ThrowOnNonSuccessfulResponseFromServer=False_ in client options.");
+                
                 if (result.ResultCode != MqttClientConnectResultCode.Success)
                 {
                     throw new MqttConnectingFailedException($"Connecting with MQTT server failed ({result.ResultCode}).", null, result);

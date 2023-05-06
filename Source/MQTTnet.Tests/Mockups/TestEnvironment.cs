@@ -245,7 +245,7 @@ namespace MQTTnet.Tests.Mockups
 
         public MqttClientOptionsBuilder CreateDefaultClientOptionsBuilder()
         {
-            return Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort);
+            return Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort).WithClientId(TestContext.TestName + "_" + Guid.NewGuid());
         }
 
         public ILowLevelMqttClient CreateLowLevelClient()

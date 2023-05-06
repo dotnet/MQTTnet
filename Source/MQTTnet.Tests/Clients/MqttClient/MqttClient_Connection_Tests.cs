@@ -127,6 +127,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 // Perform a clean disconnect.
                 await client.DisconnectAsync(disconnectOptions);
 
+                await LongTestDelay();
+                
                 Assert.IsNotNull(eventArgs);
                 Assert.AreEqual(MqttDisconnectReasonCode.MessageRateTooHigh, eventArgs.ReasonCode);
             }

@@ -23,6 +23,38 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
     public sealed class ManagedMqttClient_Tests : BaseTestClass
     {
         [TestMethod]
+        public async Task Expose_Custom_Connection_Error()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var server = await testEnvironment.StartServer();
+                
+                server.ValidatingConnectionAsync += args =>
+                {
+                    args.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                    return CompletedTask.Instance;
+                };
+
+                var managedClient = testEnvironment.Factory.CreateManagedMqttClient();
+
+                MqttClientDisconnectedEventArgs disconnectedArgs = null;
+                managedClient.DisconnectedAsync += args =>
+                {
+                    disconnectedArgs = args;
+                    return CompletedTask.Instance;
+                };
+                
+                var clientOptions = testEnvironment.Factory.CreateManagedMqttClientOptionsBuilder().WithClientOptions(testEnvironment.CreateDefaultClientOptions()).Build();
+                await managedClient.StartAsync(clientOptions);
+
+                await LongTestDelay();
+
+                Assert.IsNotNull(disconnectedArgs);
+                Assert.AreEqual(MqttClientConnectResultCode.BadUserNameOrPassword, disconnectedArgs.ConnectResult.ResultCode);
+            }
+        }
+        
+        [TestMethod]
         public async Task Receive_While_Not_Cleanly_Disconnected()
         {
             using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))

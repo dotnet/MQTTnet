@@ -12,22 +12,37 @@ namespace MQTTnet.Extensions.ManagedClient
     {
         public static IManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttClient mqttClient = null)
         {
-            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            if (factory == null)
+            {
+                throw new ArgumentNullException(nameof(factory));
+            }
 
             if (mqttClient == null)
             {
-                return new ManagedMqttClient(factory.CreateMqttClient(), factory.DefaultLogger);    
+                return new ManagedMqttClient(factory.CreateMqttClient(), factory.DefaultLogger);
             }
-            
+
             return new ManagedMqttClient(mqttClient, factory.DefaultLogger);
         }
-        
+
         public static IManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttNetLogger logger)
         {
-            if (factory == null) throw new ArgumentNullException(nameof(factory));
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (factory == null)
+            {
+                throw new ArgumentNullException(nameof(factory));
+            }
+
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
 
             return new ManagedMqttClient(factory.CreateMqttClient(logger), logger);
+        }
+
+        public static ManagedMqttClientOptionsBuilder CreateManagedMqttClientOptionsBuilder(this MqttFactory _)
+        {
+            return new ManagedMqttClientOptionsBuilder();
         }
     }
 }

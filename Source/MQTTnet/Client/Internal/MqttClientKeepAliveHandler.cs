@@ -14,10 +14,10 @@ namespace MQTTnet.Client.Internal
     {
         readonly MqttClient _client;
         readonly MqttNetSourceLogger _logger;
+
         CancellationTokenSource _cancellationToken;
         TimeSpan _keepAliveInterval;
         Task _keepAlivePacketsSenderTask;
-
         DateTime _lastPacketSentTimestamp;
 
         public MqttClientKeepAliveHandler(MqttClient client, IMqttNetLogger logger)

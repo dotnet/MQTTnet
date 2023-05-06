@@ -57,7 +57,7 @@ namespace MQTTnet.Client.Internal
             {
                 // Send the CONNECT packet..
                 var connectPacket = MqttPacketFactories.Connect.Create(options);
-                await _client.SendAsync(connectPacket, cancellationToken).ConfigureAwait(false);
+                await _client.Send(connectPacket, cancellationToken).ConfigureAwait(false);
 
                 // Wait for the CONNACK packet...
                 MqttConnAckPacket connAckPacket = null;
@@ -77,7 +77,7 @@ namespace MQTTnet.Client.Internal
 
                         var response = await OnExtendedAuthentication(authPacket).ConfigureAwait(false);
                         authPacket = MqttPacketFactories.Auth.Create(authPacket, response);
-                        await _client.SendAsync(authPacket, cancellationToken).ConfigureAwait(false);
+                        await _client.Send(authPacket, cancellationToken).ConfigureAwait(false);
                     }
                     else if (receivedPacket is MqttConnAckPacket connAckPacketBuffer)
                     {

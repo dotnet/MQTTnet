@@ -53,9 +53,7 @@ namespace MQTTnet.Client
         public string ClientId { get; set; } = Guid.NewGuid().ToString("N");
 
         public IMqttClientCredentialsProvider Credentials { get; set; }
-
-        public IMqttExtendedAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
-
+        
         /// <summary>
         ///     Gets or sets the keep alive period.
         ///     The connection is normally left open by the client so that is can send and receive data at any time.

@@ -11,25 +11,26 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttAuthPacketFactory
     {
-        public MqttAuthPacket Create(MqttAuthPacket serverAuthPacket, MqttExtendedAuthenticationExchangeResponse response)
+        public MqttAuthPacket CreateReAuthenticationPacket(MqttClientOptions clientOptions, MqttReAuthenticationOptions reAuthenticationOptions)
         {
-            if (serverAuthPacket == null)
+            if (clientOptions == null)
             {
-                throw new ArgumentNullException(nameof(serverAuthPacket));
+                throw new ArgumentNullException(nameof(clientOptions));
             }
 
-            if (response == null)
+            if (reAuthenticationOptions == null)
             {
-                throw new ArgumentNullException(nameof(response));
+                throw new ArgumentNullException(nameof(reAuthenticationOptions));
             }
 
             return new MqttAuthPacket
             {
-                ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
-                ReasonString = null,
-                AuthenticationMethod = serverAuthPacket.AuthenticationMethod,
-                AuthenticationData = response.AuthenticationData,
-                UserProperties = response.UserProperties
+                // The authentication method cannot change and must be always the same as long as the client is connected.
+                AuthenticationMethod = clientOptions.AuthenticationMethod,
+                ReasonCode = MqttAuthenticateReasonCode.ReAuthenticate,
+                AuthenticationData = reAuthenticationOptions.AuthenticationData,
+                UserProperties = reAuthenticationOptions.UserProperties,
+                ReasonString = null
             };
         }
     }

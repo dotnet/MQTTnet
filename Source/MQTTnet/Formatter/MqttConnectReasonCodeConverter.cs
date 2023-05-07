@@ -59,6 +59,8 @@ namespace MQTTnet.Formatter
                     return MqttConnectReturnCode.ConnectionAccepted;
                 }
 
+                case MqttConnectReasonCode.BadAuthenticationMethod:
+                case MqttConnectReasonCode.Banned:
                 case MqttConnectReasonCode.NotAuthorized:
                 {
                     return MqttConnectReturnCode.ConnectionRefusedNotAuthorized;
@@ -73,12 +75,13 @@ namespace MQTTnet.Formatter
                 {
                     return MqttConnectReturnCode.ConnectionRefusedIdentifierRejected;
                 }
-
+                
                 case MqttConnectReasonCode.UnsupportedProtocolVersion:
                 {
                     return MqttConnectReturnCode.ConnectionRefusedUnacceptableProtocolVersion;
                 }
-
+                
+                case MqttConnectReasonCode.UseAnotherServer:
                 case MqttConnectReasonCode.ServerUnavailable:
                 case MqttConnectReasonCode.ServerBusy:
                 case MqttConnectReasonCode.ServerMoved:
@@ -88,7 +91,8 @@ namespace MQTTnet.Formatter
 
                 default:
                 {
-                    throw new MqttProtocolViolationException("Unable to convert connect reason code (MQTTv5) to return code (MQTTv3).");
+                    // This is the most best matching value.
+                    return MqttConnectReturnCode.ConnectionRefusedUnacceptableProtocolVersion;
                 }
             }
         }

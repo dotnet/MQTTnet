@@ -95,8 +95,9 @@ namespace MQTTnet.Server
             {
                 var cancellationToken = _cancellationToken.Token;
                 IsRunning = true;
-                
-                _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
+
+                _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default)
+                    .ConfigureAwait(false);
 
                 await ReceivePackagesLoop(cancellationToken).ConfigureAwait(false);
             }
@@ -174,6 +175,22 @@ namespace MQTTnet.Server
             }
 
             return CompletedTask.Instance;
+        }
+
+        async Task HandleIncomingAuthPacket(MqttAuthPacket authPacket)
+        {
+            if (authPacket.ReasonCode != MqttAuthenticateReasonCode.ReAuthenticate)
+            {
+                throw new MqttProtocolViolationException("Clients are only allowed to send AUTH packets after connecting for re authentication.");
+            }
+
+            // We have to handle the re authentication in another task because we rely on the package retrieval.
+            _ = Task.Run(
+                async () =>
+                {
+                    var eventArgs = new ClientReAuthenticatingEventArgs();
+                    await _eventContainer.ClientReAuthenticatingEvent.InvokeAsync(eventArgs);
+                });
         }
 
         void HandleIncomingPingReqPacket()
@@ -436,9 +453,13 @@ namespace MQTTnet.Server
                         DisconnectPacket = disconnectPacket;
                         return;
                     }
+                    else if (currentPacket is MqttAuthPacket authPacket)
+                    {
+                        await HandleIncomingAuthPacket(authPacket);
+                    }
                     else
                     {
-                        throw new MqttProtocolViolationException("Packet not allowed");
+                        throw new MqttProtocolViolationException("Packet not allowed.");
                     }
                 }
             }

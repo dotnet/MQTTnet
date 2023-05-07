@@ -28,7 +28,7 @@ namespace MQTTnet.Packets
         public MqttQualityOfServiceLevel MaximumQoS { get; set; }
 
         /// <summary>
-        ///     Added in MQTTv5.
+        ///     The return code is only used in MQTTv 5.0.0 and higher.
         /// </summary>
         public MqttConnectReasonCode ReasonCode { get; set; }
 
@@ -39,13 +39,16 @@ namespace MQTTnet.Packets
         public string ResponseInformation { get; set; }
 
         public bool RetainAvailable { get; set; }
-        
+
+        /// <summary>
+        ///     The return code is only used in MQTTv 3.1.1 and lower.
+        /// </summary>
         public MqttConnectReturnCode ReturnCode { get; set; }
 
         public ushort ServerKeepAlive { get; set; }
 
         public string ServerReference { get; set; }
-        
+
         public uint SessionExpiryInterval { get; set; }
 
         public bool SharedSubscriptionAvailable { get; set; }

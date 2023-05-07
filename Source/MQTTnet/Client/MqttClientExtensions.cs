@@ -14,6 +14,8 @@ namespace MQTTnet.Client
 {
     public static class MqttClientExtensions
     {
+        static readonly MqttReAuthenticationOptions EmptyReAuthenticationOptions = new MqttReAuthenticationOptions();
+
         public static Task DisconnectAsync(
             this IMqttClient client,
             MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection,
@@ -77,6 +79,11 @@ namespace MQTTnet.Client
             return mqttClient.PublishBinaryAsync(topic, payloadBuffer, qualityOfServiceLevel, retain, cancellationToken);
         }
 
+        public static Task ReAuthenticateAsync(this IMqttClient client, CancellationToken cancellationToken = default)
+        {
+            return client.ReAuthenticateAsync(EmptyReAuthenticationOptions, cancellationToken);
+        }
+
         public static Task ReconnectAsync(this IMqttClient client, CancellationToken cancellationToken = default)
         {
             if (client.Options == null)
@@ -87,7 +94,7 @@ namespace MQTTnet.Client
 
             return client.ConnectAsync(client.Options, cancellationToken);
         }
-        
+
         public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient mqttClient, MqttTopicFilter topicFilter, CancellationToken cancellationToken = default)
         {
             if (mqttClient == null)

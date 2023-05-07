@@ -10,11 +10,15 @@ namespace MQTTnet.PacketDispatcher
 {
     public sealed class MqttPacketDispatcher : IDisposable
     {
+        public const int PingRespPacketFakeIdentifier = 2147483647;
+        public const int AuthPacketFakeIdentifier = 2147483646;
+        public const int SuccessAuthPacketFakeIdentifier = 2147483647;
+        
         readonly List<IMqttPacketAwaitable> _waiters = new List<IMqttPacketAwaitable>();
 
         bool _isDisposed;
 
-        public MqttPacketAwaitable<TResponsePacket> AddAwaitable<TResponsePacket>(ushort packetIdentifier) where TResponsePacket : MqttPacket
+        public MqttPacketAwaitable<TResponsePacket> AddAwaitable<TResponsePacket>(int packetIdentifier) where TResponsePacket : MqttPacket
         {
             var awaitable = new MqttPacketAwaitable<TResponsePacket>(packetIdentifier, this);
 
@@ -99,15 +103,21 @@ namespace MQTTnet.PacketDispatcher
                 throw new ArgumentNullException(nameof(packet));
             }
 
-            ushort identifier = 0;
+            var identifier = 0;
             if (packet is MqttPacketWithIdentifier packetWithIdentifier)
             {
                 identifier = packetWithIdentifier.PacketIdentifier;
             }
-
-            var packetType = packet.GetType();
+            else if (packet is MqttPingRespPacket)
+            {
+                identifier = PingRespPacketFakeIdentifier;
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot dispatch {packet.GetRfcName()} packet.");
+            }
+            
             var waiters = new List<IMqttPacketAwaitable>();
-
             lock (_waiters)
             {
                 ThrowIfDisposed();
@@ -115,11 +125,8 @@ namespace MQTTnet.PacketDispatcher
                 for (var i = _waiters.Count - 1; i >= 0; i--)
                 {
                     var entry = _waiters[i];
-
-                    // Note: The PingRespPacket will also arrive here and has NO identifier but there
-                    // is code which waits for it. So the code must be able to deal with filters which
-                    // are referring to the type only (identifier is 0)!
-                    if (entry.Filter.Type != packetType || entry.Filter.Identifier != identifier)
+                    
+                    if (entry.PacketIdentifier != identifier)
                     {
                         continue;
                     }

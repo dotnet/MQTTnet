@@ -7,7 +7,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using MQTTnet.Adapter;
+using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
@@ -19,11 +22,12 @@ namespace MQTTnet.Server
     {
         readonly MqttConnectPacket _connectPacket;
 
-        public ValidatingConnectionEventArgs(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter, IDictionary sessionItems)
+        public ValidatingConnectionEventArgs(MqttConnectPacket connectPacket, IMqttChannelAdapter clientAdapter, IDictionary sessionItems, CancellationToken cancellationToken)
         {
             _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
             ChannelAdapter = clientAdapter ?? throw new ArgumentNullException(nameof(clientAdapter));
             SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
+            CancellationToken = cancellationToken;
         }
 
         /// <summary>
@@ -43,6 +47,11 @@ namespace MQTTnet.Server
         ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public string AuthenticationMethod => _connectPacket.AuthenticationMethod;
+
+        /// <summary>
+        ///     Gets a cancellation token which is being canceled as soon as the transport connection is closed.
+        /// </summary>
+        public CancellationToken CancellationToken { get; }
 
         /// <summary>
         ///     Gets the channel adapter. This can be a _MqttConnectionContext_ (used in ASP.NET), a _MqttChannelAdapter_ (used for
@@ -189,5 +198,51 @@ namespace MQTTnet.Server
         ///     A value of 0 indicates that the value is not used.
         /// </summary>
         public uint WillDelayInterval => _connectPacket.WillDelayInterval;
+
+        public async Task<PartialAuthenticationResponse> ReceiveAuthenticationDataAsync(CancellationToken cancellationToken = default)
+        {
+            var receivePacket = await ChannelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+            if (receivePacket is MqttAuthPacket authPacket)
+            {
+                if (!string.Equals(authPacket.AuthenticationMethod, AuthenticationMethod, StringComparison.Ordinal))
+                {
+                    throw new MqttProtocolViolationException("The authentication method is not allowed to change while authenticating.");
+                }
+
+                return new PartialAuthenticationResponse
+                {
+                    ReasonCode = authPacket.ReasonCode,
+                    AuthenticationData = authPacket.AuthenticationData,
+                    UserProperties = authPacket.UserProperties
+                };
+            }
+
+            if (receivePacket == null)
+            {
+                throw new MqttCommunicationException("The client closed the connection.");
+            }
+
+            throw new MqttProtocolViolationException("Expected an AUTH packet from the client.");
+        }
+
+        public Task SendAuthenticationDataAsync(
+            MqttAuthenticateReasonCode reasonCode,
+            byte[] authenticationData = null,
+            string reasonString = null,
+            List<MqttUserProperty> userProperties = null,
+            CancellationToken cancellationToken = default)
+        {
+            // The authentication method will never change so we must use the already known one [MQTT-4.12.0-5].
+            var authPacket = new MqttAuthPacket
+            {
+                AuthenticationMethod = AuthenticationMethod,
+                AuthenticationData = authenticationData,
+                UserProperties = userProperties,
+                ReasonCode = reasonCode,
+                ReasonString = reasonString
+            };
+
+            return ChannelAdapter.SendPacketAsync(authPacket, cancellationToken);
+        }
     }
 }

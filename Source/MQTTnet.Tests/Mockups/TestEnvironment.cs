@@ -277,8 +277,7 @@ namespace MQTTnet.Tests.Mockups
                     // Null is used when the client id is assigned from the server!
                     if (!string.IsNullOrEmpty(e.ClientId) && !e.ClientId.StartsWith(TestContext.TestName))
                     {
-                        TrackException(new InvalidOperationException($"Invalid client ID used ({e.ClientId}). It must start with UnitTest name."));
-                        e.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
+                        Assert.Fail($"Client ID does not start with test name ({TestContext.TestName}).");
                     }
                 }
 
@@ -292,23 +291,12 @@ namespace MQTTnet.Tests.Mockups
         {
             foreach (var mqttClient in _clients)
             {
-                try
-                {
-                    //mqttClient.DisconnectAsync().GetAwaiter().GetResult();
-                }
-                catch
-                {
-                    // This can happen when the test already disconnected the client.
-                }
-                finally
-                {
-                    mqttClient?.Dispose();
-                }
+                mqttClient?.Dispose();
             }
 
             foreach (var lowLevelMqttClient in _lowLevelClients)
             {
-                lowLevelMqttClient.Dispose();
+                lowLevelMqttClient?.Dispose();
             }
 
             try

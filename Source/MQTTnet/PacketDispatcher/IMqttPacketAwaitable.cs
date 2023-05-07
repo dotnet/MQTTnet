@@ -9,7 +9,7 @@ namespace MQTTnet.PacketDispatcher
 {
     public interface IMqttPacketAwaitable : IDisposable
     {
-        MqttPacketAwaitableFilter Filter { get; }
+        int PacketIdentifier { get; }
         
         void Complete(MqttPacket packet);
 

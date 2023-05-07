@@ -360,7 +360,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                var validatingConnectionEventArgs = await ValidateConnection(connectPacket, channelAdapter).ConfigureAwait(false);
+                var validatingConnectionEventArgs = await ValidateConnection(connectPacket, channelAdapter, cancellationToken).ConfigureAwait(false);
                 var connAckPacket = MqttPacketFactories.ConnAck.Create(validatingConnectionEventArgs);
 
                 if (validatingConnectionEventArgs.ReasonCode != MqttConnectReasonCode.Success)
@@ -397,7 +397,7 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Error(exception, exception.Message);
+                _logger.Error(exception, $"Error while validating client {channelAdapter.Endpoint}. {exception.Message}");
             }
             finally
             {
@@ -719,11 +719,11 @@ namespace MQTTnet.Server
             return null;
         }
 
-        async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter)
+        async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
         {
             // TODO: Load session items from persisted sessions in the future.
             var sessionItems = new ConcurrentDictionary<object, object>();
-            var eventArgs = new ValidatingConnectionEventArgs(connectPacket, channelAdapter, sessionItems);
+            var eventArgs = new ValidatingConnectionEventArgs(connectPacket, channelAdapter, sessionItems, cancellationToken);
             await _eventContainer.ValidatingConnectionEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
             // Check the client ID and set a random one if supported.

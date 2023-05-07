@@ -15,9 +15,65 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Client.Internal
 {
+    public sealed class MqttInitialAuthenticationStrategy : IMqttAuthenticationTransportStrategy
+    {
+        readonly IMqttChannelAdapter _channelAdapter;
+
+        public MqttInitialAuthenticationStrategy(IMqttChannelAdapter channelAdapter)
+        {
+            _channelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
+        }
+
+
+        public Task SendPacketAsync(MqttAuthPacket authPacket, CancellationToken cancellationToken)
+        {
+            if (authPacket == null)
+            {
+                throw new ArgumentNullException(nameof(authPacket));
+            }
+
+            return _channelAdapter.SendPacketAsync(authPacket, cancellationToken);
+        }
+
+        public async Task<MqttAuthPacket> ReceivePacketAsync(string authenticationMethod, CancellationToken cancellationToken)
+        {
+            if (authenticationMethod == null)
+            {
+                throw new ArgumentNullException(nameof(authenticationMethod));
+            }
+
+            var receivePacket = await _channelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+            if (receivePacket is MqttAuthPacket authPacket)
+            {
+                if (!string.Equals(authPacket.AuthenticationMethod, authenticationMethod, StringComparison.Ordinal))
+                {
+                    throw new MqttProtocolViolationException("The authentication method is not allowed to change while authenticating.");
+                }
+
+                return authPacket;
+            }
+
+            if (receivePacket == null)
+            {
+                throw new MqttCommunicationException("The server closed the connection.");
+            }
+
+            throw new MqttProtocolViolationException("Expected an AUTH packet from the client.");
+        }
+    }
+    
+    public interface IMqttAuthenticationTransportStrategy
+    {
+        Task SendPacketAsync(MqttAuthPacket authPacket, CancellationToken cancellationToken);
+        
+        Task<MqttAuthPacket> ReceivePacketAsync(string authenticationMethod, CancellationToken cancellationToken);
+    }
+    
     public sealed class MqttClientAuthenticationHandler
     {
         readonly MqttClient _client;
+
+        readonly AsyncEvent<MqttExtendedAuthenticationExchangeEventArgs> _extendedAuthenticationExchangeEvent = new AsyncEvent<MqttExtendedAuthenticationExchangeEventArgs>();
         readonly MqttNetSourceLogger _logger;
 
         public MqttClientAuthenticationHandler(MqttClient client, IMqttNetLogger logger)
@@ -31,7 +87,10 @@ namespace MQTTnet.Client.Internal
             _logger = logger.WithSource(nameof(MqttClientAuthenticationHandler));
         }
 
-        public AsyncEvent<MqttExtendedAuthenticationExchangeEventArgs> ExtendedAuthenticationExchangeEvent { get; } = new AsyncEvent<MqttExtendedAuthenticationExchangeEventArgs>();
+        public void AddHandler(Func<MqttExtendedAuthenticationExchangeEventArgs, Task> handler)
+        {
+            _extendedAuthenticationExchangeEvent.AddHandler(handler);
+        }
 
         public async Task<MqttClientConnectResult> Authenticate(IMqttChannelAdapter channelAdapter, MqttClientOptions options, CancellationToken cancellationToken)
         {
@@ -64,24 +123,42 @@ namespace MQTTnet.Client.Internal
                 {
                     var receivedPacket = await channelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
 
-                    if (receivedPacket is MqttAuthPacket authPacket)
+                    if (receivedPacket is MqttAuthPacket initialAuthPacket)
                     {
                         // MQTT v3.1.1 cannot send an AUTH packet.
                         // If the Server requires additional information to complete the authentication, it can send an AUTH packet to the Client.
                         // This packet MUST contain a Reason Code of 0x18 (Continue authentication)
-                        if (authPacket.ReasonCode != MqttAuthenticateReasonCode.ContinueAuthentication)
+                        if (initialAuthPacket.ReasonCode != MqttAuthenticateReasonCode.ContinueAuthentication)
                         {
                             throw new MqttProtocolViolationException("Wrong reason code received [MQTT-4.12.0-2].");
                         }
 
-                        var response = await OnExtendedAuthentication(authPacket).ConfigureAwait(false);
-                        authPacket = MqttPacketFactories.Auth.Create(authPacket, response);
-                        await _client.Send(authPacket, cancellationToken).ConfigureAwait(false);
+                        //var response = await HandleExtendedAuthentication(authPacket, channelAdapter).ConfigureAwait(false);
+                        await HandleExtendedAuthentication(initialAuthPacket, new MqttInitialAuthenticationStrategy(channelAdapter)).ConfigureAwait(false);
                     }
                     else if (receivedPacket is MqttConnAckPacket connAckPacketBuffer)
                     {
                         connAckPacket = connAckPacketBuffer;
+                        
+                        // The CONNACK packet is the last packet when authenticating so there is no further AUTH packet allowed!
                         break;
+                    }
+                    else
+                    {
+                        throw new MqttProtocolViolationException($"Received {receivedPacket.GetRfcName()} while authenticating.");
+                    }
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // If the initial CONNECT packet included an Authentication Method property then all AUTH packets,
+                // and any successful CONNACK packet MUST include an Authentication Method Property with the same
+                // value as in the CONNECT packet [MQTT-4.12.0-5].
+                if (!string.IsNullOrEmpty(connectPacket.AuthenticationMethod))
+                {
+                    if (!string.Equals(connectPacket.AuthenticationMethod, connAckPacket?.AuthenticationMethod))
+                    {
+                        throw new MqttProtocolViolationException("The CONNACK packet does not have the same authentication method as the CONNECT packet.");
                     }
                 }
 
@@ -97,8 +174,9 @@ namespace MQTTnet.Client.Internal
             // did send a proper ACK packet.
             if (options.ThrowOnNonSuccessfulResponseFromServer)
             {
-                _logger.Warning("Client will now throw an _MqttConnectingFailedException_. This is obsolete and will be removed in the future. Consider setting _ThrowOnNonSuccessfulResponseFromServer=False_ in client options.");
-                
+                _logger.Warning(
+                    "Client will now throw an _MqttConnectingFailedException_. This is obsolete and will be removed in the future. Consider setting _ThrowOnNonSuccessfulResponseFromServer=False_ in client options.");
+
                 if (result.ResultCode != MqttClientConnectResultCode.Success)
                 {
                     throw new MqttConnectingFailedException($"Connecting with MQTT server failed ({result.ResultCode}).", null, result);
@@ -110,16 +188,38 @@ namespace MQTTnet.Client.Internal
             return result;
         }
 
-        async Task<MqttExtendedAuthenticationExchangeResponse> OnExtendedAuthentication(MqttAuthPacket authPacket)
+        public Task HandleExtendedAuthentication(MqttAuthPacket initialAuthPacket, IMqttAuthenticationTransportStrategy transportStrategy)
         {
-            if (!ExtendedAuthenticationExchangeEvent.HasHandlers)
+            ValidateEventHandler();
+
+            var eventArgs = new MqttExtendedAuthenticationExchangeEventArgs(initialAuthPacket, transportStrategy);
+            return _extendedAuthenticationExchangeEvent.InvokeAsync(eventArgs);
+        }
+
+        void ValidateEventHandler()
+        {
+            if (!_extendedAuthenticationExchangeEvent.HasHandlers)
             {
                 throw new InvalidOperationException("Cannot handle extended authentication without attached event handler.");
             }
+        }
+        
+        public void RemoveHandler(Func<MqttExtendedAuthenticationExchangeEventArgs, Task> handler)
+        {
+            _extendedAuthenticationExchangeEvent.RemoveHandler(handler);
+        }
 
-            var eventArgs = new MqttExtendedAuthenticationExchangeEventArgs(authPacket);
-            await ExtendedAuthenticationExchangeEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
-            return eventArgs.Response;
+        public async Task ReAuthenticate(MqttReAuthenticationOptions options, CancellationToken cancellationToken)
+        {
+            ValidateEventHandler();
+            
+            var authPacket = MqttPacketFactories.Auth.CreateReAuthenticationPacket(_client.Options, options);
+
+            
+            
+            // Sending the AUTH packet will trigger the re authentication and the event handler will
+            // handle the details.
+            await _client.Send(authPacket, cancellationToken).ConfigureAwait(false);
         }
     }
 }

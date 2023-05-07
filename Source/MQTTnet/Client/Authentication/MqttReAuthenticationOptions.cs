@@ -7,18 +7,22 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Client
 {
-    public sealed class MqttExtendedAuthenticationExchangeResponse
+    public sealed class MqttReAuthenticationOptions
     {
         /// <summary>
         ///     Gets or sets the authentication data.
+        ///     Authentication data is binary information used to transmit multiple iterations of cryptographic secrets of protocol
+        ///     steps.
+        ///     The content of the authentication data is highly dependent on the specific implementation of the authentication
+        ///     method.
         ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public byte[] AuthenticationData { get; set; }
 
         /// <summary>
-        ///     Gets or sets the user properties which will be sent to the server.
+        ///     Gets or sets the user properties.
         ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        public List<MqttUserProperty> UserProperties { get; set; } = new List<MqttUserProperty>();
+        public List<MqttUserProperty> UserProperties { get; set; }
     }
 }

@@ -79,7 +79,7 @@ namespace MQTTnet.Client
             return _options;
         }
 
-        public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data)
+        public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data = null)
         {
             _options.AuthenticationMethod = method;
             _options.AuthenticationData = data;
@@ -174,12 +174,6 @@ namespace MQTTnet.Client
         public MqttClientOptionsBuilder WithCredentials(IMqttClientCredentialsProvider credentials)
         {
             _options.Credentials = credentials;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedAuthenticationExchangeHandler handler)
-        {
-            _options.ExtendedAuthenticationExchangeHandler = handler;
             return this;
         }
 

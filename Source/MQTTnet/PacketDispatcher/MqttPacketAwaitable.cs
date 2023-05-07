@@ -16,18 +16,13 @@ namespace MQTTnet.PacketDispatcher
         readonly AsyncTaskCompletionSource<MqttPacket> _promise = new AsyncTaskCompletionSource<MqttPacket>();
         readonly MqttPacketDispatcher _owningPacketDispatcher;
 
-        public MqttPacketAwaitable(ushort packetIdentifier, MqttPacketDispatcher owningPacketDispatcher)
+        public MqttPacketAwaitable(int packetPacketIdentifier, MqttPacketDispatcher owningPacketDispatcher)
         {
-            Filter = new MqttPacketAwaitableFilter
-            {
-                Type = typeof(TPacket),
-                Identifier = packetIdentifier
-            };
-            
+            PacketIdentifier = packetPacketIdentifier;
             _owningPacketDispatcher = owningPacketDispatcher ?? throw new ArgumentNullException(nameof(owningPacketDispatcher));
         }
         
-        public MqttPacketAwaitableFilter Filter { get; }
+        public int PacketIdentifier { get; }
         
         public async Task<TPacket> WaitOneAsync(CancellationToken cancellationToken)
         {

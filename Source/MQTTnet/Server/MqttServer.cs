@@ -73,6 +73,12 @@ namespace MQTTnet.Server
             remove => _eventContainer.ClientDisconnectedEvent.RemoveHandler(value);
         }
 
+        public event Func<ClientReAuthenticatingEventArgs, Task> ClientReAuthenticatingAsync
+        {
+            add => _eventContainer.ClientReAuthenticatingEvent.AddHandler(value);
+            remove => _eventContainer.ClientReAuthenticatingEvent.RemoveHandler(value);
+        }
+
         public event Func<ClientSubscribedTopicEventArgs, Task> ClientSubscribedTopicAsync
         {
             add => _eventContainer.ClientSubscribedTopicEvent.AddHandler(value);
@@ -203,13 +209,6 @@ namespace MQTTnet.Server
             return _clientSessionsManager.GetClientStatusesAsync();
         }
 
-        public Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync()
-        {
-            ThrowIfNotStarted();
-
-            return _retainedMessagesManager.GetMessages();
-        }
-
         public Task<MqttApplicationMessage> GetRetainedMessageAsync(string topic)
         {
             if (topic == null)
@@ -220,6 +219,13 @@ namespace MQTTnet.Server
             ThrowIfNotStarted();
 
             return _retainedMessagesManager.GetMessage(topic);
+        }
+
+        public Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync()
+        {
+            ThrowIfNotStarted();
+
+            return _retainedMessagesManager.GetMessages();
         }
 
         public Task<IList<MqttSessionStatus>> GetSessionsAsync()

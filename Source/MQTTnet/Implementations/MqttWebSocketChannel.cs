@@ -162,7 +162,10 @@ namespace MQTTnet.Implementations
                 return new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList, credentials);
             }
 
-            return new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList);
+            return new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList)
+            {
+                UseDefaultCredentials = _options.ProxyOptions.UseDefaultCredentials
+            };
 #endif
         }
 

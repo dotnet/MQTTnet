@@ -16,6 +16,8 @@ namespace MQTTnet.Client
 
         public bool BypassOnLocal { get; set; }
 
+        public bool UseDefaultCredentials { get; set; }
+
         public string[] BypassList { get; set; }
     }
 }

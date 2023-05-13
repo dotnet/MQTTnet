@@ -155,17 +155,26 @@ namespace MQTTnet.Implementations
             throw new NotSupportedException("Proxies are not supported when using 'netstandard 1.3'.");
 #else
             var proxyUri = new Uri(_options.ProxyOptions.Address);
-
+            WebProxy webProxy;
+            
             if (!string.IsNullOrEmpty(_options.ProxyOptions.Username) && !string.IsNullOrEmpty(_options.ProxyOptions.Password))
             {
                 var credentials = new NetworkCredential(_options.ProxyOptions.Username, _options.ProxyOptions.Password, _options.ProxyOptions.Domain);
-                return new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList, credentials);
+                webProxy = new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList, credentials);
+            }
+            else
+            {
+                webProxy = new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList);    
+            }
+            
+            if (_options.ProxyOptions.UseDefaultCredentials)
+            {
+                // Only update the property if required because setting it to false will alter
+                // the used credentials internally!
+                webProxy.UseDefaultCredentials = true;
             }
 
-            return new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList)
-            {
-                UseDefaultCredentials = _options.ProxyOptions.UseDefaultCredentials
-            };
+            return webProxy;
 #endif
         }
 
@@ -209,7 +218,13 @@ namespace MQTTnet.Implementations
 #endif
                 }
             }
-
+            
+#if !NETSTANDARD1_3
+            clientWebSocket.Options.UseDefaultCredentials = _options.UseDefaultCredentials;
+            clientWebSocket.Options.KeepAliveInterval = _options.KeepAliveInterval;
+#endif
+            clientWebSocket.Options.Credentials = _options.Credentials;
+            
             var certificateValidationHandler = _options.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)
             {

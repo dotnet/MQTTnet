@@ -100,6 +100,12 @@ namespace MQTTnet.Implementations
 
                 if (_tcpOptions.TlsOptions?.UseTls == true)
                 {
+                    var targetHost = _tcpOptions.TlsOptions.TargetHost;
+                    if (string.IsNullOrEmpty(targetHost))
+                    {
+                        targetHost = _tcpOptions.Server;
+                    }
+                    
                     var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                     try
                     {
@@ -111,14 +117,16 @@ namespace MQTTnet.Implementations
                             EnabledSslProtocols = _tcpOptions.TlsOptions.SslProtocol,
                             CertificateRevocationCheckMode =
  _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode,
-                            TargetHost = _tcpOptions.Server,
-                            CipherSuitesPolicy = _tcpOptions.TlsOptions.CipherSuitesPolicy
+                            TargetHost = targetHost,
+                            CipherSuitesPolicy = _tcpOptions.TlsOptions.CipherSuitesPolicy,
+                            EncryptionPolicy = _tcpOptions.TlsOptions.EncryptionPolicy,
+                            AllowRenegotiation = _tcpOptions.TlsOptions.AllowRenegotiation
                         };
 
                         await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
 #else
                         await sslStream.AuthenticateAsClientAsync(
-                                _tcpOptions.Server,
+                                targetHost,
                                 LoadCertificates(),
                                 _tcpOptions.TlsOptions.SslProtocol,
                                 !_tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors)
@@ -290,12 +298,12 @@ namespace MQTTnet.Implementations
 
         X509CertificateCollection LoadCertificates()
         {
-            var certificates = new X509CertificateCollection();
             if (_tcpOptions.TlsOptions.Certificates == null)
             {
-                return certificates;
+                return null;
             }
 
+            var certificates = new X509CertificateCollection();
             foreach (var certificate in _tcpOptions.TlsOptions.Certificates)
             {
                 certificates.Add(certificate);

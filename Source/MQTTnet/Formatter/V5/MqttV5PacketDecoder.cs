@@ -130,6 +130,9 @@ namespace MQTTnet.Formatter.V5
                 MaximumQoS = MqttQualityOfServiceLevel.ExactlyOnce
             };
 
+            // Also set the return code of MQTT 3.1.1 for backward compatibility and debugging purposes.
+            packet.ReturnCode = MqttConnectReasonCodeConverter.ToConnectReturnCode(packet.ReasonCode);
+
             var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
             while (propertiesReader.MoveNext())
             {

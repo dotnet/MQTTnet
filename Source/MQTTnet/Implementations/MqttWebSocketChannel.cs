@@ -238,6 +238,8 @@ namespace MQTTnet.Implementations
                 throw new NotSupportedException("Remote certificate validation callback is not supported when using 'net452'.");
 #elif NET461
                 throw new NotSupportedException("Remote certificate validation callback is not supported when using 'net461'.");
+#elif NET48
+                throw new NotSupportedException("Remote certificate validation callback is not supported when using 'net48'.");
 #else
                 clientWebSocket.Options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
                 {

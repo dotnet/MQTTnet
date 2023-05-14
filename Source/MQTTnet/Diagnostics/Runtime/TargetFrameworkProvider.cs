@@ -16,6 +16,8 @@ namespace MQTTnet.Diagnostics
                 return "net461";
 #elif NET472
                 return "net472";
+#elif NET48
+                return "net48";
 #elif NETSTANDARD1_3
                 return "netstandard1.3";
 #elif NETSTANDARD2_0

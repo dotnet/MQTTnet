@@ -218,9 +218,11 @@ namespace MQTTnet.Implementations
 #endif
                 }
             }
-            
+
 #if !NETSTANDARD1_3
+#if !WINDOWS_UWP
             clientWebSocket.Options.UseDefaultCredentials = _options.UseDefaultCredentials;
+#endif
             clientWebSocket.Options.KeepAliveInterval = _options.KeepAliveInterval;
 #endif
             clientWebSocket.Options.Credentials = _options.Credentials;

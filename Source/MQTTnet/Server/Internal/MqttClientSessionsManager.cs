@@ -377,9 +377,7 @@ namespace MQTTnet.Server
 
                 if (_eventContainer.ClientConnectedEvent.HasHandlers)
                 {
-                    var eventArgs = new ClientConnectedEventArgs(
-                        connectPacket.ClientId,
-                        connectPacket.Username,
+                    var eventArgs = new ClientConnectedEventArgs(connectPacket,
                         channelAdapter.PacketFormatterAdapter.ProtocolVersion,
                         channelAdapter.Endpoint,
                         client.Session.Items);
@@ -614,7 +612,11 @@ namespace MQTTnet.Server
                     _sessions[connectPacket.ClientId] = session;
 
                     // Create a new client (always required).
-                    _clients.TryGetValue(connectPacket.ClientId, out oldClient);
+                    lock (_clients)
+                    {
+                        _clients.TryGetValue(connectPacket.ClientId, out oldClient);    
+                    }
+                    
                     if (oldClient != null)
                     {
                         // This will stop the current client from sending and receiving but remains the connection active
@@ -624,7 +626,10 @@ namespace MQTTnet.Server
 
                     client = CreateClient(connectPacket, channelAdapter, session);
 
-                    _clients[connectPacket.ClientId] = client;
+                    lock (_clients)
+                    {
+                        _clients[connectPacket.ClientId] = client;
+                    }
                 }
                 finally
                 {

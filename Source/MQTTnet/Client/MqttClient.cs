@@ -511,7 +511,7 @@ namespace MQTTnet.Client
                 _publishPacketReceiverQueue?.Dispose();
                 _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
 
-                var connectResult = await Authenticate(Options, effectiveCancellationToken.Token).ConfigureAwait(false);
+                var connectResult = await Authenticate(channelAdapter, Options, effectiveCancellationToken.Token).ConfigureAwait(false);
                 if (connectResult.ResultCode == MqttClientConnectResultCode.Success)
                 {
                     _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);

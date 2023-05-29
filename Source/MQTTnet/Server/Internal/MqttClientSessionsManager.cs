@@ -377,9 +377,7 @@ namespace MQTTnet.Server
 
                 if (_eventContainer.ClientConnectedEvent.HasHandlers)
                 {
-                    var eventArgs = new ClientConnectedEventArgs(
-                        connectPacket.ClientId,
-                        connectPacket.Username,
+                    var eventArgs = new ClientConnectedEventArgs(connectPacket,
                         channelAdapter.PacketFormatterAdapter.ProtocolVersion,
                         channelAdapter.Endpoint,
                         client.Session.Items);
@@ -625,7 +623,6 @@ namespace MQTTnet.Server
                         }
 
                         client = CreateClient(connectPacket, channelAdapter, session);
-
                         _clients[connectPacket.ClientId] = client;
                     }
                 }

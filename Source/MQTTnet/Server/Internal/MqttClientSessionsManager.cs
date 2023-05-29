@@ -58,7 +58,7 @@ namespace MQTTnet.Server
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
         }
 
-        public async Task CloseAllConnectionsAsync()
+        public async Task CloseAllConnections()
         {
             List<MqttClient> connections;
             lock (_clients)
@@ -306,17 +306,17 @@ namespace MQTTnet.Server
             }
         }
 
-        public Task<IList<MqttClientStatus>> GetClientStatusesAsync()
+        public Task<IList<MqttClientStatus>> GetClientsStatus()
         {
             var result = new List<MqttClientStatus>();
 
             lock (_clients)
             {
-                foreach (var connection in _clients.Values)
+                foreach (var client in _clients.Values)
                 {
-                    var clientStatus = new MqttClientStatus(connection)
+                    var clientStatus = new MqttClientStatus(client)
                     {
-                        Session = new MqttSessionStatus(connection.Session)
+                        Session = new MqttSessionStatus(client.Session)
                     };
 
                     result.Add(clientStatus);
@@ -326,7 +326,7 @@ namespace MQTTnet.Server
             return Task.FromResult((IList<MqttClientStatus>)result);
         }
 
-        public Task<IList<MqttSessionStatus>> GetSessionStatusAsync()
+        public Task<IList<MqttSessionStatus>> GetSessionsStatus()
         {
             var result = new List<MqttSessionStatus>();
 
@@ -614,17 +614,20 @@ namespace MQTTnet.Server
                     _sessions[connectPacket.ClientId] = session;
 
                     // Create a new client (always required).
-                    _clients.TryGetValue(connectPacket.ClientId, out oldClient);
-                    if (oldClient != null)
+                    lock (_clients)
                     {
-                        // This will stop the current client from sending and receiving but remains the connection active
-                        // for a later DISCONNECT packet.
-                        oldClient.IsTakenOver = true;
+                        _clients.TryGetValue(connectPacket.ClientId, out oldClient);
+                        if (oldClient != null)
+                        {
+                            // This will stop the current client from sending and receiving but remains the connection active
+                            // for a later DISCONNECT packet.
+                            oldClient.IsTakenOver = true;
+                        }
+
+                        client = CreateClient(connectPacket, channelAdapter, session);
+
+                        _clients[connectPacket.ClientId] = client;
                     }
-
-                    client = CreateClient(connectPacket, channelAdapter, session);
-
-                    _clients[connectPacket.ClientId] = client;
                 }
                 finally
                 {

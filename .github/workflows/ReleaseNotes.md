@@ -7,3 +7,4 @@
 * [Client] Exposed more TLS options (#1729).
 * [Client] Fixed wrong return code conversion (#1729).
 * [Server] Improved performance by changing internal locking strategy for subscriptions (#1716, thanks to @zeheng).
+* [Server] Fixed exceptions when clients are connecting and disconnecting very fast while accessing the client status for connection validation (#1742).

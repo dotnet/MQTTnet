@@ -4,6 +4,7 @@
 
 using System;
 using System.Text;
+using MQTTnet.Internal;
 
 namespace MQTTnet
 {
@@ -14,6 +15,11 @@ namespace MQTTnet
             if (applicationMessage == null)
             {
                 throw new ArgumentNullException(nameof(applicationMessage));
+            }
+
+            if(applicationMessage.PayloadSegment == EmptyBuffer.ArraySegment)
+            {
+                return null;
             }
 
             var payloadSegment = applicationMessage.PayloadSegment;

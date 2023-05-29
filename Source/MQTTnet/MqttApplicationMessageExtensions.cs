@@ -22,6 +22,11 @@ namespace MQTTnet
                 return null;
             }
 
+            if (applicationMessage.PayloadSegment.Array == null)
+            {
+                return null;
+            }
+
             var payloadSegment = applicationMessage.PayloadSegment;
             return Encoding.UTF8.GetString(payloadSegment.Array, payloadSegment.Offset, payloadSegment.Count);
         }

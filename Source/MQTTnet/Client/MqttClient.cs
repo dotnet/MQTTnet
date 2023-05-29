@@ -121,11 +121,11 @@ namespace MQTTnet.Client
                 var mqttClientAliveToken = _mqttClientAlive.Token;
 
                 var adapter = _adapterFactory.CreateClientAdapter(options, new MqttPacketInspector(_events.InspectPacketEvent, _rootLogger), _rootLogger);
-                _adapter = adapter;
+                _adapter = adapter ?? throw new InvalidOperationException("The adapter factory did not provide an adapter.");
 
                 if (cancellationToken.CanBeCanceled)
                 {
-                    connectResult = await ConnectInternal(cancellationToken).ConfigureAwait(false);
+                    connectResult = await ConnectInternal(adapter, cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
@@ -133,7 +133,7 @@ namespace MQTTnet.Client
                     // CancellationToken.None or similar.
                     using (var timeout = new CancellationTokenSource(Options.Timeout))
                     {
-                        connectResult = await ConnectInternal(timeout.Token).ConfigureAwait(false);
+                        connectResult = await ConnectInternal(adapter, timeout.Token).ConfigureAwait(false);
                     }
                 }
 
@@ -427,7 +427,7 @@ namespace MQTTnet.Client
             return CompletedTask.Instance;
         }
 
-        async Task<MqttClientConnectResult> Authenticate(MqttClientOptions options, CancellationToken cancellationToken)
+        async Task<MqttClientConnectResult> Authenticate(IMqttChannelAdapter channelAdapter, MqttClientOptions options, CancellationToken cancellationToken)
         {
             MqttClientConnectResult result;
 
@@ -498,7 +498,7 @@ namespace MQTTnet.Client
             return (MqttClientConnectionStatus)Interlocked.CompareExchange(ref _connectionStatus, (int)value, (int)comparand);
         }
 
-        async Task<MqttClientConnectResult> ConnectInternal(CancellationToken cancellationToken)
+        async Task<MqttClientConnectResult> ConnectInternal(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
         {
             var backgroundCancellationToken = _mqttClientAlive.Token;
 

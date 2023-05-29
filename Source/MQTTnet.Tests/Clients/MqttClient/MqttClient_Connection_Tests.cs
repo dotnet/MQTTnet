@@ -191,7 +191,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptionsBuilder().WithoutThrowOnNonSuccessfulConnectResponse().Build());
 
                 Assert.IsNotNull(response);
-                Assert.AreEqual(MqttConnectReasonCode.QuotaExceeded, response.ResultCode);
+                Assert.AreEqual(MqttClientConnectResultCode.QuotaExceeded, response.ResultCode);
                 Assert.AreEqual(response.UserProperties[0].Name, "Property");
                 Assert.AreEqual(response.UserProperties[0].Value, "Value");
             }

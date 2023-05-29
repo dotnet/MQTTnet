@@ -6,4 +6,5 @@
 * [Client] Exposed _UseDefaultCredentials_ and more for Web Socket options and proxy options (#1734, thanks to @impworks).
 * [Client] Exposed more TLS options (#1729).
 * [Client] Fixed wrong return code conversion (#1729).
+* [Client] Added an option to avoid throwing an exception when the server returned a proper non success (but valid) response (#1681).
 * [Server] Improved performance by changing internal locking strategy for subscriptions (#1716, thanks to @zeheng).

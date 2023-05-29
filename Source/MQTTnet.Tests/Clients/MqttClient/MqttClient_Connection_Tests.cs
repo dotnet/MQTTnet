@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,6 +11,7 @@ using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
+using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
@@ -128,7 +130,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 await client.DisconnectAsync(disconnectOptions);
 
                 await LongTestDelay();
-                
+
                 Assert.IsNotNull(eventArgs);
                 Assert.AreEqual(MqttDisconnectReasonCode.MessageRateTooHigh, eventArgs.ReasonCode);
             }
@@ -156,12 +158,42 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 await client.DisconnectAsync(disconnectOptions);
 
                 await LongTestDelay();
-                
+
                 Assert.IsNotNull(eventArgs);
                 Assert.IsNotNull(eventArgs.UserProperties);
                 Assert.AreEqual(1, eventArgs.UserProperties.Count);
                 Assert.AreEqual("test_name", eventArgs.UserProperties[0].Name);
                 Assert.AreEqual("test_value", eventArgs.UserProperties[0].Value);
+            }
+        }
+
+        [TestMethod]
+        public async Task Return_Non_Success()
+        {
+            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            {
+                var server = await testEnvironment.StartServer();
+
+                server.ValidatingConnectionAsync += args =>
+                {
+                    args.ResponseUserProperties = new List<MqttUserProperty>
+                    {
+                        new MqttUserProperty("Property", "Value")
+                    };
+
+                    args.ReasonCode = MqttConnectReasonCode.QuotaExceeded;
+
+                    return CompletedTask.Instance;
+                };
+
+                var client = testEnvironment.CreateClient();
+
+                var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptionsBuilder().WithoutThrowOnNonSuccessfulConnectResponse().Build());
+
+                Assert.IsNotNull(response);
+                Assert.AreEqual(MqttConnectReasonCode.QuotaExceeded, response.ResultCode);
+                Assert.AreEqual(response.UserProperties[0].Name, "Property");
+                Assert.AreEqual(response.UserProperties[0].Value, "Value");
             }
         }
     }

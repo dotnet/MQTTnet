@@ -103,7 +103,7 @@ namespace MQTTnet.Client
         /// <summary>
         ///     Gets or sets whether an exception should be thrown when the server has sent a non success ACK packet.
         /// </summary>
-        public bool ThrowOnNonSuccessfulResponseFromServer { get; set; } = true;
+        public bool ThrowOnNonSuccessfulConnectResponse { get; set; } = true;
 
         /// <summary>
         ///     Gets or sets the timeout which will be applied at socket level and internal operations.

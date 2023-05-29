@@ -6,6 +6,7 @@ namespace MQTTnet.Client.Internal
 {
     public static class MqttClientResultFactory
     {
+        public static readonly MqttClientConnectResultFactory ConnectResult = new MqttClientConnectResultFactory();
         public static readonly MqttClientPublishResultFactory PublishResult = new MqttClientPublishResultFactory();
         public static readonly MqttClientSubscribeResultFactory SubscribeResult = new MqttClientSubscribeResultFactory();
         public static readonly MqttClientUnsubscribeResultFactory UnsubscribeResult = new MqttClientUnsubscribeResultFactory();

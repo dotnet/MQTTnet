@@ -137,6 +137,12 @@ namespace MQTTnet.Client
                     }
                 }
 
+                if (connectResult.ResultCode != MqttClientConnectResultCode.Success)
+                {
+                    _logger.Warning("Connecting failed: {0}", connectResult.ResultCode);
+                    return connectResult;
+                }
+
                 _lastPacketSentTimestamp = DateTime.UtcNow;
 
                 var keepAliveInterval = Options.KeepAlivePeriod;
@@ -434,8 +440,7 @@ namespace MQTTnet.Client
 
                 if (receivedPacket is MqttConnAckPacket connAckPacket)
                 {
-                    var clientConnectResultFactory = new MqttClientConnectResultFactory();
-                    result = clientConnectResultFactory.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
+                    result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, _adapter.PacketFormatterAdapter.ProtocolVersion);
                 }
                 else
                 {
@@ -447,9 +452,18 @@ namespace MQTTnet.Client
                 throw new MqttConnectingFailedException($"Error while authenticating. {exception.Message}", exception, null);
             }
 
-            if (result.ResultCode != MqttClientConnectResultCode.Success)
+            // This is no feature. It is basically a backward compatibility option and should be removed in the future.
+            // The client should not throw any exception if the transport layer connection was successful and the server
+            // did send a proper ACK packet with a non success response.
+            if (options.ThrowOnNonSuccessfulConnectResponse)
             {
-                throw new MqttConnectingFailedException($"Connecting with MQTT server failed ({result.ResultCode}).", null, result);
+                _logger.Warning(
+                    "Client will now throw an _MqttConnectingFailedException_. This is obsolete and will be removed in the future. Consider setting _ThrowOnNonSuccessfulResponseFromServer=False_ in client options.");
+
+                if (result.ResultCode != MqttClientConnectResultCode.Success)
+                {
+                    throw new MqttConnectingFailedException($"Connecting with MQTT server failed ({result.ResultCode}).", null, result);
+                }
             }
 
             _logger.Verbose("Authenticated MQTT connection with server established.");
@@ -498,9 +512,11 @@ namespace MQTTnet.Client
                 _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
 
                 var connectResult = await Authenticate(channelAdapter, Options, effectiveCancellationToken.Token).ConfigureAwait(false);
-
-                _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
-                _packetReceiverTask = Task.Run(() => ReceivePacketsLoop(backgroundCancellationToken), backgroundCancellationToken);
+                if (connectResult.ResultCode == MqttClientConnectResultCode.Success)
+                {
+                    _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
+                    _packetReceiverTask = Task.Run(() => ReceivePacketsLoop(backgroundCancellationToken), backgroundCancellationToken);
+                }
 
                 return connectResult;
             }
@@ -754,6 +770,65 @@ namespace MQTTnet.Client
             return packet;
         }
 
+        async Task ReceivePacketsLoop(CancellationToken cancellationToken)
+        {
+            try
+            {
+                _logger.Verbose("Start receiving packets.");
+
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    var packet = await Receive(cancellationToken).ConfigureAwait(false);
+
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    if (packet == null)
+                    {
+                        await DisconnectInternal(_packetReceiverTask, null, null).ConfigureAwait(false);
+
+                        return;
+                    }
+
+                    await TryProcessReceivedPacket(packet, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            catch (Exception exception)
+            {
+                if (_cleanDisconnectInitiated)
+                {
+                    return;
+                }
+
+                if (exception is AggregateException aggregateException)
+                {
+                    exception = aggregateException.GetBaseException();
+                }
+
+                if (exception is OperationCanceledException)
+                {
+                }
+                else if (exception is MqttCommunicationException)
+                {
+                    _logger.Warning(exception, "Communication error while receiving packets.");
+                }
+                else
+                {
+                    _logger.Error(exception, "Error while receiving packets.");
+                }
+
+                _packetDispatcher.FailAll(exception);
+
+                await DisconnectInternal(_packetReceiverTask, exception, null).ConfigureAwait(false);
+            }
+            finally
+            {
+                _logger.Verbose("Stopped receiving packets.");
+            }
+        }
+
         async Task<TResponsePacket> Request<TResponsePacket>(MqttPacket requestPacket, CancellationToken cancellationToken) where TResponsePacket : MqttPacket
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -917,65 +992,6 @@ namespace MQTTnet.Client
                 _packetDispatcher.FailAll(exception);
 
                 await DisconnectInternal(_packetReceiverTask, exception, null).ConfigureAwait(false);
-            }
-        }
-
-        async Task ReceivePacketsLoop(CancellationToken cancellationToken)
-        {
-            try
-            {
-                _logger.Verbose("Start receiving packets.");
-
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    var packet = await Receive(cancellationToken).ConfigureAwait(false);
-
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
-
-                    if (packet == null)
-                    {
-                        await DisconnectInternal(_packetReceiverTask, null, null).ConfigureAwait(false);
-
-                        return;
-                    }
-
-                    await TryProcessReceivedPacket(packet, cancellationToken).ConfigureAwait(false);
-                }
-            }
-            catch (Exception exception)
-            {
-                if (_cleanDisconnectInitiated)
-                {
-                    return;
-                }
-
-                if (exception is AggregateException aggregateException)
-                {
-                    exception = aggregateException.GetBaseException();
-                }
-
-                if (exception is OperationCanceledException)
-                {
-                }
-                else if (exception is MqttCommunicationException)
-                {
-                    _logger.Warning(exception, "Communication error while receiving packets.");
-                }
-                else
-                {
-                    _logger.Error(exception, "Error while receiving packets.");
-                }
-
-                _packetDispatcher.FailAll(exception);
-
-                await DisconnectInternal(_packetReceiverTask, exception, null).ConfigureAwait(false);
-            }
-            finally
-            {
-                _logger.Verbose("Stopped receiving packets.");
             }
         }
 

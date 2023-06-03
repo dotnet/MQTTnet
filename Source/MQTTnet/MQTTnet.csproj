@@ -5,11 +5,12 @@
     <AssemblyName>MQTTnet</AssemblyName>
     <RootNamespace>MQTTnet</RootNamespace>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <Company />
+    <Company>Wilderness Labs, Inc</Company>
     <Product />
-    <Description />
+    <Description>Wilderness Labs modification of MQTTnet for Meadow</Description>
     <Authors />
-    <PackageId />
+    <PackageId>Meadow.MQTT</PackageId>
+    <PackageIcon>icon.png</PackageIcon>
     <SignAssembly>false</SignAssembly>
     <DelaySign>false</DelaySign>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

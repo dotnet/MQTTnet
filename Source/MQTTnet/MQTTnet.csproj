@@ -17,12 +17,12 @@
         <AssemblyName>MQTTnet</AssemblyName>
         <RootNamespace>MQTTnet</RootNamespace>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-        <Company>The contributors of MQTTnet</Company>
+        <Company>Wilderness Labs, Inc</Company>
         <Product>MQTTnet</Product>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <Description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</Description>
+        <Description>Wilderness Labs modification of MQTTnet for Meadow</Description>
         <Authors>The contributors of MQTTnet</Authors>
-        <PackageId>MQTTnet</PackageId>
+        <PackageId>Meadow.MQTT</PackageId>
         <DelaySign>false</DelaySign>
         <SignAssembly>false</SignAssembly>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -36,7 +36,7 @@
         <NeutralLanguage>en-US</NeutralLanguage>
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-        <PackageIcon>nuget.png</PackageIcon>
+        <PackageIcon>icon.png</PackageIcon>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>

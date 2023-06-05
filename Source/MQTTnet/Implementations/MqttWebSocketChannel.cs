@@ -221,11 +221,20 @@ namespace MQTTnet.Implementations
 
 #if !NETSTANDARD1_3
 #if !WINDOWS_UWP
-            clientWebSocket.Options.UseDefaultCredentials = _options.UseDefaultCredentials;
+            if (_options.UseDefaultCredentials)
+            {
+                clientWebSocket.Options.UseDefaultCredentials = _options.UseDefaultCredentials;
+            }
 #endif
-            clientWebSocket.Options.KeepAliveInterval = _options.KeepAliveInterval;
+            if (_options.KeepAliveInterval != WebSocket.DefaultKeepAliveInterval)
+            {
+                clientWebSocket.Options.KeepAliveInterval = _options.KeepAliveInterval;
+            }
 #endif
-            clientWebSocket.Options.Credentials = _options.Credentials;
+            if (_options.Credentials != null)
+            {
+                clientWebSocket.Options.Credentials = _options.Credentials;
+            }
             
             var certificateValidationHandler = _options.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)

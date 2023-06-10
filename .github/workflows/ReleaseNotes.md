@@ -1,1 +1,1 @@
-* 
+* [Server] Exposed new option which allows disabling packet fragmentation (#1753).

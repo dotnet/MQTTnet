@@ -231,6 +231,7 @@ namespace MQTTnet.Implementations
                     
                     using (var clientAdapter = new MqttChannelAdapter(tcpChannel, packetFormatterAdapter, _rootLogger))
                     {
+                        clientAdapter.AllowPacketFragmentation = _options.AllowPacketFragmentation;
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }
                 }
@@ -255,6 +256,7 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
+                    // ReSharper disable once MethodHasAsyncOverload
                     stream?.Dispose();
                     clientSocket?.Dispose();
                 }

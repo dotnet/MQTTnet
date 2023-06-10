@@ -131,6 +131,18 @@ namespace MQTTnet.Server
             return this;
         }
 
+        /// <summary>
+        ///     Usually the MQTT packets can be send partially to improve memory allocations.
+        ///     This is done by using multiple TCP packets or WebSocket frames etc.
+        ///     Unfortunately not all clients do support this and will close the connection when receiving partial packets.
+        /// </summary>
+        public MqttServerOptionsBuilder WithoutPacketFragmentation()
+        {
+            _options.DefaultEndpointOptions.AllowPacketFragmentation = false;
+            _options.TlsEndpointOptions.AllowPacketFragmentation = false;
+            return this;
+        }
+
         public MqttServerOptionsBuilder WithPersistentSessions(bool value = true)
         {
             _options.EnablePersistentSessions = value;

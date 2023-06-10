@@ -221,6 +221,8 @@ namespace MQTTnet.Implementations
 
 #if !NETSTANDARD1_3
 #if !WINDOWS_UWP
+            // Only set the value if it is actually true. This property is not supported on all platforms
+            // and will throw a _PlatformNotSupported_ (i.e. WASM) exception when being used regardless of the actual value.
             if (_options.UseDefaultCredentials)
             {
                 clientWebSocket.Options.UseDefaultCredentials = _options.UseDefaultCredentials;

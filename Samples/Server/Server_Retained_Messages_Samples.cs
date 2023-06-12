@@ -56,7 +56,8 @@ public static class Server_Retained_Messages_Samples
                     // used to write all retained messages to dedicated files etc. Then all files must be loaded and a full list
                     // of retained messages must be provided in the loaded event.
 
-                    var buffer = JsonSerializer.SerializeToUtf8Bytes(eventArgs.StoredRetainedMessages);
+                    var retainedMessages = await server.GetRetainedMessagesAsync();
+                    var buffer = JsonSerializer.SerializeToUtf8Bytes(retainedMessages);
                     await File.WriteAllBytesAsync(storePath, buffer);
                     Console.WriteLine("Retained messages saved.");
                 }

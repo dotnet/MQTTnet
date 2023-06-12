@@ -64,8 +64,7 @@ namespace MQTTnet.Server
 
             try
             {
-                List<MqttApplicationMessage> messagesForSave = null;
-                var saveIsRequired = false;
+                RetainedMessageChangedEventArgs.RetainedMessageChangeType? changeType = null;
 
                 lock (_messages)
                 {
@@ -74,7 +73,10 @@ namespace MQTTnet.Server
 
                     if (!hasPayload)
                     {
-                        saveIsRequired = _messages.Remove(applicationMessage.Topic);
+                        if (_messages.Remove(applicationMessage.Topic))
+                        {
+                            changeType = RetainedMessageChangedEventArgs.RetainedMessageChangeType.Remove;
+                        }
                         _logger.Verbose("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                     }
                     else
@@ -82,31 +84,27 @@ namespace MQTTnet.Server
                         if (!_messages.TryGetValue(applicationMessage.Topic, out var existingMessage))
                         {
                             _messages[applicationMessage.Topic] = applicationMessage;
-                            saveIsRequired = true;
+                            changeType = RetainedMessageChangedEventArgs.RetainedMessageChangeType.Add;
                         }
                         else
                         {
                             if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !SequenceEqual(existingMessage.PayloadSegment, payloadSegment))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage;
-                                saveIsRequired = true;
+                                changeType = RetainedMessageChangedEventArgs.RetainedMessageChangeType.Replace;
                             }
                         }
 
                         _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                     }
-
-                    if (saveIsRequired)
-                    {
-                        messagesForSave = new List<MqttApplicationMessage>(_messages.Values);
-                    }
                 }
 
-                if (saveIsRequired)
+                if (changeType != null)
                 {
                     using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
                     {
-                        var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessage, messagesForSave);
+                        var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessage, changeType.Value);
+
                         await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
                 }
@@ -134,9 +132,9 @@ namespace MQTTnet.Server
                 {
                     return Task.FromResult(message);
                 }
-
-                return null;
             }
+                
+            return Task.FromResult<MqttApplicationMessage>(null);   
         }
 
         public async Task ClearMessages()

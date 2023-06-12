@@ -1,1 +1,1 @@
-* 
+* [Client] Fixed _PlatformNotSupportedException_ when using Blazor (#1755, thanks to @Nickztar).

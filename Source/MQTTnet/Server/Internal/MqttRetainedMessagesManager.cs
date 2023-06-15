@@ -134,9 +134,9 @@ namespace MQTTnet.Server
                 {
                     return Task.FromResult(message);
                 }
-
-                return null;
             }
+
+            return Task.FromResult<MqttApplicationMessage>(null);
         }
 
         public async Task ClearMessages()

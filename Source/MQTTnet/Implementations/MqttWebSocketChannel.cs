@@ -227,11 +227,12 @@ namespace MQTTnet.Implementations
             {
                 clientWebSocket.Options.UseDefaultCredentials = _options.UseDefaultCredentials;
             }
-#endif
+
             if (_options.KeepAliveInterval != WebSocket.DefaultKeepAliveInterval)
             {
                 clientWebSocket.Options.KeepAliveInterval = _options.KeepAliveInterval;
             }
+#endif
 #endif
             if (_options.Credentials != null)
             {

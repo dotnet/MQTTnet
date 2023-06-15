@@ -7,6 +7,8 @@
 // ReSharper disable InconsistentNaming
 
 using System.Text.Json;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Samples.Server;
 
@@ -32,7 +34,10 @@ public static class Server_Retained_Messages_Samples
             {
                 try
                 {
-                    eventArgs.LoadedRetainedMessages = await JsonSerializer.DeserializeAsync<List<MqttApplicationMessage>>(File.OpenRead(storePath));
+                    var models = await JsonSerializer.DeserializeAsync<List<MqttRetainedMessageModel>>(File.OpenRead(storePath)) ?? new List<MqttRetainedMessageModel>();
+                    var retainedMessages = models.Select(m => m.ToApplicationMessage()).ToList();
+
+                    eventArgs.LoadedRetainedMessages = retainedMessages;
                     Console.WriteLine("Retained messages loaded.");
                 }
                 catch (FileNotFoundException)
@@ -56,7 +61,9 @@ public static class Server_Retained_Messages_Samples
                     // used to write all retained messages to dedicated files etc. Then all files must be loaded and a full list
                     // of retained messages must be provided in the loaded event.
 
-                    var buffer = JsonSerializer.SerializeToUtf8Bytes(eventArgs.StoredRetainedMessages);
+                    var models = eventArgs.StoredRetainedMessages.Select(MqttRetainedMessageModel.Create);
+
+                    var buffer = JsonSerializer.SerializeToUtf8Bytes(models);
                     await File.WriteAllBytesAsync(storePath, buffer);
                     Console.WriteLine("Retained messages saved.");
                 }
@@ -77,6 +84,61 @@ public static class Server_Retained_Messages_Samples
 
             Console.WriteLine("Press Enter to exit.");
             Console.ReadLine();
+        }
+    }
+
+    sealed class MqttRetainedMessageModel
+    {
+        public string? ContentType { get; set; }
+        public byte[]? CorrelationData { get; set; }
+        public byte[]? Payload { get; set; }
+        public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; }
+        public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
+        public string? ResponseTopic { get; set; }
+        public string? Topic { get; set; }
+        public List<MqttUserProperty>? UserProperties { get; set; }
+
+        public static MqttRetainedMessageModel Create(MqttApplicationMessage message)
+        {
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
+            return new MqttRetainedMessageModel
+            {
+                Topic = message.Topic,
+
+                // Create a copy of the buffer from the payload segment because 
+                // it cannot be serialized and deserialized with the JSON serializer.
+                Payload = message.PayloadSegment.ToArray(),
+                UserProperties = message.UserProperties,
+                ResponseTopic = message.ResponseTopic,
+                CorrelationData = message.CorrelationData,
+                ContentType = message.ContentType,
+                PayloadFormatIndicator = message.PayloadFormatIndicator,
+                QualityOfServiceLevel = message.QualityOfServiceLevel
+
+                // Other properties like "Retain" are not if interest in the storage.
+                // That's why a custom model makes sense.
+            };
+        }
+
+        public MqttApplicationMessage ToApplicationMessage()
+        {
+            return new MqttApplicationMessage
+            {
+                Topic = Topic,
+                PayloadSegment = new ArraySegment<byte>(Payload ?? Array.Empty<byte>()),
+                PayloadFormatIndicator = PayloadFormatIndicator,
+                ResponseTopic = ResponseTopic,
+                CorrelationData = CorrelationData,
+                ContentType = ContentType,
+                UserProperties = UserProperties,
+                QualityOfServiceLevel = QualityOfServiceLevel,
+                Dup = false,
+                Retain = true
+            };
         }
     }
 }

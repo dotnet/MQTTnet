@@ -24,6 +24,14 @@ namespace MQTTnet.Server
         public bool? KeepAlive { get; set; }
 
         /// <summary>
+        ///     Usually the MQTT packets can be send partially. This is done by using multiple TCP packets
+        ///     or WebSocket frames etc. Unfortunately not all clients do support this feature and
+        ///     will close the connection when receiving such packets. If such clients are connecting to this
+        ///     server the flag must be set to _false_.
+        /// </summary>
+        public bool AllowPacketFragmentation { get; set; } = true;
+
+        /// <summary>
         ///     Gets or sets the TCP keep alive interval.
         ///     The value _null_ indicates that the OS and framework defaults should be used.
         /// </summary>

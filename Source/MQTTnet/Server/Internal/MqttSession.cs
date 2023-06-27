@@ -21,6 +21,7 @@ namespace MQTTnet.Server
         readonly MqttPacketBus _packetBus = new MqttPacketBus();
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
 
+        readonly MqttConnectPacket _connectPacket;
         readonly MqttServerOptions _serverOptions;
         readonly MqttClientSubscriptionsManager _subscriptionsManager;
 
@@ -31,18 +32,16 @@ namespace MQTTnet.Server
         HashSet<string> _subscribedTopics;
 
         public MqttSession(
-            string clientId,
-            bool isPersistent,
+            MqttConnectPacket connectPacket,
             IDictionary items,
             MqttServerOptions serverOptions,
             MqttServerEventContainer eventContainer,
             MqttRetainedMessagesManager retainedMessagesManager,
             MqttClientSessionsManager clientSessionsManager)
         {
-            Id = clientId ?? throw new ArgumentNullException(nameof(clientId));
-            IsPersistent = isPersistent;
             Items = items ?? throw new ArgumentNullException(nameof(items));
 
+            _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
 
@@ -50,10 +49,14 @@ namespace MQTTnet.Server
         }
 
         public DateTime CreatedTimestamp { get; } = DateTime.UtcNow;
+        
+        public DateTime? DisconnectedTimestamp { get; set; }
 
         public bool HasSubscribedTopics => _subscribedTopics != null && _subscribedTopics.Count > 0;
 
-        public string Id { get; }
+        public uint ExpiryInterval => _connectPacket.SessionExpiryInterval;
+        
+        public string Id => _connectPacket.ClientId;
 
         /// <summary>
         ///     Session should persist if CleanSession was set to false (Mqtt3) or if SessionExpiryInterval != 0 (Mqtt5)

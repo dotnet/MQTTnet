@@ -21,6 +21,10 @@ namespace MQTTnet.Server
 
         public DateTime CreatedTimestamp => _session.CreatedTimestamp;
 
+        public DateTime? DisconnectedTimestamp => _session.DisconnectedTimestamp;
+
+        public uint ExpiryInterval => _session.ExpiryInterval;
+
         public string Id => _session.Id;
 
         public IDictionary Items => _session.Items;

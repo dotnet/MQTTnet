@@ -162,10 +162,7 @@ namespace MQTTnet.Server
 
         public void Dispose()
         {
-            if (_subscriptionsLock != null)
-            {
-                _subscriptionsLock.Dispose();
-            }
+            _subscriptionsLock?.Dispose();
         }
 
         public async Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)

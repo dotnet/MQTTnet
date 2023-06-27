@@ -442,9 +442,17 @@ namespace MQTTnet.Client
                 {
                     result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, _adapter.PacketFormatterAdapter.ProtocolVersion);
                 }
-                else
+                else if (receivedPacket is MqttAuthPacket)
                 {
                     throw new NotSupportedException("Extended authentication handler is not yet supported");
+                }
+                else if (receivedPacket == null)
+                {
+                    throw new MqttCommunicationException("Connection closed.");
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Received an unexpected MQTT packet ({receivedPacket}).");
                 }
             }
             catch (Exception exception)
@@ -547,7 +555,7 @@ namespace MQTTnet.Client
 
             try
             {
-                _packetDispatcher.Dispose(new MqttClientDisconnectedException(exception));
+                _packetDispatcher?.Dispose(new MqttClientDisconnectedException(exception));
 
                 var receiverTask = _packetReceiverTask.WaitAsync(sender, _logger);
                 var publishPacketReceiverTask = _publishPacketReceiverTask.WaitAsync(sender, _logger);

@@ -221,7 +221,10 @@ namespace MQTTnet.Tests.Server
             var eventContainer = new MqttServerEventContainer();
             var clientSessionManager = new MqttClientSessionsManager(options, retainedMessagesManager, eventContainer, logger);
 
-            var session = new MqttSession("", false, new ConcurrentDictionary<object, object>(), options, eventContainer, retainedMessagesManager, clientSessionManager);
+            var session = new MqttSession(new MqttConnectPacket
+            {
+                ClientId = ""
+            }, new ConcurrentDictionary<object, object>(), options, eventContainer, retainedMessagesManager, clientSessionManager);
 
             _subscriptionsManager = new MqttClientSubscriptionsManager(session, new MqttServerEventContainer(), retainedMessagesManager, clientSessionManager);
         }

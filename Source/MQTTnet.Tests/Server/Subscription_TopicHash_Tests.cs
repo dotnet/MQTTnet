@@ -557,7 +557,7 @@ namespace MQTTnet.Tests.Server
             var eventContainer = new MqttServerEventContainer();
             var retainedMessagesManager = new MqttRetainedMessagesManager(eventContainer, logger);
             var sessionManager = new MqttClientSessionsManager(serverOptions, retainedMessagesManager, eventContainer, logger);
-            _clientSession = new MqttSession(clientId, false, new Dictionary<object, object>(), serverOptions, eventContainer, retainedMessagesManager, sessionManager);
+            _clientSession = new MqttSession(new MqttConnectPacket{ ClientId = clientId }, new Dictionary<object, object>(), serverOptions, eventContainer, retainedMessagesManager, sessionManager);
 
             List<string> topicsToSubscribe;
 

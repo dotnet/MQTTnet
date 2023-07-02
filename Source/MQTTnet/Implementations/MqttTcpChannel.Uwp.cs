@@ -125,7 +125,7 @@ namespace MQTTnet.Implementations
 
         private static Certificate LoadCertificate(IMqttClientChannelOptions options)
         {
-            var certificates = options.TlsOptions?.CertificatesProvider?.GetCertificates();
+            var certificates = options.TlsOptions?.ClientCertificatesProvider?.GetCertificates();
 
             if (certificates == null || certificates.Count == 0)
             {

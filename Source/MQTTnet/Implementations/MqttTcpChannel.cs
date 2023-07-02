@@ -3,9 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 #if !WINDOWS_UWP
-using MQTTnet.Channel;
-using MQTTnet.Client;
-using MQTTnet.Exceptions;
 using System;
 using System.IO;
 using System.Net.Security;
@@ -14,6 +11,9 @@ using System.Runtime.ExceptionServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Channel;
+using MQTTnet.Client;
+using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations
@@ -73,7 +73,7 @@ namespace MQTTnet.Implementations
                 {
                     socket.Bind(_tcpOptions.LocalEndpoint);
                 }
-                
+
                 socket.ReceiveBufferSize = _tcpOptions.BufferSize;
                 socket.SendBufferSize = _tcpOptions.BufferSize;
                 socket.SendTimeout = (int)_clientOptions.Timeout.TotalMilliseconds;
@@ -105,7 +105,7 @@ namespace MQTTnet.Implementations
                     {
                         targetHost = _tcpOptions.Server;
                     }
-                    
+
                     var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                     try
                     {
@@ -298,18 +298,7 @@ namespace MQTTnet.Implementations
 
         X509CertificateCollection LoadCertificates()
         {
-            if (_tcpOptions.TlsOptions.Certificates == null)
-            {
-                return null;
-            }
-
-            var certificates = new X509CertificateCollection();
-            foreach (var certificate in _tcpOptions.TlsOptions.Certificates)
-            {
-                certificates.Add(certificate);
-            }
-
-            return certificates;
+            return _tcpOptions.TlsOptions.ClientCertificatesProvider?.GetCertificates();
         }
     }
 }

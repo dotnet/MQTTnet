@@ -20,7 +20,7 @@ namespace MQTTnet.TestApp
         {
 #if NET5_0_OR_GREATER
             // TLS13 is only available in Net5.0
-            var unsafeTls13 = new MqttClientOptionsBuilderTlsParameters
+            var unsafeTls13 = new MqttClientTlsOptions
             {
                 UseTls = true,
                 SslProtocol = SslProtocols.Tls13,
@@ -29,7 +29,7 @@ namespace MQTTnet.TestApp
             };
 #endif
             // Also defining TLS12 for servers that don't seem no to support TLS13.
-            var unsafeTls12 = new MqttClientOptionsBuilderTlsParameters
+            var unsafeTls12 = new MqttClientTlsOptions
             {
                 UseTls = true,
                 SslProtocol = SslProtocols.Tls12,
@@ -44,16 +44,16 @@ namespace MQTTnet.TestApp
 
             await ExecuteTestAsync(
                 "mqtt.eclipseprojects.io WS",
-                new MqttClientOptionsBuilder().WithWebSocketServer("mqtt.eclipseprojects.io:80/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).Build());
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("mqtt.eclipseprojects.io:80/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).Build());
 
 #if NET5_0_OR_GREATER
             await ExecuteTestAsync("mqtt.eclipseprojects.io WS TLS13",
-                new MqttClientOptionsBuilder().WithWebSocketServer("mqtt.eclipseprojects.io:443/mqtt")
-                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls13).Build());
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("mqtt.eclipseprojects.io:443/mqtt"))
+                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls13).Build());
             
             await ExecuteTestAsync("mqtt.eclipseprojects.io WS TLS13 (WebSocket4Net)",
-                new MqttClientOptionsBuilder().WithWebSocketServer("mqtt.eclipseprojects.io:443/mqtt")
-                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls13).Build(),
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("mqtt.eclipseprojects.io:443/mqtt"))
+                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls13).Build(),
                     true);
 #endif
 
@@ -68,12 +68,12 @@ namespace MQTTnet.TestApp
 
             await ExecuteTestAsync(
                 "test.mosquitto.org TCP TLS12",
-                new MqttClientOptionsBuilder().WithTcpServer("test.mosquitto.org", 8883).WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build());
+                new MqttClientOptionsBuilder().WithTcpServer("test.mosquitto.org", 8883).WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls12).Build());
 
 #if NET5_0_OR_GREATER
             await ExecuteTestAsync("test.mosquitto.org TCP TLS13",
                 new MqttClientOptionsBuilder().WithTcpServer("test.mosquitto.org", 8883)
-                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls13).Build());
+                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls13).Build());
 #endif
 
             await ExecuteTestAsync(
@@ -81,21 +81,21 @@ namespace MQTTnet.TestApp
                 new MqttClientOptionsBuilder().WithTcpServer("test.mosquitto.org", 8885)
                     .WithCredentials("rw", "readwrite")
                     .WithProtocolVersion(MqttProtocolVersion.V311)
-                    .WithTls(unsafeTls12)
+                    .WithTlsOptions(unsafeTls12)
                     .Build());
 
             await ExecuteTestAsync(
                 "test.mosquitto.org WS",
-                new MqttClientOptionsBuilder().WithWebSocketServer("test.mosquitto.org:8080/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).Build());
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("test.mosquitto.org:8080/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).Build());
 
             await ExecuteTestAsync(
                 "test.mosquitto.org WS (WebSocket4Net)",
-                new MqttClientOptionsBuilder().WithWebSocketServer("test.mosquitto.org:8080/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).Build(),
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("test.mosquitto.org:8080/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).Build(),
                 true);
 
             await ExecuteTestAsync(
                 "test.mosquitto.org WS TLS12",
-                new MqttClientOptionsBuilder().WithWebSocketServer("test.mosquitto.org:8081/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build());
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("test.mosquitto.org:8081/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls12).Build());
 
             // await ExecuteTestAsync(
             //     "test.mosquitto.org WS TLS12 (WebSocket4Net)",
@@ -109,30 +109,30 @@ namespace MQTTnet.TestApp
 
             await ExecuteTestAsync(
                 "broker.emqx.io TCP TLS12",
-                new MqttClientOptionsBuilder().WithTcpServer("broker.emqx.io", 8883).WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build());
+                new MqttClientOptionsBuilder().WithTcpServer("broker.emqx.io", 8883).WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls12).Build());
 
 #if NET5_0_OR_GREATER
             await ExecuteTestAsync("broker.emqx.io TCP TLS13",
                 new MqttClientOptionsBuilder().WithTcpServer("broker.emqx.io", 8883)
-                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls13).Build());
+                    .WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls13).Build());
 #endif
 
             await ExecuteTestAsync(
                 "broker.emqx.io WS",
-                new MqttClientOptionsBuilder().WithWebSocketServer("broker.emqx.io:8083/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).Build());
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("broker.emqx.io:8083/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).Build());
 
             await ExecuteTestAsync(
                 "broker.emqx.io WS (WebSocket4Net)",
-                new MqttClientOptionsBuilder().WithWebSocketServer("broker.emqx.io:8084/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).Build(),
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("broker.emqx.io:8084/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).Build(),
                 true);
 
             await ExecuteTestAsync(
                 "broker.emqx.io WS TLS12",
-                new MqttClientOptionsBuilder().WithWebSocketServer("broker.emqx.io:8084/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build());
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("broker.emqx.io:8084/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls12).Build());
 
             await ExecuteTestAsync(
                 "broker.emqx.io WS TLS12 (WebSocket4Net)",
-                new MqttClientOptionsBuilder().WithWebSocketServer("broker.emqx.io:8084/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build(),
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("broker.emqx.io:8084/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls12).Build(),
                 true);
 
             // broker.hivemq.com
@@ -142,11 +142,11 @@ namespace MQTTnet.TestApp
 
             await ExecuteTestAsync(
                 "broker.hivemq.com WS",
-                new MqttClientOptionsBuilder().WithWebSocketServer("broker.hivemq.com:8000/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).Build());
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("broker.hivemq.com:8000/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).Build());
 
             await ExecuteTestAsync(
                 "broker.hivemq.com WS (WebSocket4Net)",
-                new MqttClientOptionsBuilder().WithWebSocketServer("broker.hivemq.com:8000/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).Build(),
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("broker.hivemq.com:8000/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).Build(),
                 true);
 
             // mqtt.swifitch.cz: Does not seem to operate any more

@@ -6,8 +6,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -18,6 +16,7 @@ using Windows.Security.Cryptography.Certificates;
 using MQTTnet.Channel;
 using MQTTnet.Client;
 using MQTTnet.Server;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace MQTTnet.Implementations
 {
@@ -126,17 +125,19 @@ namespace MQTTnet.Implementations
 
         private static Certificate LoadCertificate(IMqttClientChannelOptions options)
         {
-            if (options.TlsOptions.Certificates == null || !options.TlsOptions.Certificates.Any())
+            var certificates = options.TlsOptions?.CertificatesProvider?.GetCertificates();
+
+            if (certificates == null || certificates.Count == 0)
             {
                 return null;
             }
 
-            if (options.TlsOptions.Certificates.Count > 1)
+            if (certificates.Count > 1)
             {
                 throw new NotSupportedException("Only one client certificate is supported when using 'uap10.0'.");
             }
 
-            return new Certificate(options.TlsOptions.Certificates.First().AsBuffer());
+            return new Certificate(certificates[0].Export(X509ContentType.Cert).AsBuffer());
         }
 
         private IEnumerable<ChainValidationResult> ResolveIgnorableServerCertificateErrors()

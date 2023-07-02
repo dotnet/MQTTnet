@@ -92,18 +92,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
             var webSocketVersion = WebSocketVersion.None;
             var receiveBufferSize = 0;
 
-            var certificates = new X509CertificateCollection();
-            if (_webSocketOptions.TlsOptions?.Certificates != null)
-            {
-                foreach (var certificate in _webSocketOptions.TlsOptions.Certificates)
-                {
-#if WINDOWS_UWP
-                    certificates.Add(new X509Certificate(certificate));
-#else
-                    certificates.Add(certificate);
-#endif
-                }
-            }
+            var certificates = _webSocketOptions.TlsOptions?.ClientCertificatesProvider?.GetCertificates();
 
             _webSocket = new WebSocket(uri, subProtocol, cookies, customHeaders, userAgent, origin, webSocketVersion, proxy, sslProtocols, receiveBufferSize)
             {

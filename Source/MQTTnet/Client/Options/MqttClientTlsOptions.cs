@@ -24,11 +24,13 @@ namespace MQTTnet.Client
 
         public X509RevocationMode RevocationMode { get; set; } = X509RevocationMode.Online;
 
-#if WINDOWS_UWP
-        public List<byte[]> Certificates { get; set; }
-#else
-        public List<X509Certificate> Certificates { get; set; }
-#endif
+        /// <summary>
+        ///     Gets or sets the provider for certificates.
+        ///     This provider gets called whenever the client wants to connect
+        ///     with the server and requires certificates for authentication.
+        ///     The implementation may return different certificates each time.
+        /// </summary>
+        public IMqttClientCertificatesProvider ClientCertificatesProvider { get; set; }
 
 #if NETCOREAPP3_1_OR_GREATER
         public List<SslApplicationProtocol> ApplicationProtocols { get; set; }

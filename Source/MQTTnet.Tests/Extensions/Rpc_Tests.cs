@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -39,6 +40,34 @@ namespace MQTTnet.Tests.Extensions
                 using (var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build()))
                 {
                     var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
+
+                    Assert.AreEqual("pong", Encoding.UTF8.GetString(response));
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task Execute_Success_Parameters_Propagated_Correctly()
+        {
+            var paramValue = "123";
+            var parameters = new Dictionary<string, object>
+            {
+                { TestParametersTopicGenerationStrategy.ExpectedParamName, "123" },
+            };
+
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var responseSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder());
+                await responseSender.SubscribeAsync($"MQTTnet.RPC/+/ping/{paramValue}");
+
+                responseSender.ApplicationMessageReceivedAsync += e => responseSender.PublishStringAsync(e.ApplicationMessage.Topic + "/response", "pong");
+
+                using (var rpcClient = await testEnvironment.ConnectRpcClient(new MqttRpcClientOptionsBuilder()
+                           .WithTopicGenerationStrategy(new TestParametersTopicGenerationStrategy()).Build()))
+                {
+                    var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(5), "ping", "", MqttQualityOfServiceLevel.AtMostOnce, parameters);
 
                     Assert.AreEqual("pong", Encoding.UTF8.GetString(response));
                 }
@@ -215,10 +244,42 @@ namespace MQTTnet.Tests.Extensions
         {
             public MqttRpcTopicPair CreateRpcTopics(TopicGenerationContext context)
             {
+                if (context.Parameters == null)
+                {
+                    throw new InvalidOperationException("Parameters dictionary can not be null");
+                }
+
                 return new MqttRpcTopicPair
                 {
                     RequestTopic = "a",
                     ResponseTopic = "b"
+                };
+            }
+        }
+
+        class TestParametersTopicGenerationStrategy : IMqttRpcClientTopicGenerationStrategy
+        {
+            internal const string ExpectedParamName = "test_param_name";
+
+            public MqttRpcTopicPair CreateRpcTopics(TopicGenerationContext context)
+            {
+                if (context.Parameters == null)
+                {
+                    throw new InvalidOperationException("Parameters dictionary can not be null");
+                }
+
+                if (!context.Parameters.TryGetValue(ExpectedParamName, out var paramValue))
+                {
+                    throw new InvalidOperationException($"Parameter with name {ExpectedParamName} not present");
+                }
+
+                var requestTopic = $"MQTTnet.RPC/{Guid.NewGuid():N}/{context.MethodName}/{paramValue}";
+                var responseTopic = requestTopic + "/response";
+
+                return new MqttRpcTopicPair
+                {
+                    RequestTopic = requestTopic,
+                    ResponseTopic = responseTopic
                 };
             }
         }

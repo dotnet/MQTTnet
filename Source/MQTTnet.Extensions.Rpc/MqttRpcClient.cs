@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,13 +43,13 @@ namespace MQTTnet.Extensions.Rpc
             _waitingCalls.Clear();
         }
 
-        public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
         {
             using (var timeoutToken = new CancellationTokenSource(timeout))
             {
                 try
                 {
-                    return await ExecuteAsync(methodName, payload, qualityOfServiceLevel, timeoutToken.Token).ConfigureAwait(false);
+                    return await ExecuteAsync(methodName, payload, qualityOfServiceLevel, parameters, timeoutToken.Token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException exception)
                 {
@@ -62,14 +63,14 @@ namespace MQTTnet.Extensions.Rpc
             }
         }
 
-        public async Task<byte[]> ExecuteAsync(string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, CancellationToken cancellationToken = default)
+        public async Task<byte[]> ExecuteAsync(string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
         {
             if (methodName == null)
             {
                 throw new ArgumentNullException(nameof(methodName));
             }
 
-            var context = new TopicGenerationContext(_mqttClient, _options, methodName, qualityOfServiceLevel);
+            var context = new TopicGenerationContext(_mqttClient, _options, methodName, parameters, qualityOfServiceLevel);
             var topicNames = _options.TopicGenerationStrategy.CreateRpcTopics(context);
 
             var requestTopic = topicNames.RequestTopic;

@@ -77,7 +77,7 @@ namespace MQTTnet.Client
 
         internal MqttPublishPacket PublishPacket { get; set; }
 
-        public Task AcknowledgeAsync(CancellationToken cancellationToken)
+        public Task AcknowledgeAsync(CancellationToken cancellationToken = default)
         {
             if (_acknowledgeHandler == null)
             {

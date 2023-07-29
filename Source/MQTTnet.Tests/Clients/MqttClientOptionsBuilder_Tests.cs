@@ -10,7 +10,7 @@ using MQTTnet.Client;
 namespace MQTTnet.Tests.Clients
 {
     [TestClass]
-    public class MqttClientOptionsBuilder_Tests
+    public sealed class MqttClientOptionsBuilder_Tests
     {
         [TestMethod]
         public void WithConnectionUri_Credential_Test()

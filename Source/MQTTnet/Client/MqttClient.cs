@@ -881,6 +881,7 @@ namespace MQTTnet.Client
 
             _lastPacketSentTimestamp = DateTime.UtcNow;
 
+            //ThrowIfNotConnected();
             return _adapter.SendPacketAsync(packet, cancellationToken);
         }
 

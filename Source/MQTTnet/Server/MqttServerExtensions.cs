@@ -13,7 +13,33 @@ namespace MQTTnet.Server
 {
     public static class MqttServerExtensions
     {
+        [Obsolete("Use InjectApplicationMessageAsync instead.")]
         public static Task InjectApplicationMessage(
+            this MqttServer server,
+            string topic,
+            string payload = null,
+            MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+            bool retain = false)
+        {
+            return InjectApplicationMessageAsync(server, topic, payload, qualityOfServiceLevel, retain);
+        }
+
+        public static Task InjectApplicationMessageAsync(this MqttServer server, MqttApplicationMessage applicationMessage)
+        {
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+
+            if (applicationMessage == null)
+            {
+                throw new ArgumentNullException(nameof(applicationMessage));
+            }
+
+            return server.InjectApplicationMessageAsync(new InjectedMqttApplicationMessage(applicationMessage));
+        }
+
+        public static Task InjectApplicationMessageAsync(
             this MqttServer server,
             string topic,
             string payload = null,
@@ -36,7 +62,7 @@ namespace MQTTnet.Server
                 payloadBuffer = Encoding.UTF8.GetBytes(stringPayload);
             }
 
-            return server.InjectApplicationMessage(
+            return server.InjectApplicationMessageAsync(
                 new InjectedMqttApplicationMessage(
                     new MqttApplicationMessage
                     {

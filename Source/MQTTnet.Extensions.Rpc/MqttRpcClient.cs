@@ -69,6 +69,11 @@ namespace MQTTnet.Extensions.Rpc
                 throw new ArgumentNullException(nameof(methodName));
             }
 
+            if (!_mqttClient.IsConnected)
+            {
+                throw new MqttClientDisconnectedException(null);
+            }
+
             var context = new TopicGenerationContext(_mqttClient, _options, methodName, qualityOfServiceLevel);
             var topicNames = _options.TopicGenerationStrategy.CreateRpcTopics(context);
 

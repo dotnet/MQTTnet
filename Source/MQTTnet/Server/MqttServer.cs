@@ -229,7 +229,13 @@ namespace MQTTnet.Server
             return _clientSessionsManager.GetSessionsStatus();
         }
 
+        [Obsolete("Use InjectApplicationMessageAsync instead.")]
         public Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage, CancellationToken cancellationToken = default)
+        {
+            return InjectApplicationMessageAsync(injectedApplicationMessage, cancellationToken);
+        }
+        
+        public Task InjectApplicationMessageAsync(InjectedMqttApplicationMessage injectedApplicationMessage, CancellationToken cancellationToken = default)
         {
             if (injectedApplicationMessage == null)
             {

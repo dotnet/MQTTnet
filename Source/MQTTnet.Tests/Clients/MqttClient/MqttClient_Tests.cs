@@ -69,38 +69,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 Assert.IsTrue(success);
             }
         }
+       
 
-        [TestMethod]
-        public async Task Connect_Disconnect_Connect()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                await testEnvironment.StartServer();
-
-                var clientOptions = testEnvironment.CreateDefaultClientOptions();
-                var client = testEnvironment.CreateClient();
-
-                await client.ConnectAsync(clientOptions);
-                await client.DisconnectAsync();
-                await client.ConnectAsync(clientOptions);
-            }
-        }
-        
-        [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task Connect_Multiple_Times_Should_Fail()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                await testEnvironment.StartServer();
-
-                var clientOptions = testEnvironment.CreateDefaultClientOptions();
-                var client = testEnvironment.CreateClient();
-
-                await client.ConnectAsync(clientOptions);
-                await client.ConnectAsync(clientOptions);
-            }
-        }
 
         [TestMethod]
         public async Task Disconnect_Event_Contains_Exception()

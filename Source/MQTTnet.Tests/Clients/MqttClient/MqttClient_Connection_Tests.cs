@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
+using MQTTnet.Extensions.Rpc;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
@@ -20,6 +21,38 @@ namespace MQTTnet.Tests.Clients.MqttClient
     [TestClass]
     public sealed class MqttClient_Connection_Tests : BaseTestClass
     {
+        [TestMethod]
+        public async Task Connect_Disconnect_Connect()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var clientOptions = testEnvironment.CreateDefaultClientOptions();
+                var client = testEnvironment.CreateClient();
+
+                await client.ConnectAsync(clientOptions);
+                await client.DisconnectAsync();
+                await client.ConnectAsync(clientOptions);
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task Connect_Multiple_Times_Should_Fail()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var clientOptions = testEnvironment.CreateDefaultClientOptions();
+                var client = testEnvironment.CreateClient();
+
+                await client.ConnectAsync(clientOptions);
+                await client.ConnectAsync(clientOptions);
+            }
+        }
+
         [TestMethod]
         [ExpectedException(typeof(MqttCommunicationException))]
         public async Task Connect_To_Invalid_Server_Port_Not_Opened()
@@ -194,6 +227,18 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 Assert.AreEqual(MqttClientConnectResultCode.QuotaExceeded, response.ResultCode);
                 Assert.AreEqual(response.UserProperties[0].Name, "Property");
                 Assert.AreEqual(response.UserProperties[0].Value, "Value");
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(MqttClientDisconnectedException))]
+        public async Task Rpc_Client_Not_Connected()
+        {
+            var factory = new MqttFactory();
+            using (var client = factory.CreateMqttClient())
+            {
+                var rpcClient = factory.CreateMqttRpcClient(client);
+                await rpcClient.ExecuteAsync("aaa", new byte[] { 1, 2, 3 }, MqttQualityOfServiceLevel.AtLeastOnce);
             }
         }
     }

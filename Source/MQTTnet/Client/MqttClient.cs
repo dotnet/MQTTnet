@@ -140,6 +140,7 @@ namespace MQTTnet.Client
                 if (connectResult.ResultCode != MqttClientConnectResultCode.Success)
                 {
                     _logger.Warning("Connecting failed: {0}", connectResult.ResultCode);
+                    await DisconnectInternal(null, null, connectResult).ConfigureAwait(false);
                     return connectResult;
                 }
 

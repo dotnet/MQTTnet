@@ -478,6 +478,12 @@ namespace MQTTnet.Client
             return this;
         }
 
+        public MqttClientOptionsBuilder WithWillMessageExpiryInterval(uint willMessageExpiryInterval)
+        {
+            _options.WillMessageExpiryInterval = willMessageExpiryInterval;
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithWillTopic(string willTopic)
         {
             _options.WillTopic = willTopic;

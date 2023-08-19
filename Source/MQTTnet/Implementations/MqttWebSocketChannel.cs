@@ -206,16 +206,12 @@ namespace MQTTnet.Implementations
                 clientWebSocket.Options.Cookies = _options.CookieContainer;
             }
 
-            if (_options.TlsOptions?.UseTls == true && _options.TlsOptions?.Certificates != null)
+            if (_options.TlsOptions?.UseTls == true)
             {
-                clientWebSocket.Options.ClientCertificates = new X509CertificateCollection();
-                foreach (var certificate in _options.TlsOptions.Certificates)
+                var certificates = _options.TlsOptions?.ClientCertificatesProvider?.GetCertificates();
+                if (certificates?.Count > 0)
                 {
-#if WINDOWS_UWP
-                    clientWebSocket.Options.ClientCertificates.Add(new X509Certificate(certificate));
-#else
-                    clientWebSocket.Options.ClientCertificates.Add(certificate);
-#endif
+                    clientWebSocket.Options.ClientCertificates = certificates;
                 }
             }
 

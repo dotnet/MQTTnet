@@ -249,9 +249,11 @@ namespace MQTTnet.Implementations
 #elif WINDOWS_UWP
                 throw new NotSupportedException("Remote certificate validation callback is not supported when using 'uap10.0'.");
 #elif NET452 || NET461 || NET48
-                ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => {
+                ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => 
+                {
                     var context = new MqttClientCertificateValidationEventArgs
                     {
+                        Sender = sender,
                         Certificate = certificate,
                         Chain = chain,
                         SslPolicyErrors = sslPolicyErrors,

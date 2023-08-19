@@ -14,8 +14,14 @@ namespace MQTTnet.Client
 
         public X509Chain Chain { get; set; }
 
-        public SslPolicyErrors SslPolicyErrors { get; set; }
-
         public IMqttClientChannelOptions ClientOptions { get; set; }
+#if NET452 || NET461 || NET48
+        /// <summary>
+        ///     Can be a host string name or an object derived from WebRequest.
+        /// </summary>
+        public object Sender { get; set; }
+#endif
+
+        public SslPolicyErrors SslPolicyErrors { get; set; }
     }
 }

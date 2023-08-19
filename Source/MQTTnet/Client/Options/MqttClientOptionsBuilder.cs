@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -61,7 +61,7 @@ namespace MQTTnet.Client
             {
                 _webSocketOptions.TlsOptions = tlsOptions;
             }
-            
+
             if (_proxyOptions != null)
             {
                 if (_webSocketOptions == null)
@@ -127,7 +127,11 @@ namespace MQTTnet.Client
                     break;
 
                 case "mqtts":
-                    WithTcpServer(uri.Host, port).WithTlsOptions(o => {});
+                    WithTcpServer(uri.Host, port)
+                        .WithTlsOptions(
+                            o =>
+                            {
+                            });
                     break;
 
                 case "ws":
@@ -468,6 +472,12 @@ namespace MQTTnet.Client
             return this;
         }
 
+        public MqttClientOptionsBuilder WithWillMessageExpiryInterval(uint willMessageExpiryInterval)
+        {
+            _options.WillMessageExpiryInterval = willMessageExpiryInterval;
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithWillPayload(byte[] willPayload)
         {
             _options.WillPayload = willPayload;
@@ -518,12 +528,6 @@ namespace MQTTnet.Client
         public MqttClientOptionsBuilder WithWillRetain(bool willRetain = true)
         {
             _options.WillRetain = willRetain;
-            return this;
-        }
-
-        public MqttClientOptionsBuilder WithWillMessageExpiryInterval(uint willMessageExpiryInterval)
-        {
-            _options.WillMessageExpiryInterval = willMessageExpiryInterval;
             return this;
         }
 

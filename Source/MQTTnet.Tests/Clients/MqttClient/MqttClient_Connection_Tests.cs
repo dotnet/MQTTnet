@@ -196,5 +196,27 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 Assert.AreEqual(response.UserProperties[0].Value, "Value");
             }
         }
+
+        [TestMethod]
+        public async Task Throw_Proper_Exception_When_Not_Connected()
+        {
+            try
+            {
+                var mqttFactory = new MqttFactory();
+                using (var mqttClient = mqttFactory.CreateMqttClient())
+                {
+                    await mqttClient.SubscribeAsync("test", MqttQualityOfServiceLevel.AtLeastOnce);
+                }
+            }
+            catch (MqttCommunicationException exception)
+            {
+                if (exception.Message == "The client is not connected.")
+                {
+                    return;
+                }
+            }
+
+            Assert.Fail();
+        }
     }
 }

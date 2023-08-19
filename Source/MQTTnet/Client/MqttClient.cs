@@ -321,13 +321,13 @@ namespace MQTTnet.Client
                 MqttTopicValidator.ThrowIfInvalidSubscribe(topicFilter.Topic);
             }
 
+            ThrowIfDisposed();
+            ThrowIfNotConnected();
+            
             if (Options.ValidateFeatures)
             {
                 MqttClientSubscribeOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
             }
-
-            ThrowIfDisposed();
-            ThrowIfNotConnected();
 
             var subscribePacket = MqttPacketFactories.Subscribe.Create(options);
             subscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
@@ -465,11 +465,10 @@ namespace MQTTnet.Client
             // did send a proper ACK packet with a non success response.
             if (options.ThrowOnNonSuccessfulConnectResponse)
             {
-                _logger.Warning(
-                    "Client will now throw an _MqttConnectingFailedException_. This is obsolete and will be removed in the future. Consider setting _ThrowOnNonSuccessfulResponseFromServer=False_ in client options.");
-
                 if (result.ResultCode != MqttClientConnectResultCode.Success)
                 {
+                    _logger.Warning(
+                        "Client will now throw an _MqttConnectingFailedException_. This is obsolete and will be removed in the future. Consider setting _ThrowOnNonSuccessfulResponseFromServer=False_ in client options.");
                     throw new MqttConnectingFailedException($"Connecting with MQTT server failed ({result.ResultCode}).", null, result);
                 }
             }

@@ -244,11 +244,6 @@ namespace MQTTnet.Tests.Extensions
         {
             public MqttRpcTopicPair CreateRpcTopics(TopicGenerationContext context)
             {
-                if (context.Parameters == null)
-                {
-                    throw new InvalidOperationException("Parameters dictionary can not be null");
-                }
-
                 return new MqttRpcTopicPair
                 {
                     RequestTopic = "a",
@@ -265,7 +260,7 @@ namespace MQTTnet.Tests.Extensions
             {
                 if (context.Parameters == null)
                 {
-                    throw new InvalidOperationException("Parameters dictionary can not be null");
+                    throw new InvalidOperationException("Parameters dictionary expected to be not null");
                 }
 
                 if (!context.Parameters.TryGetValue(ExpectedParamName, out var paramValue))

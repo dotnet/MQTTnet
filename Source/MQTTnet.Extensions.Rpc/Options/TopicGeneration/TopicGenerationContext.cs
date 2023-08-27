@@ -11,13 +11,11 @@ namespace MQTTnet.Extensions.Rpc
 {
     public sealed class TopicGenerationContext
     {
-        static readonly IDictionary<string, object> EmptyParameters = new Dictionary<string, object>();
-
         public TopicGenerationContext(IMqttClient mqttClient, MqttRpcClientOptions options, string methodName,
             IDictionary<string, object> parameters, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
-            Parameters = parameters ?? EmptyParameters;
+            Parameters = parameters;
             QualityOfServiceLevel = qualityOfServiceLevel;
             MqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
             Options = options ?? throw new ArgumentNullException(nameof(options));

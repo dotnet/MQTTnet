@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Protocol;
@@ -11,13 +12,13 @@ namespace MQTTnet.Extensions.Rpc
 {
     public static class MqttRpcClientExtensions
     {
-        public static Task<byte[]> ExecuteAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public static Task<byte[]> ExecuteAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string,object> parameters = null)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
 
             var buffer = Encoding.UTF8.GetBytes(payload ?? string.Empty);
 
-            return client.ExecuteAsync(timeout, methodName, buffer, qualityOfServiceLevel);
+            return client.ExecuteAsync(timeout, methodName, buffer, qualityOfServiceLevel, parameters);
         }
     }
 }

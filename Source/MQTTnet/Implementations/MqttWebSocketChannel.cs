@@ -206,16 +206,12 @@ namespace MQTTnet.Implementations
                 clientWebSocket.Options.Cookies = _options.CookieContainer;
             }
 
-            if (_options.TlsOptions?.UseTls == true && _options.TlsOptions?.Certificates != null)
+            if (_options.TlsOptions?.UseTls == true)
             {
-                clientWebSocket.Options.ClientCertificates = new X509CertificateCollection();
-                foreach (var certificate in _options.TlsOptions.Certificates)
+                var certificates = _options.TlsOptions?.ClientCertificatesProvider?.GetCertificates();
+                if (certificates?.Count > 0)
                 {
-#if WINDOWS_UWP
-                    clientWebSocket.Options.ClientCertificates.Add(new X509Certificate(certificate));
-#else
-                    clientWebSocket.Options.ClientCertificates.Add(certificate);
-#endif
+                    clientWebSocket.Options.ClientCertificates = certificates;
                 }
             }
 
@@ -248,12 +244,20 @@ namespace MQTTnet.Implementations
                 throw new NotSupportedException("Remote certificate validation callback is not supported when using 'netstandard2.0'.");
 #elif WINDOWS_UWP
                 throw new NotSupportedException("Remote certificate validation callback is not supported when using 'uap10.0'.");
-#elif NET452
-                throw new NotSupportedException("Remote certificate validation callback is not supported when using 'net452'.");
-#elif NET461
-                throw new NotSupportedException("Remote certificate validation callback is not supported when using 'net461'.");
-#elif NET48
-                throw new NotSupportedException("Remote certificate validation callback is not supported when using 'net48'.");
+#elif NET452 || NET461 || NET48
+                ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => 
+                {
+                    var context = new MqttClientCertificateValidationEventArgs
+                    {
+                        Sender = sender,
+                        Certificate = certificate,
+                        Chain = chain,
+                        SslPolicyErrors = sslPolicyErrors,
+                        ClientOptions = _options
+                    };
+
+                    return certificateValidationHandler(context);
+                };
 #else
                 clientWebSocket.Options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
                 {

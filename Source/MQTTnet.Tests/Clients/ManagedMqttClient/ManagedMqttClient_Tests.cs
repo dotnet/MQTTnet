@@ -421,7 +421,7 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                 var receivingClient = await CreateManagedClientAsync(testEnvironment, null, connectionCheckInterval);
                 var sendingClient = await testEnvironment.ConnectClient();
 
-                await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", Payload = new byte[] { 1 }, Retain = true });
+                await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", PayloadSegment = new ArraySegment<byte>( new byte[] { 1 }), Retain = true });
 
                 var subscribeTime = DateTime.UtcNow;
 
@@ -454,7 +454,7 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                 //wait a bit for the subscription to become established
                 await Task.Delay(500);
 
-                await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", Payload = new byte[] { 1 }, Retain = true });
+                await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", PayloadSegment = new ArraySegment<byte>(new byte[] { 1 }), Retain = true });
 
                 var messages = await SetupReceivingOfMessages(managedClient, 1);
 

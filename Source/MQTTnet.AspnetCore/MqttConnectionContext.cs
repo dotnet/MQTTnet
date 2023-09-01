@@ -33,8 +33,11 @@ namespace MQTTnet.AspNetCore
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
 
-            _input = connection.Transport.Input;
-            _output = connection.Transport.Output;
+            if (!(_connection is TcpConnection tcp) || tcp.IsConnected)
+            {
+                _input = connection.Transport.Input;
+                _output = connection.Transport.Output;
+            }
         }
 
         public long BytesReceived { get; private set; }

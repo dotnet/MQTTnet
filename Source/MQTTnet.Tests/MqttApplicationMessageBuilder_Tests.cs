@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Protocol;
@@ -11,7 +12,7 @@ using MQTTnet.Protocol;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class MqttApplicationMessageBuilder_Tests
+    public sealed class MqttApplicationMessageBuilder_Tests
     {
         [TestMethod]
         public void CreateApplicationMessage_TopicOnly()
@@ -29,7 +30,7 @@ namespace MQTTnet.Tests
             Assert.AreEqual("xyz", message.Topic);
             Assert.IsFalse(message.Retain);
             Assert.AreEqual(MqttQualityOfServiceLevel.AtMostOnce, message.QualityOfServiceLevel);
-            Assert.AreEqual(Encoding.UTF8.GetString(message.Payload), "00:06:00");
+            Assert.AreEqual(Encoding.UTF8.GetString(message.PayloadSegment.ToArray()), "00:06:00");
         }
 
         [TestMethod]
@@ -41,7 +42,7 @@ namespace MQTTnet.Tests
             Assert.AreEqual("123", message.Topic);
             Assert.IsFalse(message.Retain);
             Assert.AreEqual(MqttQualityOfServiceLevel.AtMostOnce, message.QualityOfServiceLevel);
-            Assert.AreEqual(Encoding.UTF8.GetString(message.Payload), "Hello");
+            Assert.AreEqual(Encoding.UTF8.GetString(message.PayloadSegment.ToArray()), "Hello");
         }
 
         [TestMethod]

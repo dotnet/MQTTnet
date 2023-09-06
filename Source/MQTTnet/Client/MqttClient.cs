@@ -238,6 +238,11 @@ namespace MQTTnet.Client
 
         public async Task PingAsync(CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            ThrowIfDisposed();
+            ThrowIfNotConnected();
+
             if (cancellationToken.CanBeCanceled)
             {
                 await Request<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
@@ -441,7 +446,7 @@ namespace MQTTnet.Client
 
                 if (receivedPacket is MqttConnAckPacket connAckPacket)
                 {
-                    result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, _adapter.PacketFormatterAdapter.ProtocolVersion);
+                    result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
                 }
                 else if (receivedPacket is MqttAuthPacket)
                 {
@@ -513,7 +518,7 @@ namespace MQTTnet.Client
             using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))
             {
                 _logger.Verbose("Trying to connect with server '{0}'", Options.ChannelOptions);
-                await _adapter.ConnectAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
+                await channelAdapter.ConnectAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
                 _logger.Verbose("Connection with server established");
 
                 _publishPacketReceiverQueue?.Dispose();

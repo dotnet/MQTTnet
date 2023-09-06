@@ -430,6 +430,9 @@ public static class Client_Connection_Samples
                         }
                     }
                 });
+
+            Console.WriteLine("Press <Enter> to exit");
+            Console.ReadLine();
         }
     }
 }

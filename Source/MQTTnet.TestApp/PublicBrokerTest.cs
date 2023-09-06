@@ -25,7 +25,9 @@ namespace MQTTnet.TestApp
                 UseTls = true,
                 SslProtocol = SslProtocols.Tls13,
                 // Don't use this in production code. This handler simply allows any invalid certificate to work.
-                CertificateValidationHandler = w => true
+                AllowUntrustedCertificates = true,
+                IgnoreCertificateChainErrors = true,
+                CertificateValidationHandler = _ => true
             };
 #endif
             // Also defining TLS12 for servers that don't seem no to support TLS13.
@@ -34,7 +36,9 @@ namespace MQTTnet.TestApp
                 UseTls = true,
                 SslProtocol = SslProtocols.Tls12,
                 // Don't use this in production code. This handler simply allows any invalid certificate to work.
-                CertificateValidationHandler = w => true
+                AllowUntrustedCertificates = true,
+                IgnoreCertificateChainErrors = true,
+                CertificateValidationHandler = _ => true
             };
 
             // mqtt.eclipseprojects.io
@@ -97,10 +101,10 @@ namespace MQTTnet.TestApp
                 "test.mosquitto.org WS TLS12",
                 new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("test.mosquitto.org:8081/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls12).Build());
 
-            // await ExecuteTestAsync(
-            //     "test.mosquitto.org WS TLS12 (WebSocket4Net)",
-            //     new MqttClientOptionsBuilder().WithWebSocketServer("test.mosquitto.org:8081/mqtt").WithProtocolVersion(MqttProtocolVersion.V311).WithTls(unsafeTls12).Build(),
-            //     true);
+            await ExecuteTestAsync(
+                "test.mosquitto.org WS TLS12 (WebSocket4Net)",
+                new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("test.mosquitto.org:8081/mqtt")).WithProtocolVersion(MqttProtocolVersion.V311).WithTlsOptions(unsafeTls12).Build(),
+                true);
 
             // broker.emqx.io
             await ExecuteTestAsync(
@@ -150,7 +154,6 @@ namespace MQTTnet.TestApp
                 true);
 
             // mqtt.swifitch.cz: Does not seem to operate any more
-
             // cloudmqtt.com: Cannot test because it does not offer a free plan any more.
 
             Write("Finished.", ConsoleColor.White);
@@ -197,9 +200,10 @@ namespace MQTTnet.TestApp
 
                 Write("[OK]\n", ConsoleColor.Green);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Write("[FAILED] " + e.Message + "\n", ConsoleColor.Red);
+                Write("[FAILED]" + Environment.NewLine, ConsoleColor.Red);
+                Write(exception + Environment.NewLine, ConsoleColor.Red);
             }
         }
 

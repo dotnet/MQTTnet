@@ -47,13 +47,13 @@ namespace MQTTnet.Extensions.WebSocket4Net
             var uri = _webSocketOptions.Uri;
             if (!uri.StartsWith("ws://", StringComparison.OrdinalIgnoreCase) && !uri.StartsWith("wss://", StringComparison.OrdinalIgnoreCase))
             {
-                if (_webSocketOptions.TlsOptions?.UseTls == false)
+                if (_webSocketOptions.TlsOptions?.UseTls == true)
                 {
-                    uri = "ws://" + uri;
+                    uri = "wss://" + uri;
                 }
                 else
                 {
-                    uri = "wss://" + uri;
+                    uri = "ws://" + uri;
                 }
             }
             

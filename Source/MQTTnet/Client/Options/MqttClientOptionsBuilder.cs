@@ -32,7 +32,12 @@ namespace MQTTnet.Client
                 throw new InvalidOperationException("A channel must be set.");
             }
 
-            var tlsOptions = _tlsOptions;
+            // The user can specify the TCP options with already configured TLS options
+            // or start with TLS settings not knowing which transport will be used (depending
+            // on the order of called methods from the builder).
+            // The builder prefers the explicitly set TLS options!
+            var tlsOptions = _tlsOptions ?? _tcpOptions?.TlsOptions;
+            
             if (_tlsParameters != null)
             {
                 if (_tlsParameters?.UseTls == true)

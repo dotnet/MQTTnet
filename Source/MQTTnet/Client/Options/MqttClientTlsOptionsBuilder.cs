@@ -144,8 +144,8 @@ namespace MQTTnet.Client
             {
                 throw new InvalidOperationException("WithCaFile cannot be used with a custom Certificate Validation Handler");
             }
-            WithCertificateValidationHandler(MqttClientCaFileCertificateValidationHandler.Handle);
             _tlsOptions.CaFile = caFile;
+            WithCertificateValidationHandler(MqttClientCaFileCertificateValidationHandler.Handle);
             return this;
         }
 #endif

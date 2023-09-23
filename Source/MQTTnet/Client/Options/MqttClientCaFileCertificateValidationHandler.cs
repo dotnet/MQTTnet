@@ -20,7 +20,7 @@ namespace MQTTnet.Client.Options
                 if (cvArgs.SslPolicyErrors == System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors)
                 {
                     string caFile = cvArgs.ClientOptions.TlsOptions.CaFile;
-                    if (!string.IsNullOrEmpty(caFile) && File.Exists(caFile))
+                    if (!string.IsNullOrEmpty(caFile))
                     {
                         X509Certificate2Collection caCerts = new X509Certificate2Collection();
 #if NET6_0_OR_GREATER

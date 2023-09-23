@@ -435,4 +435,22 @@ public static class Client_Connection_Samples
             Console.ReadLine();
         }
     }
+
+    public static async Task ConnectTls_WithCaFile()
+    {
+        var mqttFactory = new MqttFactory();
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder()
+                .WithTcpServer("test.mosquitto.org", 8883)
+                .WithTlsOptions(new MqttClientTlsOptionsBuilder()
+                    .WithCertificateValidationHandler(MQTTnet.Client.Options.MqttClientCaFileCertificateValidationHandler.Handle)
+                    .WithCaFile("mosquitto.org.crt") // from https://test.mosquitto.org/ssl/mosquitto.org.crt
+                    .Build())
+                .Build();
+             
+            var connAck = await mqttClient.ConnectAsync(mqttClientOptions);
+            Console.WriteLine("Connected to test.moquitto.org:8883 with result" + connAck.ResultCode);
+        }
+    }
 }

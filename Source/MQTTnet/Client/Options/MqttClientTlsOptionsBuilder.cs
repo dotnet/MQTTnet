@@ -131,6 +131,12 @@ namespace MQTTnet.Client
             _tlsOptions.EncryptionPolicy = encryptionPolicy;
             return this;
         }
+
 #endif
+        public MqttClientTlsOptionsBuilder WithCaFile(string caFile)
+        {
+            _tlsOptions.CaFile = caFile;
+            return this;
+        }
     }
 }

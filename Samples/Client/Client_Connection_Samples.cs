@@ -444,13 +444,12 @@ public static class Client_Connection_Samples
             var mqttClientOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer("test.mosquitto.org", 8883)
                 .WithTlsOptions(new MqttClientTlsOptionsBuilder()
-                    .WithCertificateValidationHandler(MQTTnet.Client.Options.MqttClientCaFileCertificateValidationHandler.Handle)
                     .WithCaFile("mosquitto.org.crt") // from https://test.mosquitto.org/ssl/mosquitto.org.crt
                     .Build())
                 .Build();
              
             var connAck = await mqttClient.ConnectAsync(mqttClientOptions);
-            Console.WriteLine("Connected to test.moquitto.org:8883 with result" + connAck.ResultCode);
+            Console.WriteLine("Connected to test.moquitto.org:8883 with CaFile mosquitto.org.crt: " + connAck.ResultCode);
         }
     }
 }

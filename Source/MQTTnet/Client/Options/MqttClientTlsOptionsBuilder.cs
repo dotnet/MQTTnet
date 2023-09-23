@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using MQTTnet.Client.Options;
 #if NETCOREAPP3_1_OR_GREATER
 using System.Net.Security;
 #endif
@@ -43,6 +44,11 @@ namespace MQTTnet.Client
             if (certificateValidationHandler == null)
             {
                 throw new ArgumentNullException(nameof(certificateValidationHandler));
+            }
+
+            if (!string.IsNullOrEmpty(_tlsOptions.CaFile))
+            {
+                throw new InvalidOperationException("WithCaFile cannot be used with a custom Certificate Validation Handler");
             }
 
             _tlsOptions.CertificateValidationHandler = certificateValidationHandler;
@@ -132,11 +138,16 @@ namespace MQTTnet.Client
             return this;
         }
 
-#endif
         public MqttClientTlsOptionsBuilder WithCaFile(string caFile)
         {
+            if (_tlsOptions.CertificateValidationHandler != null)
+            {
+                throw new InvalidOperationException("WithCaFile cannot be used with a custom Certificate Validation Handler");
+            }
+            WithCertificateValidationHandler(MqttClientCaFileCertificateValidationHandler.Handle);
             _tlsOptions.CaFile = caFile;
             return this;
         }
+#endif
     }
 }

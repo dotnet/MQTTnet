@@ -6,9 +6,9 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace MQTTnet.Client.Options
 {
-    public class MqttClientCaFileCertificateValidationHandler
+    internal class MqttClientCaFileCertificateValidationHandler
     {
-        public static bool Handle(MqttClientCertificateValidationEventArgs cvArgs)
+        internal static bool Handle(MqttClientCertificateValidationEventArgs cvArgs)
         {
             if (cvArgs.SslPolicyErrors == System.Net.Security.SslPolicyErrors.None)
             {
@@ -35,7 +35,10 @@ namespace MQTTnet.Client.Options
                             cvArgs.Chain.ChainStatus.ToList().ForEach(s => Trace.TraceWarning(s.StatusInformation));
                         }
                         return res;
+#else
+                        return false;
 #endif
+
                     }
                     else
                     {

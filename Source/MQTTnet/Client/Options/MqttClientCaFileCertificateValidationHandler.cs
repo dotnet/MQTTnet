@@ -22,8 +22,8 @@ namespace MQTTnet.Client.Options
                     string caFile = cvArgs.ClientOptions.TlsOptions.CaFile;
                     if (!string.IsNullOrEmpty(caFile))
                     {
+#if NET6_0_OR_GREATER   
                         X509Certificate2Collection caCerts = new X509Certificate2Collection();
-#if NET6_0_OR_GREATER
                         caCerts.ImportFromPemFile(caFile);
                         cvArgs.Chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                         cvArgs.Chain.ChainPolicy.CustomTrustStore.AddRange(caCerts);
@@ -36,21 +36,14 @@ namespace MQTTnet.Client.Options
                         }
                         return res;
 #else
-                        return false;
+                        throw new InvalidOperationException("WithCaFile requires .NET6 or greater");
 #endif
-
                     }
                     else
                     {
-#if NET6_0_OR_GREATER
-                        Trace.TraceWarning($"CaFile '{caFile}' not found.");
-#endif
                         return false;
                     }
                 }
-#if NET6_0_OR_GREATER
-                Trace.TraceWarning(cvArgs.SslPolicyErrors.ToString());
-#endif
                 return false;
             }
         }

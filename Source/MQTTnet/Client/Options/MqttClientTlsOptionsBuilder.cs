@@ -132,5 +132,13 @@ namespace MQTTnet.Client
             return this;
         }
 #endif
+
+#if NET7_0_OR_GREATER
+        public MqttClientTlsOptionsBuilder WithCertificationAuthoritiesFile(string pemFile)
+        {
+            _tlsOptions.CertificationAuthoritiesFile = pemFile;
+            return this;
+        }
+#endif
     }
 }

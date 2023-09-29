@@ -115,15 +115,30 @@ namespace MQTTnet.Implementations
                             ApplicationProtocols = _tcpOptions.TlsOptions.ApplicationProtocols,
                             ClientCertificates = LoadCertificates(),
                             EnabledSslProtocols = _tcpOptions.TlsOptions.SslProtocol,
-                            CertificateRevocationCheckMode =
- _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode,
+                            CertificateRevocationCheckMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? 
+                                                                    X509RevocationMode.NoCheck : 
+                                                                    _tcpOptions.TlsOptions.RevocationMode,
                             TargetHost = targetHost,
                             CipherSuitesPolicy = _tcpOptions.TlsOptions.CipherSuitesPolicy,
                             EncryptionPolicy = _tcpOptions.TlsOptions.EncryptionPolicy,
                             AllowRenegotiation = _tcpOptions.TlsOptions.AllowRenegotiation
                         };
+#if NET7_0_OR_GREATER
+                        if (!string.IsNullOrEmpty(_tcpOptions.TlsOptions.CertificationAuthoritiesFile))
+                        {
+                            X509Certificate2Collection caCerts = new X509Certificate2Collection();
+                            caCerts.ImportFromPemFile(_tcpOptions.TlsOptions.CertificationAuthoritiesFile);
+                            sslOptions.CertificateChainPolicy = new X509ChainPolicy();
+                            sslOptions.CertificateChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+                            sslOptions.CertificateChainPolicy.RevocationMode = _tcpOptions.TlsOptions.RevocationMode;
+                            foreach (X509Certificate2 cert in caCerts)
+                            {
+                                sslOptions.CertificateChainPolicy.CustomTrustStore.Add(cert);
+                            }
+                        }
+#endif
 
-                        await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
+                            await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
 #else
                         await sslStream.AuthenticateAsClientAsync(
                                 targetHost,

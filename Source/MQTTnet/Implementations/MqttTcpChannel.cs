@@ -124,10 +124,9 @@ namespace MQTTnet.Implementations
                             AllowRenegotiation = _tcpOptions.TlsOptions.AllowRenegotiation
                         };
 #if NET7_0_OR_GREATER
-                        if (!string.IsNullOrEmpty(_tcpOptions.TlsOptions.CertificationAuthoritiesFile))
+                        if (_tcpOptions.TlsOptions.TrustChain?.Count > 0)
                         {
-                            X509Certificate2Collection caCerts = new X509Certificate2Collection();
-                            caCerts.ImportFromPemFile(_tcpOptions.TlsOptions.CertificationAuthoritiesFile);
+                            X509Certificate2Collection caCerts = _tcpOptions.TlsOptions.TrustChain;
                             sslOptions.CertificateChainPolicy = new X509ChainPolicy();
                             sslOptions.CertificateChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                             sslOptions.CertificateChainPolicy.RevocationMode = _tcpOptions.TlsOptions.RevocationMode;

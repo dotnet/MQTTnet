@@ -134,11 +134,12 @@ namespace MQTTnet.Client
 #endif
 
 #if NET7_0_OR_GREATER
-        public MqttClientTlsOptionsBuilder WithCertificationAuthoritiesFile(string pemFile)
+        public MqttClientTlsOptionsBuilder WithTrustChain(X509Certificate2Collection chain)
         {
-            _tlsOptions.CertificationAuthoritiesFile = pemFile;
+            _tlsOptions.TrustChain = chain;
             return this;
         }
+
 #endif
     }
 }

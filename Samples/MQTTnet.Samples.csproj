@@ -21,10 +21,4 @@
         <ProjectReference Include="..\Source\MQTTnet\MQTTnet.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Update="mosquitto.org.crt">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
-
 </Project>

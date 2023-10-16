@@ -56,7 +56,7 @@ namespace MQTTnet.Client
 #endif
 
 #if NET7_0_OR_GREATER
-        public string CertificationAuthoritiesFile { get; set; }
+        public X509Certificate2Collection TrustChain { get; set; }
 #endif
     }
 }

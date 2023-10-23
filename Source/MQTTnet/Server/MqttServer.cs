@@ -91,6 +91,18 @@ namespace MQTTnet.Server
             remove => _eventContainer.InterceptingClientEnqueueEvent.RemoveHandler(value);
         }
 
+        public event Func<ApplicationMessageEnqueuedEventArgs, Task> ClientMessageEnqueuedOrDroppedAsync
+        {
+            add => _eventContainer.ClientMessageEnqueuedOrDroppedEvent.AddHandler(value);
+            remove => _eventContainer.ClientMessageEnqueuedOrDroppedEvent.RemoveHandler(value);
+        }
+
+        public event Func<QueueMessageOverwrittenEventArgs, Task> QueueMessageOverwrittenEventAsync
+        {
+            add => _eventContainer.QueueMessageOverwrittenEvent.AddHandler(value);
+            remove => _eventContainer.QueueMessageOverwrittenEvent.RemoveHandler(value);
+        }
+
         public event Func<InterceptingPacketEventArgs, Task> InterceptingInboundPacketAsync
         {
             add => _eventContainer.InterceptingInboundPacketEvent.AddHandler(value);

@@ -18,6 +18,7 @@ namespace MQTTnet.Server
     public sealed class MqttSession : IDisposable
     {
         readonly MqttClientSessionsManager _clientSessionsManager;
+        readonly MqttServerEventContainer _eventContainer;
         readonly MqttPacketBus _packetBus = new MqttPacketBus();
         readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new MqttPacketIdentifierProvider();
 
@@ -45,6 +46,7 @@ namespace MQTTnet.Server
             _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
             _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
 
+            _eventContainer = eventContainer;
             _subscriptionsManager = new MqttClientSubscriptionsManager(this, eventContainer, retainedMessagesManager, clientSessionsManager);
         }
 
@@ -117,13 +119,13 @@ namespace MQTTnet.Server
             _packetBus.EnqueueItem(packetBusItem, MqttPacketBusPartition.Control);
         }
 
-        public void EnqueueDataPacket(MqttPacketBusItem packetBusItem)
+        public bool EnqueueDataPacket(MqttPacketBusItem packetBusItem)
         {
             if (_packetBus.ItemsCount(MqttPacketBusPartition.Data) >= _serverOptions.MaxPendingMessagesPerClient)
             {
                 if (_serverOptions.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
                 {
-                    return;
+                    return false;
                 }
 
                 if (_serverOptions.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
@@ -131,6 +133,11 @@ namespace MQTTnet.Server
                     // Only drop from the data partition. Dropping from control partition might break the connection
                     // because the client does not receive PINGREQ packets etc. any longer.
                     _packetBus.DropFirstItem(MqttPacketBusPartition.Data);
+                    if (_eventContainer.QueueMessageOverwrittenEvent.HasHandlers)
+                    {
+                        var eventArgs = new QueueMessageOverwrittenEventArgs(this.Id);
+                        _eventContainer.QueueMessageOverwrittenEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                    }
                 }
             }
 
@@ -147,6 +154,7 @@ namespace MQTTnet.Server
             }
 
             _packetBus.EnqueueItem(packetBusItem, MqttPacketBusPartition.Data);
+            return true;
         }
 
         public void EnqueueHealthPacket(MqttPacketBusItem packetBusItem)

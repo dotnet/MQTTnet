@@ -103,6 +103,8 @@ namespace MQTTnet.Server
             finally
             {
                 IsRunning = false;
+                
+                Session.DisconnectedTimestamp = DateTime.UtcNow;
 
                 _cancellationToken?.TryCancel();
                 _cancellationToken?.Dispose();

@@ -54,7 +54,7 @@ namespace MQTTnet.Benchmarks
         public void Deserialize_10000_Messages()
         {
             var channel = new BenchmarkMqttChannel(_serializedPacket);
-            var reader = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535)), null, new MqttNetEventLogger());
+            var reader = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535)), new MqttNetEventLogger());
 
             for (var i = 0; i < 10000; i++)
             {

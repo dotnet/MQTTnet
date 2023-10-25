@@ -135,15 +135,15 @@ public static class Client_Connection_Samples
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
             var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("mqtt.fluux.io")
-                .WithTls(
+                .WithTlsOptions(
                     o =>
                     {
                         // The used public broker sometimes has invalid certificates. This sample accepts all
                         // certificates. This should not be used in live environments.
-                        o.CertificateValidationHandler = _ => true;
+                        o.WithCertificateValidationHandler(_ => true);
 
                         // The default value is determined by the OS. Set manually to force version.
-                        o.SslProtocol = SslProtocols.Tls12;
+                        o.WithSslProtocols(SslProtocols.Tls12);
                     })
                 .Build();
 
@@ -170,7 +170,7 @@ public static class Client_Connection_Samples
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
-            var mqttClientOptions = new MqttClientOptionsBuilder().WithWebSocketServer("broker.hivemq.com:8000/mqtt").Build();
+            var mqttClientOptions = new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("broker.hivemq.com:8000/mqtt")).Build();
 
             var response = await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
@@ -192,7 +192,7 @@ public static class Client_Connection_Samples
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
-            var mqttClientOptions = new MqttClientOptionsBuilder().WithWebSocketServer("broker.hivemq.com:8000/mqtt").Build();
+            var mqttClientOptions = new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("broker.hivemq.com:8000/mqtt")).Build();
 
             var response = await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
@@ -215,13 +215,11 @@ public static class Client_Connection_Samples
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
             var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("test.mosquitto.org", 8883)
-                .WithTls(
-                    o =>
-                    {
+                .WithTlsOptions(
+                    o => o.WithCertificateValidationHandler(
                         // The used public broker sometimes has invalid certificates. This sample accepts all
                         // certificates. This should not be used in live environments.
-                        o.CertificateValidationHandler = _ => true;
-                    })
+                        _ => true))
                 .Build();
 
             // In MQTTv5 the response contains much more information.
@@ -233,6 +231,31 @@ public static class Client_Connection_Samples
 
                 response.DumpToConsole();
             }
+        }
+    }
+
+    public static async Task Connect_With_Amazon_AWS()
+    {
+        /*
+         * This sample creates a simple MQTT client and connects to an Amazon Web Services broker.
+         *
+         * The broker requires special settings which are set here.
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        using (var mqttClient = mqttFactory.CreateMqttClient())
+        {
+            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("amazon.web.services.broker")
+                // Disabling packet fragmentation is very important!  
+                .WithoutPacketFragmentation()
+                .Build();
+
+            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+            Console.WriteLine("The MQTT client is connected.");
+
+            await mqttClient.DisconnectAsync();
         }
     }
 
@@ -291,18 +314,19 @@ public static class Client_Connection_Samples
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
             var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("mqtt.fluux.io", 8883)
-                .WithTls(
+                .WithTlsOptions(
                     o =>
                     {
-                        o.CertificateValidationHandler = eventArgs =>
-                        {
-                            eventArgs.Certificate.Subject.DumpToConsole();
-                            eventArgs.Certificate.GetExpirationDateString().DumpToConsole();
-                            eventArgs.Chain.ChainPolicy.RevocationMode.DumpToConsole();
-                            eventArgs.Chain.ChainStatus.DumpToConsole();
-                            eventArgs.SslPolicyErrors.DumpToConsole();
-                            return true;
-                        };
+                        o.WithCertificateValidationHandler(
+                            eventArgs =>
+                            {
+                                eventArgs.Certificate.Subject.DumpToConsole();
+                                eventArgs.Certificate.GetExpirationDateString().DumpToConsole();
+                                eventArgs.Chain.ChainPolicy.RevocationMode.DumpToConsole();
+                                eventArgs.Chain.ChainStatus.DumpToConsole();
+                                eventArgs.SslPolicyErrors.DumpToConsole();
+                                return true;
+                            });
                     })
                 .Build();
 
@@ -406,6 +430,9 @@ public static class Client_Connection_Samples
                         }
                     }
                 });
+
+            Console.WriteLine("Press <Enter> to exit");
+            Console.ReadLine();
         }
     }
 }

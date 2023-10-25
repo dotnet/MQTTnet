@@ -78,7 +78,7 @@ namespace MQTTnet.Tests.Formatter
             Assert.IsNull(deserialized.UserProperties); // Not supported in v3.1.1
         }
         
-                [TestMethod]
+        [TestMethod]
         public void Serialize_Full_MqttConnAckPacket_V310()
         {
             var connAckPacket = new MqttConnAckPacket

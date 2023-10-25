@@ -5,12 +5,14 @@
 using System;
 using System.Collections.Generic;
 using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 
 namespace MQTTnet.Client
 {
+    [Obsolete("Use methods from MqttClientOptionsBuilder instead.")]
     public sealed class MqttClientOptionsBuilderTlsParameters
     {
+        IEnumerable<System.Security.Cryptography.X509Certificates.X509Certificate> _obsoleteCertificates;
+
         public bool UseTls { get; set; }
 
         public Func<MqttClientCertificateValidationEventArgs, bool> CertificateValidationHandler { get; set; }
@@ -24,7 +26,24 @@ namespace MQTTnet.Client
 #if WINDOWS_UWP
         public IEnumerable<IEnumerable<byte>> Certificates { get; set; }
 #else
-        public IEnumerable<X509Certificate> Certificates { get; set; }
+        [Obsolete("Use CertificatesProvider instead.")]
+        public IEnumerable<System.Security.Cryptography.X509Certificates.X509Certificate> Certificates
+        {
+            get => _obsoleteCertificates;
+            set
+            {
+                _obsoleteCertificates = value;
+
+                if (value == null)
+                {
+                    CertificatesProvider = null;
+                }
+                else
+                {
+                    CertificatesProvider = new DefaultMqttCertificatesProvider(value);
+                }
+            }
+        }
 #endif
 
 #if NETCOREAPP3_1_OR_GREATER
@@ -36,5 +55,7 @@ namespace MQTTnet.Client
         public bool IgnoreCertificateChainErrors { get; set; }
 
         public bool IgnoreCertificateRevocationErrors { get; set; }
+
+        public IMqttClientCertificatesProvider CertificatesProvider { get; set; }
     }
 }

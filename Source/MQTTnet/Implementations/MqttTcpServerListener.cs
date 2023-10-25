@@ -229,8 +229,9 @@ namespace MQTTnet.Implementations
                     var bufferWriter = new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax);
                     var packetFormatterAdapter = new MqttPacketFormatterAdapter(bufferWriter);
                     
-                    using (var clientAdapter = new MqttChannelAdapter(tcpChannel, packetFormatterAdapter, null, _rootLogger))
+                    using (var clientAdapter = new MqttChannelAdapter(tcpChannel, packetFormatterAdapter, _rootLogger))
                     {
+                        clientAdapter.AllowPacketFragmentation = _options.AllowPacketFragmentation;
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }
                 }
@@ -255,6 +256,7 @@ namespace MQTTnet.Implementations
             {
                 try
                 {
+                    // ReSharper disable once MethodHasAsyncOverload
                     stream?.Dispose();
                     clientSocket?.Dispose();
                 }

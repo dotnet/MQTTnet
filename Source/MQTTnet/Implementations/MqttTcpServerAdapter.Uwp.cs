@@ -95,7 +95,7 @@ namespace MQTTnet.Implementations
                     var packetFormatterAdapter = new MqttPacketFormatterAdapter(bufferWriter);
                     var tcpChannel = new MqttTcpChannel(args.Socket, clientCertificate, _options);
 
-                    using (var clientAdapter = new MqttChannelAdapter(tcpChannel, packetFormatterAdapter, null, _rootLogger))
+                    using (var clientAdapter = new MqttChannelAdapter(tcpChannel, packetFormatterAdapter, _rootLogger))
                     {
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }

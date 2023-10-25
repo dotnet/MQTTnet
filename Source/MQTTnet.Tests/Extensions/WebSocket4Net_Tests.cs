@@ -23,7 +23,7 @@ namespace MQTTnet.Tests.Extensions
 
             using (var client = factory.CreateMqttClient())
             {
-                var options = new MqttClientOptionsBuilder().WithWebSocketServer("ws://a.b/mqtt").WithTimeout(TimeSpan.FromSeconds(2)).Build();
+                var options = new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("ws://a.b/mqtt")).WithTimeout(TimeSpan.FromSeconds(2)).Build();
                 await client.ConnectAsync(options).ConfigureAwait(false);
             }
         }

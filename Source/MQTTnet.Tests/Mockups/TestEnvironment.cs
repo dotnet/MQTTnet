@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -24,10 +25,9 @@ namespace MQTTnet.Tests.Mockups
     public sealed class TestEnvironment : IDisposable
     {
         readonly List<string> _clientErrors = new List<string>();
-        readonly List<IMqttClient> _clients = new List<IMqttClient>();
-
+        readonly ConcurrentBag<IMqttClient> _clients = new ConcurrentBag<IMqttClient>();
         readonly List<Exception> _exceptions = new List<Exception>();
-        readonly List<ILowLevelMqttClient> _lowLevelClients = new List<ILowLevelMqttClient>();
+        readonly ConcurrentBag<ILowLevelMqttClient> _lowLevelClients = new ConcurrentBag<ILowLevelMqttClient>();
         readonly MqttProtocolVersion _protocolVersion;
         readonly List<string> _serverErrors = new List<string>();
 
@@ -65,9 +65,12 @@ namespace MQTTnet.Tests.Mockups
 
                 if (e.LogMessage.Level == MqttNetLogLevel.Error)
                 {
-                    lock (_clientErrors)
+                    if (!IgnoreClientLogErrors)
                     {
-                        _clientErrors.Add(e.LogMessage.ToString());
+                        lock (_clientErrors)
+                        {
+                            _clientErrors.Add(e.LogMessage.ToString());
+                        }
                     }
                 }
             };
@@ -212,30 +215,27 @@ namespace MQTTnet.Tests.Mockups
 
         public IMqttClient CreateClient()
         {
-            lock (_clients)
+            var logger = EnableLogger ? (IMqttNetLogger)ClientLogger : MqttNetNullLogger.Instance;
+            
+            var client = Factory.CreateMqttClient(logger);
+            client.ConnectingAsync += e =>
             {
-                var logger = EnableLogger ? (IMqttNetLogger)ClientLogger : new MqttNetNullLogger();
-
-                var client = Factory.CreateMqttClient(logger);
-                _clients.Add(client);
-
-                client.ConnectingAsync += e =>
+                if (TestContext != null)
                 {
-                    if (TestContext != null)
+                    var clientOptions = e.ClientOptions;
+                    var existingClientId = clientOptions.ClientId;
+                    if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
                     {
-                        var clientOptions = e.ClientOptions;
-                        var existingClientId = clientOptions.ClientId;
-                        if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
-                        {
-                            clientOptions.ClientId = TestContext.TestName + "_" + existingClientId;
-                        }
+                        clientOptions.ClientId = TestContext.TestName + "_" + existingClientId;
                     }
+                }
 
-                    return CompletedTask.Instance;
-                };
-
-                return client;
-            }
+                return CompletedTask.Instance;
+            };
+            
+            _clients.Add(client);
+            
+            return client;
         }
 
         public MqttClientOptions CreateDefaultClientOptions()
@@ -245,18 +245,15 @@ namespace MQTTnet.Tests.Mockups
 
         public MqttClientOptionsBuilder CreateDefaultClientOptionsBuilder()
         {
-            return Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort);
+            return Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort).WithClientId(TestContext.TestName + "_" + Guid.NewGuid());
         }
 
         public ILowLevelMqttClient CreateLowLevelClient()
         {
-            lock (_clients)
-            {
-                var client = Factory.CreateLowLevelMqttClient(ClientLogger);
-                _lowLevelClients.Add(client);
+            var client = Factory.CreateLowLevelMqttClient(ClientLogger);
+            _lowLevelClients.Add(client);
 
-                return client;
-            }
+            return client;
         }
 
         public MqttServer CreateServer(MqttServerOptions options)
@@ -383,13 +380,16 @@ namespace MQTTnet.Tests.Mockups
                 }
             }
 
-            lock (_clientErrors)
+            if (!IgnoreClientLogErrors)
             {
-                if (!IgnoreClientLogErrors && _clientErrors.Count > 0)
+                lock (_clientErrors)
                 {
-                    var message = $"Client(s) had {_clientErrors.Count} errors (${string.Join(Environment.NewLine, _clientErrors)})";
-                    Console.WriteLine(message);
-                    throw new Exception(message);
+                    if (_clientErrors.Count > 0)
+                    {
+                        var message = $"Client(s) had {_clientErrors.Count} errors (${string.Join(Environment.NewLine, _clientErrors)})";
+                        Console.WriteLine(message);
+                        throw new Exception(message);
+                    }
                 }
             }
         }

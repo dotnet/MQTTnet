@@ -353,13 +353,13 @@ namespace MQTTnet.Extensions.ManagedClient
             return remainingTime < TimeSpan.Zero ? TimeSpan.Zero : remainingTime;
         }
 
-        async Task HandleSubscriptionExceptionAsync(Exception exception)
+        async Task HandleSubscriptionExceptionAsync(Exception exception, List<MqttTopicFilter> addedSubscriptions, List<string> removedSubscriptions)
         {
             _logger.Warning(exception, "Synchronizing subscriptions failed.");
 
             if (_synchronizingSubscriptionsFailedEvent.HasHandlers)
             {
-                await _synchronizingSubscriptionsFailedEvent.InvokeAsync(new ManagedProcessFailedEventArgs(exception)).ConfigureAwait(false);
+                await _synchronizingSubscriptionsFailedEvent.InvokeAsync(new ManagedProcessFailedEventArgs(exception, addedSubscriptions, removedSubscriptions)).ConfigureAwait(false);
             }
         }
 
@@ -457,11 +457,13 @@ namespace MQTTnet.Extensions.ManagedClient
         {
             _logger.Info("Publishing subscriptions at reconnect");
 
+            List<MqttTopicFilter> topicFilters = null;
+
             try
             {
                 if (_reconnectSubscriptions.Any())
                 {
-                    var topicFilters = new List<MqttTopicFilter>();
+                    topicFilters = new List<MqttTopicFilter>();
 
                     foreach (var sub in _reconnectSubscriptions)
                     {
@@ -479,7 +481,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             catch (Exception exception)
             {
-                await HandleSubscriptionExceptionAsync(exception).ConfigureAwait(false);
+                await HandleSubscriptionExceptionAsync(exception, topicFilters, null).ConfigureAwait(false);
             }
         }
 
@@ -591,6 +593,9 @@ namespace MQTTnet.Extensions.ManagedClient
                     }
 
                     await InternalClient.UnsubscribeAsync(unsubscribeOptionsBuilder.Build()).ConfigureAwait(false);
+
+                    //clear because these worked, maybe the subscribe below will fail, only report those
+                    removedSubscriptions.Clear();
                 }
 
                 if (addedSubscriptions != null && addedSubscriptions.Any())
@@ -607,7 +612,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
             catch (Exception exception)
             {
-                await HandleSubscriptionExceptionAsync(exception).ConfigureAwait(false);
+                await HandleSubscriptionExceptionAsync(exception, addedSubscriptions, removedSubscriptions).ConfigureAwait(false);
             }
         }
 

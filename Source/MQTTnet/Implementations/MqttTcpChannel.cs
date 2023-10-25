@@ -3,9 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 #if !WINDOWS_UWP
-using MQTTnet.Channel;
-using MQTTnet.Client;
-using MQTTnet.Exceptions;
 using System;
 using System.IO;
 using System.Net.Security;
@@ -14,6 +11,9 @@ using System.Runtime.ExceptionServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using MQTTnet.Channel;
+using MQTTnet.Client;
+using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations
@@ -73,7 +73,7 @@ namespace MQTTnet.Implementations
                 {
                     socket.Bind(_tcpOptions.LocalEndpoint);
                 }
-                
+
                 socket.ReceiveBufferSize = _tcpOptions.BufferSize;
                 socket.SendBufferSize = _tcpOptions.BufferSize;
                 socket.SendTimeout = (int)_clientOptions.Timeout.TotalMilliseconds;
@@ -100,6 +100,12 @@ namespace MQTTnet.Implementations
 
                 if (_tcpOptions.TlsOptions?.UseTls == true)
                 {
+                    var targetHost = _tcpOptions.TlsOptions.TargetHost;
+                    if (string.IsNullOrEmpty(targetHost))
+                    {
+                        targetHost = _tcpOptions.Server;
+                    }
+
                     var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                     try
                     {
@@ -111,14 +117,16 @@ namespace MQTTnet.Implementations
                             EnabledSslProtocols = _tcpOptions.TlsOptions.SslProtocol,
                             CertificateRevocationCheckMode =
  _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode,
-                            TargetHost = _tcpOptions.Server,
-                            CipherSuitesPolicy = _tcpOptions.TlsOptions.CipherSuitesPolicy
+                            TargetHost = targetHost,
+                            CipherSuitesPolicy = _tcpOptions.TlsOptions.CipherSuitesPolicy,
+                            EncryptionPolicy = _tcpOptions.TlsOptions.EncryptionPolicy,
+                            AllowRenegotiation = _tcpOptions.TlsOptions.AllowRenegotiation
                         };
 
                         await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
 #else
                         await sslStream.AuthenticateAsClientAsync(
-                                _tcpOptions.Server,
+                                targetHost,
                                 LoadCertificates(),
                                 _tcpOptions.TlsOptions.SslProtocol,
                                 !_tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors)
@@ -290,18 +298,7 @@ namespace MQTTnet.Implementations
 
         X509CertificateCollection LoadCertificates()
         {
-            var certificates = new X509CertificateCollection();
-            if (_tcpOptions.TlsOptions.Certificates == null)
-            {
-                return certificates;
-            }
-
-            foreach (var certificate in _tcpOptions.TlsOptions.Certificates)
-            {
-                certificates.Add(certificate);
-            }
-
-            return certificates;
+            return _tcpOptions.TlsOptions.ClientCertificatesProvider?.GetCertificates();
         }
     }
 }

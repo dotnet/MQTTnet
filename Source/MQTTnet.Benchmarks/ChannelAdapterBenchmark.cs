@@ -73,7 +73,7 @@ namespace MQTTnet.Benchmarks
 
             var channel = new MemoryMqttChannel(_stream);
 
-            _channelAdapter = new MqttChannelAdapter(channel, serializer, null, new MqttNetEventLogger());
+            _channelAdapter = new MqttChannelAdapter(channel, serializer, new MqttNetEventLogger());
         }
 
         static byte[] Join(params ArraySegment<byte>[] chunks)

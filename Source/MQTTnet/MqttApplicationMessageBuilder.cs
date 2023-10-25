@@ -2,16 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using MQTTnet.Exceptions;
-using MQTTnet.Internal;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using MQTTnet.Exceptions;
+using MQTTnet.Internal;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet
 {
@@ -20,9 +20,9 @@ namespace MQTTnet
         string _contentType;
         byte[] _correlationData;
         uint _messageExpiryInterval;
-        ArraySegment<byte> _payloadSegment;
 
         MqttPayloadFormatIndicator _payloadFormatIndicator;
+        ArraySegment<byte> _payloadSegment;
         MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
         string _responseTopic;
         bool _retain;
@@ -89,13 +89,11 @@ namespace MQTTnet
 
         public MqttApplicationMessageBuilder WithPayload(byte[] payload)
         {
-            _payloadSegment = payload == null || payload.Length == 0
-                ? EmptyBuffer.ArraySegment
-                : new ArraySegment<byte>(payload);
+            _payloadSegment = payload == null || payload.Length == 0 ? EmptyBuffer.ArraySegment : new ArraySegment<byte>(payload);
             return this;
         }
 
-        public MqttApplicationMessageBuilder WithPayloadSegment(ArraySegment<byte> payloadSegment)
+        public MqttApplicationMessageBuilder WithPayload(ArraySegment<byte> payloadSegment)
         {
             _payloadSegment = payloadSegment;
             return this;
@@ -123,9 +121,7 @@ namespace MQTTnet
 
         public MqttApplicationMessageBuilder WithPayload(Stream payload)
         {
-            return payload == null
-                ? WithPayload(default(byte[]))
-                : WithPayload(payload, payload.Length - payload.Position);
+            return payload == null ? WithPayload(default(byte[])) : WithPayload(payload, payload.Length - payload.Position);
         }
 
         public MqttApplicationMessageBuilder WithPayload(Stream payload, long length)
@@ -162,16 +158,6 @@ namespace MQTTnet
             return WithPayload(payloadBuffer);
         }
 
-
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
-        public MqttApplicationMessageBuilder WithPayloadSegment(ReadOnlyMemory<byte> payloadSegment)
-        {
-            return MemoryMarshal.TryGetArray(payloadSegment, out var segment)
-                ? WithPayloadSegment(segment)
-                : WithPayload(payloadSegment.ToArray());
-        }
-#endif
-
         /// <summary>
         ///     Adds the payload format indicator to the message.
         ///     <remarks>MQTT 5.0.0+ feature.</remarks>
@@ -181,6 +167,20 @@ namespace MQTTnet
             _payloadFormatIndicator = payloadFormatIndicator;
             return this;
         }
+
+        public MqttApplicationMessageBuilder WithPayloadSegment(ArraySegment<byte> payloadSegment)
+        {
+            _payloadSegment = payloadSegment;
+            return this;
+        }
+
+
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
+        public MqttApplicationMessageBuilder WithPayloadSegment(ReadOnlyMemory<byte> payloadSegment)
+        {
+            return MemoryMarshal.TryGetArray(payloadSegment, out var segment) ? WithPayloadSegment(segment) : WithPayload(payloadSegment.ToArray());
+        }
+#endif
 
         /// <summary>
         ///     The quality of service level.

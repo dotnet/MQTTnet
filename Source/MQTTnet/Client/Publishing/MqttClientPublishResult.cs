@@ -34,7 +34,7 @@ namespace MQTTnet.Client
         ///     Gets or sets the reason code.
         ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        public MqttClientPublishReasonCode ReasonCode { get; } = MqttClientPublishReasonCode.Success;
+        public MqttClientPublishReasonCode ReasonCode { get; }
 
         /// <summary>
         ///     Gets or sets the reason string.

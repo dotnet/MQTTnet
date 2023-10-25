@@ -36,7 +36,7 @@ namespace MQTTnet.Packets
 
         public override string ToString()
         {
-            return $"Disconnect: [ReasonCode={ReasonCode}]";
+            return $"Disconnect: [ReasonCode={ReasonCode}] [ReasonString={ReasonString}] [ServerReference={ServerReference}] [SessionExpiryInterval={SessionExpiryInterval}]";
         }
     }
 }

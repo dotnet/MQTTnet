@@ -200,7 +200,7 @@ namespace MQTTnet.Server
         {
             ThrowIfNotStarted();
 
-            return _clientSessionsManager.GetClientStatusesAsync();
+            return _clientSessionsManager.GetClientsStatus();
         }
 
         public Task<IList<MqttApplicationMessage>> GetRetainedMessagesAsync()
@@ -226,7 +226,7 @@ namespace MQTTnet.Server
         {
             ThrowIfNotStarted();
 
-            return _clientSessionsManager.GetSessionStatusAsync();
+            return _clientSessionsManager.GetSessionsStatus();
         }
 
         public Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage, CancellationToken cancellationToken = default)
@@ -292,7 +292,7 @@ namespace MQTTnet.Server
 
                 _cancellationTokenSource.Cancel(false);
 
-                await _clientSessionsManager.CloseAllConnectionsAsync().ConfigureAwait(false);
+                await _clientSessionsManager.CloseAllConnections().ConfigureAwait(false);
 
                 foreach (var adapter in _adapters)
                 {

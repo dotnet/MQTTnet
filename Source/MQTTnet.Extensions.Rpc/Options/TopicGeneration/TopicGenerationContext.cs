@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 
@@ -10,15 +11,19 @@ namespace MQTTnet.Extensions.Rpc
 {
     public sealed class TopicGenerationContext
     {
-        public TopicGenerationContext(IMqttClient mqttClient, MqttRpcClientOptions options, string methodName, MqttQualityOfServiceLevel qualityOfServiceLevel)
+        public TopicGenerationContext(IMqttClient mqttClient, MqttRpcClientOptions options, string methodName,
+            IDictionary<string, object> parameters, MqttQualityOfServiceLevel qualityOfServiceLevel)
         {
             MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
+            Parameters = parameters;
             QualityOfServiceLevel = qualityOfServiceLevel;
             MqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
             Options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         public string MethodName { get; }
+
+        public IDictionary<string, object> Parameters { get; }
 
         public IMqttClient MqttClient { get; }
 

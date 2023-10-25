@@ -598,8 +598,7 @@ namespace MQTTnet.Tests.Server
                 // c
                 var c1 = await testEnvironment.ConnectClient(clientOptionsBuilder);
 
-                await Task.Delay(500);
-
+                await LongTestDelay();
                 var flow = string.Join(string.Empty, events);
                 Assert.AreEqual("c", flow);
 
@@ -607,10 +606,8 @@ namespace MQTTnet.Tests.Server
                 // Connect client with same client ID. Should disconnect existing client.
                 var c2 = await testEnvironment.ConnectClient(clientOptionsBuilder);
 
-                await Task.Delay(500);
-
+                await LongTestDelay();
                 flow = string.Join(string.Empty, events);
-
                 Assert.AreEqual("cdc", flow);
 
                 c2.ApplicationMessageReceivedAsync += e =>
@@ -628,8 +625,7 @@ namespace MQTTnet.Tests.Server
                 // r
                 await c2.PublishStringAsync("topic");
 
-                await Task.Delay(500);
-
+                await LongTestDelay();
                 flow = string.Join(string.Empty, events);
                 Assert.AreEqual("cdcr", flow);
 
@@ -639,16 +635,17 @@ namespace MQTTnet.Tests.Server
                 await c1.TryDisconnectAsync();
                 Assert.AreEqual(false, c1.IsConnected);
 
-                await Task.Delay(500);
+                await LongTestDelay();
 
                 // d
                 Assert.AreEqual(true, c2.IsConnected);
                 await c2.DisconnectAsync();
 
-                await Task.Delay(500);
+                await LongTestDelay();
 
                 await server.StopAsync();
 
+                await LongTestDelay();
                 flow = string.Join(string.Empty, events);
                 Assert.AreEqual("cdcrd", flow);
             }
@@ -852,11 +849,11 @@ namespace MQTTnet.Tests.Server
                     return CompletedTask.Instance;
                 };
 
-                await Task.Delay(100);
-
+                // Stopping the server should disconnect the connection with the client
+                // which, it turn, will fire the disconnected event at the client.
                 await server.StopAsync();
 
-                await Task.Delay(100);
+                await LongTestDelay();
 
                 Assert.AreEqual(1, disconnectCalled);
             }
@@ -954,7 +951,7 @@ namespace MQTTnet.Tests.Server
 
                 var client = testEnvironment.CreateClient();
 
-                client.InspectPackage += e =>
+                client.InspectPacketAsync += e =>
                 {
                     if (e.Buffer.Length > 0)
                     {

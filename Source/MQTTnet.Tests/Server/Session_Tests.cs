@@ -71,6 +71,28 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
+        public async Task Do_Not_Use_Expired_Session()
+        {
+            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            {
+                await testEnvironment.StartServer(o => o.WithPersistentSessions());
+
+                var c1 = await testEnvironment.ConnectClient(o => o.WithClientId("Client1").WithCleanSession(false).WithSessionExpiryInterval(3));
+
+                // Kill the client connection and ensure that the session will stay there but is expired after 3 seconds!
+                c1.Dispose();
+
+                await Task.Delay(TimeSpan.FromSeconds(6));
+
+                c1 = testEnvironment.CreateClient();
+                var options = testEnvironment.CreateDefaultClientOptionsBuilder().WithClientId("Client1").WithCleanSession(false).WithSessionExpiryInterval(3).Build();
+
+                var connectResult = await c1.ConnectAsync(options);
+                Assert.AreEqual(false, connectResult.IsSessionPresent);
+            }
+        }
+
+        [TestMethod]
         public async Task Fire_Deleted_Event()
         {
             using (var testEnvironment = CreateTestEnvironment())
@@ -121,7 +143,7 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(true, session.Items["can_subscribe_x"]);
             }
         }
-        
+
         [TestMethod]
         [DataRow(MqttProtocolVersion.V310)]
         [DataRow(MqttProtocolVersion.V311)]
@@ -134,16 +156,12 @@ namespace MQTTnet.Tests.Server
 
                 await testEnvironment.StartServer();
 
-                var options = new MqttClientOptionsBuilder().WithClientId("1").WithTimeout(TimeSpan.FromSeconds(1)).WithProtocolVersion(protocolVersion);
+                var options = new MqttClientOptionsBuilder().WithClientId("1").WithTimeout(TimeSpan.FromSeconds(10)).WithProtocolVersion(protocolVersion);
 
                 var hasReceive = false;
-
                 void OnReceive()
                 {
-                    if (!hasReceive)
-                    {
-                        hasReceive = true;
-                    }
+                    hasReceive = true;
                 }
 
                 // Try to connect 50 clients at the same time.
@@ -152,7 +170,7 @@ namespace MQTTnet.Tests.Server
                 var connectedClients = clients.Where(c => c?.TryPingAsync().GetAwaiter().GetResult() == true).ToList();
 
                 await LongTestDelay();
-                
+
                 Assert.AreEqual(1, connectedClients.Count);
 
                 var option2 = new MqttClientOptionsBuilder().WithClientId("2").WithKeepAlivePeriod(TimeSpan.FromSeconds(10));
@@ -164,7 +182,7 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(true, hasReceive);
             }
         }
- 
+
         [DataTestMethod]
         [DataRow(MqttQualityOfServiceLevel.ExactlyOnce)]
         [DataRow(MqttQualityOfServiceLevel.AtLeastOnce)]
@@ -355,8 +373,8 @@ namespace MQTTnet.Tests.Server
                     onReceive();
                     return CompletedTask.Instance;
                 };
-                
-                using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+
+                using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
                 {
                     await client.SubscribeAsync("aaa", MqttQualityOfServiceLevel.AtMostOnce, timeout.Token).ConfigureAwait(false);
                 }

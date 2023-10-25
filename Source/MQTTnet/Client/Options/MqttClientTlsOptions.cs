@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
@@ -23,17 +24,29 @@ namespace MQTTnet.Client
 
         public X509RevocationMode RevocationMode { get; set; } = X509RevocationMode.Online;
 
-#if WINDOWS_UWP
-        public List<byte[]> Certificates { get; set; }
-#else
-        public List<X509Certificate> Certificates { get; set; }
-#endif
+        /// <summary>
+        ///     Gets or sets the provider for certificates.
+        ///     This provider gets called whenever the client wants to connect
+        ///     with the server and requires certificates for authentication.
+        ///     The implementation may return different certificates each time.
+        /// </summary>
+        public IMqttClientCertificatesProvider ClientCertificatesProvider { get; set; }
 
 #if NETCOREAPP3_1_OR_GREATER
-        public List<System.Net.Security.SslApplicationProtocol> ApplicationProtocols { get; set; }
-        
-        public System.Net.Security.CipherSuitesPolicy CipherSuitesPolicy { get; set; }
+        public List<SslApplicationProtocol> ApplicationProtocols { get; set; }
+
+        public CipherSuitesPolicy CipherSuitesPolicy { get; set; }
+
+        public EncryptionPolicy EncryptionPolicy { get; set; } = EncryptionPolicy.RequireEncryption;
+
+        public bool AllowRenegotiation { get; set; } = true;
 #endif
+
+        /// <summary>
+        ///     Gets or sets the target host.
+        ///     If the value is null or empty the same host as the TCP socket host will be used.
+        /// </summary>
+        public string TargetHost { get; set; }
 
 #if NET48 || NETCOREAPP3_1_OR_GREATER
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;

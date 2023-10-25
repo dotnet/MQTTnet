@@ -55,7 +55,7 @@ namespace MQTTnet.Extensions.Hosting.Implementations
                 {
                     var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
                     var channel = new MqttWebSocketChannel(webSocketContext.WebSocket, endpoint, webSocketContext.IsSecureConnection, clientCertificate);
-                    using (var channelAdapter = new MqttChannelAdapter(channel, formatter, null, _logger))
+                    using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger))
                     {
                         await clientHandler(channelAdapter).ConfigureAwait(false);
                     }

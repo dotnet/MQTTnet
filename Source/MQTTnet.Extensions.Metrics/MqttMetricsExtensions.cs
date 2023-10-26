@@ -9,7 +9,10 @@ namespace MQTTnet.Extensions.Metrics
     {
         public static void AddMetrics(this IMqttServerMetricSource server, Meter meter)
         {
-            ArgumentNullException.ThrowIfNull(meter, nameof(meter));
+            if (meter == null)
+            {
+                throw new ArgumentNullException(nameof(meter));
+            }
 
             meter.CreateObservableUpDownCounter("mqtt.sessions.count", server.GetActiveSessionCount);
             meter.CreateObservableCounter("mqtt.clients.count", server.GetActiveClientCount);

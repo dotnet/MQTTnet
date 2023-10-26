@@ -14,12 +14,14 @@
         <PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
         <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+        <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.2" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
         <ProjectReference Include="..\..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj" />
         <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
+        <ProjectReference Include="..\MQTTnet.Extensions.Metrics\MQTTnet.Extensions.Metrics.csproj" />
         <ProjectReference Include="..\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj" />
     </ItemGroup>
 

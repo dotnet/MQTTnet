@@ -14,10 +14,11 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Diagnostics.Instrumentation;
 
 namespace MQTTnet.Server
 {
-    public class MqttServer : Disposable
+    public class MqttServer : Disposable, IMqttServerMetricSource
     {
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttClientSessionsManager _clientSessionsManager;
@@ -48,6 +49,10 @@ namespace MQTTnet.Server
             _clientSessionsManager = new MqttClientSessionsManager(options, _retainedMessagesManager, _eventContainer, _rootLogger);
             _keepAliveMonitor = new MqttServerKeepAliveMonitor(options, _clientSessionsManager, _rootLogger);
         }
+
+        public int GetActiveClientCount() => _clientSessionsManager.GetActiveClientCount();
+
+        public int GetActiveSessionCount() => _clientSessionsManager.GetActiveSessionCount();
 
         public event Func<ApplicationMessageNotConsumedEventArgs, Task> ApplicationMessageNotConsumedAsync
         {

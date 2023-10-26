@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet", "Source\MQTTnet\MQTTnet.csproj", "{3587E506-55A2-4EB3-99C7-DC01E42D25D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet", "Source\MQTTnet\MQTTnet.csproj", "{3587E506-55A2-4EB3-99C7-DC01E42D25D2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B3F60ECB-45BA-4C66-8903-8BB89CA67998}"
 	ProjectSection(SolutionItems) = preProject
@@ -12,30 +12,30 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.AspNetCore", "Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj", "{F10C4060-F7EE-4A83-919F-FF723E72F94A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.AspNetCore", "Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj", "{F10C4060-F7EE-4A83-919F-FF723E72F94A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.Rpc", "Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj", "{C444E9C8-95FA-430E-9126-274129DE16CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Extensions.Rpc", "Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj", "{C444E9C8-95FA-430E-9126-274129DE16CD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.ManagedClient", "Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj", "{C400533A-8EBA-4F0B-BF4D-295C3708604B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Extensions.ManagedClient", "Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj", "{C400533A-8EBA-4F0B-BF4D-295C3708604B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.WebSocket4Net", "Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj", "{2BD01D53-4CA5-4142-BE8D-313876395E3E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Extensions.WebSocket4Net", "Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj", "{2BD01D53-4CA5-4142-BE8D-313876395E3E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Samples", "Samples\MQTTnet.Samples.csproj", "{71CF35F5-3327-4A91-AAF4-5340F6701771}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Samples", "Samples\MQTTnet.Samples.csproj", "{71CF35F5-3327-4A91-AAF4-5340F6701771}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Tests", "Source\MQTTnet.Tests\MQTTnet.Tests.csproj", "{B270F32A-9F3E-42EE-A989-813E35E29ADB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Tests", "Source\MQTTnet.Tests\MQTTnet.Tests.csproj", "{B270F32A-9F3E-42EE-A989-813E35E29ADB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{576D87F2-C86B-4C29-BD10-428EBBB1E6FD} = {576D87F2-C86B-4C29-BD10-428EBBB1E6FD}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.AspNetCore.Tests", "Source\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj", "{A238BBBF-C75F-482D-9CC3-BB34ABA9B675}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.AspNetCore.Tests", "Source\MQTTnet.AspNetCore.Tests\MQTTnet.AspNetCore.Tests.csproj", "{A238BBBF-C75F-482D-9CC3-BB34ABA9B675}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Benchmarks", "Source\MQTTnet.Benchmarks\MQTTnet.Benchmarks.csproj", "{2F516E76-AAC4-4219-B7D1-34CDD3CFF381}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Benchmarks", "Source\MQTTnet.Benchmarks\MQTTnet.Benchmarks.csproj", "{2F516E76-AAC4-4219-B7D1-34CDD3CFF381}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.TestApp", "Source\MQTTnet.TestApp\MQTTnet.TestApp.csproj", "{175D5340-CC5B-4542-939D-4E7D15A0BC8D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.TestApp", "Source\MQTTnet.TestApp\MQTTnet.TestApp.csproj", "{175D5340-CC5B-4542-939D-4E7D15A0BC8D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.AspTestApp", "Source\MQTTnet.AspTestApp\MQTTnet.AspTestApp.csproj", "{72867E4C-4E15-4E8E-8FAB-AE9253286BBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.AspTestApp", "Source\MQTTnet.AspTestApp\MQTTnet.AspTestApp.csproj", "{72867E4C-4E15-4E8E-8FAB-AE9253286BBC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.Metrics", "Source\MQTTnet.Extensions.Metrics\MQTTnet.Extensions.Metrics.csproj", "{576D87F2-C86B-4C29-BD10-428EBBB1E6FD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Extensions.Metrics", "Source\MQTTnet.Extensions.Metrics\MQTTnet.Extensions.Metrics.csproj", "{576D87F2-C86B-4C29-BD10-428EBBB1E6FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

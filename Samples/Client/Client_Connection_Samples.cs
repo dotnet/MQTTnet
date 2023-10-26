@@ -450,7 +450,6 @@ public static class Client_Connection_Samples
                 .WithTcpServer("test.mosquitto.org", 8883)
                 .WithTlsOptions(new MqttClientTlsOptionsBuilder()
                     .WithTrustChain(caChain) 
-                    .WithRevocationMode(System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck) // no check, since this CA does not include CRL/OCSP endpoints
                     .Build())
                 .Build();
 

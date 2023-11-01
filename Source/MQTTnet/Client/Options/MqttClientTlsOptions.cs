@@ -50,8 +50,13 @@ namespace MQTTnet.Client
 
 #if NET48 || NETCOREAPP3_1_OR_GREATER
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;
+
 #else
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;
+#endif
+
+#if NET7_0_OR_GREATER
+        public X509Certificate2Collection TrustChain { get; set; }
 #endif
     }
 }

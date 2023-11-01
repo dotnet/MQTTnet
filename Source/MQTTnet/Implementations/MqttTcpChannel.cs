@@ -115,24 +115,32 @@ namespace MQTTnet.Implementations
                             ApplicationProtocols = _tcpOptions.TlsOptions.ApplicationProtocols,
                             ClientCertificates = LoadCertificates(),
                             EnabledSslProtocols = _tcpOptions.TlsOptions.SslProtocol,
-                            CertificateRevocationCheckMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode,
+                            CertificateRevocationCheckMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors
+                                ? X509RevocationMode.NoCheck
+                                : _tcpOptions.TlsOptions.RevocationMode,
                             TargetHost = targetHost,
                             CipherSuitesPolicy = _tcpOptions.TlsOptions.CipherSuitesPolicy,
                             EncryptionPolicy = _tcpOptions.TlsOptions.EncryptionPolicy,
                             AllowRenegotiation = _tcpOptions.TlsOptions.AllowRenegotiation
                         };
+
 #if NET7_0_OR_GREATER
                         if (_tcpOptions.TlsOptions.TrustChain?.Count > 0)
                         {
-                            sslOptions.CertificateChainPolicy = new X509ChainPolicy();
-                            sslOptions.CertificateChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
-                            sslOptions.CertificateChainPolicy.VerificationFlags = X509VerificationFlags.IgnoreEndRevocationUnknown;
-                            sslOptions.CertificateChainPolicy.RevocationMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode;
+                            sslOptions.CertificateChainPolicy = new X509ChainPolicy
+                            {
+                                TrustMode = X509ChainTrustMode.CustomRootTrust,
+                                VerificationFlags = X509VerificationFlags.IgnoreEndRevocationUnknown,
+                                RevocationMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors
+                                    ? X509RevocationMode.NoCheck
+                                    : _tcpOptions.TlsOptions.RevocationMode
+                            };
+
                             sslOptions.CertificateChainPolicy.CustomTrustStore.AddRange(_tcpOptions.TlsOptions.TrustChain);
                         }
 #endif
 
-                            await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
+                        await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
 #else
                         await sslStream.AuthenticateAsClientAsync(
                                 targetHost,

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#pragma warning disable CS0612 // Type or member is obsolete
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +39,7 @@ namespace MQTTnet.Client
             // on the order of called methods from the builder).
             // The builder prefers the explicitly set TLS options!
             var tlsOptions = _tlsOptions ?? _tcpOptions?.TlsOptions;
-            
+
             if (_tlsParameters != null)
             {
                 if (_tlsParameters?.UseTls == true)

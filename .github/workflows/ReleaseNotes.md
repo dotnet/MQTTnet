@@ -1,2 +1,1 @@
-* [Client] Fixed wrong TLS options handling (#1830).
-* [Client] Fixed NullReferenceExeption when performing a Ping when the client is not connected (#1831).
+* [Server] Fixed not working _UpdateRetainedMessageAsync_ public api (#1858, thanks to @kimdiego2098)

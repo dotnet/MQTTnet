@@ -8,11 +8,22 @@ using System.Threading.Tasks;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Disconnecting;
 
 namespace MQTTnet.Server
 {
     public static class MqttServerExtensions
     {
+        public static Task DisconnectClientAsync(this MqttServer server, string id, MqttDisconnectReasonCode reasonCode = MqttDisconnectReasonCode.NormalDisconnection)
+        {
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+
+            return server.DisconnectClientAsync(id, new MqttServerClientDisconnectOptions { ReasonCode = reasonCode });
+        }
+
         public static Task InjectApplicationMessage(
             this MqttServer server,
             string topic,
@@ -45,6 +56,16 @@ namespace MQTTnet.Server
                         QualityOfServiceLevel = qualityOfServiceLevel,
                         Retain = retain
                     }));
+        }
+
+        public static Task StopAsync(this MqttServer server)
+        {
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+
+            return server.StopAsync(new MqttServerStopOptions());
         }
 
         public static Task SubscribeAsync(this MqttServer server, string clientId, params MqttTopicFilter[] topicFilters)

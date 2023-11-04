@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
+using MQTTnet.Server.Disconnecting;
 
 namespace MQTTnet.AspNetCore
 {
@@ -27,7 +28,7 @@ namespace MQTTnet.AspNetCore
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            return StopAsync();
+            return StopAsync(new MqttServerStopOptions());
         }
     }
 }

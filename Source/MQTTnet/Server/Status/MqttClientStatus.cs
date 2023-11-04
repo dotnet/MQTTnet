@@ -5,7 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using MQTTnet.Formatter;
-using MQTTnet.Protocol;
+using MQTTnet.Server.Disconnecting;
 
 namespace MQTTnet.Server
 {
@@ -18,41 +18,46 @@ namespace MQTTnet.Server
             _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
-        /// <summary>
-        /// Gets or sets the client identifier.
-        /// Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
-        /// </summary>
-        public string Id => _client.Id;
+        public long BytesReceived => _client.ChannelAdapter.BytesReceived;
+
+        public long BytesSent => _client.ChannelAdapter.BytesSent;
+
+        public DateTime ConnectedTimestamp => _client.Statistics.ConnectedTimestamp;
 
         public string Endpoint => _client.Endpoint;
 
-        public MqttProtocolVersion ProtocolVersion => _client.ChannelAdapter.PacketFormatterAdapter.ProtocolVersion;
+        /// <summary>
+        ///     Gets or sets the client identifier.
+        ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
+        /// </summary>
+        public string Id => _client.Id;
 
-        public DateTime ConnectedTimestamp => _client.Statistics.ConnectedTimestamp;
+        public DateTime LastNonKeepAlivePacketReceivedTimestamp => _client.Statistics.LastNonKeepAlivePacketReceivedTimestamp;
 
         public DateTime LastPacketReceivedTimestamp => _client.Statistics.LastPacketReceivedTimestamp;
 
         public DateTime LastPacketSentTimestamp => _client.Statistics.LastPacketSentTimestamp;
 
-        public DateTime LastNonKeepAlivePacketReceivedTimestamp => _client.Statistics.LastNonKeepAlivePacketReceivedTimestamp;
+        public MqttProtocolVersion ProtocolVersion => _client.ChannelAdapter.PacketFormatterAdapter.ProtocolVersion;
 
         public long ReceivedApplicationMessagesCount => _client.Statistics.ReceivedApplicationMessagesCount;
 
-        public long SentApplicationMessagesCount => _client.Statistics.SentApplicationMessagesCount;
-
         public long ReceivedPacketsCount => _client.Statistics.ReceivedPacketsCount;
+
+        public long SentApplicationMessagesCount => _client.Statistics.SentApplicationMessagesCount;
 
         public long SentPacketsCount => _client.Statistics.SentPacketsCount;
 
         public MqttSessionStatus Session { get; set; }
 
-        public long BytesSent => _client.ChannelAdapter.BytesSent;
-
-        public long BytesReceived => _client.ChannelAdapter.BytesReceived;
-        
-        public Task DisconnectAsync()
+        public Task DisconnectAsync(MqttServerClientDisconnectOptions options)
         {
-            return _client.StopAsync(MqttDisconnectReasonCode.NormalDisconnection);
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
+            return _client.StopAsync(options);
         }
 
         public void ResetStatistics()

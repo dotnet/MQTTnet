@@ -708,6 +708,9 @@ namespace MQTTnet.Client
                         await eventArgs.AcknowledgeAsync(cancellationToken).ConfigureAwait(false);
                     }
                 }
+                catch (ObjectDisposedException)
+                {
+                }
                 catch (OperationCanceledException)
                 {
                 }
@@ -787,7 +790,7 @@ namespace MQTTnet.Client
         {
             try
             {
-                _logger.Verbose("Start receiving packets.");
+                _logger.Verbose("Start receiving packets");
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -825,20 +828,22 @@ namespace MQTTnet.Client
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning(exception, "Communication error while receiving packets.");
+                    _logger.Warning(exception, "Communication error while receiving packets");
                 }
                 else
                 {
-                    _logger.Error(exception, "Error while receiving packets.");
+                    _logger.Error(exception, "Error while receiving packets");
                 }
 
-                _packetDispatcher.FailAll(exception);
+                // The packet dispatcher is set to null when the client is being disposed so it may
+                // already being gone!
+                _packetDispatcher?.FailAll(exception);
 
                 await DisconnectInternal(_packetReceiverTask, exception, null).ConfigureAwait(false);
             }
             finally
             {
-                _logger.Verbose("Stopped receiving packets.");
+                _logger.Verbose("Stopped receiving packets");
             }
         }
 

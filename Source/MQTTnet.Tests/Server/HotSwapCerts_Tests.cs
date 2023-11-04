@@ -1,4 +1,4 @@
-#if !(NET452 || NET461)
+#if !(NET452 || NET461 || NET48)
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -149,17 +149,13 @@ namespace MQTTnet.Tests.Server
             }
         }
 
-        class ClientTestHarness : IDisposable
+        sealed class ClientTestHarness : IDisposable
         {
             readonly HotSwappableClientCertProvider _hotSwapClient = new HotSwappableClientCertProvider();
+
             IMqttClient _client;
 
             public string ClientId => _client.Options.ClientId;
-
-            public void ClearServerCerts()
-            {
-                _hotSwapClient.ClearServerCerts();
-            }
 
             public Task Connect()
             {
@@ -169,6 +165,7 @@ namespace MQTTnet.Tests.Server
             public void Dispose()
             {
                 _client.Dispose();
+                _hotSwapClient.Dispose();
             }
 
             public X509Certificate2 GetCurrentClientCert()
@@ -189,6 +186,8 @@ namespace MQTTnet.Tests.Server
 
             public void WaitForConnectOrFail(TimeSpan timeout)
             {
+                Thread.Sleep(100);
+
                 if (!_client.IsConnected)
                 {
                     _client.ReconnectAsync().Wait(timeout);
@@ -210,12 +209,12 @@ namespace MQTTnet.Tests.Server
                 Assert.IsFalse(_client.IsConnected, "Client connection success but test wanted fail");
             }
 
-            public void WaitForDisconnect(TimeSpan timeout)
+            void WaitForDisconnect(TimeSpan timeout)
             {
                 var timer = Stopwatch.StartNew();
                 while ((_client == null || _client.IsConnected) && timer.Elapsed < timeout)
                 {
-                    Thread.Sleep(5);
+                    Thread.Sleep(100);
                 }
             }
 
@@ -252,21 +251,16 @@ namespace MQTTnet.Tests.Server
                 var timer = Stopwatch.StartNew();
                 while ((_client == null || !_client.IsConnected) && timer.Elapsed < timeout)
                 {
-                    Thread.Sleep(5);
+                    Thread.Sleep(100);
                 }
             }
         }
 
-        class ServerTestHarness : IDisposable
+        sealed class ServerTestHarness : IDisposable
         {
             readonly HotSwappableServerCertProvider _hotSwapServer = new HotSwappableServerCertProvider();
 
             MqttServer _server;
-
-            public void ClearClientCerts()
-            {
-                _hotSwapServer.ClearClientCerts();
-            }
 
             public void Dispose()
             {
@@ -276,15 +270,12 @@ namespace MQTTnet.Tests.Server
                     _server.Dispose();
                 }
 
-                if (_hotSwapServer != null)
-                {
-                    _hotSwapServer.Dispose();
-                }
+                _hotSwapServer?.Dispose();
             }
 
-            public async Task ForceDisconnectAsync(ClientTestHarness client)
+            public Task ForceDisconnectAsync(ClientTestHarness client)
             {
-                await _server.DisconnectClientAsync(client.ClientId, MqttDisconnectReasonCode.UnspecifiedError);
+                return _server.DisconnectClientAsync(client.ClientId, MqttDisconnectReasonCode.UnspecifiedError);
             }
 
             public X509Certificate2 GetCurrentServerCert()
@@ -302,7 +293,7 @@ namespace MQTTnet.Tests.Server
                 _hotSwapServer.InstallNewClientCert(serverCert);
             }
 
-            public async Task StartServer()
+            public Task StartServer()
             {
                 var mqttFactory = new MqttFactory();
 
@@ -312,24 +303,33 @@ namespace MQTTnet.Tests.Server
                     .Build();
 
                 mqttServerOptions.TlsEndpointOptions.ClientCertificateRequired = true;
+
                 _server = mqttFactory.CreateMqttServer(mqttServerOptions);
-                await _server.StartAsync();
+                return _server.StartAsync();
             }
         }
 
-        class HotSwappableClientCertProvider : IMqttClientCertificatesProvider
+        class HotSwappableClientCertProvider : IMqttClientCertificatesProvider, IDisposable
         {
             X509Certificate2Collection _certificates;
-            ConcurrentBag<X509Certificate2> ServerCerts = new ConcurrentBag<X509Certificate2>();
+            ConcurrentBag<X509Certificate2> _serverCerts = new ConcurrentBag<X509Certificate2>();
 
             public HotSwappableClientCertProvider()
             {
                 _certificates = new X509Certificate2Collection(CreateSelfSignedCertificate("1.3.6.1.5.5.7.3.2"));
             }
-
-            public void ClearServerCerts()
+            
+            public void Dispose()
             {
-                ServerCerts = new ConcurrentBag<X509Certificate2>();
+                if (_certificates != null)
+                {
+                    foreach (var certs in _certificates)
+                    {
+#if !NET452
+                        certs.Dispose();
+#endif
+                    }
+                }
             }
 
             public X509CertificateCollection GetCertificates()
@@ -339,18 +339,17 @@ namespace MQTTnet.Tests.Server
 
             public void HotSwapCert()
             {
-                var newCert = new X509Certificate2Collection(CreateSelfSignedCertificate("1.3.6.1.5.5.7.3.2"));
-                var oldCerts = Interlocked.Exchange(ref _certificates, newCert);
+                _certificates = new X509Certificate2Collection(CreateSelfSignedCertificate("1.3.6.1.5.5.7.3.2"));
             }
 
             public void InstallNewServerCert(X509Certificate2 serverCert)
             {
-                ServerCerts.Add(serverCert);
+                _serverCerts.Add(serverCert);
             }
 
             public bool OnCertificateValidation(MqttClientCertificateValidationEventArgs certContext)
             {
-                var serverCerts = ServerCerts.ToArray();
+                var serverCerts = _serverCerts.ToArray();
 
                 var providedCert = certContext.Certificate.GetRawCertData();
                 for (int i = 0, n = serverCerts.Length; i < n; i++)
@@ -365,34 +364,16 @@ namespace MQTTnet.Tests.Server
 
                 return false;
             }
-
-            void Dispose()
-            {
-                if (_certificates != null)
-                {
-                    foreach (var certs in _certificates)
-                    {
-#if !NET452
-                        certs.Dispose();
-#endif
-                    }
-                }
-            }
         }
 
-        class HotSwappableServerCertProvider : ICertificateProvider, IDisposable
+        sealed class HotSwappableServerCertProvider : ICertificateProvider, IDisposable
         {
+            readonly ConcurrentBag<X509Certificate2> _clientCerts = new ConcurrentBag<X509Certificate2>();
             X509Certificate2 _certificate;
-            ConcurrentBag<X509Certificate2> ClientCerts = new ConcurrentBag<X509Certificate2>();
 
             public HotSwappableServerCertProvider()
             {
                 _certificate = CreateSelfSignedCertificate("1.3.6.1.5.5.7.3.1");
-            }
-
-            public void ClearClientCerts()
-            {
-                ClientCerts = new ConcurrentBag<X509Certificate2>();
             }
 
             public void Dispose()
@@ -418,12 +399,12 @@ namespace MQTTnet.Tests.Server
 
             public void InstallNewClientCert(X509Certificate2 certificate)
             {
-                ClientCerts.Add(certificate);
+                _clientCerts.Add(certificate);
             }
 
             public bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
             {
-                var serverCerts = ClientCerts.ToArray();
+                var serverCerts = _clientCerts.ToArray();
 
                 var providedCert = certificate.GetRawCertData();
                 for (int i = 0, n = serverCerts.Length; i < n; i++)

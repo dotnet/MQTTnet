@@ -716,7 +716,7 @@ namespace MQTTnet.Client
                 }
                 catch (Exception exception)
                 {
-                    _logger.Error(exception, "Error while handling application message.");
+                    _logger.Error(exception, "Error while handling application message");
                 }
             }
         }
@@ -835,8 +835,7 @@ namespace MQTTnet.Client
                     _logger.Error(exception, "Error while receiving packets");
                 }
 
-                // The packet dispatcher is set to null when the client is being disposed so it may
-                // already being gone!
+                // The packet dispatcher is set to null when the client is being disposed so it may already being gone!
                 _packetDispatcher?.FailAll(exception);
 
                 await DisconnectInternal(_packetReceiverTask, exception, null).ConfigureAwait(false);
@@ -865,7 +864,7 @@ namespace MQTTnet.Client
                 }
                 catch (Exception exception)
                 {
-                    _logger.Warning(exception, "Error when sending request packet ({0}).", requestPacket.GetType().Name);
+                    _logger.Warning(exception, "Error when sending {0} request packet", requestPacket.GetType().Name);
                     packetAwaitable.Fail(exception);
                 }
 
@@ -877,7 +876,7 @@ namespace MQTTnet.Client
                 {
                     if (exception is MqttCommunicationTimedOutException)
                     {
-                        _logger.Warning("Timeout while waiting for response packet ({0}).", typeof(TResponsePacket).Name);
+                        _logger.Warning("Timeout while waiting for {0} response packet", typeof(TResponsePacket).Name);
                     }
 
                     throw;
@@ -943,7 +942,7 @@ namespace MQTTnet.Client
                 }
                 catch (Exception exception)
                 {
-                    _logger.Warning(exception, "Error while initiating disconnect.");
+                    _logger.Warning(exception, "Error while initiating disconnect");
                 }
             }
         }
@@ -978,7 +977,7 @@ namespace MQTTnet.Client
                 }
                 else if (packet is MqttPingReqPacket)
                 {
-                    throw new MqttProtocolViolationException("The PINGREQ Packet is sent from a Client to the Server only.");
+                    throw new MqttProtocolViolationException("The PINGREQ Packet is sent from a client to the server only.");
                 }
                 else
                 {
@@ -1000,14 +999,15 @@ namespace MQTTnet.Client
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning(exception, "Communication error while receiving packets.");
+                    _logger.Warning(exception, "Communication error while receiving packets");
                 }
                 else
                 {
-                    _logger.Error(exception, $"Error while processing received packet ({packet.GetType().Name}).");
+                    _logger.Error(exception, "Error while processing received {0} packet", packet.GetType().Name);
                 }
 
-                _packetDispatcher.FailAll(exception);
+                // The packet dispatcher may already be gone due to disconnect etc!
+                _packetDispatcher?.FailAll(exception);
 
                 await DisconnectInternal(_packetReceiverTask, exception, null).ConfigureAwait(false);
             }
@@ -1017,7 +1017,7 @@ namespace MQTTnet.Client
         {
             try
             {
-                _logger.Verbose("Start sending keep alive packets.");
+                _logger.Verbose("Start sending keep alive packets");
 
                 var keepAlivePeriod = Options.KeepAlivePeriod;
 
@@ -1055,18 +1055,18 @@ namespace MQTTnet.Client
                 }
                 else if (exception is MqttCommunicationException)
                 {
-                    _logger.Warning(exception, "Communication error while sending/receiving keep alive packets.");
+                    _logger.Warning(exception, "Communication error while sending/receiving keep alive packets");
                 }
                 else
                 {
-                    _logger.Error(exception, "Error exception while sending/receiving keep alive packets.");
+                    _logger.Error(exception, "Error exception while sending/receiving keep alive packets");
                 }
 
                 await DisconnectInternal(_keepAlivePacketsSenderTask, exception, null).ConfigureAwait(false);
             }
             finally
             {
-                _logger.Verbose("Stopped sending keep alive packets.");
+                _logger.Verbose("Stopped sending keep alive packets");
             }
         }
     }

@@ -52,7 +52,7 @@ namespace MQTTnet.Tests.Extensions
             var paramValue = "123";
             var parameters = new Dictionary<string, object>
             {
-                { TestParametersTopicGenerationStrategy.ExpectedParamName, "123" },
+                { TestParametersTopicGenerationStrategy.ExpectedParamName, "123" }
             };
 
             using (var testEnvironment = CreateTestEnvironment())
@@ -164,7 +164,7 @@ namespace MQTTnet.Tests.Extensions
 
                 using (var rpcClient = new MqttRpcClient(requestSender, new MqttRpcClientOptionsBuilder().Build()))
                 {
-                    var response = await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
+                    await rpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
                 }
             }
         }

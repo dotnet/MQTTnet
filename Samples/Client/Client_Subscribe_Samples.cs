@@ -184,7 +184,7 @@ public static class Client_Subscribe_Samples
          * This sample shows how to achieve concurrent processing and not have message AutoAcknowledged
          * This to have a proper QoS1 (at-least-once) experience for what at least MQTT specification can provide
          */
-        mqttClient.ApplicationMessageReceivedAsync += async ea =>
+        mqttClient.ApplicationMessageReceivedAsync += ea =>
         {
             ea.AutoAcknowledge = false;
 
@@ -201,6 +201,8 @@ public static class Client_Subscribe_Samples
             }
 
             _ = Task.Run(ProcessAsync, shutdownToken);
+
+            return Task.CompletedTask;
         };
     }
 

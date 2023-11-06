@@ -132,5 +132,14 @@ namespace MQTTnet.Client
             return this;
         }
 #endif
+
+#if NET7_0_OR_GREATER
+        public MqttClientTlsOptionsBuilder WithTrustChain(X509Certificate2Collection chain)
+        {
+            _tlsOptions.TrustChain = chain;
+            return this;
+        }
+
+#endif
     }
 }

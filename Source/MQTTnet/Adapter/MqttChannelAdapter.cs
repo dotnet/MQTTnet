@@ -26,9 +26,7 @@ namespace MQTTnet.Adapter
         readonly IMqttChannel _channel;
         readonly byte[] _fixedHeaderBuffer = new byte[2];
         readonly MqttNetSourceLogger _logger;
-
         readonly byte[] _singleByteBuffer = new byte[1];
-
         readonly AsyncLock _syncRoot = new AsyncLock();
 
         Statistics _statistics; // mutable struct, don't make readonly!
@@ -47,6 +45,8 @@ namespace MQTTnet.Adapter
             _logger = logger.WithSource(nameof(MqttChannelAdapter));
         }
 
+        public bool AllowPacketFragmentation { get; set; } = true;
+
         public long BytesReceived => Volatile.Read(ref _statistics._bytesReceived);
 
         public long BytesSent => Volatile.Read(ref _statistics._bytesSent);
@@ -63,8 +63,6 @@ namespace MQTTnet.Adapter
 
         public MqttPacketInspector PacketInspector { get; set; }
 
-        public bool AllowPacketFragmentation { get; set; } = true;
-
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -78,12 +76,30 @@ namespace MQTTnet.Adapter
                  * block forever. Even a cancellation token is not supported properly.
                  */
 
-                var connectTask = _channel.ConnectAsync(cancellationToken);
-
                 var timeout = new TaskCompletionSource<object>();
                 using (cancellationToken.Register(() => timeout.TrySetResult(null)))
                 {
+                    var connectTask = Task.Run(
+                        async () =>
+                        {
+                            try
+                            {
+                                await _channel.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                            }
+                            catch
+                            {
+                                // If the timeout is already reached the exception is no longer of interest and
+                                // must be catched. Otherwise it will arrive at the TaskScheduler.UnobservedTaskException.
+                                if (!timeout.Task.IsCompleted)
+                                {
+                                    throw;
+                                }
+                            }
+                        },
+                        CancellationToken.None);
+
                     await Task.WhenAny(connectTask, timeout.Task).ConfigureAwait(false);
+
                     if (timeout.Task.IsCompleted && !connectTask.IsCompleted)
                     {
                         throw new OperationCanceledException("MQTT connect canceled.", cancellationToken);
@@ -204,7 +220,7 @@ namespace MQTTnet.Adapter
                     PacketInspector?.BeginSendPacket(packetBuffer);
 
                     _logger.Verbose("TX ({0} bytes) >>> {1}", packetBuffer.Length, packet);
-                    
+
                     if (packetBuffer.Payload.Count == 0 || !AllowPacketFragmentation)
                     {
                         await _channel.WriteAsync(packetBuffer.Join(), true, cancellationToken).ConfigureAwait(false);

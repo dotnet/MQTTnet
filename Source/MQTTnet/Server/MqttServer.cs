@@ -367,7 +367,7 @@ namespace MQTTnet.Server
             ThrowIfDisposed();
             ThrowIfNotStarted();
 
-            return _retainedMessagesManager?.UpdateMessage(null, retainedMessage);
+            return _retainedMessagesManager?.UpdateMessage(string.Empty, retainedMessage);
         }
 
         protected override void Dispose(bool disposing)

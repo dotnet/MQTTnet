@@ -9,21 +9,21 @@ using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
-using MQTTnet.Server.Disconnecting;
 
 namespace MQTTnet.AspNetCore
 {
     public sealed class MqttHostedServer : MqttServer, IHostedService
     {
-        public MqttHostedServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger) 
-            : base(options, adapters, logger)
+        public MqttHostedServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger) : base(options, adapters, logger)
         {
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _ =  StartAsync();
-            return Task.CompletedTask;
+            // The yield makes sure that the hosted service is considered up and running.
+            await Task.Yield();
+
+            await StartAsync();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

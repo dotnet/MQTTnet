@@ -1,29 +1,37 @@
+using System;
+using System.Net;
+using System.Net.WebSockets;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.WebSockets;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MQTTnet.Extensions.Hosting.Implementations
 {
-    public class MqttServerWebSocketConnectionHandler : IHostedService, IDisposable
+    public sealed class MqttServerWebSocketConnectionHandler : IHostedService, IDisposable
     {
-        readonly CancellationTokenSource _cts = new CancellationTokenSource();
         readonly MqttWebSocketServerAdapter _adapter;
+        readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
         readonly IMqttNetLogger _logger;
 
         public MqttServerWebSocketConnectionHandler(MqttWebSocketServerAdapter adapter, IMqttNetLogger logger)
         {
             _adapter = adapter;
             _logger = logger;
+        }
+
+        public void Dispose()
+        {
+            _cancellationToken.Dispose();
+        }
+
+        public void HandleWebSocketConnection(HttpListenerWebSocketContext webSocketContext, HttpListenerContext httpListenerContext, X509Certificate2 clientCertificate = null)
+        {
+            _ = Task.Factory.StartNew(() => TryHandleWebSocketConnectionAsync(webSocketContext, httpListenerContext, clientCertificate));
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -33,19 +41,18 @@ namespace MQTTnet.Extensions.Hosting.Implementations
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _cts.Cancel();
+            _cancellationToken.Cancel();
 
             return Task.CompletedTask;
         }
 
-        public void HandleWebSocketConnection(HttpListenerWebSocketContext webSocketContext, HttpListenerContext httpListenerContext, X509Certificate2 clientCertificate = null)
-        {
-            _ = Task.Factory.StartNew(() => TryHandleWebSocketConnectionAsync(webSocketContext, httpListenerContext, clientCertificate));
-        }
-
         async Task TryHandleWebSocketConnectionAsync(HttpListenerWebSocketContext webSocketContext, HttpListenerContext httpListenerContext, X509Certificate2 clientCertificate)
         {
-            if (webSocketContext == null) throw new ArgumentNullException(nameof(webSocketContext));
+            if (webSocketContext == null)
+            {
+                throw new ArgumentNullException(nameof(webSocketContext));
+            }
+
             var endpoint = $"{httpListenerContext.Request.RemoteEndPoint.Address}:{httpListenerContext.Request.RemoteEndPoint.Port}";
 
             try
@@ -65,11 +72,6 @@ namespace MQTTnet.Extensions.Hosting.Implementations
             {
                 clientCertificate?.Dispose();
             }
-        }
-
-        public void Dispose()
-        {
-            _cts.Dispose();
         }
     }
 }

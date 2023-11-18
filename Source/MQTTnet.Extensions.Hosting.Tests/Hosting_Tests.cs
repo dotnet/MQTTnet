@@ -1,4 +1,4 @@
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 using System;
 using System.Net;
 using System.Threading;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Extensions.Hosting.Extensions;
 using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Server
@@ -123,7 +124,7 @@ namespace MQTTnet.Tests.Server
                 var factory = new MqttFactory();
                 var client = factory.CreateMqttClient();
                 var options = factory.CreateClientOptionsBuilder();
-                options.WithWebSocketServer("127.0.0.1:8080/mqtt");
+                options.WithWebSocketServer(o => o.WithUri("127.0.0.1:8080/mqtt"));
 
                 await client.ConnectAsync(options.Build());
             }
@@ -180,7 +181,7 @@ namespace MQTTnet.Tests.Server
                     var factory = new MqttFactory();
                     var client = factory.CreateMqttClient();
                     var options = factory.CreateClientOptionsBuilder();
-                    options.WithWebSocketServer("127.0.0.1:8080/mqtt");
+                    options.WithWebSocketServer(o => o.WithUri("127.0.0.1:8080/mqtt"));
 
                     await client.ConnectAsync(options.Build());
                 }

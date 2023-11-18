@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MQTTnet.Server
+namespace MQTTnet.Extensions.Hosting.Options
 {
     public class MqttServerWebSocketEndpointOptions  : MqttServerWebSocketEndpointBaseOptions
     {

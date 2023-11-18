@@ -9,6 +9,7 @@
 // ReSharper disable MemberCanBeMadeStatic.Local
 
 using Microsoft.Extensions.Hosting;
+using MQTTnet.Extensions.Hosting.Extensions;
 
 namespace MQTTnet.Samples.Server;
 

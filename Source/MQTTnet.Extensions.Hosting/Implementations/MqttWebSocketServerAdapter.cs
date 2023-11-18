@@ -1,36 +1,45 @@
-using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
-using MQTTnet.Internal;
-using MQTTnet.Server;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Extensions.Hosting.Options;
 using Microsoft.Extensions.DependencyInjection;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using MQTTnet.Extensions.Hosting.Options;
+using MQTTnet.Implementations;
+using MQTTnet.Internal;
+using MQTTnet.Server;
 
-namespace MQTTnet.Implementations
+namespace MQTTnet.Extensions.Hosting.Implementations
 {
-    public class MqttWebSocketServerAdapter : IMqttServerAdapter
+    public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter
     {
+        readonly MqttServerHostingOptions _hostingOptions;
         readonly List<MqttWebSocketServerListener> _listeners = new List<MqttWebSocketServerListener>();
         readonly IServiceProvider _services;
-        readonly MqttServerHostingOptions _hostingOptions;
-        MqttServerOptions _serverOptions;
-        IMqttNetLogger _logger;
 
         public MqttWebSocketServerAdapter(IServiceProvider services, MqttServerHostingOptions hostingOptions)
         {
-            _services = services;
-            _hostingOptions = hostingOptions;
+            _services = services ?? throw new ArgumentNullException(nameof(services));
+            _hostingOptions = hostingOptions ?? throw new ArgumentNullException(nameof(hostingOptions));
         }
 
-        public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
+        public Func<IMqttChannelAdapter, Task>? ClientHandler { get; set; }
+
+        public void Dispose()
+        {
+            foreach (var listener in _listeners)
+            {
+                listener.Dispose();
+            }
+        }
 
         public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
         {
-            _serverOptions = options;
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
 
             if (_hostingOptions.DefaultWebSocketEndpointOptions.IsEnabled)
             {
@@ -61,14 +70,5 @@ namespace MQTTnet.Implementations
 
             return CompletedTask.Instance;
         }
-
-        public void Dispose()
-        {
-            foreach (var listener in _listeners)
-            {
-                listener.Dispose();
-            }
-        }
-
     }
 }

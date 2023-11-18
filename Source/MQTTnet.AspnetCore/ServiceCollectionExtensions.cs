@@ -53,7 +53,9 @@ namespace MQTTnet.AspNetCore
 
         public static void AddHostedMqttServer(this IServiceCollection services)
         {
+            // The user may have these services already registered.
             services.TryAddSingleton<IMqttNetLogger>(MqttNetNullLogger.Instance);
+            services.TryAddSingleton(new MqttFactory());
 
             services.AddSingleton<MqttHostedServer>();
             services.AddHostedService<MqttHostedServer>();

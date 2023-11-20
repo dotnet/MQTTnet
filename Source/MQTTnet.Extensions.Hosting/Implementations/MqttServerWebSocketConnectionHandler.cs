@@ -29,7 +29,7 @@ namespace MQTTnet.Extensions.Hosting.Implementations
             _cancellationToken.Dispose();
         }
 
-        public void HandleWebSocketConnection(HttpListenerWebSocketContext webSocketContext, HttpListenerContext httpListenerContext, X509Certificate2 clientCertificate = null)
+        public void HandleWebSocketConnection(HttpListenerWebSocketContext webSocketContext, HttpListenerContext httpListenerContext, X509Certificate2? clientCertificate = null)
         {
             _ = Task.Factory.StartNew(() => TryHandleWebSocketConnectionAsync(webSocketContext, httpListenerContext, clientCertificate));
         }
@@ -46,7 +46,7 @@ namespace MQTTnet.Extensions.Hosting.Implementations
             return Task.CompletedTask;
         }
 
-        async Task TryHandleWebSocketConnectionAsync(HttpListenerWebSocketContext webSocketContext, HttpListenerContext httpListenerContext, X509Certificate2 clientCertificate)
+        async Task TryHandleWebSocketConnectionAsync(HttpListenerWebSocketContext webSocketContext, HttpListenerContext httpListenerContext, X509Certificate2? clientCertificate)
         {
             if (webSocketContext == null)
             {

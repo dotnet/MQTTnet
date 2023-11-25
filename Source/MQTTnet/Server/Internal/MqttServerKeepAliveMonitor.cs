@@ -107,7 +107,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                if (connection.ChannelAdapter.IsReadingPacket)
+                if (connection.ChannelAdapter.IsReadingPacket && !_options.KeepAliveOptions.DisconnectClientWhenReadingPayload)
                 {
                     // The connection is currently reading a (large) packet. So it is obviously 
                     // doing something and thus "connected".

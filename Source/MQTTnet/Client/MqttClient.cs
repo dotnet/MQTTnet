@@ -309,6 +309,7 @@ namespace MQTTnet.Client
                 AuthenticationMethod = Options.AuthenticationMethod,
                 AuthenticationData = data.AuthenticationData,
                 ReasonString = data.ReasonString,
+                ReasonCode = data.ReasonCode,
                 UserProperties = data.UserProperties
             };
 

@@ -303,7 +303,7 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
                 server.InterceptingPublishAsync += e =>
                 {
-                    e.ApplicationMessage.Payload = Encoding.ASCII.GetBytes("extended");
+                    e.ApplicationMessage.PayloadSegment = new ArraySegment<byte>(Encoding.ASCII.GetBytes("extended"));
                     return CompletedTask.Instance;
                 };
 
@@ -314,7 +314,7 @@ namespace MQTTnet.Tests.Server
                 var isIntercepted = false;
                 c2.ApplicationMessageReceivedAsync += e =>
                 {
-                    isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.Payload), StringComparison.Ordinal) == 0;
+                    isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment.ToArray()), StringComparison.Ordinal) == 0;
                     return CompletedTask.Instance;
                 };
 
@@ -425,7 +425,7 @@ namespace MQTTnet.Tests.Server
                             new MqttApplicationMessage
                             {
                                 Topic = "/test/1",
-                                Payload = Encoding.UTF8.GetBytes("true"),
+                                PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes("true")),
                                 QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
                             })
                         {
@@ -780,7 +780,7 @@ namespace MQTTnet.Tests.Server
                 var client1 = await testEnvironment.ConnectClient();
                 client1.ApplicationMessageReceivedAsync += e =>
                 {
-                    receivedBody = e.ApplicationMessage.Payload;
+                    receivedBody = e.ApplicationMessage.PayloadSegment.ToArray();
                     return CompletedTask.Instance;
                 };
 

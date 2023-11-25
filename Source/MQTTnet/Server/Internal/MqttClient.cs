@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
@@ -14,6 +15,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Disconnecting;
 
 namespace MQTTnet.Server
 {
@@ -95,15 +97,16 @@ namespace MQTTnet.Server
             {
                 var cancellationToken = _cancellationToken.Token;
                 IsRunning = true;
-                
-                _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
+
+                _ = Task.Factory.StartNew(() => SendPacketsLoop(cancellationToken), cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default)
+                    .ConfigureAwait(false);
 
                 await ReceivePackagesLoop(cancellationToken).ConfigureAwait(false);
             }
             finally
             {
                 IsRunning = false;
-                
+
                 Session.DisconnectedTimestamp = DateTime.UtcNow;
 
                 _cancellationToken?.TryCancel();
@@ -141,7 +144,7 @@ namespace MQTTnet.Server
             Statistics.HandleSentPacket(packet);
         }
 
-        public async Task StopAsync(MqttDisconnectReasonCode reason)
+        public async Task StopAsync(MqttServerClientDisconnectOptions disconnectOptions)
         {
             IsRunning = false;
 
@@ -150,16 +153,20 @@ namespace MQTTnet.Server
                 // Sending DISCONNECT packets from the server to the client is only supported when using MQTTv5+.
                 if (ChannelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500)
                 {
-                    // The Client or Server MAY send a DISCONNECT packet before closing the Network Connection.
-                    // This library does not sent a DISCONNECT packet for a normal disconnection. Maybe adding
-                    // a configuration option is requested in the future.
-                    if (reason != MqttDisconnectReasonCode.NormalDisconnection)
+                    // From RFC: The Client or Server MAY send a DISCONNECT packet before closing the Network Connection.
+                    // This library does not sent a DISCONNECT packet for a normal disconnection.
+                    // TODO: Maybe adding a configuration option is requested in the future.
+                    if (disconnectOptions != null)
                     {
-                        // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
-                        // token because the entire connection is closed (disposed) as soon as the cancellation
-                        // token is cancelled. To there is no chance that the DISCONNECT packet will ever arrive
-                        // at the client!
-                        await TrySendDisconnectPacket(reason).ConfigureAwait(false);
+                        if (disconnectOptions.ReasonCode != MqttDisconnectReasonCode.NormalDisconnection || disconnectOptions.UserProperties?.Any() == true ||
+                            !string.IsNullOrEmpty(disconnectOptions.ReasonString) || !string.IsNullOrEmpty(disconnectOptions.ServerReference))
+                        {
+                            // Is is very important to send the DISCONNECT packet here BEFORE cancelling the
+                            // token because the entire connection is closed (disposed) as soon as the cancellation
+                            // token is cancelled. To there is no chance that the DISCONNECT packet will ever arrive
+                            // at the client!
+                            await TrySendDisconnectPacket(disconnectOptions).ConfigureAwait(false);
+                        }
                     }
                 }
             }
@@ -219,7 +226,7 @@ namespace MQTTnet.Server
 
             if (dispatchApplicationMessageResult.CloseConnection)
             {
-                await StopAsync(MqttDisconnectReasonCode.UnspecifiedError);
+                await StopAsync(new MqttServerClientDisconnectOptions { ReasonCode = MqttDisconnectReasonCode.UnspecifiedError });
                 return;
             }
 
@@ -550,14 +557,14 @@ namespace MQTTnet.Server
             _cancellationToken?.TryCancel();
         }
 
-        async Task TrySendDisconnectPacket(MqttDisconnectReasonCode reasonCode)
+        async Task TrySendDisconnectPacket(MqttServerClientDisconnectOptions options)
         {
             try
             {
                 // This also indicates that it was tried at least!
                 _disconnectPacketSent = true;
 
-                var disconnectPacket = MqttPacketFactories.Disconnect.Create(reasonCode);
+                var disconnectPacket = MqttPacketFactories.Disconnect.Create(options);
 
                 using (var timeout = new CancellationTokenSource(_serverOptions.DefaultCommunicationTimeout))
                 {
@@ -566,7 +573,7 @@ namespace MQTTnet.Server
             }
             catch (Exception exception)
             {
-                _logger.Warning(exception, "Client '{0}': Error while sending DISCONNECT packet (ReasonCode = {1})", Id, reasonCode);
+                _logger.Warning(exception, "Client '{0}': Error while sending DISCONNECT packet (ReasonCode = {1})", Id, options.ReasonCode);
             }
         }
     }

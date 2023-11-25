@@ -43,7 +43,7 @@ namespace MQTTnet.Extensions.Hosting.Extensions
             var stopActions = new List<Action<MqttServer>>();
 
             hostBuilder.ConfigureServices(
-                (context, services) =>
+                (_, services) =>
                 {
                     services.AddSingleton(
                         s =>
@@ -57,6 +57,8 @@ namespace MQTTnet.Extensions.Hosting.Extensions
 
                     services.AddSingleton<IMqttNetLogger>(logger)
                         .AddSingleton<MqttHostedServer>()
+                        .AddSingleton<IMqttNetLogger>(new MqttNetNullLogger())
+                        .AddSingleton(new MqttFactory())
                         .AddSingleton<MqttServerHostingOptions>()
                         .AddSingleton<IHostedService>(s => s.GetRequiredService<MqttHostedServer>())
                         .AddSingleton<IHostedService>(s => new MqttServerConfigurationHostedService(s, startActions, stopActions))
@@ -67,6 +69,7 @@ namespace MQTTnet.Extensions.Hosting.Extensions
                         .AddSingleton<MqttWebSocketServerAdapter>()
                         .AddSingleton<IMqttServerAdapter>(s => s.GetRequiredService<MqttWebSocketServerAdapter>());
                 });
+
             return hostBuilder;
         }
     }

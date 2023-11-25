@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.Hosting.Options;
-using MQTTnet.Implementations;
 using MQTTnet.Internal;
 using MQTTnet.Server;
 

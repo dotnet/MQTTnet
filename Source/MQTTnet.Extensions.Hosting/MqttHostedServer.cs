@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using MQTTnet.Server;
@@ -27,7 +26,7 @@ namespace MQTTnet.Extensions.Hosting
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            return StopAsync();
+            return StopAsync(new MqttServerStopOptions());
         }
     }
 }

@@ -17,6 +17,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
 
 // ReSharper disable InconsistentNaming

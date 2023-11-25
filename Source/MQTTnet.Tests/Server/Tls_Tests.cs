@@ -101,7 +101,7 @@ namespace MQTTnet.Tests.Server
                 new MqttApplicationMessage
                 {
                     Topic = "TestTopic1",
-                    Payload = new byte[] { 1, 2, 3, 4 }
+                    PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
                 });
 
             await testEnvironment.Server.InjectApplicationMessage(
@@ -109,7 +109,7 @@ namespace MQTTnet.Tests.Server
                     new MqttApplicationMessage
                     {
                         Topic = "TestTopic1",
-                        Payload = new byte[] { 1, 2, 3, 4 }
+                        PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
                     }));
 
             certificateProvider.CurrentCertificate = CreateCertificate(secondOid);
@@ -137,7 +137,7 @@ namespace MQTTnet.Tests.Server
                 new MqttApplicationMessage
                 {
                     Topic = "TestTopic2",
-                    Payload = new byte[] { 1, 2, 3, 4 }
+                    PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
                 });
 
             await testEnvironment.Server.InjectApplicationMessage(
@@ -145,7 +145,7 @@ namespace MQTTnet.Tests.Server
                     new MqttApplicationMessage
                     {
                         Topic = "TestTopic2",
-                        Payload = new byte[] { 1, 2, 3, 4 }
+                        PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
                     }));
 
             // Ensure first client still works
@@ -153,7 +153,7 @@ namespace MQTTnet.Tests.Server
                 new MqttApplicationMessage
                 {
                     Topic = "TestTopic1",
-                    Payload = new byte[] { 1, 2, 3, 4 }
+                    PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
                 });
 
             await testEnvironment.Server.InjectApplicationMessage(
@@ -161,7 +161,7 @@ namespace MQTTnet.Tests.Server
                     new MqttApplicationMessage
                     {
                         Topic = "TestTopic1",
-                        Payload = new byte[] { 1, 2, 3, 4 }
+                        PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
                     }));
 
             await Task.Delay(1000);
@@ -178,12 +178,10 @@ namespace MQTTnet.Tests.Server
             var clientOptionsBuilder = testEnvironment.Factory.CreateClientOptionsBuilder();
             clientOptionsBuilder.WithClientId(Guid.NewGuid().ToString())
                 .WithTcpServer("localhost", 8883)
-                .WithTls(
-                    tls =>
+                .WithTlsOptions(
+                    o =>
                     {
-                        tls.UseTls = true;
-                        tls.SslProtocol = SslProtocols.Tls12;
-                        tls.CertificateValidationHandler = certValidator;
+                        o.WithSslProtocols(SslProtocols.Tls12).WithCertificateValidationHandler(certValidator);
                     });
 
             var clientOptions = clientOptionsBuilder.Build();

@@ -11,6 +11,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.LowLevelClient;
 using MQTTnet.Server;
+using MQTTnet.Server.Disconnecting;
 using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet
@@ -173,6 +174,16 @@ namespace MQTTnet
             }
 
             return new MqttServer(options, serverAdapters, DefaultLogger);
+        }
+
+        public MqttServerClientDisconnectOptionsBuilder CreateMqttServerClientDisconnectOptionsBuilder()
+        {
+            return new MqttServerClientDisconnectOptionsBuilder();
+        }
+
+        public MqttServerStopOptionsBuilder CreateMqttServerStopOptionsBuilder()
+        {
+            return new MqttServerStopOptionsBuilder();
         }
 
         public MqttServerOptionsBuilder CreateServerOptionsBuilder()

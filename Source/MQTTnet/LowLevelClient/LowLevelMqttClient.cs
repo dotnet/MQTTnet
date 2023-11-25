@@ -19,7 +19,6 @@ namespace MQTTnet.LowLevelClient
         readonly IMqttClientAdapterFactory _clientAdapterFactory;
         readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();
         readonly MqttNetSourceLogger _logger;
-
         readonly IMqttNetLogger _rootLogger;
 
         IMqttChannelAdapter _adapter;

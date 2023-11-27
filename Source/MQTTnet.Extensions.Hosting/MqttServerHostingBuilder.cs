@@ -334,19 +334,5 @@ namespace MQTTnet.Extensions.Hosting
 
             return this;
         }
-
-        public MqttServerHostingBuilder WithWebSocketClientAuthentication(HttpWebSocketClientAuthenticationCallback callback)
-        {
-            _hostingOptions.WebSocketAuthenticationCallback = callback;
-
-            return this;
-        }
-
-        public MqttServerHostingBuilder WithWebSocketRoute(string value)
-        {
-            _hostingOptions.WebSocketRoute = value;
-
-            return this;
-        }
     }
 }

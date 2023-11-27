@@ -9,9 +9,5 @@ namespace MQTTnet.Extensions.Hosting.Options
         public MqttServerTlsWebSocketEndpointOptions DefaultTlsWebSocketEndpointOptions { get; } = new MqttServerTlsWebSocketEndpointOptions();
 
         public MqttServerWebSocketEndpointOptions DefaultWebSocketEndpointOptions { get; } = new MqttServerWebSocketEndpointOptions();
-
-        public HttpWebSocketClientAuthenticationCallback? WebSocketAuthenticationCallback { get; set; }
-
-        public string? WebSocketRoute { get; set; }
     }
 }

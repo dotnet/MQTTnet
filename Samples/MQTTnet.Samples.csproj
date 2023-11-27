@@ -18,6 +18,7 @@
         <ProjectReference Include="..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
         <ProjectReference Include="..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj" />
         <ProjectReference Include="..\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj" />
+        <ProjectReference Include="..\Source\MQTTnet.Extensions.Hosting\MQTTnet.Extensions.Hosting.csproj" />
         <ProjectReference Include="..\Source\MQTTnet\MQTTnet.csproj" />
     </ItemGroup>
 

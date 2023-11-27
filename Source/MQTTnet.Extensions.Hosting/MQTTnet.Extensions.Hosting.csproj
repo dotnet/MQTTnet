@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <NoWarn>NETSDK1138</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Condition="'$(TargetFramework)' == 'netcoreapp3.1'" Include="Microsoft.Extensions.Hosting" Version="3.1.0" />
+    <PackageReference Condition="'$(TargetFramework)' == 'net5.0'" Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+    <PackageReference Condition="'$(TargetFramework)' == 'net6.0'" Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+    <PackageReference Condition="'$(TargetFramework)' == 'net7.0'" Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+  </ItemGroup>
+
+</Project>

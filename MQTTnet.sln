@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
@@ -31,6 +31,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.TestApp", "Source\MQTTnet.TestApp\MQTTnet.TestApp.csproj", "{175D5340-CC5B-4542-939D-4E7D15A0BC8D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.AspTestApp", "Source\MQTTnet.AspTestApp\MQTTnet.AspTestApp.csproj", "{72867E4C-4E15-4E8E-8FAB-AE9253286BBC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.Hosting", "Source\MQTTnet.Extensions.Hosting\MQTTnet.Extensions.Hosting.csproj", "{B53FC20B-862C-4F8F-B9FF-E8C8D76A870D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{26138A7E-435D-4C37-92B8-F506C640266D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTnet.Extensions.Hosting.Tests", "Source\MQTTnet.Extensions.Hosting.Tests\MQTTnet.Extensions.Hosting.Tests.csproj", "{C4DE2742-2177-4AD0-BC01-74F29E9595C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -82,11 +88,25 @@ Global
 		{72867E4C-4E15-4E8E-8FAB-AE9253286BBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72867E4C-4E15-4E8E-8FAB-AE9253286BBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72867E4C-4E15-4E8E-8FAB-AE9253286BBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B53FC20B-862C-4F8F-B9FF-E8C8D76A870D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B53FC20B-862C-4F8F-B9FF-E8C8D76A870D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B53FC20B-862C-4F8F-B9FF-E8C8D76A870D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B53FC20B-862C-4F8F-B9FF-E8C8D76A870D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4DE2742-2177-4AD0-BC01-74F29E9595C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4DE2742-2177-4AD0-BC01-74F29E9595C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4DE2742-2177-4AD0-BC01-74F29E9595C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4DE2742-2177-4AD0-BC01-74F29E9595C3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{72867E4C-4E15-4E8E-8FAB-AE9253286BBC} = {26138A7E-435D-4C37-92B8-F506C640266D}
+		{A238BBBF-C75F-482D-9CC3-BB34ABA9B675} = {26138A7E-435D-4C37-92B8-F506C640266D}
+		{B270F32A-9F3E-42EE-A989-813E35E29ADB} = {26138A7E-435D-4C37-92B8-F506C640266D}
+		{175D5340-CC5B-4542-939D-4E7D15A0BC8D} = {26138A7E-435D-4C37-92B8-F506C640266D}
+		{C4DE2742-2177-4AD0-BC01-74F29E9595C3} = {26138A7E-435D-4C37-92B8-F506C640266D}
+		{2F516E76-AAC4-4219-B7D1-34CDD3CFF381} = {26138A7E-435D-4C37-92B8-F506C640266D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07536672-5CBC-4BE3-ACE0-708A431A7894}

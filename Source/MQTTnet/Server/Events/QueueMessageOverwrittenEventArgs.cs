@@ -3,15 +3,19 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using MQTTnet.Packets;
 
 namespace MQTTnet.Server
 {
     public sealed class QueueMessageOverwrittenEventArgs : EventArgs
     {
-        public QueueMessageOverwrittenEventArgs(string receiverClientId)
+        public QueueMessageOverwrittenEventArgs(string receiverClientId, MqttPacket packet)
         {
             ReceiverClientId = receiverClientId ?? throw new ArgumentNullException(nameof(receiverClientId));
+            Packet = packet ?? throw new ArgumentNullException(nameof(packet));
         }
+
+        public MqttPacket Packet { get; }
 
         public string ReceiverClientId { get; }
     }

@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
+using MQTTnet.Server;
 
 namespace MQTTnet.Tests.MQTTv5
 {

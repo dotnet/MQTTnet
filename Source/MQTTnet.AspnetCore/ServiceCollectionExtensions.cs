@@ -58,6 +58,8 @@ namespace MQTTnet.AspNetCore
             services.TryAddSingleton(new MqttFactory());
 
             services.AddSingleton<MqttHostedServer>();
+            services.AddSingleton<MqttServer>(s => s.GetService<MqttHostedServer>());
+            
             services.AddHostedService<MqttHostedServer>();
         }
 

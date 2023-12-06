@@ -25,6 +25,8 @@ namespace MQTTnet.Tests.Extensions
             int clientCount = 0;
             long connectedCount = 0;
             long publishedCount = 0;
+            long deliveredCount = 0;
+            long droppedCount = 0;
 
             using (var testEnvironment = CreateTestEnvironment())
             using (Meter meter = new Meter("TEST"))
@@ -38,6 +40,8 @@ namespace MQTTnet.Tests.Extensions
                         case "mqtt.clients.count":
                         case "mqtt.clients.connected.count":
                         case "mqtt.messages.published.count":
+                        case "mqtt.messages.delivered.count":
+                        case "mqtt.messages.dropped.queuefull.count":
                             listener.EnableMeasurementEvents(instrument);
                             break;
                     }
@@ -69,6 +73,12 @@ namespace MQTTnet.Tests.Extensions
                             case "mqtt.messages.published.count":
                                 publishedCount += measurement;
                                 break;
+                            case "mqtt.messages.delivered.count":
+                                deliveredCount += measurement;
+                                break;
+                            case "mqtt.messages.dropped.queuefull.count":
+                                droppedCount += measurement;
+                                break;
                         }
                     };
                 meterListener.SetMeasurementEventCallback(longCallback);
@@ -83,6 +93,15 @@ namespace MQTTnet.Tests.Extensions
 
                 await metricsSource.TriggerPublish();
                 Assert.AreEqual(1, publishedCount);
+                
+                await metricsSource.TriggerEnqueueOrDrop(dropQueueFull: false);
+                Assert.AreEqual(1, deliveredCount);
+
+                await metricsSource.TriggerEnqueueOrDrop(dropQueueFull: true);
+                Assert.AreEqual(1, droppedCount);
+
+                await metricsSource.TriggerOverwriteMessage();
+                Assert.AreEqual(2, droppedCount);
             }
         }
 
@@ -90,6 +109,8 @@ namespace MQTTnet.Tests.Extensions
         {
             public event Func<ClientConnectedEventArgs, Task> ClientConnectedAsync;
             public event Func<InterceptingPublishEventArgs, Task> InterceptingPublishAsync;
+            public event Func<ApplicationMessageEnqueuedEventArgs, Task> ApplicationMessageEnqueuedOrDroppedAsync;
+            public event Func<QueueMessageOverwrittenEventArgs, Task> QueuedApplicationMessageOverwrittenAsync;
 
             public int GetActiveClientCount()
             {
@@ -119,6 +140,29 @@ namespace MQTTnet.Tests.Extensions
                     "client",
                     new Dictionary<string, object>());
                 return InterceptingPublishAsync(args);
+            }
+
+            public Task TriggerEnqueueOrDrop(bool dropQueueFull)
+            {
+                var args = new ApplicationMessageEnqueuedEventArgs(
+                    "sender",
+                    "receiver",
+                    new MqttApplicationMessage(),
+                    dropQueueFull);
+                return ApplicationMessageEnqueuedOrDroppedAsync(args);
+            }
+
+            public Task TriggerOverwriteMessage()
+            {
+                var args = new QueueMessageOverwrittenEventArgs(
+                    "receiver",
+                    new DummyPacket());
+                return QueuedApplicationMessageOverwrittenAsync(args);
+            }
+
+            private class DummyPacket : MqttPacket
+            {
+                public DummyPacket() {}
             }
         }
     }

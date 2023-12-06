@@ -10,5 +10,7 @@ namespace MQTTnet.Diagnostics.Instrumentation
         int GetActiveClientCount();
         event Func<ClientConnectedEventArgs, Task> ClientConnectedAsync;
         event Func<InterceptingPublishEventArgs, Task> InterceptingPublishAsync;
+        event Func<ApplicationMessageEnqueuedEventArgs, Task> ApplicationMessageEnqueuedOrDroppedAsync;
+        event Func<QueueMessageOverwrittenEventArgs, Task> QueuedApplicationMessageOverwrittenAsync;
     }
 }

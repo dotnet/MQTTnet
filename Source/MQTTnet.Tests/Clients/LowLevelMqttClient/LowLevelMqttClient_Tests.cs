@@ -13,6 +13,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.LowLevelClient;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Clients.LowLevelMqttClient
 {

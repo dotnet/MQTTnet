@@ -16,6 +16,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Disconnecting;
 
 namespace MQTTnet.Server
 {
@@ -32,11 +33,11 @@ namespace MQTTnet.Server
         readonly MqttRetainedMessagesManager _retainedMessagesManager;
         readonly IMqttNetLogger _rootLogger;
 
+        readonly ReaderWriterLockSlim _sessionsManagementLock = new ReaderWriterLockSlim();
+
         // The _sessions dictionary contains all session, the _subscriberSessions hash set contains subscriber sessions only.
         // See the MqttSubscription object for a detailed explanation.
         readonly MqttSessionsStorage _sessionsStorage = new MqttSessionsStorage();
-
-        readonly ReaderWriterLockSlim _sessionsManagementLock = new ReaderWriterLockSlim();
         readonly HashSet<MqttSession> _subscriberSessions = new HashSet<MqttSession>();
 
         public MqttClientSessionsManager(
@@ -62,8 +63,13 @@ namespace MQTTnet.Server
 
         public int GetActiveSessionCount() => _sessionsStorage.Count;
 
-        public async Task CloseAllConnections()
+        public async Task CloseAllConnections(MqttServerClientDisconnectOptions options)
         {
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
             List<MqttClient> connections;
             lock (_clients)
             {
@@ -73,7 +79,7 @@ namespace MQTTnet.Server
 
             foreach (var connection in connections)
             {
-                await connection.StopAsync(MqttDisconnectReasonCode.NormalDisconnection).ConfigureAwait(false);
+                await connection.StopAsync(options).ConfigureAwait(false);
             }
         }
 
@@ -105,7 +111,7 @@ namespace MQTTnet.Server
             {
                 if (connection != null)
                 {
-                    await connection.StopAsync(MqttDisconnectReasonCode.NormalDisconnection).ConfigureAwait(false);
+                    await connection.StopAsync(new MqttServerClientDisconnectOptions { ReasonCode = MqttDisconnectReasonCode.NormalDisconnection }).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
@@ -242,7 +248,14 @@ namespace MQTTnet.Server
 
                         matchingSubscribersCount++;
 
-                        session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketCopy));
+                        var result = session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketCopy));
+
+                        if (_eventContainer.ApplicationMessageEnqueuedOrDroppedEvent.HasHandlers)
+                        {
+                            var eventArgs = new ApplicationMessageEnqueuedEventArgs(senderId, session.Id, applicationMessage, result == EnqueueDataPacketResult.Dropped);
+                            await _eventContainer.ApplicationMessageEnqueuedOrDroppedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                        }
+
                         _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'", session.Id, applicationMessage.Topic);
                     }
 
@@ -386,7 +399,8 @@ namespace MQTTnet.Server
 
                 if (_eventContainer.ClientConnectedEvent.HasHandlers)
                 {
-                    var eventArgs = new ClientConnectedEventArgs(connectPacket,
+                    var eventArgs = new ClientConnectedEventArgs(
+                        connectPacket,
                         channelAdapter.PacketFormatterAdapter.ProtocolVersion,
                         channelAdapter.Endpoint,
                         client.Session.Items);
@@ -651,7 +665,8 @@ namespace MQTTnet.Server
 
                 if (oldClient != null)
                 {
-                    await oldClient.StopAsync(MqttDisconnectReasonCode.SessionTakenOver).ConfigureAwait(false);
+                    // TODO: Consider event here for session takeover to allow manipulation of user properties etc.
+                    await oldClient.StopAsync(new MqttServerClientDisconnectOptions { ReasonCode = MqttDisconnectReasonCode.SessionTakenOver }).ConfigureAwait(false);
 
                     if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                     {

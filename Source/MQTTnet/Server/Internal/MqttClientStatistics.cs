@@ -92,7 +92,7 @@ namespace MQTTnet.Server
             }
         }
 
-        private struct Statistics
+        struct Statistics
         {
             public long _receivedPacketsCount;
             public long _sentPacketsCount;

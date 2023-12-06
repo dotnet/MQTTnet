@@ -283,7 +283,7 @@ namespace MQTTnet.Tests.Server
 
                 server.InterceptingPublishAsync += e =>
                 {
-                    e.ApplicationMessage.Payload = Encoding.UTF8.GetBytes(e.SessionItems["default_payload"] as string ?? string.Empty);
+                    e.ApplicationMessage.PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(e.SessionItems["default_payload"] as string ?? string.Empty));
                     return CompletedTask.Instance;
                 };
 

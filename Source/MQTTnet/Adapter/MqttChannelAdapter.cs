@@ -55,8 +55,6 @@ namespace MQTTnet.Adapter
 
         public string Endpoint => _channel.Endpoint;
 
-        public bool IsReadingPacket { get; private set; }
-
         public bool IsSecureConnection => _channel.IsSecureConnection;
 
         public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
@@ -389,53 +387,45 @@ namespace MQTTnet.Adapter
                 return ReceivedMqttPacket.Empty;
             }
 
-            IsReadingPacket = true;
-            try
+            var fixedHeader = readFixedHeaderResult.FixedHeader;
+            if (fixedHeader.RemainingLength == 0)
             {
-                var fixedHeader = readFixedHeaderResult.FixedHeader;
-                if (fixedHeader.RemainingLength == 0)
+                return new ReceivedMqttPacket(fixedHeader.Flags, EmptyBuffer.ArraySegment, 2);
+            }
+
+            var bodyLength = fixedHeader.RemainingLength;
+            var body = new byte[bodyLength];
+
+            var bodyOffset = 0;
+            var chunkSize = Math.Min(ReadBufferSize, bodyLength);
+
+            do
+            {
+                var bytesLeft = body.Length - bodyOffset;
+                if (chunkSize > bytesLeft)
                 {
-                    return new ReceivedMqttPacket(fixedHeader.Flags, EmptyBuffer.ArraySegment, 2);
+                    chunkSize = bytesLeft;
                 }
 
-                var bodyLength = fixedHeader.RemainingLength;
-                var body = new byte[bodyLength];
+                var readBytes = await _channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false);
 
-                var bodyOffset = 0;
-                var chunkSize = Math.Min(ReadBufferSize, bodyLength);
-
-                do
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    var bytesLeft = body.Length - bodyOffset;
-                    if (chunkSize > bytesLeft)
-                    {
-                        chunkSize = bytesLeft;
-                    }
+                    return ReceivedMqttPacket.Empty;
+                }
 
-                    var readBytes = await _channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false);
+                if (readBytes == 0)
+                {
+                    return ReceivedMqttPacket.Empty;
+                }
 
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return ReceivedMqttPacket.Empty;
-                    }
+                bodyOffset += readBytes;
+            } while (bodyOffset < bodyLength);
 
-                    if (readBytes == 0)
-                    {
-                        return ReceivedMqttPacket.Empty;
-                    }
+            PacketInspector?.FillReceiveBuffer(body);
 
-                    bodyOffset += readBytes;
-                } while (bodyOffset < bodyLength);
-
-                PacketInspector?.FillReceiveBuffer(body);
-
-                var bodySegment = new ArraySegment<byte>(body, 0, bodyLength);
-                return new ReceivedMqttPacket(fixedHeader.Flags, bodySegment, fixedHeader.TotalLength);
-            }
-            finally
-            {
-                IsReadingPacket = false;
-            }
+            var bodySegment = new ArraySegment<byte>(body, 0, bodyLength);
+            return new ReceivedMqttPacket(fixedHeader.Flags, bodySegment, fixedHeader.TotalLength);
         }
 
         static bool WrapAndThrowException(Exception exception)

@@ -9,12 +9,19 @@ namespace MQTTnet.Server
     public sealed class MqttServerOptions
     {
         public TimeSpan DefaultCommunicationTimeout { get; set; } = TimeSpan.FromSeconds(100);
-        
+
         public MqttServerTcpEndpointOptions DefaultEndpointOptions { get; } = new MqttServerTcpEndpointOptions();
 
         public bool EnablePersistentSessions { get; set; }
 
-        public TimeSpan KeepAliveMonitorInterval { get; set; } = TimeSpan.FromMilliseconds(500);
+        [Obsolete("Use KeepAliveOptions instead.")]
+        public TimeSpan KeepAliveMonitorInterval
+        {
+            get => KeepAliveOptions.MonitorInterval;
+            set => KeepAliveOptions.MonitorInterval = value;
+        }
+
+        public MqttServerKeepAliveOptions KeepAliveOptions { get; } = new MqttServerKeepAliveOptions();
 
         public int MaxPendingMessagesPerClient { get; set; } = 250;
 

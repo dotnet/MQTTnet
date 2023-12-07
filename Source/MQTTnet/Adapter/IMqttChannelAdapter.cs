@@ -25,8 +25,6 @@ namespace MQTTnet.Adapter
 
         long BytesReceived { get; }
 
-        bool IsReadingPacket { get; }
-
         Task ConnectAsync(CancellationToken cancellationToken);
 
         Task DisconnectAsync(CancellationToken cancellationToken);

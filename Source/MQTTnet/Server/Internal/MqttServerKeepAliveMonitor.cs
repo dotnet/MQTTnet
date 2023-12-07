@@ -107,13 +107,6 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                if (connection.ChannelAdapter.IsReadingPacket)
-                {
-                    // The connection is currently reading a (large) packet. So it is obviously 
-                    // doing something and thus "connected".
-                    return;
-                }
-
                 // Values described here: [MQTT-3.1.2-24].
                 // If the client sends 5 sec. the server will allow up to 7.5 seconds.
                 // If the client sends 1 sec. the server will allow up to 1.5 seconds.

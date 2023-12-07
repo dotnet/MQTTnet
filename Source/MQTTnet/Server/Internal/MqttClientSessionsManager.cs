@@ -244,7 +244,14 @@ namespace MQTTnet.Server
 
                         matchingSubscribersCount++;
 
-                        session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketCopy));
+                        var result = session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketCopy));
+
+                        if (_eventContainer.ApplicationMessageEnqueuedOrDroppedEvent.HasHandlers)
+                        {
+                            var eventArgs = new ApplicationMessageEnqueuedEventArgs(senderId, session.Id, applicationMessage, result == EnqueueDataPacketResult.Dropped);
+                            await _eventContainer.ApplicationMessageEnqueuedOrDroppedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                        }
+
                         _logger.Verbose("Client '{0}': Queued PUBLISH packet with topic '{1}'", session.Id, applicationMessage.Topic);
                     }
 

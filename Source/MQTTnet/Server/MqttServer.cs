@@ -51,6 +51,12 @@ namespace MQTTnet.Server
             _keepAliveMonitor = new MqttServerKeepAliveMonitor(options, _clientSessionsManager, _rootLogger);
         }
 
+        public event Func<ApplicationMessageEnqueuedEventArgs, Task> ApplicationMessageEnqueuedOrDroppedAsync
+        {
+            add => _eventContainer.ApplicationMessageEnqueuedOrDroppedEvent.AddHandler(value);
+            remove => _eventContainer.ApplicationMessageEnqueuedOrDroppedEvent.RemoveHandler(value);
+        }
+
         public event Func<ApplicationMessageNotConsumedEventArgs, Task> ApplicationMessageNotConsumedAsync
         {
             add => _eventContainer.ApplicationMessageNotConsumedEvent.AddHandler(value);
@@ -133,6 +139,12 @@ namespace MQTTnet.Server
         {
             add => _eventContainer.PreparingSessionEvent.AddHandler(value);
             remove => _eventContainer.PreparingSessionEvent.RemoveHandler(value);
+        }
+
+        public event Func<QueueMessageOverwrittenEventArgs, Task> QueuedApplicationMessageOverwrittenAsync
+        {
+            add => _eventContainer.QueuedApplicationMessageOverwrittenEvent.AddHandler(value);
+            remove => _eventContainer.QueuedApplicationMessageOverwrittenEvent.RemoveHandler(value);
         }
 
         public event Func<RetainedMessageChangedEventArgs, Task> RetainedMessageChangedAsync

@@ -83,8 +83,6 @@ namespace MQTTnet.AspNetCore
             }
         }
 
-        public bool IsReadingPacket { get; private set; }
-
         public bool IsSecureConnection
         {
             get
@@ -164,11 +162,6 @@ namespace MQTTnet.AspNetCore
                                 BytesReceived += received;
                                 return packet;
                             }
-                            else
-                            {
-                                // we did receive something but the message is not yet complete
-                                IsReadingPacket = true;
-                            }
                         }
                         else if (readResult.IsCompleted)
                         {
@@ -189,11 +182,8 @@ namespace MQTTnet.AspNetCore
                 // completing the channel makes sure that there is no more data read after a protocol error
                 _input?.Complete(exception);
                 _output?.Complete(exception);
+
                 throw;
-            }
-            finally
-            {
-                IsReadingPacket = false;
             }
 
             cancellationToken.ThrowIfCancellationRequested();

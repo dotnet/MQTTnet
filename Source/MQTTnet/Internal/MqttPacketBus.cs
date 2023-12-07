@@ -104,17 +104,22 @@ namespace MQTTnet.Internal
             _signal.Dispose();
         }
 
-        public void DropFirstItem(MqttPacketBusPartition partition)
+        public MqttPacketBusItem DropFirstItem(MqttPacketBusPartition partition)
         {
             lock (_syncRoot)
             {
                 var partitionInstance = _partitions[(int)partition];
 
-                if (partitionInstance.Any())
+                if (partitionInstance.Count > 0)
                 {
+                    var firstItem = partitionInstance.First.Value;
                     partitionInstance.RemoveFirst();
+
+                    return firstItem;
                 }
             }
+
+            return null;
         }
 
         public void EnqueueItem(MqttPacketBusItem item, MqttPacketBusPartition partition)

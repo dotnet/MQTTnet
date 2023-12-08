@@ -5,6 +5,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
@@ -58,7 +59,8 @@ namespace MQTTnet.AspNetCore
             services.TryAddSingleton(new MqttFactory());
 
             services.AddSingleton<MqttHostedServer>();
-            services.AddHostedService<MqttHostedServer>();
+            services.AddSingleton<IHostedService>(s => s.GetService<MqttHostedServer>());
+            services.AddSingleton<MqttServer>(s => s.GetService<MqttHostedServer>());
         }
 
         public static IServiceCollection AddHostedMqttServerWithServices(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configure)

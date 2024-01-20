@@ -6,7 +6,6 @@ using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Formatter;
 using System;
-using System.Net;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 
@@ -22,8 +21,7 @@ namespace MQTTnet.AspNetCore.Client
             {
                 case MqttClientTcpOptions tcpOptions:
                     {
-                        var endpoint = new DnsEndPoint(tcpOptions.Server, tcpOptions.GetPort());
-                        var tcpConnection = new TcpConnection(endpoint);
+                        var tcpConnection = new SocketConnection(tcpOptions.RemoteEndpoint);
                         
                         var formatter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(4096, 65535));
                         return new MqttConnectionContext(formatter, tcpConnection);

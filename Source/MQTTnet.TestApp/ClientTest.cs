@@ -4,6 +4,7 @@
 
 using MQTTnet.Client;
 using System;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
@@ -27,7 +28,7 @@ namespace MQTTnet.TestApp
                 {
                     ChannelOptions = new MqttClientTcpOptions
                     {
-                        Server = "127.0.0.1"
+                        RemoteEndpoint = new DnsEndPoint("127.0.0.1", 0)
                     }
                 };
 

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Net;
 using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
@@ -108,6 +109,36 @@ namespace MQTTnet.Implementations
             // MQTT Control Packets MUST be sent in WebSocket binary data frames. If any other type of data frame is received the recipient MUST close the Network Connection [MQTT-6.0.0-1].
             // A single WebSocket data frame can contain multiple or partial MQTT Control Packets. The receiver MUST NOT assume that MQTT Control Packets are aligned on WebSocket frame boundaries [MQTT-6.0.0-2].
             await _webSocket.SendAsync(buffer, WebSocketMessageType.Binary, isEndOfPacket, cancellationToken).ConfigureAwait(false);
+#else
+            // The lock is required because the client will throw an exception if _SendAsync_ is 
+            // called from multiple threads at the same time. But this issue only happens with several
+            // framework versions.
+            if (_sendLock == null)
+            {
+                return;
+            }
+
+            using (await _sendLock.EnterAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await _webSocket.SendAsync(buffer, WebSocketMessageType.Binary, isEndOfPacket, cancellationToken).ConfigureAwait(false);
+            }
+#endif
+        }
+
+        public async Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+#if NET5_0_OR_GREATER
+            // MQTT Control Packets MUST be sent in WebSocket binary data frames. If any other type of data frame is received the recipient MUST close the Network Connection [MQTT-6.0.0-1].
+            // A single WebSocket data frame can contain multiple or partial MQTT Control Packets. The receiver MUST NOT assume that MQTT Control Packets are aligned on WebSocket frame boundaries [MQTT-6.0.0-2].
+            long length = buffer.Length;
+            foreach (var segment in buffer)
+            {
+                length -= segment.Length;
+                bool endOfPacket = isEndOfPacket && length == 0;
+                await _webSocket.SendAsync(segment, WebSocketMessageType.Binary, endOfPacket, cancellationToken).ConfigureAwait(false);
+            }
 #else
             // The lock is required because the client will throw an exception if _SendAsync_ is 
             // called from multiple threads at the same time. But this issue only happens with several

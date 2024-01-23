@@ -219,7 +219,7 @@ namespace MQTTnet.Adapter
 
                     _logger.Verbose("TX ({0} bytes) >>> {1}", packetBuffer.Length, packet);
 
-                    if (packetBuffer.Payload.Count == 0 || !AllowPacketFragmentation)
+                    if (packetBuffer.Payload.Length == 0 || !AllowPacketFragmentation)
                     {
                         await _channel.WriteAsync(packetBuffer.Join(), true, cancellationToken).ConfigureAwait(false);
                     }

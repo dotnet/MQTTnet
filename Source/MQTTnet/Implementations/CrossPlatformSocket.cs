@@ -170,11 +170,16 @@ namespace MQTTnet.Implementations
             _socket.Bind(localEndPoint);
         }
 
-        public async Task ConnectAsync(string host, int port, CancellationToken cancellationToken)
+        public Task ConnectAsync(string host, int port, CancellationToken cancellationToken)
         {
-            if (host is null)
+            return ConnectAsync(new DnsEndPoint(host, port), cancellationToken);
+        }
+
+        public async Task ConnectAsync(EndPoint endPoint, CancellationToken cancellationToken)
+        {
+            if (endPoint is null)
             {
-                throw new ArgumentNullException(nameof(host));
+                throw new ArgumentNullException(nameof(endPoint));
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -191,15 +196,15 @@ namespace MQTTnet.Implementations
 #endif
 
 #if NET5_0_OR_GREATER
-                await _socket.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+                await _socket.ConnectAsync(endPoint, cancellationToken).ConfigureAwait(false);
 #else
                 // Workaround for: https://github.com/dotnet/corefx/issues/24430
                 using (cancellationToken.Register(_socketDisposeAction))
                 {
 #if NET452 || NET461
-                    await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, host, port, null).ConfigureAwait(false);
+                    await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, endPoint, null).ConfigureAwait(false);
 #else
-                    await _socket.ConnectAsync(host, port).ConfigureAwait(false);
+                    await _socket.ConnectAsync(endPoint).ConfigureAwait(false);
 #endif
                 }
 #endif
@@ -217,7 +222,7 @@ namespace MQTTnet.Implementations
                     throw new MqttCommunicationTimedOutException();
                 }
 
-                throw new MqttCommunicationException($"Error while connecting with host '{host}:{port}'.", socketException);
+                throw new MqttCommunicationException($"Error while connecting host '{endPoint}'.", socketException);
             }
             catch (ObjectDisposedException)
             {

@@ -33,7 +33,7 @@ namespace MQTTnet.AspNetCore
             PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
 
-            if (!(_connection is TcpConnection tcp) || tcp.IsConnected)
+            if (!(_connection is SocketConnection tcp) || tcp.IsConnected)
             {
                 _input = connection.Transport.Input;
                 _output = connection.Transport.Output;
@@ -109,7 +109,7 @@ namespace MQTTnet.AspNetCore
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
-            if (_connection is TcpConnection tcp && !tcp.IsConnected)
+            if (_connection is SocketConnection tcp && !tcp.IsConnected)
             {
                 await tcp.StartAsync().ConfigureAwait(false);
             }

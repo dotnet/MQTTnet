@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Net;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Internal;
@@ -28,7 +29,7 @@ namespace MQTTnet.TestApp
                     Credentials = new RandomPassword(),
                     ChannelOptions = new MqttClientTcpOptions
                     {
-                        Server = "broker.hivemq.com"
+                        RemoteEndpoint = new DnsEndPoint("broker.hivemq.com", 0)
                     }
                 },
 

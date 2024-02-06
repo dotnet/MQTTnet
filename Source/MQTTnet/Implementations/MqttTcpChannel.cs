@@ -5,6 +5,7 @@
 #if !WINDOWS_UWP
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
@@ -92,7 +93,7 @@ namespace MQTTnet.Implementations
                     socket.DualMode = _tcpOptions.DualMode.Value;
                 }
 
-                await socket.ConnectAsync(_tcpOptions.Server, _tcpOptions.GetPort(), cancellationToken).ConfigureAwait(false);
+                await socket.ConnectAsync(_tcpOptions.RemoteEndpoint, cancellationToken).ConfigureAwait(false);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -103,9 +104,11 @@ namespace MQTTnet.Implementations
                     var targetHost = _tcpOptions.TlsOptions.TargetHost;
                     if (string.IsNullOrEmpty(targetHost))
                     {
-                        targetHost = _tcpOptions.Server;
+                        if (_tcpOptions.RemoteEndpoint is DnsEndPoint dns)
+                        {
+                            targetHost = dns.Host;    
+                        }
                     }
-
                     var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                     try
                     {

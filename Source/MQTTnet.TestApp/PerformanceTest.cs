@@ -5,13 +5,13 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
-using MqttClient = MQTTnet.Client.MqttClient;
 
 namespace MQTTnet.TestApp
 {
@@ -25,7 +25,7 @@ namespace MQTTnet.TestApp
                 {
                     ChannelOptions = new MqttClientTcpOptions
                     {
-                        Server = "127.0.0.1"
+                        RemoteEndpoint = new DnsEndPoint("127.0.0.1", 0)
                     },
                     CleanSession = true
                 };
@@ -71,7 +71,7 @@ namespace MQTTnet.TestApp
                 {
                     ChannelOptions = new MqttClientTcpOptions
                     {
-                        Server = "127.0.0.1"
+                        RemoteEndpoint = new DnsEndPoint("127.0.0.1", 0)
                     }
                 };
 
@@ -114,7 +114,10 @@ namespace MQTTnet.TestApp
             {
                 var options = new MqttClientOptions
                 {
-                    ChannelOptions = new MqttClientTcpOptions { Server = "localhost" },
+                    ChannelOptions = new MqttClientTcpOptions
+                    {
+                        RemoteEndpoint = new DnsEndPoint("localhost", 0)
+                    },
                     ClientId = "Client1",
                     CleanSession = true
                 };
@@ -218,7 +221,7 @@ namespace MQTTnet.TestApp
                 {
                     ChannelOptions = new MqttClientTcpOptions
                     {
-                        Server = "127.0.0.1"
+                        RemoteEndpoint = new DnsEndPoint("127.0.0.1", 0)
                     },
                     CleanSession = true
                 };
@@ -269,7 +272,7 @@ namespace MQTTnet.TestApp
                 {
                     ChannelOptions = new MqttClientTcpOptions
                     {
-                        Server = "127.0.0.1"
+                        RemoteEndpoint = new DnsEndPoint("127.0.0.1", 0)
                     },
                     CleanSession = true
                 };
@@ -320,7 +323,7 @@ namespace MQTTnet.TestApp
                 {
                     ChannelOptions = new MqttClientTcpOptions
                     {
-                        Server = "127.0.0.1"
+                        RemoteEndpoint = new DnsEndPoint("127.0.0.1", 0)
                     },
                     CleanSession = true
                 };

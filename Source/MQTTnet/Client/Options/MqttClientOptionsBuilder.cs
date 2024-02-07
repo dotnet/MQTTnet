@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
@@ -22,7 +23,9 @@ namespace MQTTnet.Client
 
         MqttClientTcpOptions _tcpOptions;
         MqttClientTlsOptions _tlsOptions;
-
+        EndPoint _remoteEndPoint;
+        int? _port;
+        
         [Obsolete] MqttClientOptionsBuilderTlsParameters _tlsParameters;
 
         MqttClientWebSocketOptions _webSocketOptions;
@@ -63,6 +66,31 @@ namespace MQTTnet.Client
             if (_tcpOptions != null)
             {
                 _tcpOptions.TlsOptions = tlsOptions;
+
+                if (_remoteEndPoint == null)
+                {
+                    throw new ArgumentException("No endpoint is set.");
+                }
+
+                if (_remoteEndPoint is DnsEndPoint dns)
+                {
+                    if (dns.Port == 0)
+                    {
+                        if (_port.HasValue)
+                        {
+                            _remoteEndPoint = new DnsEndPoint(dns.Host, _port.Value);
+                        }
+                        else
+                        {
+                            _remoteEndPoint = new DnsEndPoint(dns.Host, tlsOptions?.UseTls == false ? MqttPorts.Default : MqttPorts.Secure);
+                        }
+                    }
+                }
+
+                if (_tcpOptions.RemoteEndpoint == null)
+                {
+                    _tcpOptions.RemoteEndpoint = _remoteEndPoint;    
+                }
             }
             else if (_webSocketOptions != null)
             {
@@ -307,11 +335,20 @@ namespace MQTTnet.Client
 
         public MqttClientOptionsBuilder WithTcpServer(string server, int? port = null)
         {
-            _tcpOptions = new MqttClientTcpOptions
-            {
-                Server = server,
-                Port = port
-            };
+            _tcpOptions = new MqttClientTcpOptions();
+
+            // The value 0 will be updated when building the options.
+            // This a backward compatibility feature.
+            _remoteEndPoint = new DnsEndPoint(server, port ?? 0);
+            _port = port;
+
+            return this;
+        }
+        
+        public MqttClientOptionsBuilder WithEndPoint(EndPoint endPoint)
+        {
+            _remoteEndPoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
+            _tcpOptions = new MqttClientTcpOptions();
 
             return this;
         }

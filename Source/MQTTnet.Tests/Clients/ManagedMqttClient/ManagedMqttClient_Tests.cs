@@ -470,7 +470,7 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                 sendingManagedClient.InterceptPublishMessageAsync += e =>
                 {
                     Interlocked.Increment(ref interceptedMessagesCount);
-                    e.ShouldPublish = false;
+                    e.AcceptPublish = false;
                     return CompletedTask.Instance;
                 };
 
@@ -521,7 +521,7 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                 sendingManagedClient.InterceptPublishMessageAsync += e =>
                 {
                     Interlocked.Increment(ref interceptedMessagesCount);
-                    e.ShouldPublish = true;
+                    e.AcceptPublish = true;
                     return CompletedTask.Instance;
                 };
 

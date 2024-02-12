@@ -709,17 +709,17 @@ namespace MQTTnet.Extensions.ManagedClient
         async Task TryPublishQueuedMessageAsync(ManagedMqttApplicationMessage message)
         {
             Exception transmitException = null;
-            bool shouldPublish = true;
+            bool acceptPublish = true;
             try
             {
                 if (_interceptingPublishMessageEvent.HasHandlers)
                 {
                     var interceptEventArgs = new InterceptingPublishMessageEventArgs(message);
                     await _interceptingPublishMessageEvent.InvokeAsync(interceptEventArgs).ConfigureAwait(false);
-                    shouldPublish = interceptEventArgs.ShouldPublish;
+                    acceptPublish = interceptEventArgs.AcceptPublish;
                 }
 
-                if (shouldPublish)
+                if (acceptPublish)
                 {
                     await InternalClient.PublishAsync(message.ApplicationMessage).ConfigureAwait(false);
                 }

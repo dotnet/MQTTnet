@@ -15,6 +15,6 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public ManagedMqttApplicationMessage ApplicationMessage { get; }
 
-        public bool ShouldPublish { get; set; } = true;
+        public bool AcceptPublish { get; set; } = true;
     }
 }

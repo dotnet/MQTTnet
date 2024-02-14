@@ -19,6 +19,7 @@ namespace MQTTnet.Extensions.ManagedClient
 {
     public sealed class ManagedMqttClient : Disposable, IManagedMqttClient
     {
+        readonly AsyncEvent<InterceptingPublishMessageEventArgs> _interceptingPublishMessageEvent = new AsyncEvent<InterceptingPublishMessageEventArgs>();
         readonly AsyncEvent<ApplicationMessageProcessedEventArgs> _applicationMessageProcessedEvent = new AsyncEvent<ApplicationMessageProcessedEventArgs>();
         readonly AsyncEvent<ApplicationMessageSkippedEventArgs> _applicationMessageSkippedEvent = new AsyncEvent<ApplicationMessageSkippedEventArgs>();
         readonly AsyncEvent<ConnectingFailedEventArgs> _connectingFailedEvent = new AsyncEvent<ConnectingFailedEventArgs>();
@@ -87,6 +88,14 @@ namespace MQTTnet.Extensions.ManagedClient
             add => _applicationMessageProcessedEvent.AddHandler(value);
             remove => _applicationMessageProcessedEvent.RemoveHandler(value);
         }
+
+
+        public event Func<InterceptingPublishMessageEventArgs, Task> InterceptPublishMessageAsync
+        {
+            add => _interceptingPublishMessageEvent.AddHandler(value);
+            remove => _interceptingPublishMessageEvent.RemoveHandler(value);
+        }
+
 
         public event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync
         {
@@ -700,9 +709,20 @@ namespace MQTTnet.Extensions.ManagedClient
         async Task TryPublishQueuedMessageAsync(ManagedMqttApplicationMessage message)
         {
             Exception transmitException = null;
+            bool acceptPublish = true;
             try
             {
-                await InternalClient.PublishAsync(message.ApplicationMessage).ConfigureAwait(false);
+                if (_interceptingPublishMessageEvent.HasHandlers)
+                {
+                    var interceptEventArgs = new InterceptingPublishMessageEventArgs(message);
+                    await _interceptingPublishMessageEvent.InvokeAsync(interceptEventArgs).ConfigureAwait(false);
+                    acceptPublish = interceptEventArgs.AcceptPublish;
+                }
+
+                if (acceptPublish)
+                {
+                    await InternalClient.PublishAsync(message.ApplicationMessage).ConfigureAwait(false);
+                }
 
                 using (await _messageQueueLock.EnterAsync().ConfigureAwait(false)) //lock to avoid conflict with this.PublishAsync
                 {

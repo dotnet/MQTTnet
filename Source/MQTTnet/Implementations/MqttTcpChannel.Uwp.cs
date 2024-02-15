@@ -17,6 +17,7 @@ using MQTTnet.Channel;
 using MQTTnet.Client;
 using MQTTnet.Server;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Net;
 
 namespace MQTTnet.Implementations
 {
@@ -65,9 +66,22 @@ namespace MQTTnet.Implementations
                 _socket.Control.KeepAlive = true;
             }
 
+            string hostName;
+            string serviceName;
+
+            if (_options.RemoteEndpoint is DnsEndPoint dns)
+            {
+                hostName = dns.Host;
+                serviceName = dns.Port.ToString();
+            }
+            else
+            {
+                throw new NotSupportedException("UWP only supports a DNS endpoint.");
+            }
+
             if (_options.TlsOptions?.UseTls != true)
             {
-                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString()).AsTask().ConfigureAwait(false);
+                await _socket.ConnectAsync(new HostName(hostName), serviceName).AsTask().ConfigureAwait(false);
             }
             else
             {
@@ -88,7 +102,7 @@ namespace MQTTnet.Implementations
                     socketProtectionLevel = SocketProtectionLevel.Tls10;
                 }
 
-                await _socket.ConnectAsync(new HostName(_options.Server), _options.GetPort().ToString(), socketProtectionLevel).AsTask().ConfigureAwait(false);
+                await _socket.ConnectAsync(new HostName(hostName), serviceName, socketProtectionLevel).AsTask().ConfigureAwait(false);
             }
 
             Endpoint = _socket.Information.RemoteAddress + ":" + _socket.Information.RemotePort;

@@ -15,15 +15,15 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore.Client.Tcp
 {
-    public class TcpConnection : ConnectionContext
+    public sealed class SocketConnection : ConnectionContext
     {
-        private volatile bool _aborted;
-        private readonly EndPoint _endPoint;
-        private SocketSender _sender;
-        private SocketReceiver _receiver;
+        volatile bool _aborted;
+        readonly EndPoint _endPoint;
+        SocketSender _sender;
+        SocketReceiver _receiver;
 
-        private Socket _socket;
-        private IDuplexPipe _application;
+        Socket _socket;
+        IDuplexPipe _application;
 
         public bool IsConnected { get; private set; }
         public override string ConnectionId { get; set; }
@@ -31,12 +31,12 @@ namespace MQTTnet.AspNetCore.Client.Tcp
         public override IDictionary<object, object> Items { get; set; }
         public override IDuplexPipe Transport { get; set; }
 
-        public TcpConnection(EndPoint endPoint)
+        public SocketConnection(EndPoint endPoint)
         {
             _endPoint = endPoint;
         }
 
-        public TcpConnection(Socket socket)
+        public SocketConnection(Socket socket)
         {
             _socket = socket;
             _endPoint = socket.RemoteEndPoint;
@@ -87,7 +87,7 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             IsConnected = true;
         }
 
-        private async Task ExecuteAsync()
+        async Task ExecuteAsync()
         {
             Exception sendError = null;
             try
@@ -114,7 +114,7 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Unexpected exception in {nameof(TcpConnection)}.{nameof(StartAsync)}: " + ex);
+                Console.WriteLine($"Unexpected exception in {nameof(SocketConnection)}.{nameof(StartAsync)}: " + ex);
             }
             finally
             {
@@ -122,7 +122,8 @@ namespace MQTTnet.AspNetCore.Client.Tcp
                 _application.Input.Complete(sendError);
             }
         }
-        private async Task DoReceive()
+
+        async Task DoReceive()
         {
             Exception error = null;
 
@@ -171,7 +172,7 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             }
         }
 
-        private async Task ProcessReceives()
+        async Task ProcessReceives()
         {
             while (true)
             {
@@ -204,12 +205,12 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             }
         }
 
-        private Exception ConnectionAborted()
+        Exception ConnectionAborted()
         {
             return new MqttCommunicationException("Connection Aborted");
         }
 
-        private async Task<Exception> DoSend()
+        async Task<Exception> DoSend()
         {
             Exception error = null;
 
@@ -240,7 +241,7 @@ namespace MQTTnet.AspNetCore.Client.Tcp
             return error;
         }
 
-        private async Task ProcessSends()
+        async Task ProcessSends()
         {
             while (true)
             {

@@ -48,7 +48,6 @@ namespace MQTTnet.AspNetCore.Tests
         {
             var mockup = new ConnectionHandlerMockup();
 
-
             using (var host = new WebHostBuilder().UseKestrel(kestrel => kestrel.ListenLocalhost(1883, listener => listener.Use((ctx, next) => mockup.OnConnectedAsync(ctx))))
                        .UseStartup<Startup>()
                        .ConfigureServices(

@@ -8,9 +8,9 @@ using System.Collections.Generic;
 
 namespace MQTTnet.Extensions.ManagedClient
 {
-    public sealed class SubscriptionsResultEventArgs : EventArgs
+    public sealed class SubscriptionsChangedEventArgs : EventArgs
     {
-        public SubscriptionsResultEventArgs(List<MqttClientSubscribeResult> subscribeResult, List<MqttClientUnsubscribeResult> unsubscribeResult)
+        public SubscriptionsChangedEventArgs(List<MqttClientSubscribeResult> subscribeResult, List<MqttClientUnsubscribeResult> unsubscribeResult)
         {
             SubscribeResult = subscribeResult ?? throw new ArgumentNullException(nameof(subscribeResult));
             UnsubscribeResult = unsubscribeResult ?? throw new ArgumentNullException(nameof(unsubscribeResult));

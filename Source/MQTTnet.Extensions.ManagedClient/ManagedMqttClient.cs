@@ -24,7 +24,7 @@ namespace MQTTnet.Extensions.ManagedClient
         readonly AsyncEvent<ConnectingFailedEventArgs> _connectingFailedEvent = new AsyncEvent<ConnectingFailedEventArgs>();
         readonly AsyncEvent<EventArgs> _connectionStateChangedEvent = new AsyncEvent<EventArgs>();
         readonly AsyncEvent<ManagedProcessFailedEventArgs> _synchronizingSubscriptionsFailedEvent = new AsyncEvent<ManagedProcessFailedEventArgs>();
-        readonly AsyncEvent<SubscriptionsResultEventArgs> _subscriptionsResultEvent = new AsyncEvent<SubscriptionsResultEventArgs>();
+        readonly AsyncEvent<SubscriptionsChangedEventArgs> _subscriptionsResultEvent = new AsyncEvent<SubscriptionsChangedEventArgs>();
 
         readonly MqttNetSourceLogger _logger;
         readonly BlockingQueue<ManagedMqttApplicationMessage> _messageQueue = new BlockingQueue<ManagedMqttApplicationMessage>();
@@ -125,7 +125,7 @@ namespace MQTTnet.Extensions.ManagedClient
             remove => _synchronizingSubscriptionsFailedEvent.RemoveHandler(value);
         }
 
-        public event Func<SubscriptionsResultEventArgs, Task> SubscriptionsResultAsync
+        public event Func<SubscriptionsChangedEventArgs, Task> SubscriptionsChangedAsync
         {
             add => _subscriptionsResultEvent.AddHandler(value);
             remove => _subscriptionsResultEvent.RemoveHandler(value);
@@ -374,7 +374,7 @@ namespace MQTTnet.Extensions.ManagedClient
         {
             if (_subscriptionsResultEvent.HasHandlers)
             {
-                await _subscriptionsResultEvent.InvokeAsync(new SubscriptionsResultEventArgs(subscribeResults, unsubscribeResults)).ConfigureAwait(false);
+                await _subscriptionsResultEvent.InvokeAsync(new SubscriptionsChangedEventArgs(subscribeResults, unsubscribeResults)).ConfigureAwait(false);
             }
         }
 

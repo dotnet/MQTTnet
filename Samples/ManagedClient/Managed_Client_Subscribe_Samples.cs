@@ -49,7 +49,7 @@ public sealed class Managed_Client_Subscribe_Samples
             
             Console.WriteLine($"Pending messages = {managedMqttClient.PendingApplicationMessagesCount}");
 
-            managedMqttClient.SubscriptionsResultAsync += args => SubscriptionsResultAsync(args, subscribed);
+            managedMqttClient.SubscriptionsChangedAsync += args => SubscriptionsResultAsync(args, subscribed);
             await managedMqttClient.SubscribeAsync("Topic").ConfigureAwait(false);
 
             SpinWait.SpinUntil(() => subscribed, 1000);
@@ -57,7 +57,7 @@ public sealed class Managed_Client_Subscribe_Samples
         }
     }
 
-    private static Task SubscriptionsResultAsync(SubscriptionsResultEventArgs arg, bool subscribed)
+    private static Task SubscriptionsResultAsync(SubscriptionsChangedEventArgs arg, bool subscribed)
     {
         foreach (var mqttClientSubscribeResult in arg.SubscribeResult)
         {

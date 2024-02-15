@@ -25,7 +25,7 @@ namespace MQTTnet.Extensions.ManagedClient
         
         event Func<ManagedProcessFailedEventArgs, Task> SynchronizingSubscriptionsFailedAsync;
         
-        event Func<SubscriptionsResultEventArgs, Task> SubscriptionsResultAsync;
+        event Func<SubscriptionsChangedEventArgs, Task> SubscriptionsChangedAsync;
         
         IMqttClient InternalClient { get; }
         

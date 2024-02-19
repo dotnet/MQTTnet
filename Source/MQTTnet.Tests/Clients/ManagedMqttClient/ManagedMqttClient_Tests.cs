@@ -437,6 +437,109 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
             }
         }
 
+
+        [TestMethod]
+        public async Task ManagedClients_CanInterceptPublishedMessage_PreventingPublish()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var receivedMessagesCount = 0;
+                var interceptedMessagesCount = 0;
+
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
+                    .Build();
+
+                var sendingClient = testEnvironment.CreateClient();
+                var sendingManagedClient = new MQTTnet.Extensions.ManagedClient.ManagedMqttClient(sendingClient, testEnvironment.ClientLogger);
+
+                await sendingManagedClient.StartAsync(new ManagedMqttClientOptionsBuilder().WithClientOptions(clientOptions).Build());
+
+                // Wait until the managed client is fully set up and running.
+                await Task.Delay(1000);
+
+                var receivingClient = await testEnvironment.ConnectClient();
+
+                receivingClient.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return CompletedTask.Instance;
+                };
+                sendingManagedClient.InterceptPublishMessageAsync += e =>
+                {
+                    Interlocked.Increment(ref interceptedMessagesCount);
+                    e.AcceptPublish = false;
+                    return CompletedTask.Instance;
+                };
+
+                await receivingClient.SubscribeAsync("My/last/will");
+
+                // Wait for arrival of the will message at the receiver.
+                await Task.Delay(5000);
+
+                await sendingManagedClient.EnqueueAsync("My/last/will", "hello world");
+
+                // Wait for arrival of the will message at the receiver.
+                await Task.Delay(5000);
+
+                Assert.AreEqual(0, receivedMessagesCount);
+                Assert.AreEqual(1, interceptedMessagesCount);
+            }
+        }
+
+        [TestMethod]
+        public async Task ManagedClients_CanInterceptPublishedMessage_AllowingPublish()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var receivedMessagesCount = 0;
+                var interceptedMessagesCount = 0;
+
+                var clientOptions = new MqttClientOptionsBuilder()
+                    .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
+                    .Build();
+
+                var sendingClient = testEnvironment.CreateClient();
+                var sendingManagedClient = new MQTTnet.Extensions.ManagedClient.ManagedMqttClient(sendingClient, testEnvironment.ClientLogger);
+
+                await sendingManagedClient.StartAsync(new ManagedMqttClientOptionsBuilder().WithClientOptions(clientOptions).Build());
+
+                // Wait until the managed client is fully set up and running.
+                await Task.Delay(1000);
+
+                var receivingClient = await testEnvironment.ConnectClient();
+
+                receivingClient.ApplicationMessageReceivedAsync += e =>
+                {
+                    Interlocked.Increment(ref receivedMessagesCount);
+                    return CompletedTask.Instance;
+                };
+                sendingManagedClient.InterceptPublishMessageAsync += e =>
+                {
+                    Interlocked.Increment(ref interceptedMessagesCount);
+                    e.AcceptPublish = true;
+                    return CompletedTask.Instance;
+                };
+
+                await receivingClient.SubscribeAsync("My/last/will");
+
+                // Wait for arrival of the will message at the receiver.
+                await Task.Delay(5000);
+
+                await sendingManagedClient.EnqueueAsync("My/last/will", "hello world");
+
+                // Wait for arrival of the will message at the receiver.
+                await Task.Delay(5000);
+
+                Assert.AreEqual(1, receivedMessagesCount);
+                Assert.AreEqual(1, interceptedMessagesCount);
+            }
+        }
+
         // This case also serves as a regression test for the previous behavior which re-published
         // each and every existing subscriptions with every new subscription that was made
         // (causing performance problems and having the visible symptom of retained messages being received again)

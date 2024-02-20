@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -12,16 +13,20 @@ namespace MQTTnet.Adapter
 {
     public sealed class MqttPacketInspector
     {
-        readonly MqttNetSourceLogger _logger;
         readonly AsyncEvent<InspectMqttPacketEventArgs> _asyncEvent;
-        
+        readonly MqttNetSourceLogger _logger;
+
         MemoryStream _receivedPacketBuffer;
-        
+
         public MqttPacketInspector(AsyncEvent<InspectMqttPacketEventArgs> asyncEvent, IMqttNetLogger logger)
         {
             _asyncEvent = asyncEvent ?? throw new ArgumentNullException(nameof(asyncEvent));
-            
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
             _logger = logger.WithSource(nameof(MqttPacketInspector));
         }
 
@@ -36,28 +41,15 @@ namespace MQTTnet.Adapter
             {
                 _receivedPacketBuffer = new MemoryStream();
             }
-            
+
             _receivedPacketBuffer?.SetLength(0);
         }
 
-        public void EndReceivePacket()
+        public Task BeginSendPacket(MqttPacketBuffer buffer)
         {
             if (!_asyncEvent.HasHandlers)
             {
-                return;
-            }
-
-            var buffer = _receivedPacketBuffer.ToArray();
-            _receivedPacketBuffer.SetLength(0);
-
-            InspectPacket(buffer, MqttPacketFlowDirection.Inbound);
-        }
-
-        public void BeginSendPacket(MqttPacketBuffer buffer)
-        {
-            if (!_asyncEvent.HasHandlers)
-            {
-                return;
+                return CompletedTask.Instance;
             }
 
             // Create a copy of the actual packet so that the inspector gets no access
@@ -65,7 +57,20 @@ namespace MQTTnet.Adapter
             // intended for debugging etc. so that this is OK.
             var bufferCopy = buffer.ToArray();
 
-            InspectPacket(bufferCopy, MqttPacketFlowDirection.Outbound);
+            return InspectPacket(bufferCopy, MqttPacketFlowDirection.Outbound);
+        }
+
+        public Task EndReceivePacket()
+        {
+            if (!_asyncEvent.HasHandlers)
+            {
+                return CompletedTask.Instance;
+            }
+
+            var buffer = _receivedPacketBuffer.ToArray();
+            _receivedPacketBuffer.SetLength(0);
+
+            return InspectPacket(buffer, MqttPacketFlowDirection.Inbound);
         }
 
         public void FillReceiveBuffer(byte[] buffer)
@@ -74,16 +79,16 @@ namespace MQTTnet.Adapter
             {
                 return;
             }
-            
+
             _receivedPacketBuffer?.Write(buffer, 0, buffer.Length);
         }
 
-        void InspectPacket(byte[] buffer, MqttPacketFlowDirection direction)
+        async Task InspectPacket(byte[] buffer, MqttPacketFlowDirection direction)
         {
             try
             {
                 var eventArgs = new InspectMqttPacketEventArgs(direction, buffer);
-                _asyncEvent.InvokeAsync(eventArgs).GetAwaiter().GetResult();
+                await _asyncEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
             }
             catch (Exception exception)
             {

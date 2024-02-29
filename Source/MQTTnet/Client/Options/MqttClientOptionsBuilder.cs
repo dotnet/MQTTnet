@@ -18,14 +18,14 @@ namespace MQTTnet.Client
     public sealed class MqttClientOptionsBuilder
     {
         readonly MqttClientOptions _options = new MqttClientOptions();
+        int? _port;
 
         [Obsolete] MqttClientWebSocketProxyOptions _proxyOptions;
+        EndPoint _remoteEndPoint;
 
         MqttClientTcpOptions _tcpOptions;
         MqttClientTlsOptions _tlsOptions;
-        EndPoint _remoteEndPoint;
-        int? _port;
-        
+
         [Obsolete] MqttClientOptionsBuilderTlsParameters _tlsParameters;
 
         MqttClientWebSocketOptions _webSocketOptions;
@@ -89,7 +89,7 @@ namespace MQTTnet.Client
 
                 if (_tcpOptions.RemoteEndpoint == null)
                 {
-                    _tcpOptions.RemoteEndpoint = _remoteEndPoint;    
+                    _tcpOptions.RemoteEndpoint = _remoteEndPoint;
                 }
             }
             else if (_webSocketOptions != null)
@@ -145,7 +145,6 @@ namespace MQTTnet.Client
             return this;
         }
 
-        [Obsolete("Use WithTcpServer(... configure) or WithWebSocketServer(... configure) instead.")]
         public MqttClientOptionsBuilder WithConnectionUri(Uri uri)
         {
             if (uri == null)
@@ -158,24 +157,33 @@ namespace MQTTnet.Client
             {
                 case "tcp":
                 case "mqtt":
+                {
                     WithTcpServer(uri.Host, port);
                     break;
+                }
 
                 case "mqtts":
+                {
                     WithTcpServer(uri.Host, port)
                         .WithTlsOptions(
                             o =>
                             {
+                                o.UseTls();
                             });
                     break;
+                }
 
                 case "ws":
                 case "wss":
+                {
                     WithWebSocketServer(o => o.WithUri(uri.ToString()));
                     break;
+                }
 
                 default:
-                    throw new ArgumentException("Unexpected scheme in uri.");
+                {
+                    throw new ArgumentException("Unexpected scheme in URI.");
+                }
             }
 
             if (!string.IsNullOrEmpty(uri.UserInfo))
@@ -189,7 +197,6 @@ namespace MQTTnet.Client
             return this;
         }
 
-        [Obsolete("Use WithTcpServer(... configure) or WithWebSocketServer(... configure) instead.")]
         public MqttClientOptionsBuilder WithConnectionUri(string uri)
         {
             return WithConnectionUri(new Uri(uri, UriKind.Absolute));
@@ -215,6 +222,14 @@ namespace MQTTnet.Client
         public MqttClientOptionsBuilder WithCredentials(IMqttClientCredentialsProvider credentials)
         {
             _options.Credentials = credentials;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithEndPoint(EndPoint endPoint)
+        {
+            _remoteEndPoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
+            _tcpOptions = new MqttClientTcpOptions();
+
             return this;
         }
 
@@ -341,14 +356,6 @@ namespace MQTTnet.Client
             // This a backward compatibility feature.
             _remoteEndPoint = new DnsEndPoint(server, port ?? 0);
             _port = port;
-
-            return this;
-        }
-        
-        public MqttClientOptionsBuilder WithEndPoint(EndPoint endPoint)
-        {
-            _remoteEndPoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
-            _tcpOptions = new MqttClientTcpOptions();
 
             return this;
         }

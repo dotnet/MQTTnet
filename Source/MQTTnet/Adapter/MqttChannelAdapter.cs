@@ -141,7 +141,8 @@ namespace MQTTnet.Adapter
 
             try
             {
-                PacketInspector?.BeginReceivePacket();
+                var localPacketInspector = PacketInspector;
+                localPacketInspector?.BeginReceivePacket();
 
                 ReceivedMqttPacket receivedPacket;
                 var receivedPacketTask = ReceiveAsync(cancellationToken);
@@ -159,7 +160,10 @@ namespace MQTTnet.Adapter
                     return null;
                 }
 
-                PacketInspector?.EndReceivePacket();
+                if (localPacketInspector != null)
+                {
+                    await localPacketInspector.EndReceivePacket().ConfigureAwait(false);
+                }
 
                 Interlocked.Add(ref _statistics._bytesSent, receivedPacket.TotalLength);
 
@@ -215,8 +219,13 @@ namespace MQTTnet.Adapter
                 try
                 {
                     var packetBuffer = PacketFormatterAdapter.Encode(packet);
-                    PacketInspector?.BeginSendPacket(packetBuffer);
 
+                    var localPacketInspector = PacketInspector;
+                    if (localPacketInspector != null)
+                    {
+                        await localPacketInspector.BeginSendPacket(packetBuffer).ConfigureAwait(false);    
+                    }
+                    
                     _logger.Verbose("TX ({0} bytes) >>> {1}", packetBuffer.Length, packet);
 
                     if (packetBuffer.Payload.Count == 0 || !AllowPacketFragmentation)

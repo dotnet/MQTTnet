@@ -13,6 +13,8 @@ namespace MQTTnet.Server
     {
         readonly Dictionary<string, MqttSession> _sessions = new Dictionary<string, MqttSession>(4096);
 
+        public int Count => _sessions.Count;
+
         public void Clear()
         {
             // Make sure that the sessions are also getting disposed!

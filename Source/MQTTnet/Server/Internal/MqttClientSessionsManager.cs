@@ -59,6 +59,10 @@ namespace MQTTnet.Server
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
         }
 
+        public int GetActiveClientCount() => _clients.Values.Count(c => !c.IsTakenOver && c.IsRunning);
+
+        public int GetActiveSessionCount() => _sessionsStorage.Count;
+
         public async Task CloseAllConnections(MqttServerClientDisconnectOptions options)
         {
             if (options == null)
@@ -297,6 +301,22 @@ namespace MQTTnet.Server
                 }
 
                 return client;
+            }
+        }
+
+        public MqttClientStatus GetClientStatus(string id)
+        {
+            lock (_clients)
+            {
+                if (!_clients.TryGetValue(id, out var client))
+                {
+                    throw new InvalidOperationException($"Client with ID '{id}' not found.");
+                }
+                var clientStatus = new MqttClientStatus(client)
+                {
+                    Session = new MqttSessionStatus(client.Session)
+                };
+                return clientStatus;
             }
         }
 

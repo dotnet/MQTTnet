@@ -25,7 +25,7 @@ namespace MQTTnet.Extensions.ManagedClient
         readonly AsyncEvent<ConnectingFailedEventArgs> _connectingFailedEvent = new AsyncEvent<ConnectingFailedEventArgs>();
         readonly AsyncEvent<EventArgs> _connectionStateChangedEvent = new AsyncEvent<EventArgs>();
         readonly AsyncEvent<ManagedProcessFailedEventArgs> _synchronizingSubscriptionsFailedEvent = new AsyncEvent<ManagedProcessFailedEventArgs>();
-        readonly AsyncEvent<SubscriptionsChangedEventArgs> _subscriptionsResultEvent = new AsyncEvent<SubscriptionsChangedEventArgs>();
+        readonly AsyncEvent<SubscriptionsChangedEventArgs> _subscriptionsChangedEvent = new AsyncEvent<SubscriptionsChangedEventArgs>();
 
         readonly MqttNetSourceLogger _logger;
         readonly BlockingQueue<ManagedMqttApplicationMessage> _messageQueue = new BlockingQueue<ManagedMqttApplicationMessage>();
@@ -136,8 +136,8 @@ namespace MQTTnet.Extensions.ManagedClient
 
         public event Func<SubscriptionsChangedEventArgs, Task> SubscriptionsChangedAsync
         {
-            add => _subscriptionsResultEvent.AddHandler(value);
-            remove => _subscriptionsResultEvent.RemoveHandler(value);
+            add => _subscriptionsChangedEvent.AddHandler(value);
+            remove => _subscriptionsChangedEvent.RemoveHandler(value);
         }
 
         public IMqttClient InternalClient { get; }
@@ -381,9 +381,9 @@ namespace MQTTnet.Extensions.ManagedClient
 
         async Task HandleSubscriptionsResultAsync(List<MqttClientSubscribeResult> subscribeResults, List<MqttClientUnsubscribeResult> unsubscribeResults)
         {
-            if (_subscriptionsResultEvent.HasHandlers)
+            if (_subscriptionsChangedEvent.HasHandlers)
             {
-                await _subscriptionsResultEvent.InvokeAsync(new SubscriptionsChangedEventArgs(subscribeResults, unsubscribeResults)).ConfigureAwait(false);
+                await _subscriptionsChangedEvent.InvokeAsync(new SubscriptionsChangedEventArgs(subscribeResults, unsubscribeResults)).ConfigureAwait(false);
             }
         }
 

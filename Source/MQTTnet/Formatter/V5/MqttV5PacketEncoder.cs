@@ -279,7 +279,7 @@ namespace MQTTnet.Formatter.V5
             _propertiesWriter.WriteReasonString(packet.ReasonString);
             _propertiesWriter.WriteUserProperties(packet.UserProperties);
 
-            if (_bufferWriter.Length > 0 || packet.ReasonCode != MqttPubAckReasonCode.Success)
+            if (_propertiesWriter.Length > 0 || packet.ReasonCode != MqttPubAckReasonCode.Success)
             {
                 _bufferWriter.WriteByte((byte)packet.ReasonCode);
                 _propertiesWriter.WriteTo(_bufferWriter);
@@ -375,7 +375,7 @@ namespace MQTTnet.Formatter.V5
 
             _bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
 
-            if (_bufferWriter.Length > 0 || packet.ReasonCode != MqttPubRecReasonCode.Success)
+            if (_propertiesWriter.Length > 0 || packet.ReasonCode != MqttPubRecReasonCode.Success)
             {
                 _bufferWriter.WriteByte((byte)packet.ReasonCode);
                 _propertiesWriter.WriteTo(_bufferWriter);

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Server;
@@ -16,7 +17,7 @@ namespace MQTTnet.Formatter
             return new MqttPublishPacket
             {
                 Topic = publishPacket.Topic,
-                PayloadSegment = publishPacket.PayloadSegment, 
+                PayloadSequence = publishPacket.PayloadSequence,
                 Retain = publishPacket.Retain,
                 QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
                 Dup = publishPacket.Dup,
@@ -36,7 +37,7 @@ namespace MQTTnet.Formatter
             var packet = new MqttPublishPacket
             {
                 Topic = applicationMessage.Topic,
-                PayloadSegment = applicationMessage.PayloadSegment, 
+                PayloadSequence = applicationMessage.PayloadSequence, 
                 QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
                 Retain = applicationMessage.Retain,
                 Dup = applicationMessage.Dup,
@@ -74,7 +75,7 @@ namespace MQTTnet.Formatter
             var packet = new MqttPublishPacket
             {
                 Topic = connectPacket.WillTopic,
-                PayloadSegment = willMessageBuffer,
+                PayloadSequence = new ReadOnlySequence<byte>(willMessageBuffer),
                 QualityOfServiceLevel = connectPacket.WillQoS,
                 Retain = connectPacket.WillRetain,
                 ContentType = connectPacket.WillContentType,

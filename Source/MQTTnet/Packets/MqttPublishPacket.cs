@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using MQTTnet.Protocol;
 
@@ -20,7 +21,7 @@ namespace MQTTnet.Packets
 
         public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
-        public ArraySegment<byte> PayloadSegment { get; set; }
+        public ReadOnlySequence<byte> PayloadSequence { get; set; }
 
         public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; } = MqttQualityOfServiceLevel.AtMostOnce;
 
@@ -39,7 +40,7 @@ namespace MQTTnet.Packets
         public override string ToString()
         {
             return
-                $"Publish: [Topic={Topic}] [PayloadLength={PayloadSegment.Count}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
+                $"Publish: [Topic={Topic}] [PayloadLength={PayloadSequence.Length}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
         }
     }
 }

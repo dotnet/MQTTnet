@@ -19,7 +19,7 @@ namespace MQTTnet.Formatter
             return new MqttApplicationMessage
             {
                 Topic = publishPacket.Topic,
-                PayloadSegment = publishPacket.PayloadSegment,
+                PayloadSequence = publishPacket.PayloadSequence,
                 QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
                 Retain = publishPacket.Retain,
                 Dup = publishPacket.Dup,

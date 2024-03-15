@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
@@ -531,7 +532,7 @@ namespace MQTTnet.Formatter.V5
 
             if (!_bufferReader.EndOfStream)
             {
-                packet.PayloadSegment = new ArraySegment<byte>(_bufferReader.ReadRemainingData());
+                packet.PayloadSequence = new ReadOnlySequence<byte>(_bufferReader.ReadRemainingData());
             }
 
             return packet;

@@ -6,14 +6,14 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 
 namespace MQTTnet
 {
     public sealed class MqttApplicationMessage
     {
-        byte[] _payloadCache;
-        ArraySegment<byte> _payloadSegment = EmptyBuffer.ArraySegment;
+        ReadOnlySequence<byte> _payloadSequence = EmptyBuffer.ArraySequence;
 
         /// <summary>
         ///     Gets or sets the content type.
@@ -53,51 +53,26 @@ namespace MQTTnet
         public uint MessageExpiryInterval { get; set; }
 
         /// <summary>
-        /// Gets or sets the payload.
-        /// The payload is the data bytes sent via the MQTT protocol.
-        /// </summary>
-        [Obsolete("Use PayloadSegment instead. This property will be removed in a future release.")]
-        public byte[] Payload
-        {
-            get
-            {
-                if (_payloadSegment.Array == null)
-                {
-                    return null;
-                }
-                
-                // just reference from _payloadSegment.Array
-                if (_payloadSegment.Count == _payloadSegment.Array.Length)
-                {
-                    return _payloadSegment.Array;
-                }
-
-                // copy from _payloadSegment
-                if (_payloadCache == null)
-                {
-                    _payloadCache = new byte[_payloadSegment.Count];
-                    MqttMemoryHelper.Copy(_payloadSegment.Array, _payloadSegment.Offset, _payloadCache, 0, _payloadCache.Length);
-                }
-
-                return _payloadCache;
-            }
-            set
-            {
-                _payloadCache = null;
-                _payloadSegment = value == null || value.Length == 0 ? EmptyBuffer.ArraySegment : new ArraySegment<byte>(value);
-            }
-        }
-
-        /// <summary>
         /// Get or set ArraySegment style of Payload.
         /// </summary>
         public ArraySegment<byte> PayloadSegment
         {
-            get => _payloadSegment;
+            get => _payloadSequence.ToArray();
             set
             {
-                _payloadCache = null;
-                _payloadSegment = value;
+                _payloadSequence = new ReadOnlySequence<byte>(value);
+            }
+        }
+
+        /// <summary>
+        /// Get or set ReadOnlySequence style of Payload.
+        /// </summary>
+        public ReadOnlySequence<byte> PayloadSequence
+        {
+            get => _payloadSequence;
+            set
+            {
+                _payloadSequence = value;
             }
         }
 

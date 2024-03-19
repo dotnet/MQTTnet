@@ -930,7 +930,7 @@ namespace MQTTnet.Client
 
         static void ThrowNotConnected()
         {
-            throw new MqttCommunicationException("The client is not connected.");
+            throw new MqttClientNotConnectedException();
         }
 
         void TryInitiateDisconnect()

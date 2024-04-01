@@ -6,13 +6,13 @@ using System;
 
 namespace MQTTnet.Exceptions
 {
-    public class MqttClientNotConnectedException :  : MqttCommunicationException
+    public class MqttClientNotConnectedException : MqttCommunicationException
     {
-        public MqttClientNotConnectedException() : base("The client is not connected..")
+        public MqttClientNotConnectedException() : base("The MQTT client is not connected.")
         {
         }
 
-        public MqttClientNotConnectedException(Exception innerException) : base("The client is not connected..", innerException)
+        public MqttClientNotConnectedException(Exception innerException) : base("The MQTT client is not connected.", innerException)
         {
         }
     }

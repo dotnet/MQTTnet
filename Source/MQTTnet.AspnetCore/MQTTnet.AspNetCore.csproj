@@ -42,7 +42,7 @@
             <PackagePath>\</PackagePath>
         </None>
     </ItemGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     </ItemGroup>
@@ -51,11 +51,11 @@
         <DefineConstants>RELEASE;NETSTANDARD2_0</DefineConstants>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' or '$(TargetFramework)' == 'net5.0' or '$(TargetFramework)' == 'net6.0' or '$(TargetFramework)' == 'net7.0' ">
+    <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0' and '$(TargetFramework)' != 'netcoreapp2.1' ">
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1' and '$(TargetFramework)' != 'net5.0' and '$(TargetFramework)' != 'net6.0' and '$(TargetFramework)' != 'net7.0' ">
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netcoreapp2.1' ">
         <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.1.0" />
     </ItemGroup>
 

@@ -379,11 +379,11 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        async Task HandleSubscriptionsResultAsync(List<MqttClientSubscribeResult> subscribeResults, List<MqttClientUnsubscribeResult> unsubscribeResults)
+        async Task HandleSubscriptionsResultAsync(SendSubscribeUnsubscribeResult subscribeUnsubscribeResult)
         {
             if (_subscriptionsChangedEvent.HasHandlers)
             {
-                await _subscriptionsChangedEvent.InvokeAsync(new SubscriptionsChangedEventArgs(subscribeResults, unsubscribeResults)).ConfigureAwait(false);
+                await _subscriptionsChangedEvent.InvokeAsync(new SubscriptionsChangedEventArgs(subscribeUnsubscribeResult.SubscribeResults, subscribeUnsubscribeResult.UnsubscribeResults)).ConfigureAwait(false);
             }
         }
 
@@ -488,8 +488,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 if (_reconnectSubscriptions.Any())
                 {
                     topicFilters = new List<MqttTopicFilter>();
-                    List<MqttClientSubscribeResult> subscribeResults;
-                    List<MqttClientUnsubscribeResult> unsubscribeResults;
+                    SendSubscribeUnsubscribeResult subscribeUnsubscribeResult;
                     
                     foreach (var sub in _reconnectSubscriptions)
                     {
@@ -497,14 +496,14 @@ namespace MQTTnet.Extensions.ManagedClient
 
                         if (topicFilters.Count == Options.MaxTopicFiltersInSubscribeUnsubscribePackets)
                         {
-                            (subscribeResults, unsubscribeResults) = await SendSubscribeUnsubscribe(topicFilters, null).ConfigureAwait(false);
+                            subscribeUnsubscribeResult = await SendSubscribeUnsubscribe(topicFilters, null).ConfigureAwait(false);
                             topicFilters.Clear();
-                            await HandleSubscriptionsResultAsync(subscribeResults, unsubscribeResults).ConfigureAwait(false);
+                            await HandleSubscriptionsResultAsync(subscribeUnsubscribeResult).ConfigureAwait(false);
                         }
                     }
 
-                    (subscribeResults, unsubscribeResults) = await SendSubscribeUnsubscribe(topicFilters, null).ConfigureAwait(false);
-                    await HandleSubscriptionsResultAsync(subscribeResults, unsubscribeResults).ConfigureAwait(false);
+                    subscribeUnsubscribeResult = await SendSubscribeUnsubscribe(topicFilters, null).ConfigureAwait(false);
+                    await HandleSubscriptionsResultAsync(subscribeUnsubscribeResult).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
@@ -520,8 +519,7 @@ namespace MQTTnet.Extensions.ManagedClient
             while (await _subscriptionsQueuedSignal.WaitAsync(GetRemainingTime(endTime), cancellationToken).ConfigureAwait(false))
             {
                 List<MqttTopicFilter> subscriptions;
-                List<MqttClientSubscribeResult> subscribeResults;
-                List<MqttClientUnsubscribeResult> unsubscribeResults;
+                SendSubscribeUnsubscribeResult subscribeUnsubscribeResult;
                 HashSet<string> unsubscriptions;
 
                 lock (_subscriptions)
@@ -557,14 +555,14 @@ namespace MQTTnet.Extensions.ManagedClient
 
                     if (addedTopicFilters.Count == Options.MaxTopicFiltersInSubscribeUnsubscribePackets)
                     {
-                        (subscribeResults, unsubscribeResults) = await SendSubscribeUnsubscribe(addedTopicFilters, null).ConfigureAwait(false);
+                        subscribeUnsubscribeResult = await SendSubscribeUnsubscribe(addedTopicFilters, null).ConfigureAwait(false);
                         addedTopicFilters.Clear();
-                        await HandleSubscriptionsResultAsync(subscribeResults, unsubscribeResults).ConfigureAwait(false);
+                        await HandleSubscriptionsResultAsync(subscribeUnsubscribeResult).ConfigureAwait(false);
                     }
                 }
-
-                (subscribeResults, unsubscribeResults) = await SendSubscribeUnsubscribe(addedTopicFilters, null).ConfigureAwait(false);
-                await HandleSubscriptionsResultAsync(subscribeResults, unsubscribeResults).ConfigureAwait(false);
+                
+                subscribeUnsubscribeResult = await SendSubscribeUnsubscribe(addedTopicFilters, null).ConfigureAwait(false);
+                await HandleSubscriptionsResultAsync(subscribeUnsubscribeResult).ConfigureAwait(false);
 
                 var removedTopicFilters = new List<string>();
                 foreach (var unSub in unsubscriptions)
@@ -573,14 +571,14 @@ namespace MQTTnet.Extensions.ManagedClient
 
                     if (removedTopicFilters.Count == Options.MaxTopicFiltersInSubscribeUnsubscribePackets)
                     {
-                        (subscribeResults, unsubscribeResults) = await SendSubscribeUnsubscribe(null, removedTopicFilters).ConfigureAwait(false);
+                        subscribeUnsubscribeResult = await SendSubscribeUnsubscribe(null, removedTopicFilters).ConfigureAwait(false);
                         removedTopicFilters.Clear();
-                        await HandleSubscriptionsResultAsync(subscribeResults, unsubscribeResults).ConfigureAwait(false);
+                        await HandleSubscriptionsResultAsync(subscribeUnsubscribeResult).ConfigureAwait(false);
                     }
                 }
 
-                (subscribeResults, unsubscribeResults) = await SendSubscribeUnsubscribe(null, removedTopicFilters).ConfigureAwait(false);
-                await HandleSubscriptionsResultAsync(subscribeResults, unsubscribeResults).ConfigureAwait(false);
+                subscribeUnsubscribeResult = await SendSubscribeUnsubscribe(null, removedTopicFilters).ConfigureAwait(false);
+                await HandleSubscriptionsResultAsync(subscribeUnsubscribeResult).ConfigureAwait(false);
             }
         }
 
@@ -613,7 +611,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        async Task<(List<MqttClientSubscribeResult> SubscribeResults, List<MqttClientUnsubscribeResult> UnsubscribeResults)> SendSubscribeUnsubscribe(List<MqttTopicFilter> addedSubscriptions, List<string> removedSubscriptions)
+        async Task<SendSubscribeUnsubscribeResult> SendSubscribeUnsubscribe(List<MqttTopicFilter> addedSubscriptions, List<string> removedSubscriptions)
         {
             var subscribeResults = new List<MqttClientSubscribeResult>();
             var unsubscribeResults = new List<MqttClientUnsubscribeResult>();
@@ -653,7 +651,7 @@ namespace MQTTnet.Extensions.ManagedClient
                 await HandleSubscriptionExceptionAsync(exception, addedSubscriptions, removedSubscriptions).ConfigureAwait(false);
             }
 
-            return (subscribeResults, unsubscribeResults);
+            return new SendSubscribeUnsubscribeResult(subscribeResults, unsubscribeResults);
         }
 
         void StartPublishing()

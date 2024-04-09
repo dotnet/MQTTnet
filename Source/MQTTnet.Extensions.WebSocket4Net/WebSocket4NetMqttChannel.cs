@@ -76,7 +76,7 @@ namespace MQTTnet.Extensions.WebSocket4Net
             List<KeyValuePair<string, string>> customHeaders = null;
             if (_webSocketOptions.RequestHeaders != null)
             {
-                customHeaders = _webSocketOptions.RequestHeaders.Select(i => new KeyValuePair<string, string>(i.Key, i.Value)).ToList();
+                customHeaders = _webSocketOptions.RequestHeaders.ToList();
             }
 
             EndPoint proxy = null;

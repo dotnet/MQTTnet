@@ -14,11 +14,12 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Diagnostics.Instrumentation;
 using MQTTnet.Server.Disconnecting;
 
 namespace MQTTnet.Server
 {
-    public class MqttServer : Disposable
+    public class MqttServer : Disposable, IMqttServerMetricSource
     {
         readonly ICollection<IMqttServerAdapter> _adapters;
         readonly MqttClientSessionsManager _clientSessionsManager;
@@ -51,6 +52,10 @@ namespace MQTTnet.Server
             _keepAliveMonitor = new MqttServerKeepAliveMonitor(options, _clientSessionsManager, _rootLogger);
         }
 
+        public int GetActiveClientCount() => _clientSessionsManager.GetActiveClientCount();
+
+        public int GetActiveSessionCount() => _clientSessionsManager.GetActiveSessionCount();
+    
         public event Func<ApplicationMessageEnqueuedEventArgs, Task> ApplicationMessageEnqueuedOrDroppedAsync
         {
             add => _eventContainer.ApplicationMessageEnqueuedOrDroppedEvent.AddHandler(value);

@@ -65,7 +65,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
                         return CompletedTask.Instance;
                     };
 
-                    await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build());
+                    await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").Build());
 
                     Assert.Fail("Must fail!");
                 }
@@ -175,7 +175,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 testEnvironment.IgnoreClientLogErrors = true;
 
                 var client = testEnvironment.CreateClient();
-                var options = new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").WithTimeout(TimeSpan.FromSeconds(2)).Build();
+                var options = new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").WithTimeout(TimeSpan.FromSeconds(2)).Build();
 
                 try
                 {
@@ -240,9 +240,9 @@ namespace MQTTnet.Tests.Clients.MqttClient
                     await mqttClient.SubscribeAsync("test", MqttQualityOfServiceLevel.AtLeastOnce);
                 }
             }
-            catch (MqttCommunicationException exception)
+            catch (MqttClientNotConnectedException exception)
             {
-                if (exception.Message == "The client is not connected.")
+                if (exception.Message == "The MQTT client is not connected.")
                 {
                     return;
                 }

@@ -610,8 +610,14 @@ namespace MQTTnet.Client
 
             if (!DisconnectIsPendingOrFinished())
             {
-                await _events.DisconnectingEvent.InvokeAsync(new MqttClientDisconnectingEventArgs((MqttDisconnectReasonCode)_disconnectReason));
-                await DisconnectCore(sender, exception, connectResult, clientWasConnected);
+                try
+                {
+                    await _events.DisconnectingEvent.InvokeAsync(new MqttClientDisconnectingEventArgs((MqttDisconnectReasonCode)_disconnectReason));
+                }
+                finally
+                {
+                    await DisconnectCore(sender, exception, connectResult, clientWasConnected);
+                }
             }
         }
 

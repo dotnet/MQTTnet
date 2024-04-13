@@ -80,6 +80,12 @@ namespace MQTTnet.Client
             remove => _events.DisconnectedEvent.RemoveHandler(value);
         }
 
+        public event Func<MqttClientDisconnectingEventArgs, Task> DisconnectingAsync
+        {
+            add => _events.DisconnectingEvent.AddHandler(value);
+            remove => _events.DisconnectingEvent.RemoveHandler(value);
+        }
+
         public event Func<InspectMqttPacketEventArgs, Task> InspectPacketAsync
         {
             add => _events.InspectPacketEvent.AddHandler(value);
@@ -140,6 +146,7 @@ namespace MQTTnet.Client
                 if (connectResult.ResultCode != MqttClientConnectResultCode.Success)
                 {
                     _logger.Warning("Connecting failed: {0}", connectResult.ResultCode);
+                    _disconnectReason = (int)MqttDisconnectReasonCode.UnspecifiedError;
                     await DisconnectInternal(null, null, connectResult).ConfigureAwait(false);
                     return connectResult;
                 }
@@ -201,6 +208,8 @@ namespace MQTTnet.Client
 
             try
             {
+                await _events.DisconnectingEvent.InvokeAsync(new MqttClientDisconnectingEventArgs((MqttDisconnectReasonCode)options.Reason));
+
                 if (!clientWasConnected)
                 {
                     ThrowNotConnected();
@@ -239,7 +248,7 @@ namespace MQTTnet.Client
         public async Task PingAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
@@ -275,21 +284,21 @@ namespace MQTTnet.Client
             switch (applicationMessage.QualityOfServiceLevel)
             {
                 case MqttQualityOfServiceLevel.AtMostOnce:
-                {
-                    return PublishAtMostOnce(publishPacket, cancellationToken);
-                }
+                    {
+                        return PublishAtMostOnce(publishPacket, cancellationToken);
+                    }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
-                {
-                    return PublishAtLeastOnce(publishPacket, cancellationToken);
-                }
+                    {
+                        return PublishAtLeastOnce(publishPacket, cancellationToken);
+                    }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
-                {
-                    return PublishExactlyOnce(publishPacket, cancellationToken);
-                }
+                    {
+                        return PublishExactlyOnce(publishPacket, cancellationToken);
+                    }
                 default:
-                {
-                    throw new NotSupportedException();
-                }
+                    {
+                        throw new NotSupportedException();
+                    }
             }
         }
 
@@ -330,7 +339,7 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
             ThrowIfNotConnected();
-            
+
             if (Options.ValidateFeatures)
             {
                 MqttClientSubscribeOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
@@ -595,16 +604,15 @@ namespace MQTTnet.Client
             }
         }
 
-        Task DisconnectInternal(Task sender, Exception exception, MqttClientConnectResult connectResult)
+        async Task DisconnectInternal(Task sender, Exception exception, MqttClientConnectResult connectResult)
         {
             var clientWasConnected = IsConnected;
 
             if (!DisconnectIsPendingOrFinished())
             {
-                return DisconnectCore(sender, exception, connectResult, clientWasConnected);
+                await _events.DisconnectingEvent.InvokeAsync(new MqttClientDisconnectingEventArgs((MqttDisconnectReasonCode)_disconnectReason));
+                await DisconnectCore(sender, exception, connectResult, clientWasConnected);
             }
-
-            return CompletedTask.Instance;
         }
 
         bool DisconnectIsPendingOrFinished()
@@ -804,6 +812,7 @@ namespace MQTTnet.Client
 
                     if (packet == null)
                     {
+                        _disconnectReason = (int)MqttDisconnectReasonCode.UnspecifiedError;
                         await DisconnectInternal(_packetReceiverTask, null, null).ConfigureAwait(false);
 
                         return;
@@ -839,6 +848,7 @@ namespace MQTTnet.Client
                 // The packet dispatcher is set to null when the client is being disposed so it may already being gone!
                 _packetDispatcher?.FailAll(exception);
 
+                _disconnectReason = (int)MqttDisconnectReasonCode.UnspecifiedError;
                 await DisconnectInternal(_packetReceiverTask, exception, null).ConfigureAwait(false);
             }
             finally
@@ -1010,6 +1020,7 @@ namespace MQTTnet.Client
                 // The packet dispatcher may already be gone due to disconnect etc!
                 _packetDispatcher?.FailAll(exception);
 
+                _disconnectReason = (int)MqttDisconnectReasonCode.UnspecifiedError;
                 await DisconnectInternal(_packetReceiverTask, exception, null).ConfigureAwait(false);
             }
         }
@@ -1063,6 +1074,7 @@ namespace MQTTnet.Client
                     _logger.Error(exception, "Error exception while sending/receiving keep alive packets");
                 }
 
+                _disconnectReason = (int)MqttDisconnectReasonCode.UnspecifiedError;
                 await DisconnectInternal(_keepAlivePacketsSenderTask, exception, null).ConfigureAwait(false);
             }
             finally

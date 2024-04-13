@@ -13,6 +13,7 @@ namespace MQTTnet.Client.Internal
         public AsyncEvent<MqttClientConnectedEventArgs> ConnectedEvent { get; } = new AsyncEvent<MqttClientConnectedEventArgs>();
         public AsyncEvent<MqttClientConnectingEventArgs> ConnectingEvent { get; } = new AsyncEvent<MqttClientConnectingEventArgs>();
         public AsyncEvent<MqttClientDisconnectedEventArgs> DisconnectedEvent { get; } = new AsyncEvent<MqttClientDisconnectedEventArgs>();
+        public AsyncEvent<MqttClientDisconnectingEventArgs> DisconnectingEvent { get; } = new AsyncEvent<MqttClientDisconnectingEventArgs>();
         public AsyncEvent<InspectMqttPacketEventArgs> InspectPacketEvent { get; } = new AsyncEvent<InspectMqttPacketEventArgs>();
     }
 }

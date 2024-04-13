@@ -248,7 +248,6 @@ namespace MQTTnet.Client
         public async Task PingAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
@@ -284,21 +283,21 @@ namespace MQTTnet.Client
             switch (applicationMessage.QualityOfServiceLevel)
             {
                 case MqttQualityOfServiceLevel.AtMostOnce:
-                    {
-                        return PublishAtMostOnce(publishPacket, cancellationToken);
-                    }
+                {
+                    return PublishAtMostOnce(publishPacket, cancellationToken);
+                }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
-                    {
-                        return PublishAtLeastOnce(publishPacket, cancellationToken);
-                    }
+                {
+                    return PublishAtLeastOnce(publishPacket, cancellationToken);
+                }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
-                    {
-                        return PublishExactlyOnce(publishPacket, cancellationToken);
-                    }
+                {
+                    return PublishExactlyOnce(publishPacket, cancellationToken);
+                }
                 default:
-                    {
-                        throw new NotSupportedException();
-                    }
+                {
+                    throw new NotSupportedException();
+                }
             }
         }
 
@@ -339,7 +338,6 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
             ThrowIfNotConnected();
-
             if (Options.ValidateFeatures)
             {
                 MqttClientSubscribeOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);

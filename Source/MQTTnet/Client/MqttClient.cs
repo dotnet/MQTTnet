@@ -208,7 +208,11 @@ namespace MQTTnet.Client
 
             try
             {
-                await _events.DisconnectingEvent.InvokeAsync(new MqttClientDisconnectingEventArgs((MqttDisconnectReasonCode)options.Reason, clientWasConnected));
+                await _events.DisconnectingEvent.InvokeAsync(new MqttClientDisconnectingEventArgs(
+                    (MqttDisconnectReasonCode)options.Reason,
+                    clientWasConnected,
+                    null,
+                    null));
 
                 if (!clientWasConnected)
                 {
@@ -610,7 +614,11 @@ namespace MQTTnet.Client
             {
                 try
                 {
-                    await _events.DisconnectingEvent.InvokeAsync(new MqttClientDisconnectingEventArgs((MqttDisconnectReasonCode)_disconnectReason, clientWasConnected));
+                    await _events.DisconnectingEvent.InvokeAsync(new MqttClientDisconnectingEventArgs(
+                        (MqttDisconnectReasonCode)_disconnectReason,
+                        clientWasConnected,
+                        exception,
+                        connectResult));
                 }
                 finally
                 {

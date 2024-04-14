@@ -14,6 +14,8 @@ namespace MQTTnet.Client
         {
             Reason = reason;
             ClientWasConnected = clientWasConnected;
+            Exception = exception;
+            ConnectResult = connectResult;
         }
 
         /// <summary>
@@ -24,7 +26,7 @@ namespace MQTTnet.Client
 
         public bool ClientWasConnected { get; }
 
-        public Exception exception { get; }
+        public Exception Exception { get; }
 
         /// <summary>
         ///     Gets the authentication result.

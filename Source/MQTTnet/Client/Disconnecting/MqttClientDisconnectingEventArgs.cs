@@ -6,9 +6,10 @@ namespace MQTTnet.Client
 {
     public class MqttClientDisconnectingEventArgs : EventArgs
     {
-        public MqttClientDisconnectingEventArgs(MqttDisconnectReasonCode reason)
+        public MqttClientDisconnectingEventArgs(MqttDisconnectReasonCode reason, bool clientWasConnected)
         {
             Reason = reason;
+            ClientWasConnected = clientWasConnected;
         }
 
         /// <summary>
@@ -16,5 +17,7 @@ namespace MQTTnet.Client
         ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
         public MqttDisconnectReasonCode Reason { get; }
+
+        public bool ClientWasConnected { get; }
     }
 }

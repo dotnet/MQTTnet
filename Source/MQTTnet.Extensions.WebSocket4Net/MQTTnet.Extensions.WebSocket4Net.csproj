@@ -13,6 +13,7 @@
         <Description>This is an extension library which allows using _WebSocket4Net_ as transport for MQTTnet clients.</Description>
         <Authors>The contributors of MQTTnet</Authors>
         <PackageId>MQTTnet.Extensions.WebSocket4Net</PackageId>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <SignAssembly>false</SignAssembly>
         <DelaySign>false</DelaySign>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -51,10 +52,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="..\..\Images\nuget.png">
-            <Pack>True</Pack>
-            <PackagePath>\</PackagePath>
-        </None>
+        <None Include="..\..\Images\nuget.png" Pack="True" PackagePath="\" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
     
     <ItemGroup>

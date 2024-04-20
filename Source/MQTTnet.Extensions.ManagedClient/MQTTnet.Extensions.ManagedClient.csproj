@@ -13,6 +13,7 @@
         <Description>This is an extension library which provides a managed MQTT client with additional features using MQTTnet.</Description>
         <Authors>The contributors of MQTTnet</Authors>
         <PackageId>MQTTnet.Extensions.ManagedClient</PackageId>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <SignAssembly>false</SignAssembly>
         <DelaySign>false</DelaySign>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -50,10 +51,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="..\..\Images\nuget.png">
-            <Pack>True</Pack>
-            <PackagePath>\</PackagePath>
-        </None>
+        <None Include="..\..\Images\nuget.png" Pack="True" PackagePath="\" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
     
     <ItemGroup>

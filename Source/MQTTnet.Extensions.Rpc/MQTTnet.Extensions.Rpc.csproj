@@ -13,6 +13,7 @@
         <Description>This is an extension library which allows executing synchronous device calls including a response using MQTTnet.</Description>
         <Authors>The contributors of MQTTnet</Authors>
         <PackageId>MQTTnet.Extensions.Rpc</PackageId>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <SignAssembly>false</SignAssembly>
         <DelaySign>false</DelaySign>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -51,10 +52,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="..\..\Images\nuget.png">
-            <Pack>True</Pack>
-            <PackagePath>\</PackagePath>
-        </None>
+        <None Include="..\..\Images\nuget.png" Pack="True" PackagePath="\" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
     
     <ItemGroup>

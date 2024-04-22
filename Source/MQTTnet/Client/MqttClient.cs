@@ -38,6 +38,7 @@ namespace MQTTnet.Client
         // They contain the same values but the set is reduced in one case.
         int _disconnectReason;
         string _disconnectReasonString;
+        MqttDisconnectPacket _unexpectedDisconnectPacket;
         List<MqttUserProperty> _disconnectUserProperties;
 
         Task _keepAlivePacketsSenderTask;
@@ -122,6 +123,8 @@ namespace MQTTnet.Client
 
                 var adapter = _adapterFactory.CreateClientAdapter(options, new MqttPacketInspector(_events.InspectPacketEvent, _rootLogger), _rootLogger);
                 _adapter = adapter ?? throw new InvalidOperationException("The adapter factory did not provide an adapter.");
+
+                _unexpectedDisconnectPacket = null;
 
                 if (cancellationToken.CanBeCanceled)
                 {
@@ -682,6 +685,7 @@ namespace MQTTnet.Client
             _disconnectReason = (int)disconnectPacket.ReasonCode;
             _disconnectReasonString = disconnectPacket.ReasonString;
             _disconnectUserProperties = disconnectPacket.UserProperties;
+            _unexpectedDisconnectPacket = disconnectPacket;
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
             _packetDispatcher.Dispose(new MqttClientUnexpectedDisconnectReceivedException(disconnectPacket));
@@ -751,10 +755,22 @@ namespace MQTTnet.Client
 
         async Task<MqttClientPublishResult> PublishAtMostOnce(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
-            // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
-            await Send(publishPacket, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
+                await Send(publishPacket, cancellationToken).ConfigureAwait(false);
 
-            return MqttClientResultFactory.PublishResult.Create(null);
+                return MqttClientResultFactory.PublishResult.Create(null);
+            }
+            catch (Exception)
+            {
+                if (_unexpectedDisconnectPacket != null)
+                {
+                    throw new MqttClientUnexpectedDisconnectReceivedException(_unexpectedDisconnectPacket);
+                }
+
+                throw;
+            }
         }
 
         async Task<MqttClientPublishResult> PublishExactlyOnce(MqttPublishPacket publishPacket, CancellationToken cancellationToken)

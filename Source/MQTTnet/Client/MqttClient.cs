@@ -764,9 +764,11 @@ namespace MQTTnet.Client
             }
             catch (Exception)
             {
-                if (_unexpectedDisconnectPacket != null)
+                MqttDisconnectPacket localUnexpectedDisconnectPacket = _unexpectedDisconnectPacket;
+
+                if (localUnexpectedDisconnectPacket != null)
                 {
-                    throw new MqttClientUnexpectedDisconnectReceivedException(_unexpectedDisconnectPacket);
+                    throw new MqttClientUnexpectedDisconnectReceivedException(localUnexpectedDisconnectPacket);
                 }
 
                 throw;

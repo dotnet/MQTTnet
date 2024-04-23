@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Exceptions;
 using MQTTnet.Extensions.TopicTemplate;
 
 namespace MQTTnet.Tests.Extensions
@@ -15,13 +17,12 @@ namespace MQTTnet.Tests.Extensions
         public void BasicOps()
         {
             var template = new MqttTopicTemplate("A/B/{param}/D");
-            Assert.AreEqual("A/B/C/D", template.WithParameter("param", "D"));
-            Assert.AreEqual("A/B/+/D", template.WithoutParameter("param"));
+            Assert.AreEqual("A/B/C/D", template.WithParameter("param", "C").Template);
+            Assert.AreEqual("A/B/+/D", template.WithoutParameter("param").Template);
             Assert.AreEqual("A/B/+/D", template.TopicFilter);
             Assert.AreEqual("A/B/+/D/#", template.TopicTreeRootFilter);
 
             // corner cases
-            Assert.AreEqual("", new MqttTopicTemplate("").TopicFilter);
             Assert.AreEqual("#", new MqttTopicTemplate("#").TopicFilter);
             Assert.AreEqual("+", new MqttTopicTemplate("+").TopicFilter);
             Assert.AreEqual("/", new MqttTopicTemplate("/").TopicFilter);
@@ -31,8 +32,8 @@ namespace MQTTnet.Tests.Extensions
         public void BasicOpsWithHash()
         {
             var template = new MqttTopicTemplate("A/B/{param}/D/#");
-            Assert.AreEqual("A/B/C/D/#", template.WithParameter("param", "D"));
-            Assert.AreEqual("A/B/+/D/#", template.WithoutParameter("param"));
+            Assert.AreEqual("A/B/C/D/#", template.WithParameter("param", "C").Template);
+            Assert.AreEqual("A/B/+/D/#", template.WithoutParameter("param").Template);
             Assert.AreEqual("A/B/+/D/#", template.TopicFilter);
             Assert.AreEqual("A/B/+/D/#", template.TopicTreeRootFilter);
         }
@@ -44,6 +45,20 @@ namespace MQTTnet.Tests.Extensions
             var template = new MqttTopicTemplate("A/B/{foo}/D");
             template.WithParameter("foo", "a#");
         }
+        
+        [TestMethod]
+        [ExpectedException(typeof(MqttProtocolViolationException))]
+        public void RejectsEmptyTemplate()
+        {
+            var _ = new MqttTopicTemplate("");
+        }
+        
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void RejectsNullTemplate()
+        {
+            var _ = new MqttTopicTemplate(null);
+        }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
@@ -51,6 +66,25 @@ namespace MQTTnet.Tests.Extensions
         {
             var template = new MqttTopicTemplate("A/B/{foo}/D");
             template.WithParameter("foo", "e/f");
+        }
+        
+        [TestMethod]
+        public void IgnoresEmptyParameters()
+        {
+            var template = new MqttTopicTemplate("A/B/{}/D");
+            Assert.IsFalse(template.Parameters.Any());
+        }
+        
+        [TestMethod]
+        public void AcceptsValidTopics()
+        {
+            _ = new MqttTopicTemplate("A");
+            _ = new MqttTopicTemplate("/");
+            _ = new MqttTopicTemplate("/A");
+            _ = new MqttTopicTemplate("A/#");
+            _ = new MqttTopicTemplate("$SYS/#");
+            _ = new MqttTopicTemplate("////");
+            _ = new MqttTopicTemplate("A/B/{foo}/D/");
         }
 
         [TestMethod]
@@ -87,15 +121,93 @@ namespace MQTTnet.Tests.Extensions
             var template2 = new MqttTopicTemplate("A/v1/E/F");
             var template3 = new MqttTopicTemplate("A/v1/E/F/G/H");
             var canonicalFilter = MqttTopicTemplate.FindCanonicalPrefix(new[] { template1, template2, template3 });
-            Assert.AreEqual("A/v1/+/+", canonicalFilter.TopicFilter);
-            Assert.AreEqual("A/v1/+/+/#", canonicalFilter.TopicTreeRootFilter);
+            // possible improvement: Assert.AreEqual("A/v1/+/F", canonicalFilter.TopicFilter);
+            Assert.AreEqual("A/v1/+", canonicalFilter.TopicFilter);
+            Assert.AreEqual("A/v1/+/#", canonicalFilter.TopicTreeRootFilter);
+            
+            var template2b = new MqttTopicTemplate("A/v1/E/X");
+            canonicalFilter = MqttTopicTemplate.FindCanonicalPrefix(new[] { template1, template2, template3, template2b });
+            Assert.AreEqual("A/v1/+", canonicalFilter.Template);
+            Assert.AreEqual("A/v1/+", canonicalFilter.TopicFilter);
+            Assert.AreEqual("A/v1/+/#", canonicalFilter.TopicTreeRootFilter);
+
 
             var template4 = new MqttTopicTemplate("A/v2/{prefix}");
             var canonicalFilter2 = MqttTopicTemplate.FindCanonicalPrefix(new[] { template1, template2, template3, template4 });
-            Assert.AreEqual("A/+/+", canonicalFilter2.TopicFilter);
+            Assert.AreEqual("A/+", canonicalFilter2.TopicFilter);
             Assert.AreEqual("A/+/#", canonicalFilter2.TopicTreeRootFilter);
         }
-
-
+        
+        [TestMethod]
+        public void CanonicalPrefixFilterSimple1()
+        {
+            var template = MqttTopicTemplate.FindCanonicalPrefix(new[]
+            {
+                new MqttTopicTemplate("A"),
+                new MqttTopicTemplate("B")
+            });
+            Assert.AreEqual("#", template.TopicFilter);
+            Assert.AreEqual("#", template.Template);
+        }
+        
+        [TestMethod]
+        public void CanonicalPrefixFilterSimple2()
+        {
+            var template = MqttTopicTemplate.FindCanonicalPrefix(new[]
+            {
+                new MqttTopicTemplate("A/v1/{param}/F/"),
+                new MqttTopicTemplate("A/v1/E/X")
+            });
+            Assert.AreEqual("A/v1/+", template.TopicFilter);
+        }
+        
+        [TestMethod]
+        public void CanonicalPrefixFilterSimple3()
+        {
+            var template = MqttTopicTemplate.FindCanonicalPrefix(new[]
+            {
+                new MqttTopicTemplate("A/v1/{param}/F"),
+                new MqttTopicTemplate("A/v1/{param}/F/X")
+            });
+            Assert.AreEqual("A/v1/+/+", template.TopicFilter);
+            Assert.AreEqual("A/v1/{param}/+", template.Template);
+        }
+        
+        [TestMethod]
+        public void CanonicalPrefixFilterSimple4()
+        {
+            var template = MqttTopicTemplate.FindCanonicalPrefix(new[]
+            {
+                new MqttTopicTemplate("A/v1/{param}/FFA"),
+                new MqttTopicTemplate("A/v1/{param}/FX")
+            });
+            Assert.AreEqual("A/v1/+/+", template.TopicFilter);
+            Assert.AreEqual("A/v1/{param}/+", template.Template);
+        }
+        
+        
+        [TestMethod]
+        public void CanonicalPrefixFilterSimple5()
+        {
+            var template = MqttTopicTemplate.FindCanonicalPrefix(new[]
+            {
+                new MqttTopicTemplate("A/v1/E/F/G/H"),
+                new MqttTopicTemplate("A/v2/{param}")
+            });
+            Assert.AreEqual("A/+", template.TopicFilter);
+            Assert.AreEqual("A/+/#", template.TopicTreeRootFilter);
+        }
+        
+        [TestMethod]
+        public void CanonicalPrefixFilterSimple6()
+        {
+            var template = MqttTopicTemplate.FindCanonicalPrefix(new[]
+            {
+                new MqttTopicTemplate("A/{version}/E/F/G/H"),
+                new MqttTopicTemplate("A/{version}/{param}")
+            });
+            Assert.AreEqual("A/+/+", template.TopicFilter);
+            Assert.AreEqual("A/+/+/#", template.TopicTreeRootFilter);
+        }
     }
 }

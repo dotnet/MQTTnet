@@ -152,17 +152,28 @@ namespace MQTTnet.Extensions.TopicTemplate
                     }
                 }
                 
-                return a.Substring(0, maxIndex);
+                return a.Substring(0, maxIndex+1);
             }
             
-            foreach (var topic in from template in templates select template.Template)
+            foreach (string topic in from template in templates select template.Template)
             {
                 root = root == null ? topic : CommonPrefix(root, topic);
             }
             
-            root = root ?? "";
+            if (string.IsNullOrEmpty(root))
+                return new MqttTopicTemplate(MqttTopicFilterComparer.MultiLevelWildcard.ToString());
             
-            return new MqttTopicTemplate(root.Substring(0, root.LastIndexOf('/')));
+            if (root.Contains(MqttTopicFilterComparer.LevelSeparator) &&
+                !root.EndsWith(MqttTopicFilterComparer.LevelSeparator.ToString()) &&
+                !root.EndsWith("}"))
+            {
+                root = root.Substring(0, root.LastIndexOf(MqttTopicFilterComparer.LevelSeparator)+1);
+            }
+            
+            if (root.EndsWith(MqttTopicFilterComparer.LevelSeparator.ToString()))
+                root += MqttTopicFilterComparer.SingleLevelWildcard;
+
+            return new MqttTopicTemplate(root);
         }
         
         public override int GetHashCode()

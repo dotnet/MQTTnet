@@ -2,3 +2,4 @@
 * [Core] The package inspector is now fully async (#1941).
 * [Client] Added a dedicated exception when the client is not connected (#1954, thanks to @marcpiulachs).
 * [ManagedClient] Added a new event (SubscriptionsChangedAsync) which is fired when a subscription or unsubscription was made (#1894, thanks to @pdufrene).
+* [TopicTemplate] Added new extension which provides a template engine for topics (#1932, thanks to @simonthum).

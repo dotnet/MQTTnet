@@ -21,52 +21,52 @@ namespace MQTTnet.AspNetCore
             {
                 throw new ArgumentNullException(nameof(services));
             }
-            
+
             if (options == null)
             {
                 throw new ArgumentNullException(nameof(options));
             }
-            
+
             services.AddSingleton(options);
             services.AddHostedMqttServer();
-            
+
             return services;
         }
-        
+
         public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<MqttServerOptionsBuilder> configure)
         {
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
-            
+
             var serverOptionsBuilder = new MqttServerOptionsBuilder();
-            
+
             configure?.Invoke(serverOptionsBuilder);
-            
+
             var options = serverOptionsBuilder.Build();
-            
+
             return AddHostedMqttServer(services, options);
         }
-        
+
         public static void AddHostedMqttServer(this IServiceCollection services)
         {
             // The user may have these services already registered.
             services.TryAddSingleton<IMqttNetLogger>(MqttNetNullLogger.Instance);
             services.TryAddSingleton(new MqttFactory());
-            
+
             services.AddSingleton<MqttHostedServer>();
             services.AddSingleton<IHostedService>(s => s.GetService<MqttHostedServer>());
             services.AddSingleton<MqttServer>(s => s.GetService<MqttHostedServer>());
         }
-        
+
         public static IServiceCollection AddHostedMqttServerWithServices(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configure)
         {
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
-            
+
             services.AddSingleton(
                 s =>
                 {
@@ -74,56 +74,56 @@ namespace MQTTnet.AspNetCore
                     configure(builder);
                     return builder.Build();
                 });
-            
+
             services.AddHostedMqttServer();
-            
+
             return services;
         }
-        
+
         public static IServiceCollection AddMqttConnectionHandler(this IServiceCollection services)
         {
             services.AddSingleton<MqttConnectionHandler>();
             services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttConnectionHandler>());
-            
+
             return services;
         }
-        
+
         public static void AddMqttLogger(this IServiceCollection services, IMqttNetLogger logger)
         {
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
-            
+
             services.AddSingleton(logger);
         }
-        
+
         public static IServiceCollection AddMqttServer(this IServiceCollection serviceCollection, Action<MqttServerOptionsBuilder> configure = null)
         {
             if (serviceCollection is null)
             {
                 throw new ArgumentNullException(nameof(serviceCollection));
             }
-            
+
             serviceCollection.AddMqttConnectionHandler();
             serviceCollection.AddHostedMqttServer(configure);
-            
+
             return serviceCollection;
         }
-        
+
         public static IServiceCollection AddMqttTcpServerAdapter(this IServiceCollection services)
         {
             services.AddSingleton<MqttTcpServerAdapter>();
             services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttTcpServerAdapter>());
-            
+
             return services;
         }
-        
+
         public static IServiceCollection AddMqttWebSocketServerAdapter(this IServiceCollection services)
         {
             services.AddSingleton<MqttWebSocketServerAdapter>();
             services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttWebSocketServerAdapter>());
-            
+
             return services;
         }
     }

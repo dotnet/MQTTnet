@@ -40,7 +40,6 @@ dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_property = false:suggestion
 
 # ReSharper properties
-resharper_autodetect_indent_settings = true
 resharper_default_private_modifier = implicit
 resharper_place_accessorholder_attribute_on_same_line = false
 resharper_use_indent_from_vs = false
@@ -61,7 +60,7 @@ resharper_web_config_wrong_module_highlighting = warning
 [*]
 charset = utf-8
 end_of_line = crlf
-trim_trailing_whitespace = false
+trim_trailing_whitespace = true
 insert_final_newline = false
 indent_style = space
 indent_size = 4

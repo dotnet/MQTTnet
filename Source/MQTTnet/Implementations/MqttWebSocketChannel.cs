@@ -109,7 +109,7 @@ namespace MQTTnet.Implementations
             // A single WebSocket data frame can contain multiple or partial MQTT Control Packets. The receiver MUST NOT assume that MQTT Control Packets are aligned on WebSocket frame boundaries [MQTT-6.0.0-2].
             await _webSocket.SendAsync(buffer, WebSocketMessageType.Binary, isEndOfPacket, cancellationToken).ConfigureAwait(false);
 #else
-            // The lock is required because the client will throw an exception if _SendAsync_ is 
+            // The lock is required because the client will throw an exception if _SendAsync_ is
             // called from multiple threads at the same time. But this issue only happens with several
             // framework versions.
             if (_sendLock == null)
@@ -156,7 +156,7 @@ namespace MQTTnet.Implementations
 #else
             var proxyUri = new Uri(_options.ProxyOptions.Address);
             WebProxy webProxy;
-            
+
             if (!string.IsNullOrEmpty(_options.ProxyOptions.Username) && !string.IsNullOrEmpty(_options.ProxyOptions.Password))
             {
                 var credentials = new NetworkCredential(_options.ProxyOptions.Username, _options.ProxyOptions.Password, _options.ProxyOptions.Domain);
@@ -164,9 +164,9 @@ namespace MQTTnet.Implementations
             }
             else
             {
-                webProxy = new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList);    
+                webProxy = new WebProxy(proxyUri, _options.ProxyOptions.BypassOnLocal, _options.ProxyOptions.BypassList);
             }
-            
+
             if (_options.ProxyOptions.UseDefaultCredentials)
             {
                 // Only update the property if required because setting it to false will alter
@@ -234,7 +234,7 @@ namespace MQTTnet.Implementations
             {
                 clientWebSocket.Options.Credentials = _options.Credentials;
             }
-            
+
             var certificateValidationHandler = _options.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)
             {
@@ -245,7 +245,7 @@ namespace MQTTnet.Implementations
 #elif WINDOWS_UWP
                 throw new NotSupportedException("Remote certificate validation callback is not supported when using 'uap10.0'.");
 #elif NET452 || NET461 || NET48
-                ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => 
+                ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) =>
                 {
                     var context = new MqttClientCertificateValidationEventArgs
                     {
@@ -262,17 +262,16 @@ namespace MQTTnet.Implementations
                 clientWebSocket.Options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
                 {
                     // TODO: Find a way to add client options to same callback. Problem is that they have a different type.
-                    var context = new MqttClientCertificateValidationEventArgs
-                    {
-                        Certificate = certificate,
-                        Chain = chain,
-                        SslPolicyErrors = sslPolicyErrors,
-                        ClientOptions = _options
-                    };
-
+                    var context = new MqttClientCertificateValidationEventArgs(certificate, chain, sslPolicyErrors, _options);
                     return certificateValidationHandler(context);
                 };
 #endif
+
+                var certificateSelectionHandler = _options.TlsOptions?.CertificateSelectionHandler;
+                if (certificateSelectionHandler != null)
+                {
+                    throw new NotSupportedException("Remote certificate selection callback is not supported for WebSocket connections.");
+                }
             }
         }
     }

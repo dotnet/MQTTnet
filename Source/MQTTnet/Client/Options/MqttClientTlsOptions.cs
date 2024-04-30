@@ -14,8 +14,6 @@ namespace MQTTnet.Client
     {
         public Func<MqttClientCertificateValidationEventArgs, bool> CertificateValidationHandler { get; set; }
 
-        public Func<MqttClientCertificateSelectionEventArgs, X509Certificate> CertificateSelectionHandler { get; set; }
-
         public bool UseTls { get; set; }
 
         public bool IgnoreCertificateRevocationErrors { get; set; }

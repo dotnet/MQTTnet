@@ -49,17 +49,6 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientTlsOptionsBuilder WithCertificateSelectionHandler(Func<MqttClientCertificateSelectionEventArgs, X509Certificate> certificateSelectionHandler)
-        {
-            if (certificateSelectionHandler == null)
-            {
-                throw new ArgumentNullException(nameof(certificateSelectionHandler));
-            }
-
-            _tlsOptions.CertificateSelectionHandler = certificateSelectionHandler;
-            return this;
-        }
-
         public MqttClientTlsOptionsBuilder WithClientCertificates(IEnumerable<X509Certificate2> certificates)
         {
             if (certificates == null)

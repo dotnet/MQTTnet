@@ -40,13 +40,10 @@ namespace MQTTnet.AspNetCore
                 throw new ArgumentNullException(nameof(services));
             }
 
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
-
             var serverOptionsBuilder = new MqttServerOptionsBuilder();
-            configure.Invoke(serverOptionsBuilder);
+
+            configure?.Invoke(serverOptionsBuilder);
+
             var options = serverOptionsBuilder.Build();
 
             return AddHostedMqttServer(services, options);

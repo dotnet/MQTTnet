@@ -14,8 +14,8 @@ namespace MQTTnet.Client
         {
             Certificate = certificate;
             Chain = chain;
-            ClientOptions = clientOptions;
             SslPolicyErrors = sslPolicyErrors;
+            ClientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
         }
 
         public X509Certificate Certificate { get; }

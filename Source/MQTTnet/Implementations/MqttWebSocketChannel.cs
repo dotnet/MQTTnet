@@ -247,13 +247,9 @@ namespace MQTTnet.Implementations
 #elif NET452 || NET461 || NET48
                 ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) =>
                 {
-                    var context = new MqttClientCertificateValidationEventArgs
+                    var context = new MqttClientCertificateValidationEventArgs(certificate, chain, sslPolicyErrors, _options)
                     {
-                        Sender = sender,
-                        Certificate = certificate,
-                        Chain = chain,
-                        SslPolicyErrors = sslPolicyErrors,
-                        ClientOptions = _options
+                        Sender = sender
                     };
 
                     return certificateValidationHandler(context);

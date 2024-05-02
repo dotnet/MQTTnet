@@ -106,10 +106,29 @@ namespace MQTTnet.Implementations
                     {
                         if (_tcpOptions.RemoteEndpoint is DnsEndPoint dns)
                         {
-                            targetHost = dns.Host;    
+                            targetHost = dns.Host;
                         }
                     }
-                    var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
+
+                    SslStream sslStream;
+                    if (_tcpOptions.TlsOptions.CertificateSelectionHandler != null)
+                    {
+                        sslStream = new SslStream(
+                            networkStream,
+                            false,
+                            InternalUserCertificateValidationCallback,
+                            InternalUserCertificateSelectionCallback);
+                    }
+                    else
+                    {
+                        // Use a different constructor depending on the options for MQTTnet so that we do not have
+                        // to copy the exact same behavior of the selection handler.
+                        sslStream = new SslStream(
+                            networkStream,
+                            false,
+                            InternalUserCertificateValidationCallback);
+                    }
+
                     try
                     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -134,9 +153,7 @@ namespace MQTTnet.Implementations
                             {
                                 TrustMode = X509ChainTrustMode.CustomRootTrust,
                                 VerificationFlags = X509VerificationFlags.IgnoreEndRevocationUnknown,
-                                RevocationMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors
-                                    ? X509RevocationMode.NoCheck
-                                    : _tcpOptions.TlsOptions.RevocationMode
+                                RevocationMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode
                             };
 
                             sslOptions.CertificateChainPolicy.CustomTrustStore.AddRange(_tcpOptions.TlsOptions.TrustChain);
@@ -292,19 +309,34 @@ namespace MQTTnet.Implementations
             }
         }
 
+        X509Certificate InternalUserCertificateSelectionCallback(
+            object sender,
+            string targetHost,
+            X509CertificateCollection localCertificates,
+            X509Certificate remoteCertificate,
+            string[] acceptableIssuers)
+        {
+            var certificateSelectionHandler = _tcpOptions?.TlsOptions?.CertificateSelectionHandler;
+            if (certificateSelectionHandler != null)
+            {
+                var eventArgs = new MqttClientCertificateSelectionEventArgs(targetHost, localCertificates, remoteCertificate, acceptableIssuers, _tcpOptions);
+                return certificateSelectionHandler(eventArgs);
+            }
+
+            if (localCertificates?.Count > 0)
+            {
+                return localCertificates[0];
+            }
+
+            return null;
+        }
+
         bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             var certificateValidationHandler = _tcpOptions?.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)
             {
-                var eventArgs = new MqttClientCertificateValidationEventArgs
-                {
-                    Certificate = x509Certificate,
-                    Chain = chain,
-                    SslPolicyErrors = sslPolicyErrors,
-                    ClientOptions = _tcpOptions
-                };
-
+                var eventArgs = new MqttClientCertificateValidationEventArgs(x509Certificate, chain, sslPolicyErrors, _tcpOptions);
                 return certificateValidationHandler(eventArgs);
             }
 

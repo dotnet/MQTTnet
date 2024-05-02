@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using static MQTTnet.Server.MqttClientSubscriptionsManager;
 
 namespace MQTTnet.Server
 {
@@ -177,6 +178,13 @@ namespace MQTTnet.Server
 
             var addedSubscriptions = new List<string>();
             var finalTopicFilters = new List<MqttTopicFilter>();
+            var atLeastOnceSubscriptionResults = new List<CreateSubscriptionResult>();
+
+            IList<MqttApplicationMessage> retainedApplicationMessages = null;
+            if (subscribePacket.TopicFilters.Any(f => f.QualityOfServiceLevel != MqttQualityOfServiceLevel.AtLeastOnce))
+            {
+                retainedApplicationMessages = await _retainedMessagesManager.GetMessages().ConfigureAwait(false);
+            }
 
             // The topic filters are order by its QoS so that the higher QoS will win over a
             // lower one.
@@ -208,6 +216,24 @@ namespace MQTTnet.Server
                 finalTopicFilters.Add(topicFilter);
 
                 FilterRetainedApplicationMessages(retainedApplicationMessages, createSubscriptionResult, result);
+                if (createSubscriptionResult.Subscription.GrantedQualityOfServiceLevel != MqttQualityOfServiceLevel.AtLeastOnce)
+                {
+                    FilterRetainedApplicationMessages(retainedApplicationMessages, createSubscriptionResult, result);
+                }
+                else
+                {
+                    atLeastOnceSubscriptionResults.Add(createSubscriptionResult);
+                }
+            }
+
+            if (atLeastOnceSubscriptionResults.Count != 0)
+            {
+                // In order to satisfy at least once, we must query for retained messages after creating the subscription.
+                retainedApplicationMessages = await _retainedMessagesManager.GetMessages().ConfigureAwait(false);
+                foreach (var createSubscriptionResult in atLeastOnceSubscriptionResults)
+                {
+                    FilterRetainedApplicationMessages(retainedApplicationMessages, createSubscriptionResult, result);
+                }
             }
 
             // This call will add the new subscription to the internal storage.

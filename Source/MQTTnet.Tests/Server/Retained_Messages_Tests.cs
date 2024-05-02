@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
@@ -162,6 +163,39 @@ namespace MQTTnet.Tests.Server
 
                 await c2.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("retained").Build());
 
+                await Task.Delay(500);
+
+                messageHandler.AssertReceivedCountEquals(1);
+                Assert.IsTrue(messageHandler.ReceivedEventArgs.First().ApplicationMessage.Retain);
+            }
+        }
+
+        [TestMethod]
+        public async Task Receive_AtLeastOnce_Retained_Message_Published_During_Subscribe()
+        {
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                var messagePublished = new SemaphoreSlim(0,1);
+                var subscribeReceived = new SemaphoreSlim(0,1);
+                await testEnvironment.StartServer();
+                testEnvironment.Server.InterceptingSubscriptionAsync += _ => 
+                {
+                    subscribeReceived.Release();
+                    return messagePublished.WaitAsync(); 
+                };
+
+                var c1 = await testEnvironment.ConnectClient();
+
+                var c2 = await testEnvironment.ConnectClient();
+                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+
+                Task subscribeComplete = c2.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("retained").WithAtLeastOnceQoS().Build());
+                await subscribeReceived.WaitAsync(1000);
+                await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce).Build());
+                await c1.DisconnectAsync();
+
+                messagePublished.Release();
+                await subscribeComplete;
                 await Task.Delay(500);
 
                 messageHandler.AssertReceivedCountEquals(1);

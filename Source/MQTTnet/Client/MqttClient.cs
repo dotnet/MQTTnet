@@ -38,7 +38,6 @@ namespace MQTTnet.Client
         // They contain the same values but the set is reduced in one case.
         int _disconnectReason;
         string _disconnectReasonString;
-        MqttDisconnectPacket _unexpectedDisconnectPacket;
         List<MqttUserProperty> _disconnectUserProperties;
 
         Task _keepAlivePacketsSenderTask;
@@ -49,6 +48,7 @@ namespace MQTTnet.Client
         Task _packetReceiverTask;
         AsyncQueue<MqttPublishPacket> _publishPacketReceiverQueue;
         Task _publishPacketReceiverTask;
+        MqttDisconnectPacket _unexpectedDisconnectPacket;
 
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
@@ -242,7 +242,7 @@ namespace MQTTnet.Client
         public async Task PingAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
@@ -333,7 +333,7 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
             ThrowIfNotConnected();
-            
+
             if (Options.ValidateFeatures)
             {
                 MqttClientSubscribeOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
@@ -688,7 +688,7 @@ namespace MQTTnet.Client
             _unexpectedDisconnectPacket = disconnectPacket;
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
-            _packetDispatcher.Dispose(new MqttClientUnexpectedDisconnectReceivedException(disconnectPacket));
+            _packetDispatcher.Dispose(new MqttClientUnexpectedDisconnectReceivedException(disconnectPacket, null));
 
             return DisconnectInternal(_packetReceiverTask, null, null);
         }
@@ -762,13 +762,16 @@ namespace MQTTnet.Client
 
                 return MqttClientResultFactory.PublishResult.Create(null);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                MqttDisconnectPacket localUnexpectedDisconnectPacket = _unexpectedDisconnectPacket;
+                // We have to check if the server has sent a disconnect packet in response to the published message.
+                // Since we are in QoS 0 we do not get a direct response via an PUBACK packet and thus basically no
+                // feedback at all.
+                var localUnexpectedDisconnectPacket = _unexpectedDisconnectPacket;
 
                 if (localUnexpectedDisconnectPacket != null)
                 {
-                    throw new MqttClientUnexpectedDisconnectReceivedException(localUnexpectedDisconnectPacket);
+                    throw new MqttClientUnexpectedDisconnectReceivedException(localUnexpectedDisconnectPacket, exception);
                 }
 
                 throw;

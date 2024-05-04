@@ -257,7 +257,12 @@ namespace MQTTnet.Server
 
                     if (matchingSubscribersCount == 0)
                     {
-                        reasonCode = (int)MqttPubAckReasonCode.NoMatchingSubscribers;
+                        if (reasonCode == (int)MqttPubAckReasonCode.Success)
+                        {
+                            // Only change the value if it was success. Otherwise, we would hide an error or not authorized status.
+                            reasonCode = (int)MqttPubAckReasonCode.NoMatchingSubscribers;
+                        }
+
                         await FireApplicationMessageNotConsumedEvent(applicationMessage, senderId).ConfigureAwait(false);
                     }
                 }

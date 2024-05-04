@@ -254,7 +254,7 @@ namespace MQTTnet.Client
         }
 
         /// <summary>
-        ///     The client will not throw an exception when the MQTT server responses with a non success ACK packet.
+        ///     The client will not throw an exception when the MQTT server responds with a non success ACK packet.
         ///     This will become the default behavior in future versions of the library.
         /// </summary>
         public MqttClientOptionsBuilder WithoutThrowOnNonSuccessfulConnectResponse()

@@ -167,8 +167,8 @@ namespace MQTTnet.Server
         /// </summary>
         public ushort TopicAliasMaximum => _connectPacket.TopicAliasMaximum;
 
-        [Obsolete("This property name has a typo. Use 'UserName' instead. This one will be removed soon.")]
-        public string Username => _connectPacket.Username;
+        //[Obsolete("This property name has a typo. Use 'UserName' instead. This one will be removed soon.")]
+        //public string Username => _connectPacket.Username;
 
         public string UserName => _connectPacket.Username;
 

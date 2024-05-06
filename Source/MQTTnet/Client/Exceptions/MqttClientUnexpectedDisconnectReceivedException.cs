@@ -12,7 +12,7 @@ namespace MQTTnet.Client
 {
     public sealed class MqttClientUnexpectedDisconnectReceivedException : MqttCommunicationException
     {
-        public MqttClientUnexpectedDisconnectReceivedException(MqttDisconnectPacket disconnectPacket, Exception innerExcpetion) : base(
+        public MqttClientUnexpectedDisconnectReceivedException(MqttDisconnectPacket disconnectPacket, Exception innerExcpetion = null) : base(
             $"Unexpected DISCONNECT (Reason code={disconnectPacket.ReasonCode}) received.",
             innerExcpetion)
         {

@@ -48,6 +48,7 @@ namespace MQTTnet.Client
         Task _packetReceiverTask;
         AsyncQueue<MqttPublishPacket> _publishPacketReceiverQueue;
         Task _publishPacketReceiverTask;
+        MqttDisconnectPacket _unexpectedDisconnectPacket;
 
         public MqttClient(IMqttClientAdapterFactory channelFactory, IMqttNetLogger logger)
         {
@@ -122,6 +123,8 @@ namespace MQTTnet.Client
 
                 var adapter = _adapterFactory.CreateClientAdapter(options, new MqttPacketInspector(_events.InspectPacketEvent, _rootLogger), _rootLogger);
                 _adapter = adapter ?? throw new InvalidOperationException("The adapter factory did not provide an adapter.");
+
+                _unexpectedDisconnectPacket = null;
 
                 if (cancellationToken.CanBeCanceled)
                 {
@@ -239,7 +242,7 @@ namespace MQTTnet.Client
         public async Task PingAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
@@ -330,7 +333,7 @@ namespace MQTTnet.Client
 
             ThrowIfDisposed();
             ThrowIfNotConnected();
-            
+
             if (Options.ValidateFeatures)
             {
                 MqttClientSubscribeOptionsValidator.ThrowIfNotSupported(options, _adapter.PacketFormatterAdapter.ProtocolVersion);
@@ -682,9 +685,10 @@ namespace MQTTnet.Client
             _disconnectReason = (int)disconnectPacket.ReasonCode;
             _disconnectReasonString = disconnectPacket.ReasonString;
             _disconnectUserProperties = disconnectPacket.UserProperties;
+            _unexpectedDisconnectPacket = disconnectPacket;
 
             // Also dispatch disconnect to waiting threads to generate a proper exception.
-            _packetDispatcher.Dispose(new MqttClientUnexpectedDisconnectReceivedException(disconnectPacket));
+            _packetDispatcher.Dispose(new MqttClientUnexpectedDisconnectReceivedException(disconnectPacket, null));
 
             return DisconnectInternal(_packetReceiverTask, null, null);
         }
@@ -751,10 +755,27 @@ namespace MQTTnet.Client
 
         async Task<MqttClientPublishResult> PublishAtMostOnce(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
         {
-            // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
-            await Send(publishPacket, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
+                await Send(publishPacket, cancellationToken).ConfigureAwait(false);
 
-            return MqttClientResultFactory.PublishResult.Create(null);
+                return MqttClientResultFactory.PublishResult.Create(null);
+            }
+            catch (Exception exception)
+            {
+                // We have to check if the server has sent a disconnect packet in response to the published message.
+                // Since we are in QoS 0 we do not get a direct response via an PUBACK packet and thus basically no
+                // feedback at all.
+                var localUnexpectedDisconnectPacket = _unexpectedDisconnectPacket;
+
+                if (localUnexpectedDisconnectPacket != null)
+                {
+                    throw new MqttClientUnexpectedDisconnectReceivedException(localUnexpectedDisconnectPacket, exception);
+                }
+
+                throw;
+            }
         }
 
         async Task<MqttClientPublishResult> PublishExactlyOnce(MqttPublishPacket publishPacket, CancellationToken cancellationToken)

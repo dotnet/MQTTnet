@@ -239,7 +239,7 @@ namespace MQTTnet.Client
         public async Task PingAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             ThrowIfDisposed();
             ThrowIfNotConnected();
 
@@ -409,8 +409,10 @@ namespace MQTTnet.Client
             switch (eventArgs.PublishPacket.QualityOfServiceLevel)
             {
                 case MqttQualityOfServiceLevel.AtMostOnce:
+                {
                     // no response required
                     break;
+                }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                 {
                     if (!eventArgs.ProcessingFailed)
@@ -432,7 +434,9 @@ namespace MQTTnet.Client
                     break;
                 }
                 default:
+                {
                     throw new MqttProtocolViolationException("Received a not supported QoS level.");
+                }
             }
 
             return CompletedTask.Instance;
@@ -452,14 +456,22 @@ namespace MQTTnet.Client
                 switch (receivedPacket)
                 {
                     case MqttConnAckPacket connAckPacket:
+                    {
                         result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
                         break;
+                    }
                     case MqttAuthPacket _:
+                    {
                         throw new NotSupportedException("Extended authentication handler is not yet supported");
+                    }
                     case null:
+                    {
                         throw new MqttCommunicationException("Connection closed.");
+                    }
                     default:
+                    {
                         throw new InvalidOperationException($"Received an unexpected MQTT packet ({receivedPacket}).");
+                    }
                 }
             }
             catch (Exception exception)
@@ -591,7 +603,6 @@ namespace MQTTnet.Client
 
                 // This handler must be executed in a new thread to prevent a deadlock
                 // that may occur when attempting to reconnect within that handler, etc.
-
                 Task.Run(() => _events.DisconnectedEvent.InvokeAsync(eventArgs)).RunInBackground(_logger);
             }
         }
@@ -600,8 +611,8 @@ namespace MQTTnet.Client
         {
             var clientWasConnected = IsConnected;
 
-            return !DisconnectIsPendingOrFinished() ? 
-                DisconnectCore(sender, exception, connectResult, clientWasConnected) 
+            return !DisconnectIsPendingOrFinished() ?
+                DisconnectCore(sender, exception, connectResult, clientWasConnected)
                 : CompletedTask.Instance;
         }
 
@@ -662,7 +673,6 @@ namespace MQTTnet.Client
 
             var eventArgs = new MqttClientConnectedEventArgs(connectResult);
             return _events.ConnectedEvent.InvokeAsync(eventArgs);
-
         }
 
         Task ProcessReceivedAuthPacket(MqttAuthPacket authPacket)
@@ -722,11 +732,11 @@ namespace MQTTnet.Client
             {
                 return CompletedTask.Instance;
             }
+
             // The packet is unknown, probably due to a restart of the client.
             // So we send this to the server to trigger a full resend of the message.
             var pubRelPacket = MqttPacketFactories.PubRel.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.PacketIdentifierNotFound);
             return Send(pubRelPacket, cancellationToken);
-
         }
 
         Task ProcessReceivedPubRelPacket(MqttPubRelPacket pubRelPacket, CancellationToken cancellationToken)
@@ -998,7 +1008,7 @@ namespace MQTTnet.Client
                         break;
                 }
 
-                // The packet dispatcher may already be gone due to disconnect etc!
+                // The packet dispatcher may already be gone due to disconnect etc.!
                 _packetDispatcher?.FailAll(exception);
 
                 await DisconnectInternal(_packetReceiverTask, exception, null).ConfigureAwait(false);

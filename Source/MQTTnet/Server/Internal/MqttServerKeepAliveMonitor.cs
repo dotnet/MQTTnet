@@ -57,7 +57,7 @@ namespace MQTTnet.Server
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     TryProcessClients();
-                    Sleep(_options.KeepAliveMonitorInterval);
+                    Sleep(_options.KeepAliveOptions.MonitorInterval);
                 }
             }
             catch (OperationCanceledException)

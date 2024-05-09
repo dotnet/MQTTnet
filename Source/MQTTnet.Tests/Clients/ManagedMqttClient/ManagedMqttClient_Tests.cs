@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
@@ -678,9 +677,9 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
             {
                 testEnvironment.IgnoreClientLogErrors = true;
                 bool reject = true;
-                var receivedOnServer = new TaskCompletionSource();
+                var receivedOnServer = new TaskCompletionSource<object>();
                 managedClient.ApplicationMessageProcessedAsync += e => Task.FromResult(reject &= e.Exception is null);
-                testEnvironment.Server.InterceptingInboundPacketAsync += e => 
+                testEnvironment.Server.InterceptingInboundPacketAsync += e =>
                 {
                     if (e.Packet is MqttPublishPacket)
                     {
@@ -690,14 +689,14 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                         }
                         else
                         {
-                            receivedOnServer.TrySetResult();
+                            receivedOnServer.TrySetResult(null);
                         }
                     }
                     return Task.CompletedTask;
                 };
 
 
-                await managedClient.EnqueueAsync(new MqttApplicationMessage { Topic = topic, Payload = new byte[] { 1 }, Retain = true, QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+                await managedClient.EnqueueAsync(new MqttApplicationMessage { Topic = topic, PayloadSegment = new ArraySegment<byte>(new byte[] { 1 }), Retain = true, QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
                 var timeoutTask = Task.Delay(testTimeout);
 

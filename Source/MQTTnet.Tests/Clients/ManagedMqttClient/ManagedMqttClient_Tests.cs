@@ -579,7 +579,7 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
         public async Task Subscribe_Does_Not_Hang_On_Server_Stop()
         {
             var timeout = TimeSpan.FromSeconds(2);
-            var testTimeout = timeout * 2;
+            var testTimeout = TimeSpan.FromSeconds(timeout.TotalSeconds * 2);
             const string topic = "test_topic_2";
             using (var testEnvironment = CreateTestEnvironment())
             using (var managedClient = await CreateManagedClientAsync(testEnvironment, timeout: timeout))

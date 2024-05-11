@@ -579,7 +579,11 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
         public async Task Subscribe_Does_Not_Hang_On_Server_Stop()
         {
             var timeout = TimeSpan.FromSeconds(2);
+#if NET452 || NET48
+            var testTimeout = TimeSpan.FromSeconds(timeout.TotalSeconds * 2);
+#else
             var testTimeout = timeout * 2;
+#endif
             const string topic = "test_topic_2";
             using (var testEnvironment = CreateTestEnvironment())
             using (var managedClient = await CreateManagedClientAsync(testEnvironment, timeout: timeout))
@@ -598,12 +602,22 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                         }
                         receivedOnServer.Release();
                     }
+
+#if NET452
+                    return Task.FromResult<object>(null);
+#else
                     return Task.CompletedTask;
+#endif
+
                 };
                 managedClient.SynchronizingSubscriptionsFailedAsync += e =>
                 {
                     failedOnClient.Release();
+#if NET452
+                    return Task.FromResult<object>(null);
+#else
                     return Task.CompletedTask;
+#endif
                 };
 
                 await managedClient.SubscribeAsync(topic);
@@ -620,7 +634,11 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
         public async Task Unsubscribe_Does_Not_Hang_On_Server_Stop()
         {
             var timeout = TimeSpan.FromSeconds(2);
+#if NET452 || NET48
+            var testTimeout = TimeSpan.FromSeconds(timeout.TotalSeconds * 2);
+#else
             var testTimeout = timeout * 2;
+#endif 
             const string topic = "test_topic_2";
             using (var testEnvironment = CreateTestEnvironment())
             using (var managedClient = await CreateManagedClientAsync(testEnvironment, timeout: timeout))
@@ -643,12 +661,21 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                     {
                         receivedOnServer.Release();
                     }
+
+#if NET452
+                    return Task.FromResult<object>(null);
+#else
                     return Task.CompletedTask;
+#endif
                 };
                 managedClient.SynchronizingSubscriptionsFailedAsync += e =>
                 {
                     failedOnClient.Release();
+#if NET452
+                    return Task.FromResult<object>(null);
+#else
                     return Task.CompletedTask;
+#endif
                 };
 
                 await managedClient.SubscribeAsync(topic);
@@ -668,7 +695,11 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
         public async Task Publish_Does_Not_Hang_On_Server_Error()
         {
             var timeout = TimeSpan.FromSeconds(2);
+#if NET452 || NET48
+            var testTimeout = TimeSpan.FromSeconds(timeout.TotalSeconds * 2);
+#else
             var testTimeout = timeout * 2;
+#endif 
 
             const string topic = "test_topic_42";
 
@@ -692,7 +723,11 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                             receivedOnServer.TrySetResult(null);
                         }
                     }
+#if NET452
+                    return Task.FromResult<object>(null);
+#else
                     return Task.CompletedTask;
+#endif
                 };
 
 

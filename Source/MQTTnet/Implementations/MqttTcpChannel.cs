@@ -67,7 +67,7 @@ namespace MQTTnet.Implementations
                 }
                 else
                 {
-                    socket = new CrossPlatformSocket(_tcpOptions.AddressFamily);
+                    socket = new CrossPlatformSocket(_tcpOptions.AddressFamily, _tcpOptions.ProtocolType);
                 }
 
                 if (_tcpOptions.LocalEndpoint != null)

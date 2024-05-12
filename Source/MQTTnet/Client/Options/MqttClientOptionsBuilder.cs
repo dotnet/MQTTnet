@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
@@ -18,14 +19,14 @@ namespace MQTTnet.Client
     public sealed class MqttClientOptionsBuilder
     {
         readonly MqttClientOptions _options = new MqttClientOptions();
+        int? _port;
 
         [Obsolete] MqttClientWebSocketProxyOptions _proxyOptions;
+        EndPoint _remoteEndPoint;
 
         MqttClientTcpOptions _tcpOptions;
         MqttClientTlsOptions _tlsOptions;
-        EndPoint _remoteEndPoint;
-        int? _port;
-        
+
         [Obsolete] MqttClientOptionsBuilderTlsParameters _tlsParameters;
 
         MqttClientWebSocketOptions _webSocketOptions;
@@ -89,7 +90,7 @@ namespace MQTTnet.Client
 
                 if (_tcpOptions.RemoteEndpoint == null)
                 {
-                    _tcpOptions.RemoteEndpoint = _remoteEndPoint;    
+                    _tcpOptions.RemoteEndpoint = _remoteEndPoint;
                 }
             }
             else if (_webSocketOptions != null)
@@ -112,6 +113,12 @@ namespace MQTTnet.Client
             MqttClientOptionsValidator.ThrowIfNotSupported(_options);
 
             return _options;
+        }
+
+        public MqttClientOptionsBuilder WithAddressFamily(AddressFamily addressFamily)
+        {
+            _tcpOptions.AddressFamily = addressFamily;
+            return this;
         }
 
         public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data)
@@ -218,6 +225,14 @@ namespace MQTTnet.Client
             return this;
         }
 
+        public MqttClientOptionsBuilder WithEndPoint(EndPoint endPoint)
+        {
+            _remoteEndPoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
+            _tcpOptions = new MqttClientTcpOptions();
+
+            return this;
+        }
+
         public MqttClientOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedAuthenticationExchangeHandler handler)
         {
             _options.ExtendedAuthenticationExchangeHandler = handler;
@@ -260,6 +275,12 @@ namespace MQTTnet.Client
         public MqttClientOptionsBuilder WithoutThrowOnNonSuccessfulConnectResponse()
         {
             _options.ThrowOnNonSuccessfulConnectResponse = false;
+            return this;
+        }
+
+        public MqttClientOptionsBuilder WithProtocolType(ProtocolType protocolType)
+        {
+            _tcpOptions.ProtocolType = protocolType;
             return this;
         }
 
@@ -341,14 +362,6 @@ namespace MQTTnet.Client
             // This a backward compatibility feature.
             _remoteEndPoint = new DnsEndPoint(server, port ?? 0);
             _port = port;
-
-            return this;
-        }
-        
-        public MqttClientOptionsBuilder WithEndPoint(EndPoint endPoint)
-        {
-            _remoteEndPoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
-            _tcpOptions = new MqttClientTcpOptions();
 
             return this;
         }

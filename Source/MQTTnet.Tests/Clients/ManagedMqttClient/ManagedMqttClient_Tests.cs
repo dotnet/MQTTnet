@@ -598,12 +598,13 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                         }
                         receivedOnServer.Release();
                     }
-                    return Task.CompletedTask;
+
+                    return CompletedTask.Instance;
                 };
                 managedClient.SynchronizingSubscriptionsFailedAsync += e =>
                 {
                     failedOnClient.Release();
-                    return Task.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.SubscribeAsync(topic);
@@ -643,12 +644,12 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                     {
                         receivedOnServer.Release();
                     }
-                    return Task.CompletedTask;
+                    return CompletedTask.Instance;
                 };
                 managedClient.SynchronizingSubscriptionsFailedAsync += e =>
                 {
                     failedOnClient.Release();
-                    return Task.CompletedTask;
+                    return CompletedTask.Instance;
                 };
 
                 await managedClient.SubscribeAsync(topic);
@@ -692,9 +693,9 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
                             receivedOnServer.TrySetResult(null);
                         }
                     }
-                    return Task.CompletedTask;
-                };
 
+                    return CompletedTask.Instance;
+                };
 
                 await managedClient.EnqueueAsync(new MqttApplicationMessage { Topic = topic, PayloadSegment = new ArraySegment<byte>(new byte[] { 1 }), Retain = true, QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 

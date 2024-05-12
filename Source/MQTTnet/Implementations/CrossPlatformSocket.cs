@@ -22,9 +22,9 @@ namespace MQTTnet.Implementations
 
         NetworkStream _networkStream;
 
-        public CrossPlatformSocket(AddressFamily addressFamily)
+        public CrossPlatformSocket(AddressFamily addressFamily, ProtocolType protocolType)
         {
-            _socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _socket = new Socket(addressFamily, SocketType.Stream, protocolType);
 
 #if !NET5_0_OR_GREATER
             _socketDisposeAction = _socket.Dispose;

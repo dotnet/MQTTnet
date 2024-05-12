@@ -30,6 +30,12 @@ namespace MQTTnet.Client
 
         public bool NoDelay { get; set; } = true;
 
+        /// <summary>
+        ///     The MQTT transport is usually TCP but when using other endpoint types like
+        ///     unix sockets it must be changed (IP for unix sockets).
+        /// </summary>
+        public ProtocolType ProtocolType { get; set; } = ProtocolType.Tcp;
+
         public EndPoint RemoteEndpoint { get; set; }
 
         public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();

@@ -49,7 +49,7 @@ jobs:
             **\*.snupkg
 
       - name: Core tests
-        run: dotnet test --no-restore --framework net8.0 Source/MQTTnet/MQTTnet.Tests.csproj
+        run: dotnet test --no-restore --framework net8.0 Source/MQTTnet.Tests/MQTTnet.Tests.csproj
 
       - name: ASP.NET tests
         run: dotnet test --no-restore --framework net8.0 Source/MQTTnet.AspNetCore.Tests/MQTTnet.AspNetCore.Tests.csproj

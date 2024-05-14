@@ -29,14 +29,6 @@ jobs:
           fileDir: ${{ github.workspace }}
           encodedString: ${{ secrets.SNC_BASE64 }}
 
-      #  run: |
-      #    $secret = '${{ secrets.SNC_BASE64 }}'
-      #    $decoded = [System.Convert]::FromBase64CharArray($secret, 0, $secret.Length)
-      #    Set-Content -Path ${{ github.workspace }}/certificate.snk -Value $decoded -AsByteStream
-
-#      - name: Build solution
-#        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
-
       - name: Build solution
         run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}/certificate.snk
 

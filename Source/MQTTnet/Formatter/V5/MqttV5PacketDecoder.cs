@@ -220,7 +220,7 @@ namespace MQTTnet.Formatter.V5
             var packet = new MqttConnectPacket
             {
                 // If the Request Problem Information is absent, the value of 1 is used.
-                RequestProblemInformation = true 
+                RequestProblemInformation = true
             };
 
             var protocolName = _bufferReader.ReadString();
@@ -352,7 +352,16 @@ namespace MQTTnet.Formatter.V5
 
         MqttPacket DecodeDisconnectPacket(ArraySegment<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            // From RFC: 3.14.2.1 Disconnect Reason Code
+            // Byte 1 in the Variable Header is the Disconnect Reason Code.
+            // If the Remaining Length is less than 1 the value of 0x00 (Normal disconnection) is used.
+            if (body.Count == 0)
+            {
+                return new MqttDisconnectPacket
+                {
+                    ReasonCode = MqttDisconnectReasonCode.NormalDisconnection
+                };
+            }
 
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
 
@@ -386,7 +395,7 @@ namespace MQTTnet.Formatter.V5
 
             return packet;
         }
-        
+
         MqttPacket DecodePubAckPacket(ArraySegment<byte> body)
         {
             ThrowIfBodyIsEmpty(body);
@@ -724,7 +733,7 @@ namespace MQTTnet.Formatter.V5
             packet.UserProperties = propertiesReader.CollectedUserProperties;
 
             packet.ReasonCodes = new List<MqttUnsubscribeReasonCode>(_bufferReader.BytesLeft);
-            
+
             while (!_bufferReader.EndOfStream)
             {
                 var reasonCode = (MqttUnsubscribeReasonCode)_bufferReader.ReadByte();

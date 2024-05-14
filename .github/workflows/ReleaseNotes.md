@@ -1,5 +1,6 @@
 * [Core] Optimized packet serialization of PUBACK and PUBREC packets for protocol version 5.0.0 (#1939, thanks to @Y-Sindo).
 * [Core] The package inspector is now fully async (#1941).
+* [Core] Fixed decoding of DISCONNECT packet with empty body (#1994, thanks to @Y-Sindo).
 * [Client] Exposed the _EndPoint_ type to support other endpoint types (like Unix Domain Sockets) in client options (#1919).
 * [Client] Fixed support for unix sockets by exposing more options (#1995).
 * [Client] Added a dedicated exception when the client is not connected (#1954, thanks to @marcpiulachs).

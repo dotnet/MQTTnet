@@ -23,7 +23,7 @@ public sealed class Managed_Client_Subscribe_Samples
          * - Storing pending messages in an internal queue so that an enqueue is possible while the client remains not connected.
          */
         
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
         var subscribed = false;
 
         using (var managedMqttClient = mqttFactory.CreateManagedMqttClient())

@@ -4,7 +4,6 @@
 
 using System;
 using MQTTnet.Client;
-using MQTTnet.Server;
 
 namespace MQTTnet.Extensions.ManagedClient
 {

@@ -14,6 +14,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Adapter;
 using MQTTnet.Server.Disconnecting;
 
 namespace MQTTnet.Server

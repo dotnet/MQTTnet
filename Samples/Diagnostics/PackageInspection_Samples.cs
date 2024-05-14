@@ -18,7 +18,7 @@ public static class PackageInspection_Samples
          * This sample covers the inspection of outgoing packages from the client.
          */
         
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
         
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {

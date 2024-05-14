@@ -9,6 +9,7 @@
 using System.Text.Json;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server;
 
 namespace MQTTnet.Samples.Server;
 
@@ -22,12 +23,12 @@ public static class Server_Retained_Messages_Samples
 
         var storePath = Path.Combine(Path.GetTempPath(), "RetainedMessages.json");
 
-        var mqttFactory = new MqttFactory();
+        var mqttServerFactory = new MqttServerFactory();
 
         // Due to security reasons the "default" endpoint (which is unencrypted) is not enabled by default!
-        var mqttServerOptions = mqttFactory.CreateServerOptionsBuilder().WithDefaultEndpoint().Build();
+        var mqttServerOptions = mqttServerFactory.CreateServerOptionsBuilder().WithDefaultEndpoint().Build();
 
-        using (var server = mqttFactory.CreateMqttServer(mqttServerOptions))
+        using (var server = mqttServerFactory.CreateMqttServer(mqttServerOptions))
         {
             // Make sure that the server will load the retained messages.
             server.LoadingRetainedMessageAsync += async eventArgs =>
@@ -109,7 +110,7 @@ public static class Server_Retained_Messages_Samples
             {
                 Topic = message.Topic,
 
-                // Create a copy of the buffer from the payload segment because 
+                // Create a copy of the buffer from the payload segment because
                 // it cannot be serialized and deserialized with the JSON serializer.
                 Payload = message.PayloadSegment.ToArray(),
                 UserProperties = message.UserProperties,

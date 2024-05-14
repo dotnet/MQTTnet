@@ -53,7 +53,7 @@ namespace MQTTnet.Tests.Server
         public async Task Tls_Swap_Test()
         {
             var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
-            var serverOptionsBuilder = testEnvironment.Factory.CreateServerOptionsBuilder();
+            var serverOptionsBuilder = testEnvironment.ServerFactory.CreateServerOptionsBuilder();
 
             var firstOid = "1.3.6.1.5.5.7.3.1";
             var secondOid = "1.3.6.1.5.5.7.3.2";
@@ -175,7 +175,7 @@ namespace MQTTnet.Tests.Server
 
         static async Task<IMqttClient> ConnectClientAsync(TestEnvironment testEnvironment, Func<MqttClientCertificateValidationEventArgs, bool> certValidator)
         {
-            var clientOptionsBuilder = testEnvironment.Factory.CreateClientOptionsBuilder();
+            var clientOptionsBuilder = testEnvironment.ClientFactory.CreateClientOptionsBuilder();
             clientOptionsBuilder.WithClientId(Guid.NewGuid().ToString())
                 .WithTcpServer("localhost", 8883)
                 .WithTlsOptions(

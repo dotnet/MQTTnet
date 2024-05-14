@@ -22,7 +22,7 @@ public static class Client_Subscribe_Samples
          * This sample subscribes to a topic and processes the received message.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -64,7 +64,7 @@ public static class Client_Subscribe_Samples
          * This sample subscribes to a topic and sends a response to the broker. This requires at least QoS level 1 to work!
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -110,7 +110,7 @@ public static class Client_Subscribe_Samples
          * This sample subscribes to several topics in a single request.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -153,7 +153,7 @@ public static class Client_Subscribe_Samples
          * This sample subscribes to a topic.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {

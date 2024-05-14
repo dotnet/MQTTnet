@@ -39,7 +39,7 @@ namespace MQTTnet.TestApp
 
             try
             {
-                var managedClient = new MqttFactory().CreateManagedMqttClient();
+                var managedClient = new MqttClientFactory().CreateManagedMqttClient();
                 managedClient.ApplicationMessageReceivedAsync += e =>
                 {
                     Console.WriteLine(">> RECEIVED: " + e.ApplicationMessage.Topic);

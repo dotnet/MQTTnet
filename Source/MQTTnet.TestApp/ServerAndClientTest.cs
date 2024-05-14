@@ -17,9 +17,10 @@ namespace MQTTnet.TestApp
             var logger = new MqttNetEventLogger();
             MqttNetConsoleLogger.ForwardToConsole(logger);
 
-            var factory = new MqttFactory(logger);
-            var server = factory.CreateMqttServer( new MqttServerOptionsBuilder().Build());
-            var client = factory.CreateMqttClient();
+            var mqttServerFactory = new MqttServerFactory();
+            var mqttClientFactory = new MqttClientFactory(logger);
+            var server = mqttServerFactory.CreateMqttServer( new MqttServerOptionsBuilder().Build());
+            var client = mqttClientFactory.CreateMqttClient();
 
             await server.StartAsync();
 

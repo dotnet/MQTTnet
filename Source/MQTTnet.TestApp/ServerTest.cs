@@ -20,9 +20,9 @@ namespace MQTTnet.TestApp
     {
         public static void RunEmptyServer()
         {
-            var mqttServer = new MqttFactory().CreateMqttServer(new MqttServerOptions());
+            var mqttServer = new MqttServerFactory().CreateMqttServer(new MqttServerOptions());
             mqttServer.StartAsync().GetAwaiter().GetResult();
-            
+
             Console.WriteLine("Press any key to exit.");
             Console.ReadLine();
         }
@@ -31,15 +31,15 @@ namespace MQTTnet.TestApp
         {
             var logger = new MqttNetEventLogger();
             MqttNetConsoleLogger.ForwardToConsole(logger);
-           
-            var mqttFactory = new MqttFactory(logger);
-            var mqttServer = mqttFactory.CreateMqttServer(new MqttServerOptions());
+
+            var mqttServerFactory = new MqttServerFactory(logger);
+            var mqttServer = mqttServerFactory.CreateMqttServer(new MqttServerOptions());
             mqttServer.StartAsync().GetAwaiter().GetResult();
 
             Console.WriteLine("Press any key to exit.");
             Console.ReadLine();
         }
-        
+
         public static async Task RunAsync()
         {
             try
@@ -55,10 +55,10 @@ namespace MQTTnet.TestApp
                 //options.DefaultEndpointOptions.IsEnabled = true;
                 //options.TlsEndpointOptions.IsEnabled = false;
 
-                var mqttServer = new MqttFactory().CreateMqttServer(options);
+                var mqttServer = new MqttServerFactory().CreateMqttServer(options);
 
                 const string Filename = "C:\\MQTT\\RetainedMessages.json";
-                
+
                 mqttServer.RetainedMessageChangedAsync += e =>
                 {
                     var directory = Path.GetDirectoryName(Filename);
@@ -70,13 +70,13 @@ namespace MQTTnet.TestApp
                     File.WriteAllText(Filename, JsonConvert.SerializeObject(e.StoredRetainedMessages));
                     return CompletedTask.Instance;
                 };
-                
+
                 mqttServer.RetainedMessagesClearedAsync += e =>
                 {
                     File.Delete(Filename);
                     return CompletedTask.Instance;
                 };
-                
+
                 mqttServer.LoadingRetainedMessageAsync += e =>
                 {
                     List<MqttApplicationMessage> retainedMessages;
@@ -99,7 +99,7 @@ namespace MQTTnet.TestApp
                 {
                     if (MqttTopicFilterComparer.Compare(e.ApplicationMessage.Topic, "/myTopic/WithTimestamp/#") == MqttTopicFilterCompareResult.IsMatch)
                     {
-                        // Replace the payload with the timestamp. But also extending a JSON 
+                        // Replace the payload with the timestamp. But also extending a JSON
                         // based payload with the timestamp is a suitable use case.
                         e.ApplicationMessage.PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(DateTime.Now.ToString("O")));
                     }
@@ -112,7 +112,7 @@ namespace MQTTnet.TestApp
 
                     return CompletedTask.Instance;
                 };
-                
+
                 mqttServer.ValidatingConnectionAsync += e =>
                 {
                     if (e.ClientId == "SpecialClient")
@@ -141,7 +141,7 @@ namespace MQTTnet.TestApp
 
                     return CompletedTask.Instance;
                 };
-                
+
                 mqttServer.InterceptingPublishAsync += e =>
                 {
                     var payloadText = string.Empty;
@@ -152,7 +152,7 @@ namespace MQTTnet.TestApp
                             e.ApplicationMessage.PayloadSegment.Offset,
                             e.ApplicationMessage.PayloadSegment.Count);
                     }
-                    
+
                     MqttNetConsoleLogger.PrintToConsole($"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{payloadText}'", ConsoleColor.Magenta);
                     return CompletedTask.Instance;
                 };

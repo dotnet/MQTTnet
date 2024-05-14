@@ -40,11 +40,8 @@ jobs:
             **\*.nupkg
             **\*.snupkg
 
-      - name: Core tests
+      - name: Execute tests
         run: dotnet test --no-restore --framework net8.0 Source/MQTTnet.Tests/MQTTnet.Tests.csproj
-
-      - name: ASP.NET tests
-        run: dotnet test --no-restore --framework net8.0 Source/MQTTnet.AspNetCore.Tests/MQTTnet.AspNetCore.Tests.csproj
 
       - name: Publish MyGet nugets
         if: ${{ github.event_name == 'push' }}

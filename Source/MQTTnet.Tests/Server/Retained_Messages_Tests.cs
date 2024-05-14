@@ -242,7 +242,7 @@ namespace MQTTnet.Tests.Server
                 var client = testEnvironment.CreateClient();
 
                 var connectResult = await client.ConnectAsync(
-                    testEnvironment.Factory.CreateClientOptionsBuilder()
+                    testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                         .WithProtocolVersion(MqttProtocolVersion.V311)
                         .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                         .Build());
@@ -260,7 +260,7 @@ namespace MQTTnet.Tests.Server
 
                 var client = testEnvironment.CreateClient();
                 var connectResult = await client.ConnectAsync(
-                    testEnvironment.Factory.CreateClientOptionsBuilder()
+                    testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                         .WithProtocolVersion(MqttProtocolVersion.V500)
                         .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                         .Build());

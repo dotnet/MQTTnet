@@ -6,11 +6,13 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using MQTTnet.Adapter;
+using MQTTnet.AspNetCore;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Server;
+using MQTTnet.Server.Adapter;
 
-namespace MQTTnet.AspNetCore.Tests.Mockups
+namespace MQTTnet.Tests.ASP.Mockups
 {
     public sealed class ConnectionHandlerMockup : IMqttServerAdapter
     {

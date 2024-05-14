@@ -106,7 +106,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Disconnect_Event_Contains_Exception()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             using (var client = factory.CreateMqttClient())
             {
                 Exception ex = null;
@@ -247,7 +247,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Invalid_Connect_Throws_Exception()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             using (var client = factory.CreateMqttClient())
             {
                 try

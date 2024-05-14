@@ -51,7 +51,7 @@ namespace MQTTnet.Tests.Server
                 // Reconnect the same client ID without clean session
 
                 var client2 = testEnvironment.CreateClient();
-                var options = testEnvironment.Factory.CreateClientOptionsBuilder()
+                var options = testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                     .WithProtocolVersion(MqttProtocolVersion.V311)
                     .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                     .WithSessionExpiryInterval(9999) // not relevant for v311 but testing impact

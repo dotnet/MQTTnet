@@ -22,7 +22,7 @@ public static class RpcClient_Samples
     
     public static async Task Send_Request()
     {
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
         
         // The RPC client is an addon for the existing client. So we need a regular client
         // which is wrapped later.

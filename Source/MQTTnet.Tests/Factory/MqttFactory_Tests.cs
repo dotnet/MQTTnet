@@ -19,7 +19,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public async Task Create_Managed_Client_With_Logger()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
 
             // This test compares
             // 1. correct logID
@@ -58,7 +58,7 @@ namespace MQTTnet.Tests.Factory
                     tcs.TrySetResult(null);
                     return CompletedTask.Instance;
                 };
-                
+
                 await Task.WhenAny(Task.Delay(managedClient.Options.ClientOptions.Timeout), tcs.Task);
             }
             finally
@@ -75,7 +75,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public void Create_ApplicationMessageBuilder()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             var builder = factory.CreateApplicationMessageBuilder();
 
             Assert.IsNotNull(builder);
@@ -84,7 +84,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public void Create_ClientOptionsBuilder()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             var builder = factory.CreateClientOptionsBuilder();
 
             Assert.IsNotNull(builder);
@@ -93,7 +93,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public void Create_ServerOptionsBuilder()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttServerFactory();
             var builder = factory.CreateServerOptionsBuilder();
 
             Assert.IsNotNull(builder);
@@ -102,7 +102,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public void Create_SubscribeOptionsBuilder()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             var builder = factory.CreateSubscribeOptionsBuilder();
 
             Assert.IsNotNull(builder);
@@ -111,7 +111,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public void Create_UnsubscribeOptionsBuilder()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             var builder = factory.CreateUnsubscribeOptionsBuilder();
 
             Assert.IsNotNull(builder);
@@ -120,7 +120,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public void Create_TopicFilterBuilder()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             var builder = factory.CreateTopicFilterBuilder();
 
             Assert.IsNotNull(builder);
@@ -129,7 +129,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public void Create_MqttServer()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttServerFactory();
             var server = factory.CreateMqttServer(new MqttServerOptionsBuilder().Build());
 
             Assert.IsNotNull(server);
@@ -138,7 +138,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public void Create_MqttClient()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             var client = factory.CreateMqttClient();
 
             Assert.IsNotNull(client);
@@ -147,7 +147,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public void Create_LowLevelMqttClient()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             var client = factory.CreateLowLevelMqttClient();
 
             Assert.IsNotNull(client);
@@ -156,7 +156,7 @@ namespace MQTTnet.Tests.Factory
         [TestMethod]
         public void Create_ManagedMqttClient()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             var client = factory.CreateManagedMqttClient();
 
             Assert.IsNotNull(client);

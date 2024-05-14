@@ -25,7 +25,7 @@ public static class Client_Connection_Samples
          * See sample _Connect_Client_ for more details.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -47,7 +47,7 @@ public static class Client_Connection_Samples
          * The default version of MQTT is 3.1.1.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -79,7 +79,7 @@ public static class Client_Connection_Samples
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -107,7 +107,7 @@ public static class Client_Connection_Samples
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -130,7 +130,7 @@ public static class Client_Connection_Samples
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -164,7 +164,7 @@ public static class Client_Connection_Samples
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -186,7 +186,7 @@ public static class Client_Connection_Samples
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -218,7 +218,7 @@ public static class Client_Connection_Samples
          * The broker requires special settings which are set here.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -243,7 +243,7 @@ public static class Client_Connection_Samples
          * trigger sending the last will etc.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -265,7 +265,7 @@ public static class Client_Connection_Samples
          * trigger sending the last will etc.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         var mqttClient = mqttFactory.CreateMqttClient();
 
@@ -285,7 +285,7 @@ public static class Client_Connection_Samples
          * including the reason for that status.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -322,7 +322,7 @@ public static class Client_Connection_Samples
          * This is only supported in MQTTv5.0.0+.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -345,7 +345,7 @@ public static class Client_Connection_Samples
          * This approach has a risk of dead locks! Consider using the timer approach (see sample).
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -372,7 +372,7 @@ public static class Client_Connection_Samples
          * This is the recommended way but requires more custom code!
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -414,7 +414,7 @@ public static class Client_Connection_Samples
 
     public static async Task ConnectTls_WithCaFile()
     {
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         X509Certificate2Collection caChain = new X509Certificate2Collection();
         caChain.ImportFromPem(mosquitto_org); // from https://test.mosquitto.org/ssl/mosquitto.org.crt

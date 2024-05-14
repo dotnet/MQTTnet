@@ -11,6 +11,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
+using MQTTnet.Server.Adapter;
 
 namespace MQTTnet.AspNetCore
 {

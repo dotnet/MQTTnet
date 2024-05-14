@@ -51,7 +51,7 @@ public static class Server_ASP_NET_Samples
         {
             // Inject other services via constructor.
         }
-        
+
         public Task OnClientConnected(ClientConnectedEventArgs eventArgs)
         {
             Console.WriteLine($"Client '{eventArgs.ClientId}' connected.");

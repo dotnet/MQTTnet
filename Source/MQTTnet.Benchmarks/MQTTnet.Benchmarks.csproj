@@ -30,8 +30,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\Source\MQTTnet.Server\MQTTnet.Server.csproj" />
         <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
         <ProjectReference Include="..\MQTTnet.Tests\MQTTnet.Tests.csproj" />
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
     </ItemGroup>
 
 </Project>

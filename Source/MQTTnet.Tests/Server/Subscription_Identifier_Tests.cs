@@ -20,7 +20,7 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
                 
                 var client = testEnvironment.CreateClient();
-                var connectResult = await client.ConnectAsync(testEnvironment.Factory.CreateClientOptionsBuilder()
+                var connectResult = await client.ConnectAsync(testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                     .WithProtocolVersion(MqttProtocolVersion.V500)
                     .WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
 
@@ -37,8 +37,8 @@ namespace MQTTnet.Tests.Server
                 
                 var client1 = await testEnvironment.ConnectClient();
                 var applicationMessageHandler = testEnvironment.CreateApplicationMessageHandler(client1);
-                var topicFilter = testEnvironment.Factory.CreateTopicFilterBuilder().WithTopic("Topic").Build();
-                var subscribeOptions = testEnvironment.Factory.CreateSubscribeOptionsBuilder().WithSubscriptionIdentifier(456).WithTopicFilter(topicFilter).Build();
+                var topicFilter = testEnvironment.ClientFactory.CreateTopicFilterBuilder().WithTopic("Topic").Build();
+                var subscribeOptions = testEnvironment.ClientFactory.CreateSubscribeOptionsBuilder().WithSubscriptionIdentifier(456).WithTopicFilter(topicFilter).Build();
                 
                 await client1.SubscribeAsync(subscribeOptions);
                 await LongTestDelay();
@@ -65,14 +65,14 @@ namespace MQTTnet.Tests.Server
                 var client1 = await testEnvironment.ConnectClient();
                 var applicationMessageHandler = testEnvironment.CreateApplicationMessageHandler(client1);
                 
-                var topicFilter = testEnvironment.Factory.CreateTopicFilterBuilder().WithTopic("Topic/A").Build();
-                var subscribeOptions = testEnvironment.Factory.CreateSubscribeOptionsBuilder().WithSubscriptionIdentifier(456).WithTopicFilter(topicFilter).Build();
+                var topicFilter = testEnvironment.ClientFactory.CreateTopicFilterBuilder().WithTopic("Topic/A").Build();
+                var subscribeOptions = testEnvironment.ClientFactory.CreateSubscribeOptionsBuilder().WithSubscriptionIdentifier(456).WithTopicFilter(topicFilter).Build();
                 await client1.SubscribeAsync(subscribeOptions);
                 
                 await LongTestDelay();
                 
-                topicFilter = testEnvironment.Factory.CreateTopicFilterBuilder().WithTopic("Topic/+").Build();
-                subscribeOptions = testEnvironment.Factory.CreateSubscribeOptionsBuilder().WithSubscriptionIdentifier(789).WithTopicFilter(topicFilter).Build();
+                topicFilter = testEnvironment.ClientFactory.CreateTopicFilterBuilder().WithTopic("Topic/+").Build();
+                subscribeOptions = testEnvironment.ClientFactory.CreateSubscribeOptionsBuilder().WithSubscriptionIdentifier(789).WithTopicFilter(topicFilter).Build();
                 await client1.SubscribeAsync(subscribeOptions);
                 
                 await LongTestDelay();

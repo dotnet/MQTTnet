@@ -5,8 +5,6 @@
 using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Server;
-using MQTTnet.Server.Disconnecting;
 
 namespace MQTTnet.Formatter
 {
@@ -63,33 +61,6 @@ namespace MQTTnet.Formatter
                 ReasonString = null,
                 ServerReference = null,
                 SessionExpiryInterval = 0
-            };
-        }
-
-        public MqttDisconnectPacket Create(MqttServerStopOptions serverStopOptions)
-        {
-            if (serverStopOptions == null)
-            {
-                return DefaultServerShuttingDown;
-            }
-
-            return Create(serverStopOptions.DefaultClientDisconnectOptions);
-        }
-
-        public MqttDisconnectPacket Create(MqttServerClientDisconnectOptions clientDisconnectOptions)
-        {
-            if (clientDisconnectOptions == null)
-            {
-                return DefaultNormalDisconnection;
-            }
-
-            return new MqttDisconnectPacket
-            {
-                ReasonCode = clientDisconnectOptions.ReasonCode,
-                UserProperties = clientDisconnectOptions.UserProperties,
-                ReasonString = clientDisconnectOptions.ReasonString,
-                ServerReference = clientDisconnectOptions.ServerReference,
-                SessionExpiryInterval = 0 // TODO: Not yet supported!
             };
         }
 

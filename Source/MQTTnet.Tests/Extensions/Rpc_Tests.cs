@@ -186,7 +186,7 @@ namespace MQTTnet.Tests.Extensions
         [TestMethod]
         public void Use_Factory()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             using (var client = factory.CreateMqttClient())
             {
                 var rpcClient = factory.CreateMqttRpcClient(client);

@@ -220,7 +220,7 @@ namespace MQTTnet.Tests.MQTTv5
 
         static MqttClientOptions CreateClientOptions(TestEnvironment testEnvironment, string clientId, bool cleanSession, uint sessionExpiryInterval)
         {
-            return testEnvironment.Factory.CreateClientOptionsBuilder()
+            return testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                 .WithProtocolVersion(MqttProtocolVersion.V500)
                 .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                 .WithSessionExpiryInterval(sessionExpiryInterval)

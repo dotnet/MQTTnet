@@ -64,7 +64,7 @@ public static class Server_Simple_Samples
          * This sample starts a simple MQTT server which will accept any TCP connection.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttServerFactory = new MqttServerFactory();
 
         // The port for the default endpoint is 1883.
         // The default endpoint is NOT encrypted!
@@ -77,7 +77,7 @@ public static class Server_Simple_Samples
         //     .WithDefaultEndpointPort(1234)
         //     .Build();
 
-        using (var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions))
+        using (var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions))
         {
             await mqttServer.StartAsync();
 
@@ -99,11 +99,11 @@ public static class Server_Simple_Samples
          * See sample "Run_Minimal_Server" for more details.
          */
 
-        var mqttFactory = new MqttFactory(new ConsoleLogger());
+        var mqttServerFactory = new MqttServerFactory(new ConsoleLogger());
 
         var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
-        using (var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions))
+        using (var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions))
         {
             await mqttServer.StartAsync();
 
@@ -123,13 +123,13 @@ public static class Server_Simple_Samples
          * See _Run_Minimal_Server_ for more information.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttServerFactory = new MqttServerFactory();
 
         var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
-        using (var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions))
+        using (var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions))
         {
-            // Setup connection validation before starting the server so that there is 
+            // Setup connection validation before starting the server so that there is
             // no change to connect without valid credentials.
             mqttServer.ValidatingConnectionAsync += e =>
             {
@@ -162,11 +162,11 @@ public static class Server_Simple_Samples
 
     static async Task<MqttServer> StartMqttServer()
     {
-        var mqttFactory = new MqttFactory();
+        var mqttServerFactory = new MqttServerFactory();
 
         // Due to security reasons the "default" endpoint (which is unencrypted) is not enabled by default!
-        var mqttServerOptions = mqttFactory.CreateServerOptionsBuilder().WithDefaultEndpoint().Build();
-        var server = mqttFactory.CreateMqttServer(mqttServerOptions);
+        var mqttServerOptions = mqttServerFactory.CreateServerOptionsBuilder().WithDefaultEndpoint().Build();
+        var server = mqttServerFactory.CreateMqttServer(mqttServerOptions);
         await server.StartAsync();
         return server;
     }

@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
+using MQTTnet.Server.Adapter;
 
 namespace MQTTnet.Benchmarks
 {
@@ -26,7 +27,7 @@ namespace MQTTnet.Benchmarks
         [GlobalSetup]
         public void Setup()
         {
-            var factory = new MqttFactory();
+            var serverFactory = new MqttServerFactory();
             var tcpServer = new MqttTcpServerAdapter();
             tcpServer.ClientHandler += args =>
             {
@@ -39,9 +40,9 @@ namespace MQTTnet.Benchmarks
             };
 
             var serverOptions = new MqttServerOptionsBuilder().Build();
-            _mqttServer = factory.CreateMqttServer(serverOptions, new[] { tcpServer }, new MqttNetEventLogger());
+            _mqttServer = serverFactory.CreateMqttServer(serverOptions, new[] { tcpServer }, new MqttNetEventLogger());
 
-            
+
             _mqttServer.StartAsync().GetAwaiter().GetResult();
 
             var clientOptions = new MqttClientOptionsBuilder()
@@ -81,7 +82,7 @@ namespace MQTTnet.Benchmarks
             await Task.Yield();
 
             var buffer = new ArraySegment<byte>(new byte[size]);
-            
+
             for (var i = 0; i < iterations; i++)
             {
                 await _serverChannel.WriteAsync(buffer, true, CancellationToken.None).ConfigureAwait(false);

@@ -2,11 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
@@ -16,6 +11,11 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Disconnecting;
+using MQTTnet.Server.Formatter;
+using MqttDisconnectPacketFactory = MQTTnet.Server.Formatter.MqttDisconnectPacketFactory;
+using MqttPubAckPacketFactory = MQTTnet.Server.Formatter.MqttPubAckPacketFactory;
+using MqttPublishPacketFactory = MQTTnet.Server.Formatter.MqttPublishPacketFactory;
+using MqttPubRecPacketFactory = MQTTnet.Server.Formatter.MqttPubRecPacketFactory;
 
 namespace MQTTnet.Server
 {
@@ -239,13 +239,13 @@ namespace MQTTnet.Server
                 }
                 case MqttQualityOfServiceLevel.AtLeastOnce:
                 {
-                    var pubAckPacket = MqttPacketFactories.PubAck.Create(publishPacket, dispatchApplicationMessageResult);
+                    var pubAckPacket = MqttPubAckPacketFactory.Create(publishPacket, dispatchApplicationMessageResult);
                     Session.EnqueueControlPacket(new MqttPacketBusItem(pubAckPacket));
                     break;
                 }
                 case MqttQualityOfServiceLevel.ExactlyOnce:
                 {
-                    var pubRecPacket = MqttPacketFactories.PubRec.Create(publishPacket, dispatchApplicationMessageResult);
+                    var pubRecPacket = MqttPubRecPacketFactory.Create(publishPacket, dispatchApplicationMessageResult);
                     Session.EnqueueControlPacket(new MqttPacketBusItem(pubRecPacket));
                     break;
                 }
@@ -276,7 +276,7 @@ namespace MQTTnet.Server
         {
             var subscribeResult = await Session.Subscribe(subscribePacket, cancellationToken).ConfigureAwait(false);
 
-            var subAckPacket = MqttPacketFactories.SubAck.Create(subscribePacket, subscribeResult);
+            var subAckPacket = MqttSubAckPacketFactory.Create(subscribePacket, subscribeResult);
 
             Session.EnqueueControlPacket(new MqttPacketBusItem(subAckPacket));
 
@@ -290,7 +290,7 @@ namespace MQTTnet.Server
             {
                 foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
                 {
-                    var publishPacket = MqttPacketFactories.Publish.Create(retainedMessageMatch);
+                    var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
                     Session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
                 }
             }
@@ -300,7 +300,7 @@ namespace MQTTnet.Server
         {
             var unsubscribeResult = await Session.Unsubscribe(unsubscribePacket, cancellationToken).ConfigureAwait(false);
 
-            var unsubAckPacket = MqttPacketFactories.UnsubAck.Create(unsubscribePacket, unsubscribeResult);
+            var unsubAckPacket = MqttUnsubAckPacketFactory.Create(unsubscribePacket, unsubscribeResult);
 
             Session.EnqueueControlPacket(new MqttPacketBusItem(unsubAckPacket));
 
@@ -564,7 +564,7 @@ namespace MQTTnet.Server
                 // This also indicates that it was tried at least!
                 _disconnectPacketSent = true;
 
-                var disconnectPacket = MqttPacketFactories.Disconnect.Create(options);
+                var disconnectPacket = MqttDisconnectPacketFactory.Create(options);
 
                 using (var timeout = new CancellationTokenSource(_serverOptions.DefaultCommunicationTimeout))
                 {

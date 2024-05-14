@@ -42,7 +42,7 @@ app.UseMqttServer(server =>
         _ = Task.Run(async () =>
         {
             var mqttApplicationMessage = new MqttApplicationMessageBuilder()
-                .WithPayload($"Test application message from MQTTnet server.")
+                .WithPayload("Test application message from MQTTnet server.")
                 .WithTopic("message")
                 .Build();
 

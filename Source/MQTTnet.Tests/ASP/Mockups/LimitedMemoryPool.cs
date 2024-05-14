@@ -4,7 +4,7 @@
 
 using System.Buffers;
 
-namespace MQTTnet.AspNetCore.Tests.Mockups
+namespace MQTTnet.Tests.ASP.Mockups
 {
     public sealed class LimitedMemoryPool : MemoryPool<byte>
     {

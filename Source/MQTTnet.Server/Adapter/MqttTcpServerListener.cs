@@ -2,21 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
-using MQTTnet.Formatter;
-using MQTTnet.Internal;
-using MQTTnet.Server;
-using System;
-using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using MQTTnet.Formatter;
+using MQTTnet.Implementations;
+using MQTTnet.Internal;
 
-namespace MQTTnet.Implementations
+namespace MQTTnet.Server.Adapter
 {
     public sealed class MqttTcpServerListener : IDisposable
     {

@@ -40,7 +40,7 @@ namespace MQTTnet.Benchmarks
         Dictionary<string, IMqttClient> _mqttPublisherClientsByPublisherName;
 
         Dictionary<string, List<string>> _topicsByPublisher;
-        Dictionary<string, string> _publisherByTopic;        
+        Dictionary<string, string> _publisherByTopic;
         List<string> _allSubscribedTopics; // Keep track of the subset of topics that are subscribed
 
 
@@ -67,9 +67,10 @@ namespace MQTTnet.Benchmarks
             }
 
             // Create server
-            var factory = new MqttFactory();
+            var serverFactory = new MqttServerFactory();
+            var clientFactory = new MqttClientFactory();
             var serverOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
-            _mqttServer = factory.CreateMqttServer(serverOptions);
+            _mqttServer = serverFactory.CreateMqttServer(serverOptions);
             _mqttServer.StartAsync().GetAwaiter().GetResult();
 
             // Create publisher clients
@@ -77,7 +78,7 @@ namespace MQTTnet.Benchmarks
             foreach (var pt in _topicsByPublisher)
             {
                 var publisherName = pt.Key;
-                var mqttClient = factory.CreateMqttClient();
+                var mqttClient = clientFactory.CreateMqttClient();
                 var publisherOptions = new MqttClientOptionsBuilder()
                     .WithTcpServer("localhost")
                     .WithClientId(publisherName)
@@ -91,7 +92,7 @@ namespace MQTTnet.Benchmarks
             _mqttSubscriberClients = new List<IMqttClient>();
             for (var i = 0; i < NumSubscribers; i++)
             {
-                var mqttSubscriberClient = factory.CreateMqttClient();
+                var mqttSubscriberClient = clientFactory.CreateMqttClient();
                 _mqttSubscriberClients.Add(mqttSubscriberClient);
 
                 var subscriberOptions = new MqttClientOptionsBuilder()
@@ -134,7 +135,7 @@ namespace MQTTnet.Benchmarks
             if (topicIndexStep * NumSubscribedTopicsPerSubscriber * NumSubscribers != totalNumTopics)
             {
                 throw new System.Exception(
-                    String.Format("The total number of topics must be divisible by the number of subscribed topics across all subscribers. Total number of topics: {0}, topic step: {1}", 
+                    String.Format("The total number of topics must be divisible by the number of subscribed topics across all subscribers. Total number of topics: {0}, topic step: {1}",
                     totalNumTopics, topicIndexStep
                     ));
             }
@@ -188,7 +189,7 @@ namespace MQTTnet.Benchmarks
                 var publisherClient = _mqttPublisherClientsByPublisherName[publisherName];
                 _ = publisherClient.PublishAsync(message);
             }
-      
+
             // Wait one message per publish to be received by subscriber (in the subscriber's application message handler)
             try
             {

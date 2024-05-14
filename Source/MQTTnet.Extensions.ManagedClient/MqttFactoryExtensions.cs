@@ -10,26 +10,26 @@ namespace MQTTnet.Extensions.ManagedClient
 {
     public static class MqttFactoryExtensions
     {
-        public static IManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttClient mqttClient = null)
+        public static IManagedMqttClient CreateManagedMqttClient(this MqttClientFactory clientFactory, IMqttClient mqttClient = null)
         {
-            if (factory == null)
+            if (clientFactory == null)
             {
-                throw new ArgumentNullException(nameof(factory));
+                throw new ArgumentNullException(nameof(clientFactory));
             }
 
             if (mqttClient == null)
             {
-                return new ManagedMqttClient(factory.CreateMqttClient(), factory.DefaultLogger);
+                return new ManagedMqttClient(clientFactory.CreateMqttClient(), clientFactory.DefaultLogger);
             }
 
-            return new ManagedMqttClient(mqttClient, factory.DefaultLogger);
+            return new ManagedMqttClient(mqttClient, clientFactory.DefaultLogger);
         }
 
-        public static IManagedMqttClient CreateManagedMqttClient(this MqttFactory factory, IMqttNetLogger logger)
+        public static IManagedMqttClient CreateManagedMqttClient(this MqttClientFactory clientFactory, IMqttNetLogger logger)
         {
-            if (factory == null)
+            if (clientFactory == null)
             {
-                throw new ArgumentNullException(nameof(factory));
+                throw new ArgumentNullException(nameof(clientFactory));
             }
 
             if (logger == null)
@@ -37,10 +37,10 @@ namespace MQTTnet.Extensions.ManagedClient
                 throw new ArgumentNullException(nameof(logger));
             }
 
-            return new ManagedMqttClient(factory.CreateMqttClient(logger), logger);
+            return new ManagedMqttClient(clientFactory.CreateMqttClient(logger), logger);
         }
 
-        public static ManagedMqttClientOptionsBuilder CreateManagedMqttClientOptionsBuilder(this MqttFactory _)
+        public static ManagedMqttClientOptionsBuilder CreateManagedMqttClientOptionsBuilder(this MqttClientFactory _)
         {
             return new ManagedMqttClientOptionsBuilder();
         }

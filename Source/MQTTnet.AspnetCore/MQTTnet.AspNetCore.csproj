@@ -50,6 +50,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\MQTTnet.Server\MQTTnet.Server.csproj" />
         <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
     </ItemGroup>
 

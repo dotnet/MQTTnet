@@ -239,7 +239,7 @@ namespace MQTTnet.Tests.Server
 
                 var mqttClientOptions = optionsBuilder.Build();
 
-                var factory = new MqttFactory();
+                var factory = new MqttClientFactory();
                 var mqttClient = factory.CreateMqttClient();
                 _client = mqttClient;
 
@@ -295,7 +295,7 @@ namespace MQTTnet.Tests.Server
 
             public Task StartServer()
             {
-                var mqttFactory = new MqttFactory();
+                var mqttServerFactory = new MqttServerFactory();
 
                 var mqttServerOptions = new MqttServerOptionsBuilder().WithEncryptionCertificate(_hotSwapServer)
                     .WithRemoteCertificateValidationCallback(_hotSwapServer.RemoteCertificateValidationCallback)
@@ -304,7 +304,7 @@ namespace MQTTnet.Tests.Server
 
                 mqttServerOptions.TlsEndpointOptions.ClientCertificateRequired = true;
 
-                _server = mqttFactory.CreateMqttServer(mqttServerOptions);
+                _server = mqttServerFactory.CreateMqttServer(mqttServerOptions);
                 return _server.StartAsync();
             }
         }
@@ -318,7 +318,7 @@ namespace MQTTnet.Tests.Server
             {
                 _certificates = new X509Certificate2Collection(CreateSelfSignedCertificate("1.3.6.1.5.5.7.3.2"));
             }
-            
+
             public void Dispose()
             {
                 if (_certificates != null)

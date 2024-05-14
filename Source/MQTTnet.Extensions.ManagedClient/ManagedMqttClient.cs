@@ -13,7 +13,6 @@ using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Server;
 
 namespace MQTTnet.Extensions.ManagedClient
 {

@@ -2,13 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Exceptions;
@@ -17,6 +12,8 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Disconnecting;
+using MQTTnet.Server.Formatter;
+using MqttPublishPacketFactory = MQTTnet.Server.Formatter.MqttPublishPacketFactory;
 
 namespace MQTTnet.Server
 {
@@ -368,7 +365,7 @@ namespace MQTTnet.Server
                 }
 
                 var validatingConnectionEventArgs = await ValidateConnection(connectPacket, channelAdapter).ConfigureAwait(false);
-                var connAckPacket = MqttPacketFactories.ConnAck.Create(validatingConnectionEventArgs);
+                var connAckPacket = MqttConnAckPacketFactory.Create(validatingConnectionEventArgs);
 
                 if (validatingConnectionEventArgs.ReasonCode != MqttConnectReasonCode.Success)
                 {
@@ -519,7 +516,7 @@ namespace MQTTnet.Server
             {
                 foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
                 {
-                    var publishPacket = MqttPacketFactories.Publish.Create(retainedMessageMatch);
+                    var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
                     clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
                 }
             }

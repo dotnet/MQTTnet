@@ -23,7 +23,7 @@ public static class Client_Publish_Samples
          * or at least provides backward compatibility where possible.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -54,7 +54,7 @@ public static class Client_Publish_Samples
          * See sample _Publish_Application_Message_ for more details.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {

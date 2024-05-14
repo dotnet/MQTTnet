@@ -4,7 +4,7 @@
 
 using System.IO.Pipelines;
 
-namespace MQTTnet.AspNetCore.Tests.Mockups
+namespace MQTTnet.Tests.ASP.Mockups
 {
     public sealed class DuplexPipeMockup : IDuplexPipe
     {

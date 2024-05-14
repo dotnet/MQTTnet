@@ -53,7 +53,7 @@ namespace MQTTnet.Tests.Server
                 using (var validClient = testEnvironment.CreateClient())
                 {
                     await validClient.ConnectAsync(
-                        testEnvironment.Factory.CreateClientOptionsBuilder()
+                        testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                             .WithTcpServer("localhost", testEnvironment.ServerPort)
                             .WithCredentials("SECRET")
                             .WithClientId("CLIENT")
@@ -68,7 +68,7 @@ namespace MQTTnet.Tests.Server
                         using (var invalidClient = testEnvironment.CreateClient())
                         {
                             await invalidClient.ConnectAsync(
-                                testEnvironment.Factory.CreateClientOptionsBuilder()
+                                testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                                     .WithTcpServer("localhost", testEnvironment.ServerPort)
                                     .WithCredentials("???")
                                     .WithClientId("CLIENT")

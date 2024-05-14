@@ -27,7 +27,7 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
             {
                 await testEnvironment.StartServer();
 
-                var factory = new MqttFactory();
+                var factory = new MqttClientFactory();
                 var lowLevelClient = factory.CreateLowLevelMqttClient();
 
                 await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);
@@ -48,7 +48,7 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
             {
                 await testEnvironment.StartServer();
 
-                var lowLevelClient = testEnvironment.Factory.CreateLowLevelMqttClient();
+                var lowLevelClient = testEnvironment.ClientFactory.CreateLowLevelMqttClient();
 
                 await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);
 
@@ -60,7 +60,7 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
         [ExpectedException(typeof(MqttCommunicationException))]
         public async Task Connect_To_Not_Existing_Broker()
         {
-            var client = new MqttFactory().CreateLowLevelMqttClient();
+            var client = new MqttClientFactory().CreateLowLevelMqttClient();
             var options = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
 
             await client.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
@@ -70,7 +70,7 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
         [ExpectedException(typeof(MqttCommunicationException))]
         public async Task Connect_To_Wrong_Host()
         {
-            var client = new MqttFactory().CreateLowLevelMqttClient();
+            var client = new MqttClientFactory().CreateLowLevelMqttClient();
             var options = new MqttClientOptionsBuilder().WithTcpServer("123.456.789.10").Build();
 
             await client.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
@@ -166,7 +166,7 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
             {
                 await testEnvironment.StartServer();
 
-                var factory = new MqttFactory();
+                var factory = new MqttClientFactory();
                 var lowLevelClient = factory.CreateLowLevelMqttClient();
 
                 await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);

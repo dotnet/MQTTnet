@@ -10,13 +10,14 @@ using System;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
+using MQTTnet.Server.Adapter;
 
 namespace MQTTnet.AspNetCore
 {
     public sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
     {
         MqttServerOptions _serverOptions;
-        
+
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
         public override async Task OnConnectedAsync(ConnectionContext connection)
@@ -27,7 +28,7 @@ namespace MQTTnet.AspNetCore
             {
                 transferFormatFeature.ActiveFormat = TransferFormat.Binary;
             }
-            
+
             var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax));
             using (var adapter = new MqttConnectionContext(formatter, connection))
             {

@@ -49,7 +49,7 @@ namespace MQTTnet.Tests.Server
                 var client2 = await testEnvironment.ConnectClient();
                 var applicationMessageHandler = testEnvironment.CreateApplicationMessageHandler(client2);
                 
-                var topicFilter = testEnvironment.Factory.CreateTopicFilterBuilder().WithTopic("Topic").WithRetainHandling(retainHandling).Build();
+                var topicFilter = testEnvironment.ClientFactory.CreateTopicFilterBuilder().WithTopic("Topic").WithRetainHandling(retainHandling).Build();
                 await client2.SubscribeAsync(topicFilter);
                 await LongTestDelay();
 

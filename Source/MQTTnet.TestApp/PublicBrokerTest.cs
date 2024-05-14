@@ -145,7 +145,7 @@ namespace MQTTnet.TestApp
             {
                 Write("Testing '" + name + "'... ", ConsoleColor.Gray);
 
-                var factory = new MqttFactory();
+                var factory = new MqttClientFactory();
 
                 using (var client = factory.CreateMqttClient())
                 {

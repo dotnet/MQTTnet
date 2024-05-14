@@ -23,12 +23,12 @@ namespace MQTTnet.Tests.Mockups
 {
     public sealed class TestEnvironment : IDisposable
     {
-        readonly List<string> _clientErrors = new List<string>();
-        readonly List<IMqttClient> _clients = new List<IMqttClient>();
-        readonly List<Exception> _exceptions = new List<Exception>();
-        readonly List<ILowLevelMqttClient> _lowLevelClients = new List<ILowLevelMqttClient>();
+        readonly List<string> _clientErrors = new();
+        readonly List<IMqttClient> _clients = new();
+        readonly List<Exception> _exceptions = new();
+        readonly List<ILowLevelMqttClient> _lowLevelClients = new();
         readonly MqttProtocolVersion _protocolVersion;
-        readonly List<string> _serverErrors = new List<string>();
+        readonly List<string> _serverErrors = new();
 
         public TestEnvironment() : this(null)
         {
@@ -77,11 +77,13 @@ namespace MQTTnet.Tests.Mockups
             };
         }
 
-        public MqttNetEventLogger ClientLogger { get; } = new MqttNetEventLogger("client");
+        public MqttNetEventLogger ClientLogger { get; } = new("client");
 
         public static bool EnableLogger { get; set; } = true;
 
-        public MqttFactory Factory { get; } = new MqttFactory();
+        public MqttClientFactory ClientFactory { get; } = new();
+
+        public MqttServerFactory ServerFactory { get; } = new();
 
         public bool IgnoreClientLogErrors { get; set; }
 
@@ -89,7 +91,7 @@ namespace MQTTnet.Tests.Mockups
 
         public MqttServer Server { get; private set; }
 
-        public MqttNetEventLogger ServerLogger { get; } = new MqttNetEventLogger("server");
+        public MqttNetEventLogger ServerLogger { get; } = new("server");
 
         public int ServerPort { get; set; }
 
@@ -97,7 +99,7 @@ namespace MQTTnet.Tests.Mockups
 
         public Task<IMqttClient> ConnectClient()
         {
-            return ConnectClient(Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion));
+            return ConnectClient(ClientFactory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion));
         }
 
         public async Task<IMqttClient> ConnectClient(Action<MqttClientOptionsBuilder> configureOptions, TimeSpan timeout = default)
@@ -108,7 +110,7 @@ namespace MQTTnet.Tests.Mockups
             }
 
             // Start with initial default values.
-            var optionsBuilder = Factory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort);
+            var optionsBuilder = ClientFactory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort);
 
             // Let the caller override settings. Do not touch the options after this.
             configureOptions.Invoke(optionsBuilder);
@@ -218,7 +220,7 @@ namespace MQTTnet.Tests.Mockups
         {
             var logger = EnableLogger ? (IMqttNetLogger)ClientLogger : MqttNetNullLogger.Instance;
 
-            var client = Factory.CreateMqttClient(logger);
+            var client = ClientFactory.CreateMqttClient(logger);
 
             client.ConnectingAsync += e =>
             {
@@ -250,7 +252,7 @@ namespace MQTTnet.Tests.Mockups
 
         public MqttClientOptionsBuilder CreateDefaultClientOptionsBuilder()
         {
-            return Factory.CreateClientOptionsBuilder()
+            return ClientFactory.CreateClientOptionsBuilder()
                 .WithProtocolVersion(_protocolVersion)
                 .WithTcpServer("127.0.0.1", ServerPort)
                 .WithClientId(TestContext.TestName + "_" + Guid.NewGuid());
@@ -258,7 +260,7 @@ namespace MQTTnet.Tests.Mockups
 
         public ILowLevelMqttClient CreateLowLevelClient()
         {
-            var client = Factory.CreateLowLevelMqttClient(ClientLogger);
+            var client = ClientFactory.CreateLowLevelMqttClient(ClientLogger);
 
             lock (_lowLevelClients)
             {
@@ -277,7 +279,7 @@ namespace MQTTnet.Tests.Mockups
 
             var logger = EnableLogger ? (IMqttNetLogger)ServerLogger : new MqttNetNullLogger();
 
-            Server = Factory.CreateMqttServer(options, logger);
+            Server = ServerFactory.CreateMqttServer(options, logger);
 
             Server.ValidatingConnectionAsync += e =>
             {
@@ -352,7 +354,7 @@ namespace MQTTnet.Tests.Mockups
                 GC.Collect();
                 GC.WaitForFullGCComplete();
                 GC.WaitForPendingFinalizers();
-                
+
                 if (_exceptions.Any())
                 {
                     throw new Exception($"{_exceptions.Count} exceptions tracked.\r\n" + string.Join(Environment.NewLine, _exceptions));
@@ -366,7 +368,7 @@ namespace MQTTnet.Tests.Mockups
 
         public Task<MqttServer> StartServer()
         {
-            return StartServer(Factory.CreateServerOptionsBuilder());
+            return StartServer(ServerFactory.CreateServerOptionsBuilder());
         }
 
         public async Task<MqttServer> StartServer(MqttServerOptionsBuilder optionsBuilder)
@@ -386,7 +388,7 @@ namespace MQTTnet.Tests.Mockups
 
         public async Task<MqttServer> StartServer(Action<MqttServerOptionsBuilder> configure)
         {
-            var optionsBuilder = Factory.CreateServerOptionsBuilder();
+            var optionsBuilder = ServerFactory.CreateServerOptionsBuilder();
 
             optionsBuilder.WithDefaultEndpoint();
             optionsBuilder.WithDefaultEndpointPort(ServerPort);

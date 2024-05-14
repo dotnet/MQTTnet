@@ -2,15 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using MQTTnet.Packets;
-using MQTTnet.Server;
 
-namespace MQTTnet.Formatter
+namespace MQTTnet.Server.Formatter
 {
-    public sealed class MqttUnsubAckPacketFactory
+    public static class MqttUnsubAckPacketFactory
     {
-        public MqttUnsubAckPacket Create(MqttUnsubscribePacket unsubscribePacket, UnsubscribeResult unsubscribeResult)
+        public static MqttUnsubAckPacket Create(MqttUnsubscribePacket unsubscribePacket, UnsubscribeResult unsubscribeResult)
         {
             if (unsubscribePacket == null)
             {

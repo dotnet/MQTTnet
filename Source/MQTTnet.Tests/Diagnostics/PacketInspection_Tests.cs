@@ -23,7 +23,7 @@ namespace MQTTnet.Tests.Diagnostics
             
                 using (var mqttClient = testEnvironment.CreateClient())
                 {
-                    var mqttClientOptions = testEnvironment.Factory.CreateClientOptionsBuilder()
+                    var mqttClientOptions = testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                         .WithClientId("CLIENT_ID") // Must be fixed.
                         .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                         .Build();

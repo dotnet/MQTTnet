@@ -22,10 +22,11 @@ namespace MQTTnet.Benchmarks
         public void Setup()
         {
             var serverOptions = new MqttServerOptionsBuilder().Build();
-            
-            var factory = new MqttFactory();
-            _mqttServer = factory.CreateMqttServer(serverOptions);
-            _mqttClient = factory.CreateMqttClient();
+
+            var serverFactory = new MqttServerFactory();
+            _mqttServer = serverFactory.CreateMqttServer(serverOptions);
+            var clientFactory = new MqttClientFactory();
+            _mqttClient = clientFactory.CreateMqttClient();
 
             _mqttServer.StartAsync().GetAwaiter().GetResult();
 

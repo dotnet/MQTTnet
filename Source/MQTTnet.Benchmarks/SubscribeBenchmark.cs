@@ -30,9 +30,10 @@ namespace MQTTnet.Benchmarks
 
             var serverOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
-            var factory = new MqttFactory();
-            _mqttServer = factory.CreateMqttServer(serverOptions);
-            _mqttClient = factory.CreateMqttClient();
+            var serverFactory = new MqttServerFactory();
+            _mqttServer = serverFactory.CreateMqttServer(serverOptions);
+            var clientFactory = new MqttClientFactory();
+            _mqttClient = clientFactory.CreateMqttClient();
 
             _mqttServer.StartAsync().GetAwaiter().GetResult();
 
@@ -58,7 +59,7 @@ namespace MQTTnet.Benchmarks
                 var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
                        .WithTopicFilter(topic, Protocol.MqttQualityOfServiceLevel.AtMostOnce)
                        .Build();
-                
+
                 _mqttClient.SubscribeAsync(subscribeOptions).GetAwaiter().GetResult();
             }
         }

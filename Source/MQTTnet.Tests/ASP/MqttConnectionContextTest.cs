@@ -3,25 +3,20 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Adapter;
-using MQTTnet.AspNetCore.Tests.Mockups;
-using MQTTnet.Client;
+using MQTTnet.AspNetCore;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Tests.ASP.Mockups;
 using MQTTnet.Tests.Helpers;
-using MQTTnet.Tests.MQTTv5;
 
-namespace MQTTnet.AspNetCore.Tests
+namespace MQTTnet.Tests.ASP
 {
     [TestClass]
     public class MqttConnectionContextTest

@@ -6,7 +6,6 @@ using System;
 using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Server;
 
 namespace MQTTnet.Formatter
 {
@@ -21,24 +20,6 @@ namespace MQTTnet.Formatter
 
             var pubRecPacket = Create(applicationMessageReceivedEventArgs.PublishPacket, applicationMessageReceivedEventArgs.ReasonCode);
             pubRecPacket.UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties;
-
-            return pubRecPacket;
-        }
-
-        public MqttPacket Create(MqttPublishPacket publishPacket, DispatchApplicationMessageResult dispatchApplicationMessageResult)
-        {
-            if (publishPacket == null)
-            {
-                throw new ArgumentNullException(nameof(publishPacket));
-            }
-
-            var pubRecPacket = new MqttPubRecPacket
-            {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubRecReasonCode)dispatchApplicationMessageResult.ReasonCode,
-                ReasonString = dispatchApplicationMessageResult.ReasonString,
-                UserProperties = dispatchApplicationMessageResult.UserProperties
-            };
 
             return pubRecPacket;
         }

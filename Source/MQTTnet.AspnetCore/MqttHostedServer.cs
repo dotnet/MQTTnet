@@ -10,19 +10,20 @@ using Microsoft.Extensions.Hosting;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
+using MQTTnet.Server.Adapter;
 
 namespace MQTTnet.AspNetCore
 {
     public sealed class MqttHostedServer : MqttServer, IHostedService
     {
-        readonly MqttFactory _mqttFactory;
+        readonly MqttServerFactory _mqttServerFactory;
 
-        public MqttHostedServer(MqttFactory mqttFactory, MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger) : base(
+        public MqttHostedServer(MqttServerFactory mqttServerFactory, MqttServerOptions options, IEnumerable<IMqttServerAdapter> adapters, IMqttNetLogger logger) : base(
             options,
             adapters,
             logger)
         {
-            _mqttFactory = mqttFactory ?? throw new ArgumentNullException(nameof(mqttFactory));
+            _mqttServerFactory = mqttServerFactory ?? throw new ArgumentNullException(nameof(mqttServerFactory));
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -35,7 +36,7 @@ namespace MQTTnet.AspNetCore
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            return StopAsync(_mqttFactory.CreateMqttServerStopOptionsBuilder().Build());
+            return StopAsync(_mqttServerFactory.CreateMqttServerStopOptionsBuilder().Build());
         }
     }
 }

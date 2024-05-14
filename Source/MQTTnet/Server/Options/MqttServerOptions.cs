@@ -14,13 +14,6 @@ namespace MQTTnet.Server
 
         public bool EnablePersistentSessions { get; set; }
 
-        [Obsolete("Use KeepAliveOptions instead.")]
-        public TimeSpan KeepAliveMonitorInterval
-        {
-            get => KeepAliveOptions.MonitorInterval;
-            set => KeepAliveOptions.MonitorInterval = value;
-        }
-
         public MqttServerKeepAliveOptions KeepAliveOptions { get; } = new MqttServerKeepAliveOptions();
 
         public int MaxPendingMessagesPerClient { get; set; } = 250;

@@ -1,4 +1,4 @@
-#if !WINDOWS_UWP && (NET48_OR_GREATER || NET5_0_OR_GREATER)
+#if NET48_OR_GREATER || NET5_0_OR_GREATER
 using System;
 using System.Linq;
 using System.Net;
@@ -25,7 +25,7 @@ namespace MQTTnet.Tests.Server
             sanBuilder.AddIpAddress(IPAddress.Loopback);
             sanBuilder.AddIpAddress(IPAddress.IPv6Loopback);
             sanBuilder.AddDnsName("localhost");
-            
+
             using (var rsa = RSA.Create())
             {
                 var certRequest = new CertificateRequest("CN=localhost", rsa, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
@@ -187,7 +187,7 @@ namespace MQTTnet.Tests.Server
             var clientOptions = clientOptionsBuilder.Build();
             return await testEnvironment.ConnectClient(clientOptions);
         }
-        
+
         sealed class CertificateProvider : ICertificateProvider
         {
             public X509Certificate2 CurrentCertificate { get; set; }

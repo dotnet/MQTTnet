@@ -7,9 +7,7 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
 using MQTTnet.Certificates;
-#if !WINDOWS_UWP
 using System.Security.Cryptography.X509Certificates;
-#endif
 
 // ReSharper disable UnusedMember.Global
 namespace MQTTnet.Server
@@ -23,7 +21,6 @@ namespace MQTTnet.Server
             return _options;
         }
 
-#if !WINDOWS_UWP
         public MqttServerOptionsBuilder WithClientCertificate(RemoteCertificateValidationCallback validationCallback = null, bool checkCertificateRevocation = false)
         {
             _options.TlsEndpointOptions.ClientCertificateRequired = true;
@@ -31,7 +28,6 @@ namespace MQTTnet.Server
             _options.TlsEndpointOptions.RemoteCertificateValidationCallback = validationCallback;
             return this;
         }
-#endif
 
         public MqttServerOptionsBuilder WithConnectionBacklog(int value)
         {
@@ -149,13 +145,11 @@ namespace MQTTnet.Server
             return this;
         }
 
-#if !WINDOWS_UWP
         public MqttServerOptionsBuilder WithRemoteCertificateValidationCallback(RemoteCertificateValidationCallback value)
         {
             _options.TlsEndpointOptions.RemoteCertificateValidationCallback = value;
             return this;
         }
-#endif
 
         public MqttServerOptionsBuilder WithTcpKeepAliveInterval(int value)
         {
@@ -184,7 +178,6 @@ namespace MQTTnet.Server
             return this;
         }
 
-#if !WINDOWS_UWP
         public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value, IMqttServerCertificateCredentials credentials = null)
         {
             if (value == null)
@@ -222,6 +215,5 @@ namespace MQTTnet.Server
 
             return this;
         }
-#endif
     }
 }

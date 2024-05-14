@@ -149,9 +149,7 @@ namespace MQTTnet.Implementations
                 return null;
             }
 
-#if WINDOWS_UWP
-            throw new NotSupportedException("Proxies are not supported when using 'uap10.0'.");
-#elif NETSTANDARD1_3
+#if NETSTANDARD1_3
             throw new NotSupportedException("Proxies are not supported when using 'netstandard 1.3'.");
 #else
             var proxyUri = new Uri(_options.ProxyOptions.Address);
@@ -216,7 +214,6 @@ namespace MQTTnet.Implementations
             }
 
 #if !NETSTANDARD1_3
-#if !WINDOWS_UWP
             // Only set the value if it is actually true. This property is not supported on all platforms
             // and will throw a _PlatformNotSupported_ (i.e. WASM) exception when being used regardless of the actual value.
             if (_options.UseDefaultCredentials)
@@ -228,7 +225,6 @@ namespace MQTTnet.Implementations
             {
                 clientWebSocket.Options.KeepAliveInterval = _options.KeepAliveInterval;
             }
-#endif
 #endif
             if (_options.Credentials != null)
             {
@@ -242,8 +238,6 @@ namespace MQTTnet.Implementations
                 throw new NotSupportedException("Remote certificate validation callback is not supported when using 'netstandard1.3'.");
 #elif NETSTANDARD2_0
                 throw new NotSupportedException("Remote certificate validation callback is not supported when using 'netstandard2.0'.");
-#elif WINDOWS_UWP
-                throw new NotSupportedException("Remote certificate validation callback is not supported when using 'uap10.0'.");
 #elif NET452 || NET461 || NET48
                 ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) =>
                 {

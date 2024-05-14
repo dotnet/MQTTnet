@@ -41,9 +41,9 @@ namespace MQTTnet.Server
 
         public void Start(CancellationToken cancellationToken)
         {
-            // The keep alive monitor spawns a real new thread (LongRunning) because it does not 
+            // The keep alive monitor spawns a real new thread (LongRunning) because it does not
             // support async/await. Async etc. is avoided here because the thread will usually check
-            // the connections every few milliseconds and thus the context changes (due to async) are 
+            // the connections every few milliseconds and thus the context changes (due to async) are
             // only consuming resources. Also there is just 1 thread for the entire server which is fine at all!
             Task.Factory.StartNew(_ => DoWork(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning).RunInBackground(_logger);
         }
@@ -75,7 +75,7 @@ namespace MQTTnet.Server
 
         static void Sleep(TimeSpan timeout)
         {
-#if !NETSTANDARD1_3 && !WINDOWS_UWP
+#if !NETSTANDARD1_3
             try
             {
                 Thread.Sleep(timeout);

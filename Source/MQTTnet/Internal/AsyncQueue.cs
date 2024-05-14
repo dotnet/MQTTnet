@@ -17,7 +17,7 @@ namespace MQTTnet.Internal
         ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
 
         bool _isDisposed;
-        
+
         public int Count => _queue.Count;
 
         public void Clear()
@@ -37,7 +37,7 @@ namespace MQTTnet.Internal
 
                 _isDisposed = true;
 
-#if !NETSTANDARD1_3 && !WINDOWS_UWP
+#if !NETSTANDARD1_3
                 if (typeof(IDisposable).IsAssignableFrom(typeof(TItem)))
                 {
                     while (_queue.TryDequeue(out TItem item))
@@ -90,9 +90,9 @@ namespace MQTTnet.Internal
 
                     if (task != null)
                     {
-                        await task.ConfigureAwait(false);    
+                        await task.ConfigureAwait(false);
                     }
-                    
+
                     if (cancellationToken.IsCancellationRequested)
                     {
                         return AsyncQueueDequeueResult<TItem>.NonSuccess;

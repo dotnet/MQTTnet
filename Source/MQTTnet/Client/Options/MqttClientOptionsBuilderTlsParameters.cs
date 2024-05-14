@@ -23,9 +23,6 @@ namespace MQTTnet.Client
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;
 #endif
 
-#if WINDOWS_UWP
-        public IEnumerable<IEnumerable<byte>> Certificates { get; set; }
-#else
         [Obsolete("Use CertificatesProvider instead.")]
         public IEnumerable<System.Security.Cryptography.X509Certificates.X509Certificate> Certificates
         {
@@ -44,7 +41,6 @@ namespace MQTTnet.Client
                 }
             }
         }
-#endif
 
 #if NETCOREAPP3_1_OR_GREATER
         public List<System.Net.Security.SslApplicationProtocol> ApplicationProtocols { get; set; }

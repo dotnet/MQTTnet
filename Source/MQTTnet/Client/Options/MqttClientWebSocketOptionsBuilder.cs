@@ -74,7 +74,7 @@ namespace MQTTnet.Client
             return this;
         }
 #endif
-#if !WINDOWS_UWP && !NETSTANDARD1_3
+#if !NETSTANDARD1_3
         public MqttClientWebSocketOptionsBuilder WithUseDefaultCredentials(bool useDefaultCredentials = true)
         {
             _webSocketOptions.UseDefaultCredentials = useDefaultCredentials;

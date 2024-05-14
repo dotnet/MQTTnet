@@ -27,7 +27,7 @@ namespace MQTTnet.Implementations
         readonly MqttServerOptions _serverOptions;
         readonly MqttServerTcpEndpointBaseOptions _options;
         readonly MqttServerTlsTcpEndpointOptions _tlsOptions;
-        
+
         CrossPlatformSocket _socket;
         IPEndPoint _localEndPoint;
 
@@ -65,7 +65,7 @@ namespace MQTTnet.Implementations
 
                 _logger.Info("Starting TCP listener (Endpoint={0}, TLS={1})", _localEndPoint, _tlsOptions?.CertificateProvider != null);
 
-                _socket = new CrossPlatformSocket(_addressFamily);
+                _socket = new CrossPlatformSocket(_addressFamily, ProtocolType.Tcp);
 
                 // Usage of socket options is described here: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.setsocketoption?view=netcore-2.2
                 if (_options.ReuseAddress)
@@ -87,33 +87,33 @@ namespace MQTTnet.Implementations
                 {
                     _socket.KeepAlive = _options.KeepAlive.Value;
                 }
-                
+
                 if (_options.TcpKeepAliveInterval.HasValue)
                 {
                     _socket.TcpKeepAliveInterval = _options.TcpKeepAliveInterval.Value;
                 }
-                
+
                 if (_options.TcpKeepAliveRetryCount.HasValue)
                 {
                     _socket.TcpKeepAliveInterval = _options.TcpKeepAliveRetryCount.Value;
                 }
-                
+
                 if (_options.TcpKeepAliveTime.HasValue)
                 {
                     _socket.TcpKeepAliveTime = _options.TcpKeepAliveTime.Value;
                 }
-                
+
                 _socket.Bind(_localEndPoint);
-                
+
                 // Get the local endpoint back from the socket. The port may have changed.
                 // This can happen when port 0 is used. Then the OS will choose the next free port.
                 _localEndPoint = (IPEndPoint)_socket.LocalEndPoint;
                 _options.Port = _localEndPoint.Port;
-                
+
                 _socket.Listen(_options.ConnectionBacklog);
-                
+
                 _logger.Verbose("TCP listener started (Endpoint={0})", _localEndPoint);
-                
+
                 Task.Run(() => AcceptClientConnectionsAsync(cancellationToken), cancellationToken).RunInBackground(_logger);
 
                 return true;
@@ -183,7 +183,7 @@ namespace MQTTnet.Implementations
                 clientSocket.NoDelay = _options.NoDelay;
                 stream = clientSocket.GetStream();
                 var clientCertificate = _tlsOptions?.CertificateProvider?.GetCertificate();
-                
+
                 if (clientCertificate != null)
                 {
                     if (!clientCertificate.HasPrivateKey)
@@ -228,7 +228,7 @@ namespace MQTTnet.Implementations
                     var tcpChannel = new MqttTcpChannel(stream, remoteEndPoint, clientCertificate);
                     var bufferWriter = new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax);
                     var packetFormatterAdapter = new MqttPacketFormatterAdapter(bufferWriter);
-                    
+
                     using (var clientAdapter = new MqttChannelAdapter(tcpChannel, packetFormatterAdapter, _rootLogger))
                     {
                         clientAdapter.AllowPacketFragmentation = _options.AllowPacketFragmentation;

@@ -67,7 +67,7 @@ namespace MQTTnet.Implementations
                 }
                 else
                 {
-                    socket = new CrossPlatformSocket(_tcpOptions.AddressFamily);
+                    socket = new CrossPlatformSocket(_tcpOptions.AddressFamily, _tcpOptions.ProtocolType);
                 }
 
                 if (_tcpOptions.LocalEndpoint != null)
@@ -78,7 +78,12 @@ namespace MQTTnet.Implementations
                 socket.ReceiveBufferSize = _tcpOptions.BufferSize;
                 socket.SendBufferSize = _tcpOptions.BufferSize;
                 socket.SendTimeout = (int)_clientOptions.Timeout.TotalMilliseconds;
-                socket.NoDelay = _tcpOptions.NoDelay;
+
+                if (_tcpOptions.ProtocolType == ProtocolType.Tcp)
+                {
+                    // Other protocol types do not support the Nagle algorithm.
+                    socket.NoDelay = _tcpOptions.NoDelay;
+                }
 
                 if (socket.LingerState != null)
                 {

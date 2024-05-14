@@ -28,7 +28,19 @@ namespace MQTTnet.Client
         /// </summary>
         public EndPoint LocalEndpoint { get; set; }
 
+        /// <summary>
+        ///     Enables or disables the Nagle algorithm for the socket.
+        ///     This is only supported for TCP.
+        ///     For other protocol types the value is ignored.
+        ///     Default: true
+        /// </summary>
         public bool NoDelay { get; set; } = true;
+
+        /// <summary>
+        ///     The MQTT transport is usually TCP but when using other endpoint types like
+        ///     unix sockets it must be changed (IP for unix sockets).
+        /// </summary>
+        public ProtocolType ProtocolType { get; set; } = ProtocolType.Tcp;
 
         public EndPoint RemoteEndpoint { get; set; }
 

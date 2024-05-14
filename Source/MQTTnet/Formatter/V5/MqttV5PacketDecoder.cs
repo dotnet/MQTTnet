@@ -352,7 +352,10 @@ namespace MQTTnet.Formatter.V5
 
         MqttPacket DecodeDisconnectPacket(ArraySegment<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            if (body.Count == 0)
+            {
+                return new MqttDisconnectPacket();
+            }
 
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
 

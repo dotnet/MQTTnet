@@ -3,44 +3,42 @@ name: CI
 on: [push, pull_request]
 
 env:
-  VERSION: "4.3.4.${{github.run_number}}"
+  VERSION: "5.0.0.${{github.run_number}}"
 
 jobs:
   build:
 
-    runs-on: windows-2022
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Setup Windows SDK
-        uses: GuillaumeFalourd/setup-windows10-sdk-action@v1
-        with:
-          sdk-version: 18362
-
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v1.9.0
+        uses: actions/setup-dotnet@v4.0.0
         with:
           dotnet-version: |
-            3.1.x
             6.0.x
             7.0.x
+            8.0.x
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.1
+      - name: Checkout code
+        uses: actions/checkout@v4.1.4
 
-      - name: Checkout Code
-        uses: actions/checkout@v2
+      - name: Download code signing certificate
+        uses: timheuer/base64-to-file@v1.2
+        with:
+          fileName: certificate.snk
+          fileDir: ${{ github.workspace }}
+          encodedString: ${{ secrets.SNC_BASE64 }}
 
-      - name: Setup Signing Certificate
-        run: |
-          $secret = '${{ secrets.SNC_BASE64 }}'
-          $decoded = [System.Convert]::FromBase64CharArray($secret, 0, $secret.Length)
-          Set-Content -Path ${{ github.workspace }}\certificate.snk -Value $decoded -AsByteStream
+      #  run: |
+      #    $secret = '${{ secrets.SNC_BASE64 }}'
+      #    $decoded = [System.Convert]::FromBase64CharArray($secret, 0, $secret.Length)
+      #    Set-Content -Path ${{ github.workspace }}/certificate.snk -Value $decoded -AsByteStream
 
-      - name: Restore nuget packages
-        run: msbuild MQTTnet.sln /t:Restore /p:Configuration="Release" /verbosity:m
+#      - name: Build solution
+#        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
 
       - name: Build solution
-        run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
+        run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
 
       - name: Collect nuget Packages
         uses: actions/upload-artifact@v2
@@ -50,14 +48,11 @@ jobs:
             **\*.nupkg
             **\*.snupkg
 
-      - name: Setup VSTest
-        uses: darenm/Setup-VSTest@v1
+      - name: Core tests
+        run: dotnet test --no-restore --framework net8.0 Source/MQTTnet/MQTTnet.Tests.csproj
 
-      - name: Core Tests
-        run: vstest.console.exe Source\MQTTnet.Tests\bin\Release\net7.0\MQTTnet.Tests.dll
-
-      - name: ASP.NET Tests
-        run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
+      - name: ASP.NET tests
+        run: dotnet test --no-restore --framework net8.0 Source/MQTTnet.AspNetCore.Tests/MQTTnet.AspNetCore.Tests.csproj
 
       - name: Publish MyGet nugets
         if: ${{ github.event_name == 'push' }}

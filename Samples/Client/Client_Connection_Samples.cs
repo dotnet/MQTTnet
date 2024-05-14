@@ -9,7 +9,6 @@
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using MQTTnet.Client;
-using MQTTnet.Extensions.WebSocket4Net;
 using MQTTnet.Formatter;
 using MQTTnet.Samples.Helpers;
 
@@ -33,7 +32,7 @@ public static class Client_Connection_Samples
             var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
             await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            // This will send the DISCONNECT packet. Calling _Dispose_ without DisconnectAsync the 
+            // This will send the DISCONNECT packet. Calling _Dispose_ without DisconnectAsync the
             // connection is closed in a "not clean" way. See MQTT specification for more details.
             await mqttClient.DisconnectAsync(new MqttClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.NormalDisconnection).Build());
         }
@@ -56,7 +55,7 @@ public static class Client_Connection_Samples
             var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
 
             // This will throw an exception if the server is not available.
-            // The result from this message returns additional data which was sent 
+            // The result from this message returns additional data which was sent
             // from the server. Please refer to the MQTT protocol specification for details.
             var response = await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
@@ -76,7 +75,7 @@ public static class Client_Connection_Samples
     {
         /*
          * This sample creates a simple MQTT client and connects to an invalid broker using a timeout.
-         * 
+         *
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
@@ -104,7 +103,7 @@ public static class Client_Connection_Samples
     {
         /*
          * This sample creates a simple MQTT client and connects to a public broker using MQTTv5.
-         * 
+         *
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
@@ -127,7 +126,7 @@ public static class Client_Connection_Samples
     {
         /*
          * This sample creates a simple MQTT client and connects to a public broker using TLS 1.2 encryption.
-         * 
+         *
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
@@ -157,35 +156,11 @@ public static class Client_Connection_Samples
         }
     }
 
-    public static async Task Connect_Client_Using_WebSocket4Net()
-    {
-        /*
-         * This sample creates a simple MQTT client and connects to a public broker using a WebSocket connection.
-         * Instead of the .NET implementation of WebSockets the implementation from WebSocket4Net is used. It provides more
-         * encryption algorithms and supports more platforms.
-         * 
-         * This is a modified version of the sample _Connect_Client_! See other sample for more details.
-         */
-
-        var mqttFactory = new MqttFactory().UseWebSocket4Net();
-
-        using (var mqttClient = mqttFactory.CreateMqttClient())
-        {
-            var mqttClientOptions = new MqttClientOptionsBuilder().WithWebSocketServer(o => o.WithUri("broker.hivemq.com:8000/mqtt")).Build();
-
-            var response = await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
-
-            Console.WriteLine("The MQTT client is connected.");
-
-            response.DumpToConsole();
-        }
-    }
-
     public static async Task Connect_Client_Using_WebSockets()
     {
         /*
          * This sample creates a simple MQTT client and connects to a public broker using a WebSocket connection.
-         * 
+         *
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
@@ -207,7 +182,7 @@ public static class Client_Connection_Samples
     {
         /*
          * This sample creates a simple MQTT client and connects to a public broker with enabled TLS encryption.
-         * 
+         *
          * This is a modified version of the sample _Connect_Client_! See other sample for more details.
          */
 
@@ -248,7 +223,7 @@ public static class Client_Connection_Samples
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
             var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("amazon.web.services.broker")
-                // Disabling packet fragmentation is very important!  
+                // Disabling packet fragmentation is very important!
                 .WithoutPacketFragmentation()
                 .Build();
 
@@ -449,7 +424,7 @@ public static class Client_Connection_Samples
             var mqttClientOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer("test.mosquitto.org", 8883)
                 .WithTlsOptions(new MqttClientTlsOptionsBuilder()
-                    .WithTrustChain(caChain) 
+                    .WithTrustChain(caChain)
                     .Build())
                 .Build();
 

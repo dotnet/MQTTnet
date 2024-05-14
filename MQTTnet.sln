@@ -18,8 +18,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.Rpc", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.ManagedClient", "Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj", "{C400533A-8EBA-4F0B-BF4D-295C3708604B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Extensions.WebSocket4Net", "Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj", "{2BD01D53-4CA5-4142-BE8D-313876395E3E}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Samples", "Samples\MQTTnet.Samples.csproj", "{71CF35F5-3327-4A91-AAF4-5340F6701771}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MQTTnet.Tests", "Source\MQTTnet.Tests\MQTTnet.Tests.csproj", "{B270F32A-9F3E-42EE-A989-813E35E29ADB}"
@@ -56,10 +54,6 @@ Global
 		{C400533A-8EBA-4F0B-BF4D-295C3708604B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C400533A-8EBA-4F0B-BF4D-295C3708604B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C400533A-8EBA-4F0B-BF4D-295C3708604B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2BD01D53-4CA5-4142-BE8D-313876395E3E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{71CF35F5-3327-4A91-AAF4-5340F6701771}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{71CF35F5-3327-4A91-AAF4-5340F6701771}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71CF35F5-3327-4A91-AAF4-5340F6701771}.Release|Any CPU.ActiveCfg = Release|Any CPU

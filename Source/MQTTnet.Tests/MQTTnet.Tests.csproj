@@ -22,7 +22,6 @@
         <ProjectReference Include="..\..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj" />
         <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
         <ProjectReference Include="..\MQTTnet.Extensions.TopicTemplate\MQTTnet.Extensions.TopicTemplate.csproj" />
-        <ProjectReference Include="..\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj" />
     </ItemGroup>
 
 </Project>

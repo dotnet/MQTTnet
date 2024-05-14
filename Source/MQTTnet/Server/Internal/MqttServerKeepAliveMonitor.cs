@@ -75,7 +75,6 @@ namespace MQTTnet.Server
 
         static void Sleep(TimeSpan timeout)
         {
-#if !NETSTANDARD1_3
             try
             {
                 Thread.Sleep(timeout);
@@ -86,9 +85,6 @@ namespace MQTTnet.Server
                 // So we use a one which is similar and will be catched properly.
                 throw new OperationCanceledException();
             }
-#else
-            Task.Delay(timeout).Wait();
-#endif
         }
 
         void TryProcessClient(MqttClient connection, DateTime now)

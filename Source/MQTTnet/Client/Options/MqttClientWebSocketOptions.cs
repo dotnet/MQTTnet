@@ -30,7 +30,6 @@ namespace MQTTnet.Client
             return Uri;
         }
 
-#if !NETSTANDARD1_3
         /// <summary>
         ///     Gets or sets the keep alive interval for the Web Socket connection.
         ///     This is not related to the keep alive interval for the MQTT protocol.
@@ -42,12 +41,5 @@ namespace MQTTnet.Client
         ///     This is not related to the credentials which are used for the MQTT protocol.
         /// </summary>
         public bool UseDefaultCredentials { get; set; }
-#else
-        /// <summary>
-        ///     Gets or sets the keep alive interval for the Web Socket connection.
-        ///     This is not related to the keep alive interval for the MQTT protocol.
-        /// </summary>
-        public TimeSpan KeepAliveInterval { get; set; } = TimeSpan.FromSeconds(30);
-#endif
     }
 }

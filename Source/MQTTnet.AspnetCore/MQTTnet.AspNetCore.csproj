@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;netcoreapp2.1;netcoreapp3.1;net5.0;net6.0;net7.0</TargetFrameworks>
-
+        <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
         <AssemblyName>MQTTnet.AspNetCore</AssemblyName>
         <RootNamespace>MQTTnet.AspNetCore</RootNamespace>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>

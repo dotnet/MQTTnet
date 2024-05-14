@@ -4,8 +4,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputType>Exe</OutputType>
         <DebugType>Full</DebugType>
-        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-        <LangVersion>7.2</LangVersion>
+        <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
@@ -17,7 +16,7 @@
         <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
         <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     </ItemGroup>
-    
+
     <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
         <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
     </ItemGroup>

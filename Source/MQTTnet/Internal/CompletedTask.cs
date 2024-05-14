@@ -8,10 +8,6 @@ namespace MQTTnet.Internal
 {
     public static class CompletedTask
     {
-#if NET452
-        public static readonly Task Instance = Task.FromResult(true);
-#else
         public static readonly Task Instance = Task.CompletedTask;
-#endif
     }
 }

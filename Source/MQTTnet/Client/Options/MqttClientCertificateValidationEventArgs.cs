@@ -24,13 +24,6 @@ namespace MQTTnet.Client
 
         public IMqttClientChannelOptions ClientOptions { get; }
 
-#if NET452 || NET461 || NET48
-        /// <summary>
-        ///     Can be a host string name or an object derived from WebRequest.
-        /// </summary>
-        public object Sender { get; set; }
-#endif
-
         public SslPolicyErrors SslPolicyErrors { get; }
     }
 }

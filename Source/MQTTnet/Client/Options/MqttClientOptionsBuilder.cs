@@ -57,9 +57,7 @@ namespace MQTTnet.Client
                         IgnoreCertificateChainErrors = _tlsParameters.IgnoreCertificateChainErrors,
                         IgnoreCertificateRevocationErrors = _tlsParameters.IgnoreCertificateRevocationErrors,
                         ClientCertificatesProvider = _tlsParameters.CertificatesProvider,
-#if NETCOREAPP3_1_OR_GREATER
-                        ApplicationProtocols = _tlsParameters.ApplicationProtocols,
-#endif
+                        ApplicationProtocols = _tlsParameters.ApplicationProtocols
                     };
                 }
             }

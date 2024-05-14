@@ -6,9 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-#if NETCOREAPP3_1_OR_GREATER
 using System.Net.Security;
-#endif
 
 namespace MQTTnet.Client
 {
@@ -118,7 +116,6 @@ namespace MQTTnet.Client
             return this;
         }
 
-#if NETCOREAPP3_1_OR_GREATER
         public MqttClientTlsOptionsBuilder WithAllowRenegotiation(bool allowRenegotiation = true)
         {
             _tlsOptions.AllowRenegotiation = allowRenegotiation;
@@ -142,7 +139,6 @@ namespace MQTTnet.Client
             _tlsOptions.EncryptionPolicy = encryptionPolicy;
             return this;
         }
-#endif
 
 #if NET7_0_OR_GREATER
         public MqttClientTlsOptionsBuilder WithTrustChain(X509Certificate2Collection chain)
@@ -150,7 +146,6 @@ namespace MQTTnet.Client
             _tlsOptions.TrustChain = chain;
             return this;
         }
-
 #endif
     }
 }

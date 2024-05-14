@@ -174,13 +174,10 @@ namespace MQTTnet
             return this;
         }
 
-
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
         public MqttApplicationMessageBuilder WithPayloadSegment(ReadOnlyMemory<byte> payloadSegment)
         {
             return MemoryMarshal.TryGetArray(payloadSegment, out var segment) ? WithPayloadSegment(segment) : WithPayload(payloadSegment.ToArray());
         }
-#endif
 
         /// <summary>
         ///     The quality of service level.

@@ -22,11 +22,7 @@ namespace MQTTnet.Internal
 
         public void Clear()
         {
-#if NETCOREAPP3_1_OR_GREATER
             _queue.Clear();
-#else
-            Interlocked.Exchange(ref _queue, new ConcurrentQueue<TItem>());
-#endif
         }
 
         public void Dispose()
@@ -37,7 +33,6 @@ namespace MQTTnet.Internal
 
                 _isDisposed = true;
 
-#if !NETSTANDARD1_3
                 if (typeof(IDisposable).IsAssignableFrom(typeof(TItem)))
                 {
                     while (_queue.TryDequeue(out TItem item))
@@ -45,7 +40,6 @@ namespace MQTTnet.Internal
                         (item as IDisposable).Dispose();
                     }
                 }
-#endif
             }
         }
 

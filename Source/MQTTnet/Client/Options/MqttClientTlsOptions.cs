@@ -34,7 +34,6 @@ namespace MQTTnet.Client
         /// </summary>
         public IMqttClientCertificatesProvider ClientCertificatesProvider { get; set; }
 
-#if NETCOREAPP3_1_OR_GREATER
         public List<SslApplicationProtocol> ApplicationProtocols { get; set; }
 
         public CipherSuitesPolicy CipherSuitesPolicy { get; set; }
@@ -42,7 +41,6 @@ namespace MQTTnet.Client
         public EncryptionPolicy EncryptionPolicy { get; set; } = EncryptionPolicy.RequireEncryption;
 
         public bool AllowRenegotiation { get; set; } = true;
-#endif
 
         /// <summary>
         ///     Gets or sets the target host.
@@ -50,12 +48,7 @@ namespace MQTTnet.Client
         /// </summary>
         public string TargetHost { get; set; }
 
-#if NET48 || NETCOREAPP3_1_OR_GREATER
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;
-
-#else
-        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | (SslProtocols)0x00003000 /*Tls13*/;
-#endif
 
 #if NET7_0_OR_GREATER
         public X509Certificate2Collection TrustChain { get; set; }

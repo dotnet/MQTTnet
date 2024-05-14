@@ -104,24 +104,9 @@ namespace MQTTnet.Implementations
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-#if NET5_0_OR_GREATER
             // MQTT Control Packets MUST be sent in WebSocket binary data frames. If any other type of data frame is received the recipient MUST close the Network Connection [MQTT-6.0.0-1].
             // A single WebSocket data frame can contain multiple or partial MQTT Control Packets. The receiver MUST NOT assume that MQTT Control Packets are aligned on WebSocket frame boundaries [MQTT-6.0.0-2].
             await _webSocket.SendAsync(buffer, WebSocketMessageType.Binary, isEndOfPacket, cancellationToken).ConfigureAwait(false);
-#else
-            // The lock is required because the client will throw an exception if _SendAsync_ is
-            // called from multiple threads at the same time. But this issue only happens with several
-            // framework versions.
-            if (_sendLock == null)
-            {
-                return;
-            }
-
-            using (await _sendLock.EnterAsync(cancellationToken).ConfigureAwait(false))
-            {
-                await _webSocket.SendAsync(buffer, WebSocketMessageType.Binary, isEndOfPacket, cancellationToken).ConfigureAwait(false);
-            }
-#endif
         }
 
         void Cleanup()
@@ -149,9 +134,6 @@ namespace MQTTnet.Implementations
                 return null;
             }
 
-#if NETSTANDARD1_3
-            throw new NotSupportedException("Proxies are not supported when using 'netstandard 1.3'.");
-#else
             var proxyUri = new Uri(_options.ProxyOptions.Address);
             WebProxy webProxy;
 
@@ -173,7 +155,6 @@ namespace MQTTnet.Implementations
             }
 
             return webProxy;
-#endif
         }
 
         void SetupClientWebSocket(ClientWebSocket clientWebSocket)
@@ -213,7 +194,6 @@ namespace MQTTnet.Implementations
                 }
             }
 
-#if !NETSTANDARD1_3
             // Only set the value if it is actually true. This property is not supported on all platforms
             // and will throw a _PlatformNotSupported_ (i.e. WASM) exception when being used regardless of the actual value.
             if (_options.UseDefaultCredentials)
@@ -225,7 +205,7 @@ namespace MQTTnet.Implementations
             {
                 clientWebSocket.Options.KeepAliveInterval = _options.KeepAliveInterval;
             }
-#endif
+
             if (_options.Credentials != null)
             {
                 clientWebSocket.Options.Credentials = _options.Credentials;
@@ -234,28 +214,12 @@ namespace MQTTnet.Implementations
             var certificateValidationHandler = _options.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)
             {
-#if NETSTANDARD1_3
-                throw new NotSupportedException("Remote certificate validation callback is not supported when using 'netstandard1.3'.");
-#elif NETSTANDARD2_0
-                throw new NotSupportedException("Remote certificate validation callback is not supported when using 'netstandard2.0'.");
-#elif NET452 || NET461 || NET48
-                ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) =>
-                {
-                    var context = new MqttClientCertificateValidationEventArgs(certificate, chain, sslPolicyErrors, _options)
-                    {
-                        Sender = sender
-                    };
-
-                    return certificateValidationHandler(context);
-                };
-#else
-                clientWebSocket.Options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
+                clientWebSocket.Options.RemoteCertificateValidationCallback = (_, certificate, chain, sslPolicyErrors) =>
                 {
                     // TODO: Find a way to add client options to same callback. Problem is that they have a different type.
                     var context = new MqttClientCertificateValidationEventArgs(certificate, chain, sslPolicyErrors, _options);
                     return certificateValidationHandler(context);
                 };
-#endif
 
                 var certificateSelectionHandler = _options.TlsOptions?.CertificateSelectionHandler;
                 if (certificateSelectionHandler != null)

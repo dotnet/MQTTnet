@@ -67,19 +67,16 @@ namespace MQTTnet.Client
             return this;
         }
 
-#if !NETSTANDARD1_3
         public MqttClientWebSocketOptionsBuilder WithKeepAliveInterval(TimeSpan keepAliveInterval)
         {
             _webSocketOptions.KeepAliveInterval = keepAliveInterval;
             return this;
         }
-#endif
-#if !NETSTANDARD1_3
+
         public MqttClientWebSocketOptionsBuilder WithUseDefaultCredentials(bool useDefaultCredentials = true)
         {
             _webSocketOptions.UseDefaultCredentials = useDefaultCredentials;
             return this;
         }
-#endif
     }
 }

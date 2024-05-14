@@ -32,7 +32,6 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>1591;NETSDK1138</NoWarn>
-        <LangVersion>7.3</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -44,19 +43,11 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-    </ItemGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <DefineConstants>RELEASE;NETSTANDARD2_0</DefineConstants>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0' and '$(TargetFramework)' != 'netcoreapp2.1' ">
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netcoreapp2.1' ">
-        <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.1.0" />
-    </ItemGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release'">
+    </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />

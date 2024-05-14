@@ -214,9 +214,7 @@ namespace MQTTnet.Implementations
             // https://stackoverflow.com/questions/3601521/should-i-manually-dispose-the-socket-after-closing-it
             try
             {
-#if !NETSTANDARD1_3
                 _stream?.Close();
-#endif
                 _stream?.Dispose();
             }
             catch (ObjectDisposedException)
@@ -249,15 +247,7 @@ namespace MQTTnet.Implementations
                     return 0;
                 }
 
-#if NETCOREAPP3_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
                 return await stream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
-#else
-                // Workaround for: https://github.com/dotnet/corefx/issues/24430
-                using (cancellationToken.Register(_disposeAction))
-                {
-                    return await stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-                }
-#endif
             }
             catch (ObjectDisposedException)
             {
@@ -288,15 +278,7 @@ namespace MQTTnet.Implementations
                     throw new MqttCommunicationException("The TCP connection is closed.");
                 }
 
-#if NETCOREAPP3_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
                 await stream.WriteAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
-#else
-                // Workaround for: https://github.com/dotnet/corefx/issues/24430
-                using (cancellationToken.Register(_disposeAction))
-                {
-                    await stream.WriteAsync(buffer.Array, buffer.Offset, buffer.Count, cancellationToken).ConfigureAwait(false);
-                }
-#endif
             }
             catch (ObjectDisposedException)
             {

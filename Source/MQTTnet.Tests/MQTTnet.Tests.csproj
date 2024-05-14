@@ -10,9 +10,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
-        <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+        <PackageReference Include="MSTest.TestAdapter" Version="3.3.1" />
+        <PackageReference Include="MSTest.TestFramework" Version="3.3.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 

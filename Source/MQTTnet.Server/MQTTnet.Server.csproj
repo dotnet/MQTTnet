@@ -10,7 +10,7 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <Description>This is the server implementation of MQTTnet.</Description>
         <Authors>The contributors of MQTTnet</Authors>
-        <PackageId>MQTTnet</PackageId>
+        <PackageId>MQTTnet.Server</PackageId>
         <DelaySign>false</DelaySign>
         <SignAssembly>false</SignAssembly>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -46,7 +46,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     </ItemGroup>
 
 </Project>

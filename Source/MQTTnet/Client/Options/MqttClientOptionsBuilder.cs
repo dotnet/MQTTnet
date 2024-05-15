@@ -230,16 +230,6 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    /// <summary>
-    ///     The client will not throw an exception when the MQTT server responds with a non success ACK packet.
-    ///     This will become the default behavior in future versions of the library.
-    /// </summary>
-    public MqttClientOptionsBuilder WithoutThrowOnNonSuccessfulConnectResponse()
-    {
-        _options.ThrowOnNonSuccessfulConnectResponse = false;
-        return this;
-    }
-
     public MqttClientOptionsBuilder WithProtocolType(ProtocolType protocolType)
     {
         _tcpOptions.ProtocolType = protocolType;

@@ -220,7 +220,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 var client = testEnvironment.CreateClient();
 
-                var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptionsBuilder().WithoutThrowOnNonSuccessfulConnectResponse().Build());
+                var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptionsBuilder().Build());
 
                 Assert.IsNotNull(response);
                 Assert.AreEqual(MqttClientConnectResultCode.QuotaExceeded, response.ResultCode);

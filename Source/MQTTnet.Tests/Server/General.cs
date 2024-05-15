@@ -102,8 +102,10 @@ namespace MQTTnet.Tests.Server
                     return CompletedTask.Instance;
                 };
 
-                var connectingFailedException = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(() => testEnvironment.ConnectClient());
-                Assert.AreEqual(MqttClientConnectResultCode.NotAuthorized, connectingFailedException.ResultCode);
+                var client = testEnvironment.CreateClient();
+                var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptions());
+
+                Assert.AreEqual(MqttClientConnectResultCode.NotAuthorized, response.ResultCode);
             }
         }
 

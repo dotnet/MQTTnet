@@ -105,11 +105,6 @@ public sealed class MqttClientOptions
     public uint SessionExpiryInterval { get; set; }
 
     /// <summary>
-    ///     Gets or sets whether an exception should be thrown when the server has sent a non success ACK packet.
-    /// </summary>
-    public bool ThrowOnNonSuccessfulConnectResponse { get; set; } = true;
-
-    /// <summary>
     ///     Gets or sets the timeout which will be applied at socket level and internal operations.
     ///     The default value is the same as for sockets in .NET in general.
     /// </summary>

@@ -171,11 +171,6 @@ public sealed class MqttClient : Disposable, IMqttClient
         }
         catch (Exception exception)
         {
-            if (exception is MqttConnectingFailedException connectingFailedException)
-            {
-                connectResult = connectingFailedException.Result;
-            }
-
             _disconnectReason = (int)MqttClientDisconnectOptionsReason.UnspecifiedError;
 
             _logger.Error(exception, "Error while connecting with server");
@@ -479,20 +474,7 @@ public sealed class MqttClient : Disposable, IMqttClient
         }
         catch (Exception exception)
         {
-            throw new MqttConnectingFailedException($"Error while authenticating. {exception.Message}", exception, null);
-        }
-
-        // This is no feature. It is basically a backward compatibility option and should be removed in the future.
-        // The client should not throw any exception if the transport layer connection was successful and the server
-        // did send a proper ACK packet with a non success response.
-        if (options.ThrowOnNonSuccessfulConnectResponse)
-        {
-            if (result.ResultCode != MqttClientConnectResultCode.Success)
-            {
-                _logger.Warning(
-                    "Client will now throw an _MqttConnectingFailedException_. This is obsolete and will be removed in the future. Consider setting _ThrowOnNonSuccessfulResponseFromServer=False_ in client options.");
-                throw new MqttConnectingFailedException($"Connecting with MQTT server failed ({result.ResultCode}).", null, result);
-            }
+            throw new MqttConnectingFailedException($"Error while authenticating. {exception.Message}", exception);
         }
 
         _logger.Verbose("Authenticated MQTT connection with server established.");

@@ -7,15 +7,17 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Server;
 
-namespace MQTTnet.AspNetCore
+namespace MQTTnet.AspNetCore;
+
+public static class ApplicationBuilderExtensions
 {
-    public static class ApplicationBuilderExtensions
+    [Obsolete(
+        "This class is obsolete and will be removed in a future version. The recommended alternative is to use MapMqtt inside Microsoft.AspNetCore.Builder.UseEndpoints(...).")]
+    public static IApplicationBuilder UseMqttEndpoint(this IApplicationBuilder app, string path = "/mqtt")
     {
-        [Obsolete("This class is obsolete and will be removed in a future version. The recommended alternative is to use MapMqtt inside Microsoft.AspNetCore.Builder.UseEndpoints(...).")]
-        public static IApplicationBuilder UseMqttEndpoint(this IApplicationBuilder app, string path = "/mqtt")
-        {
-            app.UseWebSockets();
-            app.Use(async (context, next) =>
+        app.UseWebSockets();
+        app.Use(
+            async (context, next) =>
             {
                 if (!context.WebSockets.IsWebSocketRequest || context.Request.Path != path)
                 {
@@ -37,16 +39,15 @@ namespace MQTTnet.AspNetCore
                 }
             });
 
-            return app;
-        }
+        return app;
+    }
 
-        public static IApplicationBuilder UseMqttServer(this IApplicationBuilder app, Action<MqttServer> configure)
-        {
-            var server = app.ApplicationServices.GetRequiredService<MqttServer>();
+    public static IApplicationBuilder UseMqttServer(this IApplicationBuilder app, Action<MqttServer> configure)
+    {
+        var server = app.ApplicationServices.GetRequiredService<MqttServer>();
 
-            configure(server);
+        configure(server);
 
-            return app;
-        }
+        return app;
     }
 }

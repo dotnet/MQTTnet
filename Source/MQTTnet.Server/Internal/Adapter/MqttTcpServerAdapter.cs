@@ -8,7 +8,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 
-namespace MQTTnet.Server.Adapter
+namespace MQTTnet.Server.Internal.Adapter
 {
     public sealed class MqttTcpServerAdapter : IMqttServerAdapter
     {

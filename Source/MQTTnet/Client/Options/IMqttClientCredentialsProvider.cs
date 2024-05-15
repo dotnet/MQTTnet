@@ -2,12 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Client
-{
-    public interface IMqttClientCredentialsProvider
-    {
-        string GetUserName(MqttClientOptions clientOptions);
+namespace MQTTnet.Client;
 
-        byte[] GetPassword(MqttClientOptions clientOptions);
-    }
+public interface IMqttClientCredentialsProvider
+{
+    byte[] GetPassword(MqttClientOptions clientOptions);
+    string GetUserName(MqttClientOptions clientOptions);
 }

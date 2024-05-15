@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Server.Internal;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Server

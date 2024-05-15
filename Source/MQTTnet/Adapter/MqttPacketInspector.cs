@@ -9,91 +9,90 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 
-namespace MQTTnet.Adapter
+namespace MQTTnet.Adapter;
+
+public sealed class MqttPacketInspector
 {
-    public sealed class MqttPacketInspector
+    readonly AsyncEvent<InspectMqttPacketEventArgs> _asyncEvent;
+    readonly MqttNetSourceLogger _logger;
+
+    MemoryStream _receivedPacketBuffer;
+
+    public MqttPacketInspector(AsyncEvent<InspectMqttPacketEventArgs> asyncEvent, IMqttNetLogger logger)
     {
-        readonly AsyncEvent<InspectMqttPacketEventArgs> _asyncEvent;
-        readonly MqttNetSourceLogger _logger;
+        _asyncEvent = asyncEvent ?? throw new ArgumentNullException(nameof(asyncEvent));
 
-        MemoryStream _receivedPacketBuffer;
-
-        public MqttPacketInspector(AsyncEvent<InspectMqttPacketEventArgs> asyncEvent, IMqttNetLogger logger)
+        if (logger == null)
         {
-            _asyncEvent = asyncEvent ?? throw new ArgumentNullException(nameof(asyncEvent));
-
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger));
-            }
-
-            _logger = logger.WithSource(nameof(MqttPacketInspector));
+            throw new ArgumentNullException(nameof(logger));
         }
 
-        public void BeginReceivePacket()
+        _logger = logger.WithSource(nameof(MqttPacketInspector));
+    }
+
+    public void BeginReceivePacket()
+    {
+        if (!_asyncEvent.HasHandlers)
         {
-            if (!_asyncEvent.HasHandlers)
-            {
-                return;
-            }
-
-            if (_receivedPacketBuffer == null)
-            {
-                _receivedPacketBuffer = new MemoryStream();
-            }
-
-            _receivedPacketBuffer?.SetLength(0);
+            return;
         }
 
-        public Task BeginSendPacket(MqttPacketBuffer buffer)
+        if (_receivedPacketBuffer == null)
         {
-            if (!_asyncEvent.HasHandlers)
-            {
-                return CompletedTask.Instance;
-            }
-
-            // Create a copy of the actual packet so that the inspector gets no access
-            // to the internal buffers. This is waste of memory but this feature is only
-            // intended for debugging etc. so that this is OK.
-            var bufferCopy = buffer.ToArray();
-
-            return InspectPacket(bufferCopy, MqttPacketFlowDirection.Outbound);
+            _receivedPacketBuffer = new MemoryStream();
         }
 
-        public Task EndReceivePacket()
+        _receivedPacketBuffer?.SetLength(0);
+    }
+
+    public Task BeginSendPacket(MqttPacketBuffer buffer)
+    {
+        if (!_asyncEvent.HasHandlers)
         {
-            if (!_asyncEvent.HasHandlers)
-            {
-                return CompletedTask.Instance;
-            }
-
-            var buffer = _receivedPacketBuffer.ToArray();
-            _receivedPacketBuffer.SetLength(0);
-
-            return InspectPacket(buffer, MqttPacketFlowDirection.Inbound);
+            return CompletedTask.Instance;
         }
 
-        public void FillReceiveBuffer(byte[] buffer)
-        {
-            if (!_asyncEvent.HasHandlers)
-            {
-                return;
-            }
+        // Create a copy of the actual packet so that the inspector gets no access
+        // to the internal buffers. This is waste of memory but this feature is only
+        // intended for debugging etc. so that this is OK.
+        var bufferCopy = buffer.ToArray();
 
-            _receivedPacketBuffer?.Write(buffer, 0, buffer.Length);
+        return InspectPacket(bufferCopy, MqttPacketFlowDirection.Outbound);
+    }
+
+    public Task EndReceivePacket()
+    {
+        if (!_asyncEvent.HasHandlers)
+        {
+            return CompletedTask.Instance;
         }
 
-        async Task InspectPacket(byte[] buffer, MqttPacketFlowDirection direction)
+        var buffer = _receivedPacketBuffer.ToArray();
+        _receivedPacketBuffer.SetLength(0);
+
+        return InspectPacket(buffer, MqttPacketFlowDirection.Inbound);
+    }
+
+    public void FillReceiveBuffer(byte[] buffer)
+    {
+        if (!_asyncEvent.HasHandlers)
         {
-            try
-            {
-                var eventArgs = new InspectMqttPacketEventArgs(direction, buffer);
-                await _asyncEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                _logger.Error(exception, "Error while inspecting packet.");
-            }
+            return;
+        }
+
+        _receivedPacketBuffer?.Write(buffer, 0, buffer.Length);
+    }
+
+    async Task InspectPacket(byte[] buffer, MqttPacketFlowDirection direction)
+    {
+        try
+        {
+            var eventArgs = new InspectMqttPacketEventArgs(direction, buffer);
+            await _asyncEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logger.Error(exception, "Error while inspecting packet.");
         }
     }
 }

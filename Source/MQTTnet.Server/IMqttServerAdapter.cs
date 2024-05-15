@@ -5,7 +5,7 @@
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 
-namespace MQTTnet.Server.Adapter;
+namespace MQTTnet.Server;
 
 public interface IMqttServerAdapter : IDisposable
 {

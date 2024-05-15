@@ -12,7 +12,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Internal;
 
-namespace MQTTnet.Server.Adapter
+namespace MQTTnet.Server.Internal.Adapter
 {
     public sealed class MqttTcpServerListener : IDisposable
     {

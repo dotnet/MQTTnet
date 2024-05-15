@@ -4,15 +4,14 @@
 
 using System;
 
-namespace MQTTnet.Client
-{
-    public sealed class MqttClientConnectingEventArgs : EventArgs
-    {
-        public MqttClientConnectingEventArgs(MqttClientOptions clientOptions)
-        {
-            ClientOptions = clientOptions;
-        }
+namespace MQTTnet.Client;
 
-        public MqttClientOptions ClientOptions { get; }
+public sealed class MqttClientConnectingEventArgs : EventArgs
+{
+    public MqttClientConnectingEventArgs(MqttClientOptions clientOptions)
+    {
+        ClientOptions = clientOptions;
     }
+
+    public MqttClientOptions ClientOptions { get; }
 }

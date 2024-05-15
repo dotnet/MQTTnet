@@ -2,15 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
-using MQTTnet.Server.Disconnecting;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server.Internal
 {
     public sealed class MqttServerKeepAliveMonitor
     {
@@ -97,7 +93,7 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                if (connection.KeepAlivePeriod == 0)
+                if (connection.ConnectPacket.KeepAlivePeriod == 0)
                 {
                     // The keep alive feature is not used by the current connection.
                     return;
@@ -106,7 +102,7 @@ namespace MQTTnet.Server
                 // Values described here: [MQTT-3.1.2-24].
                 // If the client sends 5 sec. the server will allow up to 7.5 seconds.
                 // If the client sends 1 sec. the server will allow up to 1.5 seconds.
-                var maxSecondsWithoutPacket = connection.KeepAlivePeriod * 1.5D;
+                var maxSecondsWithoutPacket = connection.ConnectPacket.KeepAlivePeriod * 1.5D;
 
                 var secondsWithoutPackage = (now - connection.Statistics.LastPacketSentTimestamp).TotalSeconds;
                 if (secondsWithoutPackage < maxSecondsWithoutPacket)

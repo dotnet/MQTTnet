@@ -2,10 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Client
+namespace MQTTnet.Client;
+
+public interface IMqttClientChannelOptions
 {
-    public interface IMqttClientChannelOptions
-    {
-        MqttClientTlsOptions TlsOptions { get; }
-    }
+    MqttClientTlsOptions TlsOptions { get; }
 }

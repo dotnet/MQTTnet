@@ -13,7 +13,6 @@ namespace MQTTnet.Samples.Server;
 // ReSharper disable InconsistentNaming
 // ReSharper disable EmptyConstructor
 // ReSharper disable MemberCanBeMadeStatic.Local
-
 public static class Server_Diagnostics_Samples
 {
     public static async Task Get_Notified_When_Client_Received_Message()

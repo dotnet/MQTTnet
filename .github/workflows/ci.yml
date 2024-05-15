@@ -32,13 +32,13 @@ jobs:
       - name: Build solution
         run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}/certificate.snk
 
-      - name: Collect nuget Packages
+      - name: Collect nuget packages
         uses: actions/upload-artifact@v2
         with:
           name: nuget Packages
           path: |
-            **\*.nupkg
-            **\*.snupkg
+            **/*.nupkg
+            **/*.snupkg
 
       - name: Execute tests
         run: dotnet test --no-restore --framework net8.0 Source/MQTTnet.Tests/MQTTnet.Tests.csproj

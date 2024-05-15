@@ -6,42 +6,41 @@ using System;
 using System.Collections.Generic;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Client
+namespace MQTTnet.Client;
+
+public sealed class MqttClientUnsubscribeResult
 {
-    public sealed class MqttClientUnsubscribeResult
+    public MqttClientUnsubscribeResult(
+        ushort packetIdentifier,
+        IReadOnlyCollection<MqttClientUnsubscribeResultItem> items,
+        string reasonString,
+        IReadOnlyCollection<MqttUserProperty> userProperties)
     {
-        public MqttClientUnsubscribeResult(
-            ushort packetIdentifier,
-            IReadOnlyCollection<MqttClientUnsubscribeResultItem> items,
-            string reasonString,
-            IReadOnlyCollection<MqttUserProperty> userProperties)
-        {
-            PacketIdentifier = packetIdentifier;
-            Items = items ?? throw new ArgumentNullException(nameof(items));
-            ReasonString = reasonString;
-            UserProperties = userProperties ?? throw new ArgumentNullException(nameof(userProperties));
-        }
-
-        /// <summary>
-        ///     Gets the result for every topic filter item.
-        /// </summary>
-        public IReadOnlyCollection<MqttClientUnsubscribeResultItem> Items { get; }
-
-        /// <summary>
-        ///     Gets the packet identifier which was used.
-        /// </summary>
-        public ushort PacketIdentifier { get; }
-
-        /// <summary>
-        ///     Gets the reason string.
-        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
-        /// </summary>
-        public string ReasonString { get; }
-
-        /// <summary>
-        ///     Gets the user properties which were part of the UNSUBACK packet.
-        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
-        /// </summary>
-        public IReadOnlyCollection<MqttUserProperty> UserProperties { get; set; }
+        PacketIdentifier = packetIdentifier;
+        Items = items ?? throw new ArgumentNullException(nameof(items));
+        ReasonString = reasonString;
+        UserProperties = userProperties ?? throw new ArgumentNullException(nameof(userProperties));
     }
+
+    /// <summary>
+    ///     Gets the result for every topic filter item.
+    /// </summary>
+    public IReadOnlyCollection<MqttClientUnsubscribeResultItem> Items { get; }
+
+    /// <summary>
+    ///     Gets the packet identifier which was used.
+    /// </summary>
+    public ushort PacketIdentifier { get; }
+
+    /// <summary>
+    ///     Gets the reason string.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public string ReasonString { get; }
+
+    /// <summary>
+    ///     Gets the user properties which were part of the UNSUBACK packet.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public IReadOnlyCollection<MqttUserProperty> UserProperties { get; set; }
 }

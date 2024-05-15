@@ -42,16 +42,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release'">
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MQTTnet.Server\MQTTnet.Server.csproj" />
-        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+        <ProjectReference Include="..\MQTTnet.Server\MQTTnet.Server.csproj"/>
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
     </ItemGroup>
 
 </Project>

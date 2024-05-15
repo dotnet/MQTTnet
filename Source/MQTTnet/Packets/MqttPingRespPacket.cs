@@ -2,16 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Packets
-{
-    public sealed class MqttPingRespPacket : MqttPacket
-    {
-        // This is a minor performance improvement.
-        public static readonly MqttPingRespPacket Instance = new MqttPingRespPacket();
+namespace MQTTnet.Packets;
 
-        public override string ToString()
-        {
-            return "PingResp";
-        }
+public sealed class MqttPingRespPacket : MqttPacket
+{
+    // This is a minor performance improvement.
+    public static readonly MqttPingRespPacket Instance = new();
+
+    public override string ToString()
+    {
+        return "PingResp";
     }
 }

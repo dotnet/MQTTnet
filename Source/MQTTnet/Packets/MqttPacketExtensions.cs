@@ -4,98 +4,97 @@
 
 using System;
 
-namespace MQTTnet.Packets
+namespace MQTTnet.Packets;
+
+public static class MqttPacketExtensions
 {
-    public static class MqttPacketExtensions
+    public static string GetRfcName(this MqttPacket packet)
     {
-        public static string GetRfcName(this MqttPacket packet)
+        if (packet == null)
         {
-            if (packet == null)
+            throw new ArgumentNullException(nameof(packet));
+        }
+
+        switch (packet)
+        {
+            case MqttConnectPacket _:
             {
-                throw new ArgumentNullException(nameof(packet));
+                return "CONNECT";
             }
 
-            switch (packet)
+            case MqttConnAckPacket _:
             {
-                case MqttConnectPacket _:
-                {
-                    return "CONNECT";
-                }
+                return "CONNACK";
+            }
 
-                case MqttConnAckPacket _:
-                {
-                    return "CONNACK";
-                }
+            case MqttAuthPacket _:
+            {
+                return "AUTH";
+            }
 
-                case MqttAuthPacket _:
-                {
-                    return "AUTH";
-                }
+            case MqttDisconnectPacket _:
+            {
+                return "DISCONNECT";
+            }
 
-                case MqttDisconnectPacket _:
-                {
-                    return "DISCONNECT";
-                }
+            case MqttPingReqPacket _:
+            {
+                return "PINGREQ";
+            }
 
-                case MqttPingReqPacket _:
-                {
-                    return "PINGREQ";
-                }
+            case MqttPingRespPacket _:
+            {
+                return "PINGRESP";
+            }
 
-                case MqttPingRespPacket _:
-                {
-                    return "PINGRESP";
-                }
+            case MqttSubscribePacket _:
+            {
+                return "SUBSCRIBE";
+            }
 
-                case MqttSubscribePacket _:
-                {
-                    return "SUBSCRIBE";
-                }
+            case MqttSubAckPacket _:
+            {
+                return "SUBACK";
+            }
 
-                case MqttSubAckPacket _:
-                {
-                    return "SUBACK";
-                }
+            case MqttUnsubscribePacket _:
+            {
+                return "UNSUBSCRIBE";
+            }
 
-                case MqttUnsubscribePacket _:
-                {
-                    return "UNSUBSCRIBE";
-                }
+            case MqttUnsubAckPacket _:
+            {
+                return "UNSUBACK";
+            }
 
-                case MqttUnsubAckPacket _:
-                {
-                    return "UNSUBACK";
-                }
+            case MqttPublishPacket _:
+            {
+                return "PUBLISH";
+            }
 
-                case MqttPublishPacket _:
-                {
-                    return "PUBLISH";
-                }
+            case MqttPubAckPacket _:
+            {
+                return "PUBACK";
+            }
 
-                case MqttPubAckPacket _:
-                {
-                    return "PUBACK";
-                }
+            case MqttPubRelPacket _:
+            {
+                return "PUBREL";
+            }
 
-                case MqttPubRelPacket _:
-                {
-                    return "PUBREL";
-                }
+            case MqttPubRecPacket _:
+            {
+                return "PUBREC";
+            }
 
-                case MqttPubRecPacket _:
-                {
-                    return "PUBREC";
-                }
+            case MqttPubCompPacket _:
+            {
+                return "PUBCOMP";
+            }
 
-                case MqttPubCompPacket _:
-                {
-                    return "PUBCOMP";
-                }
-                
-                default:
-                {
-                    return packet.GetType().Name;
-                }
+            default:
+            {
+                return packet.GetType().Name;
             }
         }
     }

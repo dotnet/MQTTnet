@@ -11,61 +11,59 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
-using MQTTnet.Server.Adapter;
 
-namespace MQTTnet.AspNetCore
+namespace MQTTnet.AspNetCore;
+
+public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter
 {
-    public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter
+    IMqttNetLogger _logger = MqttNetNullLogger.Instance;
+
+    public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
+
+    public void Dispose()
     {
-        IMqttNetLogger _logger = MqttNetNullLogger.Instance;
+    }
 
-        public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
-
-        public void Dispose()
+    public async Task RunWebSocketConnectionAsync(WebSocket webSocket, HttpContext httpContext)
+    {
+        if (webSocket == null)
         {
+            throw new ArgumentNullException(nameof(webSocket));
         }
 
-        public async Task RunWebSocketConnectionAsync(WebSocket webSocket, HttpContext httpContext)
+        var endpoint = $"{httpContext.Connection.RemoteIpAddress}:{httpContext.Connection.RemotePort}";
+
+        var clientCertificate = await httpContext.Connection.GetClientCertificateAsync().ConfigureAwait(false);
+        try
         {
-            if (webSocket == null)
+            var isSecureConnection = clientCertificate != null;
+
+            var clientHandler = ClientHandler;
+            if (clientHandler != null)
             {
-                throw new ArgumentNullException(nameof(webSocket));
-            }
+                var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
+                var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection, clientCertificate);
 
-            var endpoint = $"{httpContext.Connection.RemoteIpAddress}:{httpContext.Connection.RemotePort}";
-
-            var clientCertificate = await httpContext.Connection.GetClientCertificateAsync().ConfigureAwait(false);
-            try
-            {
-                var isSecureConnection = clientCertificate != null;
-
-                var clientHandler = ClientHandler;
-                if (clientHandler != null)
+                using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger))
                 {
-                    var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
-                    var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection, clientCertificate);
-
-                    using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger))
-                    {
-                        await clientHandler(channelAdapter).ConfigureAwait(false);
-                    }
+                    await clientHandler(channelAdapter).ConfigureAwait(false);
                 }
             }
-            finally
-            {
-                clientCertificate?.Dispose();
-            }
         }
-
-        public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
+        finally
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            return Task.CompletedTask;
+            clientCertificate?.Dispose();
         }
+    }
 
-        public Task StopAsync()
-        {
-            return Task.CompletedTask;
-        }
+    public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync()
+    {
+        return Task.CompletedTask;
     }
 }

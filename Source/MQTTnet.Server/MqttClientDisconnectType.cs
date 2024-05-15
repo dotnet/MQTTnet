@@ -2,12 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server;
+
+public enum MqttClientDisconnectType
 {
-    public enum MqttClientDisconnectType
-    {
-        Clean,
-        NotClean,
-        Takeover
-    }
+    Clean,
+    NotClean,
+    Takeover
 }

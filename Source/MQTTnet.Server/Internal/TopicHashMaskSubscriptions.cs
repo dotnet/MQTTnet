@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-
-namespace MQTTnet.Server
+namespace MQTTnet.Server.Internal
 {
     /// <summary>
     ///     Helper class that stores subscriptions by their topic hash mask.

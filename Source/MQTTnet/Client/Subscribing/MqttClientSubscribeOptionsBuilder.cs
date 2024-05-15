@@ -8,100 +8,99 @@ using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Client
+namespace MQTTnet.Client;
+
+public sealed class MqttClientSubscribeOptionsBuilder
 {
-    public sealed class MqttClientSubscribeOptionsBuilder
+    readonly MqttClientSubscribeOptions _subscribeOptions = new();
+
+    public MqttClientSubscribeOptions Build()
     {
-        readonly MqttClientSubscribeOptions _subscribeOptions = new MqttClientSubscribeOptions();
+        return _subscribeOptions;
+    }
 
-        public MqttClientSubscribeOptions Build()
+    public MqttClientSubscribeOptionsBuilder WithSubscriptionIdentifier(uint subscriptionIdentifier)
+    {
+        if (subscriptionIdentifier == 0)
         {
-            return _subscribeOptions;
+            throw new MqttProtocolViolationException("Subscription identifier cannot be 0.");
         }
 
-        public MqttClientSubscribeOptionsBuilder WithSubscriptionIdentifier(uint subscriptionIdentifier)
-        {
-            if (subscriptionIdentifier == 0)
+        _subscribeOptions.SubscriptionIdentifier = subscriptionIdentifier;
+        return this;
+    }
+
+    public MqttClientSubscribeOptionsBuilder WithTopicFilter(
+        string topic,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool noLocal = false,
+        bool retainAsPublished = false,
+        MqttRetainHandling retainHandling = MqttRetainHandling.SendAtSubscribe)
+    {
+        return WithTopicFilter(
+            new MqttTopicFilter
             {
-                throw new MqttProtocolViolationException("Subscription identifier cannot be 0.");
-            }
+                Topic = topic,
+                QualityOfServiceLevel = qualityOfServiceLevel,
+                NoLocal = noLocal,
+                RetainAsPublished = retainAsPublished,
+                RetainHandling = retainHandling
+            });
+    }
 
-            _subscribeOptions.SubscriptionIdentifier = subscriptionIdentifier;
-            return this;
-        }
-
-        public MqttClientSubscribeOptionsBuilder WithTopicFilter(
-            string topic,
-            MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
-            bool noLocal = false,
-            bool retainAsPublished = false,
-            MqttRetainHandling retainHandling = MqttRetainHandling.SendAtSubscribe)
+    public MqttClientSubscribeOptionsBuilder WithTopicFilter(Action<MqttTopicFilterBuilder> topicFilterBuilder)
+    {
+        if (topicFilterBuilder == null)
         {
-            return WithTopicFilter(
-                new MqttTopicFilter
-                {
-                    Topic = topic,
-                    QualityOfServiceLevel = qualityOfServiceLevel,
-                    NoLocal = noLocal,
-                    RetainAsPublished = retainAsPublished,
-                    RetainHandling = retainHandling
-                });
+            throw new ArgumentNullException(nameof(topicFilterBuilder));
         }
 
-        public MqttClientSubscribeOptionsBuilder WithTopicFilter(Action<MqttTopicFilterBuilder> topicFilterBuilder)
+        var internalTopicFilterBuilder = new MqttTopicFilterBuilder();
+        topicFilterBuilder(internalTopicFilterBuilder);
+
+        return WithTopicFilter(internalTopicFilterBuilder);
+    }
+
+    public MqttClientSubscribeOptionsBuilder WithTopicFilter(MqttTopicFilterBuilder topicFilterBuilder)
+    {
+        if (topicFilterBuilder == null)
         {
-            if (topicFilterBuilder == null)
-            {
-                throw new ArgumentNullException(nameof(topicFilterBuilder));
-            }
-
-            var internalTopicFilterBuilder = new MqttTopicFilterBuilder();
-            topicFilterBuilder(internalTopicFilterBuilder);
-
-            return WithTopicFilter(internalTopicFilterBuilder);
+            throw new ArgumentNullException(nameof(topicFilterBuilder));
         }
 
-        public MqttClientSubscribeOptionsBuilder WithTopicFilter(MqttTopicFilterBuilder topicFilterBuilder)
+        return WithTopicFilter(topicFilterBuilder.Build());
+    }
+
+    public MqttClientSubscribeOptionsBuilder WithTopicFilter(MqttTopicFilter topicFilter)
+    {
+        if (topicFilter == null)
         {
-            if (topicFilterBuilder == null)
-            {
-                throw new ArgumentNullException(nameof(topicFilterBuilder));
-            }
-
-            return WithTopicFilter(topicFilterBuilder.Build());
+            throw new ArgumentNullException(nameof(topicFilter));
         }
 
-        public MqttClientSubscribeOptionsBuilder WithTopicFilter(MqttTopicFilter topicFilter)
+        if (_subscribeOptions.TopicFilters == null)
         {
-            if (topicFilter == null)
-            {
-                throw new ArgumentNullException(nameof(topicFilter));
-            }
-
-            if (_subscribeOptions.TopicFilters == null)
-            {
-                _subscribeOptions.TopicFilters = new List<MqttTopicFilter>();
-            }
-
-            _subscribeOptions.TopicFilters.Add(topicFilter);
-
-            return this;
+            _subscribeOptions.TopicFilters = new List<MqttTopicFilter>();
         }
 
-        /// <summary>
-        ///     Adds the user property to the subscribe options.
-        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
-        /// </summary>
-        public MqttClientSubscribeOptionsBuilder WithUserProperty(string name, string value)
+        _subscribeOptions.TopicFilters.Add(topicFilter);
+
+        return this;
+    }
+
+    /// <summary>
+    ///     Adds the user property to the subscribe options.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public MqttClientSubscribeOptionsBuilder WithUserProperty(string name, string value)
+    {
+        if (_subscribeOptions.UserProperties == null)
         {
-            if (_subscribeOptions.UserProperties == null)
-            {
-                _subscribeOptions.UserProperties = new List<MqttUserProperty>();
-            }
-
-            _subscribeOptions.UserProperties.Add(new MqttUserProperty(name, value));
-
-            return this;
+            _subscribeOptions.UserProperties = new List<MqttUserProperty>();
         }
+
+        _subscribeOptions.UserProperties.Add(new MqttUserProperty(name, value));
+
+        return this;
     }
 }

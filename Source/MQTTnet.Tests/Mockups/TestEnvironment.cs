@@ -398,7 +398,7 @@ namespace MQTTnet.Tests.Mockups
 
             var options = optionsBuilder.Build();
             var server = CreateServer(options);
-            await server.StartAsync();
+            await server.StartAsync().ConfigureAwait(false);
 
             // The OS has chosen the port to we have to properly expose it to the tests.
             ServerPort = options.DefaultEndpointOptions.Port;

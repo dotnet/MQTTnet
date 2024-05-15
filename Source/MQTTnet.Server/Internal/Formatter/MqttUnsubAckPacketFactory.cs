@@ -4,7 +4,7 @@
 
 using MQTTnet.Packets;
 
-namespace MQTTnet.Server.Formatter
+namespace MQTTnet.Server.Internal.Formatter
 {
     public static class MqttUnsubAckPacketFactory
     {

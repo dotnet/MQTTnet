@@ -5,10 +5,9 @@
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
 
-namespace MQTTnet.Adapter
+namespace MQTTnet.Adapter;
+
+public interface IMqttClientAdapterFactory
 {
-    public interface IMqttClientAdapterFactory
-    {
-        IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger);
-    }
+    IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger);
 }

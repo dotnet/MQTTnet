@@ -3,8 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Diagnostics;
-using MQTTnet.Server.Adapter;
-using MQTTnet.Server.Disconnecting;
+using MQTTnet.Server.Internal.Adapter;
 
 namespace MQTTnet.Server;
 

@@ -6,54 +6,53 @@ using System;
 using MQTTnet.Client;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Formatter
+namespace MQTTnet.Formatter;
+
+public static class MqttConnectPacketFactory
 {
-    public sealed class MqttConnectPacketFactory
+    public static MqttConnectPacket Create(MqttClientOptions clientOptions)
     {
-        public MqttConnectPacket Create(MqttClientOptions clientOptions)
+        if (clientOptions == null)
         {
-            if (clientOptions == null)
-            {
-                throw new ArgumentNullException(nameof(clientOptions));
-            }
-
-            var connectPacket = new MqttConnectPacket
-            {
-                ClientId = clientOptions.ClientId,
-                Username = clientOptions.Credentials?.GetUserName(clientOptions),
-                Password = clientOptions.Credentials?.GetPassword(clientOptions),
-                CleanSession = clientOptions.CleanSession,
-                KeepAlivePeriod = (ushort)clientOptions.KeepAlivePeriod.TotalSeconds,
-                AuthenticationMethod = clientOptions.AuthenticationMethod,
-                AuthenticationData = clientOptions.AuthenticationData,
-                WillDelayInterval = clientOptions.WillDelayInterval,
-                MaximumPacketSize = clientOptions.MaximumPacketSize,
-                ReceiveMaximum = clientOptions.ReceiveMaximum,
-                RequestProblemInformation = clientOptions.RequestProblemInformation,
-                RequestResponseInformation = clientOptions.RequestResponseInformation,
-                SessionExpiryInterval = clientOptions.SessionExpiryInterval,
-                TopicAliasMaximum = clientOptions.TopicAliasMaximum,
-                UserProperties = clientOptions.UserProperties,
-                TryPrivate = clientOptions.TryPrivate
-            };
-
-            if (!string.IsNullOrEmpty(clientOptions.WillTopic))
-            {
-                connectPacket.WillFlag = true;
-                connectPacket.WillTopic = clientOptions.WillTopic;
-                connectPacket.WillQoS = clientOptions.WillQualityOfServiceLevel;
-                connectPacket.WillMessage = clientOptions.WillPayload;
-                connectPacket.WillRetain = clientOptions.WillRetain;
-                connectPacket.WillDelayInterval = clientOptions.WillDelayInterval;
-                connectPacket.WillContentType = clientOptions.WillContentType;
-                connectPacket.WillCorrelationData = clientOptions.WillCorrelationData;
-                connectPacket.WillResponseTopic = clientOptions.WillResponseTopic;
-                connectPacket.WillMessageExpiryInterval = clientOptions.WillMessageExpiryInterval;
-                connectPacket.WillPayloadFormatIndicator = clientOptions.WillPayloadFormatIndicator;
-                connectPacket.WillUserProperties = clientOptions.WillUserProperties;
-            }
-
-            return connectPacket;
+            throw new ArgumentNullException(nameof(clientOptions));
         }
+
+        var connectPacket = new MqttConnectPacket
+        {
+            ClientId = clientOptions.ClientId,
+            Username = clientOptions.Credentials?.GetUserName(clientOptions),
+            Password = clientOptions.Credentials?.GetPassword(clientOptions),
+            CleanSession = clientOptions.CleanSession,
+            KeepAlivePeriod = (ushort)clientOptions.KeepAlivePeriod.TotalSeconds,
+            AuthenticationMethod = clientOptions.AuthenticationMethod,
+            AuthenticationData = clientOptions.AuthenticationData,
+            WillDelayInterval = clientOptions.WillDelayInterval,
+            MaximumPacketSize = clientOptions.MaximumPacketSize,
+            ReceiveMaximum = clientOptions.ReceiveMaximum,
+            RequestProblemInformation = clientOptions.RequestProblemInformation,
+            RequestResponseInformation = clientOptions.RequestResponseInformation,
+            SessionExpiryInterval = clientOptions.SessionExpiryInterval,
+            TopicAliasMaximum = clientOptions.TopicAliasMaximum,
+            UserProperties = clientOptions.UserProperties,
+            TryPrivate = clientOptions.TryPrivate
+        };
+
+        if (!string.IsNullOrEmpty(clientOptions.WillTopic))
+        {
+            connectPacket.WillFlag = true;
+            connectPacket.WillTopic = clientOptions.WillTopic;
+            connectPacket.WillQoS = clientOptions.WillQualityOfServiceLevel;
+            connectPacket.WillMessage = clientOptions.WillPayload;
+            connectPacket.WillRetain = clientOptions.WillRetain;
+            connectPacket.WillDelayInterval = clientOptions.WillDelayInterval;
+            connectPacket.WillContentType = clientOptions.WillContentType;
+            connectPacket.WillCorrelationData = clientOptions.WillCorrelationData;
+            connectPacket.WillResponseTopic = clientOptions.WillResponseTopic;
+            connectPacket.WillMessageExpiryInterval = clientOptions.WillMessageExpiryInterval;
+            connectPacket.WillPayloadFormatIndicator = clientOptions.WillPayloadFormatIndicator;
+            connectPacket.WillUserProperties = clientOptions.WillUserProperties;
+        }
+
+        return connectPacket;
     }
 }

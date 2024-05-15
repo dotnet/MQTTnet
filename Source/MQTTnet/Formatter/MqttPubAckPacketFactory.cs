@@ -7,26 +7,25 @@ using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Formatter
+namespace MQTTnet.Formatter;
+
+public static class MqttPubAckPacketFactory
 {
-    public sealed class MqttPubAckPacketFactory
+    public static MqttPubAckPacket Create(MqttApplicationMessageReceivedEventArgs applicationMessageReceivedEventArgs)
     {
-        public MqttPubAckPacket Create(MqttApplicationMessageReceivedEventArgs applicationMessageReceivedEventArgs)
+        if (applicationMessageReceivedEventArgs == null)
         {
-            if (applicationMessageReceivedEventArgs == null)
-            {
-                throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
-            }
-
-            var pubAckPacket = new MqttPubAckPacket
-            {
-                PacketIdentifier = applicationMessageReceivedEventArgs.PublishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubAckReasonCode)(int)applicationMessageReceivedEventArgs.ReasonCode,
-                UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties,
-                ReasonString = applicationMessageReceivedEventArgs.ResponseReasonString
-            };
-
-            return pubAckPacket;
+            throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
         }
+
+        var pubAckPacket = new MqttPubAckPacket
+        {
+            PacketIdentifier = applicationMessageReceivedEventArgs.PublishPacket.PacketIdentifier,
+            ReasonCode = (MqttPubAckReasonCode)(int)applicationMessageReceivedEventArgs.ReasonCode,
+            UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties,
+            ReasonString = applicationMessageReceivedEventArgs.ResponseReasonString
+        };
+
+        return pubAckPacket;
     }
 }

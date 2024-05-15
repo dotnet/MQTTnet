@@ -6,37 +6,36 @@ using System;
 using System.Linq;
 using MQTTnet.Formatter;
 
-namespace MQTTnet.Client
+namespace MQTTnet.Client;
+
+public static class MqttClientDisconnectOptionsValidator
 {
-    public static class MqttClientDisconnectOptionsValidator
+    public static void ThrowIfNotSupported(MqttClientDisconnectOptions options, MqttProtocolVersion protocolVersion)
     {
-        public static void ThrowIfNotSupported(MqttClientDisconnectOptions options, MqttProtocolVersion protocolVersion)
+        if (options == null)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
-
-            if (protocolVersion == MqttProtocolVersion.V500)
-            {
-                // Everything is supported.
-                return;
-            }
-
-            if (options.ReasonString?.Any() == true)
-            {
-                Throw(nameof(options.ReasonString));
-            }
-
-            if (options.Reason != MqttClientDisconnectOptionsReason.NormalDisconnection)
-            {
-                Throw(nameof(options.Reason));
-            }
+            throw new ArgumentNullException(nameof(options));
         }
 
-        static void Throw(string featureName)
+        if (protocolVersion == MqttProtocolVersion.V500)
         {
-            throw new NotSupportedException($"Feature {featureName} requires MQTT version 5.0.0.");
+            // Everything is supported.
+            return;
         }
+
+        if (options.ReasonString?.Any() == true)
+        {
+            Throw(nameof(options.ReasonString));
+        }
+
+        if (options.Reason != MqttClientDisconnectOptionsReason.NormalDisconnection)
+        {
+            Throw(nameof(options.Reason));
+        }
+    }
+
+    static void Throw(string featureName)
+    {
+        throw new NotSupportedException($"Feature {featureName} requires MQTT version 5.0.0.");
     }
 }

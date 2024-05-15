@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
 using MQTTnet.Client;
+using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -60,7 +61,7 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 
                 // Create the session including the subscription.
-                var client1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("a").WithCleanSession(false));
+                var client1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("a").WithCleanSession(false).WithSessionExpiryInterval(60));
                 await client1.SubscribeAsync("x");
                 await client1.DisconnectAsync();
                 await Task.Delay(500);
@@ -68,7 +69,7 @@ namespace MQTTnet.Tests.Server
                 var clientStatus = await server.GetClientsAsync();
                 Assert.AreEqual(0, clientStatus.Count);
 
-                var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b").WithCleanSession(false));
+                var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b").WithCleanSession(false).WithSessionExpiryInterval(60));
                 await client2.PublishStringAsync("x", "1");
                 await client2.PublishStringAsync("x", "2");
                 await client2.PublishStringAsync("x", "3");
@@ -794,7 +795,7 @@ namespace MQTTnet.Tests.Server
                 Assert.IsTrue(longBody.SequenceEqual(receivedBody ?? new byte[0]));
             }
         }
-        
+
         [TestMethod]
         public async Task Set_Subscription_At_Server()
         {

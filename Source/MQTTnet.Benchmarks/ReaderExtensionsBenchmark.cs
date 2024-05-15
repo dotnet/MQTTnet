@@ -31,7 +31,7 @@ namespace MQTTnet.Benchmarks
             .WithPayload(new byte[10 * 1024])
             .Build();
 
-            var packet = MqttPacketFactories.Publish.Create(mqttMessage);
+            var packet = MqttPublishPacketFactory.Create(mqttMessage);
 
             var buffer = mqttPacketFormatter.Encode(packet);
             stream = new MemoryStream();

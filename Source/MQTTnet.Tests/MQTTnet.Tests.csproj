@@ -10,19 +10,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MSTest.TestAdapter" Version="3.3.1" />
-        <PackageReference Include="MSTest.TestFramework" Version="3.3.1" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="MSTest.TestAdapter" Version="3.3.1"/>
+        <PackageReference Include="MSTest.TestFramework" Version="3.3.1"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Source\MQTTnet.Server\MQTTnet.Server.csproj" />
-        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
-        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj" />
-        <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
-        <ProjectReference Include="..\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
-        <ProjectReference Include="..\MQTTnet.Extensions.TopicTemplate\MQTTnet.Extensions.TopicTemplate.csproj" />
+        <ProjectReference Include="..\..\Source\MQTTnet.Server\MQTTnet.Server.csproj"/>
+        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj"/>
+        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj"/>
+        <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj"/>
+        <ProjectReference Include="..\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj"/>
+        <ProjectReference Include="..\MQTTnet.Extensions.TopicTemplate\MQTTnet.Extensions.TopicTemplate.csproj"/>
     </ItemGroup>
-    
+
 </Project>

@@ -4,10 +4,9 @@
 
 using System.Threading.Tasks;
 
-namespace MQTTnet.Client
+namespace MQTTnet.Client;
+
+public interface IMqttExtendedAuthenticationExchangeHandler
 {
-    public interface IMqttExtendedAuthenticationExchangeHandler
-    {
-        Task HandleRequestAsync(MqttExtendedAuthenticationExchangeContext context);
-    }
+    Task HandleRequestAsync(MqttExtendedAuthenticationExchangeContext context);
 }

@@ -4,7 +4,7 @@
 
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server.Internal
 {
     public sealed class MqttSubscription
     {

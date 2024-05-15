@@ -6,7 +6,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Formatter;
+namespace MQTTnet.Server.Internal.Formatter;
 
 public static class MqttConnAckPacketFactory
 {

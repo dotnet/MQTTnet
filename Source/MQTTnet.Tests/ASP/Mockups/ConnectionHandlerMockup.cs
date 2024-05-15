@@ -10,43 +10,41 @@ using MQTTnet.AspNetCore;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Server;
-using MQTTnet.Server.Adapter;
 
-namespace MQTTnet.Tests.ASP.Mockups
+namespace MQTTnet.Tests.ASP.Mockups;
+
+public sealed class ConnectionHandlerMockup : IMqttServerAdapter
 {
-    public sealed class ConnectionHandlerMockup : IMqttServerAdapter
+    public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
+    public TaskCompletionSource<MqttConnectionContext> Context { get; } = new();
+
+    public void Dispose()
     {
-        public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
-        public TaskCompletionSource<MqttConnectionContext> Context { get; } = new TaskCompletionSource<MqttConnectionContext>();
+    }
 
-        public void Dispose()
+    public async Task OnConnectedAsync(ConnectionContext connection)
+    {
+        try
         {
-        }
+            var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
+            var context = new MqttConnectionContext(formatter, connection);
+            Context.TrySetResult(context);
 
-        public async Task OnConnectedAsync(ConnectionContext connection)
+            await ClientHandler(context);
+        }
+        catch (Exception ex)
         {
-            try
-            {
-                var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
-                var context = new MqttConnectionContext(formatter, connection);
-                Context.TrySetResult(context);
-
-                await ClientHandler(context);
-            }
-            catch (Exception ex)
-            {
-                Context.TrySetException(ex);
-            }
+            Context.TrySetException(ex);
         }
+    }
 
-        public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
-        {
-            return Task.CompletedTask;
-        }
+    public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
+    {
+        return Task.CompletedTask;
+    }
 
-        public Task StopAsync()
-        {
-            return Task.CompletedTask;
-        }
+    public Task StopAsync()
+    {
+        return Task.CompletedTask;
     }
 }

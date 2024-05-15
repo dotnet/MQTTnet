@@ -6,72 +6,71 @@ using System;
 using System.Collections.Generic;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Client
+namespace MQTTnet.Client;
+
+public sealed class MqttClientUnsubscribeOptionsBuilder
 {
-    public sealed class MqttClientUnsubscribeOptionsBuilder
+    readonly MqttClientUnsubscribeOptions _unsubscribeOptions = new();
+
+    public MqttClientUnsubscribeOptions Build()
     {
-        readonly MqttClientUnsubscribeOptions _unsubscribeOptions = new MqttClientUnsubscribeOptions();
+        return _unsubscribeOptions;
+    }
 
-        public MqttClientUnsubscribeOptions Build()
+    public MqttClientUnsubscribeOptionsBuilder WithTopicFilter(string topic)
+    {
+        if (topic is null)
         {
-            return _unsubscribeOptions;
+            throw new ArgumentNullException(nameof(topic));
         }
 
-        public MqttClientUnsubscribeOptionsBuilder WithTopicFilter(string topic)
+        if (_unsubscribeOptions.TopicFilters is null)
         {
-            if (topic is null)
-            {
-                throw new ArgumentNullException(nameof(topic));
-            }
-
-            if (_unsubscribeOptions.TopicFilters is null)
-            {
-                _unsubscribeOptions.TopicFilters = new List<string>();
-            }
-
-            _unsubscribeOptions.TopicFilters.Add(topic);
-
-            return this;
+            _unsubscribeOptions.TopicFilters = new List<string>();
         }
 
-        public MqttClientUnsubscribeOptionsBuilder WithTopicFilter(MqttTopicFilter topicFilter)
-        {
-            if (topicFilter is null)
-            {
-                throw new ArgumentNullException(nameof(topicFilter));
-            }
+        _unsubscribeOptions.TopicFilters.Add(topic);
 
-            return WithTopicFilter(topicFilter.Topic);
+        return this;
+    }
+
+    public MqttClientUnsubscribeOptionsBuilder WithTopicFilter(MqttTopicFilter topicFilter)
+    {
+        if (topicFilter is null)
+        {
+            throw new ArgumentNullException(nameof(topicFilter));
         }
 
-        /// <summary>
-        ///     Adds the user property to the unsubscribe options.
-        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
-        /// </summary>
-        public MqttClientUnsubscribeOptionsBuilder WithUserProperty(string name, string value)
+        return WithTopicFilter(topicFilter.Topic);
+    }
+
+    /// <summary>
+    ///     Adds the user property to the unsubscribe options.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public MqttClientUnsubscribeOptionsBuilder WithUserProperty(string name, string value)
+    {
+        return WithUserProperty(new MqttUserProperty(name, value));
+    }
+
+    /// <summary>
+    ///     Adds the user property to the unsubscribe options.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public MqttClientUnsubscribeOptionsBuilder WithUserProperty(MqttUserProperty userProperty)
+    {
+        if (userProperty is null)
         {
-            return WithUserProperty(new MqttUserProperty(name, value));
+            throw new ArgumentNullException(nameof(userProperty));
         }
 
-        /// <summary>
-        ///     Adds the user property to the unsubscribe options.
-        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
-        /// </summary>
-        public MqttClientUnsubscribeOptionsBuilder WithUserProperty(MqttUserProperty userProperty)
+        if (_unsubscribeOptions.UserProperties is null)
         {
-            if (userProperty is null)
-            {
-                throw new ArgumentNullException(nameof(userProperty));
-            }
-
-            if (_unsubscribeOptions.UserProperties is null)
-            {
-                _unsubscribeOptions.UserProperties = new List<MqttUserProperty>();
-            }
-
-            _unsubscribeOptions.UserProperties.Add(userProperty);
-
-            return this;
+            _unsubscribeOptions.UserProperties = new List<MqttUserProperty>();
         }
+
+        _unsubscribeOptions.UserProperties.Add(userProperty);
+
+        return this;
     }
 }

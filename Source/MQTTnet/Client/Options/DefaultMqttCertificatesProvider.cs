@@ -5,32 +5,31 @@
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 
-namespace MQTTnet.Client
+namespace MQTTnet.Client;
+
+public sealed class DefaultMqttCertificatesProvider : IMqttClientCertificatesProvider
 {
-    public sealed class DefaultMqttCertificatesProvider : IMqttClientCertificatesProvider
+    readonly X509Certificate2Collection _certificates;
+
+    public DefaultMqttCertificatesProvider(X509Certificate2Collection certificates)
     {
-        readonly X509Certificate2Collection _certificates;
+        _certificates = certificates;
+    }
 
-        public DefaultMqttCertificatesProvider(X509Certificate2Collection certificates)
+    public DefaultMqttCertificatesProvider(IEnumerable<X509Certificate> certificates)
+    {
+        if (certificates != null)
         {
-            _certificates = certificates;
-        }
-
-        public DefaultMqttCertificatesProvider(IEnumerable<X509Certificate> certificates)
-        {
-            if (certificates != null)
+            _certificates = new X509Certificate2Collection();
+            foreach (var certificate in certificates)
             {
-                _certificates = new X509Certificate2Collection();
-                foreach (var certificate in certificates)
-                {
-                    _certificates.Add(certificate);
-                }
+                _certificates.Add(certificate);
             }
         }
+    }
 
-        public X509CertificateCollection GetCertificates()
-        {
-            return _certificates;
-        }
+    public X509CertificateCollection GetCertificates()
+    {
+        return _certificates;
     }
 }

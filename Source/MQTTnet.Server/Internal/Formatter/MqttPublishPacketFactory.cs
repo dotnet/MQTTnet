@@ -2,12 +2,48 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Server.Formatter;
+namespace MQTTnet.Server.Internal.Formatter;
 
 public static class MqttPublishPacketFactory
 {
+    public static MqttPublishPacket Create(MqttConnectPacket connectPacket)
+    {
+        if (connectPacket == null)
+        {
+            throw new ArgumentNullException(nameof(connectPacket));
+        }
+
+        if (!connectPacket.WillFlag)
+        {
+            throw new MqttProtocolViolationException("The CONNECT packet contains no will message (WillFlag).");
+        }
+
+        ArraySegment<byte> willMessageBuffer = default;
+        if (connectPacket.WillMessage?.Length > 0)
+        {
+            willMessageBuffer = new ArraySegment<byte>(connectPacket.WillMessage);
+        }
+
+        var packet = new MqttPublishPacket
+        {
+            Topic = connectPacket.WillTopic,
+            PayloadSegment = willMessageBuffer,
+            QualityOfServiceLevel = connectPacket.WillQoS,
+            Retain = connectPacket.WillRetain,
+            ContentType = connectPacket.WillContentType,
+            CorrelationData = connectPacket.WillCorrelationData,
+            MessageExpiryInterval = connectPacket.WillMessageExpiryInterval,
+            PayloadFormatIndicator = connectPacket.WillPayloadFormatIndicator,
+            ResponseTopic = connectPacket.WillResponseTopic,
+            UserProperties = connectPacket.WillUserProperties
+        };
+
+        return packet;
+    }
+
     public static MqttPublishPacket Create(MqttApplicationMessage applicationMessage)
     {
         if (applicationMessage == null)

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Protocol;
-using MQTTnet.Server.Disconnecting;
 
 namespace MQTTnet.Server
 {

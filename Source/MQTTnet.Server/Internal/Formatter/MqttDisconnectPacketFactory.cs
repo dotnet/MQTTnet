@@ -4,9 +4,8 @@
 
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Server.Disconnecting;
 
-namespace MQTTnet.Server.Formatter;
+namespace MQTTnet.Server.Internal.Formatter;
 
 public static class MqttDisconnectPacketFactory
 {

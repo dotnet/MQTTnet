@@ -8,22 +8,9 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Formatter
 {
-    public sealed class MqttPublishPacketFactory
+    public static class MqttPublishPacketFactory
     {
-        public MqttPublishPacket Clone(MqttPublishPacket publishPacket)
-        {
-            return new MqttPublishPacket
-            {
-                Topic = publishPacket.Topic,
-                PayloadSegment = publishPacket.PayloadSegment,
-                Retain = publishPacket.Retain,
-                QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
-                Dup = publishPacket.Dup,
-                PacketIdentifier = publishPacket.PacketIdentifier
-            };
-        }
-
-        public MqttPublishPacket Create(MqttApplicationMessage applicationMessage)
+        public static MqttPublishPacket Create(MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null)
             {
@@ -47,41 +34,6 @@ namespace MQTTnet.Formatter
                 TopicAlias = applicationMessage.TopicAlias,
                 SubscriptionIdentifiers = applicationMessage.SubscriptionIdentifiers,
                 UserProperties = applicationMessage.UserProperties
-            };
-
-            return packet;
-        }
-
-        public MqttPublishPacket Create(MqttConnectPacket connectPacket)
-        {
-            if (connectPacket == null)
-            {
-                throw new ArgumentNullException(nameof(connectPacket));
-            }
-
-            if (!connectPacket.WillFlag)
-            {
-                throw new MqttProtocolViolationException("The CONNECT packet contains no will message (WillFlag).");
-            }
-
-            ArraySegment<byte> willMessageBuffer = default;
-            if (connectPacket.WillMessage?.Length > 0)
-            {
-                willMessageBuffer = new ArraySegment<byte>(connectPacket.WillMessage);
-            }
-
-            var packet = new MqttPublishPacket
-            {
-                Topic = connectPacket.WillTopic,
-                PayloadSegment = willMessageBuffer,
-                QualityOfServiceLevel = connectPacket.WillQoS,
-                Retain = connectPacket.WillRetain,
-                ContentType = connectPacket.WillContentType,
-                CorrelationData = connectPacket.WillCorrelationData,
-                MessageExpiryInterval = connectPacket.WillMessageExpiryInterval,
-                PayloadFormatIndicator = connectPacket.WillPayloadFormatIndicator,
-                ResponseTopic = connectPacket.WillResponseTopic,
-                UserProperties = connectPacket.WillUserProperties
             };
 
             return packet;

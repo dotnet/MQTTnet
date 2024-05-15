@@ -35,7 +35,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -46,7 +46,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
     </ItemGroup>
 
 </Project>

@@ -5,12 +5,11 @@
 using System;
 using MQTTnet.Exceptions;
 
-namespace MQTTnet.Client
+namespace MQTTnet.Client;
+
+public sealed class MqttClientDisconnectedException : MqttCommunicationException
 {
-    public sealed class MqttClientDisconnectedException : MqttCommunicationException
+    public MqttClientDisconnectedException(Exception innerException) : base("The MQTT client is disconnected.", innerException)
     {
-        public MqttClientDisconnectedException(Exception innerException) : base("The MQTT client is disconnected.", innerException)
-        {
-        }
     }
 }

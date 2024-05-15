@@ -12,13 +12,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Source\MQTTnet.Server\MQTTnet.Server.csproj" />
-        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
-        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+        <ProjectReference Include="..\MQTTnet.Server\MQTTnet.Server.csproj"/>
+        <ProjectReference Include="..\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj"/>
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
     </ItemGroup>
 
 </Project>

@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-
-namespace MQTTnet.Server
+namespace MQTTnet.Server.Internal
 {
     public interface ISubscriptionChangedNotification
     {

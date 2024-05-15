@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using MQTTnet.Diagnostics;
 using MQTTnet.Server;
-using MQTTnet.Server.Adapter;
+using MQTTnet.Server.Internal.Adapter;
 
 namespace MQTTnet.AspNetCore;
 

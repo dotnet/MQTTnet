@@ -3,36 +3,35 @@ using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics;
 
-namespace MQTTnet.Client
+namespace MQTTnet.Client;
+
+public interface IMqttClient : IDisposable
 {
-    public interface IMqttClient : IDisposable
-    {
-        event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync;
-        
-        event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync;
+    event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync;
 
-        event Func<MqttClientConnectingEventArgs, Task> ConnectingAsync;
+    event Func<MqttClientConnectedEventArgs, Task> ConnectedAsync;
 
-        event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync;
+    event Func<MqttClientConnectingEventArgs, Task> ConnectingAsync;
 
-        event Func<InspectMqttPacketEventArgs, Task> InspectPacketAsync;
+    event Func<MqttClientDisconnectedEventArgs, Task> DisconnectedAsync;
 
-        bool IsConnected { get; }
+    event Func<InspectMqttPacketEventArgs, Task> InspectPacketAsync;
 
-        MqttClientOptions Options { get; }
+    bool IsConnected { get; }
 
-        Task<MqttClientConnectResult> ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken = default);
+    MqttClientOptions Options { get; }
 
-        Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken = default);
+    Task<MqttClientConnectResult> ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken = default);
 
-        Task PingAsync(CancellationToken cancellationToken = default);
+    Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken = default);
 
-        Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken = default);
+    Task PingAsync(CancellationToken cancellationToken = default);
 
-        Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken = default);
+    Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken = default);
 
-        Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken = default);
+    Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken = default);
 
-        Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken = default);
-    }
+    Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken = default);
+
+    Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken = default);
 }

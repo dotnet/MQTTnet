@@ -6,77 +6,31 @@ using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Formatter
+namespace MQTTnet.Formatter;
+
+public static class MqttDisconnectPacketFactory
 {
-    public sealed class MqttDisconnectPacketFactory
+    static readonly MqttDisconnectPacket DefaultNormalDisconnection = new()
     {
-        static readonly MqttDisconnectPacket DefaultNormalDisconnection = new MqttDisconnectPacket
+        ReasonCode = MqttDisconnectReasonCode.NormalDisconnection,
+        UserProperties = null,
+        ReasonString = null,
+        ServerReference = null,
+        SessionExpiryInterval = 0
+    };
+
+    public static MqttDisconnectPacket Create(MqttClientDisconnectOptions clientDisconnectOptions)
+    {
+        if (clientDisconnectOptions == null)
         {
-            ReasonCode = MqttDisconnectReasonCode.NormalDisconnection,
-            UserProperties = null,
-            ReasonString = null,
-            ServerReference = null,
-            SessionExpiryInterval = 0
-        };
-
-        static readonly MqttDisconnectPacket DefaultServerShuttingDown = new MqttDisconnectPacket
-        {
-            ReasonCode = MqttDisconnectReasonCode.ServerShuttingDown,
-            UserProperties = null,
-            ReasonString = null,
-            ServerReference = null,
-            SessionExpiryInterval = 0
-        };
-
-        static readonly MqttDisconnectPacket DefaultUnspecifiedError = new MqttDisconnectPacket
-        {
-            ReasonCode = MqttDisconnectReasonCode.UnspecifiedError,
-            UserProperties = null,
-            ReasonString = null,
-            ServerReference = null,
-            SessionExpiryInterval = 0
-        };
-
-        public MqttDisconnectPacket Create(MqttDisconnectReasonCode reasonCode)
-        {
-            if (reasonCode == MqttDisconnectReasonCode.NormalDisconnection)
-            {
-                return DefaultNormalDisconnection;
-            }
-
-            if (reasonCode == MqttDisconnectReasonCode.ServerShuttingDown)
-            {
-                return DefaultServerShuttingDown;
-            }
-
-            if (reasonCode == MqttDisconnectReasonCode.UnspecifiedError)
-            {
-                return DefaultUnspecifiedError;
-            }
-
-            return new MqttDisconnectPacket
-            {
-                ReasonCode = reasonCode,
-                UserProperties = null,
-                ReasonString = null,
-                ServerReference = null,
-                SessionExpiryInterval = 0
-            };
+            return DefaultNormalDisconnection;
         }
 
-        public MqttDisconnectPacket Create(MqttClientDisconnectOptions clientDisconnectOptions)
+        return new MqttDisconnectPacket
         {
-            if (clientDisconnectOptions == null)
-            {
-                return DefaultNormalDisconnection;
-            }
-
-            return new MqttDisconnectPacket
-            {
-                ReasonCode = (MqttDisconnectReasonCode)clientDisconnectOptions.Reason,
-                UserProperties = clientDisconnectOptions.UserProperties,
-                SessionExpiryInterval = clientDisconnectOptions.SessionExpiryInterval
-            };
-        }
+            ReasonCode = (MqttDisconnectReasonCode)clientDisconnectOptions.Reason,
+            UserProperties = clientDisconnectOptions.UserProperties,
+            SessionExpiryInterval = clientDisconnectOptions.SessionExpiryInterval
+        };
     }
 }

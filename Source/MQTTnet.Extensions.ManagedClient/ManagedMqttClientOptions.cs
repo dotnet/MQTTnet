@@ -5,26 +5,24 @@
 using System;
 using MQTTnet.Client;
 
-namespace MQTTnet.Extensions.ManagedClient
+namespace MQTTnet.Extensions.ManagedClient;
+
+public sealed class ManagedMqttClientOptions
 {
-    public sealed class ManagedMqttClientOptions
-    {
-        public MqttClientOptions ClientOptions { get; set; }
+    public TimeSpan AutoReconnectDelay { get; set; } = TimeSpan.FromSeconds(5);
+    public MqttClientOptions ClientOptions { get; set; }
 
-        public TimeSpan AutoReconnectDelay { get; set; } = TimeSpan.FromSeconds(5);
+    public TimeSpan ConnectionCheckInterval { get; set; } = TimeSpan.FromSeconds(1);
 
-        public TimeSpan ConnectionCheckInterval { get; set; } = TimeSpan.FromSeconds(1);
+    public int MaxPendingMessages { get; set; } = int.MaxValue;
 
-        public IManagedMqttClientStorage Storage { get; set; }
+    /// <summary>
+    ///     Defines the maximum amount of topic filters which will be sent in a SUBSCRIBE/UNSUBSCRIBE packet.
+    ///     Amazon Web Services (AWS) limits this number to 8. The default is int.MaxValue.
+    /// </summary>
+    public int MaxTopicFiltersInSubscribeUnsubscribePackets { get; set; } = int.MaxValue;
 
-        public int MaxPendingMessages { get; set; } = int.MaxValue;
+    public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropNewMessage;
 
-        public MqttPendingMessagesOverflowStrategy PendingMessagesOverflowStrategy { get; set; } = MqttPendingMessagesOverflowStrategy.DropNewMessage;
-
-        /// <summary>
-        /// Defines the maximum amount of topic filters which will be sent in a SUBSCRIBE/UNSUBSCRIBE packet.
-        /// Amazon Web Services (AWS) limits this number to 8. The default is int.MaxValue.
-        /// </summary>
-        public int MaxTopicFiltersInSubscribeUnsubscribePackets { get; set; } = int.MaxValue;
-    }
+    public IManagedMqttClientStorage Storage { get; set; }
 }

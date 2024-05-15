@@ -5,32 +5,31 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
 
-namespace MQTTnet.Client
+namespace MQTTnet.Client;
+
+public sealed class MqttClientCertificateSelectionEventArgs : EventArgs
 {
-    public sealed class MqttClientCertificateSelectionEventArgs : EventArgs
+    public MqttClientCertificateSelectionEventArgs(
+        string targetHost,
+        X509CertificateCollection localCertificates,
+        X509Certificate remoteCertificate,
+        string[] acceptableIssuers,
+        MqttClientTcpOptions tcpOptions)
     {
-        public MqttClientCertificateSelectionEventArgs(
-            string targetHost,
-            X509CertificateCollection localCertificates,
-            X509Certificate remoteCertificate,
-            string[] acceptableIssuers,
-            MqttClientTcpOptions tcpOptions)
-        {
-            TargetHost = targetHost;
-            LocalCertificates = localCertificates;
-            RemoveCertificate = remoteCertificate;
-            AcceptableIssuers = acceptableIssuers;
-            TcpOptions = tcpOptions ?? throw new ArgumentNullException(nameof(tcpOptions));
-        }
-
-        public string[] AcceptableIssuers { get; }
-
-        public X509CertificateCollection LocalCertificates { get; }
-
-        public X509Certificate RemoveCertificate { get; }
-
-        public string TargetHost { get; }
-
-        public MqttClientTcpOptions TcpOptions { get; }
+        TargetHost = targetHost;
+        LocalCertificates = localCertificates;
+        RemoveCertificate = remoteCertificate;
+        AcceptableIssuers = acceptableIssuers;
+        TcpOptions = tcpOptions ?? throw new ArgumentNullException(nameof(tcpOptions));
     }
+
+    public string[] AcceptableIssuers { get; }
+
+    public X509CertificateCollection LocalCertificates { get; }
+
+    public X509Certificate RemoveCertificate { get; }
+
+    public string TargetHost { get; }
+
+    public MqttClientTcpOptions TcpOptions { get; }
 }

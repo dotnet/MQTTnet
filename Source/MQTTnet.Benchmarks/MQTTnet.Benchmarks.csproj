@@ -12,15 +12,23 @@
         <NoWarn>1591;NETSDK1138</NoWarn>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <NoWarn>1591;NETSDK1138</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <NoWarn>1591;NETSDK1138</NoWarn>
+    </PropertyGroup>
+
     <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
+        <PackageReference Include="BenchmarkDotNet" Version="0.13.12"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Source\MQTTnet.Server\MQTTnet.Server.csproj" />
-        <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
-        <ProjectReference Include="..\MQTTnet.Tests\MQTTnet.Tests.csproj" />
-        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+        <ProjectReference Include="..\..\Source\MQTTnet.Server\MQTTnet.Server.csproj"/>
+        <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj"/>
+        <ProjectReference Include="..\MQTTnet.Tests\MQTTnet.Tests.csproj"/>
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
     </ItemGroup>
 
 </Project>

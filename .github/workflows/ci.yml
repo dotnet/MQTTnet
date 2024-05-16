@@ -67,8 +67,8 @@ jobs:
   sign:
     needs: build
     runs-on: windows-latest # Code signing must run on a Windows agent for Authenticode signing (dll/exe)
-    permissions:
-      id-token: write # Required for requesting the JWT
+#    permissions:
+#      id-token: write # Required for requesting the JWT
 
     steps:
       - name: Setup .NET SDK
@@ -76,6 +76,12 @@ jobs:
         with:
           dotnet-version: |
             6.0.x
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: nugets
+          path: nugets
 
       - name: Install sign CLI tool
         run: dotnet tool install --tool-path . sign --version 0.9.0-beta.23127.3
@@ -86,35 +92,30 @@ jobs:
    #       name: config
    #       path: config
         
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: nugets
-          path: nugets
 
-      - name: 'Azure CLI login'
-        uses: azure/login@v1
-        with:
-          allow-no-subscriptions: true
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+#      - name: 'Azure CLI login'
+#        uses: azure/login@v1
+#        with:
+#          allow-no-subscriptions: true
+#          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+#          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+#          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
    
       - name: Sign nugets
         shell: pwsh
         run: >
           ./sign code azure-key-vault `
-          **/*.nupkg `
-          --base-directory "${{ github.workspace }}/nugets" `
+          "**/*.nupkg" `
+          --base-directory "${{ github.workspace }}\nugets" `
           --publisher-name "MQTTnet" `
           --description "MQTTnet" `
           --description-url "https://github.com/dotnet/MQTTnet" `
-          --azure-key-vault-managed-identity true `
-          --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}" `
-          --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERTIFICATE_ID }}" `
           --azure-key-vault-tenant-id "${{ secrets.AZURE_TENANT_ID }}" `
           --azure-key-vault-client-id "${{ secrets.AZURE_CLIENT_ID }}" `
           --azure-key-vault-client-secret "${{ secrets.AZURE_CLIENT_SECRET }}" `
+          --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERTIFICATE_ID }}" `
+          --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}"
         
       - name: Publish MyGet nugets
         if: ${{ github.event_name == 'push' }}

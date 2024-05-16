@@ -30,7 +30,7 @@ jobs:
 #          encodedString: ${{ secrets.SNC_BASE64 }}
 
       - name: Build package
-        run: dotnet pack MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}
+        run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}
         #run: dotnet pack MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}/certificate.snk
 
       - name: Upload signing file list

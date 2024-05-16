@@ -87,4 +87,4 @@ jobs:
         
       - name: Publish MyGet nugets
         if: ${{ github.event_name == 'push' }}
-        run: dotnet nuget push **/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
+        run: dotnet nuget push nugets\*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate

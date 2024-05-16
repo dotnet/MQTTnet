@@ -26,7 +26,7 @@ jobs:
         run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}
 
       - name: Upload nuget packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: nugets
           path: |
@@ -74,7 +74,7 @@ jobs:
         shell: pwsh
         run: >
           ./sign code azure-key-vault `
-          "${{ github.workspace }}\nugets\*.nupkg" `
+          "**/*.nupkg" `
           --base-directory "${{ github.workspace }}\nugets" `
           --publisher-name "MQTTnet" `
           --description "MQTTnet" `
@@ -87,4 +87,4 @@ jobs:
         
       - name: Publish MyGet nugets
         if: ${{ github.event_name == 'push' }}
-        run: dotnet nuget push "${{ github.workspace }}\nugets\*.nupkg" -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
+        run: dotnet nuget push ${{ github.workspace }}\nugets\*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate

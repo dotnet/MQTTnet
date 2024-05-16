@@ -33,11 +33,11 @@ jobs:
         run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}
         #run: dotnet pack MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}/certificate.snk
 
-      - name: Upload signing file list
-        uses: actions/upload-artifact@v3
-        with:
-          name: config
-          path: config
+ #     - name: Upload signing file list
+ #       uses: actions/upload-artifact@v3
+ #       with:
+ #         name: config
+ #         path: config
 
       - name: Upload nuget packages
         uses: actions/upload-artifact@v3
@@ -47,8 +47,22 @@ jobs:
             **/*.nupkg
             **/*.snupkg
 
+  test:
+    needs: build
+    runs-on: ubuntu latest
+
+    steps:
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Execute tests
-        run: dotnet test --no-restore --framework net8.0 Source/MQTTnet.Tests/MQTTnet.Tests.csproj
+        run: dotnet test --framework net8.0 Source/MQTTnet.Tests/MQTTnet.Tests.csproj
 
   sign:
     needs: build
@@ -66,11 +80,11 @@ jobs:
       - name: Install sign CLI tool
         run: dotnet tool install --tool-path . sign --version 0.9.0-beta.23127.3
 
-      - name: Download signing config
-        uses: actions/download-artifact@v3
-        with:
-          name: config
-          path: config
+   #   - name: Download signing config
+   #     uses: actions/download-artifact@v3
+   #     with:
+   #       name: config
+   #       path: config
         
       - name: Download build artifacts
         uses: actions/download-artifact@v3
@@ -85,7 +99,6 @@ jobs:
           ./sign code azure-key-vault `
           **/*.nupkg `
           --base-directory "${{ github.workspace }}/nugets" `
-          --file-list "${{ github.workspace }}/config/filelist.txt" `
           --publisher-name "MQTTnet" `
           --description "MQTTnet" `
           --description-url "https://github.com/dotnet/MQTTnet" `

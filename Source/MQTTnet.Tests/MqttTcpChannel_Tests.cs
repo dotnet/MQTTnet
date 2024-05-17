@@ -39,7 +39,7 @@ namespace MQTTnet.Tests
                 }, ct.Token);
 
                 var clientSocket = new CrossPlatformSocket(AddressFamily.InterNetwork, ProtocolType.Tcp);
-                await clientSocket.ConnectAsync("localhost", 50001, CancellationToken.None);
+                await clientSocket.ConnectAsync(new DnsEndPoint("localhost", 50001), CancellationToken.None);
 
                 var tcpChannel = new MqttTcpChannel(clientSocket.GetStream(), "test", null);
 

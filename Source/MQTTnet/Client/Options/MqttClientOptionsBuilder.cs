@@ -53,11 +53,26 @@ public sealed class MqttClientOptionsBuilder
                 {
                     if (_port.HasValue)
                     {
-                        _remoteEndPoint = new DnsEndPoint(dns.Host, _port.Value);
+                        _remoteEndPoint = new DnsEndPoint(dns.Host, _port.Value, dns.AddressFamily);
                     }
                     else
                     {
-                        _remoteEndPoint = new DnsEndPoint(dns.Host, tlsOptions?.UseTls == false ? MqttPorts.Default : MqttPorts.Secure);
+                        _remoteEndPoint = new DnsEndPoint(dns.Host, tlsOptions?.UseTls == false ? MqttPorts.Default : MqttPorts.Secure, dns.AddressFamily);
+                    }
+                }
+            }
+
+            if (_remoteEndPoint is IPEndPoint ip)
+            {
+                if (ip.Port == 0)
+                {
+                    if (_port.HasValue)
+                    {
+                        _remoteEndPoint = new IPEndPoint(ip.Address, _port.Value);
+                    }
+                    else
+                    {
+                        _remoteEndPoint = new IPEndPoint(ip.Address, tlsOptions?.UseTls == false ? MqttPorts.Default : MqttPorts.Secure);
                     }
                 }
             }
@@ -219,7 +234,7 @@ public sealed class MqttClientOptionsBuilder
     }
 
     /// <summary>
-    ///     Usually the MQTT packets can be send partially. This is done by using multiple TCP packets
+    ///     Usually the MQTT packets can be sent partially. This is done by using multiple TCP packets
     ///     or WebSocket frames etc. Unfortunately not all brokers (like Amazon Web Services (AWS)) do support this feature and
     ///     will close the connection when receiving such packets. If such a service is used this flag must
     ///     be set to _true_.
@@ -271,13 +286,27 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithTcpServer(string server, int? port = null)
+    public MqttClientOptionsBuilder WithTcpServer(string host, int? port = null, AddressFamily addressFamily = AddressFamily.Unspecified)
     {
+        if (host == null)
+        {
+            throw new ArgumentNullException(nameof(host));
+        }
+
         _tcpOptions = new MqttClientTcpOptions();
 
         // The value 0 will be updated when building the options.
         // This a backward compatibility feature.
-        _remoteEndPoint = new DnsEndPoint(server, port ?? 0);
+
+        if (IPAddress.TryParse(host, out var ipAddress))
+        {
+            _remoteEndPoint = new IPEndPoint(ipAddress, port ?? 0);
+        }
+        else
+        {
+            _remoteEndPoint = new DnsEndPoint(host, port ?? 0, addressFamily);
+        }
+
         _port = port;
 
         return this;

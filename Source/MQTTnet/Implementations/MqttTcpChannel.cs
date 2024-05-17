@@ -62,7 +62,7 @@ namespace MQTTnet.Implementations
             {
                 if (_tcpOptions.AddressFamily == AddressFamily.Unspecified)
                 {
-                    socket = new CrossPlatformSocket();
+                    socket = new CrossPlatformSocket(_tcpOptions.ProtocolType);
                 }
                 else
                 {

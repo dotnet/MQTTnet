@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,8 +19,8 @@ namespace MQTTnet.Tests.Internal
         [TestMethod]
         public async Task Connect_Send_Receive()
         {
-            var crossPlatformSocket = new CrossPlatformSocket();
-            await crossPlatformSocket.ConnectAsync("www.google.de", 80, CancellationToken.None);
+            var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
+            await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.google.de", 80), CancellationToken.None);
 
             var requestBuffer = Encoding.UTF8.GetBytes("GET / HTTP/1.1\r\nHost: www.google.de\r\n\r\n");
             await crossPlatformSocket.SendAsync(new ArraySegment<byte>(requestBuffer), System.Net.Sockets.SocketFlags.None);
@@ -36,12 +38,12 @@ namespace MQTTnet.Tests.Internal
         [ExpectedException(typeof(OperationCanceledException))]
         public async Task Try_Connect_Invalid_Host()
         {
-            var crossPlatformSocket = new CrossPlatformSocket();
+            var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
 
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             cancellationToken.Token.Register(() => crossPlatformSocket.Dispose());
 
-            await crossPlatformSocket.ConnectAsync("www.google.de", 54321, cancellationToken.Token);
+            await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.google.de", 54321), cancellationToken.Token);
         }
 
         //[TestMethod]
@@ -65,7 +67,7 @@ namespace MQTTnet.Tests.Internal
         [TestMethod]
         public void Set_Options()
         {
-            var crossPlatformSocket = new CrossPlatformSocket();
+            var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
 
             Assert.IsFalse(crossPlatformSocket.ReuseAddress);
             crossPlatformSocket.ReuseAddress = true;

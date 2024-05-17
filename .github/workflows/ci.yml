@@ -30,8 +30,8 @@ jobs:
         with:
           name: nugets
           path: |
-            ./Source/**/*.nupkg
-            ./Source/**/*.snupkg
+            ${{ github.workspace }}/Source/**/*.nupkg
+            ${{ github.workspace }}/Source/**/*.snupkg
 
   test:
     runs-on: ubuntu-latest
@@ -89,8 +89,8 @@ jobs:
         with:
           name: signed-nugets
           path: |
-            ./Source/**/*.nupkg
-            ./Source/**/*.snupkg
+            ${{ github.workspace }}/**/*.nupkg
+            ${{ github.workspace }}/**/*.snupkg
 
   publish:
     if: ${{ github.event_name == 'push' }}

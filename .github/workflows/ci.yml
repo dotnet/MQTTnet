@@ -30,11 +30,11 @@ jobs:
         with:
           name: nugets
           path: |
-            **/*.nupkg
-            **/*.snupkg
+            ./Source/**/*.nupkg
+            ./Source/**/*.snupkg
 
   test:
-    runs-on: ubuntu latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Setup .NET SDK
@@ -89,8 +89,8 @@ jobs:
         with:
           name: signed-nugets
           path: |
-            **/*.nupkg
-            **/*.snupkg
+            ./Source/**/*.nupkg
+            ./Source/**/*.snupkg
 
   publish:
     if: ${{ github.event_name == 'push' }}

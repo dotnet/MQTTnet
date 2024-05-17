@@ -89,8 +89,8 @@ jobs:
         with:
           name: signed-nugets
           path: |
-            ${{ github.workspace }}/**/*.nupkg
-            ${{ github.workspace }}/**/*.snupkg
+            ${{ github.workspace }}\nugets\**\*.nupkg
+            ${{ github.workspace }}\nugets\**\*.snupkg
 
   publish:
     if: ${{ github.event_name == 'push' }}

@@ -105,4 +105,4 @@ jobs:
           path: nugets
 
       - name: Publish MyGet nugets
-        run: dotnet nuget push ${{ github.workspace }}\nugets\**/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
+        run: dotnet nuget push ${{ github.workspace }}/nugets/**/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate

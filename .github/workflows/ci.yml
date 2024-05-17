@@ -34,7 +34,6 @@ jobs:
             **/*.snupkg
 
   test:
-    needs: build
     runs-on: ubuntu latest
 
     steps:
@@ -61,7 +60,7 @@ jobs:
           dotnet-version: |
             6.0.x
 
-      - name: Download build artifacts
+      - name: Download nuget packages
         uses: actions/download-artifact@v4
         with:
           name: nugets
@@ -85,6 +84,25 @@ jobs:
           --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERTIFICATE_ID }}" `
           --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}"
         
+      - name: Upload signed nuget packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-nugets
+          path: |
+            **/*.nupkg
+            **/*.snupkg
+
+  publish:
+    if: ${{ github.event_name == 'push' }}
+    needs: sign
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download signed nuget packages
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-nugets
+          path: nugets
+
       - name: Publish MyGet nugets
-        if: ${{ github.event_name == 'push' }}
         run: dotnet nuget push ${{ github.workspace }}\nugets\**/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate

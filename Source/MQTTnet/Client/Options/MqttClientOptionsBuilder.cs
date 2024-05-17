@@ -152,7 +152,6 @@ namespace MQTTnet.Client
             return this;
         }
 
-        [Obsolete("Use WithTcpServer(... configure) or WithWebSocketServer(... configure) instead.")]
         public MqttClientOptionsBuilder WithConnectionUri(Uri uri)
         {
             if (uri == null)
@@ -196,7 +195,6 @@ namespace MQTTnet.Client
             return this;
         }
 
-        [Obsolete("Use WithTcpServer(... configure) or WithWebSocketServer(... configure) instead.")]
         public MqttClientOptionsBuilder WithConnectionUri(string uri)
         {
             return WithConnectionUri(new Uri(uri, UriKind.Absolute));

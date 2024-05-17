@@ -79,11 +79,26 @@ namespace MQTTnet.Client
                     {
                         if (_port.HasValue)
                         {
-                            _remoteEndPoint = new DnsEndPoint(dns.Host, _port.Value);
+                            _remoteEndPoint = new DnsEndPoint(dns.Host, _port.Value, dns.AddressFamily);
                         }
                         else
                         {
-                            _remoteEndPoint = new DnsEndPoint(dns.Host, tlsOptions?.UseTls == false ? MqttPorts.Default : MqttPorts.Secure);
+                            _remoteEndPoint = new DnsEndPoint(dns.Host, tlsOptions?.UseTls == false ? MqttPorts.Default : MqttPorts.Secure, dns.AddressFamily);
+                        }
+                    }
+                }
+
+                if (_remoteEndPoint is IPEndPoint ip)
+                {
+                    if (ip.Port == 0)
+                    {
+                        if (_port.HasValue)
+                        {
+                            _remoteEndPoint = new IPEndPoint(ip.Address, _port.Value);
+                        }
+                        else
+                        {
+                            _remoteEndPoint = new IPEndPoint(ip.Address, tlsOptions?.UseTls == false ? MqttPorts.Default : MqttPorts.Secure);
                         }
                     }
                 }
@@ -152,7 +167,6 @@ namespace MQTTnet.Client
             return this;
         }
 
-        [Obsolete("Use WithTcpServer(... configure) or WithWebSocketServer(... configure) instead.")]
         public MqttClientOptionsBuilder WithConnectionUri(Uri uri)
         {
             if (uri == null)
@@ -196,7 +210,6 @@ namespace MQTTnet.Client
             return this;
         }
 
-        [Obsolete("Use WithTcpServer(... configure) or WithWebSocketServer(... configure) instead.")]
         public MqttClientOptionsBuilder WithConnectionUri(string uri)
         {
             return WithConnectionUri(new Uri(uri, UriKind.Absolute));
@@ -354,13 +367,29 @@ namespace MQTTnet.Client
             return this;
         }
 
-        public MqttClientOptionsBuilder WithTcpServer(string server, int? port = null)
+        public MqttClientOptionsBuilder WithTcpServer(string host, int? port = null, AddressFamily addressFamily = AddressFamily.Unspecified)
         {
+            if (host == null)
+            {
+                throw new ArgumentNullException(nameof(host));
+            }
+
             _tcpOptions = new MqttClientTcpOptions();
+
+            _port = port;
 
             // The value 0 will be updated when building the options.
             // This a backward compatibility feature.
-            _remoteEndPoint = new DnsEndPoint(server, port ?? 0);
+
+            if (IPAddress.TryParse(host, out var ipAddress))
+            {
+                _remoteEndPoint = new IPEndPoint(ipAddress, port ?? 0);
+            }
+            else
+            {
+                _remoteEndPoint = new DnsEndPoint(host, port ?? 0, addressFamily);
+            }
+
             _port = port;
 
             return this;

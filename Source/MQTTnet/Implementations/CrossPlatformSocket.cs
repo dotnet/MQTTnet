@@ -31,11 +31,11 @@ namespace MQTTnet.Implementations
 #endif
         }
 
-        public CrossPlatformSocket()
+        public CrossPlatformSocket(ProtocolType protocolType)
         {
             // Having this constructor is important because avoiding the address family as parameter
             // will make use of dual mode in the .net framework.
-            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            _socket = new Socket(SocketType.Stream, protocolType);
 
 #if !NET5_0_OR_GREATER
             _socketDisposeAction = _socket.Dispose;

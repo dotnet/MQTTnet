@@ -202,9 +202,28 @@ namespace MQTTnet.Implementations
                 using (cancellationToken.Register(_socketDisposeAction))
                 {
 #if NET452 || NET461
-                    await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, endPoint, null).ConfigureAwait(false);
+                    // This is a fix for Mono which behaves differently than dotnet.
+                    // The connection will not be established when the DNS endpoint is used.
+                    if (endPoint is DnsEndPoint dns && dns.AddressFamily == AddressFamily.Unspecified)
+                    {
+                        await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, dns.Host, dns.Port, null).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, endPoint, null).ConfigureAwait(false);
+                    }
 #else
-                    await _socket.ConnectAsync(endPoint).ConfigureAwait(false);
+
+                    // This is a fix for Mono which behaves differently than dotnet.
+                    // The connection will not be established when the DNS endpoint is used.
+                    if (endPoint is DnsEndPoint dns && dns.AddressFamily == AddressFamily.Unspecified)
+                    {
+                        await _socket.ConnectAsync(dns.Host, dns.Port).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await _socket.ConnectAsync(endPoint).ConfigureAwait(false);
+                    }
 #endif
                 }
 #endif

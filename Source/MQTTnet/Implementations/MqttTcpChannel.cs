@@ -15,6 +15,7 @@ using MQTTnet.Channel;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Implementations
 {
@@ -95,6 +96,29 @@ namespace MQTTnet.Implementations
                     // because on IPv4 only networks the setter will always throw an exception. Regardless
                     // of the actual value.
                     socket.DualMode = _tcpOptions.DualMode.Value;
+                }
+
+                // This block is only for backward compatibility.
+                if (_tcpOptions.RemoteEndpoint == null && !string.IsNullOrEmpty(_tcpOptions.Server))
+                {
+                    int port;
+                    if (_tcpOptions.Port.HasValue)
+                    {
+                        port = _tcpOptions.Port.Value;
+                    }
+                    else
+                    {
+                        if (_tcpOptions.TlsOptions?.UseTls == true)
+                        {
+                            port = MqttPorts.Secure;
+                        }
+                        else
+                        {
+                            port = MqttPorts.Default;
+                        }
+                    }
+
+                    _tcpOptions.RemoteEndpoint = new DnsEndPoint(_tcpOptions.Server, port, AddressFamily.Unspecified);
                 }
 
                 await socket.ConnectAsync(_tcpOptions.RemoteEndpoint, cancellationToken).ConfigureAwait(false);

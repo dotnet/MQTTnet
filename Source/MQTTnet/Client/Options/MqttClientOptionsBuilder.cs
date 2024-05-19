@@ -376,20 +376,9 @@ namespace MQTTnet.Client
 
             _tcpOptions = new MqttClientTcpOptions();
 
-            _port = port;
-
             // The value 0 will be updated when building the options.
             // This a backward compatibility feature.
-
-            if (IPAddress.TryParse(host, out var ipAddress))
-            {
-                _remoteEndPoint = new IPEndPoint(ipAddress, port ?? 0);
-            }
-            else
-            {
-                _remoteEndPoint = new DnsEndPoint(host, port ?? 0, addressFamily);
-            }
-
+            _remoteEndPoint = new DnsEndPoint(host, port ?? 0, addressFamily);
             _port = port;
 
             return this;

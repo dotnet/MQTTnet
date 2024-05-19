@@ -1,4 +1,3 @@
-#if NET48_OR_GREATER || NET5_0_OR_GREATER
 using System;
 using System.Linq;
 using System.Net;
@@ -199,4 +198,3 @@ namespace MQTTnet.Tests.Server
         }
     }
 }
-#endif

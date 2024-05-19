@@ -3,7 +3,7 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <DebugType>Full</DebugType>
-        <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+        <TargetFrameworks>net8.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>

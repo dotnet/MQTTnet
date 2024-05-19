@@ -188,24 +188,16 @@ namespace MQTTnet.Server.Internal.Adapter
 
                     var sslStream = new SslStream(stream, false, _tlsOptions.RemoteCertificateValidationCallback);
 
-                    #if NETCOREAPP3_1_OR_GREATER
-                        await sslStream.AuthenticateAsServerAsync(
-                            new SslServerAuthenticationOptions
-                            {
-                                ServerCertificate = clientCertificate,
-                                ClientCertificateRequired = _tlsOptions.ClientCertificateRequired,
-                                EnabledSslProtocols = _tlsOptions.SslProtocol,
-                                CertificateRevocationCheckMode = _tlsOptions.CheckCertificateRevocation ? X509RevocationMode.Online : X509RevocationMode.NoCheck,
-                                EncryptionPolicy = EncryptionPolicy.RequireEncryption,
-                                CipherSuitesPolicy = _tlsOptions.CipherSuitesPolicy
-                            }).ConfigureAwait(false);
-                    #else
-                        await sslStream.AuthenticateAsServerAsync(
-                            clientCertificate,
-                            _tlsOptions.ClientCertificateRequired,
-                            _tlsOptions.SslProtocol,
-                            _tlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
-                    #endif
+                    await sslStream.AuthenticateAsServerAsync(
+                        new SslServerAuthenticationOptions
+                        {
+                            ServerCertificate = clientCertificate,
+                            ClientCertificateRequired = _tlsOptions.ClientCertificateRequired,
+                            EnabledSslProtocols = _tlsOptions.SslProtocol,
+                            CertificateRevocationCheckMode = _tlsOptions.CheckCertificateRevocation ? X509RevocationMode.Online : X509RevocationMode.NoCheck,
+                            EncryptionPolicy = EncryptionPolicy.RequireEncryption,
+                            CipherSuitesPolicy = _tlsOptions.CipherSuitesPolicy
+                        }).ConfigureAwait(false);
 
                     stream = sslStream;
 

@@ -30,10 +30,7 @@ app.UseAuthorization();
 app.MapRazorPages();
 
 // Setup MQTT stuff.
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapMqtt("/mqtt");
-});
+app.MapMqtt("/mqtt");
 
 app.UseMqttServer(server =>
 {

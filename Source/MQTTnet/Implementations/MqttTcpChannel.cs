@@ -15,21 +15,18 @@ using MQTTnet.Channel;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttChannel
     {
         readonly MqttClientOptions _clientOptions;
-        readonly Action _disposeAction;
         readonly MqttClientTcpOptions _tcpOptions;
 
         Stream _stream;
 
         public MqttTcpChannel()
         {
-            _disposeAction = Dispose;
         }
 
         public MqttTcpChannel(MqttClientOptions clientOptions) : this()
@@ -98,29 +95,6 @@ namespace MQTTnet.Implementations
                     socket.DualMode = _tcpOptions.DualMode.Value;
                 }
 
-                // This block is only for backward compatibility.
-                if (_tcpOptions.RemoteEndpoint == null && !string.IsNullOrEmpty(_tcpOptions.Server))
-                {
-                    int port;
-                    if (_tcpOptions.Port.HasValue)
-                    {
-                        port = _tcpOptions.Port.Value;
-                    }
-                    else
-                    {
-                        if (_tcpOptions.TlsOptions?.UseTls == true)
-                        {
-                            port = MqttPorts.Secure;
-                        }
-                        else
-                        {
-                            port = MqttPorts.Default;
-                        }
-                    }
-
-                    _tcpOptions.RemoteEndpoint = new DnsEndPoint(_tcpOptions.Server, port, AddressFamily.Unspecified);
-                }
-
                 await socket.ConnectAsync(_tcpOptions.RemoteEndpoint, cancellationToken).ConfigureAwait(false);
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -159,7 +133,6 @@ namespace MQTTnet.Implementations
 
                     try
                     {
-#if NETCOREAPP3_1_OR_GREATER
                         var sslOptions = new SslClientAuthenticationOptions
                         {
                             ApplicationProtocols = _tcpOptions.TlsOptions.ApplicationProtocols,
@@ -189,22 +162,10 @@ namespace MQTTnet.Implementations
 #endif
 
                         await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
-#else
-                        await sslStream.AuthenticateAsClientAsync(
-                                targetHost,
-                                LoadCertificates(),
-                                _tcpOptions.TlsOptions.SslProtocol,
-                                !_tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors)
-                            .ConfigureAwait(false);
-#endif
                     }
                     catch
                     {
-#if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
                         await sslStream.DisposeAsync().ConfigureAwait(false);
-#else
-                        sslStream.Dispose();
-#endif
 
                         throw;
                     }

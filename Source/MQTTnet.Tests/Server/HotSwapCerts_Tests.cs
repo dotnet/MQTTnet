@@ -1,4 +1,3 @@
-#if !(NET452 || NET461 || NET48)
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -325,9 +324,7 @@ namespace MQTTnet.Tests.Server
                 {
                     foreach (var certs in _certificates)
                     {
-#if !NET452
                         certs.Dispose();
-#endif
                     }
                 }
             }
@@ -378,9 +375,7 @@ namespace MQTTnet.Tests.Server
 
             public void Dispose()
             {
-#if !NET452
                 _certificate.Dispose();
-#endif
             }
 
             public X509Certificate2 GetCertificate()
@@ -392,9 +387,8 @@ namespace MQTTnet.Tests.Server
             {
                 var newCert = CreateSelfSignedCertificate("1.3.6.1.5.5.7.3.1");
                 var oldCert = Interlocked.Exchange(ref _certificate, newCert);
-#if !NET452
+
                 oldCert.Dispose();
-#endif
             }
 
             public void InstallNewClientCert(X509Certificate2 certificate)
@@ -422,5 +416,3 @@ namespace MQTTnet.Tests.Server
         }
     }
 }
-
-#endif

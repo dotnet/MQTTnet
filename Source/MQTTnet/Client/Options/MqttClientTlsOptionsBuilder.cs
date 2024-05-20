@@ -14,7 +14,7 @@ public sealed class MqttClientTlsOptionsBuilder
 {
     readonly MqttClientTlsOptions _tlsOptions = new()
     {
-        // If someone used this builder the change is very very high that TLS
+        // If someone used this builder the change is very high that TLS
         // should be actually used.
         UseTls = true
     };
@@ -140,11 +140,9 @@ public sealed class MqttClientTlsOptionsBuilder
         return this;
     }
 
-#if NET7_0_OR_GREATER
-        public MqttClientTlsOptionsBuilder WithTrustChain(X509Certificate2Collection chain)
-        {
-            _tlsOptions.TrustChain = chain;
-            return this;
-        }
-#endif
+    public MqttClientTlsOptionsBuilder WithTrustChain(X509Certificate2Collection chain)
+    {
+        _tlsOptions.TrustChain = chain;
+        return this;
+    }
 }

@@ -147,7 +147,6 @@ namespace MQTTnet.Implementations
                             AllowRenegotiation = _tcpOptions.TlsOptions.AllowRenegotiation
                         };
 
-#if NET7_0_OR_GREATER
                         if (_tcpOptions.TlsOptions.TrustChain?.Count > 0)
                         {
                             sslOptions.CertificateChainPolicy = new X509ChainPolicy
@@ -159,7 +158,6 @@ namespace MQTTnet.Implementations
 
                             sslOptions.CertificateChainPolicy.CustomTrustStore.AddRange(_tcpOptions.TlsOptions.TrustChain);
                         }
-#endif
 
                         await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
                     }

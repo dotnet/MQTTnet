@@ -50,7 +50,5 @@ public sealed class MqttClientTlsOptions
 
     public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;
 
-#if NET7_0_OR_GREATER
-        public X509Certificate2Collection TrustChain { get; set; }
-#endif
+    public X509Certificate2Collection TrustChain { get; set; }
 }

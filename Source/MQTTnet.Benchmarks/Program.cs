@@ -111,7 +111,7 @@ namespace MQTTnet.Benchmarks
         {
             Console.Clear();
 
-            Console.WriteLine($"MQTTnet - Benchmarks ({TargetFrameworkProvider.TargetFramework})");
+            Console.WriteLine($"MQTTnet - Benchmarks");
             Console.WriteLine("-----------------------------------------------");
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Press arrow keys for benchmark selection");

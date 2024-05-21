@@ -5,11 +5,13 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet.Client
 {
     public sealed class MqttClientTcpOptions : IMqttClientChannelOptions
     {
+        EndPoint _remoteEndpoint;
         public AddressFamily AddressFamily { get; set; } = AddressFamily.Unspecified;
 
         public int BufferSize { get; set; } = 8192;
@@ -49,13 +51,56 @@ namespace MQTTnet.Client
         /// </summary>
         public ProtocolType ProtocolType { get; set; } = ProtocolType.Tcp;
 
-        public EndPoint RemoteEndpoint { get; set; }
+        public EndPoint RemoteEndpoint
+        {
+            get => _remoteEndpoint;
+            set
+            {
+                _remoteEndpoint = value;
+
+                if (_remoteEndpoint is DnsEndPoint dnsEndPoint)
+                {
+                    Server = dnsEndPoint.Host;
+                    Port = dnsEndPoint.Port;
+                }
+                else if (_remoteEndpoint is IPEndPoint ipEndPoint)
+                {
+                    Server = ipEndPoint.Address.ToString();
+                    Port = ipEndPoint.Port;
+                }
+            }
+        }
 
         public MqttClientTlsOptions TlsOptions { get; set; } = new MqttClientTlsOptions();
 
         public override string ToString()
         {
-            return RemoteEndpoint?.ToString() ?? string.Empty;
+            if (RemoteEndpoint != null)
+            {
+                return RemoteEndpoint.ToString();
+            }
+
+            if (!string.IsNullOrEmpty(Server))
+            {
+                return $"{Server}:{GetPort()}";
+            }
+
+            return string.Empty;
+        }
+
+        int GetPort()
+        {
+            if (Port.HasValue)
+            {
+                return Port.Value;
+            }
+
+            if (TlsOptions?.UseTls == true)
+            {
+                return MqttPorts.Secure;
+            }
+
+            return MqttPorts.Default;
         }
     }
 }

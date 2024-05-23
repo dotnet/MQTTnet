@@ -1,2 +1,1 @@
-* [Client] Fix _None of the discovered or specified addresses match the socket address family._ (#1997).
-* [Client] Remove the obsolete attribute from the _WithConnectionUri_ methods (#1979).
+* [Client] Restored _Server_ and _Port_ behavior of client options (#2005).

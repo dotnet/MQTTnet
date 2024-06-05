@@ -4,6 +4,7 @@
 
 using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
+using System.Buffers;
 
 namespace MQTTnet.Server.Internal
 {
@@ -65,8 +66,8 @@ namespace MQTTnet.Server.Internal
 
                 lock (_messages)
                 {
-                    var payloadSegment = applicationMessage.PayloadSegment;
-                    var hasPayload = payloadSegment.Count > 0;
+                    var payloadSequence = applicationMessage.PayloadSequence;
+                    var hasPayload = payloadSequence.Length > 0;
 
                     if (!hasPayload)
                     {
@@ -82,7 +83,7 @@ namespace MQTTnet.Server.Internal
                         }
                         else
                         {
-                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !SequenceEqual(existingMessage.PayloadSegment, payloadSegment))
+                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !SequenceEqual(existingMessage.PayloadSequence, payloadSequence))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage;
                                 saveIsRequired = true;
@@ -151,6 +152,13 @@ namespace MQTTnet.Server.Internal
         static bool SequenceEqual(ArraySegment<byte> source, ArraySegment<byte> target)
         {
             return source.AsSpan().SequenceEqual(target);
+        }
+
+        static bool SequenceEqual(ReadOnlySequence<byte> source, ReadOnlySequence<byte> target)
+        {
+            int offset = 0;
+            // TODO
+            return true;
         }
     }
 }

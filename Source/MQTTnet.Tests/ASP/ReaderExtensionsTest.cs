@@ -18,7 +18,7 @@ public sealed class ReaderExtensionsTest
     {
         var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
 
-        var buffer = serializer.Encode(new MqttPublishPacket { Topic = "a", PayloadSegment = new byte[5] }).Join();
+        var buffer = serializer.Encode(new MqttPublishPacket { Topic = "a", PayloadSequence = new ReadOnlySequence<byte>(new byte[5]) }).Join();
 
         var sequence = new ReadOnlySequence<byte>(buffer.Array, buffer.Offset, buffer.Count);
 

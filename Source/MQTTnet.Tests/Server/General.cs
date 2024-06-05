@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -306,7 +307,7 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
                 server.InterceptingPublishAsync += e =>
                 {
-                    e.ApplicationMessage.PayloadSegment = new ArraySegment<byte>(Encoding.ASCII.GetBytes("extended"));
+                    e.ApplicationMessage.PayloadSequence = new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes("extended"));
                     return CompletedTask.Instance;
                 };
 
@@ -317,7 +318,7 @@ namespace MQTTnet.Tests.Server
                 var isIntercepted = false;
                 c2.ApplicationMessageReceivedAsync += e =>
                 {
-                    isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment.ToArray()), StringComparison.Ordinal) == 0;
+                    isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSequence.ToArray()), StringComparison.Ordinal) == 0;
                     return CompletedTask.Instance;
                 };
 
@@ -428,7 +429,7 @@ namespace MQTTnet.Tests.Server
                             new MqttApplicationMessage
                             {
                                 Topic = "/test/1",
-                                PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes("true")),
+                                PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("true")),
                                 QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
                             })
                         {
@@ -783,7 +784,7 @@ namespace MQTTnet.Tests.Server
                 var client1 = await testEnvironment.ConnectClient();
                 client1.ApplicationMessageReceivedAsync += e =>
                 {
-                    receivedBody = e.ApplicationMessage.PayloadSegment.ToArray();
+                    receivedBody = e.ApplicationMessage.PayloadSequence.ToArray();
                     return CompletedTask.Instance;
                 };
 

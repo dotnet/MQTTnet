@@ -4,6 +4,7 @@
 
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
+using System.Buffers;
 
 namespace MQTTnet.Server.Internal.Formatter;
 
@@ -30,7 +31,7 @@ public static class MqttPublishPacketFactory
         var packet = new MqttPublishPacket
         {
             Topic = connectPacket.WillTopic,
-            PayloadSegment = willMessageBuffer,
+            PayloadSequence = new ReadOnlySequence<byte>(willMessageBuffer),
             QualityOfServiceLevel = connectPacket.WillQoS,
             Retain = connectPacket.WillRetain,
             ContentType = connectPacket.WillContentType,
@@ -56,7 +57,7 @@ public static class MqttPublishPacketFactory
         var packet = new MqttPublishPacket
         {
             Topic = applicationMessage.Topic,
-            PayloadSegment = applicationMessage.PayloadSegment,
+            PayloadSequence = applicationMessage.PayloadSequence,
             QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
             Retain = applicationMessage.Retain,
             Dup = applicationMessage.Dup,

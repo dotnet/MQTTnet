@@ -14,6 +14,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Formatter.V3;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Diagnostics;
+using System.Buffers;
 
 namespace MQTTnet.Benchmarks
 {
@@ -105,6 +106,11 @@ namespace MQTTnet.Benchmarks
             }
 
             public Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
+            {
+                throw new NotSupportedException();
+            }
+
+            public Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
             {
                 throw new NotSupportedException();
             }

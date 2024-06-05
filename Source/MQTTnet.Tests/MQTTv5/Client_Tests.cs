@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -273,7 +274,7 @@ namespace MQTTnet.Tests.MQTTv5
                 Assert.AreEqual(applicationMessage.ResponseTopic, receivedMessage.ResponseTopic);
                 Assert.AreEqual(applicationMessage.MessageExpiryInterval, receivedMessage.MessageExpiryInterval);
                 CollectionAssert.AreEqual(applicationMessage.CorrelationData, receivedMessage.CorrelationData);
-                CollectionAssert.AreEqual(applicationMessage.PayloadSegment.ToArray(), receivedMessage.PayloadSegment.ToArray());
+                CollectionAssert.AreEqual(applicationMessage.PayloadSequence.ToArray(), receivedMessage.PayloadSequence.ToArray());
                 CollectionAssert.AreEqual(applicationMessage.UserProperties, receivedMessage.UserProperties);
             }
         }

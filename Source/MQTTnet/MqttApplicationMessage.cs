@@ -6,6 +6,7 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 
 namespace MQTTnet
@@ -50,9 +51,9 @@ namespace MQTTnet
         public uint MessageExpiryInterval { get; set; }
 
         /// <summary>
-        /// Get or set ArraySegment style of Payload.
+        /// Get or set ReadOnlySequence style of Payload.
         /// </summary>
-        public ArraySegment<byte> PayloadSegment { get; set; } = EmptyBuffer.ArraySegment;
+        public ReadOnlySequence<byte> PayloadSequence { get; set; }
 
         /// <summary>
         ///     Gets or sets the payload format indicator.

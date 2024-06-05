@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -50,6 +51,14 @@ namespace MQTTnet.Tests.Mockups
         public Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
             return _stream.WriteAsync(buffer.Array, buffer.Offset, buffer.Count, cancellationToken);
+        }
+
+        public async Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
+        {
+            foreach (var segment in buffer)
+            {
+                await _stream.WriteAsync(segment, cancellationToken).ConfigureAwait(false);
+            }
         }
 
         public void Dispose()

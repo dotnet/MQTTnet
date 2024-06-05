@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -111,7 +112,7 @@ namespace MQTTnet.Tests.Formatter
                 PacketIdentifier = 123,
                 Dup = true,
                 Retain = true,
-                PayloadSegment = new ArraySegment<byte>(Encoding.ASCII.GetBytes("HELLO")),
+                PayloadSequence = new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes("HELLO")),
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
                 Topic = "A/B/C"
             };
@@ -318,7 +319,7 @@ namespace MQTTnet.Tests.Formatter
             var publishPacket = new MqttPublishPacket
             {
                 Topic = "abcdefghijklmnopqrstuvwxyz0123456789",
-                PayloadSegment = new ArraySegment<byte>(payload)
+                PayloadSequence = new ReadOnlySequence<byte>(payload)
             };
 
             var serializationHelper = new MqttPacketSerializationHelper();
@@ -328,17 +329,17 @@ namespace MQTTnet.Tests.Formatter
 
             Assert.IsNotNull(publishPacketCopy);
             Assert.AreEqual(publishPacket.Topic, publishPacketCopy.Topic);
-            CollectionAssert.AreEqual(publishPacket.PayloadSegment.ToArray(), publishPacketCopy.PayloadSegment.ToArray());
+            CollectionAssert.AreEqual(publishPacket.PayloadSequence.ToArray(), publishPacketCopy.PayloadSequence.ToArray());
 
             // Now modify the payload and test again.
-            publishPacket.PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes("MQTT"));
+            publishPacket.PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("MQTT"));
 
             buffer = serializationHelper.Encode(publishPacket);
             var publishPacketCopy2 = serializationHelper.Decode(buffer) as MqttPublishPacket;
 
             Assert.IsNotNull(publishPacketCopy2);
             Assert.AreEqual(publishPacket.Topic, publishPacketCopy2.Topic);
-            CollectionAssert.AreEqual(publishPacket.PayloadSegment.ToArray(), publishPacketCopy2.PayloadSegment.ToArray());
+            CollectionAssert.AreEqual(publishPacket.PayloadSequence.ToArray(), publishPacketCopy2.PayloadSequence.ToArray());
         }
 
         [TestMethod]
@@ -462,7 +463,7 @@ namespace MQTTnet.Tests.Formatter
                 PacketIdentifier = 123,
                 Dup = true,
                 Retain = true,
-                PayloadSegment = new ArraySegment<byte>(Encoding.ASCII.GetBytes("HELLO")),
+                PayloadSequence = new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes("HELLO")),
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
                 Topic = "A/B/C"
             };

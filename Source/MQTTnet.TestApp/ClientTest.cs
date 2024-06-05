@@ -35,12 +35,9 @@ namespace MQTTnet.TestApp
                 client.ApplicationMessageReceivedAsync += e =>
                 {
                     var payloadText = string.Empty;
-                    if (e.ApplicationMessage.PayloadSegment.Count > 0)
+                    if (e.ApplicationMessage.PayloadSequence.Length > 0)
                     {
-                        payloadText = Encoding.UTF8.GetString(
-                            e.ApplicationMessage.PayloadSegment.Array,
-                            e.ApplicationMessage.PayloadSegment.Offset,
-                            e.ApplicationMessage.PayloadSegment.Count);
+                        payloadText = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSequence);
                     }
                     
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");

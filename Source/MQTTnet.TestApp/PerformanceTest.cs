@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -200,7 +201,7 @@ namespace MQTTnet.TestApp
             return new MqttApplicationMessage
             {
                 Topic = "A/B/C",
-                PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(Payload)),
+                PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(Payload)),
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce
             };
         }
@@ -233,7 +234,7 @@ namespace MQTTnet.TestApp
                 var message = new MqttApplicationMessage
                 {
                     Topic = "A/B/C",
-                    PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes("Hello World")),
+                    PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("Hello World")),
                     QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
                 };
 
@@ -284,7 +285,7 @@ namespace MQTTnet.TestApp
                 var message = new MqttApplicationMessage
                 {
                     Topic = "A/B/C",
-                    PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes("Hello World")),
+                    PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("Hello World")),
                     QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce
                 };
 
@@ -335,7 +336,7 @@ namespace MQTTnet.TestApp
                 var message = new MqttApplicationMessage
                 {
                     Topic = "A/B/C",
-                    PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes("Hello World")),
+                    PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("Hello World")),
                     QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
                 };
 

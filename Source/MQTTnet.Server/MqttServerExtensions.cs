@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Buffers;
 using System.Text;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
@@ -49,7 +50,7 @@ public static class MqttServerExtensions
                 new MqttApplicationMessage
                 {
                     Topic = topic,
-                    PayloadSegment = new ArraySegment<byte>(payloadBuffer),
+                    PayloadSequence = new ReadOnlySequence<byte>(payloadBuffer),
                     QualityOfServiceLevel = qualityOfServiceLevel,
                     Retain = retain
                 }));

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -132,7 +133,7 @@ namespace MQTTnet.Extensions.Rpc
                 return CompletedTask.Instance;
             }
 
-            var payloadBuffer = eventArgs.ApplicationMessage.PayloadSegment.ToArray();
+            var payloadBuffer = eventArgs.ApplicationMessage.PayloadSequence.ToArray();
             awaitable.TrySetResult(payloadBuffer);
 
             // Set this message to handled to that other code can avoid execution etc.

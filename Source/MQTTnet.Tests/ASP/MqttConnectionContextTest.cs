@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -99,7 +100,7 @@ namespace MQTTnet.Tests.ASP
             connection.Transport = pipe;
             var ctx = new MqttConnectionContext(serializer, connection);
 
-            await ctx.SendPacketAsync(new MqttPublishPacket { PayloadSegment = new ArraySegment<byte>(new byte[20_000]) }, CancellationToken.None).ConfigureAwait(false);
+            await ctx.SendPacketAsync(new MqttPublishPacket { PayloadSequence = new ReadOnlySequence<byte>(new byte[20_000]) }, CancellationToken.None).ConfigureAwait(false);
 
             var readResult = await pipe.Send.Reader.ReadAsync();
             Assert.IsTrue(readResult.Buffer.Length > 20000);

@@ -158,7 +158,7 @@ namespace MQTTnet.Server.Internal
         {
             int offset = 0;
             // TODO
-            return true;
+            return false;
         }
     }
 }

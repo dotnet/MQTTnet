@@ -236,7 +236,7 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
         int offset = 0;
         foreach (var segment in buffer.Payload)
         {
-            segment.Span.CopyTo(span.Slice(offset, buffer.Packet.Count));
+            segment.Span.CopyTo(span.Slice(offset));
             offset += segment.Length;
         }
 

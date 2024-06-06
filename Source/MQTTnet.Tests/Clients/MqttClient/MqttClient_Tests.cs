@@ -509,7 +509,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 client2.ApplicationMessageReceivedAsync += e =>
                 {
-                    client2TopicResults.Add(Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSequence.ToArray()));
+                    client2TopicResults.Add(Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSequence));
                     return CompletedTask.Instance;
                 };
 

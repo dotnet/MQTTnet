@@ -164,8 +164,8 @@ namespace MQTTnet.Server.Internal
             long comparedLength = 0;
             long length = source.Length;
 
-            int offsetSource = 0;
-            int offsetTarget = 0;
+            int sourceOffset = 0;
+            int targetOffset = 0;
 
             var sourceEnumerator = source.GetEnumerator();
             var targetEnumerator = target.GetEnumerator();
@@ -175,9 +175,10 @@ namespace MQTTnet.Server.Internal
 
             while (true)
             {
-                int compareLength = Math.Min(sourceSegment.Length, targetSegment.Length);
+                int compareLength = Math.Min(sourceSegment.Length - sourceOffset, targetSegment.Length - targetOffset);
 
-                if (!sourceSegment.Span.Slice(offsetSource, compareLength).SequenceEqual(targetSegment.Span.Slice(offsetTarget, compareLength)))
+                if (compareLength > 0 &&
+                    !sourceSegment.Span.Slice(sourceOffset, compareLength).SequenceEqual(targetSegment.Span.Slice(targetOffset, compareLength)))
                 {
                     return false;
                 }
@@ -188,9 +189,8 @@ namespace MQTTnet.Server.Internal
                     return true;
                 }
 
-                offsetSource += compareLength;
-                offsetTarget += compareLength;
-                if (offsetSource >= sourceSegment.Length)
+                sourceOffset += compareLength;
+                if (sourceOffset >= sourceSegment.Length)
                 {
                     if (!sourceEnumerator.MoveNext())
                     {
@@ -198,9 +198,11 @@ namespace MQTTnet.Server.Internal
                     }
 
                     sourceSegment = sourceEnumerator.Current;
-                    offsetSource = 0;
+                    sourceOffset = 0;
                 }
-                if (offsetTarget >= targetSegment.Length)
+
+                targetOffset += compareLength;
+                if (targetOffset >= targetSegment.Length)
                 {
                     if (!targetEnumerator.MoveNext())
                     {
@@ -208,7 +210,7 @@ namespace MQTTnet.Server.Internal
                     }
 
                     targetSegment = targetEnumerator.Current;
-                    offsetTarget = 0;
+                    targetOffset = 0;
                 }
             }
         }

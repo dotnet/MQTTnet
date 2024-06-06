@@ -17,7 +17,7 @@ namespace MQTTnet.Formatter
             Packet = packet;
             Payload = payload;
 
-            if (Packet.Count + (int)Payload.Length > int.MaxValue)
+            if (Packet.Count + Payload.Length > int.MaxValue)
             {
                 throw new InvalidOperationException("The packet is too large.");
             }

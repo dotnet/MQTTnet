@@ -156,9 +156,61 @@ namespace MQTTnet.Server.Internal
 
         static bool SequenceEqual(ReadOnlySequence<byte> source, ReadOnlySequence<byte> target)
         {
-            int offset = 0;
-            // TODO
-            return false;
+            if (source.Length != target.Length)
+            {
+                return false;
+            }
+
+            long comparedLength = 0;
+            long length = source.Length;
+
+            int offsetSource = 0;
+            int offsetTarget = 0;
+
+            var sourceEnumerator = source.GetEnumerator();
+            var targetEnumerator = target.GetEnumerator();
+
+            ReadOnlyMemory<byte> sourceSegment = sourceEnumerator.Current;
+            ReadOnlyMemory<byte> targetSegment = targetEnumerator.Current;
+
+            while (true)
+            {
+                int compareLength = Math.Min(sourceSegment.Length, targetSegment.Length);
+
+                if (!sourceSegment.Span.Slice(offsetSource, compareLength).SequenceEqual(targetSegment.Span.Slice(offsetTarget, compareLength)))
+                {
+                    return false;
+                }
+
+                comparedLength += compareLength;
+                if (comparedLength >= length)
+                {
+                    return true;
+                }
+
+                offsetSource += compareLength;
+                offsetTarget += compareLength;
+                if (offsetSource >= sourceSegment.Length)
+                {
+                    if (!sourceEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    sourceSegment = sourceEnumerator.Current;
+                    offsetSource = 0;
+                }
+                if (offsetTarget >= targetSegment.Length)
+                {
+                    if (!targetEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    targetSegment = targetEnumerator.Current;
+                    offsetTarget = 0;
+                }
+            }
         }
     }
 }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet.Extensions.ManagedClient
@@ -11,6 +12,6 @@ namespace MQTTnet.Extensions.ManagedClient
     {
         Task SaveQueuedMessagesAsync(IList<ManagedMqttApplicationMessage> messages);
 
-        Task<IList<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync();
+        IAsyncEnumerable<ManagedMqttApplicationMessage> LoadQueuedMessagesAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -2,15 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.IO;
-using System.Threading;
 using BenchmarkDotNet.Attributes;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Tests.Mockups;
+using System.Buffers;
+using System.IO;
+using System.Threading;
 
 namespace MQTTnet.Benchmarks
 {
@@ -58,7 +58,7 @@ namespace MQTTnet.Benchmarks
 
             var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
 
-            var serializedPacket = Join(serializer.Encode(_packet).Join());
+            var serializedPacket = serializer.Encode(_packet).ToArray();
 
             _iterations = 10000;
 
@@ -74,17 +74,6 @@ namespace MQTTnet.Benchmarks
             var channel = new MemoryMqttChannel(_stream);
 
             _channelAdapter = new MqttChannelAdapter(channel, serializer, new MqttNetEventLogger());
-        }
-
-        static byte[] Join(params ArraySegment<byte>[] chunks)
-        {
-            var buffer = new MemoryStream();
-            foreach (var chunk in chunks)
-            {
-                buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
-            }
-
-            return buffer.ToArray();
         }
     }
 }

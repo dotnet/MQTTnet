@@ -249,36 +249,6 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public async Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            try
-            {
-                var stream = _stream;
-
-                if (stream == null)
-                {
-                    throw new MqttCommunicationException("The TCP connection is closed.");
-                }
-
-                await stream.WriteAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
-            }
-            catch (ObjectDisposedException)
-            {
-                throw new MqttCommunicationException("The TCP connection is closed.");
-            }
-            catch (IOException exception)
-            {
-                if (exception.InnerException is SocketException socketException)
-                {
-                    ExceptionDispatchInfo.Capture(socketException).Throw();
-                }
-
-                throw;
-            }
-        }
-
         public async Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();

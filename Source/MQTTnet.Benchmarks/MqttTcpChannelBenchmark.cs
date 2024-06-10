@@ -2,10 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Channel;
@@ -14,6 +10,10 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
 using MQTTnet.Server.Internal.Adapter;
+using System.Buffers;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Benchmarks;
 
@@ -64,12 +64,13 @@ public class MqttTcpChannelBenchmark : BaseBenchmark
     {
         await Task.Yield();
 
+        var buffer = new byte[size];
         var expected = iterations * size;
         long read = 0;
 
         while (read < expected)
         {
-            var readResult = await _clientChannel.ReadAsync(new byte[size], 0, size, CancellationToken.None).ConfigureAwait(false);
+            var readResult = await _clientChannel.ReadAsync(buffer, 0, size, CancellationToken.None).ConfigureAwait(false);
             read += readResult;
         }
     }
@@ -78,7 +79,7 @@ public class MqttTcpChannelBenchmark : BaseBenchmark
     {
         await Task.Yield();
 
-        var buffer = new ArraySegment<byte>(new byte[size]);
+        var buffer = new ReadOnlySequence<byte>(new byte[size]);
 
         for (var i = 0; i < iterations; i++)
         {

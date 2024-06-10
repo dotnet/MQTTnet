@@ -23,7 +23,5 @@ public interface IMqttChannel : IDisposable
 
     Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);
 
-    Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken);
-
     Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken);
 }

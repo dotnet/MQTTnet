@@ -38,7 +38,7 @@ namespace MQTTnet.Benchmarks
 
             _bufferWriter = new MqttBufferWriter(4096, 65535);
             _serializer = new MqttV3PacketFormatter(_bufferWriter, MqttProtocolVersion.V311);
-            _serializedPacket = _serializer.Encode(_packet).Join();
+            _serializedPacket = _serializer.Encode(_packet).ToArray();
         }
 
         [Benchmark]
@@ -103,11 +103,6 @@ namespace MQTTnet.Benchmarks
                 _position += count;
 
                 return Task.FromResult(count);
-            }
-
-            public Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
-            {
-                throw new NotSupportedException();
             }
 
             public Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)

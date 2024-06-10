@@ -48,11 +48,6 @@ namespace MQTTnet.Tests.Mockups
             return _stream.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
-        public Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
-        {
-            return _stream.WriteAsync(buffer.Array, buffer.Offset, buffer.Count, cancellationToken);
-        }
-
         public async Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
             foreach (var segment in buffer)

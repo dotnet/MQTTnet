@@ -67,18 +67,7 @@ namespace MQTTnet.Formatter
                 return Packet;
             }
 
-            var buffer = GC.AllocateUninitializedArray<byte>(Length);
-
-            MqttMemoryHelper.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
-
-            int offset = Packet.Count;
-            foreach (ReadOnlyMemory<byte> segment in Payload)
-            {
-                segment.CopyTo(buffer.AsMemory(offset));
-                offset += segment.Length;
-            }
-
-            return new ArraySegment<byte>(buffer);
+            return new ArraySegment<byte>(ToArray());
         }
     }
 }

@@ -113,7 +113,7 @@ public static class Server_Retained_Messages_Samples
 
                 // Create a copy of the buffer from the payload segment because
                 // it cannot be serialized and deserialized with the JSON serializer.
-                Payload = message.PayloadSequence.ToArray(),
+                Payload = message.Payload.ToArray(),
                 UserProperties = message.UserProperties,
                 ResponseTopic = message.ResponseTopic,
                 CorrelationData = message.CorrelationData,
@@ -131,7 +131,7 @@ public static class Server_Retained_Messages_Samples
             return new MqttApplicationMessage
             {
                 Topic = Topic,
-                PayloadSequence = new ReadOnlySequence<byte>(Payload ?? Array.Empty<byte>()),
+                Payload = Payload != null ? new ReadOnlySequence<byte>(Payload) : ReadOnlySequence<byte>.Empty,
                 PayloadFormatIndicator = PayloadFormatIndicator,
                 ResponseTopic = ResponseTopic,
                 CorrelationData = CorrelationData,

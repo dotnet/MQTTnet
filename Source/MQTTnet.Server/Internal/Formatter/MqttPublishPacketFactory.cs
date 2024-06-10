@@ -31,7 +31,7 @@ public static class MqttPublishPacketFactory
         var packet = new MqttPublishPacket
         {
             Topic = connectPacket.WillTopic,
-            PayloadSequence = new ReadOnlySequence<byte>(willMessageBuffer),
+            Payload = new ReadOnlySequence<byte>(willMessageBuffer),
             QualityOfServiceLevel = connectPacket.WillQoS,
             Retain = connectPacket.WillRetain,
             ContentType = connectPacket.WillContentType,
@@ -57,7 +57,7 @@ public static class MqttPublishPacketFactory
         var packet = new MqttPublishPacket
         {
             Topic = applicationMessage.Topic,
-            PayloadSequence = applicationMessage.PayloadSequence,
+            Payload = applicationMessage.Payload,
             QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
             Retain = applicationMessage.Retain,
             Dup = applicationMessage.Dup,

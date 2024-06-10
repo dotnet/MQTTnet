@@ -10,8 +10,6 @@ namespace MQTTnet.Formatter
 {
     public readonly struct MqttPacketBuffer
     {
-        static readonly ReadOnlySequence<byte> EmptySequence = EmptyBuffer.ArraySequence;
-
         public MqttPacketBuffer(ArraySegment<byte> packet, ReadOnlySequence<byte> payload)
         {
             Packet = packet;
@@ -28,7 +26,7 @@ namespace MQTTnet.Formatter
         public MqttPacketBuffer(ArraySegment<byte> packet)
         {
             Packet = packet;
-            Payload = EmptySequence;
+            Payload = ReadOnlySequence<byte>.Empty;
 
             Length = Packet.Count;
         }

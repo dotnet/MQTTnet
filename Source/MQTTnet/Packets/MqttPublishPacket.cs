@@ -21,7 +21,7 @@ public sealed class MqttPublishPacket : MqttPacketWithIdentifier
 
     public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
-    public ReadOnlySequence<byte> PayloadSequence { get; set; }
+    public ReadOnlySequence<byte> Payload { get; set; }
 
     public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; } = MqttQualityOfServiceLevel.AtMostOnce;
 
@@ -40,6 +40,6 @@ public sealed class MqttPublishPacket : MqttPacketWithIdentifier
     public override string ToString()
     {
         return
-            $"Publish: [Topic={Topic}] [PayloadLength={PayloadSequence.Length}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
+            $"Publish: [Topic={Topic}] [PayloadLength={Payload.Length}] [QoSLevel={QualityOfServiceLevel}] [Dup={Dup}] [Retain={Retain}] [PacketIdentifier={PacketIdentifier}]";
     }
 }

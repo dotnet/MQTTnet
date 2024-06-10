@@ -284,7 +284,7 @@ namespace MQTTnet.Tests.Server
 
                 server.InterceptingPublishAsync += e =>
                 {
-                    e.ApplicationMessage.PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(e.SessionItems["default_payload"] as string ?? string.Empty));
+                    e.ApplicationMessage.Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(e.SessionItems["default_payload"] as string ?? string.Empty));
                     return CompletedTask.Instance;
                 };
 

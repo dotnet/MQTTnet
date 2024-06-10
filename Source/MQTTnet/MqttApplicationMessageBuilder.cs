@@ -23,7 +23,7 @@ namespace MQTTnet
         uint _messageExpiryInterval;
 
         MqttPayloadFormatIndicator _payloadFormatIndicator;
-        ReadOnlySequence<byte> _payloadSequence;
+        ReadOnlySequence<byte> _payload;
         MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
         string _responseTopic;
         bool _retain;
@@ -42,7 +42,7 @@ namespace MQTTnet
             var applicationMessage = new MqttApplicationMessage
             {
                 Topic = _topic,
-                PayloadSequence = _payloadSequence,
+                Payload = _payload,
                 QualityOfServiceLevel = _qualityOfServiceLevel,
                 Retain = _retain,
                 ContentType = _contentType,
@@ -90,19 +90,19 @@ namespace MQTTnet
 
         public MqttApplicationMessageBuilder WithPayload(byte[] payload)
         {
-            _payloadSequence = payload == null || payload.Length == 0 ? EmptyBuffer.ArraySequence : new ReadOnlySequence<byte>(payload);
+            _payload = payload == null || payload.Length == 0 ? ReadOnlySequence<byte>.Empty : new ReadOnlySequence<byte>(payload);
             return this;
         }
 
         public MqttApplicationMessageBuilder WithPayload(ArraySegment<byte> payloadSegment)
         {
-            _payloadSequence = new ReadOnlySequence<byte>(payloadSegment);
+            _payload = new ReadOnlySequence<byte>(payloadSegment);
             return this;
         }
 
-        public MqttApplicationMessageBuilder WithPayload(ReadOnlySequence<byte> payloadSequence)
+        public MqttApplicationMessageBuilder WithPayload(ReadOnlySequence<byte> payload)
         {
-            _payloadSequence = payloadSequence;
+            _payload = payload;
             return this;
         }
 
@@ -177,19 +177,19 @@ namespace MQTTnet
 
         public MqttApplicationMessageBuilder WithPayloadSegment(ArraySegment<byte> payloadSegment)
         {
-            _payloadSequence = new ReadOnlySequence<byte>(payloadSegment);
-            return this;
-        }
-
-        public MqttApplicationMessageBuilder WithPayloadSegment(ReadOnlySequence<byte> payloadSequence)
-        {
-            _payloadSequence = payloadSequence;
+            _payload = new ReadOnlySequence<byte>(payloadSegment);
             return this;
         }
 
         public MqttApplicationMessageBuilder WithPayloadSegment(ReadOnlyMemory<byte> payloadSegment)
         {
-            _payloadSequence = new ReadOnlySequence<byte>(payloadSegment);
+            _payload = new ReadOnlySequence<byte>(payloadSegment);
+            return this;
+        }
+
+        public MqttApplicationMessageBuilder WithPayloadSequence(ReadOnlySequence<byte> payload)
+        {
+            _payload = payload;
             return this;
         }
 

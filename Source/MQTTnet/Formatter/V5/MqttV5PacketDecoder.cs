@@ -541,7 +541,7 @@ namespace MQTTnet.Formatter.V5
 
             if (!_bufferReader.EndOfStream)
             {
-                packet.PayloadSequence = new ReadOnlySequence<byte>(_bufferReader.ReadRemainingData());
+                packet.Payload = new ReadOnlySequence<byte>(_bufferReader.ReadRemainingData());
             }
 
             return packet;

@@ -38,11 +38,11 @@ namespace MQTTnet.Formatter.V5
             var remainingLength = (uint)_bufferWriter.Length - ReservedHeaderSize;
 
             var publishPacket = packet as MqttPublishPacket;
-            var payloadSequence = publishPacket?.PayloadSequence;
+            var payload = publishPacket?.Payload;
 
-            if (payloadSequence != null)
+            if (payload != null)
             {
-                remainingLength += (uint)payloadSequence.Value.Length;
+                remainingLength += (uint)payload.Value.Length;
             }
 
             var remainingLengthSize = MqttBufferWriter.GetVariableByteIntegerSize(remainingLength);
@@ -58,9 +58,9 @@ namespace MQTTnet.Formatter.V5
             var buffer = _bufferWriter.GetBuffer();
             var firstSegment = new ArraySegment<byte>(buffer, headerOffset, _bufferWriter.Length - headerOffset);
 
-            return payloadSequence == null
+            return payload == null
                ? new MqttPacketBuffer(firstSegment)
-               : new MqttPacketBuffer(firstSegment, payloadSequence.Value);
+               : new MqttPacketBuffer(firstSegment, payload.Value);
         }
 
         byte EncodeAuthPacket(MqttAuthPacket packet)

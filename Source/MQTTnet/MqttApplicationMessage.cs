@@ -51,7 +51,7 @@ namespace MQTTnet
         /// <summary>
         /// Get or set ReadOnlySequence style of Payload.
         /// </summary>
-        public ReadOnlySequence<byte> PayloadSequence { get; set; }
+        public ReadOnlySequence<byte> Payload { get; set; }
 
         /// <summary>
         ///     Gets or sets the payload format indicator.

@@ -16,11 +16,11 @@ public static class MqttApplicationMessageExtensions
             throw new ArgumentNullException(nameof(applicationMessage));
         }
 
-        if (applicationMessage.PayloadSequence.Length == 0)
+        if (applicationMessage.Payload.Length == 0)
         {
             return null;
         }
 
-        return Encoding.UTF8.GetString(applicationMessage.PayloadSequence);
+        return Encoding.UTF8.GetString(applicationMessage.Payload);
     }
 }

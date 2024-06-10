@@ -298,7 +298,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 Assert.IsNotNull(receivedMessage);
                 Assert.AreEqual("A", receivedMessage.Topic);
-                Assert.AreEqual(0, receivedMessage.PayloadSequence.Length);
+                Assert.AreEqual(0, receivedMessage.Payload.Length);
             }
         }
 
@@ -509,7 +509,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 client2.ApplicationMessageReceivedAsync += e =>
                 {
-                    client2TopicResults.Add(Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSequence));
+                    client2TopicResults.Add(Encoding.UTF8.GetString(e.ApplicationMessage.Payload));
                     return CompletedTask.Instance;
                 };
 

@@ -50,7 +50,7 @@ public static class MqttServerExtensions
                 new MqttApplicationMessage
                 {
                     Topic = topic,
-                    PayloadSequence = new ReadOnlySequence<byte>(payloadBuffer),
+                    Payload = new ReadOnlySequence<byte>(payloadBuffer),
                     QualityOfServiceLevel = qualityOfServiceLevel,
                     Retain = retain
                 }));

@@ -274,7 +274,7 @@ namespace MQTTnet.Tests.MQTTv5
                 Assert.AreEqual(applicationMessage.ResponseTopic, receivedMessage.ResponseTopic);
                 Assert.AreEqual(applicationMessage.MessageExpiryInterval, receivedMessage.MessageExpiryInterval);
                 CollectionAssert.AreEqual(applicationMessage.CorrelationData, receivedMessage.CorrelationData);
-                CollectionAssert.AreEqual(applicationMessage.PayloadSequence.ToArray(), receivedMessage.PayloadSequence.ToArray());
+                CollectionAssert.AreEqual(applicationMessage.Payload.ToArray(), receivedMessage.Payload.ToArray());
                 CollectionAssert.AreEqual(applicationMessage.UserProperties, receivedMessage.UserProperties);
             }
         }

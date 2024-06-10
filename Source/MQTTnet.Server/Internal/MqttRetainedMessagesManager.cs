@@ -66,8 +66,8 @@ namespace MQTTnet.Server.Internal
 
                 lock (_messages)
                 {
-                    var payloadSequence = applicationMessage.PayloadSequence;
-                    var hasPayload = payloadSequence.Length > 0;
+                    var payload = applicationMessage.Payload;
+                    var hasPayload = payload.Length > 0;
 
                     if (!hasPayload)
                     {
@@ -83,7 +83,7 @@ namespace MQTTnet.Server.Internal
                         }
                         else
                         {
-                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !SequenceEqual(existingMessage.PayloadSequence, payloadSequence))
+                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !SequenceEqual(existingMessage.Payload, payload))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage;
                                 saveIsRequired = true;

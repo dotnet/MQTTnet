@@ -201,7 +201,7 @@ namespace MQTTnet.TestApp
             return new MqttApplicationMessage
             {
                 Topic = "A/B/C",
-                PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(Payload)),
+                Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(Payload)),
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce
             };
         }
@@ -234,7 +234,7 @@ namespace MQTTnet.TestApp
                 var message = new MqttApplicationMessage
                 {
                     Topic = "A/B/C",
-                    PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("Hello World")),
+                    Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("Hello World")),
                     QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
                 };
 
@@ -285,7 +285,7 @@ namespace MQTTnet.TestApp
                 var message = new MqttApplicationMessage
                 {
                     Topic = "A/B/C",
-                    PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("Hello World")),
+                    Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("Hello World")),
                     QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce
                 };
 
@@ -336,7 +336,7 @@ namespace MQTTnet.TestApp
                 var message = new MqttApplicationMessage
                 {
                     Topic = "A/B/C",
-                    PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("Hello World")),
+                    Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("Hello World")),
                     QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
                 };
 

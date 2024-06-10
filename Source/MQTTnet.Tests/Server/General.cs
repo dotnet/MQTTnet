@@ -307,7 +307,7 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
                 server.InterceptingPublishAsync += e =>
                 {
-                    e.ApplicationMessage.PayloadSequence = new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes("extended"));
+                    e.ApplicationMessage.Payload = new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes("extended"));
                     return CompletedTask.Instance;
                 };
 
@@ -318,7 +318,7 @@ namespace MQTTnet.Tests.Server
                 var isIntercepted = false;
                 c2.ApplicationMessageReceivedAsync += e =>
                 {
-                    isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSequence), StringComparison.Ordinal) == 0;
+                    isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.Payload), StringComparison.Ordinal) == 0;
                     return CompletedTask.Instance;
                 };
 
@@ -429,7 +429,7 @@ namespace MQTTnet.Tests.Server
                             new MqttApplicationMessage
                             {
                                 Topic = "/test/1",
-                                PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("true")),
+                                Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("true")),
                                 QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
                             })
                         {
@@ -784,7 +784,7 @@ namespace MQTTnet.Tests.Server
                 var client1 = await testEnvironment.ConnectClient();
                 client1.ApplicationMessageReceivedAsync += e =>
                 {
-                    receivedBody = e.ApplicationMessage.PayloadSequence.ToArray();
+                    receivedBody = e.ApplicationMessage.Payload.ToArray();
                     return CompletedTask.Instance;
                 };
 

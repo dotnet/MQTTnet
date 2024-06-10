@@ -260,7 +260,7 @@ namespace MQTTnet.Tests.Formatter
                 PacketIdentifier = 123,
                 Dup = true,
                 Retain = true,
-                PayloadSequence = new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes("Payload")),
+                Payload = new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes("Payload")),
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
                 Topic = "Topic",
                 ResponseTopic = "/Response",
@@ -284,7 +284,7 @@ namespace MQTTnet.Tests.Formatter
             Assert.AreEqual(publishPacket.PacketIdentifier, deserialized.PacketIdentifier);
             Assert.AreEqual(publishPacket.Dup, deserialized.Dup);
             Assert.AreEqual(publishPacket.Retain, deserialized.Retain);
-            CollectionAssert.AreEqual(publishPacket.PayloadSequence.ToArray(), deserialized.PayloadSequence.ToArray());
+            CollectionAssert.AreEqual(publishPacket.Payload.ToArray(), deserialized.Payload.ToArray());
             Assert.AreEqual(publishPacket.QualityOfServiceLevel, deserialized.QualityOfServiceLevel);
             Assert.AreEqual(publishPacket.Topic, deserialized.Topic);
             Assert.AreEqual(publishPacket.ResponseTopic, deserialized.ResponseTopic);

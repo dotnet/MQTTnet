@@ -104,10 +104,10 @@ namespace MQTTnet.Formatter.V3
             var remainingLength = (uint)(_bufferWriter.Length - 5);
 
             var publishPacket = packet as MqttPublishPacket;
-            var payloadSequence = publishPacket?.PayloadSequence;
-            if (payloadSequence != null)
+            var payload = publishPacket?.Payload;
+            if (payload != null)
             {
-                remainingLength += (uint)payloadSequence.Value.Length;
+                remainingLength += (uint)payload.Value.Length;
             }
 
             var remainingLengthSize = MqttBufferWriter.GetVariableByteIntegerSize(remainingLength);
@@ -123,9 +123,9 @@ namespace MQTTnet.Formatter.V3
             var buffer = _bufferWriter.GetBuffer();
             var firstSegment = new ArraySegment<byte>(buffer, headerOffset, _bufferWriter.Length - headerOffset);
 
-            return payloadSequence == null
+            return payload == null
                 ? new MqttPacketBuffer(firstSegment)
-                : new MqttPacketBuffer(firstSegment, payloadSequence.Value);
+                : new MqttPacketBuffer(firstSegment, payload.Value);
         }
 
         MqttPacket DecodeConnAckPacket(ArraySegment<byte> body)
@@ -279,7 +279,7 @@ namespace MQTTnet.Formatter.V3
 
             if (!_bufferReader.EndOfStream)
             {
-                packet.PayloadSequence = new ReadOnlySequence<byte>(_bufferReader.ReadRemainingData());
+                packet.Payload = new ReadOnlySequence<byte>(_bufferReader.ReadRemainingData());
             }
 
             return packet;

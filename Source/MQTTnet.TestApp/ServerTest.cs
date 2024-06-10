@@ -102,7 +102,7 @@ namespace MQTTnet.TestApp
                     {
                         // Replace the payload with the timestamp. But also extending a JSON
                         // based payload with the timestamp is a suitable use case.
-                        e.ApplicationMessage.PayloadSequence = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(DateTime.Now.ToString("O")));
+                        e.ApplicationMessage.Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(DateTime.Now.ToString("O")));
                     }
 
                     if (e.ApplicationMessage.Topic == "not_allowed_topic")
@@ -146,9 +146,9 @@ namespace MQTTnet.TestApp
                 mqttServer.InterceptingPublishAsync += e =>
                 {
                     var payloadText = string.Empty;
-                    if (e.ApplicationMessage.PayloadSequence.Length > 0)
+                    if (e.ApplicationMessage.Payload.Length > 0)
                     {
-                        payloadText = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSequence);
+                        payloadText = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                     }
 
                     MqttNetConsoleLogger.PrintToConsole($"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{payloadText}'", ConsoleColor.Magenta);

@@ -299,7 +299,7 @@ public sealed class ManagedMqttClient_Tests : BaseTestClass
 
             await managedClient.EnqueueAsync(
                 new MqttApplicationMessage
-                    { Topic = topic, PayloadSequence = new ReadOnlySequence<byte>(new byte[] { 1 }), Retain = true, QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+                    { Topic = topic, Payload = new ReadOnlySequence<byte>(new byte[] { 1 }), Retain = true, QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
             var timeoutTask = Task.Delay(testTimeout);
 
@@ -609,7 +609,7 @@ public sealed class ManagedMqttClient_Tests : BaseTestClass
             var receivingClient = await CreateManagedClientAsync(testEnvironment, null, connectionCheckInterval);
             var sendingClient = await testEnvironment.ConnectClient();
 
-            await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", PayloadSequence = new ReadOnlySequence<byte>(new byte[] { 1 }), Retain = true });
+            await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", Payload = new ReadOnlySequence<byte>(new byte[] { 1 }), Retain = true });
 
             var subscribeTime = DateTime.UtcNow;
 
@@ -642,7 +642,7 @@ public sealed class ManagedMqttClient_Tests : BaseTestClass
             //wait a bit for the subscription to become established
             await Task.Delay(500);
 
-            await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", PayloadSequence = new ReadOnlySequence<byte>(new byte[] { 1 }), Retain = true });
+            await sendingClient.PublishAsync(new MqttApplicationMessage { Topic = "topic", Payload = new ReadOnlySequence<byte>(new byte[] { 1 }), Retain = true });
 
             var messages = await SetupReceivingOfMessages(managedClient, 1);
 

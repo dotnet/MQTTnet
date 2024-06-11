@@ -18,7 +18,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\MQTTnet.Server\MQTTnet.Server.csproj"/>
-        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj"/>
         <ProjectReference Include="..\..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj"/>
         <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj"/>
         <ProjectReference Include="..\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj"/>

@@ -16,7 +16,6 @@ public static class Program
         Console.WriteLine("1 = Start client");
         Console.WriteLine("2 = Start server");
         Console.WriteLine("3 = Start performance test");
-        Console.WriteLine("4 = Start managed client");
         Console.WriteLine("5 = Start public broker test");
         Console.WriteLine("6 = Start server & client");
         Console.WriteLine("7 = Client flow test");
@@ -41,10 +40,6 @@ public static class Program
         else if (pressedKey.KeyChar == '3')
         {
             Task.Run(PerformanceTest.RunClientAndServer);
-        }
-        else if (pressedKey.KeyChar == '4')
-        {
-            Task.Run(ManagedClientTest.RunAsync);
         }
         else if (pressedKey.KeyChar == '5')
         {

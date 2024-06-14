@@ -47,6 +47,29 @@ namespace MQTTnet.Tests.Extensions
         }
         
         [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void RejectsReservedChars2()
+        {
+            var template = new MqttTopicTemplate("A/B/{foo}/D");
+            template.WithParameter("foo", "a+b");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void RejectsReservedChars3()
+        {
+            var template = new MqttTopicTemplate("A/B/{foo}/D");
+            template.WithParameter("foo", "a/b");
+        }
+        
+        [TestMethod]
+        public void AcceptsEmptyValue()
+        {
+            var template = new MqttTopicTemplate("A/B/{foo}/D");
+            template.WithParameter("foo", "");
+        }
+        
+        [TestMethod]
         [ExpectedException(typeof(MqttProtocolViolationException))]
         public void RejectsEmptyTemplate()
         {
@@ -60,13 +83,6 @@ namespace MQTTnet.Tests.Extensions
             var _ = new MqttTopicTemplate(null);
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void RejectsReservedChars2()
-        {
-            var template = new MqttTopicTemplate("A/B/{foo}/D");
-            template.WithParameter("foo", "e/f");
-        }
         
         [TestMethod]
         public void IgnoresEmptyParameters()

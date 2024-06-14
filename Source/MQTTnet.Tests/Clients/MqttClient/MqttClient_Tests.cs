@@ -87,7 +87,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 await client.ConnectAsync(clientOptions);
             }
         }
-        
+
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task Connect_Multiple_Times_Should_Fail()
@@ -749,8 +749,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 {
                     if (e.ApplicationMessage.Topic == "request")
                     {
-                        // Use AtMostOnce here because with QoS 1 or even QoS 2 the process waits for 
-                        // the ACK etc. The problem is that the SpinUntil below only waits until the 
+                        // Use AtMostOnce here because with QoS 1 or even QoS 2 the process waits for
+                        // the ACK etc. The problem is that the SpinUntil below only waits until the
                         // flag is set. It does not wait until the client has sent the ACK
                         await client2.PublishStringAsync("reply");
                     }

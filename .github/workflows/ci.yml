@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 env:
   VERSION: "5.0.0.${{github.run_number}}"
+  PACKAGE_SUFFIX: "-beta"
 
 jobs:
   build:
@@ -21,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build package
-        run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}
+        run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}${{ env.PACKAGE_SUFFIX }}
 
       - name: Upload nuget packages
         uses: actions/upload-artifact@v4
@@ -81,7 +82,7 @@ jobs:
           --azure-key-vault-client-secret "${{ secrets.AZURE_CLIENT_SECRET }}" `
           --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERTIFICATE_ID }}" `
           --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}"
-        
+
       - name: Upload signed nuget packages
         uses: actions/upload-artifact@v4
         with:
@@ -90,7 +91,7 @@ jobs:
             ${{ github.workspace }}\nugets\**\*.nupkg
             ${{ github.workspace }}\nugets\**\*.snupkg
 
-  publish:
+  publish-myget:
     if: ${{ github.event_name == 'push' }}
     needs: sign
     runs-on: ubuntu-latest
@@ -102,5 +103,20 @@ jobs:
           name: signed-nugets
           path: nugets
 
-      - name: Publish MyGet nugets
+      - name: Publish myget.com nugets
         run: dotnet nuget push ${{ github.workspace }}/nugets/**/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
+
+  publish-nuget:
+    if: ${{ github.event_name == 'release' }}
+    needs: sign
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download signed nuget packages
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-nugets
+          path: nugets
+
+      - name: Publish nuget.org nugets
+        run: dotnet nuget push ${{ github.workspace }}/nugets/**/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate

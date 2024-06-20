@@ -13,6 +13,7 @@ using MQTTnet.Diagnostics;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
+using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -574,15 +575,153 @@ namespace MQTTnet.Tests.Clients.ManagedMqttClient
             }
         }
 
+        [TestMethod]
+        public async Task Subscribe_Does_Not_Hang_On_Server_Stop()
+        {
+            var timeout = TimeSpan.FromSeconds(2);
+            var testTimeout = TimeSpan.FromSeconds(timeout.TotalSeconds * 2);
+            const string topic = "test_topic_2";
+            using (var testEnvironment = CreateTestEnvironment())
+            using (var managedClient = await CreateManagedClientAsync(testEnvironment, timeout: timeout))
+            {
+                testEnvironment.IgnoreClientLogErrors = true;
+                bool reject = true;
+                var receivedOnServer = new SemaphoreSlim(0, 1);
+                var failedOnClient = new SemaphoreSlim(0, 1);
+                testEnvironment.Server.InterceptingInboundPacketAsync += e =>
+                {
+                    if (e.Packet is MqttSubscribePacket)
+                    {
+                        if (reject)
+                        {
+                            e.ProcessPacket = false;
+                        }
+                        receivedOnServer.Release();
+                    }
+
+                    return CompletedTask.Instance;
+                };
+                managedClient.SynchronizingSubscriptionsFailedAsync += e =>
+                {
+                    failedOnClient.Release();
+                    return CompletedTask.Instance;
+                };
+
+                await managedClient.SubscribeAsync(topic);
+                Assert.IsTrue(await receivedOnServer.WaitAsync(testTimeout));
+                Assert.IsTrue(await failedOnClient.WaitAsync(testTimeout));
+
+                reject = false;
+                await managedClient.SubscribeAsync(topic);
+                Assert.IsTrue(await receivedOnServer.WaitAsync(testTimeout));
+            }
+        }
+
+        [TestMethod]
+        public async Task Unsubscribe_Does_Not_Hang_On_Server_Stop()
+        {
+            var timeout = TimeSpan.FromSeconds(2);
+            var testTimeout = TimeSpan.FromSeconds(timeout.TotalSeconds * 2);
+            const string topic = "test_topic_2";
+            using (var testEnvironment = CreateTestEnvironment())
+            using (var managedClient = await CreateManagedClientAsync(testEnvironment, timeout: timeout))
+            {
+                testEnvironment.IgnoreClientLogErrors = true;
+                bool reject = true;
+                var receivedOnServer = new SemaphoreSlim(0, 1);
+                var failedOnClient = new SemaphoreSlim(0, 1);
+                testEnvironment.Server.InterceptingInboundPacketAsync += e =>
+                {
+                    if (e.Packet is MqttUnsubscribePacket)
+                    {
+                        if (reject)
+                        {
+                            e.ProcessPacket = false;
+                        }
+                        receivedOnServer.Release();
+                    }
+                    else if (e.Packet is MqttSubscribePacket)
+                    {
+                        receivedOnServer.Release();
+                    }
+
+                    return CompletedTask.Instance;
+                };
+                managedClient.SynchronizingSubscriptionsFailedAsync += e =>
+                {
+                    failedOnClient.Release();
+                    return CompletedTask.Instance;
+                };
+
+                await managedClient.SubscribeAsync(topic);
+                Assert.IsTrue(await receivedOnServer.WaitAsync(testTimeout));
+
+                await managedClient.UnsubscribeAsync(topic);
+                Assert.IsTrue(await receivedOnServer.WaitAsync(testTimeout));
+                Assert.IsTrue(await failedOnClient.WaitAsync(testTimeout));
+
+                reject = false;
+                await managedClient.UnsubscribeAsync(topic);
+                Assert.IsTrue(await receivedOnServer.WaitAsync(testTimeout));
+            }
+        }
+
+        [TestMethod]
+        public async Task Publish_Does_Not_Hang_On_Server_Error()
+        {
+            var timeout = TimeSpan.FromSeconds(2);
+            var testTimeout = TimeSpan.FromSeconds(timeout.TotalSeconds * 2);
+
+            const string topic = "test_topic_42";
+
+            using (var testEnvironment = CreateTestEnvironment())
+            using (var managedClient = await CreateManagedClientAsync(testEnvironment, timeout: timeout))
+            {
+                testEnvironment.IgnoreClientLogErrors = true;
+                bool reject = true;
+                var receivedOnServer = new TaskCompletionSource<object>();
+                managedClient.ApplicationMessageProcessedAsync += e => Task.FromResult(reject &= e.Exception is null);
+                testEnvironment.Server.InterceptingInboundPacketAsync += e =>
+                {
+                    if (e.Packet is MqttPublishPacket)
+                    {
+                        if (reject)
+                        {
+                            e.ProcessPacket = false;
+                        }
+                        else
+                        {
+                            receivedOnServer.TrySetResult(null);
+                        }
+                    }
+
+                    return CompletedTask.Instance;
+                };
+
+                await managedClient.EnqueueAsync(new MqttApplicationMessage { Topic = topic, PayloadSegment = new ArraySegment<byte>(new byte[] { 1 }), Retain = true, QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+
+                var timeoutTask = Task.Delay(testTimeout);
+
+                var firstDone = await Task.WhenAny(receivedOnServer.Task, timeoutTask);
+                Assert.AreEqual(receivedOnServer.Task, firstDone, "Client is hung on publish!");
+            }
+        }
+
         async Task<MQTTnet.Extensions.ManagedClient.ManagedMqttClient> CreateManagedClientAsync(
             TestEnvironment testEnvironment,
             IMqttClient underlyingClient = null,
             TimeSpan? connectionCheckInterval = null,
-            string host = "localhost")
+            string host = "localhost",
+            TimeSpan? timeout = null)
         {
             await testEnvironment.StartServer();
 
             var clientOptions = new MqttClientOptionsBuilder().WithTcpServer(host, testEnvironment.ServerPort);
+
+            if (timeout != null)
+            {
+                clientOptions.WithTimeout(timeout.Value);
+            }
 
             var managedOptions = new ManagedMqttClientOptionsBuilder().WithClientOptions(clientOptions).Build();
 

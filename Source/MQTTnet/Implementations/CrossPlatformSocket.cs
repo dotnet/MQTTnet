@@ -22,20 +22,20 @@ namespace MQTTnet.Implementations
 
         NetworkStream _networkStream;
 
-        public CrossPlatformSocket(AddressFamily addressFamily)
+        public CrossPlatformSocket(AddressFamily addressFamily, ProtocolType protocolType)
         {
-            _socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _socket = new Socket(addressFamily, SocketType.Stream, protocolType);
 
 #if !NET5_0_OR_GREATER
             _socketDisposeAction = _socket.Dispose;
 #endif
         }
 
-        public CrossPlatformSocket()
+        public CrossPlatformSocket(ProtocolType protocolType)
         {
             // Having this constructor is important because avoiding the address family as parameter
             // will make use of dual mode in the .net framework.
-            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            _socket = new Socket(SocketType.Stream, protocolType);
 
 #if !NET5_0_OR_GREATER
             _socketDisposeAction = _socket.Dispose;
@@ -202,9 +202,28 @@ namespace MQTTnet.Implementations
                 using (cancellationToken.Register(_socketDisposeAction))
                 {
 #if NET452 || NET461
-                    await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, endPoint, null).ConfigureAwait(false);
+                    // This is a fix for Mono which behaves differently than dotnet.
+                    // The connection will not be established when the DNS endpoint is used.
+                    if (endPoint is DnsEndPoint dns && dns.AddressFamily == AddressFamily.Unspecified)
+                    {
+                        await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, dns.Host, dns.Port, null).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, endPoint, null).ConfigureAwait(false);
+                    }
 #else
-                    await _socket.ConnectAsync(endPoint).ConfigureAwait(false);
+
+                    // This is a fix for Mono which behaves differently than dotnet.
+                    // The connection will not be established when the DNS endpoint is used.
+                    if (endPoint is DnsEndPoint dns && dns.AddressFamily == AddressFamily.Unspecified)
+                    {
+                        await _socket.ConnectAsync(dns.Host, dns.Port).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await _socket.ConnectAsync(endPoint).ConfigureAwait(false);
+                    }
 #endif
                 }
 #endif

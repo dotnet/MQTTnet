@@ -32,19 +32,15 @@ namespace MQTTnet.Extensions.TopicTemplate
             {
                 throw new ArgumentException("message does not have a response topic");
             }
-            
+
             return builder.WithTopic(message.ResponseTopic).WithCorrelationData(message.CorrelationData);
         }
-        
+
         /// <summary>
         ///     Set the filter topic according to the template, with
         ///     remaining template parameters substituted by single-level
         ///     wildcard.
         /// </summary>
-        /// <param
-        ///     name="builder">
-        ///     a filter builder
-        /// </param>
         /// <param
         ///     name="topicTemplate">
         ///     a topic template
@@ -58,7 +54,7 @@ namespace MQTTnet.Extensions.TopicTemplate
         {
             return new MqttTopicFilterBuilder().WithTopicTemplate(topicTemplate, subscribeTreeRoot);
         }
-        
+
         /// <summary>
         ///     Return a message builder to respond to this message. The
         ///     message's response topic and correlation data are included
@@ -75,7 +71,7 @@ namespace MQTTnet.Extensions.TopicTemplate
         {
             return new MqttApplicationMessageBuilder().AsResponseTo(message);
         }
-        
+
         /// <summary>
         ///     Return whether the message matches the given topic template.
         /// </summary>
@@ -96,7 +92,7 @@ namespace MQTTnet.Extensions.TopicTemplate
         {
             return topicTemplate.MatchesTopic(message.Topic, subtree);
         }
-        
+
         /// <summary>
         ///     Set the filter topic according to the template, with
         ///     template parameters substituted by a single-level
@@ -119,7 +115,7 @@ namespace MQTTnet.Extensions.TopicTemplate
         {
             return builder.WithTopic(subscribeTreeRoot ? topicTemplate.TopicTreeRootFilter : topicTemplate.TopicFilter);
         }
-        
+
         /// <summary>
         ///     Set the publication topic according to the topic template. The template
         ///     must not have remaining (unset) parameters or contain wildcards.
@@ -143,7 +139,7 @@ namespace MQTTnet.Extensions.TopicTemplate
             {
                 throw new ArgumentException("topic templates must be parameter-less when sending " + topicTemplate.Template);
             }
-            
+
             MqttTopicValidator.ThrowIfInvalid(topicTemplate.Template);
             return builder.WithTopic(topicTemplate.Template);
         }

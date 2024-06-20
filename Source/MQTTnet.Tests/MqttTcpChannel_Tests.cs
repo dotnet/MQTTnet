@@ -19,7 +19,7 @@ namespace MQTTnet.Tests
         public async Task Dispose_Channel_While_Used()
         {
             var ct = new CancellationTokenSource();
-            var serverSocket = new CrossPlatformSocket(AddressFamily.InterNetwork);
+            var serverSocket = new CrossPlatformSocket(AddressFamily.InterNetwork, ProtocolType.Tcp);
 
             try
             {
@@ -38,7 +38,7 @@ namespace MQTTnet.Tests
                     }
                 }, ct.Token);
 
-                var clientSocket = new CrossPlatformSocket(AddressFamily.InterNetwork);
+                var clientSocket = new CrossPlatformSocket(AddressFamily.InterNetwork, ProtocolType.Tcp);
                 await clientSocket.ConnectAsync("localhost", 50001, CancellationToken.None);
 
                 var tcpChannel = new MqttTcpChannel(clientSocket.GetStream(), "test", null);

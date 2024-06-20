@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using MQTTnet.Adapter;
+using MQTTnet.Buffers;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Server;

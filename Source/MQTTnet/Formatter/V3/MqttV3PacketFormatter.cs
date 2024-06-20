@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Adapter;
+using MQTTnet.Buffers;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -103,11 +104,11 @@ namespace MQTTnet.Formatter.V3
             var fixedHeader = EncodePacket(packet, _bufferWriter);
             var remainingLength = (uint)(_bufferWriter.Length - 5);
 
-            var publishPacket = packet as MqttPublishPacket;
-            var payload = publishPacket?.Payload;
-            if (payload != null)
+            ReadOnlySequence<byte> payload = default;
+            if (packet is MqttPublishPacket publishPacket)
             {
-                remainingLength += (uint)payload.Value.Length;
+                payload = publishPacket.Payload;
+                remainingLength += (uint)payload.Length;
             }
 
             var remainingLengthSize = MqttBufferWriter.GetVariableByteIntegerSize(remainingLength);
@@ -120,12 +121,11 @@ namespace MQTTnet.Formatter.V3
             _bufferWriter.WriteByte(fixedHeader);
             _bufferWriter.WriteVariableByteInteger(remainingLength);
 
-            var buffer = _bufferWriter.GetBuffer();
-            var firstSegment = new ArraySegment<byte>(buffer, headerOffset, _bufferWriter.Length - headerOffset);
+            var firstSegment = new ReadOnlySequence<byte>(_bufferWriter.GetBuffer(), headerOffset, _bufferWriter.Length - headerOffset);
 
-            return payload == null
+            return payload.Length == 0
                 ? new MqttPacketBuffer(firstSegment)
-                : new MqttPacketBuffer(firstSegment, payload.Value);
+                : new MqttPacketBuffer(firstSegment, payload);
         }
 
         MqttPacket DecodeConnAckPacket(ArraySegment<byte> body)

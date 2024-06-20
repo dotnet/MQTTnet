@@ -8,6 +8,7 @@ using MQTTnet.Formatter;
 using System;
 using MQTTnet.Channel;
 using MQTTnet.Client;
+using MQTTnet.Buffers;
 
 namespace MQTTnet.Implementations
 {

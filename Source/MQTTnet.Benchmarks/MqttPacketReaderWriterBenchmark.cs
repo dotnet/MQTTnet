@@ -5,6 +5,7 @@
 using System;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
+using MQTTnet.Buffers;
 using MQTTnet.Formatter;
 using MQTTnet.Tests.Mockups;
 

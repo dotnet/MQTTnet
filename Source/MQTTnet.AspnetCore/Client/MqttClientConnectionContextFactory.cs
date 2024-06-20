@@ -8,6 +8,7 @@ using MQTTnet.Formatter;
 using System;
 using MQTTnet.Client;
 using MQTTnet.Diagnostics;
+using MQTTnet.Buffers;
 
 namespace MQTTnet.AspNetCore.Client
 {

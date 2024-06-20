@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using MQTTnet.Buffers;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;

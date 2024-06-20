@@ -33,7 +33,7 @@ namespace MQTTnet.Benchmarks
         [Benchmark]
         public void Memory_Copy()
         {
-            MQTTnet.Internal.MqttMemoryHelper.Copy(source, 0, target, 0, Length);
+            MQTTnet.Buffers.MqttMemoryHelper.Copy(source, 0, target, 0, Length);
         }
 
     }

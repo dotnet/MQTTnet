@@ -7,6 +7,7 @@
 // ReSharper disable InconsistentNaming
 
 using MQTTnet.Diagnostics;
+using System.Buffers;
 
 namespace MQTTnet.Samples.Diagnostics;
 
@@ -43,11 +44,11 @@ public static class PackageInspection_Samples
     {
         if (eventArgs.Direction == MqttPacketFlowDirection.Inbound)
         {
-            Console.WriteLine($"IN: {Convert.ToBase64String(eventArgs.Buffer)}");
+            Console.WriteLine($"IN: {Convert.ToBase64String(eventArgs.Buffer.ToArray())}");
         }
         else
         {
-            Console.WriteLine($"OUT: {Convert.ToBase64String(eventArgs.Buffer)}");
+            Console.WriteLine($"OUT: {Convert.ToBase64String(eventArgs.Buffer.ToArray())}");
         }
 
         return Task.CompletedTask;

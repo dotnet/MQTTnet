@@ -235,7 +235,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
                 }
                 else
                 {
-                    await _channel.WriteAsync(new ReadOnlySequence<byte>(packetBuffer.Packet), false, cancellationToken).ConfigureAwait(false);
+                    await _channel.WriteAsync(packetBuffer.Packet, false, cancellationToken).ConfigureAwait(false);
                     await _channel.WriteAsync(packetBuffer.Payload, true, cancellationToken).ConfigureAwait(false);
                 }
 

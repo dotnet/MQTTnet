@@ -5,6 +5,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using MQTTnet.Adapter;
+using MQTTnet.Buffers;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter.V3;
 using MQTTnet.Formatter.V5;

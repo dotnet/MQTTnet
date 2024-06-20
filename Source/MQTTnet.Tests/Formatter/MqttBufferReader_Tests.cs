@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Buffers;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,7 +35,7 @@ namespace MQTTnet.Tests.Diagnostics
 
                     mqttClient.InspectPacketAsync += eventArgs =>
                     {
-                        packets.Add(eventArgs.Direction + ":" + Convert.ToBase64String(eventArgs.Buffer));
+                        packets.Add(eventArgs.Direction + ":" + Convert.ToBase64String(eventArgs.Buffer.ToArray()));
                         return CompletedTask.Instance;
                     };
 

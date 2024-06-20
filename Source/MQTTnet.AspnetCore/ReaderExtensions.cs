@@ -43,7 +43,7 @@ public static class ReaderExtensions
             return false;
         }
 
-        var fixedHeader = copy.First.Span[0];
+        var fixedHeader = copy.FirstSpan[0];
         copy = copy.Slice(headerLength);
         if (copy.Length < bodyLength)
         {

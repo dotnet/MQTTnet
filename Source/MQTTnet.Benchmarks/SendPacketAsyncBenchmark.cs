@@ -42,7 +42,10 @@ namespace MQTTnet.Benchmarks
 
             if (buffer.Payload.Length == 0)
             {
-                await output.WriteAsync(buffer.Packet).ConfigureAwait(false);
+                foreach (var buffer in buffer.Packet)
+                {
+                    await output.WriteAsync(buffer).ConfigureAwait(false);
+                }
             }
             else
             {
@@ -59,10 +62,14 @@ namespace MQTTnet.Benchmarks
 
             var span = output.GetSpan(buffer.Length);
 
-            buffer.Packet.AsSpan().CopyTo(span);
-
             int offset = 0;
-            foreach(var segment in buffer.Payload)
+            foreach (var segment in buffer.Packet)
+            {
+                segment.Span.CopyTo(span.Slice(offset));
+                offset += segment.Length;
+            }
+
+            foreach (var segment in buffer.Payload)
             {
                 segment.Span.CopyTo(span.Slice(offset));
                 offset += segment.Length;

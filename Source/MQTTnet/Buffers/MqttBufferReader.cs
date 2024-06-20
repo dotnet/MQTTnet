@@ -9,7 +9,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using System.Buffers.Binary;
 
-namespace MQTTnet.Formatter
+namespace MQTTnet.Buffers
 {
     public sealed class MqttBufferReader
     {

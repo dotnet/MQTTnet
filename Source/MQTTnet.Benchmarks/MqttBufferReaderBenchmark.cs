@@ -6,6 +6,7 @@ using System;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
+using MQTTnet.Buffers;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Benchmarks

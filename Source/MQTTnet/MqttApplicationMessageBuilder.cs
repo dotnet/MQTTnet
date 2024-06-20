@@ -2,17 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Buffers;
+using MQTTnet.Exceptions;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using MQTTnet.Exceptions;
-using MQTTnet.Internal;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet
 {
@@ -139,10 +138,10 @@ namespace MQTTnet
             }
 
             var payloadBuffer = new byte[length];
-            var totalRead = 0;
+            int totalRead = 0;
             do
             {
-                var bytesRead = payload.Read(payloadBuffer, totalRead, payloadBuffer.Length - totalRead);
+                int bytesRead = payload.Read(payloadBuffer, totalRead, payloadBuffer.Length - totalRead);
                 if (bytesRead == 0)
                 {
                     break;

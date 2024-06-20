@@ -3,8 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading.Tasks;
+using MQTTnet.Buffers;
 using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -16,7 +18,7 @@ public sealed class MqttPacketInspector
     readonly AsyncEvent<InspectMqttPacketEventArgs> _asyncEvent;
     readonly MqttNetSourceLogger _logger;
 
-    MemoryStream _receivedPacketBuffer;
+    ArrayPoolMemoryStream _receivedPacketBuffer;
 
     public MqttPacketInspector(AsyncEvent<InspectMqttPacketEventArgs> asyncEvent, IMqttNetLogger logger)
     {
@@ -39,10 +41,8 @@ public sealed class MqttPacketInspector
 
         if (_receivedPacketBuffer == null)
         {
-            _receivedPacketBuffer = new MemoryStream();
+            _receivedPacketBuffer = new ArrayPoolMemoryStream(1024);
         }
-
-        _receivedPacketBuffer?.SetLength(0);
     }
 
     public Task BeginSendPacket(MqttPacketBuffer buffer)
@@ -55,9 +55,9 @@ public sealed class MqttPacketInspector
         // Create a copy of the actual packet so that the inspector gets no access
         // to the internal buffers. This is waste of memory but this feature is only
         // intended for debugging etc. so that this is OK.
-        var bufferCopy = buffer.ToArray();
+        var bufferCopy = new ReadOnlySequence<byte>(buffer.ToArray());
 
-        return InspectPacket(bufferCopy, MqttPacketFlowDirection.Outbound);
+        return InspectPacket(bufferCopy, null, MqttPacketFlowDirection.Outbound);
     }
 
     public Task EndReceivePacket()
@@ -67,28 +67,32 @@ public sealed class MqttPacketInspector
             return CompletedTask.Instance;
         }
 
-        var buffer = _receivedPacketBuffer.ToArray();
-        _receivedPacketBuffer.SetLength(0);
+        var sequence = _receivedPacketBuffer.GetReadOnlySequence();
 
-        return InspectPacket(buffer, MqttPacketFlowDirection.Inbound);
+        // set sequence and transform ownership of stream
+        Task t = InspectPacket(sequence, _receivedPacketBuffer, MqttPacketFlowDirection.Inbound);
+        _receivedPacketBuffer = null;
+
+        return t;
     }
 
-    public void FillReceiveBuffer(byte[] buffer)
+    public void FillReceiveBuffer(ReadOnlySpan<byte> buffer)
     {
         if (!_asyncEvent.HasHandlers)
         {
             return;
         }
 
-        _receivedPacketBuffer?.Write(buffer, 0, buffer.Length);
+        _receivedPacketBuffer?.Write(buffer);
     }
 
-    async Task InspectPacket(byte[] buffer, MqttPacketFlowDirection direction)
+    async Task InspectPacket(ReadOnlySequence<byte> sequence, IDisposable owner, MqttPacketFlowDirection direction)
     {
         try
         {
-            var eventArgs = new InspectMqttPacketEventArgs(direction, buffer);
+            var eventArgs = new InspectMqttPacketEventArgs(direction, sequence);
             await _asyncEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+            owner?.Dispose();
         }
         catch (Exception exception)
         {

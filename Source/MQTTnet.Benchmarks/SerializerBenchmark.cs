@@ -15,6 +15,7 @@ using MQTTnet.Formatter.V3;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Diagnostics;
 using System.Buffers;
+using MQTTnet.Buffers;
 
 namespace MQTTnet.Benchmarks
 {

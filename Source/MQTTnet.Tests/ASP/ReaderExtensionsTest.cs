@@ -5,6 +5,7 @@
 using System.Buffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.AspNetCore;
+using MQTTnet.Buffers;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 

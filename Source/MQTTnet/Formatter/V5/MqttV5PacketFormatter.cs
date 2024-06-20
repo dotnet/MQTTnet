@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Adapter;
+using MQTTnet.Buffers;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Formatter.V5

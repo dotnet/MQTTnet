@@ -22,7 +22,7 @@ public sealed class Managed_Client_Subscribe_Samples
          * - Reconnecting when connection is lost.
          * - Storing pending messages in an internal queue so that an enqueue is possible while the client remains not connected.
          */
-        
+
         var mqttFactory = new MqttFactory();
         var subscribed = false;
 
@@ -43,21 +43,21 @@ public sealed class Managed_Client_Subscribe_Samples
             await managedMqttClient.EnqueueAsync("Topic", "Payload");
 
             Console.WriteLine("The managed MQTT client is connected.");
-            
+
             // Wait until the queue is fully processed.
             SpinWait.SpinUntil(() => managedMqttClient.PendingApplicationMessagesCount == 0, 10000);
-            
+
             Console.WriteLine($"Pending messages = {managedMqttClient.PendingApplicationMessagesCount}");
 
-            managedMqttClient.SubscriptionsChangedAsync += args => SubscriptionsResultAsync(args, subscribed);
+            managedMqttClient.SubscriptionsChangedAsync += args => SubscriptionsResultAsync(args, ref subscribed);
             await managedMqttClient.SubscribeAsync("Topic").ConfigureAwait(false);
 
             SpinWait.SpinUntil(() => subscribed, 1000);
-            Console.WriteLine("Subscription properly done");
+            Console.WriteLine($"Subscription properly done {subscribed}");
         }
     }
 
-    private static Task SubscriptionsResultAsync(SubscriptionsChangedEventArgs arg, bool subscribed)
+    private static Task SubscriptionsResultAsync(SubscriptionsChangedEventArgs arg, ref bool subscribed)
     {
         foreach (var mqttClientSubscribeResult in arg.SubscribeResult)
         {

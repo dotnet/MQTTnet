@@ -11,7 +11,7 @@ namespace MQTTnet.Diagnostics
         public InspectMqttPacketEventArgs(MqttPacketFlowDirection direction, byte[] buffer)
         {
             Direction = direction;
-            Buffer = buffer;
+            Buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
         }
 
         public byte[] Buffer { get; }

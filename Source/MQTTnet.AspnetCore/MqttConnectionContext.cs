@@ -203,8 +203,17 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
             {
                 var buffer = PacketFormatterAdapter.Encode(packet);
 
-                WritePacketBuffer(_output, buffer);
-                await _output.FlushAsync(cancellationToken).ConfigureAwait(false);
+                if (buffer.Packet.IsSingleSegment && buffer.Payload.Length == 0)
+                {
+                    // zero copy
+                    // https://github.com/dotnet/runtime/blob/e31ddfdc4f574b26231233dc10c9a9c402f40590/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamPipeWriter.cs#L279
+                    await _output.WriteAsync(buffer.Packet.First, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    WritePacketBuffer(_output, buffer);
+                    await _output.FlushAsync(cancellationToken).ConfigureAwait(false);
+                }
 
                 BytesSent += buffer.Length;
             }

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Buffers;
 using MQTTnet.Diagnostics;
 using MQTTnet.Internal;
 using System.Buffers;
@@ -83,7 +84,8 @@ namespace MQTTnet.Server.Internal
                         }
                         else
                         {
-                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !SequenceEqual(existingMessage.Payload, payload))
+                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel ||
+                                !MqttMemoryHelper.SequenceEqual(existingMessage.Payload, payload))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage.Clone();
                                 saveIsRequired = true;
@@ -148,72 +150,6 @@ namespace MQTTnet.Server.Internal
             using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
             {
                 await _eventContainer.RetainedMessagesClearedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
-            }
-        }
-
-        static bool SequenceEqual(ArraySegment<byte> source, ArraySegment<byte> target)
-        {
-            return source.AsSpan().SequenceEqual(target);
-        }
-
-        static bool SequenceEqual(ReadOnlySequence<byte> source, ReadOnlySequence<byte> target)
-        {
-            if (source.Length != target.Length)
-            {
-                return false;
-            }
-
-            long comparedLength = 0;
-            long length = source.Length;
-
-            int sourceOffset = 0;
-            int targetOffset = 0;
-
-            var sourceEnumerator = source.GetEnumerator();
-            var targetEnumerator = target.GetEnumerator();
-
-            ReadOnlyMemory<byte> sourceSegment = sourceEnumerator.Current;
-            ReadOnlyMemory<byte> targetSegment = targetEnumerator.Current;
-
-            while (true)
-            {
-                int compareLength = Math.Min(sourceSegment.Length - sourceOffset, targetSegment.Length - targetOffset);
-
-                if (compareLength > 0 &&
-                    !sourceSegment.Span.Slice(sourceOffset, compareLength).SequenceEqual(targetSegment.Span.Slice(targetOffset, compareLength)))
-                {
-                    return false;
-                }
-
-                comparedLength += compareLength;
-                if (comparedLength >= length)
-                {
-                    return true;
-                }
-
-                sourceOffset += compareLength;
-                if (sourceOffset >= sourceSegment.Length)
-                {
-                    if (!sourceEnumerator.MoveNext())
-                    {
-                        return false;
-                    }
-
-                    sourceSegment = sourceEnumerator.Current;
-                    sourceOffset = 0;
-                }
-
-                targetOffset += compareLength;
-                if (targetOffset >= targetSegment.Length)
-                {
-                    if (!targetEnumerator.MoveNext())
-                    {
-                        return false;
-                    }
-
-                    targetSegment = targetEnumerator.Current;
-                    targetOffset = 0;
-                }
             }
         }
     }

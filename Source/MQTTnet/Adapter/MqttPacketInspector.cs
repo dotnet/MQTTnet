@@ -43,7 +43,8 @@ public sealed class MqttPacketInspector
         {
             _receivedPacketBuffer = new MemoryStream();
         }
-        _receivedPacketBuffer.SetLength(0);
+
+        _receivedPacketBuffer?.SetLength(0);
     }
 
     public Task BeginSendPacket(MqttPacketBuffer buffer)
@@ -69,10 +70,8 @@ public sealed class MqttPacketInspector
         }
 
         var buffer = _receivedPacketBuffer.ToArray();
-        //var sequence = _receivedPacketBuffer.GetReadOnlySequence();
         _receivedPacketBuffer.SetLength(0);
 
-        // set sequence and transform ownership of stream
         return InspectPacket(buffer, MqttPacketFlowDirection.Inbound);
     }
 

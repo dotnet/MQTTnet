@@ -7,7 +7,6 @@
 // ReSharper disable InconsistentNaming
 
 using MQTTnet.Diagnostics;
-using System.Buffers;
 
 namespace MQTTnet.Samples.Diagnostics;
 
@@ -18,19 +17,19 @@ public static class PackageInspection_Samples
         /*
          * This sample covers the inspection of outgoing packages from the client.
          */
-        
+
         var mqttFactory = new MqttClientFactory();
-        
+
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
             var mqttClientOptions = mqttFactory.CreateClientOptionsBuilder()
                 .WithTcpServer("broker.hivemq.com")
                 .Build();
-            
+
             mqttClient.InspectPacketAsync += OnInspectPacket;
-            
+
             await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
-            
+
             Console.WriteLine("MQTT client is connected.");
 
             var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
@@ -44,11 +43,11 @@ public static class PackageInspection_Samples
     {
         if (eventArgs.Direction == MqttPacketFlowDirection.Inbound)
         {
-            Console.WriteLine($"IN: {Convert.ToBase64String(eventArgs.Buffer.ToArray())}");
+            Console.WriteLine($"IN: {Convert.ToBase64String(eventArgs.Buffer)}");
         }
         else
         {
-            Console.WriteLine($"OUT: {Convert.ToBase64String(eventArgs.Buffer.ToArray())}");
+            Console.WriteLine($"OUT: {Convert.ToBase64String(eventArgs.Buffer)}");
         }
 
         return Task.CompletedTask;

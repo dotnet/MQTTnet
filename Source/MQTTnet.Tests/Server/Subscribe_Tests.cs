@@ -45,7 +45,7 @@ namespace MQTTnet.Tests.Server
 
                 var receiver = await testEnvironment.ConnectClient();
                 await receiver.SubscribeAsync(filter).ConfigureAwait(false);
-                var receivedMessages = receiver.TrackReceivedMessages();
+                using var receivedMessages = receiver.TrackReceivedMessages();
 
                 var sender = await testEnvironment.ConnectClient();
                 await sender.PublishStringAsync(topic, "PAYLOAD").ConfigureAwait(false);
@@ -143,7 +143,7 @@ namespace MQTTnet.Tests.Server
                 };
 
                 var client = await testEnvironment.ConnectClient();
-                var receivedMessages = testEnvironment.CreateApplicationMessageHandler(client);
+                using var receivedMessages = testEnvironment.CreateApplicationMessageHandler(client);
 
                 await client.SubscribeAsync("test_topic");
 

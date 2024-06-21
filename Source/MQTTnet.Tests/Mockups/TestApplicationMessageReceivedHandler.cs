@@ -13,9 +13,17 @@ using MQTTnet.Internal;
 
 namespace MQTTnet.Tests.Mockups
 {
-    public sealed class TestApplicationMessageReceivedHandler
+    public sealed class TestApplicationMessageReceivedHandler : IDisposable
     {
         readonly List<MqttApplicationMessageReceivedEventArgs> _receivedEventArgs = new List<MqttApplicationMessageReceivedEventArgs>();
+
+        public void Dispose()
+        {
+            foreach (var eventArgs in _receivedEventArgs)
+            {
+                eventArgs.ApplicationMessage?.DisposePayload();
+            }
+        }
 
         public TestApplicationMessageReceivedHandler(IMqttClient mqttClient)
         {
@@ -76,6 +84,8 @@ namespace MQTTnet.Tests.Mockups
         {
             lock (_receivedEventArgs)
             {
+                // take ownership of message payload to avoid cloning
+                eventArgs.TransferPayload(false);
                 _receivedEventArgs.Add(eventArgs);
             }
 

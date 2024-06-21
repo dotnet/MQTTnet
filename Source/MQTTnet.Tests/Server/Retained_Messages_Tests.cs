@@ -30,7 +30,7 @@ namespace MQTTnet.Tests.Server
                 await c1.DisconnectAsync();
 
                 var c2 = await testEnvironment.ConnectClient();
-                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+                using var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
 
                 await Task.Delay(200);
                 await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
@@ -55,7 +55,7 @@ namespace MQTTnet.Tests.Server
                 await c1.DisconnectAsync();
 
                 var c2 = await testEnvironment.ConnectClient();
-                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+                using var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
 
                 await Task.Delay(200);
                 await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce });
@@ -84,7 +84,7 @@ namespace MQTTnet.Tests.Server
 
                 // The second client uses QoS 1 so a downgrade is required.
                 var c2 = await testEnvironment.ConnectClient();
-                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+                using var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
                 await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
                 await LongTestDelay();
@@ -114,7 +114,7 @@ namespace MQTTnet.Tests.Server
 
                 // The second client uses QoS 2 so an upgrade is expected but according to the MQTT spec this is not supported!
                 var c2 = await testEnvironment.ConnectClient();
-                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+                using var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
                 await c2.SubscribeAsync(new MqttTopicFilter { Topic = "retained", QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce });
 
                 await LongTestDelay();
@@ -137,7 +137,7 @@ namespace MQTTnet.Tests.Server
                 await c1.DisconnectAsync();
 
                 var c2 = await testEnvironment.ConnectClient();
-                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+                using var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
                 await c2.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("retained_other").Build());
 
                 await Task.Delay(500);
@@ -158,7 +158,7 @@ namespace MQTTnet.Tests.Server
                 await c1.DisconnectAsync();
 
                 var c2 = await testEnvironment.ConnectClient();
-                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+                using var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
 
                 await c2.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("retained").Build());
 
@@ -189,7 +189,7 @@ namespace MQTTnet.Tests.Server
 
                 // Subscribe using a new client.
                 var c2 = await testEnvironment.ConnectClient();
-                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+                using var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
 
                 await Task.Delay(200);
                 // Using QoS 2 will lead to 1 instead because the publish was made with QoS level 1 (see 3.8.4 SUBSCRIBE Actions)!
@@ -211,7 +211,7 @@ namespace MQTTnet.Tests.Server
                 var c1 = await testEnvironment.ConnectClient();
 
                 var c2 = await testEnvironment.ConnectClient();
-                var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
+                using var messageHandler = testEnvironment.CreateApplicationMessageHandler(c2);
 
                 await c1.PublishAsync(retainedMessage);
                 await c1.DisconnectAsync();

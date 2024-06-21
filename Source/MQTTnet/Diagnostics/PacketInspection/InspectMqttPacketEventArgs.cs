@@ -3,19 +3,18 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Buffers;
 
 namespace MQTTnet.Diagnostics
 {
     public sealed class InspectMqttPacketEventArgs : EventArgs
     {
-        public InspectMqttPacketEventArgs(MqttPacketFlowDirection direction, ReadOnlySequence<byte> buffer)
+        public InspectMqttPacketEventArgs(MqttPacketFlowDirection direction, byte[] buffer)
         {
             Direction = direction;
             Buffer = buffer;
         }
 
-        public ReadOnlySequence<byte> Buffer { get; }
+        public byte[] Buffer { get; }
 
         public MqttPacketFlowDirection Direction { get; }
     }

@@ -4,13 +4,49 @@
 
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 
 namespace MQTTnet
 {
-    public sealed class MqttApplicationMessage
+    public sealed class MqttApplicationMessage 
     {
+        /// <summary>
+        /// Create a clone of the <see cref="MqttApplicationMessage"/>
+        /// with a deep copy of the Payload which is cleaned up by the GC.
+        /// </summary>
+        public MqttApplicationMessage Clone()
+        {
+            return new MqttApplicationMessage()
+            {
+                ContentType = this.ContentType,
+                CorrelationData = this.CorrelationData,
+                Dup = this.Dup,
+                MessageExpiryInterval = this.MessageExpiryInterval,
+                Payload = new ReadOnlySequence<byte>(this.Payload.ToArray()),
+                PayloadOwner = null,
+                PayloadFormatIndicator = this.PayloadFormatIndicator,
+                QualityOfServiceLevel = this.QualityOfServiceLevel,
+                ResponseTopic = this.ResponseTopic,
+                Retain = this.Retain,
+                SubscriptionIdentifiers = this.SubscriptionIdentifiers,
+                Topic = this.Topic,
+                TopicAlias = this.TopicAlias,
+                UserProperties = this.UserProperties
+            };
+        }
+
+        /// <summary>
+        ///    Disposes the payload used by the current instance of the <see cref="MqttApplicationMessage" /> class.
+        /// </summary>
+        public void DisposePayload()
+        {
+            Payload = ReadOnlySequence<byte>.Empty;
+            PayloadOwner?.Dispose();
+            PayloadOwner = null;
+        }
+
         /// <summary>
         ///     Gets or sets the content type.
         ///     The content type must be a UTF-8 encoded string. The content type value identifies the kind of UTF-8 encoded
@@ -52,6 +88,11 @@ namespace MQTTnet
         /// Get or set ReadOnlySequence style of Payload.
         /// </summary>
         public ReadOnlySequence<byte> Payload { get; set; }
+
+        /// <summary>
+        /// Get or set the owner of the <see cref="Payload"/> memory.
+        /// </summary>
+        public IDisposable PayloadOwner { get; set; }
 
         /// <summary>
         ///     Gets or sets the payload format indicator.

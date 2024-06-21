@@ -43,7 +43,7 @@ namespace MQTTnet.Tests.Server
 
                 var receiver = await testEnvironment.ConnectClient().ConfigureAwait(false);
 
-                var receivedMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
+                using var receivedMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
 
                 await receiver.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
@@ -65,7 +65,7 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var receiver = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder()).ConfigureAwait(false);
-                var receivedMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
+                using var receivedMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
                 await receiver.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
                 var clientOptions = new MqttClientOptionsBuilder().WithWillTopic("My/last/will").WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce);

@@ -17,7 +17,7 @@ namespace MQTTnet.Tests.Server
         {
             return ExecuteTest(true, 0);
         }
-        
+
         [TestMethod]
         public Task Subscribe_Without_No_Local()
         {
@@ -31,19 +31,19 @@ namespace MQTTnet.Tests.Server
             using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
             {
                 await testEnvironment.StartServer();
-                
+
                 var client1 = await testEnvironment.ConnectClient();
-                var applicationMessageHandler = testEnvironment.CreateApplicationMessageHandler(client1);
+                using var applicationMessageHandler = testEnvironment.CreateApplicationMessageHandler(client1);
                 var topicFilter = testEnvironment.ClientFactory.CreateTopicFilterBuilder().WithTopic("Topic").WithNoLocal(noLocal).Build();
                 await client1.SubscribeAsync(topicFilter);
                 await LongTestDelay();
 
                 applicationMessageHandler.AssertReceivedCountEquals(0);
-                
+
                 // The client will publish a message where it is itself subscribing to.
                 await client1.PublishStringAsync("Topic", "Payload", retain: true);
                 await LongTestDelay();
-                
+
                 applicationMessageHandler.AssertReceivedCountEquals(expectedCountAfterPublish);
             }
         }

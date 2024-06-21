@@ -53,7 +53,7 @@ public static class ReaderExtensions
         var bodySlice = copy.Slice(0, bodyLength);
         var bodySegment = GetArraySegment(ref bodySlice);
 
-        var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySegment, headerLength + bodyLength);
+        using var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySegment, headerLength + bodyLength);
         if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
         {
             formatter.DetectProtocolVersion(receivedMqttPacket);

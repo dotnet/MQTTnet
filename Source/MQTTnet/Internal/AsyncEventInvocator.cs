@@ -33,15 +33,17 @@ namespace MQTTnet.Internal
         
         public Task InvokeAsync(TEventArgs eventArgs)
         {
-            if (_handler != null)
+            var handler = _handler;
+            if (handler != null)
             {
-                _handler.Invoke(eventArgs);
+                handler.Invoke(eventArgs);
                 return CompletedTask.Instance;
             }
 
-            if (_asyncHandler != null)
+            var asyncHandler = _asyncHandler;
+            if (asyncHandler != null)
             {
-                return _asyncHandler.Invoke(eventArgs);
+                return asyncHandler.Invoke(eventArgs);
             }
 
             throw new InvalidOperationException();

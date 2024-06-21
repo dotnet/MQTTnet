@@ -212,7 +212,7 @@ namespace MQTTnet.Tests.MQTTv5
                 
                 var client1 = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client1"));
 
-                var testMessageHandler = testEnvironment.CreateApplicationMessageHandler(client1);
+                using var testMessageHandler = testEnvironment.CreateApplicationMessageHandler(client1);
 
                 await client1.SubscribeAsync("a");
 
@@ -244,38 +244,46 @@ namespace MQTTnet.Tests.MQTTv5
                 MqttApplicationMessage receivedMessage = null;
                 receiver.ApplicationMessageReceivedAsync += e =>
                 {
+                    e.TransferPayload(false);
                     receivedMessage = e.ApplicationMessage;
                     return CompletedTask.Instance;
                 };
 
-                var sender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
+                try
+                {
+                    var sender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
 
-                var applicationMessage = new MqttApplicationMessageBuilder()
-                    .WithTopic("Hello")
-                    .WithPayload("World")
-                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-                    .WithUserProperty("x", "1")
-                    .WithUserProperty("y", "2")
-                    .WithResponseTopic("response")
-                    .WithContentType("text")
-                    .WithMessageExpiryInterval(50)
-                    .WithCorrelationData(new byte[12])
-                    .WithTopicAlias(2)
-                    .Build();
+                    var applicationMessage = new MqttApplicationMessageBuilder()
+                        .WithTopic("Hello")
+                        .WithPayload("World")
+                        .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                        .WithUserProperty("x", "1")
+                        .WithUserProperty("y", "2")
+                        .WithResponseTopic("response")
+                        .WithContentType("text")
+                        .WithMessageExpiryInterval(50)
+                        .WithCorrelationData(new byte[12])
+                        .WithTopicAlias(2)
+                        .Build();
 
-                await sender.PublishAsync(applicationMessage);
+                    await sender.PublishAsync(applicationMessage);
 
-                await Task.Delay(500);
+                    await Task.Delay(500);
 
-                Assert.IsNotNull(receivedMessage);
-                Assert.AreEqual(applicationMessage.Topic, receivedMessage.Topic);
-                Assert.AreEqual(applicationMessage.TopicAlias, receivedMessage.TopicAlias);
-                Assert.AreEqual(applicationMessage.ContentType, receivedMessage.ContentType);
-                Assert.AreEqual(applicationMessage.ResponseTopic, receivedMessage.ResponseTopic);
-                Assert.AreEqual(applicationMessage.MessageExpiryInterval, receivedMessage.MessageExpiryInterval);
-                CollectionAssert.AreEqual(applicationMessage.CorrelationData, receivedMessage.CorrelationData);
-                CollectionAssert.AreEqual(applicationMessage.Payload.ToArray(), receivedMessage.Payload.ToArray());
-                CollectionAssert.AreEqual(applicationMessage.UserProperties, receivedMessage.UserProperties);
+                    Assert.IsNotNull(receivedMessage);
+                    Assert.AreEqual(applicationMessage.Topic, receivedMessage.Topic);
+                    Assert.AreEqual(applicationMessage.TopicAlias, receivedMessage.TopicAlias);
+                    Assert.AreEqual(applicationMessage.ContentType, receivedMessage.ContentType);
+                    Assert.AreEqual(applicationMessage.ResponseTopic, receivedMessage.ResponseTopic);
+                    Assert.AreEqual(applicationMessage.MessageExpiryInterval, receivedMessage.MessageExpiryInterval);
+                    CollectionAssert.AreEqual(applicationMessage.CorrelationData, receivedMessage.CorrelationData);
+                    CollectionAssert.AreEqual(applicationMessage.Payload.ToArray(), receivedMessage.Payload.ToArray());
+                    CollectionAssert.AreEqual(applicationMessage.UserProperties, receivedMessage.UserProperties);
+                }
+                finally
+                {
+                    receivedMessage?.DisposePayload();
+                }
             }
         }
     }

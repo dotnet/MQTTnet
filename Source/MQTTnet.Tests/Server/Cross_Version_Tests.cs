@@ -18,7 +18,7 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var receiver = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
-                var receivedApplicationMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
+                using var receivedApplicationMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
                 await receiver.SubscribeAsync("#");
 
                 var sender = await testEnvironment.ConnectClient();
@@ -42,7 +42,7 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var receiver = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V311));
-                var receivedApplicationMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
+                using var receivedApplicationMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
                 await receiver.SubscribeAsync("#");
                 
                 var sender = await testEnvironment.ConnectClient();

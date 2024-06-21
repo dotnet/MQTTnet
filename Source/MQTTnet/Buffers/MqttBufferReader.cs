@@ -35,7 +35,7 @@ namespace MQTTnet.Buffers
 
             ValidateReceiveBuffer(length);
 
-            var result = new byte[length];
+            var result = GC.AllocateUninitializedArray<byte>(length);
             MqttMemoryHelper.Copy(_buffer, _position, result, 0, length);
             _position += length;
 
@@ -66,7 +66,7 @@ namespace MQTTnet.Buffers
                 return EmptyBuffer.Array;
             }
 
-            var buffer = new byte[bufferLength];
+            var buffer = GC.AllocateUninitializedArray<byte>(bufferLength);
             MqttMemoryHelper.Copy(_buffer, _position, buffer, 0, bufferLength);
             _position += bufferLength;
 

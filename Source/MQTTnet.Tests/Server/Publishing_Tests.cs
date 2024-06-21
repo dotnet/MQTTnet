@@ -79,29 +79,29 @@ namespace MQTTnet.Tests.Server
             using (var testEnvironment = CreateTestEnvironment())
             {
                 var server = await testEnvironment.StartServer();
-                
+
                 var sender = await testEnvironment.ConnectClient();
-                
+
                 var receiver = await testEnvironment.ConnectClient();
                 await receiver.SubscribeAsync("A");
-                var receivedMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
-                
+                using var receivedMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
+
                 await sender.PublishStringAsync("A", "Payload", MqttQualityOfServiceLevel.AtLeastOnce);
 
                 await LongTestDelay();
-                
+
                 receivedMessages.AssertReceivedCountEquals(1);
-                
+
                 server.InterceptingClientEnqueueAsync += e =>
                 {
                     e.AcceptEnqueue = false;
                     return CompletedTask.Instance;
                 };
-                
+
                 await sender.PublishStringAsync("A", "Payload", MqttQualityOfServiceLevel.AtLeastOnce);
 
                 await LongTestDelay();
-                
+
                 // Do not increase because the internal enqueue to the target client is not accepted!
                 receivedMessages.AssertReceivedCountEquals(1);
             }
@@ -118,15 +118,15 @@ namespace MQTTnet.Tests.Server
 
                 var receiverOne = await testEnvironment.ConnectClient(o => o.WithClientId("One"));
                 await receiverOne.SubscribeAsync("A");
-                var receivedMessagesOne = testEnvironment.CreateApplicationMessageHandler(receiverOne);
+                using var receivedMessagesOne = testEnvironment.CreateApplicationMessageHandler(receiverOne);
 
                 var receiverTwo = await testEnvironment.ConnectClient(o => o.WithClientId("Two"));
                 await receiverTwo.SubscribeAsync("A");
-                var receivedMessagesTwo = testEnvironment.CreateApplicationMessageHandler(receiverTwo);
+                using var receivedMessagesTwo = testEnvironment.CreateApplicationMessageHandler(receiverTwo);
 
                 var receiverThree = await testEnvironment.ConnectClient(o => o.WithClientId("Three"));
                 await receiverThree.SubscribeAsync("A");
-                var receivedMessagesThree = testEnvironment.CreateApplicationMessageHandler(receiverThree);
+                using var receivedMessagesThree = testEnvironment.CreateApplicationMessageHandler(receiverThree);
 
                 server.InterceptingClientEnqueueAsync += e =>
                 {

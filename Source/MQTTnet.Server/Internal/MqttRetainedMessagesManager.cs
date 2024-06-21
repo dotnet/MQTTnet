@@ -78,14 +78,14 @@ namespace MQTTnet.Server.Internal
                     {
                         if (!_messages.TryGetValue(applicationMessage.Topic, out var existingMessage))
                         {
-                            _messages[applicationMessage.Topic] = applicationMessage;
+                            _messages[applicationMessage.Topic] = applicationMessage.Clone();
                             saveIsRequired = true;
                         }
                         else
                         {
                             if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !SequenceEqual(existingMessage.Payload, payload))
                             {
-                                _messages[applicationMessage.Topic] = applicationMessage;
+                                _messages[applicationMessage.Topic] = applicationMessage.Clone();
                                 saveIsRequired = true;
                             }
                         }
@@ -107,6 +107,8 @@ namespace MQTTnet.Server.Internal
                         await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
                 }
+
+                applicationMessage.DisposePayload();
             }
             catch (Exception exception)
             {

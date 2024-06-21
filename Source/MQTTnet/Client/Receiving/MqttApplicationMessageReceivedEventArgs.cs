@@ -28,7 +28,30 @@ public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
         _acknowledgeHandler = acknowledgeHandler;
     }
 
-    public MqttApplicationMessage ApplicationMessage { get; }
+    /// <summary>
+    ///     The invoked message receiver can take ownership of the payload to avoid cloning.
+    ///     If not cloned, it is the obligation of the new owner to dispose the payload by
+    ///     calling <see cref="MqttApplicationMessage.DisposePayload()"/>.
+    /// </summary>
+    /// <param name="clonePayload">
+    ///     If set to true, clones the applicationMessage and copies the payload.
+    ///     The new instance does not need to be disposed.
+    /// </param>
+    public void TransferPayload(bool clonePayload)
+    {
+        TransferredPayload = true;
+        if (clonePayload)
+        {
+            var applicationMessage = ApplicationMessage;
+            if (applicationMessage != null)
+            {
+                ApplicationMessage = applicationMessage.Clone();
+                applicationMessage.DisposePayload();
+            }
+        }
+    }
+
+    public MqttApplicationMessage ApplicationMessage { get; private set; }
 
     /// <summary>
     ///     Gets or sets whether the library should send MQTT ACK packets automatically if required.
@@ -40,6 +63,15 @@ public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
     /// </summary>
     public string ClientId { get; }
+
+    /// <summary>
+    ///     Gets or sets whether the ownership of the message payload 
+    ///     was handed over to the invoked code. This value determines
+    ///     if the payload can be disposed after the callback returns.
+    ///     If transferred, the new owner is responsible
+    ///     to dispose the payload after processing.
+    /// </summary>
+    public bool TransferredPayload { get; private set; } = false;
 
     /// <summary>
     ///     Gets or sets whether this message was handled.

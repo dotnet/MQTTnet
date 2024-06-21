@@ -2,6 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Client;
+using MQTTnet.Internal;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -9,14 +15,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Adapter;
-using MQTTnet.Client;
-using MQTTnet.Formatter;
-using MQTTnet.Internal;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
-using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Server
 {
@@ -959,7 +957,7 @@ namespace MQTTnet.Tests.Server
                 {
                     if (e.Buffer.Length > 0)
                     {
-                        if (e.Buffer.FirstSpan[0] == (byte)MqttControlPacketType.Disconnect << 4)
+                        if (e.Buffer[0] == (byte)MqttControlPacketType.Disconnect << 4)
                         {
                             disconnectPacketReceived = true;
                         }
@@ -1015,7 +1013,7 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("receiver"));
-                var c1MessageHandler = testEnvironment.CreateApplicationMessageHandler(c1);
+                using var c1MessageHandler = testEnvironment.CreateApplicationMessageHandler(c1);
                 await c1.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topicFilter).WithQualityOfServiceLevel(filterQualityOfServiceLevel).Build());
 
                 var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("sender"));

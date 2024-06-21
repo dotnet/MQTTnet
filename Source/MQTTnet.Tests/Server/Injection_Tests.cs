@@ -17,8 +17,8 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
                 var receiver1 = await testEnvironment.ConnectClient();
                 var receiver2 = await testEnvironment.ConnectClient();
-                var messageReceivedHandler1 = testEnvironment.CreateApplicationMessageHandler(receiver1);
-                var messageReceivedHandler2 = testEnvironment.CreateApplicationMessageHandler(receiver2);
+                using var messageReceivedHandler1 = testEnvironment.CreateApplicationMessageHandler(receiver1);
+                using var messageReceivedHandler2 = testEnvironment.CreateApplicationMessageHandler(receiver2);
 
                 var status = await server.GetSessionsAsync();
                 var clientStatus = status[0];
@@ -47,7 +47,7 @@ namespace MQTTnet.Tests.Server
 
                 var receiver = await testEnvironment.ConnectClient();
 
-                var messageReceivedHandler = testEnvironment.CreateApplicationMessageHandler(receiver);
+                using var messageReceivedHandler = testEnvironment.CreateApplicationMessageHandler(receiver);
 
                 await receiver.SubscribeAsync("#");
 

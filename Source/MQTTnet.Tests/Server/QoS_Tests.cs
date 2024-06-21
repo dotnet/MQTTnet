@@ -148,7 +148,7 @@ public sealed class QoS_Tests : BaseTestClass
 
             // Create a new client for the existing message.
             var client = await testEnvironment.ConnectClient(o => o.WithClientId("A").WithCleanSession(false));
-            var messages = testEnvironment.CreateApplicationMessageHandler(client);
+            using var messages = testEnvironment.CreateApplicationMessageHandler(client);
 
             await LongTestDelay();
 

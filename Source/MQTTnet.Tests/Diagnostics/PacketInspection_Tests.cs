@@ -35,7 +35,7 @@ namespace MQTTnet.Tests.Diagnostics
 
                     mqttClient.InspectPacketAsync += eventArgs =>
                     {
-                        packets.Add(eventArgs.Direction + ":" + Convert.ToBase64String(eventArgs.Buffer.ToArray()));
+                        packets.Add(eventArgs.Direction + ":" + Convert.ToBase64String(eventArgs.Buffer));
                         return CompletedTask.Instance;
                     };
 

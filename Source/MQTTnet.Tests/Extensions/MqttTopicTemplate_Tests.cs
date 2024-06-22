@@ -45,6 +45,29 @@ namespace MQTTnet.Tests.Extensions
             var template = new MqttTopicTemplate("A/B/{foo}/D");
             template.WithParameter("foo", "a#");
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void RejectsReservedChars2()
+        {
+            var template = new MqttTopicTemplate("A/B/{foo}/D");
+            template.WithParameter("foo", "a+b");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void RejectsReservedChars3()
+        {
+            var template = new MqttTopicTemplate("A/B/{foo}/D");
+            template.WithParameter("foo", "a/b");
+        }
+        
+        [TestMethod]
+        public void AcceptsEmptyValue()
+        {
+            var template = new MqttTopicTemplate("A/B/{foo}/D");
+            template.WithParameter("foo", "");
+        }
         
         [TestMethod]
         [ExpectedException(typeof(MqttProtocolViolationException))]
@@ -60,13 +83,6 @@ namespace MQTTnet.Tests.Extensions
             var _ = new MqttTopicTemplate(null);
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void RejectsReservedChars2()
-        {
-            var template = new MqttTopicTemplate("A/B/{foo}/D");
-            template.WithParameter("foo", "e/f");
-        }
         
         [TestMethod]
         public void IgnoresEmptyParameters()
@@ -112,6 +128,50 @@ namespace MQTTnet.Tests.Extensions
                 .WithNoLocal()
                 .Build();
             Assert.AreEqual("A/v1/+/F", filter.Topic);
+        }
+
+        [TestMethod]
+        public void SubscriptionSupport2()
+        {
+            var template = new MqttTopicTemplate("A/v1/{param}/F");
+            
+            var subscribeOptions = new MqttFactory().CreateSubscribeOptionsBuilder()
+                .WithTopicTemplate(template)
+                .WithSubscriptionIdentifier(5)
+                .Build();
+            Assert.AreEqual("A/v1/+/F", subscribeOptions.TopicFilters[0].Topic);
+        }
+
+        [TestMethod]
+        public void SendAndSubscribeSupport()
+        {
+            var template = new MqttTopicTemplate("App/v1/{sender}/message");
+
+            var filter = new MqttTopicFilterBuilder()
+                .WithTopicTemplate(template)
+                .WithAtLeastOnceQoS()
+                .WithNoLocal()
+                .Build();
+
+            Assert.AreEqual("App/v1/+/message", filter.Topic);
+
+            var myTopic = template.WithParameter("sender", "me, myself & i");
+
+            var message = new MqttApplicationMessageBuilder()
+                .WithTopicTemplate(
+                    myTopic)
+                .WithPayload("Hello!")
+                .Build();
+
+            Assert.IsTrue(message.MatchesTopicTemplate(template));
+        }
+
+        [TestMethod]
+        public void SendAndSubscribeSupport2()
+        {
+            var template = new MqttTopicTemplate("App/v1/{sender}/message");
+            Assert.ThrowsException<ArgumentException>(() => 
+                template.BuildMessage());
         }
 
         [TestMethod]

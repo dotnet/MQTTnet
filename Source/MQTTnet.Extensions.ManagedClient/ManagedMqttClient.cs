@@ -288,7 +288,7 @@ namespace MQTTnet.Extensions.ManagedClient
             }
         }
 
-        public Task SubscribeAsync(ICollection<MqttTopicFilter> topicFilters)
+        public Task SubscribeAsync(IEnumerable<MqttTopicFilter> topicFilters)
         {
             ThrowIfDisposed();
 
@@ -316,7 +316,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return CompletedTask.Instance;
         }
 
-        public Task UnsubscribeAsync(ICollection<string> topics)
+        public Task UnsubscribeAsync(IEnumerable<string> topics)
         {
             ThrowIfDisposed();
 

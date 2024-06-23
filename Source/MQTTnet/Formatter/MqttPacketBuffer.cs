@@ -48,20 +48,28 @@ namespace MQTTnet.Formatter
 
         public byte[] ToArray()
         {
-            if (Payload.Length == 0)
-            {
-                var packetBuffer = GC.AllocateUninitializedArray<byte>((int)Packet.Length);
-                Packet.CopyTo(packetBuffer);
-                return packetBuffer;
-            }
-
             var buffer = GC.AllocateUninitializedArray<byte>(Length);
             int packetLength = (int)Packet.Length;
-            int payloadLength = (int)Payload.Length;
             MqttMemoryHelper.Copy(Packet, 0, buffer, 0, packetLength);
-            MqttMemoryHelper.Copy(Payload, 0, buffer, packetLength, payloadLength);
-
+            if (Payload.Length > 0)
+            {
+                int payloadLength = (int)Payload.Length;
+                MqttMemoryHelper.Copy(Payload, 0, buffer, packetLength, payloadLength);
+            }
             return buffer;
+        }
+
+        public IMemoryOwner<byte> ToMemoryOwner()
+        {
+            var memoryOwner = MemoryPool<byte>.Shared.Rent(Length);
+            int packetLength = (int)Packet.Length;
+            MqttMemoryHelper.Copy(Packet, 0, memoryOwner.Memory, 0, packetLength);
+            if (Payload.Length > 0)
+            {
+                int payloadLength = (int)Payload.Length;
+                MqttMemoryHelper.Copy(Payload, 0, memoryOwner.Memory, packetLength, payloadLength);
+            }
+            return memoryOwner;
         }
 
         public ArraySegment<byte> Join()

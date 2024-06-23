@@ -9,7 +9,7 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Benchmarks;
 
-[SimpleJob(RuntimeMoniker.Net60)]
+[SimpleJob(RuntimeMoniker.Net80)]
 [RPlotExporter]
 [RankColumn]
 [MemoryDiagnoser]

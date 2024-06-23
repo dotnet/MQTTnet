@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Benchmarks;
 
-[SimpleJob(RuntimeMoniker.Net60)]
+[SimpleJob(RuntimeMoniker.Net80)]
 [MemoryDiagnoser]
 public class MqttTcpChannelBenchmark : BaseBenchmark
 {

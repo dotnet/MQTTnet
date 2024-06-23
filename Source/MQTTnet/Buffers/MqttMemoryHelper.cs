@@ -15,6 +15,12 @@ namespace MQTTnet.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Copy(ReadOnlySequence<byte> sequence, int sourceIndex, byte[] destination, int destinationIndex, int length)
         {
+            sequence.Slice(sourceIndex).CopyTo(destination.AsSpan(destinationIndex, length));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Copy(ReadOnlySequence<byte> sequence, int sourceIndex, Memory<byte> destination, int destinationIndex, int length)
+        {
             var offset = destinationIndex;
             foreach (var segment in sequence)
             {
@@ -23,8 +29,9 @@ namespace MQTTnet.Buffers
                     sourceIndex -= segment.Length;
                     continue;
                 }
+
                 var targetLength = Math.Min(segment.Length - sourceIndex, length);
-                segment.Span.Slice(sourceIndex, targetLength).CopyTo(destination.AsSpan(offset));
+                segment.Span.Slice(sourceIndex, targetLength).CopyTo(destination.Span.Slice(offset));
                 offset += targetLength;
                 length -= targetLength;
                 if (length == 0)

@@ -233,14 +233,20 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
 
                 _logger.Verbose("TX ({0} bytes) >>> {1}", packetBuffer.Length, packet);
 
-                if (packetBuffer.Payload.Length == 0 || !AllowPacketFragmentation)
+                if (!AllowPacketFragmentation)
                 {
-                    await _channel.WriteAsync(new ReadOnlySequence<byte>(packetBuffer.ToArray()), true, cancellationToken).ConfigureAwait(false);
+                    using (var memoryOwner = packetBuffer.ToMemoryOwner())
+                    {
+                        await _channel.WriteAsync(new ReadOnlySequence<byte>(memoryOwner.Memory), true, cancellationToken).ConfigureAwait(false);
+                    }
                 }
                 else
                 {
                     await _channel.WriteAsync(packetBuffer.Packet, false, cancellationToken).ConfigureAwait(false);
-                    await _channel.WriteAsync(packetBuffer.Payload, true, cancellationToken).ConfigureAwait(false);
+                    if (packetBuffer.Payload.Length > 0)
+                    {
+                        await _channel.WriteAsync(packetBuffer.Payload, true, cancellationToken).ConfigureAwait(false);
+                    }
                 }
 
                 Interlocked.Add(ref _statistics._bytesReceived, packetBuffer.Length);

@@ -2,21 +2,20 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Buffers;
-using MQTTnet.Formatter;
 using MQTTnet.Tests.Mockups;
+using System;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
     public class MqttPacketReaderWriterBenchmark : BaseBenchmark
     {
         readonly byte[] _demoPayload = new byte[1024];
-        
+
         byte[] _readPayload;
 
         [GlobalCleanup]
@@ -28,7 +27,7 @@ namespace MQTTnet.Benchmarks
         public void GlobalSetup()
         {
             TestEnvironment.EnableLogger = false;
-            
+
             var writer = new MqttBufferWriter(4096, 65535);
             writer.WriteString("A relative short string.");
             writer.WriteBinary(_demoPayload);
@@ -70,7 +69,7 @@ namespace MQTTnet.Benchmarks
                 reader.ReadBinaryData();
             }
         }
-        
+
         [Benchmark]
         public void Write_100_000_Messages()
         {

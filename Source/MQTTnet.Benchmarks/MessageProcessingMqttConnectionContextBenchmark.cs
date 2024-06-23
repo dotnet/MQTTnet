@@ -13,7 +13,7 @@ using MQTTnet.Diagnostics;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
     public class MessageProcessingMqttConnectionContextBenchmark : BaseBenchmark
     {

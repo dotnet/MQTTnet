@@ -11,24 +11,26 @@ namespace MQTTnet.Buffers
     /// Owner of memory rented from <see cref="ArrayPool{T}.Shared"/> that 
     /// is responsible for disposing the underlying memory appropriately.
     /// </summary>
-    public sealed class ArrayPoolMemoryOwner<T> : IMemoryOwner<T>
+    public struct ArrayPoolMemoryOwner<T> : IMemoryOwner<T>
     {
         public static ArrayPoolMemoryOwner<T> Rent(int length)
         {
             var memory = ArrayPool<T>.Shared.Rent(length);
-            return new ArrayPoolMemoryOwner<T>(memory);
+            return new ArrayPoolMemoryOwner<T>(memory, length);
         }
 
-        private ArrayPoolMemoryOwner(T[] memory)
+        private ArrayPoolMemoryOwner(T[] memory, int length)
         {
-            Initialize(memory);
+            Initialize(memory, length);
         }
 
-        private void Initialize(T[] array)
+        private void Initialize(T[] array, int length)
         {
+            _length = length;
             _array = array;
         }
 
+        private int _length;
         private T[] _array;
 
         /// <summary>
@@ -37,7 +39,7 @@ namespace MQTTnet.Buffers
         public T[] Array => _array;
 
         /// <inheritdoc/>
-        public Memory<T> Memory => _array.AsMemory();
+        public Memory<T> Memory => _array.AsMemory(0, _length);
 
         /// <summary>
         /// Returns the underlying memory and sets the <see cref="Array"/> to null.

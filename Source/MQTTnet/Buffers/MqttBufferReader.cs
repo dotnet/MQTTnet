@@ -8,6 +8,7 @@ using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using System.Buffers.Binary;
+using System.Buffers;
 
 namespace MQTTnet.Buffers
 {
@@ -71,6 +72,21 @@ namespace MQTTnet.Buffers
             _position += bufferLength;
 
             return buffer;
+        }
+
+        public IMemoryOwner<byte> ReadPayload()
+        {
+            var bufferLength = BytesLeft;
+            if (bufferLength == 0)
+            {
+                return EmptyMemoryOwner<byte>.Empty;
+            }
+
+            var result = ArrayPoolMemoryOwner<byte>.Rent(bufferLength);
+            MqttMemoryHelper.Copy(_buffer, _position, result.Array, 0, bufferLength);
+            _position += bufferLength;
+
+            return result;
         }
 
         public string ReadString()

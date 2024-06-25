@@ -3,12 +3,13 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Protocol;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 
 namespace MQTTnet.Packets;
 
-public sealed class MqttPublishPacket : MqttPacketWithIdentifier
+public class MqttPublishPacket : MqttPacketWithIdentifier
 {
     public string ContentType { get; set; }
 
@@ -21,6 +22,8 @@ public sealed class MqttPublishPacket : MqttPacketWithIdentifier
     public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
     public ReadOnlySequence<byte> Payload { get; set; }
+
+    public IDisposable PayloadOwner { get; set; }
 
     public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; } = MqttQualityOfServiceLevel.AtMostOnce;
 

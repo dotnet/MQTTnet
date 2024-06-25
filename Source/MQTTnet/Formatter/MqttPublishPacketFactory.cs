@@ -23,6 +23,7 @@ namespace MQTTnet.Formatter
             {
                 Topic = applicationMessage.Topic,
                 Payload = applicationMessage.Payload,
+                PayloadOwner = applicationMessage.PayloadOwner,
                 QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
                 Retain = applicationMessage.Retain,
                 Dup = applicationMessage.Dup,

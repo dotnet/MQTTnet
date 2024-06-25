@@ -20,6 +20,7 @@ namespace MQTTnet.Formatter
             {
                 Topic = publishPacket.Topic,
                 Payload = publishPacket.Payload,
+                PayloadOwner = publishPacket.PayloadOwner,
                 QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
                 Retain = publishPacket.Retain,
                 Dup = publishPacket.Dup,

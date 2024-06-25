@@ -85,12 +85,12 @@ namespace MQTTnet
         public uint MessageExpiryInterval { get; set; }
 
         /// <summary>
-        /// Get or set ReadOnlySequence style of Payload.
+        ///     Get or set ReadOnlySequence style of Payload.
         /// </summary>
         public ReadOnlySequence<byte> Payload { get; set; }
 
         /// <summary>
-        /// Get or set the owner of the <see cref="Payload"/> memory.
+        ///     Get or set the owner of the <see cref="Payload"/> memory.
         /// </summary>
         public IDisposable PayloadOwner { get; set; }
 

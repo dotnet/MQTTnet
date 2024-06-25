@@ -95,9 +95,9 @@ namespace MQTTnet
             return this;
         }
 
-        public MqttApplicationMessageBuilder WithPayload(ArraySegment<byte> payloadSegment)
+        public MqttApplicationMessageBuilder WithPayload(ArraySegment<byte> payload)
         {
-            _payload = new ReadOnlySequence<byte>(payloadSegment);
+            _payload = new ReadOnlySequence<byte>(payload);
             return this;
         }
 
@@ -146,11 +146,18 @@ namespace MQTTnet
                 return WithPayload(default(byte[]));
             }
 
-            var payloadBuffer = new byte[length];
+            if (length > int.MaxValue || length < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(length));
+            }
+
+            // for most streams the Read(byte[]) method is most efficient way to tread the buffer
+            int checkedLength = (int)length;
+            var payloadBuffer = ArrayPoolMemoryOwner<byte>.Rent(checkedLength);
             int totalRead = 0;
             do
             {
-                int bytesRead = payload.Read(payloadBuffer, totalRead, payloadBuffer.Length - totalRead);
+                int bytesRead = payload.Read(payloadBuffer.Array, totalRead, checkedLength - totalRead);
                 if (bytesRead == 0)
                 {
                     break;
@@ -159,7 +166,7 @@ namespace MQTTnet
                 totalRead += bytesRead;
             } while (totalRead < length);
 
-            return WithPayload(payloadBuffer);
+            return WithPayload(new ReadOnlySequence<byte>(payloadBuffer.Array.AsMemory(0, totalRead)), payloadBuffer);
         }
 
         public MqttApplicationMessageBuilder WithPayload(string payload)

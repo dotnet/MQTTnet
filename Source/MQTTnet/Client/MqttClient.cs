@@ -269,26 +269,33 @@ public sealed class MqttClient : Disposable, IMqttClient
             MqttApplicationMessageValidator.ThrowIfNotSupported(applicationMessage, _adapter.PacketFormatterAdapter.ProtocolVersion);
         }
 
-        var publishPacket = MqttPublishPacketFactory.Create(applicationMessage);
-
-        switch (applicationMessage.QualityOfServiceLevel)
+        try
         {
-            case MqttQualityOfServiceLevel.AtMostOnce:
-                {
-                    return PublishAtMostOnce(publishPacket, cancellationToken);
-                }
-            case MqttQualityOfServiceLevel.AtLeastOnce:
-                {
-                    return PublishAtLeastOnce(publishPacket, cancellationToken);
-                }
-            case MqttQualityOfServiceLevel.ExactlyOnce:
-                {
-                    return PublishExactlyOnce(publishPacket, cancellationToken);
-                }
-            default:
-                {
-                    throw new NotSupportedException();
-                }
+            var publishPacket = MqttPublishPacketFactory.Create(applicationMessage);
+
+            switch (applicationMessage.QualityOfServiceLevel)
+            {
+                case MqttQualityOfServiceLevel.AtMostOnce:
+                    {
+                        return PublishAtMostOnce(publishPacket, cancellationToken);
+                    }
+                case MqttQualityOfServiceLevel.AtLeastOnce:
+                    {
+                        return PublishAtLeastOnce(publishPacket, cancellationToken);
+                    }
+                case MqttQualityOfServiceLevel.ExactlyOnce:
+                    {
+                        return PublishExactlyOnce(publishPacket, cancellationToken);
+                    }
+                default:
+                    {
+                        throw new NotSupportedException();
+                    }
+            }
+        }
+        finally
+        {
+            applicationMessage?.PayloadOwner?.Dispose();
         }
     }
 

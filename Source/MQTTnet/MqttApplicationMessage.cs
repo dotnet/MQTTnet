@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Buffers;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
@@ -24,8 +25,7 @@ namespace MQTTnet
                 CorrelationData = this.CorrelationData,
                 Dup = this.Dup,
                 MessageExpiryInterval = this.MessageExpiryInterval,
-                Payload = new ReadOnlySequence<byte>(this.Payload.ToArray()),
-                PayloadOwner = null,
+                Payload = this.Payload.Sequence.ToArray(),
                 PayloadFormatIndicator = this.PayloadFormatIndicator,
                 QualityOfServiceLevel = this.QualityOfServiceLevel,
                 ResponseTopic = this.ResponseTopic,
@@ -42,9 +42,7 @@ namespace MQTTnet
         /// </summary>
         public void DisposePayload()
         {
-            Payload = ReadOnlySequence<byte>.Empty;
-            PayloadOwner?.Dispose();
-            PayloadOwner = null;
+            Payload.Dispose();
         }
 
         /// <summary>
@@ -85,14 +83,9 @@ namespace MQTTnet
         public uint MessageExpiryInterval { get; set; }
 
         /// <summary>
-        ///     Get or set ReadOnlySequence style of Payload.
+        ///     Get or set Mqtt Payload owner.
         /// </summary>
-        public ReadOnlySequence<byte> Payload { get; set; }
-
-        /// <summary>
-        ///     Get or set the owner of the <see cref="Payload"/> memory.
-        /// </summary>
-        public IDisposable PayloadOwner { get; set; }
+        public MqttPayloadOwner<byte> Payload{ get; set; }
 
         /// <summary>
         ///     Gets or sets the payload format indicator.

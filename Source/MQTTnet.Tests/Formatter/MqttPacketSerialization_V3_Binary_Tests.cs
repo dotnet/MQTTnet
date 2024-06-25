@@ -330,7 +330,7 @@ namespace MQTTnet.Tests.Formatter
 
             Assert.IsNotNull(publishPacketCopy);
             Assert.AreEqual(publishPacket.Topic, publishPacketCopy.Topic);
-            CollectionAssert.AreEqual(publishPacket.Payload.ToArray(), publishPacketCopy.Payload.ToArray());
+            CollectionAssert.AreEqual(publishPacket.Payload.Sequence.ToArray(), publishPacketCopy.Payload.Sequence.ToArray());
 
             // Now modify the payload and test again.
             publishPacket.Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("MQTT"));
@@ -340,7 +340,7 @@ namespace MQTTnet.Tests.Formatter
 
             Assert.IsNotNull(publishPacketCopy2);
             Assert.AreEqual(publishPacket.Topic, publishPacketCopy2.Topic);
-            CollectionAssert.AreEqual(publishPacket.Payload.ToArray(), publishPacketCopy2.Payload.ToArray());
+            CollectionAssert.AreEqual(publishPacket.Payload.Sequence.ToArray(), publishPacketCopy2.Payload.Sequence.ToArray());
         }
 
         [TestMethod]

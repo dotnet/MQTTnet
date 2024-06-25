@@ -107,7 +107,7 @@ namespace MQTTnet.Formatter.V3
             ReadOnlySequence<byte> payload = default;
             if (packet is MqttPublishPacket publishPacket)
             {
-                payload = publishPacket.Payload;
+                payload = publishPacket.Payload.Sequence;
                 remainingLength += (uint)payload.Length;
             }
 
@@ -280,8 +280,7 @@ namespace MQTTnet.Formatter.V3
             if (!_bufferReader.EndOfStream)
             {
                 IMemoryOwner<byte> payloadOwner = _bufferReader.ReadPayload();
-                packet.Payload = new ReadOnlySequence<byte>(payloadOwner.Memory);
-                packet.PayloadOwner = payloadOwner;
+                packet.Payload = new MqttPayloadOwner<byte>(payloadOwner.Memory, payloadOwner);
             }
 
             return packet;

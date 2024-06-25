@@ -37,7 +37,7 @@ namespace MQTTnet.TestApp
                     var payloadText = string.Empty;
                     if (e.ApplicationMessage.Payload.Length > 0)
                     {
-                        payloadText = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                        payloadText = Encoding.UTF8.GetString(e.ApplicationMessage.Payload.Sequence);
                     }
                     
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");

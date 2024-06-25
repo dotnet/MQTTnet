@@ -542,8 +542,7 @@ namespace MQTTnet.Formatter.V5
             if (!_bufferReader.EndOfStream)
             {
                 IMemoryOwner<byte> payloadOwner = _bufferReader.ReadPayload();
-                packet.Payload = new ReadOnlySequence<byte>(payloadOwner.Memory);
-                packet.PayloadOwner = payloadOwner;
+                packet.Payload = new MqttPayloadOwner<byte>(payloadOwner.Memory, payloadOwner);
             }
 
             return packet;

@@ -113,7 +113,7 @@ public static class Server_Retained_Messages_Samples
 
                 // Create a copy of the buffer from the payload segment because
                 // it cannot be serialized and deserialized with the JSON serializer.
-                Payload = message.Payload.ToArray(),
+                Payload = message.Payload.Sequence.ToArray(),
                 UserProperties = message.UserProperties,
                 ResponseTopic = message.ResponseTopic,
                 CorrelationData = message.CorrelationData,

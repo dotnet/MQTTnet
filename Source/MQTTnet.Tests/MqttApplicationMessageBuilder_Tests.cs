@@ -31,7 +31,7 @@ namespace MQTTnet.Tests
             Assert.AreEqual("xyz", message.Topic);
             Assert.IsFalse(message.Retain);
             Assert.AreEqual(MqttQualityOfServiceLevel.AtMostOnce, message.QualityOfServiceLevel);
-            Assert.AreEqual(Encoding.UTF8.GetString(message.Payload), "00:06:00");
+            Assert.AreEqual(Encoding.UTF8.GetString(message.Payload.Sequence), "00:06:00");
         }
 
         [TestMethod]
@@ -43,7 +43,7 @@ namespace MQTTnet.Tests
             Assert.AreEqual("123", message.Topic);
             Assert.IsFalse(message.Retain);
             Assert.AreEqual(MqttQualityOfServiceLevel.AtMostOnce, message.QualityOfServiceLevel);
-            Assert.AreEqual(Encoding.UTF8.GetString(message.Payload), "Hello");
+            Assert.AreEqual(Encoding.UTF8.GetString(message.Payload.Sequence), "Hello");
         }
 
         [TestMethod]

@@ -284,7 +284,7 @@ namespace MQTTnet.Tests.Formatter
             Assert.AreEqual(publishPacket.PacketIdentifier, deserialized.PacketIdentifier);
             Assert.AreEqual(publishPacket.Dup, deserialized.Dup);
             Assert.AreEqual(publishPacket.Retain, deserialized.Retain);
-            CollectionAssert.AreEqual(publishPacket.Payload.ToArray(), deserialized.Payload.ToArray());
+            CollectionAssert.AreEqual(publishPacket.Payload.Sequence.ToArray(), deserialized.Payload.Sequence.ToArray());
             Assert.AreEqual(publishPacket.QualityOfServiceLevel, deserialized.QualityOfServiceLevel);
             Assert.AreEqual(publishPacket.Topic, deserialized.Topic);
             Assert.AreEqual(publishPacket.ResponseTopic, deserialized.ResponseTopic);

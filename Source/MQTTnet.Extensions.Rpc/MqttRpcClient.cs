@@ -133,7 +133,7 @@ namespace MQTTnet.Extensions.Rpc
                 return CompletedTask.Instance;
             }
 
-            var payloadBuffer = eventArgs.ApplicationMessage.Payload.ToArray();
+            var payloadBuffer = eventArgs.ApplicationMessage.Payload.Sequence.ToArray();
             awaitable.TrySetResult(payloadBuffer);
 
             // Set this message to handled to that other code can avoid execution etc.

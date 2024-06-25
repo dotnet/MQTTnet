@@ -21,6 +21,6 @@ public static class MqttApplicationMessageExtensions
             return null;
         }
 
-        return Encoding.UTF8.GetString(applicationMessage.Payload);
+        return Encoding.UTF8.GetString(applicationMessage.Payload.Sequence);
     }
 }

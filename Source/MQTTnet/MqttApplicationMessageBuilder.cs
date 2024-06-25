@@ -43,7 +43,6 @@ namespace MQTTnet
             {
                 Topic = _topic,
                 Payload = _payload,
-                PayloadOwner = _payloadOwner,
                 QualityOfServiceLevel = _qualityOfServiceLevel,
                 Retain = _retain,
                 ContentType = _contentType,

@@ -148,7 +148,7 @@ namespace MQTTnet.TestApp
                     var payloadText = string.Empty;
                     if (e.ApplicationMessage.Payload.Length > 0)
                     {
-                        payloadText = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                        payloadText = Encoding.UTF8.GetString(e.ApplicationMessage.Payload.Sequence);
                     }
 
                     MqttNetConsoleLogger.PrintToConsole($"'{e.ClientId}' reported '{e.ApplicationMessage.Topic}' > '{payloadText}'", ConsoleColor.Magenta);

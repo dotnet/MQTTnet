@@ -85,7 +85,7 @@ namespace MQTTnet.Server.Internal
                         else
                         {
                             if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel ||
-                                !MqttMemoryHelper.SequenceEqual(existingMessage.Payload, payload))
+                                !MqttMemoryHelper.SequenceEqual(existingMessage.Payload.Sequence, payload.Sequence))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage.Clone();
                                 saveIsRequired = true;

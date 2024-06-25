@@ -316,7 +316,7 @@ namespace MQTTnet.Tests.Server
                 var isIntercepted = false;
                 c2.ApplicationMessageReceivedAsync += e =>
                 {
-                    isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.Payload), StringComparison.Ordinal) == 0;
+                    isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.Payload.Sequence), StringComparison.Ordinal) == 0;
                     return CompletedTask.Instance;
                 };
 
@@ -782,7 +782,7 @@ namespace MQTTnet.Tests.Server
                 var client1 = await testEnvironment.ConnectClient();
                 client1.ApplicationMessageReceivedAsync += e =>
                 {
-                    receivedBody = e.ApplicationMessage.Payload.ToArray();
+                    receivedBody = e.ApplicationMessage.Payload.Sequence.ToArray();
                     return CompletedTask.Instance;
                 };
 

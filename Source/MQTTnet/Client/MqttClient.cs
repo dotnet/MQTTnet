@@ -295,7 +295,7 @@ public sealed class MqttClient : Disposable, IMqttClient
         }
         finally
         {
-            applicationMessage?.PayloadOwner?.Dispose();
+            applicationMessage?.Payload.Dispose();
         }
     }
 

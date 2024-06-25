@@ -42,7 +42,7 @@ namespace MQTTnet.Formatter.V5
             ReadOnlySequence<byte> payload = default;
             if (packet is MqttPublishPacket publishPacket)
             {
-                payload = publishPacket.Payload;
+                payload = publishPacket.Payload.Sequence;
                 remainingLength += (uint)payload.Length;
             }
 

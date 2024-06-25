@@ -11,29 +11,29 @@ namespace MQTTnet.Buffers
     /// Owner of <see cref="ReadOnlySequence{T}"/> that is responsible
     /// for disposing the underlying payload appropriately.
     /// </summary>
-    public struct MqttPayload<T> : IReadOnlySequenceOwner<T>
+    public struct MqttPayloadOwner<T> : IReadOnlySequenceOwner<T>
     {
-        public MqttPayload()
+        public MqttPayloadOwner()
         {
             Initialize(ReadOnlySequence<T>.Empty, null);
         }
 
-        public MqttPayload(T[] memory, IDisposable owner = null)
+        public MqttPayloadOwner(T[] memory, IDisposable owner = null)
         {
             Initialize(new ReadOnlySequence<T>(memory), owner);
         }
 
-        public MqttPayload(ReadOnlySequence<T> sequence, IDisposable owner = null)
+        public MqttPayloadOwner(ReadOnlySequence<T> sequence, IDisposable owner = null)
         {
             Initialize(sequence, owner);
         }
 
-        public MqttPayload(ReadOnlyMemory<T> memory, IDisposable owner = null)
+        public MqttPayloadOwner(ReadOnlyMemory<T> memory, IDisposable owner = null)
         {
             Initialize(new ReadOnlySequence<T>(memory), owner);
         }
 
-        public MqttPayload(ArraySegment<T> memory, IDisposable owner = null)
+        public MqttPayloadOwner(ArraySegment<T> memory, IDisposable owner = null)
         {
             Initialize(new ReadOnlySequence<T>(memory), owner);
         }
@@ -58,12 +58,24 @@ namespace MQTTnet.Buffers
         public IDisposable Owner => _owner;
 
         /// <summary>
+        /// Gets the length of the <see cref="ReadOnlySequence{T}"/>.
+        /// </summary>
+        public long Length => _sequence.Length;
+
+        /// <summary>
         /// Frees the underlying memory and sets the <see cref="ReadOnlySequence{T}"/> to empty.
         /// </summary>
         public void Dispose()
         {
             _sequence = ReadOnlySequence<T>.Empty;
             _owner?.Dispose();
+            _owner = null;
         }
+
+        public static implicit operator MqttPayloadOwner<T>(ArrayPoolMemoryOwner<T> memoryOwner) => new MqttPayloadOwner<T>(memoryOwner.Memory, memoryOwner);
+        public static implicit operator MqttPayloadOwner<T>(ReadOnlySequence<T> sequence) => new MqttPayloadOwner<T>(sequence);
+        public static implicit operator MqttPayloadOwner<T>(ReadOnlyMemory<T> memory) => new MqttPayloadOwner<T>(memory);
+        public static implicit operator MqttPayloadOwner<T>(ArraySegment<T> memory) => new MqttPayloadOwner<T>(memory);
+        public static implicit operator MqttPayloadOwner<T>(T[] memory) => new MqttPayloadOwner<T>(memory);
     }
 }

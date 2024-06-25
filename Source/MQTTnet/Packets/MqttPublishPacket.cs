@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Buffers;
 using MQTTnet.Protocol;
 using System;
 using System.Buffers;
@@ -21,9 +22,7 @@ public class MqttPublishPacket : MqttPacketWithIdentifier
 
     public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
-    public ReadOnlySequence<byte> Payload { get; set; }
-
-    public IDisposable PayloadOwner { get; set; }
+    public MqttPayloadOwner<byte> Payload { get; set; }
 
     public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; } = MqttQualityOfServiceLevel.AtMostOnce;
 

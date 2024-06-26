@@ -244,8 +244,7 @@ namespace MQTTnet.Tests.MQTTv5
                 MqttApplicationMessage receivedMessage = null;
                 receiver.ApplicationMessageReceivedAsync += e =>
                 {
-                    e.TransferPayload(false);
-                    receivedMessage = e.ApplicationMessage;
+                    receivedMessage = e.TransferApplicationMessageOwnership(true);
                     return CompletedTask.Instance;
                 };
 
@@ -282,7 +281,7 @@ namespace MQTTnet.Tests.MQTTv5
                 }
                 finally
                 {
-                    receivedMessage?.DisposePayload();
+                    receivedMessage?.Dispose();
                 }
             }
         }

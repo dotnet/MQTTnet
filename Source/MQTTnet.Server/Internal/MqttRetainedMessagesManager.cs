@@ -110,7 +110,7 @@ namespace MQTTnet.Server.Internal
                     }
                 }
 
-                applicationMessage.DisposePayload();
+                applicationMessage.Dispose();
             }
             catch (Exception exception)
             {

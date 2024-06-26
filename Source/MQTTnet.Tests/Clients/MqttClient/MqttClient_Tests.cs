@@ -870,8 +870,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 {
                     lock (receivedMessages)
                     {
-                        e.TransferPayload(true);
-                        receivedMessages.Add(e.ApplicationMessage);
+                        receivedMessages.Add(e.TransferApplicationMessageOwnership(true));
                     }
 
                     return CompletedTask.Instance;

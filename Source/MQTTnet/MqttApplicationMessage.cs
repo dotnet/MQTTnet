@@ -11,11 +11,11 @@ using System.Collections.Generic;
 
 namespace MQTTnet
 {
-    public sealed class MqttApplicationMessage 
+    public sealed class MqttApplicationMessage : IDisposable
     {
         /// <summary>
-        /// Create a clone of the <see cref="MqttApplicationMessage"/>
-        /// with a deep copy of the Payload which is cleaned up by the GC.
+        /// Create a clone of the <see cref="MqttApplicationMessage"/>.
+        /// with a deep copy of the Payload allocated from the heap.
         /// </summary>
         public MqttApplicationMessage Clone()
         {
@@ -40,7 +40,7 @@ namespace MQTTnet
         /// <summary>
         ///    Disposes the payload used by the current instance of the <see cref="MqttApplicationMessage" /> class.
         /// </summary>
-        public void DisposePayload()
+        public void Dispose()
         {
             Payload.Dispose();
         }

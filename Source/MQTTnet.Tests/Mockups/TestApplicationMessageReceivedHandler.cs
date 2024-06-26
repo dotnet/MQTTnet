@@ -21,7 +21,7 @@ namespace MQTTnet.Tests.Mockups
         {
             foreach (var eventArgs in _receivedEventArgs)
             {
-                eventArgs.ApplicationMessage?.DisposePayload();
+                eventArgs.ApplicationMessage?.Dispose();
             }
         }
 
@@ -84,8 +84,8 @@ namespace MQTTnet.Tests.Mockups
         {
             lock (_receivedEventArgs)
             {
-                // take ownership of message payload to avoid cloning
-                eventArgs.TransferPayload(false);
+                // take ownership of application message to avoid cloning
+                eventArgs.TransferApplicationMessageOwnership(false);
                 _receivedEventArgs.Add(eventArgs);
             }
 

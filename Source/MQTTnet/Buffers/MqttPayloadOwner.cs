@@ -72,6 +72,18 @@ namespace MQTTnet.Buffers
             _owner = null;
         }
 
+        /// <summary>
+        /// Returns a new <see cref="MqttPayloadOwner{T}"/> with the same
+        /// <see cref="ReadOnlySequence{T}"/> and transfers the ownership
+        /// to the caller.
+        /// </summary>
+        public MqttPayloadOwner<T> TransferOwnership()
+        {
+            var payload = new MqttPayloadOwner<T>(_sequence, _owner);
+            _owner = null;
+            return payload;
+        }
+
         public static implicit operator MqttPayloadOwner<T>(ArrayPoolMemoryOwner<T> memoryOwner) => new MqttPayloadOwner<T>(memoryOwner.Memory, memoryOwner);
         public static implicit operator MqttPayloadOwner<T>(ReadOnlySequence<T> sequence) => new MqttPayloadOwner<T>(sequence);
         public static implicit operator MqttPayloadOwner<T>(ReadOnlyMemory<T> memory) => new MqttPayloadOwner<T>(memory);

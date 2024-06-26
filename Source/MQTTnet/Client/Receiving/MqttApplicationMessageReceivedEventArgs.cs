@@ -29,26 +29,29 @@ public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     }
 
     /// <summary>
-    ///     The invoked message receiver can take ownership of the payload to avoid cloning.
-    ///     If not cloned, it is the obligation of the new owner to dispose the payload by
-    ///     calling <see cref="MqttApplicationMessage.DisposePayload()"/>.
+    ///     The invoked message receiver can take ownership of the application
+    ///     message with payload to avoid cloning.
+    ///     It is then the obligation of the new owner to dispose the obtained
+    ///     application message.
     /// </summary>
     /// <param name="clonePayload">
-    ///     If set to true, clones the applicationMessage and copies the payload.
-    ///     The new instance does not need to be disposed.
+    ///     If set to true, clones the ApplicationMessage and copies the payload.
     /// </param>
-    public void TransferPayload(bool clonePayload)
+    public MqttApplicationMessage TransferApplicationMessageOwnership(bool clonePayload)
     {
-        TransferredPayload = true;
+        DisposeApplicationMessage = false;
         if (clonePayload)
         {
             var applicationMessage = ApplicationMessage;
-            if (applicationMessage != null)
+            // replace application message with a clone
+            // if the payload is owner managed
+            if (applicationMessage?.Payload.Owner != null)
             {
                 ApplicationMessage = applicationMessage.Clone();
-                applicationMessage.DisposePayload();
+                applicationMessage.Dispose();
             }
         }
+        return ApplicationMessage;
     }
 
     public MqttApplicationMessage ApplicationMessage { get; private set; }
@@ -68,10 +71,10 @@ public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     ///     Gets or sets whether the ownership of the message payload 
     ///     was handed over to the invoked code. This value determines
     ///     if the payload can be disposed after the callback returns.
-    ///     If transferred, the new owner is responsible
+    ///     If transferred, the new owner of the message is responsible
     ///     to dispose the payload after processing.
     /// </summary>
-    public bool TransferredPayload { get; private set; } = false;
+    public bool DisposeApplicationMessage { get; private set; } = true;
 
     /// <summary>
     ///     Gets or sets whether this message was handled.

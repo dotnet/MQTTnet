@@ -720,9 +720,9 @@ public sealed class MqttClient : Disposable, IMqttClient
             }
             finally
             {
-                if (eventArgs?.TransferredPayload == false)
+                if (eventArgs?.DisposeApplicationMessage == true)
                 {
-                    eventArgs.ApplicationMessage?.DisposePayload();
+                    eventArgs.ApplicationMessage?.Dispose();
                 }
             }
         }

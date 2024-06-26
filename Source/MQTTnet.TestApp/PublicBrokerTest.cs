@@ -144,8 +144,7 @@ namespace MQTTnet.TestApp
                     MqttApplicationMessage receivedMessage = null;
                     client.ApplicationMessageReceivedAsync += e =>
                     {
-                        e.TransferPayload(true);
-                        receivedMessage = e.ApplicationMessage;
+                        receivedMessage = e.TransferApplicationMessageOwnership(true);
                         return CompletedTask.Instance;
                     };
 

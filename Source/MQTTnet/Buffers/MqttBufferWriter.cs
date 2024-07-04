@@ -180,9 +180,9 @@ namespace MQTTnet.Buffers
                 // UTF8 chars can have a max length of 4 and the used buffer increase *2 every time.
                 // So the buffer should always have much more capacity left so that a correct value
                 // here is only waste of CPU cycles.
-                var byteCount = value.Length * 4;
+                var maxByteCount = Encoding.UTF8.GetMaxByteCount(value.Length);
 
-                EnsureAdditionalCapacity(byteCount + 2);
+                EnsureAdditionalCapacity(maxByteCount + 2);
 
                 var writtenBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _position + 2);
 

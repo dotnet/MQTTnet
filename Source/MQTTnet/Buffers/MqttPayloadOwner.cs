@@ -11,7 +11,7 @@ namespace MQTTnet.Buffers
     /// Owner of <see cref="ReadOnlySequence{T}"/> that is responsible
     /// for disposing the underlying payload appropriately.
     /// </summary>
-    public struct MqttPayloadOwner<T> : IReadOnlySequenceOwner<T>
+    public class MqttPayloadOwner<T> : IReadOnlySequenceOwner<T>
     {
         public MqttPayloadOwner()
         {

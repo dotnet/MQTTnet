@@ -420,7 +420,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
         var bodyArray = mqttPacket.Body.Array;
         do
         {
-            var bytesLeft = bodyArray.Length - bodyOffset;
+            var bytesLeft = bodyLength - bodyOffset;
             if (chunkSize > bytesLeft)
             {
                 chunkSize = bytesLeft;

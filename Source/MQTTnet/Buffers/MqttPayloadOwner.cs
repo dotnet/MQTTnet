@@ -11,7 +11,7 @@ namespace MQTTnet.Buffers
     /// Owner of <see cref="ReadOnlySequence{T}"/> that is responsible
     /// for disposing the underlying payload appropriately.
     /// </summary>
-    public class MqttPayloadOwner<T> : IReadOnlySequenceOwner<T>
+    public struct MqttPayloadOwner<T> : IReadOnlySequenceOwner<T>
     {
         public MqttPayloadOwner()
         {
@@ -77,14 +77,13 @@ namespace MQTTnet.Buffers
         /// <see cref="ReadOnlySequence{T}"/> and transfers the ownership
         /// to the caller.
         /// </summary>
-        public MqttPayloadOwner<T> TransferOwnership()
+        public static MqttPayloadOwner<T> TransferOwnership(ref MqttPayloadOwner<T> payloadOwner)
         {
-            var payload = new MqttPayloadOwner<T>(_sequence, _owner);
-            _owner = null;
+            var payload = new MqttPayloadOwner<T>(payloadOwner._sequence, payloadOwner._owner);
+            payloadOwner._owner = null;
             return payload;
         }
 
-        public static implicit operator MqttPayloadOwner<T>(ArrayPoolMemoryOwner<T> memoryOwner) => new MqttPayloadOwner<T>(memoryOwner.Memory, memoryOwner);
         public static implicit operator MqttPayloadOwner<T>(ReadOnlySequence<T> sequence) => new MqttPayloadOwner<T>(sequence);
         public static implicit operator MqttPayloadOwner<T>(ReadOnlyMemory<T> memory) => new MqttPayloadOwner<T>(memory);
         public static implicit operator MqttPayloadOwner<T>(ArraySegment<T> memory) => new MqttPayloadOwner<T>(memory);

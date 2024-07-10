@@ -109,8 +109,6 @@ namespace MQTTnet.Server.Internal
                         await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
                 }
-
-                applicationMessage.Dispose();
             }
             catch (Exception exception)
             {

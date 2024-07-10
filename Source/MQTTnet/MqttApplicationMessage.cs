@@ -13,6 +13,9 @@ namespace MQTTnet
 {
     public sealed class MqttApplicationMessage : IDisposable
     {
+        private bool _disposed;
+        private MqttPayloadOwner<byte> _payload;
+
         /// <summary>
         /// Create a clone of the <see cref="MqttApplicationMessage"/>.
         /// with a deep copy of the Payload allocated from the heap.
@@ -38,11 +41,26 @@ namespace MQTTnet
         }
 
         /// <summary>
+        ///    Transfers the payload ownership to the caller.
+        /// </summary>
+        /// <remarks>
+        ///    This method is used to transfer the ownership of the payload to the caller.
+        ///    It returns the <see cref="MqttPayloadOwner{T}"/> with a reference to the
+        ///    payload owner and sets the owner in this application message to null.
+        ///    After the transfer the caller is responsible to dispose the payload.
+        /// </remarks>
+        public MqttPayloadOwner<byte> TransferPayloadOwnership()
+        {
+            return MqttPayloadOwner<byte>.TransferOwnership(ref _payload);
+        }
+
+        /// <summary>
         ///    Disposes the payload used by the current instance of the <see cref="MqttApplicationMessage" /> class.
         /// </summary>
         public void Dispose()
         {
-            Payload.Dispose();
+            _disposed = true;
+            _payload.Dispose();
         }
 
         /// <summary>
@@ -85,7 +103,30 @@ namespace MQTTnet
         /// <summary>
         ///     Get or set Mqtt Payload owner.
         /// </summary>
-        public MqttPayloadOwner<byte> Payload{ get; set; }
+        /// <reamrks>
+        ///     <see cref="MqttPayloadOwner{T}"/> is a struct that wraps a <see cref="ReadOnlySequence{T}"/>
+        ///     and provides a way to manage the lifetime of the buffers. Special care has to be
+        ///     taken to dispose the object, because it is a struct with a <see cref="Dispose"/>" method
+        ///     which must be called on this instance to properly track the owner. The property always
+        ///     returns a Value type which has no owner, to avoid double dispose and double ownership./>
+        /// </reamrks>
+        public MqttPayloadOwner<byte> Payload
+        {
+            get
+            {
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException("Accessing the MqttApplicationMessage.Payload which is already disposed");
+                }
+
+                // Since the payload is a value type, do not pass the owner,
+                // so we return a new instance which contains only the sequence.
+                // There is no allocation involved, because the sequence is a value type.
+                return new MqttPayloadOwner<byte>(_payload.Sequence, null);
+            }
+
+            set => _payload = value;
+        }
 
         /// <summary>
         ///     Gets or sets the payload format indicator.

@@ -4,7 +4,6 @@
 
 using System;
 using System.Buffers;
-using System.Linq;
 
 namespace MQTTnet.Buffers
 {

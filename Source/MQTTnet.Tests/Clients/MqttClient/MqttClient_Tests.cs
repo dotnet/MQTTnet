@@ -2,15 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
@@ -20,6 +11,14 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 // ReSharper disable InconsistentNaming
 
@@ -288,7 +287,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 MqttApplicationMessage receivedMessage = null;
                 receiver.ApplicationMessageReceivedAsync += e =>
                 {
-                    receivedMessage = e.ApplicationMessage;
+                    receivedMessage = e.ApplicationMessage.Clone();
                     return CompletedTask.Instance;
                 };
 

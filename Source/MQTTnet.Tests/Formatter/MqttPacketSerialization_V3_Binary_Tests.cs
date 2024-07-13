@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -328,7 +329,7 @@ namespace MQTTnet.Tests.Formatter
 
             Assert.IsNotNull(publishPacketCopy);
             Assert.AreEqual(publishPacket.Topic, publishPacketCopy.Topic);
-            CollectionAssert.AreEqual(publishPacket.PayloadSegment.ToArray(), publishPacketCopy.PayloadSegment.ToArray());
+            CollectionAssert.AreEqual(publishPacket.Payload.ToArray(), publishPacketCopy.Payload.ToArray());
 
             // Now modify the payload and test again.
             publishPacket.PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes("MQTT"));
@@ -338,7 +339,7 @@ namespace MQTTnet.Tests.Formatter
 
             Assert.IsNotNull(publishPacketCopy2);
             Assert.AreEqual(publishPacket.Topic, publishPacketCopy2.Topic);
-            CollectionAssert.AreEqual(publishPacket.PayloadSegment.ToArray(), publishPacketCopy2.PayloadSegment.ToArray());
+            CollectionAssert.AreEqual(publishPacket.Payload.ToArray(), publishPacketCopy2.Payload.ToArray());
         }
 
         [TestMethod]
@@ -587,7 +588,7 @@ namespace MQTTnet.Tests.Formatter
             return packetFormatterAdapter.ProtocolVersion;
         }
 
-        TPacket Roundtrip<TPacket>(TPacket packet, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311, MqttBufferWriter bufferWriter = null) where TPacket : MqttPacket
+        TPacket Roundtrip<TPacket>(TPacket packet, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311, MqttBufferReader bufferReader = null, MqttBufferWriter bufferWriter = null) where TPacket : MqttPacket
         {
             var writer = bufferWriter ?? WriterFactory();
             var serializer = MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, writer);

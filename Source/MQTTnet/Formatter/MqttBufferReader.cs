@@ -8,6 +8,7 @@ using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using System.Buffers.Binary;
+using MQTTnet.Buffers;
 
 namespace MQTTnet.Formatter
 {
@@ -35,7 +36,7 @@ namespace MQTTnet.Formatter
 
             ValidateReceiveBuffer(length);
 
-            var result = new byte[length];
+            var result = GC.AllocateUninitializedArray<byte>(length);
             MqttMemoryHelper.Copy(_buffer, _position, result, 0, length);
             _position += length;
 
@@ -66,11 +67,26 @@ namespace MQTTnet.Formatter
                 return EmptyBuffer.Array;
             }
 
-            var buffer = new byte[bufferLength];
+            var buffer = GC.AllocateUninitializedArray<byte>(bufferLength);
             MqttMemoryHelper.Copy(_buffer, _position, buffer, 0, bufferLength);
             _position += bufferLength;
 
             return buffer;
+        }
+
+        public IReadOnlySequenceOwner<byte> ReadBufferedPayload()
+        {
+            var bufferLength = BytesLeft;
+            if (bufferLength == 0)
+            {
+                return EmptyReadOnlySequenceOwner<byte>.Empty;
+            }
+
+            var result = ArrayPoolSequenceOwner<byte>.Rent(bufferLength);
+            MqttMemoryHelper.Copy(_buffer, _position, result.Array, 0, bufferLength);
+            _position += bufferLength;
+
+            return result;
         }
 
         public string ReadString()

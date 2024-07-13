@@ -2,6 +2,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Formatter;
 using System;
+using System.Buffers;
 using System.IO;
 using System.IO.Pipelines;
 using System.Threading.Tasks;
@@ -40,7 +41,7 @@ namespace MQTTnet.Benchmarks
             stream.Position = 0;
             var output = PipeWriter.Create(stream);
 
-            if (buffer.Payload.Count == 0)
+            if (buffer.Payload.Length == 0)
             {
                 await output.WriteAsync(buffer.Packet).ConfigureAwait(false);
             }
@@ -60,7 +61,7 @@ namespace MQTTnet.Benchmarks
             var span = output.GetSpan(buffer.Length);
 
             buffer.Packet.AsSpan().CopyTo(span);
-            buffer.Payload.AsSpan().CopyTo(span.Slice(buffer.Packet.Count));
+            buffer.Payload.CopyTo(span.Slice(buffer.Packet.Count));
 
             output.Advance(buffer.Length);
         }

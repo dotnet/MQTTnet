@@ -70,7 +70,26 @@ namespace MQTTnet.Tests.Formatter
             Assert.AreEqual(5, remainingData.Length);
         }
 
-         [TestMethod]
+        [TestMethod]
+        public void Read_Remaining_Payload_From_Larger_Buffer()
+        {
+            var buffer = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+            var reader = new MqttBufferReader();
+
+            // The used buffer contains more data than used!
+            reader.SetBuffer(buffer, 0, 5);
+
+            // This should only read 5 bytes even if more data is in the buffer
+            // due to custom bounds.
+            using var remainingData = reader.ReadBufferedPayload();
+
+            Assert.IsTrue(reader.EndOfStream);
+            Assert.AreEqual(0, reader.BytesLeft);
+            Assert.AreEqual(5, remainingData.Sequence.Length);
+        }
+
+        [TestMethod]
         public void Read_Various_Positions_and_Offsets()
         {
             const int NumBufferElements = 1000;

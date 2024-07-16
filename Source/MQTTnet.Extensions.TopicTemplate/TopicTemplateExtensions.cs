@@ -4,6 +4,8 @@
 
 using System;
 using System.Linq;
+using MQTTnet.Client;
+using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Extensions.TopicTemplate
@@ -55,6 +57,24 @@ namespace MQTTnet.Extensions.TopicTemplate
             return new MqttTopicFilterBuilder().WithTopicTemplate(topicTemplate, subscribeTreeRoot);
         }
 
+        /// <summary>
+        ///     Create a message builder from this template. The template must not have
+        ///     remaining parameters. 
+        /// </summary>
+        /// <param
+        ///     name="topicTemplate">
+        ///     a parameterless topic template
+        /// </param>
+        /// <returns>a new message builder</returns>
+        /// <exception
+        ///     cref="ArgumentException">
+        ///     if the topic template has parameters
+        /// </exception>
+        public static MqttApplicationMessageBuilder BuildMessage(this MqttTopicTemplate topicTemplate)
+        {
+            return new MqttApplicationMessageBuilder().WithTopicTemplate(topicTemplate);
+        }
+        
         /// <summary>
         ///     Return a message builder to respond to this message. The
         ///     message's response topic and correlation data are included
@@ -116,6 +136,29 @@ namespace MQTTnet.Extensions.TopicTemplate
             return builder.WithTopic(subscribeTreeRoot ? topicTemplate.TopicTreeRootFilter : topicTemplate.TopicFilter);
         }
 
+        /// <summary>
+        /// Set the subscription to the template's topic filter.
+        /// </summary>
+        /// <returns>the builder</returns>
+        public static MqttClientSubscribeOptionsBuilder WithTopicTemplate(
+            this MqttClientSubscribeOptionsBuilder builder,
+            MqttTopicTemplate topicTemplate,
+            MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+            bool noLocal = false,
+            bool retainAsPublished = false,
+            MqttRetainHandling retainHandling = MqttRetainHandling.SendAtSubscribe)
+        {
+            return builder.WithTopicFilter(
+                new MqttTopicFilter
+                {
+                    Topic = topicTemplate.TopicFilter,
+                    QualityOfServiceLevel = qualityOfServiceLevel,
+                    NoLocal = noLocal,
+                    RetainAsPublished = retainAsPublished,
+                    RetainHandling = retainHandling
+                });
+        }
+        
         /// <summary>
         ///     Set the publication topic according to the topic template. The template
         ///     must not have remaining (unset) parameters or contain wildcards.

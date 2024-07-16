@@ -16,8 +16,8 @@ namespace MQTTnet.Extensions.TopicTemplate
     ///     segments in curly braces called parameters. This well-known
     ///     'moustache' syntax also matches AsyncAPI Channel Address Expressions.
     ///     The topic template is designed to support dynamic subscription/publication,
-    ///     message-topic matching and routing. It is intended to be more convenient
-    ///     than String.Format() for aforementioned purposes.
+    ///     message-topic matching and routing. It is intended to be more safe and
+    ///     convenient than String.Format() for aforementioned purposes.
     /// </summary>
     /// <example>
     ///     topic/subtopic/{parameter}/{otherParameter}
@@ -282,12 +282,17 @@ namespace MQTTnet.Extensions.TopicTemplate
         /// <returns>the topic template (without the parameter)</returns>
         public MqttTopicTemplate WithoutParameter(string parameter)
         {
-            return WithParameter(parameter, MqttTopicFilterComparer.SingleLevelWildcard.ToString());
+            if (string.IsNullOrEmpty(parameter) || !_parameterSegments.Contains(parameter))
+            {
+                throw new ArgumentException("topic template parameter must exist.");
+            }
+            
+            return ReplaceInternal(parameter, MqttTopicFilterComparer.SingleLevelWildcard.ToString());
         }
         
         /// <summary>
         ///     Substitute a parameter with a given value, thus removing the parameter. If the parameter is not present,
-        ///     the method trows. The value must not contain slashes.
+        ///     the method trows. The value must not contain slashes or wildcards.
         /// </summary>
         /// <param
         ///     name="parameter">
@@ -304,12 +309,19 @@ namespace MQTTnet.Extensions.TopicTemplate
         /// <returns>the topic template (without the parameter)</returns>
         public MqttTopicTemplate WithParameter(string parameter, string value)
         {
-            if (value == null || string.IsNullOrEmpty(parameter) || !_parameterSegments.Contains(parameter) || value.Contains(MqttTopicFilterComparer.LevelSeparator) ||
+            if (value == null || string.IsNullOrEmpty(parameter) || !_parameterSegments.Contains(parameter) ||
+                value.Contains(MqttTopicFilterComparer.LevelSeparator) ||
+                value.Contains(MqttTopicFilterComparer.SingleLevelWildcard) ||
                 value.Contains(MqttTopicFilterComparer.MultiLevelWildcard))
             {
-                throw new ArgumentException("parameter must exist and value must not contain slashes.");
+                throw new ArgumentException("parameter must exist and value must not contain slashes or wildcard.");
             }
             
+            return ReplaceInternal(parameter, value);
+        }
+        
+        private MqttTopicTemplate ReplaceInternal(string parameter, string value)
+        {
             var moustache = "{" + parameter + "}";
             return new MqttTopicTemplate(Template.Replace(moustache, value));
         }

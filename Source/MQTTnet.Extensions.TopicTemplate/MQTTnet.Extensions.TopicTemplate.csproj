@@ -11,10 +11,10 @@
         <Company>The contributors of MQTTnet</Company>
         <Product>MQTTnet</Product>
         <Description>
-           This is an extension library which provides mqtt topic templating logic to support dispatch,
-           routing and similar functionality based on the well known moustache syntax, aka
-           AsyncAPI dynamic channel address.
+           Provides mqtt topic templating logic to support dispatch,
+           routing and similar functionality based on the well known moustache syntax (AsyncAPI compatible).
         </Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
         <Authors>The contributors of MQTTnet</Authors>
         <PackageId>MQTTnet.Extensions.TopicTemplate</PackageId>
         <SignAssembly>false</SignAssembly>
@@ -51,6 +51,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="README.md">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
         <None Include="..\..\Images\nuget.png">
             <Pack>True</Pack>
             <PackagePath>\</PackagePath>

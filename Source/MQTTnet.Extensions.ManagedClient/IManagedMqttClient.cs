@@ -47,8 +47,8 @@ namespace MQTTnet.Extensions.ManagedClient
         
         Task StopAsync(bool cleanDisconnect = true);
         
-        Task SubscribeAsync(ICollection<MqttTopicFilter> topicFilters);
+        Task SubscribeAsync(IEnumerable<MqttTopicFilter> topicFilters);
         
-        Task UnsubscribeAsync(ICollection<string> topics);
+        Task UnsubscribeAsync(IEnumerable<string> topics);
     }
 }

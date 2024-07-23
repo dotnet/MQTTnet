@@ -18,30 +18,6 @@ namespace MQTTnet.Internal
             sequence.Slice(sourceIndex).CopyTo(destination.AsSpan(destinationIndex, length));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Copy(ReadOnlySequence<byte> sequence, int sourceIndex, Memory<byte> destination, int destinationIndex, int length)
-        {
-            var offset = destinationIndex;
-            foreach (var segment in sequence)
-            {
-                if (segment.Length < sourceIndex)
-                {
-                    sourceIndex -= segment.Length;
-                    continue;
-                }
-
-                var targetLength = Math.Min(segment.Length - sourceIndex, length);
-                segment.Span.Slice(sourceIndex, targetLength).CopyTo(destination.Span.Slice(offset));
-                offset += targetLength;
-                length -= targetLength;
-                if (length == 0)
-                {
-                    break;
-                }
-                sourceIndex = 0;
-            }
-        }
-
         public static bool SequenceEqual(ArraySegment<byte> source, ArraySegment<byte> target)
         {
             return source.AsSpan().SequenceEqual(target);

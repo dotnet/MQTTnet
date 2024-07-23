@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.IO.Pipelines;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
@@ -232,14 +233,8 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
         var span = output.GetSpan(buffer.Length);
 
         buffer.Packet.AsSpan().CopyTo(span);
-
         int offset = buffer.Packet.Count;
-        foreach (var segment in buffer.Payload)
-        {
-            segment.Span.CopyTo(span.Slice(offset));
-            offset += segment.Length;
-        }
-
+        buffer.Payload.CopyTo(destination: span.Slice(offset));
         output.Advance(buffer.Length);
     }
 }

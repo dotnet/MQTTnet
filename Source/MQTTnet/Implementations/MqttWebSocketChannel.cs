@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Net;
 using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
@@ -100,13 +101,19 @@ namespace MQTTnet.Implementations
             return response.Count;
         }
 
-        public async Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
+        public async Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             // MQTT Control Packets MUST be sent in WebSocket binary data frames. If any other type of data frame is received the recipient MUST close the Network Connection [MQTT-6.0.0-1].
             // A single WebSocket data frame can contain multiple or partial MQTT Control Packets. The receiver MUST NOT assume that MQTT Control Packets are aligned on WebSocket frame boundaries [MQTT-6.0.0-2].
-            await _webSocket.SendAsync(buffer, WebSocketMessageType.Binary, isEndOfPacket, cancellationToken).ConfigureAwait(false);
+            long length = buffer.Length;
+            foreach (var segment in buffer)
+            {
+                length -= segment.Length;
+                bool endOfPacket = isEndOfPacket && length == 0;
+                await _webSocket.SendAsync(segment, WebSocketMessageType.Binary, endOfPacket, cancellationToken).ConfigureAwait(false);
+            }
         }
 
         void Cleanup()

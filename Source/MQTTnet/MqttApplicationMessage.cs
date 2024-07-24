@@ -6,6 +6,7 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 
 namespace MQTTnet
@@ -50,9 +51,20 @@ namespace MQTTnet
         public uint MessageExpiryInterval { get; set; }
 
         /// <summary>
-        /// Get or set ArraySegment style of Payload.
+        ///     Set an ArraySegment as Payload.
         /// </summary>
-        public ArraySegment<byte> PayloadSegment { get; set; } = EmptyBuffer.ArraySegment;
+        public ArraySegment<byte> PayloadSegment
+        {
+            set { Payload = new ReadOnlySequence<byte>(value); }
+        }
+
+        /// <summary>
+        ///     Get or set ReadOnlySequence style of Payload.
+        ///     This payload type is used internally and is recommended for public use.
+        ///     It can be used in combination with a RecyclableMemoryStream to publish
+        ///     large buffered messages without allocating large chunks of memory.
+        /// </summary>
+        public ReadOnlySequence<byte> Payload { get; set; } = EmptyBuffer.ReadOnlySequence;
 
         /// <summary>
         ///     Gets or sets the payload format indicator.

@@ -6,6 +6,7 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
 
+using System.Buffers;
 using System.Text.Json;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -112,7 +113,7 @@ public static class Server_Retained_Messages_Samples
 
                 // Create a copy of the buffer from the payload segment because
                 // it cannot be serialized and deserialized with the JSON serializer.
-                Payload = message.PayloadSegment.ToArray(),
+                Payload = message.Payload.ToArray(),
                 UserProperties = message.UserProperties,
                 ResponseTopic = message.ResponseTopic,
                 CorrelationData = message.CorrelationData,

@@ -70,6 +70,7 @@ namespace MQTTnet.Tests.Formatter
             Assert.AreEqual(5, remainingData.Length);
         }
 
+
         [TestMethod]
         public void Read_Various_Positions_and_Offsets()
         {

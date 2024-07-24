@@ -36,7 +36,7 @@ namespace MQTTnet.Benchmarks
             var buffer = mqttPacketFormatter.Encode(packet);
             stream = new MemoryStream();
             stream.Write(buffer.Packet);
-            stream.Write(buffer.Payload);
+            stream.Write(buffer.Payload.ToArray());
             mqttPacketFormatter.Cleanup();
         }
 

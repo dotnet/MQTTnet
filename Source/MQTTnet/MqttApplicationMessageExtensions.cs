@@ -4,7 +4,6 @@
 
 using System;
 using System.Text;
-using MQTTnet.Internal;
 
 namespace MQTTnet;
 
@@ -17,17 +16,11 @@ public static class MqttApplicationMessageExtensions
             throw new ArgumentNullException(nameof(applicationMessage));
         }
 
-        if (applicationMessage.PayloadSegment == EmptyBuffer.ArraySegment)
+        if (applicationMessage.Payload.Length == 0)
         {
             return null;
         }
 
-        if (applicationMessage.PayloadSegment.Array == null)
-        {
-            return null;
-        }
-
-        var payloadSegment = applicationMessage.PayloadSegment;
-        return Encoding.UTF8.GetString(payloadSegment.Array, payloadSegment.Offset, payloadSegment.Count);
+        return Encoding.UTF8.GetString(applicationMessage.Payload);
     }
 }

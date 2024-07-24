@@ -22,7 +22,7 @@ namespace MQTTnet.Formatter
             var packet = new MqttPublishPacket
             {
                 Topic = applicationMessage.Topic,
-                PayloadSegment = applicationMessage.PayloadSegment,
+                Payload = applicationMessage.Payload,
                 QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
                 Retain = applicationMessage.Retain,
                 Dup = applicationMessage.Dup,

@@ -7,7 +7,7 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 using MQTTnet.Implementations;
 using MQTTnet.Server;

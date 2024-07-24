@@ -5,7 +5,7 @@
 using System.Net;
 using System.Net.Sockets;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Internal;
 
 namespace MQTTnet.Server.Internal.Adapter

@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Server;
 

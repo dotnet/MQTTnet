@@ -5,7 +5,8 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Diagnostics.PacketInspection;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 

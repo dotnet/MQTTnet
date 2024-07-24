@@ -4,7 +4,7 @@
 
 using System;
 
-namespace MQTTnet.Diagnostics
+namespace MQTTnet.Diagnostics.Logger
 {
     /*
      * The logger uses generic parameters in order to avoid boxing of parameter values like integers etc.

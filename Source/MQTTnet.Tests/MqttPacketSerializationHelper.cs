@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Tests.Mockups;

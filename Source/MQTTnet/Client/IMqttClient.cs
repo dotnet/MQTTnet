@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.PacketInspection;
 
 namespace MQTTnet.Client;
 

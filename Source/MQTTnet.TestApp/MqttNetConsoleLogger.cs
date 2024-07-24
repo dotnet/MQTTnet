@@ -4,7 +4,7 @@
 
 using System;
 using System.Text;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.TestApp
 {
@@ -15,7 +15,7 @@ namespace MQTTnet.TestApp
         public static void ForwardToConsole(MqttNetEventLogger logger)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
-            
+
             logger.LogMessagePublished -= PrintToConsole;
             logger.LogMessagePublished += PrintToConsole;
         }

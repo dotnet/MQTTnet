@@ -7,7 +7,7 @@ using System.IO;
 using System.Threading;
 using BenchmarkDotNet.Attributes;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Tests.Mockups;

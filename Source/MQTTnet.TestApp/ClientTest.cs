@@ -7,7 +7,7 @@ using System;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
@@ -42,14 +42,14 @@ namespace MQTTnet.TestApp
                             e.ApplicationMessage.PayloadSegment.Offset,
                             e.ApplicationMessage.PayloadSegment.Count);
                     }
-                    
+
                     Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
                     Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
                     Console.WriteLine($"+ Payload = {payloadText}");
                     Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
                     Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
                     Console.WriteLine();
-                    
+
                     return CompletedTask.Instance;
                 };
 

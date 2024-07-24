@@ -7,7 +7,7 @@ using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Formatter;
 using System;
 using MQTTnet.Client;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.AspNetCore.Client
 {
@@ -22,7 +22,7 @@ namespace MQTTnet.AspNetCore.Client
                 case MqttClientTcpOptions tcpOptions:
                     {
                         var tcpConnection = new SocketConnection(tcpOptions.RemoteEndpoint);
-                        
+
                         var formatter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(4096, 65535));
                         return new MqttConnectionContext(formatter, tcpConnection);
                     }

@@ -5,12 +5,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
@@ -213,7 +212,7 @@ namespace MQTTnet.Tests.Formatter
                     MqttSubscribeReasonCode.UnspecifiedError
                 }
             };
-            
+
             DeserializeAndCompare(p, "kAYAewABAoA=");
         }
 
@@ -506,7 +505,7 @@ namespace MQTTnet.Tests.Formatter
                     MqttSubscribeReasonCode.UnspecifiedError
                 }
             };
-            
+
             SerializeAndCompare(p, "kAYAewABAoA=");
         }
 

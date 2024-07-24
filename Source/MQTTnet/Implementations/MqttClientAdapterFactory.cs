@@ -3,11 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
 using MQTTnet.Formatter;
 using System;
 using MQTTnet.Channel;
 using MQTTnet.Client;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Implementations
 {

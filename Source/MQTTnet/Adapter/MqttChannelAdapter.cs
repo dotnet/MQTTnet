@@ -10,7 +10,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -209,7 +209,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
         ThrowIfDisposed();
 
         // This lock makes sure that multiple threads can send packets at the same time.
-        // This is required when a disconnect is sent from another thread while the 
+        // This is required when a disconnect is sent from another thread while the
         // worker thread is still sending publish packets etc.
         using (await _syncRoot.EnterAsync(cancellationToken).ConfigureAwait(false))
         {

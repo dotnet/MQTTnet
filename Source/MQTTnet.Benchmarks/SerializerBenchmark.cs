@@ -13,7 +13,7 @@ using MQTTnet.Channel;
 using MQTTnet.Formatter;
 using MQTTnet.Formatter.V3;
 using BenchmarkDotNet.Jobs;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Benchmarks
 {

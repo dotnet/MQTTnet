@@ -7,7 +7,7 @@
 // ReSharper disable InconsistentNaming
 
 using System.Text;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Samples.Diagnostics;
 

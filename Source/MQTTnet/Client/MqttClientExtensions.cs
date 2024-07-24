@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -42,6 +43,33 @@ public static class MqttClientExtensions
         this IMqttClient mqttClient,
         string topic,
         IEnumerable<byte> payload = null,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        if (mqttClient == null)
+        {
+            throw new ArgumentNullException(nameof(mqttClient));
+        }
+
+        if (topic == null)
+        {
+            throw new ArgumentNullException(nameof(topic));
+        }
+
+        var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(topic)
+            .WithPayload(payload)
+            .WithRetainFlag(retain)
+            .WithQualityOfServiceLevel(qualityOfServiceLevel)
+            .Build();
+
+        return mqttClient.PublishAsync(applicationMessage, cancellationToken);
+    }
+
+    public static Task<MqttClientPublishResult> PublishSequenceAsync(
+        this IMqttClient mqttClient,
+        string topic,
+        ReadOnlySequence<byte> payload,
         MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
         bool retain = false,
         CancellationToken cancellationToken = default)

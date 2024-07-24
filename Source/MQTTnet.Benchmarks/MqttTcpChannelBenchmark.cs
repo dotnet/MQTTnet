@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,7 +79,7 @@ public class MqttTcpChannelBenchmark : BaseBenchmark
     {
         await Task.Yield();
 
-        var buffer = new ArraySegment<byte>(new byte[size]);
+        var buffer = new ReadOnlySequence<byte>(new byte[size]);
 
         for (var i = 0; i < iterations; i++)
         {

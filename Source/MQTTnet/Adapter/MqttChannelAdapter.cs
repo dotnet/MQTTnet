@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -228,13 +229,13 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
 
                 _logger.Verbose("TX ({0} bytes) >>> {1}", packetBuffer.Length, packet);
 
-                if (packetBuffer.Payload.Count == 0 || !AllowPacketFragmentation)
+                if (packetBuffer.Payload.Length == 0 || !AllowPacketFragmentation)
                 {
-                    await _channel.WriteAsync(packetBuffer.Join(), true, cancellationToken).ConfigureAwait(false);
+                    await _channel.WriteAsync(new ReadOnlySequence<byte>(packetBuffer.Join()), true, cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
-                    await _channel.WriteAsync(packetBuffer.Packet, false, cancellationToken).ConfigureAwait(false);
+                    await _channel.WriteAsync(new ReadOnlySequence<byte>(packetBuffer.Packet), false, cancellationToken).ConfigureAwait(false);
                     await _channel.WriteAsync(packetBuffer.Payload, true, cancellationToken).ConfigureAwait(false);
                 }
 

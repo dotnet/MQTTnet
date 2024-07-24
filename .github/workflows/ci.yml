@@ -51,7 +51,7 @@ jobs:
   sign:
     needs: build
     runs-on: windows-latest # Code signing must run on a Windows agent for Authenticode signing (dll/exe)
-
+    if: github.repository == 'dotnet/MQTTnet'
     steps:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4

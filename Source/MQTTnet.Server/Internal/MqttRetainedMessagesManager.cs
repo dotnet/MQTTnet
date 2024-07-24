@@ -65,8 +65,8 @@ namespace MQTTnet.Server.Internal
 
                 lock (_messages)
                 {
-                    var payloadSegment = applicationMessage.PayloadSegment;
-                    var hasPayload = payloadSegment.Count > 0;
+                    var payload = applicationMessage.Payload;
+                    var hasPayload = payload.Length > 0;
 
                     if (!hasPayload)
                     {
@@ -82,7 +82,8 @@ namespace MQTTnet.Server.Internal
                         }
                         else
                         {
-                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel || !SequenceEqual(existingMessage.PayloadSegment, payloadSegment))
+                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel ||
+                                !MqttMemoryHelper.SequenceEqual(existingMessage.Payload, payload))
                             {
                                 _messages[applicationMessage.Topic] = applicationMessage;
                                 saveIsRequired = true;
@@ -146,11 +147,6 @@ namespace MQTTnet.Server.Internal
             {
                 await _eventContainer.RetainedMessagesClearedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
             }
-        }
-
-        static bool SequenceEqual(ArraySegment<byte> source, ArraySegment<byte> target)
-        {
-            return source.AsSpan().SequenceEqual(target);
         }
     }
 }

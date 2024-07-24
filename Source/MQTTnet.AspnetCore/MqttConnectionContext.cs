@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.IO.Pipelines;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
@@ -203,7 +204,7 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
             {
                 var buffer = PacketFormatterAdapter.Encode(packet);
 
-                if (buffer.Payload.Count == 0)
+                if (buffer.Payload.Length == 0)
                 {
                     // zero copy
                     // https://github.com/dotnet/runtime/blob/e31ddfdc4f574b26231233dc10c9a9c402f40590/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamPipeWriter.cs#L279
@@ -232,8 +233,8 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
         var span = output.GetSpan(buffer.Length);
 
         buffer.Packet.AsSpan().CopyTo(span);
-        buffer.Payload.AsSpan().CopyTo(span.Slice(buffer.Packet.Count));
-
+        int offset = buffer.Packet.Count;
+        buffer.Payload.CopyTo(destination: span.Slice(offset));
         output.Advance(buffer.Length);
     }
 }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Net;
 using System.Net.Security;
@@ -248,7 +249,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public async Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
+        public async Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -261,7 +262,10 @@ namespace MQTTnet.Implementations
                     throw new MqttCommunicationException("The TCP connection is closed.");
                 }
 
-                await stream.WriteAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
+                foreach (var segment in buffer)
+                {
+                    await stream.WriteAsync(segment, cancellationToken).ConfigureAwait(false);
+                }
             }
             catch (ObjectDisposedException)
             {

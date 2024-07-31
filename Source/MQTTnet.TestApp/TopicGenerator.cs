@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using MQTTnet.Extensions.TopicTemplate;
 
 namespace MQTTnet.TestApp
 {
@@ -16,6 +16,8 @@ namespace MQTTnet.TestApp
             topicsByPublisher = new Dictionary<string, List<string>>();
             singleWildcardTopicsByPublisher = new Dictionary<string, List<string>>();
             multiWildcardTopicsByPublisher = new Dictionary<string, List<string>>();
+
+            MqttTopicTemplate baseTemplate = new MqttTopicTemplate("{publisher}/{building}/{level}/{sensor}");
 
             // Find some reasonable distribution across three topic levels
             var topicsPerLevel = (int)Math.Pow(numTopicsPerPublisher, (1.0 / 3.0));
@@ -40,25 +42,37 @@ namespace MQTTnet.TestApp
                 int publisherTopicCount = 0;
 
                 var publisherName = "pub" + p;
+                var publisherTemplate = baseTemplate
+                    .WithParameter("publisher", publisherName);
                 for (var l1 = 0; l1 < numLevel1Topics; ++l1)
                 {
+                    var l1Template = publisherTemplate
+                        .WithParameter("building", "building" + (l1 + 1));
                     for (var l2 = 0; l2 < numLevel2Topics; ++l2)
                     {
+                        var l2Template = l1Template
+                            .WithParameter("level", "level" + (l2 + 1));
                         for (var l3 = 0; l3 < maxNumLevel3Topics; ++l3)
                         {
                             if (publisherTopicCount >= numTopicsPerPublisher)
                                 break;
 
-                            var topic = string.Format("{0}/building{1}/level{2}/sensor{3}", publisherName, l1 + 1, l2 + 1, l3 + 1);
+                            var topic = l2Template
+                                .WithParameter("sensor", "sensor" + (l3 + 1))
+                                .TopicFilter;
                             AddPublisherTopic(publisherName, topic, topicsByPublisher);
 
                             if (l2 == 0)
                             {
-                                var singleWildcardTopic = string.Format("{0}/building{1}/+/sensor{2}", publisherName, l1 + 1, l3 + 1);
+                                var singleWildcardTopic = l1Template
+                                        .WithParameter("sensor", "sensor" + (l3 + 1))
+                                        .TopicFilter;
                                 AddPublisherTopic(publisherName, singleWildcardTopic, singleWildcardTopicsByPublisher);
                                 if (l1 == 0)
                                 {
-                                    var multiWildcardTopic = string.Format("{0}/+/level{1}/+", publisherName, l3 + 1);
+                                    var multiWildcardTopic = publisherTemplate
+                                        .WithParameter("sensor", "sensor" + (l3 + 1))
+                                        .TopicFilter;
                                     AddPublisherTopic(publisherName, multiWildcardTopic, multiWildcardTopicsByPublisher);
                                 }
                             }

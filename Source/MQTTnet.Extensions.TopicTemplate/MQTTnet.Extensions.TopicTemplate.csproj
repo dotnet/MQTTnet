@@ -1,10 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard1.3;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0</TargetFrameworks>
-        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net461;net48</TargetFrameworks>
-        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">$(TargetFrameworks);uap10.0</TargetFrameworks>
-        
+        <TargetFrameworks>net8.0</TargetFrameworks>
         <AssemblyName>MQTTnet.Extensions.TopicTemplate</AssemblyName>
         <RootNamespace>MQTTnet.Extensions.TopicTemplate</RootNamespace>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -60,7 +57,7 @@
             <PackagePath>\</PackagePath>
         </None>
     </ItemGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
         <PackageReference Include="System.ValueTuple" Version="4.5.0" />

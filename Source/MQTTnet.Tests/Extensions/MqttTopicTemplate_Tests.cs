@@ -61,21 +61,21 @@ namespace MQTTnet.Tests.Extensions
             var template = new MqttTopicTemplate("A/B/{foo}/D");
             template.WithParameter("foo", "a/b");
         }
-        
+
         [TestMethod]
         public void AcceptsEmptyValue()
         {
             var template = new MqttTopicTemplate("A/B/{foo}/D");
             template.WithParameter("foo", "");
         }
-        
+
         [TestMethod]
         [ExpectedException(typeof(MqttProtocolViolationException))]
         public void RejectsEmptyTemplate()
         {
             var _ = new MqttTopicTemplate("");
         }
-        
+
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void RejectsNullTemplate()
@@ -83,14 +83,13 @@ namespace MQTTnet.Tests.Extensions
             var _ = new MqttTopicTemplate(null);
         }
 
-        
         [TestMethod]
         public void IgnoresEmptyParameters()
         {
             var template = new MqttTopicTemplate("A/B/{}/D");
             Assert.IsFalse(template.Parameters.Any());
         }
-        
+
         [TestMethod]
         public void AcceptsValidTopics()
         {
@@ -127,6 +126,7 @@ namespace MQTTnet.Tests.Extensions
                 .WithAtLeastOnceQoS()
                 .WithNoLocal()
                 .Build();
+
             Assert.AreEqual("A/v1/+/F", filter.Topic);
         }
 
@@ -134,11 +134,12 @@ namespace MQTTnet.Tests.Extensions
         public void SubscriptionSupport2()
         {
             var template = new MqttTopicTemplate("A/v1/{param}/F");
-            
-            var subscribeOptions = new MqttFactory().CreateSubscribeOptionsBuilder()
+
+            var subscribeOptions = new MqttClientFactory().CreateSubscribeOptionsBuilder()
                 .WithTopicTemplate(template)
                 .WithSubscriptionIdentifier(5)
                 .Build();
+
             Assert.AreEqual("A/v1/+/F", subscribeOptions.TopicFilters[0].Topic);
         }
 
@@ -170,7 +171,7 @@ namespace MQTTnet.Tests.Extensions
         public void SendAndSubscribeSupport2()
         {
             var template = new MqttTopicTemplate("App/v1/{sender}/message");
-            Assert.ThrowsException<ArgumentException>(() => 
+            Assert.ThrowsException<ArgumentException>(() =>
                 template.BuildMessage());
         }
 
@@ -184,7 +185,7 @@ namespace MQTTnet.Tests.Extensions
             // possible improvement: Assert.AreEqual("A/v1/+/F", canonicalFilter.TopicFilter);
             Assert.AreEqual("A/v1/+", canonicalFilter.TopicFilter);
             Assert.AreEqual("A/v1/+/#", canonicalFilter.TopicTreeRootFilter);
-            
+
             var template2b = new MqttTopicTemplate("A/v1/E/X");
             canonicalFilter = MqttTopicTemplate.FindCanonicalPrefix(new[] { template1, template2, template3, template2b });
             Assert.AreEqual("A/v1/+", canonicalFilter.Template);
@@ -197,7 +198,7 @@ namespace MQTTnet.Tests.Extensions
             Assert.AreEqual("A/+", canonicalFilter2.TopicFilter);
             Assert.AreEqual("A/+/#", canonicalFilter2.TopicTreeRootFilter);
         }
-        
+
         [TestMethod]
         public void CanonicalPrefixFilterSimple1()
         {
@@ -209,7 +210,7 @@ namespace MQTTnet.Tests.Extensions
             Assert.AreEqual("#", template.TopicFilter);
             Assert.AreEqual("#", template.Template);
         }
-        
+
         [TestMethod]
         public void CanonicalPrefixFilterSimple2()
         {
@@ -220,7 +221,7 @@ namespace MQTTnet.Tests.Extensions
             });
             Assert.AreEqual("A/v1/+", template.TopicFilter);
         }
-        
+
         [TestMethod]
         public void CanonicalPrefixFilterSimple3()
         {
@@ -232,7 +233,7 @@ namespace MQTTnet.Tests.Extensions
             Assert.AreEqual("A/v1/+/+", template.TopicFilter);
             Assert.AreEqual("A/v1/{param}/+", template.Template);
         }
-        
+
         [TestMethod]
         public void CanonicalPrefixFilterSimple4()
         {
@@ -244,8 +245,7 @@ namespace MQTTnet.Tests.Extensions
             Assert.AreEqual("A/v1/+/+", template.TopicFilter);
             Assert.AreEqual("A/v1/{param}/+", template.Template);
         }
-        
-        
+
         [TestMethod]
         public void CanonicalPrefixFilterSimple5()
         {
@@ -257,7 +257,7 @@ namespace MQTTnet.Tests.Extensions
             Assert.AreEqual("A/+", template.TopicFilter);
             Assert.AreEqual("A/+/#", template.TopicTreeRootFilter);
         }
-        
+
         [TestMethod]
         public void CanonicalPrefixFilterSimple6()
         {

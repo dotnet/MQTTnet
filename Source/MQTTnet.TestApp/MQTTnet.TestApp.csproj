@@ -20,6 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\MQTTnet.Extensions.TopicTemplate\MQTTnet.Extensions.TopicTemplate.csproj" />
         <ProjectReference Include="..\MQTTnet.Server\MQTTnet.Server.csproj"/>
         <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
     </ItemGroup>

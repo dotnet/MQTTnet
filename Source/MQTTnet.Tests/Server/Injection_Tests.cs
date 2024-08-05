@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Internal;
 using MQTTnet.Server;
 

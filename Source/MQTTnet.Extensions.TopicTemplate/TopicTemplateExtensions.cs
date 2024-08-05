@@ -4,7 +4,6 @@
 
 using System;
 using System.Linq;
-using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 

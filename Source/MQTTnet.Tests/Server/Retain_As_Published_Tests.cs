@@ -5,7 +5,6 @@
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
-using MQTTnet.Client;
 
 namespace MQTTnet.Tests.Server
 {

@@ -6,7 +6,6 @@ using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using System;
 using MQTTnet.Channel;
-using MQTTnet.Client;
 using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Implementations

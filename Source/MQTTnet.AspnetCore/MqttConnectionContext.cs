@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.Http.Features;
 using MQTTnet.Adapter;
-using MQTTnet.AspNetCore.Client.Tcp;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;

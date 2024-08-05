@@ -4,7 +4,6 @@
 
 using System;
 using System.Threading.Tasks;
-using MQTTnet.Client;
 using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.TestApp

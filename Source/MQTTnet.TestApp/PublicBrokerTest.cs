@@ -6,7 +6,6 @@ using System;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;

@@ -4,10 +4,8 @@
 
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using MQTTnet.Client;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using MQTTnet.AspNetCore.Client;
 using MQTTnet.AspNetCore;
 using MQTTnet.Diagnostics.Logger;
 

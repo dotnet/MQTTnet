@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.LowLevelClient;
 using MQTTnet.Packets;

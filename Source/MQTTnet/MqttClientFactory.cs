@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using MQTTnet.Adapter;
-using MQTTnet.Client;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Implementations;
 using MQTTnet.LowLevelClient;

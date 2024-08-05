@@ -4,7 +4,6 @@
 
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Tests.Server
@@ -18,7 +17,7 @@ namespace MQTTnet.Tests.Server
             using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
             {
                 await testEnvironment.StartServer();
-                
+
                 var client = testEnvironment.CreateClient();
                 var connectResult = await client.ConnectAsync(testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                     .WithProtocolVersion(MqttProtocolVersion.V500)
@@ -27,24 +26,24 @@ namespace MQTTnet.Tests.Server
                 Assert.IsTrue(connectResult.SubscriptionIdentifiersAvailable);
             }
         }
-        
+
         [TestMethod]
         public async Task Subscribe_With_Subscription_Identifier()
         {
             using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
             {
                 await testEnvironment.StartServer();
-                
+
                 var client1 = await testEnvironment.ConnectClient();
                 var applicationMessageHandler = testEnvironment.CreateApplicationMessageHandler(client1);
                 var topicFilter = testEnvironment.ClientFactory.CreateTopicFilterBuilder().WithTopic("Topic").Build();
                 var subscribeOptions = testEnvironment.ClientFactory.CreateSubscribeOptionsBuilder().WithSubscriptionIdentifier(456).WithTopicFilter(topicFilter).Build();
-                
+
                 await client1.SubscribeAsync(subscribeOptions);
                 await LongTestDelay();
 
                 applicationMessageHandler.AssertReceivedCountEquals(0);
-                
+
                 // The client will publish a message where it is itself subscribing to.
                 await client1.PublishStringAsync("Topic", "Payload", retain: true);
                 await LongTestDelay();
@@ -54,31 +53,31 @@ namespace MQTTnet.Tests.Server
                 applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.SubscriptionIdentifiers.Contains(456);
             }
         }
-        
+
         [TestMethod]
         public async Task Subscribe_With_Multiple_Subscription_Identifiers()
         {
             using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
             {
                 await testEnvironment.StartServer();
-                
+
                 var client1 = await testEnvironment.ConnectClient();
                 var applicationMessageHandler = testEnvironment.CreateApplicationMessageHandler(client1);
-                
+
                 var topicFilter = testEnvironment.ClientFactory.CreateTopicFilterBuilder().WithTopic("Topic/A").Build();
                 var subscribeOptions = testEnvironment.ClientFactory.CreateSubscribeOptionsBuilder().WithSubscriptionIdentifier(456).WithTopicFilter(topicFilter).Build();
                 await client1.SubscribeAsync(subscribeOptions);
-                
+
                 await LongTestDelay();
-                
+
                 topicFilter = testEnvironment.ClientFactory.CreateTopicFilterBuilder().WithTopic("Topic/+").Build();
                 subscribeOptions = testEnvironment.ClientFactory.CreateSubscribeOptionsBuilder().WithSubscriptionIdentifier(789).WithTopicFilter(topicFilter).Build();
                 await client1.SubscribeAsync(subscribeOptions);
-                
+
                 await LongTestDelay();
 
                 applicationMessageHandler.AssertReceivedCountEquals(0);
-                
+
                 // The client will publish a message where it is itself subscribing to.
                 await client1.PublishStringAsync("Topic/A", "Payload", retain: true);
                 await LongTestDelay();

@@ -5,7 +5,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;

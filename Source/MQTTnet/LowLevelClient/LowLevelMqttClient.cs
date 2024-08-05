@@ -6,7 +6,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Adapter;
-using MQTTnet.Client;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Diagnostics.PacketInspection;
 using MQTTnet.Exceptions;

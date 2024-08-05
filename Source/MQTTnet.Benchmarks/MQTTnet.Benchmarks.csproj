@@ -9,19 +9,11 @@
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
+        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902;CS8892</NoWarn>
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAudit>true</NuGetAudit>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
-    </PropertyGroup>
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <NoWarn>1591;NETSDK1138</NoWarn>
-    </PropertyGroup>
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <NoWarn>1591;NETSDK1138</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

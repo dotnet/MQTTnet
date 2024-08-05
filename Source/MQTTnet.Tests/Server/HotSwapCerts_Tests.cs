@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Certificates;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using MQTTnet.Server;

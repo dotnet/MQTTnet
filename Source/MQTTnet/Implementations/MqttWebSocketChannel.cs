@@ -10,7 +10,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
-using MQTTnet.Client;
 using MQTTnet.Internal;
 
 namespace MQTTnet.Implementations

@@ -9,9 +9,9 @@ namespace MQTTnet.Server;
 
 public sealed class MqttClientStatus
 {
-    readonly MqttClient _client;
+    readonly MqttConnectedClient _client;
 
-    public MqttClientStatus(MqttClient client)
+    public MqttClientStatus(MqttConnectedClient client)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
     }

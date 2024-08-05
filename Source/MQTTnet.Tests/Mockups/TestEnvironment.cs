@@ -9,7 +9,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Formatter;

@@ -18,7 +18,7 @@ namespace MQTTnet.Server.Internal;
 
 public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification, IDisposable
 {
-    readonly Dictionary<string, MqttClient> _clients = new(4096);
+    readonly Dictionary<string, MqttConnectedClient> _clients = new(4096);
 
     readonly AsyncLock _createConnectionSyncRoot = new();
 
@@ -58,7 +58,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
             throw new ArgumentNullException(nameof(options));
         }
 
-        List<MqttClient> connections;
+        List<MqttConnectedClient> connections;
         lock (_clients)
         {
             connections = _clients.Values.ToList();
@@ -75,7 +75,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
     {
         _logger.Verbose("Deleting session for client '{0}'.", clientId);
 
-        MqttClient connection;
+        MqttConnectedClient connection;
         lock (_clients)
         {
             _clients.TryGetValue(clientId, out connection);
@@ -279,7 +279,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         _sessionsManagementLock?.Dispose();
     }
 
-    public MqttClient GetClient(string id)
+    public MqttConnectedClient GetClient(string id)
     {
         lock (_clients)
         {
@@ -292,7 +292,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
     }
 
-    public List<MqttClient> GetClients()
+    public List<MqttConnectedClient> GetClients()
     {
         lock (_clients)
         {
@@ -343,7 +343,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public async Task HandleClientConnectionAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
     {
-        MqttClient client = null;
+        MqttConnectedClient connectedClient = null;
 
         try
         {
@@ -365,18 +365,18 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
             }
 
             // Pass connAckPacket so that IsSessionPresent flag can be set if the client session already exists.
-            client = await CreateClientConnection(connectPacket, connAckPacket, channelAdapter, validatingConnectionEventArgs).ConfigureAwait(false);
+            connectedClient = await CreateClientConnection(connectPacket, connAckPacket, channelAdapter, validatingConnectionEventArgs).ConfigureAwait(false);
 
-            await client.SendPacketAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
+            await connectedClient.SendPacketAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
 
             if (_eventContainer.ClientConnectedEvent.HasHandlers)
             {
-                var eventArgs = new ClientConnectedEventArgs(connectPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion, channelAdapter.Endpoint, client.Session.Items);
+                var eventArgs = new ClientConnectedEventArgs(connectPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion, channelAdapter.Endpoint, connectedClient.Session.Items);
 
                 await _eventContainer.ClientConnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
             }
 
-            await client.RunAsync().ConfigureAwait(false);
+            await connectedClient.RunAsync().ConfigureAwait(false);
         }
         catch (ObjectDisposedException)
         {
@@ -390,31 +390,31 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
         finally
         {
-            if (client != null)
+            if (connectedClient != null)
             {
-                if (client.Id != null)
+                if (connectedClient.Id != null)
                 {
                     // in case it is a takeover _clientConnections already contains the new connection
-                    if (!client.IsTakenOver)
+                    if (!connectedClient.IsTakenOver)
                     {
                         lock (_clients)
                         {
-                            _clients.Remove(client.Id);
+                            _clients.Remove(connectedClient.Id);
                         }
 
-                        if (!_options.EnablePersistentSessions || !ShouldPersistSession(client))
+                        if (!_options.EnablePersistentSessions || !ShouldPersistSession(connectedClient))
                         {
-                            await DeleteSessionAsync(client.Id).ConfigureAwait(false);
+                            await DeleteSessionAsync(connectedClient.Id).ConfigureAwait(false);
                         }
                     }
                 }
 
-                var endpoint = client.Endpoint;
+                var endpoint = connectedClient.Endpoint;
 
-                if (client.Id != null && !client.IsTakenOver && _eventContainer.ClientDisconnectedEvent.HasHandlers)
+                if (connectedClient.Id != null && !connectedClient.IsTakenOver && _eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
-                    var disconnectType = client.DisconnectPacket != null ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean;
-                    var eventArgs = new ClientDisconnectedEventArgs(client.Id, client.DisconnectPacket, disconnectType, endpoint, client.Session.Items);
+                    var disconnectType = connectedClient.DisconnectPacket != null ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean;
+                    var eventArgs = new ClientDisconnectedEventArgs(connectedClient.Id, connectedClient.DisconnectPacket, disconnectType, endpoint, connectedClient.Session.Items);
 
                     await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
@@ -526,23 +526,23 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         return GetClientSession(clientId).Unsubscribe(fakeUnsubscribePacket, CancellationToken.None);
     }
 
-    MqttClient CreateClient(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, MqttSession session)
+    MqttConnectedClient CreateClient(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, MqttSession session)
     {
-        return new MqttClient(connectPacket, channelAdapter, session, _options, _eventContainer, this, _rootLogger);
+        return new MqttConnectedClient(connectPacket, channelAdapter, session, _options, _eventContainer, this, _rootLogger);
     }
 
-    async Task<MqttClient> CreateClientConnection(
+    async Task<MqttConnectedClient> CreateClientConnection(
         MqttConnectPacket connectPacket,
         MqttConnAckPacket connAckPacket,
         IMqttChannelAdapter channelAdapter,
         ValidatingConnectionEventArgs validatingConnectionEventArgs)
     {
-        MqttClient client;
+        MqttConnectedClient connectedClient;
 
         using (await _createConnectionSyncRoot.EnterAsync().ConfigureAwait(false))
         {
             MqttSession oldSession;
-            MqttClient oldClient;
+            MqttConnectedClient oldConnectedClient;
 
             _sessionsManagementLock.EnterWriteLock();
             try
@@ -580,16 +580,16 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 // Create a new client (always required).
                 lock (_clients)
                 {
-                    _clients.TryGetValue(connectPacket.ClientId, out oldClient);
-                    if (oldClient != null)
+                    _clients.TryGetValue(connectPacket.ClientId, out oldConnectedClient);
+                    if (oldConnectedClient != null)
                     {
                         // This will stop the current client from sending and receiving but remains the connection active
                         // for a later DISCONNECT packet.
-                        oldClient.IsTakenOver = true;
+                        oldConnectedClient.IsTakenOver = true;
                     }
 
-                    client = CreateClient(connectPacket, channelAdapter, session);
-                    _clients[connectPacket.ClientId] = client;
+                    connectedClient = CreateClient(connectPacket, channelAdapter, session);
+                    _clients[connectPacket.ClientId] = connectedClient;
                 }
             }
             finally
@@ -604,14 +604,14 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 await _eventContainer.PreparingSessionEvent.TryInvokeAsync(preparingSessionEventArgs, _logger).ConfigureAwait(false);
             }
 
-            if (oldClient != null)
+            if (oldConnectedClient != null)
             {
                 // TODO: Consider event here for session takeover to allow manipulation of user properties etc.
-                await oldClient.StopAsync(new MqttServerClientDisconnectOptions { ReasonCode = MqttDisconnectReasonCode.SessionTakenOver }).ConfigureAwait(false);
+                await oldConnectedClient.StopAsync(new MqttServerClientDisconnectOptions { ReasonCode = MqttDisconnectReasonCode.SessionTakenOver }).ConfigureAwait(false);
 
                 if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
-                    var eventArgs = new ClientDisconnectedEventArgs(oldClient.Id, null, MqttClientDisconnectType.Takeover, oldClient.Endpoint, oldClient.Session.Items);
+                    var eventArgs = new ClientDisconnectedEventArgs(oldConnectedClient.Id, null, MqttClientDisconnectType.Takeover, oldConnectedClient.Endpoint, oldConnectedClient.Session.Items);
 
                     await _eventContainer.ClientDisconnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
                 }
@@ -620,7 +620,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
             oldSession?.Dispose();
         }
 
-        return client;
+        return connectedClient;
     }
 
     MqttSession CreateSession(MqttConnectPacket connectPacket, ValidatingConnectionEventArgs validatingConnectionEventArgs)
@@ -686,9 +686,9 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         return null;
     }
 
-    static bool ShouldPersistSession(MqttClient client)
+    static bool ShouldPersistSession(MqttConnectedClient connectedClient)
     {
-        switch (client.ChannelAdapter.PacketFormatterAdapter.ProtocolVersion)
+        switch (connectedClient.ChannelAdapter.PacketFormatterAdapter.ProtocolVersion)
         {
             case MqttProtocolVersion.V500:
             {
@@ -699,11 +699,11 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 // It will not receive Application Messages published before it connected and has to subscribe afresh to any topics that it is interested
                 // in each time it connects.
 
-                var effectiveSessionExpiryInterval = client.DisconnectPacket?.SessionExpiryInterval ?? 0U;
+                var effectiveSessionExpiryInterval = connectedClient.DisconnectPacket?.SessionExpiryInterval ?? 0U;
                 if (effectiveSessionExpiryInterval == 0U)
                 {
                     // From RFC: If the Session Expiry Interval is absent, the Session Expiry Interval in the CONNECT packet is used.
-                    effectiveSessionExpiryInterval = client.ConnectPacket.SessionExpiryInterval;
+                    effectiveSessionExpiryInterval = connectedClient.ConnectPacket.SessionExpiryInterval;
                 }
 
                 return effectiveSessionExpiryInterval != 0U;
@@ -717,7 +717,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 // This Session lasts as long as the Network Connection. State data associated with this Session MUST NOT be
                 // reused in any subsequent Session [MQTT-3.1.2-6].
 
-                return !client.ConnectPacket.CleanSession;
+                return !connectedClient.ConnectPacket.CleanSession;
             }
 
             case MqttProtocolVersion.V310:

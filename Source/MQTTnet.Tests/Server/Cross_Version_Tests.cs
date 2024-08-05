@@ -2,7 +2,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Tests.Server
@@ -44,7 +43,7 @@ namespace MQTTnet.Tests.Server
                 var receiver = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V311));
                 var receivedApplicationMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
                 await receiver.SubscribeAsync("#");
-                
+
                 var sender = await testEnvironment.ConnectClient();
 
                 var applicationMessage = new MqttApplicationMessageBuilder().WithTopic("My/Message")
@@ -53,7 +52,7 @@ namespace MQTTnet.Tests.Server
                     .WithResponseTopic("Response")
                     .WithCorrelationData(Encoding.UTF8.GetBytes("Correlation"))
                     .Build();
-                
+
                 await sender.PublishAsync(applicationMessage);
 
                 await LongTestDelay();

@@ -5,7 +5,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
@@ -49,7 +48,7 @@ namespace MQTTnet.Tests.Server
 
                     return CompletedTask.Instance;
                 };
-                
+
                 testEnvironment.Server.ClientConnectedAsync += args =>
                 {
                     serverConnectedClientId = args.ClientId;

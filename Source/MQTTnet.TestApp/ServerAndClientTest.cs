@@ -4,7 +4,6 @@
 
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Server;
 

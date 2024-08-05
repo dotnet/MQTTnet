@@ -4,7 +4,6 @@
 
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Tests.Server
@@ -27,7 +26,7 @@ namespace MQTTnet.Tests.Server
                 Assert.IsTrue(connectResult.WildcardSubscriptionAvailable);
             }
         }
-        
+
         [TestMethod]
         public async Task Server_Reports_Wildcard_Subscription_Available_Tests_Supported_V5()
         {

@@ -7,7 +7,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
 
-using MQTTnet.Client;
 using MQTTnet.Extensions.TopicTemplate;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;

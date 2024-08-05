@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Server;
 

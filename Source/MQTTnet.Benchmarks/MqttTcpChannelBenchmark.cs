@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Channel;
-using MQTTnet.Client;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Implementations;
 using MQTTnet.Server;

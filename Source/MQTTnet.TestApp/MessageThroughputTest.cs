@@ -1,4 +1,3 @@
-using MQTTnet.Client;
 using MQTTnet.Server;
 using System.Collections.Generic;
 using System;

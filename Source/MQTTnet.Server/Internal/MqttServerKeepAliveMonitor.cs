@@ -83,7 +83,7 @@ namespace MQTTnet.Server.Internal
             }
         }
 
-        void TryProcessClient(MqttClient connection, DateTime now)
+        void TryProcessClient(MqttConnectedClient connection, DateTime now)
         {
             try
             {

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>MQTTnet.Extensions.TopicTemplate</AssemblyName>
         <RootNamespace>MQTTnet.Extensions.TopicTemplate</RootNamespace>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>

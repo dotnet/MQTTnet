@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>MQTTnet.Server</AssemblyName>
         <RootNamespace>MQTTnet.Server</RootNamespace>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -33,6 +33,7 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAudit>true</NuGetAudit>
+        <NuGetAuditLevel>low</NuGetAuditLevel>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>

@@ -4,7 +4,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputType>Exe</OutputType>
         <DebugType>Full</DebugType>
-        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetFramework>net8.0</TargetFramework>
         <IsPackable>false</IsPackable>
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
@@ -13,6 +13,7 @@
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAudit>true</NuGetAudit>
+        <NuGetAuditLevel>low</NuGetAuditLevel>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
     </PropertyGroup>
 

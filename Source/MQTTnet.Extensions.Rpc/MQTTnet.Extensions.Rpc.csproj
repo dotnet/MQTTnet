@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>MQTTnet.Extensions.Rpc</AssemblyName>
         <RootNamespace>MQTTnet.Extensions.Rpc</RootNamespace>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -34,6 +34,7 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAudit>true</NuGetAudit>
+        <NuGetAuditLevel>low</NuGetAuditLevel>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
     </PropertyGroup>
 

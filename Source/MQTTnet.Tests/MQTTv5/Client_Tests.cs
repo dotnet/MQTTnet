@@ -2,11 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
@@ -61,7 +62,7 @@ namespace MQTTnet.Tests.MQTTv5
                 Assert.AreEqual(2, receivedMessage.UserProperties.Count);
             }
         }
-        
+
         [TestMethod]
         public async Task Connect()
         {
@@ -129,6 +130,54 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
+        public async Task Publish_QoS_0_LargeBuffer()
+        {
+            using var recyclableMemoryStream = GetLargePayload();
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                var result = await client.PublishSequenceAsync("a", recyclableMemoryStream.GetReadOnlySequence());
+                await client.DisconnectAsync();
+
+                Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
+            }
+        }
+
+        [TestMethod]
+        public async Task Publish_QoS_1_LargeBuffer()
+        {
+            using var recyclableMemoryStream = GetLargePayload();
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                var result = await client.PublishSequenceAsync("a", recyclableMemoryStream.GetReadOnlySequence(), MqttQualityOfServiceLevel.AtLeastOnce);
+                await client.DisconnectAsync();
+
+                Assert.AreEqual(MqttClientPublishReasonCode.NoMatchingSubscribers, result.ReasonCode);
+            }
+        }
+
+        [TestMethod]
+        public async Task Publish_QoS_2_LargeBuffer()
+        {
+            using var recyclableMemoryStream = GetLargePayload();
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+                var result = await client.PublishSequenceAsync("a", recyclableMemoryStream.GetReadOnlySequence(), MqttQualityOfServiceLevel.ExactlyOnce);
+                await client.DisconnectAsync();
+
+                Assert.AreEqual(MqttClientPublishReasonCode.NoMatchingSubscribers, result.ReasonCode);
+            }
+        }
+
+        [TestMethod]
         public async Task Publish_QoS_0()
         {
             using (var testEnvironment = CreateTestEnvironment())
@@ -174,6 +223,45 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
+        public async Task Publish_With_RecyclableMemoryStream()
+        {
+            var memoryManager = new RecyclableMemoryStreamManager(options: new RecyclableMemoryStreamManager.Options { BlockSize = 4096 });
+            using (var testEnvironment = CreateTestEnvironment())
+            {
+                await testEnvironment.StartServer();
+
+                var client = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+
+                const int payloadSize = 100000;
+                using var memoryStream = memoryManager.GetStream();
+
+                byte testValue = 0;
+                while (memoryStream.Length < payloadSize)
+                {
+                    memoryStream.WriteByte(testValue++);
+                }
+
+                var applicationMessage = new MqttApplicationMessageBuilder()
+                    .WithTopic("Hello")
+                    .WithPayload(memoryStream.GetReadOnlySequence())
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                    .WithUserProperty("x", "1")
+                    .WithUserProperty("y", "2")
+                    .WithResponseTopic("response")
+                    .WithContentType("text")
+                    .WithMessageExpiryInterval(50)
+                    .WithCorrelationData(new byte[12])
+                    .WithTopicAlias(2)
+                    .Build();
+
+                var result = await client.PublishAsync(applicationMessage);
+                await client.DisconnectAsync();
+
+                Assert.AreEqual(MqttClientPublishReasonCode.Success, result.ReasonCode);
+            }
+        }
+
+        [TestMethod]
         public async Task Publish_With_Properties()
         {
             using (var testEnvironment = CreateTestEnvironment())
@@ -208,7 +296,7 @@ namespace MQTTnet.Tests.MQTTv5
             using (var testEnvironment = CreateTestEnvironment())
             {
                 await testEnvironment.StartServer();
-                
+
                 var client1 = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500).WithClientId("client1"));
 
                 var testMessageHandler = testEnvironment.CreateApplicationMessageHandler(client1);
@@ -273,9 +361,22 @@ namespace MQTTnet.Tests.MQTTv5
                 Assert.AreEqual(applicationMessage.ResponseTopic, receivedMessage.ResponseTopic);
                 Assert.AreEqual(applicationMessage.MessageExpiryInterval, receivedMessage.MessageExpiryInterval);
                 CollectionAssert.AreEqual(applicationMessage.CorrelationData, receivedMessage.CorrelationData);
-                CollectionAssert.AreEqual(applicationMessage.PayloadSegment.ToArray(), receivedMessage.PayloadSegment.ToArray());
+                CollectionAssert.AreEqual(applicationMessage.Payload.ToArray(), receivedMessage.Payload.ToArray());
                 CollectionAssert.AreEqual(applicationMessage.UserProperties, receivedMessage.UserProperties);
             }
+        }
+
+        private RecyclableMemoryStream GetLargePayload()
+        {
+            var memoryManager = new RecyclableMemoryStreamManager();
+            var memoryStream = memoryManager.GetStream();
+            for (var i = 0; i < 100000; i++)
+            {
+                memoryStream.WriteByte((byte)i);
+            }
+
+            memoryStream.Position = 0;
+            return memoryStream;
         }
     }
 }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -19,7 +20,7 @@ namespace MQTTnet.Tests.Internal
         public async Task Connect_Send_Receive()
         {
             var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
-            await crossPlatformSocket.ConnectAsync("www.google.de", 80, CancellationToken.None);
+            await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.google.de", 80), CancellationToken.None);
 
             var requestBuffer = Encoding.UTF8.GetBytes("GET / HTTP/1.1\r\nHost: www.google.de\r\n\r\n");
             await crossPlatformSocket.SendAsync(new ArraySegment<byte>(requestBuffer), System.Net.Sockets.SocketFlags.None);
@@ -42,7 +43,7 @@ namespace MQTTnet.Tests.Internal
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             cancellationToken.Token.Register(() => crossPlatformSocket.Dispose());
 
-            await crossPlatformSocket.ConnectAsync("www.google.de", 54321, cancellationToken.Token);
+            await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.google.de", 54321), cancellationToken.Token);
         }
 
         //[TestMethod]

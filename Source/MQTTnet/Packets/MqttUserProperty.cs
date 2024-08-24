@@ -4,48 +4,47 @@
 
 using System;
 
-namespace MQTTnet.Packets
+namespace MQTTnet.Packets;
+
+public sealed class MqttUserProperty
 {
-    public sealed class MqttUserProperty
+    public MqttUserProperty(string name, string value)
     {
-        public MqttUserProperty(string name, string value)
+        Name = name ?? throw new ArgumentNullException(nameof(name));
+        Value = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
+    public string Name { get; }
+
+    public string Value { get; }
+
+    public override bool Equals(object other)
+    {
+        return Equals(other as MqttUserProperty);
+    }
+
+    public bool Equals(MqttUserProperty other)
+    {
+        if (other == null)
         {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Value = value ?? throw new ArgumentNullException(nameof(value));
+            return false;
         }
 
-        public string Name { get; }
-
-        public string Value { get; }
-
-        public override bool Equals(object other)
+        if (ReferenceEquals(other, this))
         {
-            return Equals(other as MqttUserProperty);
+            return true;
         }
 
-        public bool Equals(MqttUserProperty other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
+        return string.Equals(Name, other.Name, StringComparison.Ordinal) && string.Equals(Value, other.Value, StringComparison.Ordinal);
+    }
 
-            if (ReferenceEquals(other, this))
-            {
-                return true;
-            }
+    public override int GetHashCode()
+    {
+        return Name.GetHashCode() ^ Value.GetHashCode();
+    }
 
-            return string.Equals(Name, other.Name, StringComparison.Ordinal) && string.Equals(Value, other.Value, StringComparison.Ordinal);
-        }
-
-        public override int GetHashCode()
-        {
-            return Name.GetHashCode() ^ Value.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return $"{Name} = {Value}";
-        }
+    public override string ToString()
+    {
+        return $"{Name} = {Value}";
     }
 }

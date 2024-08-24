@@ -1,28 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netcoreapp3.1;net7.0</TargetFrameworks>
-        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net48</TargetFrameworks>
+        <TargetFrameworks>net8.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
-        <LangVersion>7.3</LangVersion>
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <NoWarn>1591;NETSDK1138</NoWarn>
+        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAudit>true</NuGetAudit>
+        <AnalysisLevel>latest-Recommended</AnalysisLevel>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
-        <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+        <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
+        <PackageReference Include="MSTest.TestAdapter" Version="3.3.1" />
+        <PackageReference Include="MSTest.TestFramework" Version="3.3.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
+        <ProjectReference Include="..\..\Source\MQTTnet.Server\MQTTnet.Server.csproj" />
         <ProjectReference Include="..\..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj" />
         <ProjectReference Include="..\..\Source\MQTTnet\MQTTnet.csproj" />
+        <ProjectReference Include="..\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
         <ProjectReference Include="..\MQTTnet.Extensions.TopicTemplate\MQTTnet.Extensions.TopicTemplate.csproj" />
-        <ProjectReference Include="..\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj" />
     </ItemGroup>
 
 </Project>

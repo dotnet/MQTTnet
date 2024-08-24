@@ -5,7 +5,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Tests.Server
@@ -21,14 +20,14 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var client = testEnvironment.CreateClient();
-                var connectResult = await client.ConnectAsync(testEnvironment.Factory.CreateClientOptionsBuilder()
+                var connectResult = await client.ConnectAsync(testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                     .WithProtocolVersion(MqttProtocolVersion.V500)
                     .WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
 
                 Assert.IsFalse(connectResult.SharedSubscriptionAvailable);
             }
         }
-        
+
         [TestMethod]
         public async Task Subscription_Of_Shared_Subscription_Is_Denied()
         {
@@ -37,12 +36,12 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var client = testEnvironment.CreateClient();
-                await client.ConnectAsync(testEnvironment.Factory.CreateClientOptionsBuilder()
+                await client.ConnectAsync(testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                     .WithProtocolVersion(MqttProtocolVersion.V500)
                     .WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
 
                 var subscribeResult = await client.SubscribeAsync("$share/A");
-                
+
                 Assert.AreEqual(MqttClientSubscribeResultCode.SharedSubscriptionsNotSupported, subscribeResult.Items.First().ResultCode);
             }
         }

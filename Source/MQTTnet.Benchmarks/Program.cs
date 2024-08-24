@@ -71,7 +71,7 @@ namespace MQTTnet.Benchmarks
                 {
                     if (type != typeof(BaseBenchmark))
                     {
-                        benchmarks.Add(type);        
+                        benchmarks.Add(type);
                     }
                 }
             }
@@ -87,7 +87,7 @@ namespace MQTTnet.Benchmarks
             }
 
             // Allow for preselection to avoid developer frustration.
-            
+
             if (int.TryParse(arguments[0], out var benchmarkIndex))
             {
                 _selectedBenchmarkIndex = benchmarkIndex;
@@ -111,7 +111,7 @@ namespace MQTTnet.Benchmarks
         {
             Console.Clear();
 
-            Console.WriteLine($"MQTTnet - Benchmarks ({TargetFrameworkProvider.TargetFramework})");
+            Console.WriteLine($"MQTTnet - Benchmarks");
             Console.WriteLine("-----------------------------------------------");
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Press arrow keys for benchmark selection");

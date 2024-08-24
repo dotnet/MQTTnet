@@ -4,7 +4,7 @@
 
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Benchmarks
 {
@@ -15,13 +15,13 @@ namespace MQTTnet.Benchmarks
     {
         MqttNetNullLogger _nullLogger;
         MqttNetSourceLogger _sourceNullLogger;
-        
+
         MqttNetEventLogger _eventLogger;
         MqttNetSourceLogger _sourceEventLogger;
-        
+
         MqttNetEventLogger _eventLoggerNoListener;
         MqttNetSourceLogger _sourceEventLoggerNoListener;
-        
+
         bool _useHandler;
 
         [GlobalSetup]
@@ -29,11 +29,11 @@ namespace MQTTnet.Benchmarks
         {
             _nullLogger = new MqttNetNullLogger();
             _sourceNullLogger = _nullLogger.WithSource("Source");
-            
+
             _eventLogger = new MqttNetEventLogger();
             _eventLogger.LogMessagePublished += OnLogMessagePublished;
             _sourceEventLogger = _eventLogger.WithSource("Source");
-            
+
             _eventLoggerNoListener = new MqttNetEventLogger();
             _sourceEventLoggerNoListener = _eventLoggerNoListener.WithSource("Source");
         }
@@ -50,7 +50,7 @@ namespace MQTTnet.Benchmarks
         public void Log_10000_Messages_No_Listener()
         {
             _useHandler = false;
-            
+
             for (var i = 0; i < 10000; i++)
             {
                 _sourceEventLoggerNoListener.Verbose("test log message {0}", "parameter");
@@ -61,24 +61,24 @@ namespace MQTTnet.Benchmarks
         public void Log_10000_Messages_With_To_String()
         {
             _useHandler = true;
-            
+
             for (var i = 0; i < 10000; i++)
             {
                 _sourceEventLogger.Verbose("test log message {0}", "parameter");
             }
         }
-        
+
         [Benchmark]
         public void Log_10000_Messages_Without_To_String()
         {
             _useHandler = false;
-            
+
             for (var i = 0; i < 10000; i++)
             {
                 _sourceEventLogger.Verbose("test log message {0}", "parameter");
             }
         }
-        
+
         [Benchmark]
         public void Log_10000_Messages_With_NullLogger()
         {

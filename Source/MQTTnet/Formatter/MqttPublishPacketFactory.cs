@@ -5,26 +5,12 @@
 using System;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
-using MQTTnet.Server;
 
 namespace MQTTnet.Formatter
 {
-    public sealed class MqttPublishPacketFactory
+    public static class MqttPublishPacketFactory
     {
-        public MqttPublishPacket Clone(MqttPublishPacket publishPacket)
-        {
-            return new MqttPublishPacket
-            {
-                Topic = publishPacket.Topic,
-                PayloadSegment = publishPacket.PayloadSegment, 
-                Retain = publishPacket.Retain,
-                QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
-                Dup = publishPacket.Dup,
-                PacketIdentifier = publishPacket.PacketIdentifier
-            };
-        }
-
-        public MqttPublishPacket Create(MqttApplicationMessage applicationMessage)
+        public static MqttPublishPacket Create(MqttApplicationMessage applicationMessage)
         {
             if (applicationMessage == null)
             {
@@ -36,7 +22,7 @@ namespace MQTTnet.Formatter
             var packet = new MqttPublishPacket
             {
                 Topic = applicationMessage.Topic,
-                PayloadSegment = applicationMessage.PayloadSegment, 
+                Payload = applicationMessage.Payload,
                 QualityOfServiceLevel = applicationMessage.QualityOfServiceLevel,
                 Retain = applicationMessage.Retain,
                 Dup = applicationMessage.Dup,
@@ -51,53 +37,6 @@ namespace MQTTnet.Formatter
             };
 
             return packet;
-        }
-
-        public MqttPublishPacket Create(MqttConnectPacket connectPacket)
-        {
-            if (connectPacket == null)
-            {
-                throw new ArgumentNullException(nameof(connectPacket));
-            }
-
-            if (!connectPacket.WillFlag)
-            {
-                throw new MqttProtocolViolationException("The CONNECT packet contains no will message (WillFlag).");
-            }
-
-            ArraySegment<byte> willMessageBuffer = default;
-            if (connectPacket.WillMessage?.Length > 0)
-            {
-                willMessageBuffer = new ArraySegment<byte>(connectPacket.WillMessage);
-            }
-
-            var packet = new MqttPublishPacket
-            {
-                Topic = connectPacket.WillTopic,
-                PayloadSegment = willMessageBuffer,
-                QualityOfServiceLevel = connectPacket.WillQoS,
-                Retain = connectPacket.WillRetain,
-                ContentType = connectPacket.WillContentType,
-                CorrelationData = connectPacket.WillCorrelationData,
-                MessageExpiryInterval = connectPacket.WillMessageExpiryInterval,
-                PayloadFormatIndicator = connectPacket.WillPayloadFormatIndicator,
-                ResponseTopic = connectPacket.WillResponseTopic,
-                UserProperties = connectPacket.WillUserProperties
-            };
-
-            return packet;
-        }
-
-        public MqttPublishPacket Create(MqttRetainedMessageMatch retainedMessage)
-        {
-            if (retainedMessage == null)
-            {
-                throw new ArgumentNullException(nameof(retainedMessage));
-            }
-
-            var publishPacket = Create(retainedMessage.ApplicationMessage);
-            publishPacket.QualityOfServiceLevel = retainedMessage.SubscriptionQualityOfServiceLevel;
-            return publishPacket;
         }
     }
 }

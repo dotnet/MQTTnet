@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <Target Name="ImportReleaseNotes" BeforeTargets="GenerateNuspec">
-        <ReadLinesFromFile File="..\..\.github\workflows\ReleaseNotes.md">
-            <Output TaskParameter="Lines" ItemName="ReleaseNotes" />
+        <ReadLinesFromFile File="..\workflows\ReleaseNotes.md">
+            <Output TaskParameter="Lines" ItemName="ReleaseNotes"/>
         </ReadLinesFromFile>
         <PropertyGroup>
             <PackageReleaseNotes>@(ReleaseNotes, '%0a')</PackageReleaseNotes>
@@ -10,10 +10,7 @@
     </Target>
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard1.3;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0</TargetFrameworks>
-        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net452;net461;net48</TargetFrameworks>
-        <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">$(TargetFrameworks);uap10.0</TargetFrameworks>
-        <LangVersion>7.3</LangVersion>
+        <TargetFrameworks>net8.0</TargetFrameworks>
         <AssemblyName>MQTTnet</AssemblyName>
         <RootNamespace>MQTTnet</RootNamespace>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -41,31 +38,19 @@
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <NoWarn>1591;NETSDK1138</NoWarn>
+        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(TargetFramework)'=='uap10.0'">
-        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
-        <NugetTargetMoniker>UAP,Version=v10.0</NugetTargetMoniker>
-        <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-        <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
-        <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
-        <TargetFrameworkIdentifier>.NETCore</TargetFrameworkIdentifier>
-        <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
-        <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
-        <DefaultLanguage>en</DefaultLanguage>
-        <LanguageTargets>$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets</LanguageTargets>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAudit>true</NuGetAudit>
+        <AnalysisLevel>latest-Recommended</AnalysisLevel>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
         <DebugType>Full</DebugType>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-      <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
     </PropertyGroup>
 
     <ItemGroup>
@@ -76,17 +61,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)'=='netstandard1.3'">
-        <PackageReference Include="System.Net.Security" Version="4.3.2" />
-        <PackageReference Include="System.Net.WebSockets" Version="4.3.0" />
-        <PackageReference Include="System.Net.WebSockets.Client" Version="4.3.2" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)'=='uap10.0'">
-        <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.10" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
     </ItemGroup>
 
 </Project>

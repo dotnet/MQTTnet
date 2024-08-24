@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -24,7 +23,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [ExpectedException(typeof(MqttCommunicationException))]
         public async Task Connect_To_Invalid_Server_Port_Not_Opened()
         {
-            var client = new MqttFactory().CreateMqttClient();
+            var client = new MqttClientFactory().CreateMqttClient();
             using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", 12345).Build(), timeout.Token);
@@ -35,7 +34,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [ExpectedException(typeof(OperationCanceledException))]
         public async Task Connect_To_Invalid_Server_Wrong_IP()
         {
-            var client = new MqttFactory().CreateMqttClient();
+            var client = new MqttClientFactory().CreateMqttClient();
             using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2)))
             {
                 await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build(), timeout.Token);
@@ -46,14 +45,14 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [ExpectedException(typeof(MqttCommunicationException))]
         public async Task Connect_To_Invalid_Server_Wrong_Protocol()
         {
-            var client = new MqttFactory().CreateMqttClient();
+            var client = new MqttClientFactory().CreateMqttClient();
             await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("http://127.0.0.1", 12345).WithTimeout(TimeSpan.FromSeconds(2)).Build());
         }
 
         [TestMethod]
         public async Task ConnectTimeout_Throws_Exception()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             using (var client = factory.CreateMqttClient())
             {
                 var disconnectHandlerCalled = false;
@@ -96,7 +95,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 var client = await testEnvironment.ConnectClient();
 
-                var disconnectOptions = testEnvironment.Factory.CreateClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.MessageRateTooHigh).Build();
+                var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.MessageRateTooHigh).Build();
 
                 // Perform a clean disconnect.
                 await client.DisconnectAsync(disconnectOptions);
@@ -124,7 +123,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 var client = await testEnvironment.ConnectClient();
 
-                var disconnectOptions = testEnvironment.Factory.CreateClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.MessageRateTooHigh).Build();
+                var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.MessageRateTooHigh).Build();
 
                 // Perform a clean disconnect.
                 await client.DisconnectAsync(disconnectOptions);
@@ -152,7 +151,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 var client = await testEnvironment.ConnectClient();
 
-                var disconnectOptions = testEnvironment.Factory.CreateClientDisconnectOptionsBuilder().WithUserProperty("test_name", "test_value").Build();
+                var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithUserProperty("test_name", "test_value").Build();
 
                 // Perform a clean disconnect.
                 await client.DisconnectAsync(disconnectOptions);
@@ -220,7 +219,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 var client = testEnvironment.CreateClient();
 
-                var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptionsBuilder().WithoutThrowOnNonSuccessfulConnectResponse().Build());
+                var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptionsBuilder().Build());
 
                 Assert.IsNotNull(response);
                 Assert.AreEqual(MqttClientConnectResultCode.QuotaExceeded, response.ResultCode);
@@ -234,7 +233,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
         {
             try
             {
-                var mqttFactory = new MqttFactory();
+                var mqttFactory = new MqttClientFactory();
                 using (var mqttClient = mqttFactory.CreateMqttClient())
                 {
                     await mqttClient.SubscribeAsync("test", MqttQualityOfServiceLevel.AtLeastOnce);

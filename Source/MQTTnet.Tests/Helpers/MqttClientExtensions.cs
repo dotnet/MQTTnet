@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using MQTTnet.Client;
 using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Helpers

@@ -2,65 +2,59 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
-using MQTTnet.Client;
-using MQTTnet.Server;
 using System.Collections.Generic;
 using System.Linq;
+using BenchmarkDotNet.Attributes;
+using MQTTnet.Server;
 
-namespace MQTTnet.Benchmarks
+namespace MQTTnet.Benchmarks;
+
+[MemoryDiagnoser]
+public class SubscribeBenchmark : BaseBenchmark
 {
-    [MemoryDiagnoser]
-    public class SubscribeBenchmark : BaseBenchmark
+    const int NumPublishers = 1;
+    const int NumTopicsPerPublisher = 10000;
+    IMqttClient _mqttClient;
+    MqttServer _mqttServer;
+
+    List<string> _topics;
+
+    [GlobalCleanup]
+    public void Cleanup()
     {
-        MqttServer _mqttServer;
-        IMqttClient _mqttClient;
+        _mqttClient.DisconnectAsync().GetAwaiter().GetResult();
+        _mqttServer.StopAsync().GetAwaiter().GetResult();
+        _mqttServer.Dispose();
+    }
 
-        const int NumPublishers = 1;
-        const int NumTopicsPerPublisher = 10000;
+    [GlobalSetup]
+    public void Setup()
+    {
+        TopicGenerator.Generate(NumPublishers, NumTopicsPerPublisher, out var topicsByPublisher, out var singleWildcardTopicsByPublisher, out var multiWildcardTopicsByPublisher);
+        _topics = topicsByPublisher.Values.First();
 
-        List<string> _topics;
+        var serverOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
-        [GlobalSetup]
-        public void Setup()
+        var serverFactory = new MqttServerFactory();
+        _mqttServer = serverFactory.CreateMqttServer(serverOptions);
+        var clientFactory = new MqttClientFactory();
+        _mqttClient = clientFactory.CreateMqttClient();
+
+        _mqttServer.StartAsync().GetAwaiter().GetResult();
+
+        var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
+
+        _mqttClient.ConnectAsync(clientOptions).GetAwaiter().GetResult();
+    }
+
+    [Benchmark]
+    public void Subscribe_10000_Topics()
+    {
+        foreach (var topic in _topics)
         {
-            TopicGenerator.Generate(NumPublishers, NumTopicsPerPublisher, out var topicsByPublisher, out var singleWildcardTopicsByPublisher, out var multiWildcardTopicsByPublisher);
-            _topics = topicsByPublisher.Values.First();
+            var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topic).Build();
 
-            var serverOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
-
-            var factory = new MqttFactory();
-            _mqttServer = factory.CreateMqttServer(serverOptions);
-            _mqttClient = factory.CreateMqttClient();
-
-            _mqttServer.StartAsync().GetAwaiter().GetResult();
-
-            var clientOptions = new MqttClientOptionsBuilder()
-                .WithTcpServer("localhost").Build();
-
-            _mqttClient.ConnectAsync(clientOptions).GetAwaiter().GetResult();
-        }
-
-        [GlobalCleanup]
-        public void Cleanup()
-        {
-            _mqttClient.DisconnectAsync().GetAwaiter().GetResult();
-            _mqttServer.StopAsync().GetAwaiter().GetResult();
-            _mqttServer.Dispose();
-        }
-
-        [Benchmark]
-        public void Subscribe_10000_Topics()
-        {
-            foreach (var topic in _topics)
-            {
-                var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
-                       .WithTopicFilter(topic, Protocol.MqttQualityOfServiceLevel.AtMostOnce)
-                       .Build();
-                
-                _mqttClient.SubscribeAsync(subscribeOptions).GetAwaiter().GetResult();
-            }
+            _mqttClient.SubscribeAsync(subscribeOptions).GetAwaiter().GetResult();
         }
     }
 }

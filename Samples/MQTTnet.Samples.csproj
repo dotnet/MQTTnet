@@ -2,24 +2,27 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFrameworks>net8.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-        <NoWarn>1591;NETSDK1138</NoWarn>
+        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAudit>true</NuGetAudit>
+        <AnalysisLevel>latest-Recommended</AnalysisLevel>
     </PropertyGroup>
 
     <ItemGroup>
 
-        <ProjectReference Include="..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
-        <ProjectReference Include="..\Source\MQTTnet.Extensions.ManagedClient\MQTTnet.Extensions.ManagedClient.csproj" />
-        <ProjectReference Include="..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj" />
+        <ProjectReference Include="..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj"/>
+        <ProjectReference Include="..\Source\MQTTnet.Extensions.Rpc\MQTTnet.Extensions.Rpc.csproj"/>
         <ProjectReference Include="..\Source\MQTTnet.Extensions.TopicTemplate\MQTTnet.Extensions.TopicTemplate.csproj" />
-        <ProjectReference Include="..\Source\MQTTnet.Extensions.WebSocket4Net\MQTTnet.Extensions.WebSocket4Net.csproj" />
-        <ProjectReference Include="..\Source\MQTTnet\MQTTnet.csproj" />
+        <ProjectReference Include="..\Source\MQTTnet.Server\MQTTnet.Server.csproj"/>
+        <ProjectReference Include="..\Source\MQTTnet\MQTTnet.csproj"/>
     </ItemGroup>
 
 </Project>

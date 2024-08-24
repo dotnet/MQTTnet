@@ -5,26 +5,25 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MQTTnet.Packets
+namespace MQTTnet.Packets;
+
+public sealed class MqttSubscribePacket : MqttPacketWithIdentifier
 {
-    public sealed class MqttSubscribePacket : MqttPacketWithIdentifier
+    /// <summary>
+    ///     It is a Protocol Error if the Subscription Identifier has a value of 0.
+    /// </summary>
+    public uint SubscriptionIdentifier { get; set; }
+
+    public List<MqttTopicFilter> TopicFilters { get; set; } = new();
+
+    /// <summary>
+    ///     Added in MQTTv5.
+    /// </summary>
+    public List<MqttUserProperty> UserProperties { get; set; }
+
+    public override string ToString()
     {
-        /// <summary>
-        ///     It is a Protocol Error if the Subscription Identifier has a value of 0.
-        /// </summary>
-        public uint SubscriptionIdentifier { get; set; }
-
-        public List<MqttTopicFilter> TopicFilters { get; set; } = new List<MqttTopicFilter>();
-
-        /// <summary>
-        ///     Added in MQTTv5.
-        /// </summary>
-        public List<MqttUserProperty> UserProperties { get; set; }
-
-        public override string ToString()
-        {
-            var topicFiltersText = string.Join(",", TopicFilters.Select(f => f.Topic + "@" + f.QualityOfServiceLevel));
-            return $"Subscribe: [PacketIdentifier={PacketIdentifier}] [TopicFilters={topicFiltersText}]";
-        }
+        var topicFiltersText = string.Join(",", TopicFilters.Select(f => f.Topic + "@" + f.QualityOfServiceLevel));
+        return $"Subscribe: [PacketIdentifier={PacketIdentifier}] [TopicFilters={topicFiltersText}]";
     }
 }

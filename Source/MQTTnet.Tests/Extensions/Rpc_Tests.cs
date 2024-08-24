@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Formatter;
@@ -186,7 +185,7 @@ namespace MQTTnet.Tests.Extensions
         [TestMethod]
         public void Use_Factory()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             using (var client = factory.CreateMqttClient())
             {
                 var rpcClient = factory.CreateMqttRpcClient(client);

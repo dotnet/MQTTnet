@@ -6,7 +6,6 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
 
-using MQTTnet.Client;
 using MQTTnet.Extensions.Rpc;
 using MQTTnet.Protocol;
 
@@ -19,14 +18,14 @@ public static class RpcClient_Samples
      * This is done via defining a pattern which uses the topic to correlate the request and the response.
      * From client usage it is possible to define a timeout.
      */
-    
+
     public static async Task Send_Request()
     {
-        var mqttFactory = new MqttFactory();
-        
+        var mqttFactory = new MqttClientFactory();
+
         // The RPC client is an addon for the existing client. So we need a regular client
         // which is wrapped later.
-        
+
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
             var mqttClientOptions = new MqttClientOptionsBuilder()
@@ -34,23 +33,23 @@ public static class RpcClient_Samples
                 .Build();
 
             await mqttClient.ConnectAsync(mqttClientOptions);
-            
+
             using (var mqttRpcClient = mqttFactory.CreateMqttRpcClient(mqttClient))
             {
                 // Access to a fully featured application message is not supported for RPC calls!
                 // The method will throw an exception when the response was not received in time.
                 await mqttRpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
             }
-            
+
             Console.WriteLine("The RPC call was successful.");
         }
     }
-    
+
     /*
      * The device must respond to the request using the correct topic. The following C code shows how a
      * smart device like an ESP8266 must respond to the above sample.
      *
-        // If using the MQTT client PubSubClient it must be ensured 
+        // If using the MQTT client PubSubClient it must be ensured
         // that the request topic for each method is subscribed like the following.
         mqttClient.subscribe("MQTTnet.RPC/+/ping");
         mqttClient.subscribe("MQTTnet.RPC/+/do_something");

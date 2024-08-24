@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Internal;
 using MQTTnet.Tests.Mockups;
 
@@ -24,20 +23,20 @@ namespace MQTTnet.Tests
             using (var testEnvironment = new TestEnvironment(TestContext))
             {
                 await testEnvironment.StartServer();
-                
+
                 var receiverClient = await testEnvironment.ConnectClient();
                 var senderClient = await testEnvironment.ConnectClient();
 
                 TaskCompletionSource<string> response = null;
 
-                receiverClient.ApplicationMessageReceivedAsync += e => 
+                receiverClient.ApplicationMessageReceivedAsync += e =>
                 {
                     response?.TrySetResult(e.ApplicationMessage.ConvertPayloadToString());
                     return CompletedTask.Instance;
                 };
 
                 await receiverClient.SubscribeAsync("#");
-                
+
                 var times = new List<TimeSpan>();
                 var stopwatch = Stopwatch.StartNew();
 

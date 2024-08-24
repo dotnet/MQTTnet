@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Tests.Server
 {
@@ -14,8 +15,8 @@ namespace MQTTnet.Tests.Server
         public async Task MqttRetainedMessageManager_GetUndefinedTopic()
         {
             var logger = new Mockups.TestLogger();
-            var eventContainer = new MQTTnet.Server.MqttServerEventContainer();
-            var retainedMessagesManager = new MQTTnet.Server.MqttRetainedMessagesManager(eventContainer, logger);
+            var eventContainer = new MqttServerEventContainer();
+            var retainedMessagesManager = new MqttRetainedMessagesManager(eventContainer, logger);
             var task = retainedMessagesManager.GetMessage("undefined");
             Assert.IsNotNull(task, "Task should not be null");
             var result = await task;

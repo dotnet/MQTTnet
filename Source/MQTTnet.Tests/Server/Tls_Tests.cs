@@ -1,4 +1,3 @@
-#if !WINDOWS_UWP && (NET48_OR_GREATER || NET5_0_OR_GREATER)
 using System;
 using System.Linq;
 using System.Net;
@@ -9,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Certificates;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Server;
 using MQTTnet.Tests.Mockups;
@@ -25,7 +23,7 @@ namespace MQTTnet.Tests.Server
             sanBuilder.AddIpAddress(IPAddress.Loopback);
             sanBuilder.AddIpAddress(IPAddress.IPv6Loopback);
             sanBuilder.AddDnsName("localhost");
-            
+
             using (var rsa = RSA.Create())
             {
                 var certRequest = new CertificateRequest("CN=localhost", rsa, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
@@ -53,7 +51,7 @@ namespace MQTTnet.Tests.Server
         public async Task Tls_Swap_Test()
         {
             var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
-            var serverOptionsBuilder = testEnvironment.Factory.CreateServerOptionsBuilder();
+            var serverOptionsBuilder = testEnvironment.ServerFactory.CreateServerOptionsBuilder();
 
             var firstOid = "1.3.6.1.5.5.7.3.1";
             var secondOid = "1.3.6.1.5.5.7.3.2";
@@ -175,7 +173,7 @@ namespace MQTTnet.Tests.Server
 
         static async Task<IMqttClient> ConnectClientAsync(TestEnvironment testEnvironment, Func<MqttClientCertificateValidationEventArgs, bool> certValidator)
         {
-            var clientOptionsBuilder = testEnvironment.Factory.CreateClientOptionsBuilder();
+            var clientOptionsBuilder = testEnvironment.ClientFactory.CreateClientOptionsBuilder();
             clientOptionsBuilder.WithClientId(Guid.NewGuid().ToString())
                 .WithTcpServer("localhost", 8883)
                 .WithTlsOptions(
@@ -187,7 +185,7 @@ namespace MQTTnet.Tests.Server
             var clientOptions = clientOptionsBuilder.Build();
             return await testEnvironment.ConnectClient(clientOptions);
         }
-        
+
         sealed class CertificateProvider : ICertificateProvider
         {
             public X509Certificate2 CurrentCertificate { get; set; }
@@ -199,4 +197,3 @@ namespace MQTTnet.Tests.Server
         }
     }
 }
-#endif

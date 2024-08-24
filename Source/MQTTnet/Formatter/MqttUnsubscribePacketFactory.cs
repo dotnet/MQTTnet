@@ -3,31 +3,29 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using MQTTnet.Client;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Formatter
+namespace MQTTnet.Formatter;
+
+public static class MqttUnsubscribePacketFactory
 {
-    public sealed class MqttUnsubscribePacketFactory
+    public static MqttUnsubscribePacket Create(MqttClientUnsubscribeOptions clientUnsubscribeOptions)
     {
-        public MqttUnsubscribePacket Create(MqttClientUnsubscribeOptions clientUnsubscribeOptions)
+        if (clientUnsubscribeOptions == null)
         {
-            if (clientUnsubscribeOptions == null)
-            {
-                throw new ArgumentNullException(nameof(clientUnsubscribeOptions));
-            }
-
-            var packet = new MqttUnsubscribePacket
-            {
-                UserProperties = clientUnsubscribeOptions.UserProperties
-            };
-
-            if (clientUnsubscribeOptions.TopicFilters != null)
-            {
-                packet.TopicFilters.AddRange(clientUnsubscribeOptions.TopicFilters);
-            }
-
-            return packet;
+            throw new ArgumentNullException(nameof(clientUnsubscribeOptions));
         }
+
+        var packet = new MqttUnsubscribePacket
+        {
+            UserProperties = clientUnsubscribeOptions.UserProperties
+        };
+
+        if (clientUnsubscribeOptions.TopicFilters != null)
+        {
+            packet.TopicFilters.AddRange(clientUnsubscribeOptions.TopicFilters);
+        }
+
+        return packet;
     }
 }

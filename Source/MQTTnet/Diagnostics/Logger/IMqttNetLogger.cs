@@ -4,7 +4,7 @@
 
 using System;
 
-namespace MQTTnet.Diagnostics
+namespace MQTTnet.Diagnostics.Logger
 {
     public interface IMqttNetLogger
     {

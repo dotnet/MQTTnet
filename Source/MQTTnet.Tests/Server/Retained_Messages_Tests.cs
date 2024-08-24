@@ -5,7 +5,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -242,7 +241,7 @@ namespace MQTTnet.Tests.Server
                 var client = testEnvironment.CreateClient();
 
                 var connectResult = await client.ConnectAsync(
-                    testEnvironment.Factory.CreateClientOptionsBuilder()
+                    testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                         .WithProtocolVersion(MqttProtocolVersion.V311)
                         .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                         .Build());
@@ -260,7 +259,7 @@ namespace MQTTnet.Tests.Server
 
                 var client = testEnvironment.CreateClient();
                 var connectResult = await client.ConnectAsync(
-                    testEnvironment.Factory.CreateClientOptionsBuilder()
+                    testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                         .WithProtocolVersion(MqttProtocolVersion.V500)
                         .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
                         .Build());

@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using MQTTnet.AspNetCore.Client.Tcp;
+using MQTTnet.AspNetCore;
 
 namespace MQTTnet.Benchmarks
 {

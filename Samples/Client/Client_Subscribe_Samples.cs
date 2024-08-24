@@ -7,7 +7,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
 
-using MQTTnet.Client;
 using MQTTnet.Extensions.TopicTemplate;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -17,15 +16,15 @@ namespace MQTTnet.Samples.Client;
 
 public static class Client_Subscribe_Samples
 {
-    static MqttTopicTemplate sampleTemplate = new MqttTopicTemplate("mqttnet/samples/topic/{id}");
-    
+    static readonly MqttTopicTemplate sampleTemplate = new("mqttnet/samples/topic/{id}");
+
     public static async Task Handle_Received_Application_Message()
     {
         /*
          * This sample subscribes to a topic and processes the received message.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -44,9 +43,7 @@ public static class Client_Subscribe_Samples
 
             await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
-                .WithTopicTemplate(sampleTemplate.WithParameter("id", "2"))
-                .Build();
+            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "2")).Build();
 
             await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
@@ -63,7 +60,7 @@ public static class Client_Subscribe_Samples
          * This sample subscribes to a topic and sends a response to the broker. This requires at least QoS level 1 to work!
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -86,10 +83,7 @@ public static class Client_Subscribe_Samples
 
             await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
-                .WithTopicTemplate(
-                    sampleTemplate.WithParameter("id", "1"))
-                .Build();
+            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "1")).Build();
 
             var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
@@ -106,7 +100,7 @@ public static class Client_Subscribe_Samples
          * This sample subscribes to several topics in a single request.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -117,12 +111,9 @@ public static class Client_Subscribe_Samples
             // Create the subscribe options including several topics with different options.
             // It is also possible to all of these topics using a dedicated call of _SubscribeAsync_ per topic.
             var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
-                .WithTopicTemplate(
-                    sampleTemplate.WithParameter("id", "1"))
-                .WithTopicTemplate(
-                    sampleTemplate.WithParameter("id", "2"), noLocal: true)
-                .WithTopicTemplate(
-                    sampleTemplate.WithParameter("id", "3"), retainHandling: MqttRetainHandling.SendAtSubscribe)
+                .WithTopicTemplate(sampleTemplate.WithParameter("id", "1"))
+                .WithTopicTemplate(sampleTemplate.WithParameter("id", "2"), noLocal: true)
+                .WithTopicTemplate(sampleTemplate.WithParameter("id", "3"), retainHandling: MqttRetainHandling.SendAtSubscribe)
                 .Build();
 
             var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
@@ -140,7 +131,7 @@ public static class Client_Subscribe_Samples
          * This sample subscribes to a topic.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -148,9 +139,7 @@ public static class Client_Subscribe_Samples
 
             await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
-                .WithTopicTemplate(sampleTemplate.WithParameter("id", "1"))
-                .Build();
+            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "1")).Build();
 
             var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 

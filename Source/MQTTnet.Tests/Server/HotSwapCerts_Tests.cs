@@ -1,4 +1,3 @@
-#if !(NET452 || NET461 || NET48)
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -12,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Certificates;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -239,7 +237,7 @@ namespace MQTTnet.Tests.Server
 
                 var mqttClientOptions = optionsBuilder.Build();
 
-                var factory = new MqttFactory();
+                var factory = new MqttClientFactory();
                 var mqttClient = factory.CreateMqttClient();
                 _client = mqttClient;
 
@@ -295,7 +293,7 @@ namespace MQTTnet.Tests.Server
 
             public Task StartServer()
             {
-                var mqttFactory = new MqttFactory();
+                var mqttServerFactory = new MqttServerFactory();
 
                 var mqttServerOptions = new MqttServerOptionsBuilder().WithEncryptionCertificate(_hotSwapServer)
                     .WithRemoteCertificateValidationCallback(_hotSwapServer.RemoteCertificateValidationCallback)
@@ -304,7 +302,7 @@ namespace MQTTnet.Tests.Server
 
                 mqttServerOptions.TlsEndpointOptions.ClientCertificateRequired = true;
 
-                _server = mqttFactory.CreateMqttServer(mqttServerOptions);
+                _server = mqttServerFactory.CreateMqttServer(mqttServerOptions);
                 return _server.StartAsync();
             }
         }
@@ -318,16 +316,14 @@ namespace MQTTnet.Tests.Server
             {
                 _certificates = new X509Certificate2Collection(CreateSelfSignedCertificate("1.3.6.1.5.5.7.3.2"));
             }
-            
+
             public void Dispose()
             {
                 if (_certificates != null)
                 {
                     foreach (var certs in _certificates)
                     {
-#if !NET452
                         certs.Dispose();
-#endif
                     }
                 }
             }
@@ -378,9 +374,7 @@ namespace MQTTnet.Tests.Server
 
             public void Dispose()
             {
-#if !NET452
                 _certificate.Dispose();
-#endif
             }
 
             public X509Certificate2 GetCertificate()
@@ -392,9 +386,8 @@ namespace MQTTnet.Tests.Server
             {
                 var newCert = CreateSelfSignedCertificate("1.3.6.1.5.5.7.3.1");
                 var oldCert = Interlocked.Exchange(ref _certificate, newCert);
-#if !NET452
+
                 oldCert.Dispose();
-#endif
             }
 
             public void InstallNewClientCert(X509Certificate2 certificate)
@@ -422,5 +415,3 @@ namespace MQTTnet.Tests.Server
         }
     }
 }
-
-#endif

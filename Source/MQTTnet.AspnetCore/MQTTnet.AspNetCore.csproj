@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;netcoreapp2.1;netcoreapp3.1;net5.0;net6.0;net7.0</TargetFrameworks>
-
+        <TargetFrameworks>net8.0</TargetFrameworks>
         <AssemblyName>MQTTnet.AspNetCore</AssemblyName>
         <RootNamespace>MQTTnet.AspNetCore</RootNamespace>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -32,8 +31,11 @@
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <NoWarn>1591;NETSDK1138</NoWarn>
-        <LangVersion>7.3</LangVersion>
+        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAudit>true</NuGetAudit>
+        <AnalysisLevel>latest-Recommended</AnalysisLevel>
     </PropertyGroup>
 
     <ItemGroup>
@@ -44,23 +46,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     </ItemGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <DefineConstants>RELEASE;NETSTANDARD2_0</DefineConstants>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release'">
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0' and '$(TargetFramework)' != 'netcoreapp2.1' ">
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netcoreapp2.1' ">
-        <PackageReference Include="Microsoft.AspNetCore.Http.Connections" Version="1.1.0" />
-    </ItemGroup>
-
     <ItemGroup>
-        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+        <ProjectReference Include="..\MQTTnet.Server\MQTTnet.Server.csproj"/>
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
     </ItemGroup>
 
 </Project>

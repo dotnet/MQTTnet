@@ -4,8 +4,7 @@
 
 using System;
 using System.Threading.Tasks;
-using MQTTnet.Client;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.TestApp
 {
@@ -17,15 +16,15 @@ namespace MQTTnet.TestApp
             {
                 var logger = new MqttNetEventLogger();
                 MqttNetConsoleLogger.ForwardToConsole(logger);
-                
-                var factory = new MqttFactory(logger);
-                
+
+                var factory = new MqttClientFactory(logger);
+
                 var client = factory.CreateMqttClient();
-                
+
                 var options = new MqttClientOptionsBuilder()
                     .WithTcpServer("localhost")
                     .Build();
-                
+
                 Console.WriteLine("BEFORE CONNECT");
                 await client.ConnectAsync(options);
                 Console.WriteLine("AFTER CONNECT");

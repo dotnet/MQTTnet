@@ -3,16 +3,15 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -107,7 +106,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Disconnect_Event_Contains_Exception()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             using (var client = factory.CreateMqttClient())
             {
                 Exception ex = null;
@@ -248,7 +247,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Invalid_Connect_Throws_Exception()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             using (var client = factory.CreateMqttClient())
             {
                 try
@@ -298,7 +297,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 Assert.IsNotNull(receivedMessage);
                 Assert.AreEqual("A", receivedMessage.Topic);
-                Assert.AreEqual(null, receivedMessage.PayloadSegment.Array);
+                Assert.AreEqual(0, receivedMessage.Payload.Length);
             }
         }
 
@@ -509,7 +508,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 client2.ApplicationMessageReceivedAsync += e =>
                 {
-                    client2TopicResults.Add(Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment.ToArray()));
+                    client2TopicResults.Add(Encoding.UTF8.GetString(e.ApplicationMessage.Payload.ToArray()));
                     return CompletedTask.Instance;
                 };
 
@@ -925,55 +924,6 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 Assert.IsTrue(client1.TryPingAsync().GetAwaiter().GetResult());
                 Assert.IsFalse(disconnectedFired);
             }
-        }
-
-        [TestMethod]
-        public void Backward_compatible_TCP_options()
-        {
-            var options = new MqttClientOptionsBuilder().WithTcpServer("host", 3).Build();
-
-            Assert.AreEqual("host", ((MqttClientTcpOptions)options.ChannelOptions).Server);
-            Assert.AreEqual(3, ((MqttClientTcpOptions)options.ChannelOptions).Port);
-
-            options = new MqttClientOptions
-            {
-                ChannelOptions = new MqttClientTcpOptions
-                {
-                    Server = "host",
-                    Port = 3
-                }
-            };
-
-            Assert.AreEqual("host:3", options.ChannelOptions.ToString());
-            Assert.AreEqual("host", ((MqttClientTcpOptions)options.ChannelOptions).Server);
-            Assert.AreEqual(3, ((MqttClientTcpOptions)options.ChannelOptions).Port);
-
-            options = new MqttClientOptionsBuilder().WithEndPoint(new DnsEndPoint("host", 3)).Build();
-            Assert.AreEqual("Unspecified/host:3", options.ChannelOptions.ToString());
-            Assert.AreEqual("host", ((MqttClientTcpOptions)options.ChannelOptions).Server);
-            Assert.AreEqual(3, ((MqttClientTcpOptions)options.ChannelOptions).Port);
-
-            options = new MqttClientOptionsBuilder().WithTcpServer("host").Build();
-
-            Assert.AreEqual("host", ((MqttClientTcpOptions)options.ChannelOptions).Server);
-            Assert.AreEqual(1883, ((MqttClientTcpOptions)options.ChannelOptions).Port);
-            Assert.AreEqual("Unspecified/host:1883", options.ChannelOptions.ToString());
-
-            options = new MqttClientOptionsBuilder().WithTlsOptions(o => o.UseTls()).WithTcpServer("host").Build();
-
-            Assert.AreEqual("host", ((MqttClientTcpOptions)options.ChannelOptions).Server);
-            Assert.AreEqual(8883, ((MqttClientTcpOptions)options.ChannelOptions).Port);
-
-            options = new MqttClientOptions
-            {
-                ChannelOptions = new MqttClientTcpOptions
-                {
-                    Server = "host"
-                }
-            };
-
-            Assert.AreEqual("host", ((MqttClientTcpOptions)options.ChannelOptions).Server);
-            Assert.AreEqual(null, ((MqttClientTcpOptions)options.ChannelOptions).Port);
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
+using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
@@ -106,7 +106,7 @@ namespace MQTTnet.Tests.Server
 
                 var client = await testEnvironment.ConnectClient();
 
-                var subscribeOptions = testEnvironment.Factory.CreateSubscribeOptionsBuilder().WithTopicFilter("X").WithUserProperty("A", "1").Build();
+                var subscribeOptions = testEnvironment.ClientFactory.CreateSubscribeOptionsBuilder().WithTopicFilter("X").WithUserProperty("A", "1").Build();
                 await client.SubscribeAsync(subscribeOptions);
 
                 CollectionAssert.AreEqual(subscribeOptions.UserProperties.ToList(), eventArgs.UserProperties);

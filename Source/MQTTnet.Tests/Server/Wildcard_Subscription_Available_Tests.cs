@@ -4,7 +4,6 @@
 
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 
 namespace MQTTnet.Tests.Server
@@ -20,14 +19,14 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var client = testEnvironment.CreateClient();
-                var connectResult = await client.ConnectAsync(testEnvironment.Factory.CreateClientOptionsBuilder()
+                var connectResult = await client.ConnectAsync(testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                     .WithProtocolVersion(MqttProtocolVersion.V311)
                     .WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
 
                 Assert.IsTrue(connectResult.WildcardSubscriptionAvailable);
             }
         }
-        
+
         [TestMethod]
         public async Task Server_Reports_Wildcard_Subscription_Available_Tests_Supported_V5()
         {
@@ -36,7 +35,7 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 var client = testEnvironment.CreateClient();
-                var connectResult = await client.ConnectAsync(testEnvironment.Factory.CreateClientOptionsBuilder()
+                var connectResult = await client.ConnectAsync(testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                     .WithProtocolVersion(MqttProtocolVersion.V500)
                     .WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
 

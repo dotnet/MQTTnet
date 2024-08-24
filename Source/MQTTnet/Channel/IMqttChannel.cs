@@ -3,26 +3,25 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Channel
+namespace MQTTnet.Channel;
+
+public interface IMqttChannel : IDisposable
 {
-    public interface IMqttChannel : IDisposable
-    {
-        string Endpoint { get; }
-        
-        bool IsSecureConnection { get; }
-        
-        X509Certificate2 ClientCertificate { get; }
+    X509Certificate2 ClientCertificate { get; }
+    string Endpoint { get; }
 
-        Task ConnectAsync(CancellationToken cancellationToken);
-        
-        Task DisconnectAsync(CancellationToken cancellationToken);
+    bool IsSecureConnection { get; }
 
-        Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);
-        
-        Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken);
-    }
+    Task ConnectAsync(CancellationToken cancellationToken);
+
+    Task DisconnectAsync(CancellationToken cancellationToken);
+
+    Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);
+
+    Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken);
 }

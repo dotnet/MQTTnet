@@ -4,35 +4,27 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputType>Exe</OutputType>
         <DebugType>Full</DebugType>
-        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-        <LangVersion>7.2</LangVersion>
+        <TargetFrameworks>net8.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <NoWarn>1591;NETSDK1138</NoWarn>
+        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902;CS8892</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAudit>true</NuGetAudit>
+        <AnalysisLevel>latest-Recommended</AnalysisLevel>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
-        <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
-    </ItemGroup>
-    
-    <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
-        <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-        <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
-        <PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
+        <PackageReference Include="BenchmarkDotNet" Version="0.13.12"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj" />
-        <ProjectReference Include="..\MQTTnet.Tests\MQTTnet.Tests.csproj" />
+        <ProjectReference Include="..\..\Source\MQTTnet.Server\MQTTnet.Server.csproj"/>
+        <ProjectReference Include="..\..\Source\MQTTnet.AspnetCore\MQTTnet.AspNetCore.csproj"/>
+        <ProjectReference Include="..\MQTTnet.Tests\MQTTnet.Tests.csproj"/>
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
     </ItemGroup>
 
 </Project>

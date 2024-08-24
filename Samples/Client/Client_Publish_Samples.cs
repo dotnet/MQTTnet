@@ -6,8 +6,6 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
 
-using MQTTnet.Client;
-
 namespace MQTTnet.Samples.Client;
 
 public static class Client_Publish_Samples
@@ -23,7 +21,7 @@ public static class Client_Publish_Samples
          * or at least provides backward compatibility where possible.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -41,11 +39,11 @@ public static class Client_Publish_Samples
             await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
 
             await mqttClient.DisconnectAsync();
-            
+
             Console.WriteLine("MQTT application message is published.");
         }
     }
-    
+
     public static async Task Publish_Multiple_Application_Messages()
     {
         /*
@@ -54,7 +52,7 @@ public static class Client_Publish_Samples
          * See sample _Publish_Application_Message_ for more details.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttFactory = new MqttClientFactory();
 
         using (var mqttClient = mqttFactory.CreateMqttClient())
         {
@@ -70,23 +68,23 @@ public static class Client_Publish_Samples
                 .Build();
 
             await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
-            
+
             applicationMessage = new MqttApplicationMessageBuilder()
                 .WithTopic("samples/temperature/living_room")
                 .WithPayload("20.0")
                 .Build();
-            
+
             await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
 
             applicationMessage = new MqttApplicationMessageBuilder()
                 .WithTopic("samples/temperature/living_room")
                 .WithPayload("21.0")
                 .Build();
-            
+
             await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
 
             await mqttClient.DisconnectAsync();
-            
+
             Console.WriteLine("MQTT application message is published.");
         }
     }

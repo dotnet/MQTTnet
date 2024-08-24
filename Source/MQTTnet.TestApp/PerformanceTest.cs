@@ -9,7 +9,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Client;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
@@ -30,7 +29,7 @@ namespace MQTTnet.TestApp
                     CleanSession = true
                 };
 
-                var client = new MqttFactory().CreateMqttClient();
+                var client = new MqttClientFactory().CreateMqttClient();
                 client.ConnectAsync(options).GetAwaiter().GetResult();
 
                 var message = CreateMessage();
@@ -62,9 +61,10 @@ namespace MQTTnet.TestApp
         {
             try
             {
-                var mqttFactory = new MqttFactory();
+                var mqttClientFactory = new MqttClientFactory();
+                var mqttServerFactory = new MqttServerFactory();
                 var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
-                var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions);
+                var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions);
                 await mqttServer.StartAsync().ConfigureAwait(false);
 
                 var options = new MqttClientOptions
@@ -75,12 +75,12 @@ namespace MQTTnet.TestApp
                     }
                 };
 
-                var client = mqttFactory.CreateMqttClient();
+                var client = mqttClientFactory.CreateMqttClient();
                 await client.ConnectAsync(options).ConfigureAwait(false);
 
                 var message = new MqttApplicationMessageBuilder().WithTopic("t")
                     .Build();
-                
+
                 var stopwatch = new Stopwatch();
 
                 for (var i = 0; i < 10; i++)
@@ -122,7 +122,7 @@ namespace MQTTnet.TestApp
                     CleanSession = true
                 };
 
-                var client = new MqttFactory().CreateMqttClient();
+                var client = new MqttClientFactory().CreateMqttClient();
 
                 try
                 {
@@ -214,7 +214,7 @@ namespace MQTTnet.TestApp
         {
             try
             {
-                var mqttServer = new MqttFactory().CreateMqttServer(new MqttServerOptions());
+                var mqttServer = new MqttServerFactory().CreateMqttServer(new MqttServerOptions());
                 await mqttServer.StartAsync();
 
                 var options = new MqttClientOptions
@@ -226,7 +226,7 @@ namespace MQTTnet.TestApp
                     CleanSession = true
                 };
 
-                var client = new MqttFactory().CreateMqttClient();
+                var client = new MqttClientFactory().CreateMqttClient();
                 await client.ConnectAsync(options);
 
                 var message = new MqttApplicationMessage
@@ -265,7 +265,7 @@ namespace MQTTnet.TestApp
         {
             try
             {
-                var mqttServer = new MqttFactory().CreateMqttServer(new MqttServerOptions());
+                var mqttServer = new MqttServerFactory().CreateMqttServer(new MqttServerOptions());
                 await mqttServer.StartAsync();
 
                 var options = new MqttClientOptions
@@ -277,7 +277,7 @@ namespace MQTTnet.TestApp
                     CleanSession = true
                 };
 
-                var client = new MqttFactory().CreateMqttClient();
+                var client = new MqttClientFactory().CreateMqttClient();
                 await client.ConnectAsync(options);
 
                 var message = new MqttApplicationMessage
@@ -328,7 +328,7 @@ namespace MQTTnet.TestApp
                     CleanSession = true
                 };
 
-                var client = new MqttFactory().CreateMqttClient();
+                var client = new MqttClientFactory().CreateMqttClient();
                 await client.ConnectAsync(options);
 
                 var message = new MqttApplicationMessage

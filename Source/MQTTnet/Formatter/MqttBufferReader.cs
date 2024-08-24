@@ -7,9 +7,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
-#if NETCOREAPP3_0_OR_GREATER
 using System.Buffers.Binary;
-#endif
+
 
 namespace MQTTnet.Formatter
 {
@@ -37,7 +36,7 @@ namespace MQTTnet.Formatter
 
             ValidateReceiveBuffer(length);
 
-            var result = new byte[length];
+            var result = GC.AllocateUninitializedArray<byte>(length);
             MqttMemoryHelper.Copy(_buffer, _position, result, 0, length);
             _position += length;
 
@@ -54,16 +53,7 @@ namespace MQTTnet.Formatter
         {
             ValidateReceiveBuffer(4);
 
-#if NETCOREAPP3_0_OR_GREATER
             var value = BinaryPrimitives.ReadUInt32BigEndian(_buffer.AsSpan(_position));
-#else
-            var byte0 = _buffer[_position];
-            var byte1 = _buffer[_position + 1];
-            var byte2 = _buffer[_position + 2];
-            var byte3 = _buffer[_position + 3];
-
-            var value = (uint)((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3);
-#endif
 
             _position += 4;
             return value;
@@ -77,7 +67,7 @@ namespace MQTTnet.Formatter
                 return EmptyBuffer.Array;
             }
 
-            var buffer = new byte[bufferLength];
+            var buffer = GC.AllocateUninitializedArray<byte>(bufferLength);
             MqttMemoryHelper.Copy(_buffer, _position, buffer, 0, bufferLength);
             _position += bufferLength;
 
@@ -95,12 +85,8 @@ namespace MQTTnet.Formatter
 
             ValidateReceiveBuffer(length);
 
-#if NETCOREAPP3_0_OR_GREATER
             // AsSpan() version is slightly faster. Not much but at least a little bit.
             var result = Encoding.UTF8.GetString(_buffer.AsSpan(_position, length));
-#else
-            var result = Encoding.UTF8.GetString(_buffer, _position, length);
-#endif
 
             _position += length;
             return result;
@@ -110,14 +96,7 @@ namespace MQTTnet.Formatter
         {
             ValidateReceiveBuffer(2);
 
-#if NETCOREAPP3_0_OR_GREATER
             var value = BinaryPrimitives.ReadUInt16BigEndian(_buffer.AsSpan(_position));
-#else
-            var msb = _buffer[_position];
-            var lsb = _buffer[_position + 1];
-
-            var value = (ushort)((msb << 8) | lsb);
-#endif
 
             _position += 2;
             return value;

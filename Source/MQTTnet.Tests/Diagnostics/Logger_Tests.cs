@@ -4,7 +4,7 @@
 
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Tests.Diagnostics
 {
@@ -44,7 +44,7 @@ namespace MQTTnet.Tests.Diagnostics
 
             Assert.AreEqual(4, logMessagesCount);
         }
-        
+
         [TestMethod]
         public void Use_Custom_Log_Id()
         {
@@ -56,7 +56,7 @@ namespace MQTTnet.Tests.Diagnostics
                 Assert.AreEqual("logId", e.LogMessage.LogId);
                 Assert.AreEqual("Source1", e.LogMessage.Source);
             };
-            
+
             childLogger.Verbose("Verbose");
             childLogger.Info("Info");
             childLogger.Warning((Exception)null, "Warning");

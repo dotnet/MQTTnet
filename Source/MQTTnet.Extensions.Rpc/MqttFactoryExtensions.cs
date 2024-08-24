@@ -3,15 +3,14 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using MQTTnet.Client;
 
 namespace MQTTnet.Extensions.Rpc
 {
     public static class MqttFactoryExtensions
     {
-        public static IMqttRpcClient CreateMqttRpcClient(this MqttFactory factory, IMqttClient mqttClient)
+        public static IMqttRpcClient CreateMqttRpcClient(this MqttClientFactory clientFactory, IMqttClient mqttClient)
         {
-            return factory.CreateMqttRpcClient(
+            return clientFactory.CreateMqttRpcClient(
                 mqttClient,
                 new MqttRpcClientOptions
                 {
@@ -19,7 +18,7 @@ namespace MQTTnet.Extensions.Rpc
                 });
         }
 
-        public static IMqttRpcClient CreateMqttRpcClient(this MqttFactory _, IMqttClient mqttClient, MqttRpcClientOptions rpcClientOptions)
+        public static IMqttRpcClient CreateMqttRpcClient(this MqttClientFactory _, IMqttClient mqttClient, MqttRpcClientOptions rpcClientOptions)
         {
             if (mqttClient == null)
             {

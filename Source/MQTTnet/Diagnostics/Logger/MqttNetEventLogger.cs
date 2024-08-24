@@ -4,7 +4,7 @@
 
 using System;
 
-namespace MQTTnet.Diagnostics
+namespace MQTTnet.Diagnostics.Logger
 {
     /// <summary>
     ///     This logger fires an event when a new message was published.

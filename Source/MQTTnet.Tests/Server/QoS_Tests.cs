@@ -5,165 +5,163 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
-namespace MQTTnet.Tests.Server
+namespace MQTTnet.Tests.Server;
+
+[TestClass]
+public sealed class QoS_Tests : BaseTestClass
 {
-    [TestClass]
-    public sealed class QoS_Tests : BaseTestClass
+    [TestMethod]
+    public async Task Fire_Event_On_Client_Acknowledges_QoS_0()
     {
-        [TestMethod]
-        public async Task Preserve_Message_Order_For_Queued_Messages()
+        using (var testEnvironment = CreateTestEnvironment())
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            var server = await testEnvironment.StartServer();
+
+            ClientAcknowledgedPublishPacketEventArgs eventArgs = null;
+            server.ClientAcknowledgedPublishPacketAsync += args =>
             {
-                var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
+                eventArgs = args;
+                return CompletedTask.Instance;
+            };
 
-                // Create a session which will contain the messages.
-                var dummyClient = await testEnvironment.ConnectClient(o => o.WithClientId("A").WithCleanSession(false));
-                await dummyClient.SubscribeAsync("#", MqttQualityOfServiceLevel.AtLeastOnce);
-                dummyClient.Dispose();
+            var client1 = await testEnvironment.ConnectClient();
+            await client1.SubscribeAsync("A");
 
-                await LongTestDelay();
-                await LongTestDelay();
-                
-                // Now inject messages which are appended to the queue of the client.
-                await server.InjectApplicationMessage("T", "0", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
-                
-                await server.InjectApplicationMessage("T", "2", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
-                await server.InjectApplicationMessage("T", "1", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
-                
-                await server.InjectApplicationMessage("T", "4", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
-                await server.InjectApplicationMessage("T", "3", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
-                
-                await server.InjectApplicationMessage("T", "6", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
-                await server.InjectApplicationMessage("T", "5", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
-                
-                await server.InjectApplicationMessage("T", "8", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
-                await server.InjectApplicationMessage("T", "7", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
-                
-                await server.InjectApplicationMessage("T", "9", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
-                
-                await LongTestDelay();
-                
-                // Create a new client for the existing message.
-                var client = await testEnvironment.ConnectClient(o => o.WithClientId("A").WithCleanSession(false));
-                var messages = testEnvironment.CreateApplicationMessageHandler(client);
-                
-                await LongTestDelay();
-                
-                var payloadSequence = messages.GeneratePayloadSequence();
-                Assert.AreEqual("0214365879", payloadSequence);
+            var client2 = await testEnvironment.ConnectClient();
+            await client2.PublishStringAsync("A");
 
-                // Disconnect and reconnect to make sure that the server will not send the messages twice.
-                await client.DisconnectAsync();
-                await LongTestDelay();
-                await client.ReconnectAsync();
-                await LongTestDelay();
-                
-                payloadSequence = messages.GeneratePayloadSequence();
-                Assert.AreEqual("0214365879", payloadSequence);
-            }
+            await LongTestDelay();
+
+            // Must be null because no event should be fired for QoS 0.
+            Assert.IsNull(eventArgs);
         }
-        
-        [TestMethod]
-        public async Task Fire_Event_On_Client_Acknowledges_QoS_0()
+    }
+
+    [TestMethod]
+    public async Task Fire_Event_On_Client_Acknowledges_QoS_1()
+    {
+        using (var testEnvironment = CreateTestEnvironment())
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            var server = await testEnvironment.StartServer();
+
+            ClientAcknowledgedPublishPacketEventArgs eventArgs = null;
+            server.ClientAcknowledgedPublishPacketAsync += args =>
             {
-                var server = await testEnvironment.StartServer();
+                eventArgs = args;
+                return CompletedTask.Instance;
+            };
 
-                ClientAcknowledgedPublishPacketEventArgs eventArgs = null;
-                server.ClientAcknowledgedPublishPacketAsync += args =>
-                {
-                    eventArgs = args;
-                    return CompletedTask.Instance;
-                };
+            var client1 = await testEnvironment.ConnectClient();
+            await client1.SubscribeAsync("A", MqttQualityOfServiceLevel.AtLeastOnce);
 
-                var client1 = await testEnvironment.ConnectClient();
-                await client1.SubscribeAsync("A");
+            var client2 = await testEnvironment.ConnectClient();
+            await client2.PublishStringAsync("A", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
 
-                var client2 = await testEnvironment.ConnectClient();
-                await client2.PublishStringAsync("A");
+            await LongTestDelay();
 
-                await LongTestDelay();
+            Assert.IsNotNull(eventArgs);
+            Assert.IsNotNull(eventArgs.PublishPacket);
+            Assert.IsNotNull(eventArgs.AcknowledgePacket);
+            Assert.IsTrue(eventArgs.IsCompleted);
 
-                // Must be null because no event should be fired for QoS 0.
-                Assert.IsNull(eventArgs);
-            }
+            Assert.AreEqual("A", eventArgs.PublishPacket.Topic);
         }
+    }
 
-        [TestMethod]
-        public async Task Fire_Event_On_Client_Acknowledges_QoS_1()
+    [TestMethod]
+    public async Task Fire_Event_On_Client_Acknowledges_QoS_2()
+    {
+        using (var testEnvironment = CreateTestEnvironment())
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            var server = await testEnvironment.StartServer();
+
+            var eventArgs = new List<ClientAcknowledgedPublishPacketEventArgs>();
+            server.ClientAcknowledgedPublishPacketAsync += args =>
             {
-                var server = await testEnvironment.StartServer();
-
-                ClientAcknowledgedPublishPacketEventArgs eventArgs = null;
-                server.ClientAcknowledgedPublishPacketAsync += args =>
+                lock (eventArgs)
                 {
-                    eventArgs = args;
-                    return CompletedTask.Instance;
-                };
+                    eventArgs.Add(args);
+                }
 
-                var client1 = await testEnvironment.ConnectClient();
-                await client1.SubscribeAsync("A", MqttQualityOfServiceLevel.AtLeastOnce);
+                return CompletedTask.Instance;
+            };
 
-                var client2 = await testEnvironment.ConnectClient();
-                await client2.PublishStringAsync("A", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
+            var client1 = await testEnvironment.ConnectClient();
+            await client1.SubscribeAsync("A", MqttQualityOfServiceLevel.ExactlyOnce);
 
-                await LongTestDelay();
+            var client2 = await testEnvironment.ConnectClient();
+            await client2.PublishStringAsync("A", qualityOfServiceLevel: MqttQualityOfServiceLevel.ExactlyOnce);
 
-                Assert.IsNotNull(eventArgs);
-                Assert.IsNotNull(eventArgs.PublishPacket);
-                Assert.IsNotNull(eventArgs.AcknowledgePacket);
-                Assert.IsTrue(eventArgs.IsCompleted);
+            await LongTestDelay();
 
-                Assert.AreEqual("A", eventArgs.PublishPacket.Topic);
-            }
+            Assert.AreEqual(1, eventArgs.Count);
+
+            var firstEvent = eventArgs[0];
+
+            Assert.IsNotNull(firstEvent);
+            Assert.IsNotNull(firstEvent.PublishPacket);
+            Assert.IsNotNull(firstEvent.AcknowledgePacket);
+            Assert.IsTrue(firstEvent.IsCompleted);
+
+            Assert.AreEqual("A", firstEvent.PublishPacket.Topic);
         }
+    }
 
-        [TestMethod]
-        public async Task Fire_Event_On_Client_Acknowledges_QoS_2()
+    [TestMethod]
+    public async Task Preserve_Message_Order_For_Queued_Messages()
+    {
+        using (var testEnvironment = CreateTestEnvironment())
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var server = await testEnvironment.StartServer();
+            var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
 
-                var eventArgs = new List<ClientAcknowledgedPublishPacketEventArgs>();
-                server.ClientAcknowledgedPublishPacketAsync += args =>
-                {
-                    lock (eventArgs)
-                    {
-                        eventArgs.Add(args);
-                    }
+            // Create a session which will contain the messages.
+            var dummyClient = await testEnvironment.ConnectClient(o => o.WithClientId("A").WithCleanSession(false));
+            await dummyClient.SubscribeAsync("#", MqttQualityOfServiceLevel.AtLeastOnce);
+            dummyClient.Dispose();
 
-                    return CompletedTask.Instance;
-                };
+            await LongTestDelay();
+            await LongTestDelay();
 
-                var client1 = await testEnvironment.ConnectClient();
-                await client1.SubscribeAsync("A", MqttQualityOfServiceLevel.ExactlyOnce);
+            // Now inject messages which are appended to the queue of the client.
+            await server.InjectApplicationMessage("T", "0", MqttQualityOfServiceLevel.AtLeastOnce);
 
-                var client2 = await testEnvironment.ConnectClient();
-                await client2.PublishStringAsync("A", qualityOfServiceLevel: MqttQualityOfServiceLevel.ExactlyOnce);
+            await server.InjectApplicationMessage("T", "2", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectApplicationMessage("T", "1", MqttQualityOfServiceLevel.AtLeastOnce);
 
-                await LongTestDelay();
+            await server.InjectApplicationMessage("T", "4", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectApplicationMessage("T", "3", MqttQualityOfServiceLevel.AtLeastOnce);
 
-                Assert.AreEqual(1, eventArgs.Count);
+            await server.InjectApplicationMessage("T", "6", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectApplicationMessage("T", "5", MqttQualityOfServiceLevel.AtLeastOnce);
 
-                var firstEvent = eventArgs[0];
+            await server.InjectApplicationMessage("T", "8", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectApplicationMessage("T", "7", MqttQualityOfServiceLevel.AtLeastOnce);
 
-                Assert.IsNotNull(firstEvent);
-                Assert.IsNotNull(firstEvent.PublishPacket);
-                Assert.IsNotNull(firstEvent.AcknowledgePacket);
-                Assert.IsTrue(firstEvent.IsCompleted);
+            await server.InjectApplicationMessage("T", "9", MqttQualityOfServiceLevel.AtLeastOnce);
 
-                Assert.AreEqual("A", firstEvent.PublishPacket.Topic);
-            }
+            await LongTestDelay();
+
+            // Create a new client for the existing message.
+            var client = await testEnvironment.ConnectClient(o => o.WithClientId("A").WithCleanSession(false));
+            var messages = testEnvironment.CreateApplicationMessageHandler(client);
+
+            await LongTestDelay();
+
+            var payloadSequence = messages.GeneratePayloadSequence();
+            Assert.AreEqual("0214365879", payloadSequence);
+
+            // Disconnect and reconnect to make sure that the server will not send the messages twice.
+            await client.DisconnectAsync();
+            await LongTestDelay();
+            await client.ReconnectAsync();
+            await LongTestDelay();
+
+            payloadSequence = messages.GeneratePayloadSequence();
+            Assert.AreEqual("0214365879", payloadSequence);
         }
     }
 }

@@ -17,7 +17,7 @@
       clientId: 'mqttnet_web_client'
     }
 
-    const client  = mqtt.connect('ws://localhost:5049/mqtt')
+    const client  = mqtt.connect('ws://localhost:5000/mqtt')
 
     client.on('connect', function () {
       console.log('Connected')

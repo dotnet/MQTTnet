@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Adapter;
-using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
@@ -22,7 +21,7 @@ namespace MQTTnet.Tests.Server
             using (var testEnvironment = CreateTestEnvironment())
             {
                 testEnvironment.IgnoreClientLogErrors = true;
-                
+
                 await testEnvironment.StartServer();
 
                 var publishedApplicationMessages = new List<MqttApplicationMessage>();
@@ -53,7 +52,7 @@ namespace MQTTnet.Tests.Server
                 using (var validClient = testEnvironment.CreateClient())
                 {
                     await validClient.ConnectAsync(
-                        testEnvironment.Factory.CreateClientOptionsBuilder()
+                        testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                             .WithTcpServer("localhost", testEnvironment.ServerPort)
                             .WithCredentials("SECRET")
                             .WithClientId("CLIENT")
@@ -68,7 +67,7 @@ namespace MQTTnet.Tests.Server
                         using (var invalidClient = testEnvironment.CreateClient())
                         {
                             await invalidClient.ConnectAsync(
-                                testEnvironment.Factory.CreateClientOptionsBuilder()
+                                testEnvironment.ClientFactory.CreateClientOptionsBuilder()
                                     .WithTcpServer("localhost", testEnvironment.ServerPort)
                                     .WithCredentials("???")
                                     .WithClientId("CLIENT")
@@ -81,15 +80,15 @@ namespace MQTTnet.Tests.Server
                     }
 
                     await LongTestDelay();
-                    
+
                     await validClient.PublishStringAsync("HELLO 2");
-                    
+
                     await LongTestDelay();
-                    
+
                     await validClient.PublishStringAsync("HELLO 3");
-                    
+
                     await LongTestDelay();
-                    
+
                     Assert.AreEqual(3, publishedApplicationMessages.Count);
                     Assert.AreEqual(1, testEnvironment.Server.GetClientsAsync().GetAwaiter().GetResult().Count);
                 }
@@ -133,7 +132,6 @@ namespace MQTTnet.Tests.Server
                 var ex = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(async () => await client.ConnectAsync(clientOptions));
                 Assert.IsInstanceOfType(ex.InnerException, typeof(MqttProtocolViolationException));
                 Assert.AreEqual("Error while authenticating. If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].", ex.Message, false);
-                Assert.AreEqual(MqttClientConnectResultCode.UnspecifiedError, ex.ResultCode);
             }
         }
 
@@ -164,8 +162,8 @@ namespace MQTTnet.Tests.Server
 
                 var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).WithCredentials(userName, password).Build();
 
-                var ex = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(() => client.ConnectAsync(clientOptions));
-                Assert.AreEqual(MqttClientConnectResultCode.BadUserNameOrPassword, ex.Result.ResultCode);
+                var response = await client.ConnectAsync(clientOptions);
+                Assert.AreEqual(MqttClientConnectResultCode.BadUserNameOrPassword, response.ResultCode);
             }
         }
     }

@@ -5,7 +5,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Client;
+using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
@@ -49,7 +49,7 @@ namespace MQTTnet.Tests.Server
 
                 var client = await testEnvironment.ConnectClient();
 
-                var unsubscribeOptions = testEnvironment.Factory.CreateUnsubscribeOptionsBuilder().WithTopicFilter("X").WithUserProperty("A", "1").Build();
+                var unsubscribeOptions = testEnvironment.ClientFactory.CreateUnsubscribeOptionsBuilder().WithTopicFilter("X").WithUserProperty("A", "1").Build();
                 await client.UnsubscribeAsync(unsubscribeOptions);
 
                 CollectionAssert.AreEqual(unsubscribeOptions.UserProperties.ToList(), eventArgs.UserProperties);

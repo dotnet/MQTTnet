@@ -2,8 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#if !WINDOWS_UWP
 using System;
+using System.Buffers;
 using System.IO;
 using System.Net;
 using System.Net.Security;
@@ -13,24 +13,20 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Channel;
-using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Implementations
 {
     public sealed class MqttTcpChannel : IMqttChannel
     {
         readonly MqttClientOptions _clientOptions;
-        readonly Action _disposeAction;
         readonly MqttClientTcpOptions _tcpOptions;
 
         Stream _stream;
 
         public MqttTcpChannel()
         {
-            _disposeAction = Dispose;
         }
 
         public MqttTcpChannel(MqttClientOptions clientOptions) : this()
@@ -99,29 +95,6 @@ namespace MQTTnet.Implementations
                     socket.DualMode = _tcpOptions.DualMode.Value;
                 }
 
-                // This block is only for backward compatibility.
-                if (_tcpOptions.RemoteEndpoint == null && !string.IsNullOrEmpty(_tcpOptions.Server))
-                {
-                    int port;
-                    if (_tcpOptions.Port.HasValue)
-                    {
-                        port = _tcpOptions.Port.Value;
-                    }
-                    else
-                    {
-                        if (_tcpOptions.TlsOptions?.UseTls == true)
-                        {
-                            port = MqttPorts.Secure;
-                        }
-                        else
-                        {
-                            port = MqttPorts.Default;
-                        }
-                    }
-
-                    _tcpOptions.RemoteEndpoint = new DnsEndPoint(_tcpOptions.Server, port, AddressFamily.Unspecified);
-                }
-
                 await socket.ConnectAsync(_tcpOptions.RemoteEndpoint, cancellationToken).ConfigureAwait(false);
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -160,7 +133,6 @@ namespace MQTTnet.Implementations
 
                     try
                     {
-#if NETCOREAPP3_1_OR_GREATER
                         var sslOptions = new SslClientAuthenticationOptions
                         {
                             ApplicationProtocols = _tcpOptions.TlsOptions.ApplicationProtocols,
@@ -175,7 +147,6 @@ namespace MQTTnet.Implementations
                             AllowRenegotiation = _tcpOptions.TlsOptions.AllowRenegotiation
                         };
 
-#if NET7_0_OR_GREATER
                         if (_tcpOptions.TlsOptions.TrustChain?.Count > 0)
                         {
                             sslOptions.CertificateChainPolicy = new X509ChainPolicy
@@ -187,25 +158,12 @@ namespace MQTTnet.Implementations
 
                             sslOptions.CertificateChainPolicy.CustomTrustStore.AddRange(_tcpOptions.TlsOptions.TrustChain);
                         }
-#endif
 
                         await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
-#else
-                        await sslStream.AuthenticateAsClientAsync(
-                                targetHost,
-                                LoadCertificates(),
-                                _tcpOptions.TlsOptions.SslProtocol,
-                                !_tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors)
-                            .ConfigureAwait(false);
-#endif
                     }
                     catch
                     {
-#if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
                         await sslStream.DisposeAsync().ConfigureAwait(false);
-#else
-                        sslStream.Dispose();
-#endif
 
                         throw;
                     }
@@ -239,9 +197,7 @@ namespace MQTTnet.Implementations
             // https://stackoverflow.com/questions/3601521/should-i-manually-dispose-the-socket-after-closing-it
             try
             {
-#if !NETSTANDARD1_3
                 _stream?.Close();
-#endif
                 _stream?.Dispose();
             }
             catch (ObjectDisposedException)
@@ -274,15 +230,7 @@ namespace MQTTnet.Implementations
                     return 0;
                 }
 
-#if NETCOREAPP3_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
                 return await stream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
-#else
-                // Workaround for: https://github.com/dotnet/corefx/issues/24430
-                using (cancellationToken.Register(_disposeAction))
-                {
-                    return await stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-                }
-#endif
             }
             catch (ObjectDisposedException)
             {
@@ -300,7 +248,7 @@ namespace MQTTnet.Implementations
             }
         }
 
-        public async Task WriteAsync(ArraySegment<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
+        public async Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -313,15 +261,10 @@ namespace MQTTnet.Implementations
                     throw new MqttCommunicationException("The TCP connection is closed.");
                 }
 
-#if NETCOREAPP3_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-                await stream.WriteAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
-#else
-                // Workaround for: https://github.com/dotnet/corefx/issues/24430
-                using (cancellationToken.Register(_disposeAction))
+                foreach (var segment in buffer)
                 {
-                    await stream.WriteAsync(buffer.Array, buffer.Offset, buffer.Count, cancellationToken).ConfigureAwait(false);
+                    await stream.WriteAsync(segment, cancellationToken).ConfigureAwait(false);
                 }
-#endif
             }
             catch (ObjectDisposedException)
             {
@@ -383,4 +326,3 @@ namespace MQTTnet.Implementations
         }
     }
 }
-#endif

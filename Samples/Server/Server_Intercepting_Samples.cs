@@ -22,10 +22,10 @@ public static class Server_Intercepting_Samples
          * Please see _Server_Simple_Samples_ for more details on how to start a server.
          */
 
-        var mqttFactory = new MqttFactory();
+        var mqttServerFactory = new MqttServerFactory();
         var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
-        using (var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions))
+        using (var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions))
         {
             mqttServer.InterceptingPublishAsync += args =>
             {

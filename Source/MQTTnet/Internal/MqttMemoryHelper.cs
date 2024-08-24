@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 
 namespace MQTTnet.Internal
@@ -8,22 +9,79 @@ namespace MQTTnet.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Copy(byte[] source, int sourceIndex, byte[] destination, int destinationIndex, int length)
         {
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
             source.AsSpan(sourceIndex, length).CopyTo(destination.AsSpan(destinationIndex, length));
-#elif NET461_OR_GREATER || NETSTANDARD1_3_OR_GREATER
-            unsafe
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Copy(ReadOnlySequence<byte> sequence, int sourceIndex, byte[] destination, int destinationIndex, int length)
+        {
+            sequence.Slice(sourceIndex).CopyTo(destination.AsSpan(destinationIndex, length));
+        }
+
+        public static bool SequenceEqual(ArraySegment<byte> source, ArraySegment<byte> target)
+        {
+            return source.AsSpan().SequenceEqual(target);
+        }
+
+        public static bool SequenceEqual(ReadOnlySequence<byte> source, ReadOnlySequence<byte> target)
+        {
+            if (source.Length != target.Length)
             {
-                fixed (byte* sourceHandle = &source[sourceIndex])
+                return false;
+            }
+
+            long comparedLength = 0;
+            long length = source.Length;
+
+            int sourceOffset = 0;
+            int targetOffset = 0;
+
+            var sourceEnumerator = source.GetEnumerator();
+            var targetEnumerator = target.GetEnumerator();
+
+            ReadOnlyMemory<byte> sourceSegment = sourceEnumerator.Current;
+            ReadOnlyMemory<byte> targetSegment = targetEnumerator.Current;
+
+            while (true)
+            {
+                int compareLength = Math.Min(sourceSegment.Length - sourceOffset, targetSegment.Length - targetOffset);
+
+                if (compareLength > 0 &&
+                    !sourceSegment.Span.Slice(sourceOffset, compareLength).SequenceEqual(targetSegment.Span.Slice(targetOffset, compareLength)))
                 {
-                    fixed (byte* destinationHandle = &destination[destinationIndex])
+                    return false;
+                }
+
+                comparedLength += compareLength;
+                if (comparedLength >= length)
+                {
+                    return true;
+                }
+
+                sourceOffset += compareLength;
+                if (sourceOffset >= sourceSegment.Length)
+                {
+                    if (!sourceEnumerator.MoveNext())
                     {
-                        System.Buffer.MemoryCopy(sourceHandle, destinationHandle, length, length);
+                        return false;
                     }
+
+                    sourceSegment = sourceEnumerator.Current;
+                    sourceOffset = 0;
+                }
+
+                targetOffset += compareLength;
+                if (targetOffset >= targetSegment.Length)
+                {
+                    if (!targetEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    targetSegment = targetEnumerator.Current;
+                    targetOffset = 0;
                 }
             }
-#else
-            Array.Copy(source, sourceIndex, destination, destinationIndex, length);
-#endif
         }
     }
 }

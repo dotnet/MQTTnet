@@ -4,12 +4,10 @@
 
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using MQTTnet.Client;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using MQTTnet.AspNetCore.Client;
 using MQTTnet.AspNetCore;
-using MQTTnet.Diagnostics;
+using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Benchmarks
 {
@@ -38,7 +36,7 @@ namespace MQTTnet.Benchmarks
                    })
                    .Build();
 
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             _mqttClient = factory.CreateMqttClient(new MqttNetEventLogger(), new MqttClientConnectionContextFactory());
 
             _host.StartAsync().GetAwaiter().GetResult();

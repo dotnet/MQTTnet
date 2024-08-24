@@ -3,55 +3,34 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using MQTTnet.Client;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using MQTTnet.Server;
 
-namespace MQTTnet.Formatter
+namespace MQTTnet.Formatter;
+
+public static class MqttPubRecPacketFactory
 {
-    public sealed class MqttPubRecPacketFactory
+    public static MqttPubRecPacket Create(MqttApplicationMessageReceivedEventArgs applicationMessageReceivedEventArgs)
     {
-        public MqttPubRecPacket Create(MqttApplicationMessageReceivedEventArgs applicationMessageReceivedEventArgs)
+        if (applicationMessageReceivedEventArgs == null)
         {
-            if (applicationMessageReceivedEventArgs == null)
-            {
-                throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
-            }
-
-            var pubRecPacket = Create(applicationMessageReceivedEventArgs.PublishPacket, applicationMessageReceivedEventArgs.ReasonCode);
-            pubRecPacket.UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties;
-
-            return pubRecPacket;
+            throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
         }
 
-        public MqttPacket Create(MqttPublishPacket publishPacket, DispatchApplicationMessageResult dispatchApplicationMessageResult)
+        var pubRecPacket = Create(applicationMessageReceivedEventArgs.PublishPacket, applicationMessageReceivedEventArgs.ReasonCode);
+        pubRecPacket.UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties;
+
+        return pubRecPacket;
+    }
+
+    static MqttPubRecPacket Create(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode applicationMessageReceivedReasonCode)
+    {
+        var pubRecPacket = new MqttPubRecPacket
         {
-            if (publishPacket == null)
-            {
-                throw new ArgumentNullException(nameof(publishPacket));
-            }
+            PacketIdentifier = publishPacket.PacketIdentifier,
+            ReasonCode = (MqttPubRecReasonCode)(int)applicationMessageReceivedReasonCode
+        };
 
-            var pubRecPacket = new MqttPubRecPacket
-            {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubRecReasonCode)dispatchApplicationMessageResult.ReasonCode,
-                ReasonString = dispatchApplicationMessageResult.ReasonString,
-                UserProperties = dispatchApplicationMessageResult.UserProperties
-            };
-
-            return pubRecPacket;
-        }
-
-        static MqttPubRecPacket Create(MqttPublishPacket publishPacket, MqttApplicationMessageReceivedReasonCode applicationMessageReceivedReasonCode)
-        {
-            var pubRecPacket = new MqttPubRecPacket
-            {
-                PacketIdentifier = publishPacket.PacketIdentifier,
-                ReasonCode = (MqttPubRecReasonCode)(int)applicationMessageReceivedReasonCode
-            };
-
-            return pubRecPacket;
-        }
+        return pubRecPacket;
     }
 }

@@ -6,15 +6,13 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 
 namespace MQTTnet
 {
     public sealed class MqttApplicationMessage
     {
-        byte[] _payloadCache;
-        ArraySegment<byte> _payloadSegment = EmptyBuffer.ArraySegment;
-
         /// <summary>
         ///     Gets or sets the content type.
         ///     The content type must be a UTF-8 encoded string. The content type value identifies the kind of UTF-8 encoded
@@ -53,53 +51,20 @@ namespace MQTTnet
         public uint MessageExpiryInterval { get; set; }
 
         /// <summary>
-        /// Gets or sets the payload.
-        /// The payload is the data bytes sent via the MQTT protocol.
-        /// </summary>
-        [Obsolete("Use PayloadSegment instead. This property will be removed in a future release.")]
-        public byte[] Payload
-        {
-            get
-            {
-                if (_payloadSegment.Array == null)
-                {
-                    return null;
-                }
-                
-                // just reference from _payloadSegment.Array
-                if (_payloadSegment.Count == _payloadSegment.Array.Length)
-                {
-                    return _payloadSegment.Array;
-                }
-
-                // copy from _payloadSegment
-                if (_payloadCache == null)
-                {
-                    _payloadCache = new byte[_payloadSegment.Count];
-                    MqttMemoryHelper.Copy(_payloadSegment.Array, _payloadSegment.Offset, _payloadCache, 0, _payloadCache.Length);
-                }
-
-                return _payloadCache;
-            }
-            set
-            {
-                _payloadCache = null;
-                _payloadSegment = value == null || value.Length == 0 ? EmptyBuffer.ArraySegment : new ArraySegment<byte>(value);
-            }
-        }
-
-        /// <summary>
-        /// Get or set ArraySegment style of Payload.
+        ///     Set an ArraySegment as Payload.
         /// </summary>
         public ArraySegment<byte> PayloadSegment
         {
-            get => _payloadSegment;
-            set
-            {
-                _payloadCache = null;
-                _payloadSegment = value;
-            }
+            set { Payload = new ReadOnlySequence<byte>(value); }
         }
+
+        /// <summary>
+        ///     Get or set ReadOnlySequence style of Payload.
+        ///     This payload type is used internally and is recommended for public use.
+        ///     It can be used in combination with a RecyclableMemoryStream to publish
+        ///     large buffered messages without allocating large chunks of memory.
+        /// </summary>
+        public ReadOnlySequence<byte> Payload { get; set; } = EmptyBuffer.ReadOnlySequence;
 
         /// <summary>
         ///     Gets or sets the payload format indicator.

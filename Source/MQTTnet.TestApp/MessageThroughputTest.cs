@@ -1,4 +1,3 @@
-using MQTTnet.Client;
 using MQTTnet.Server;
 using System.Collections.Generic;
 using System;
@@ -77,8 +76,9 @@ namespace MQTTnet.TestApp
             new TopicGenerator().Generate(NumPublishers, NumTopicsPerPublisher, out _topicsByPublisher, out _singleWildcardTopicsByPublisher, out _multiWildcardTopicsByPublisher);
 
             var serverOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
-            var factory = new MqttFactory();
-            _mqttServer = factory.CreateMqttServer(serverOptions);
+            var mqttClientFactory = new MqttClientFactory();
+            var mqttServerFactory = new MqttServerFactory();
+            _mqttServer = mqttServerFactory.CreateMqttServer(serverOptions);
             await _mqttServer.StartAsync();
 
             Console.WriteLine();
@@ -90,7 +90,7 @@ namespace MQTTnet.TestApp
             foreach (var pt in _topicsByPublisher)
             {
                 var publisherName = pt.Key;
-                var mqttClient = factory.CreateMqttClient();
+                var mqttClient = mqttClientFactory.CreateMqttClient();
                 var publisherOptions = new MqttClientOptionsBuilder()
                     .WithTcpServer("localhost")
                     .WithClientId(publisherName)
@@ -106,7 +106,7 @@ namespace MQTTnet.TestApp
             _mqttSubscriberClients = new List<IMqttClient>();
             for (var i = 0; i < NumSubscribers; ++i)
             {
-                var mqttClient = factory.CreateMqttClient();
+                var mqttClient = mqttClientFactory.CreateMqttClient();
                 var subsriberOptions = new MqttClientOptionsBuilder()
                     .WithTcpServer("localhost")
                     .WithClientId("sub" + i)

@@ -4,6 +4,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Server;
+using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Tests
 {

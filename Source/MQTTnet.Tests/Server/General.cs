@@ -2,19 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Internal;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Adapter;
-using MQTTnet.Client;
-using MQTTnet.Internal;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
-using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Server
 {
@@ -60,7 +59,7 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 
                 // Create the session including the subscription.
-                var client1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("a").WithCleanSession(false));
+                var client1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("a").WithCleanSession(false).WithSessionExpiryInterval(60));
                 await client1.SubscribeAsync("x");
                 await client1.DisconnectAsync();
                 await Task.Delay(500);
@@ -68,7 +67,7 @@ namespace MQTTnet.Tests.Server
                 var clientStatus = await server.GetClientsAsync();
                 Assert.AreEqual(0, clientStatus.Count);
 
-                var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b").WithCleanSession(false));
+                var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b").WithCleanSession(false).WithSessionExpiryInterval(60));
                 await client2.PublishStringAsync("x", "1");
                 await client2.PublishStringAsync("x", "2");
                 await client2.PublishStringAsync("x", "3");
@@ -101,8 +100,10 @@ namespace MQTTnet.Tests.Server
                     return CompletedTask.Instance;
                 };
 
-                var connectingFailedException = await Assert.ThrowsExceptionAsync<MqttConnectingFailedException>(() => testEnvironment.ConnectClient());
-                Assert.AreEqual(MqttClientConnectResultCode.NotAuthorized, connectingFailedException.ResultCode);
+                var client = testEnvironment.CreateClient();
+                var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptions());
+
+                Assert.AreEqual(MqttClientConnectResultCode.NotAuthorized, response.ResultCode);
             }
         }
 
@@ -314,7 +315,7 @@ namespace MQTTnet.Tests.Server
                 var isIntercepted = false;
                 c2.ApplicationMessageReceivedAsync += e =>
                 {
-                    isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment.ToArray()), StringComparison.Ordinal) == 0;
+                    isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.Payload), StringComparison.Ordinal) == 0;
                     return CompletedTask.Instance;
                 };
 
@@ -780,7 +781,7 @@ namespace MQTTnet.Tests.Server
                 var client1 = await testEnvironment.ConnectClient();
                 client1.ApplicationMessageReceivedAsync += e =>
                 {
-                    receivedBody = e.ApplicationMessage.PayloadSegment.ToArray();
+                    receivedBody = e.ApplicationMessage.Payload.ToArray();
                     return CompletedTask.Instance;
                 };
 
@@ -794,7 +795,7 @@ namespace MQTTnet.Tests.Server
                 Assert.IsTrue(longBody.SequenceEqual(receivedBody ?? new byte[0]));
             }
         }
-        
+
         [TestMethod]
         public async Task Set_Subscription_At_Server()
         {

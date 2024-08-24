@@ -9,30 +9,28 @@ using System.Threading.Tasks;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Adapter
+namespace MQTTnet.Adapter;
+
+public interface IMqttChannelAdapter : IDisposable
 {
-    public interface IMqttChannelAdapter : IDisposable
-    {
-        string Endpoint { get; }
+    long BytesReceived { get; }
 
-        bool IsSecureConnection { get; }
+    long BytesSent { get; }
 
-        X509Certificate2 ClientCertificate { get; }
+    X509Certificate2 ClientCertificate { get; }
+    string Endpoint { get; }
 
-        MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
+    bool IsSecureConnection { get; }
 
-        long BytesSent { get; }
+    MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
-        long BytesReceived { get; }
+    Task ConnectAsync(CancellationToken cancellationToken);
 
-        Task ConnectAsync(CancellationToken cancellationToken);
+    Task DisconnectAsync(CancellationToken cancellationToken);
 
-        Task DisconnectAsync(CancellationToken cancellationToken);
+    Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken);
 
-        Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken);
+    void ResetStatistics();
 
-        Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken);
-
-        void ResetStatistics();
-    }
+    Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken);
 }

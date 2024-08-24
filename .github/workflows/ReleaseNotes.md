@@ -1,1 +1,4 @@
-* [Client] Restored _Server_ and _Port_ behavior of client options (#2005).
+* nuget: Changed code signing and nuget certificate (**BREAKING CHANGE**).
+* TopicTemplates: Updated samples, parameter validation (#2022).
+* ManagedClient: Switch SubscribeAsync/UnsubscribeAsync to IEnumerable<string> (#2026).
+* Server: Fix _LoadingRetainedMessageAsync_ not executed (#2025).

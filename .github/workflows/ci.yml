@@ -4,12 +4,11 @@ on: [push, pull_request]
 
 env:
   VERSION: "4.3.7.${{github.run_number}}"
-  PACKAGE_SUFFIX: ""
 
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - name: Setup Windows SDK
@@ -25,7 +24,10 @@ jobs:
             6.0.x
             7.0.x
 
-      - name: Checkout code
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Signing Certificate
@@ -40,55 +42,14 @@ jobs:
       - name: Build solution
         run: msbuild MQTTnet.sln /t:Build /p:Configuration="Release" /verbosity:m /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
 
-     # - name: Setup VSTest
-     #   uses: darenm/Setup-VSTest@v1
+      - name: Setup VSTest
+        uses: darenm/Setup-VSTest@v1
 
-     # - name: Core Tests
-     #   run: vstest.console.exe Source\MQTTnet.Tests\bin\Release\net7.0\MQTTnet.Tests.dll
+      - name: Core Tests
+        run: vstest.console.exe Source\MQTTnet.Tests\bin\Release\net7.0\MQTTnet.Tests.dll
 
-      #- name: ASP.NET Tests
-      #  run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
-
-      - name: Upload nuget packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: nugets
-          path: |
-            ${{ github.workspace }}/Source/**/*.nupkg
-            ${{ github.workspace }}/Source/**/*.snupkg
-
-  test:
-    runs-on: windows-latest
-
-    steps:
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.x
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Execute tests
-        run: dotnet test --framework net7.0 Source/MQTTnet.Tests/MQTTnet.Tests.csproj
-
-  sign:
-    needs: build
-    runs-on: windows-latest # Code signing must run on a Windows agent for Authenticode signing (dll/exe)
-    if: github.repository == 'dotnet/MQTTnet'
-    steps:
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            6.0.x
-
-      - name: Download nuget packages
-        uses: actions/download-artifact@v4
-        with:
-          name: nugets
-          path: nugets
+      - name: ASP.NET Tests
+        run: vstest.console.exe Source\MQTTnet.AspNetCore.Tests\bin\Release\netcoreapp3.1\MQTTnet.AspNetCore.Tests.dll
 
       - name: Install sign CLI tool
         run: dotnet tool install --tool-path . sign --version 0.9.0-beta.23127.3
@@ -98,7 +59,7 @@ jobs:
         run: >
           ./sign code azure-key-vault `
           "**/*.nupkg" `
-          --base-directory "${{ github.workspace }}\nugets" `
+          --base-directory "${{ github.workspace }}/Source" `
           --publisher-name "MQTTnet" `
           --description "MQTTnet" `
           --description-url "https://github.com/dotnet/MQTTnet" `
@@ -113,35 +74,9 @@ jobs:
         with:
           name: signed-nugets
           path: |
-            ${{ github.workspace }}\nugets\**\*.nupkg
-            ${{ github.workspace }}\nugets\**\*.snupkg
+            ${{ github.workspace }}/Source/**/*.nupkg
+            ${{ github.workspace }}/Source/**/*.snupkg
 
-  publish-myget:
-    if: ${{ github.event_name == 'push' }}
-    needs: sign
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download signed nuget packages
-        uses: actions/download-artifact@v4
-        with:
-          name: signed-nugets
-          path: nugets
-
-      - name: Publish myget.com nugets
-        run: dotnet nuget push ${{ github.workspace }}/nugets/**/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
-
-  publish-nuget:
-    if: ${{ github.event_name == 'release' }}
-    needs: sign
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download signed nuget packages
-        uses: actions/download-artifact@v4
-        with:
-          name: signed-nugets
-          path: nugets
-
-      - name: Publish nuget.org nugets
-        run: dotnet nuget push ${{ github.workspace }}/nugets/**/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Publish MyGet nugets
+        if: ${{ github.event_name == 'push' }}
+        run: dotnet nuget push ${{ github.workspace }}/Source/**/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate

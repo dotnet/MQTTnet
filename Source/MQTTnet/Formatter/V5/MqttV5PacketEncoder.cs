@@ -67,6 +67,11 @@ public sealed class MqttV5PacketEncoder
 
     byte EncodeAuthPacket(MqttAuthPacket packet)
     {
+        _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
+        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+        _propertiesWriter.WriteReasonString(packet.ReasonString);
+        _propertiesWriter.WriteUserProperties(packet.UserProperties);
+
         // MQTT spec: The Reason Code and Property Length can be omitted if the Reason Code is 0x00 (Success) and there are no Properties.
         // In this case the AUTH has a Remaining Length of 0.
         if (packet.ReasonCode == MqttAuthenticateReasonCode.Success && _propertiesWriter.Length == 0)
@@ -75,11 +80,6 @@ public sealed class MqttV5PacketEncoder
         }
 
         _bufferWriter.WriteByte((byte)packet.ReasonCode);
-
-        _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
-        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
-        _propertiesWriter.WriteReasonString(packet.ReasonString);
-        _propertiesWriter.WriteUserProperties(packet.UserProperties);
 
         _propertiesWriter.WriteTo(_bufferWriter);
         _propertiesWriter.Reset();

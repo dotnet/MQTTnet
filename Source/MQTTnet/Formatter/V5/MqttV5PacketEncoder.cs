@@ -13,7 +13,7 @@ namespace MQTTnet.Formatter.V5
     public sealed class MqttV5PacketEncoder
     {
         const int FixedHeaderSize = 1;
-        
+
         readonly MqttBufferWriter _bufferWriter;
         readonly MqttV5PropertiesWriter _propertiesWriter = new MqttV5PropertiesWriter(new MqttBufferWriter(1024, 4096));
 
@@ -64,12 +64,19 @@ namespace MQTTnet.Formatter.V5
 
         byte EncodeAuthPacket(MqttAuthPacket packet)
         {
-            _bufferWriter.WriteByte((byte)packet.ReasonCode);
-
             _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
             _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
             _propertiesWriter.WriteReasonString(packet.ReasonString);
             _propertiesWriter.WriteUserProperties(packet.UserProperties);
+
+            // MQTT spec: The Reason Code and Property Length can be omitted if the Reason Code is 0x00 (Success) and there are no Properties.
+            // In this case the AUTH has a Remaining Length of 0.
+            if (packet.ReasonCode == MqttAuthenticateReasonCode.Success && _propertiesWriter.Length == 0)
+            {
+                return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Auth);
+            }
+
+            _bufferWriter.WriteByte((byte)packet.ReasonCode);
 
             _propertiesWriter.WriteTo(_bufferWriter);
             _propertiesWriter.Reset();
@@ -526,7 +533,7 @@ namespace MQTTnet.Formatter.V5
 
         static void ThrowIfPacketIdentifierIsInvalid(ushort packetIdentifier, MqttPacket packet)
         {
-            // SUBSCRIBE, UNSUBSCRIBE, and PUBLISH(in cases where QoS > 0) Control Packets MUST contain a non-zero 16 - bit Packet Identifier[MQTT - 2.3.1 - 1]. 
+            // SUBSCRIBE, UNSUBSCRIBE, and PUBLISH(in cases where QoS > 0) Control Packets MUST contain a non-zero 16 - bit Packet Identifier[MQTT - 2.3.1 - 1].
 
             if (packetIdentifier == 0)
             {

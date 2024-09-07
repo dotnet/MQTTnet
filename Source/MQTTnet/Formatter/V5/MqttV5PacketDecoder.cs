@@ -68,12 +68,12 @@ namespace MQTTnet.Formatter.V5
 
         MqttPacket DecodeAuthPacket(ArraySegment<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
-
             _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
 
             var packet = new MqttAuthPacket();
 
+            // MQTT spec: The Reason Code and Property Length can be omitted if the Reason Code is 0x00 (Success) and there are no Properties.
+            // In this case the AUTH has a Remaining Length of 0.
             if (_bufferReader.EndOfStream)
             {
                 packet.ReasonCode = MqttAuthenticateReasonCode.Success;

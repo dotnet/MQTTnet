@@ -142,12 +142,14 @@ namespace MQTTnet.Implementations
             set => _socket.SendTimeout = value;
         }
 
-        public async Task<CrossPlatformSocket> AcceptAsync()
+        public async Task<CrossPlatformSocket> AcceptAsync(CancellationToken cancellationToken)
         {
             try
             {
 #if NET452 || NET461
                 var clientSocket = await Task.Factory.FromAsync(_socket.BeginAccept, _socket.EndAccept, null).ConfigureAwait(false);
+#elif NET7_0_OR_GREATER
+                var clientSocket = await _socket.AcceptAsync(cancellationToken).ConfigureAwait(false);
 #else
                 var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
 #endif

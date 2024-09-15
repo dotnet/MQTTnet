@@ -136,7 +136,7 @@ namespace MQTTnet.Server.Internal.Adapter
             {
                 try
                 {
-                    var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
+                    var clientSocket = await _socket.AcceptAsync(cancellationToken).ConfigureAwait(false);
                     if (clientSocket == null)
                     {
                         continue;

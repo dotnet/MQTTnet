@@ -108,11 +108,11 @@ public sealed class CrossPlatformSocket : IDisposable
         set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, value);
     }
 
-    public async Task<CrossPlatformSocket> AcceptAsync()
+    public async Task<CrossPlatformSocket> AcceptAsync(CancellationToken cancellationToken)
     {
         try
         {
-            var clientSocket = await _socket.AcceptAsync().ConfigureAwait(false);
+            var clientSocket = await _socket.AcceptAsync(cancellationToken).ConfigureAwait(false);
             return new CrossPlatformSocket(clientSocket);
         }
         catch (ObjectDisposedException)

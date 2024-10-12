@@ -12,10 +12,7 @@ public static class MqttPubRecPacketFactory
 {
     public static MqttPubRecPacket Create(MqttApplicationMessageReceivedEventArgs applicationMessageReceivedEventArgs)
     {
-        if (applicationMessageReceivedEventArgs == null)
-        {
-            throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
-        }
+        ArgumentNullException.ThrowIfNull(applicationMessageReceivedEventArgs);
 
         var pubRecPacket = Create(applicationMessageReceivedEventArgs.PublishPacket, applicationMessageReceivedEventArgs.ReasonCode);
         pubRecPacket.UserProperties = applicationMessageReceivedEventArgs.ResponseUserProperties;

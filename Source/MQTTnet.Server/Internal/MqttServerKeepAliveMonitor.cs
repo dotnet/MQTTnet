@@ -27,10 +27,7 @@ namespace MQTTnet.Server.Internal
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _sessionsManager = sessionsManager ?? throw new ArgumentNullException(nameof(sessionsManager));
 
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger));
-            }
+            ArgumentNullException.ThrowIfNull(logger);
 
             _logger = logger.WithSource(nameof(MqttServerKeepAliveMonitor));
         }

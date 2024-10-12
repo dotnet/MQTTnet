@@ -50,10 +50,7 @@ namespace MQTTnet.Server.Internal
 
         public void HandleReceivedPacket(MqttPacket packet)
         {
-            if (packet == null)
-            {
-                throw new ArgumentNullException(nameof(packet));
-            }
+            ArgumentNullException.ThrowIfNull(packet);
 
             // This class is tracking all values from Clients perspective!
             LastPacketSentTimestamp = DateTime.UtcNow;
@@ -74,10 +71,7 @@ namespace MQTTnet.Server.Internal
 
         public void HandleSentPacket(MqttPacket packet)
         {
-            if (packet == null)
-            {
-                throw new ArgumentNullException(nameof(packet));
-            }
+            ArgumentNullException.ThrowIfNull(packet);
 
             // This class is tracking all values from Clients perspective!
             LastPacketReceivedTimestamp = DateTime.UtcNow;

@@ -38,10 +38,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public MqttClientSessionsManager(MqttServerOptions options, MqttRetainedMessagesManager retainedMessagesManager, MqttServerEventContainer eventContainer, IMqttNetLogger logger)
     {
-        if (logger == null)
-        {
-            throw new ArgumentNullException(nameof(logger));
-        }
+        ArgumentNullException.ThrowIfNull(logger);
 
         _logger = logger.WithSource(nameof(MqttClientSessionsManager));
         _rootLogger = logger;
@@ -53,10 +50,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public async Task CloseAllConnections(MqttServerClientDisconnectOptions options)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         List<MqttConnectedClient> connections;
         lock (_clients)
@@ -481,15 +475,8 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public async Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
     {
-        if (clientId == null)
-        {
-            throw new ArgumentNullException(nameof(clientId));
-        }
-
-        if (topicFilters == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilters));
-        }
+        ArgumentNullException.ThrowIfNull(clientId);
+        ArgumentNullException.ThrowIfNull(topicFilters);
 
         var fakeSubscribePacket = new MqttSubscribePacket();
         fakeSubscribePacket.TopicFilters.AddRange(topicFilters);
@@ -510,15 +497,8 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public Task UnsubscribeAsync(string clientId, ICollection<string> topicFilters)
     {
-        if (clientId == null)
-        {
-            throw new ArgumentNullException(nameof(clientId));
-        }
-
-        if (topicFilters == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilters));
-        }
+        ArgumentNullException.ThrowIfNull(clientId);
+        ArgumentNullException.ThrowIfNull(topicFilters);
 
         var fakeUnsubscribePacket = new MqttUnsubscribePacket();
         fakeUnsubscribePacket.TopicFilters.AddRange(topicFilters);

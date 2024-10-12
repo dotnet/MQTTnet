@@ -28,7 +28,7 @@ namespace MQTTnet.Internal
 
         public void Enqueue(TItem item)
         {
-            if (item == null) throw new ArgumentNullException(nameof(item));
+            ArgumentNullException.ThrowIfNull(item);
 
             lock (_syncRoot)
             {
@@ -88,7 +88,7 @@ namespace MQTTnet.Internal
 
         public void RemoveFirst(Predicate<TItem> match)
         {
-            if (match == null) throw new ArgumentNullException(nameof(match));
+            ArgumentNullException.ThrowIfNull(match);
 
             lock (_syncRoot)
             {

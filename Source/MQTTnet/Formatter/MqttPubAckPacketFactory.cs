@@ -12,10 +12,7 @@ public static class MqttPubAckPacketFactory
 {
     public static MqttPubAckPacket Create(MqttApplicationMessageReceivedEventArgs applicationMessageReceivedEventArgs)
     {
-        if (applicationMessageReceivedEventArgs == null)
-        {
-            throw new ArgumentNullException(nameof(applicationMessageReceivedEventArgs));
-        }
+        ArgumentNullException.ThrowIfNull(applicationMessageReceivedEventArgs);
 
         var pubAckPacket = new MqttPubAckPacket
         {

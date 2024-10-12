@@ -50,10 +50,7 @@ public sealed class MqttClientStatus
 
     public Task DisconnectAsync(MqttServerClientDisconnectOptions options)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         return _client.StopAsync(options);
     }

@@ -9,7 +9,7 @@ namespace MQTTnet.Diagnostics.Logger
     /*
      * The logger uses generic parameters in order to avoid boxing of parameter values like integers etc.
      */
-    
+
     public static class MqttNetSourceLoggerExtensions
     {
         public static void Error<TParameter1>(this MqttNetSourceLogger logger, Exception exception, string message, TParameter1 parameter1)
@@ -91,7 +91,7 @@ namespace MQTTnet.Diagnostics.Logger
 
             logger.Publish(logLevel, message, new object[] { parameter1 }, exception);
         }
-        
+
         public static void Publish<TParameter1, TParameter2>(this MqttNetSourceLogger logger, MqttNetLogLevel logLevel, Exception exception, string message, TParameter1 parameter1, TParameter2 parameter2)
         {
             if (!logger.IsEnabled)
@@ -209,10 +209,7 @@ namespace MQTTnet.Diagnostics.Logger
 
         public static MqttNetSourceLogger WithSource(this IMqttNetLogger logger, string source)
         {
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger));
-            }
+            ArgumentNullException.ThrowIfNull(logger);
 
             return new MqttNetSourceLogger(logger, source);
         }

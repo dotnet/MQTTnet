@@ -11,10 +11,7 @@ public static class MqttApplicationMessageExtensions
 {
     public static string ConvertPayloadToString(this MqttApplicationMessage applicationMessage)
     {
-        if (applicationMessage == null)
-        {
-            throw new ArgumentNullException(nameof(applicationMessage));
-        }
+        ArgumentNullException.ThrowIfNull(applicationMessage);
 
         if (applicationMessage.Payload.Length == 0)
         {

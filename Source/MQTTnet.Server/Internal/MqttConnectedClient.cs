@@ -48,10 +48,7 @@ public sealed class MqttConnectedClient : IDisposable
         Endpoint = channelAdapter.Endpoint;
         Session = session ?? throw new ArgumentNullException(nameof(session));
 
-        if (logger == null)
-        {
-            throw new ArgumentNullException(nameof(logger));
-        }
+        ArgumentNullException.ThrowIfNull(logger);
 
         _logger = logger.WithSource(nameof(MqttConnectedClient));
     }

@@ -11,10 +11,7 @@ namespace MQTTnet.Formatter
     {
         public static MqttApplicationMessage Create(MqttPublishPacket publishPacket)
         {
-            if (publishPacket == null)
-            {
-                throw new ArgumentNullException(nameof(publishPacket));
-            }
+            ArgumentNullException.ThrowIfNull(publishPacket);
 
             return new MqttApplicationMessage
             {

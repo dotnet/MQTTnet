@@ -10,10 +10,7 @@ public static class MqttPacketExtensions
 {
     public static string GetRfcName(this MqttPacket packet)
     {
-        if (packet == null)
-        {
-            throw new ArgumentNullException(nameof(packet));
-        }
+        ArgumentNullException.ThrowIfNull(packet);
 
         switch (packet)
         {

@@ -15,15 +15,8 @@ public sealed class MqttClientUnsubscribeResultFactory
 
     public MqttClientUnsubscribeResult Create(MqttUnsubscribePacket unsubscribePacket, MqttUnsubAckPacket unsubAckPacket)
     {
-        if (unsubscribePacket == null)
-        {
-            throw new ArgumentNullException(nameof(unsubscribePacket));
-        }
-
-        if (unsubAckPacket == null)
-        {
-            throw new ArgumentNullException(nameof(unsubAckPacket));
-        }
+        ArgumentNullException.ThrowIfNull(unsubscribePacket);
+        ArgumentNullException.ThrowIfNull(unsubAckPacket);
 
         // MQTTv3.1.1 has no reason code at all!
         if (unsubAckPacket.ReasonCodes != null && unsubAckPacket.ReasonCodes.Count != unsubscribePacket.TopicFilters.Count)

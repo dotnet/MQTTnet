@@ -26,10 +26,7 @@ namespace MQTTnet.Internal
 
         public void AddHandler(Func<TEventArgs, Task> handler)
         {
-            if (handler == null)
-            {
-                throw new ArgumentNullException(nameof(handler));
-            }
+            ArgumentNullException.ThrowIfNull(handler);
 
             lock (_handlers)
             {
@@ -42,10 +39,7 @@ namespace MQTTnet.Internal
 
         public void AddHandler(Action<TEventArgs> handler)
         {
-            if (handler == null)
-            {
-                throw new ArgumentNullException(nameof(handler));
-            }
+            ArgumentNullException.ThrowIfNull(handler);
 
             lock (_handlers)
             {
@@ -75,10 +69,7 @@ namespace MQTTnet.Internal
 
         public void RemoveHandler(Func<TEventArgs, Task> handler)
         {
-            if (handler == null)
-            {
-                throw new ArgumentNullException(nameof(handler));
-            }
+            ArgumentNullException.ThrowIfNull(handler);
 
             lock (_handlers)
             {
@@ -91,10 +82,7 @@ namespace MQTTnet.Internal
 
         public void RemoveHandler(Action<TEventArgs> handler)
         {
-            if (handler == null)
-            {
-                throw new ArgumentNullException(nameof(handler));
-            }
+            ArgumentNullException.ThrowIfNull(handler);
 
             lock (_handlers)
             {
@@ -107,15 +95,8 @@ namespace MQTTnet.Internal
 
         public async Task TryInvokeAsync(TEventArgs eventArgs, MqttNetSourceLogger logger)
         {
-            if (eventArgs == null)
-            {
-                throw new ArgumentNullException(nameof(eventArgs));
-            }
-
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger));
-            }
+            ArgumentNullException.ThrowIfNull(eventArgs);
+            ArgumentNullException.ThrowIfNull(logger);
 
             try
             {

@@ -26,10 +26,7 @@ public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter
 
     public async Task RunWebSocketConnectionAsync(WebSocket webSocket, HttpContext httpContext)
     {
-        if (webSocket == null)
-        {
-            throw new ArgumentNullException(nameof(webSocket));
-        }
+        ArgumentNullException.ThrowIfNull(webSocket);
 
         var endpoint = $"{httpContext.Connection.RemoteIpAddress}:{httpContext.Connection.RemotePort}";
 

@@ -12,10 +12,7 @@ namespace MQTTnet.Formatter
     {
         public static MqttPublishPacket Create(MqttApplicationMessage applicationMessage)
         {
-            if (applicationMessage == null)
-            {
-                throw new ArgumentNullException(nameof(applicationMessage));
-            }
+            ArgumentNullException.ThrowIfNull(applicationMessage);
 
             // Copy all values to their matching counterparts.
             // The not supported values in MQTT 3.1.1 are not serialized (excluded) later.

@@ -116,10 +116,7 @@ namespace MQTTnet.Internal
 
             public bool Approve(IDisposable scope)
             {
-                if (scope == null)
-                {
-                    throw new ArgumentNullException(nameof(scope));
-                }
+                ArgumentNullException.ThrowIfNull(scope);
 
                 if (_promise.Task.IsCompleted)
                 {

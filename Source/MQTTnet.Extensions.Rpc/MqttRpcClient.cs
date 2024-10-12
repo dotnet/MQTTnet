@@ -65,10 +65,7 @@ namespace MQTTnet.Extensions.Rpc
 
         public async Task<byte[]> ExecuteAsync(string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
         {
-            if (methodName == null)
-            {
-                throw new ArgumentNullException(nameof(methodName));
-            }
+            ArgumentNullException.ThrowIfNull(methodName);
 
             var context = new TopicGenerationContext(_mqttClient, _options, methodName, parameters, qualityOfServiceLevel);
             var topicNames = _options.TopicGenerationStrategy.CreateRpcTopics(context);

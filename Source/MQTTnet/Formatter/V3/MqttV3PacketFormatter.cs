@@ -91,10 +91,7 @@ namespace MQTTnet.Formatter.V3
 
         public MqttPacketBuffer Encode(MqttPacket packet)
         {
-            if (packet == null)
-            {
-                throw new ArgumentNullException(nameof(packet));
-            }
+            ArgumentNullException.ThrowIfNull(packet);
 
             // Leave enough head space for max header size (fixed + 4 variable remaining length = 5 bytes)
             _bufferWriter.Reset(5);
@@ -797,10 +794,7 @@ namespace MQTTnet.Formatter.V3
 
         void ValidateConnectPacket(MqttConnectPacket packet)
         {
-            if (packet == null)
-            {
-                throw new ArgumentNullException(nameof(packet));
-            }
+            ArgumentNullException.ThrowIfNull(packet);
 
             if (string.IsNullOrEmpty(packet.ClientId) && !packet.CleanSession)
             {

@@ -11,10 +11,7 @@ public static class MqttUnsubscribePacketFactory
 {
     public static MqttUnsubscribePacket Create(MqttClientUnsubscribeOptions clientUnsubscribeOptions)
     {
-        if (clientUnsubscribeOptions == null)
-        {
-            throw new ArgumentNullException(nameof(clientUnsubscribeOptions));
-        }
+        ArgumentNullException.ThrowIfNull(clientUnsubscribeOptions);
 
         var packet = new MqttUnsubscribePacket
         {

@@ -13,10 +13,7 @@ public static class MqttClientOptionsValidator
 {
     public static void ThrowIfNotSupported(MqttClientOptions options)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         if (options.ProtocolVersion == MqttProtocolVersion.V500)
         {

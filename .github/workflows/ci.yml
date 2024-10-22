@@ -107,7 +107,8 @@ jobs:
         run: dotnet nuget push ${{ github.workspace }}/nugets/**/*.nupkg -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/mqttnet/api/v3/index.json --skip-duplicate
 
   publish-nuget:
-    if: ${{ github.event_name == 'published' }}
+    # Tag schema is 'v5.0.0-rc' etc.
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: [sign, test]
     runs-on: ubuntu-latest
 

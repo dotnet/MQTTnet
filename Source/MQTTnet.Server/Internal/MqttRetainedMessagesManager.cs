@@ -62,6 +62,7 @@ namespace MQTTnet.Server.Internal
             {
                 List<MqttApplicationMessage> messagesForSave = null;
                 var saveIsRequired = false;
+                var hasHandlers = _eventContainer.RetainedMessageChangedEvent.HasHandlers;
 
                 lock (_messages)
                 {
@@ -93,13 +94,13 @@ namespace MQTTnet.Server.Internal
                         _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                     }
 
-                    if (saveIsRequired)
+                    if (saveIsRequired && hasHandlers)
                     {
                         messagesForSave = new List<MqttApplicationMessage>(_messages.Values);
                     }
                 }
 
-                if (saveIsRequired)
+                if (saveIsRequired && hasHandlers)
                 {
                     using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
                     {

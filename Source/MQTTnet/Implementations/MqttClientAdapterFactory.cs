@@ -14,7 +14,7 @@ namespace MQTTnet.Implementations
     {
         public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            ArgumentNullException.ThrowIfNull(options);
 
             IMqttChannel channel;
             switch (options.ChannelOptions)

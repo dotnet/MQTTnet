@@ -12,10 +12,7 @@ public static class MqttClientUnsubscribeOptionsValidator
 {
     public static void ThrowIfNotSupported(MqttClientUnsubscribeOptions options, MqttProtocolVersion protocolVersion)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         if (protocolVersion == MqttProtocolVersion.V500)
         {

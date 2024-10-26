@@ -13,10 +13,7 @@ public class MqttExtendedAuthenticationExchangeContext
 {
     public MqttExtendedAuthenticationExchangeContext(MqttAuthPacket authPacket, MqttClient client)
     {
-        if (authPacket == null)
-        {
-            throw new ArgumentNullException(nameof(authPacket));
-        }
+        ArgumentNullException.ThrowIfNull(authPacket);
 
         ReasonCode = authPacket.ReasonCode;
         ReasonString = authPacket.ReasonString;

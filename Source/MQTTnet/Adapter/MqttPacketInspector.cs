@@ -23,10 +23,7 @@ public sealed class MqttPacketInspector
     {
         _asyncEvent = asyncEvent ?? throw new ArgumentNullException(nameof(asyncEvent));
 
-        if (logger == null)
-        {
-            throw new ArgumentNullException(nameof(logger));
-        }
+        ArgumentNullException.ThrowIfNull(logger);
 
         _logger = logger.WithSource(nameof(MqttPacketInspector));
     }

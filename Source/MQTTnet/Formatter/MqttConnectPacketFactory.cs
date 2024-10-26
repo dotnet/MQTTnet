@@ -11,10 +11,7 @@ public static class MqttConnectPacketFactory
 {
     public static MqttConnectPacket Create(MqttClientOptions clientOptions)
     {
-        if (clientOptions == null)
-        {
-            throw new ArgumentNullException(nameof(clientOptions));
-        }
+        ArgumentNullException.ThrowIfNull(clientOptions);
 
         var connectPacket = new MqttConnectPacket
         {

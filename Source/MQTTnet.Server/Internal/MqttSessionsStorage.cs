@@ -34,10 +34,7 @@ namespace MQTTnet.Server.Internal
 
         public bool TryGetSession(string id, out MqttSession session)
         {
-            if (id == null)
-            {
-                throw new ArgumentNullException(nameof(id));
-            }
+            ArgumentNullException.ThrowIfNull(id);
 
             if (!_sessions.TryGetValue(id, out session))
             {
@@ -63,10 +60,7 @@ namespace MQTTnet.Server.Internal
 
         public bool TryRemoveSession(string id, out MqttSession session)
         {
-            if (id == null)
-            {
-                throw new ArgumentNullException(nameof(id));
-            }
+            ArgumentNullException.ThrowIfNull(id);
 
             if (_sessions.TryGetValue(id, out session))
             {
@@ -79,10 +73,7 @@ namespace MQTTnet.Server.Internal
 
         public void UpdateSession(string id, MqttSession session)
         {
-            if (id == null)
-            {
-                throw new ArgumentNullException(nameof(id));
-            }
+            ArgumentNullException.ThrowIfNull(id);
 
             _sessions[id] = session;
         }

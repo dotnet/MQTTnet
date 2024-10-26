@@ -19,10 +19,7 @@ public sealed class MqttClientUnsubscribeOptionsBuilder
 
     public MqttClientUnsubscribeOptionsBuilder WithTopicFilter(string topic)
     {
-        if (topic is null)
-        {
-            throw new ArgumentNullException(nameof(topic));
-        }
+        ArgumentNullException.ThrowIfNull(topic);
 
         if (_unsubscribeOptions.TopicFilters is null)
         {
@@ -36,10 +33,7 @@ public sealed class MqttClientUnsubscribeOptionsBuilder
 
     public MqttClientUnsubscribeOptionsBuilder WithTopicFilter(MqttTopicFilter topicFilter)
     {
-        if (topicFilter is null)
-        {
-            throw new ArgumentNullException(nameof(topicFilter));
-        }
+        ArgumentNullException.ThrowIfNull(topicFilter);
 
         return WithTopicFilter(topicFilter.Topic);
     }
@@ -59,10 +53,7 @@ public sealed class MqttClientUnsubscribeOptionsBuilder
     /// </summary>
     public MqttClientUnsubscribeOptionsBuilder WithUserProperty(MqttUserProperty userProperty)
     {
-        if (userProperty is null)
-        {
-            throw new ArgumentNullException(nameof(userProperty));
-        }
+        ArgumentNullException.ThrowIfNull(userProperty);
 
         if (_unsubscribeOptions.UserProperties is null)
         {

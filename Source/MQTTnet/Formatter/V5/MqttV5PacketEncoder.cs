@@ -25,10 +25,7 @@ public sealed class MqttV5PacketEncoder
 
     public MqttPacketBuffer Encode(MqttPacket packet)
     {
-        if (packet == null)
-        {
-            throw new ArgumentNullException(nameof(packet));
-        }
+        ArgumentNullException.ThrowIfNull(packet);
 
         // Leave enough head space for max header size (fixed + 4 variable remaining length = 5 bytes)
         const int ReservedHeaderSize = 5;

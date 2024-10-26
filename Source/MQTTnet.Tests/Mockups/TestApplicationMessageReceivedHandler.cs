@@ -18,10 +18,7 @@ namespace MQTTnet.Tests.Mockups
 
         public TestApplicationMessageReceivedHandler(IMqttClient mqttClient)
         {
-            if (mqttClient == null)
-            {
-                throw new ArgumentNullException(nameof(mqttClient));
-            }
+            ArgumentNullException.ThrowIfNull(mqttClient);
 
             mqttClient.ApplicationMessageReceivedAsync += OnApplicationMessageReceivedAsync;
         }

@@ -102,10 +102,7 @@ namespace MQTTnet.Tests.Mockups
 
         public async Task<IMqttClient> ConnectClient(Action<MqttClientOptionsBuilder> configureOptions, TimeSpan timeout = default)
         {
-            if (configureOptions == null)
-            {
-                throw new ArgumentNullException(nameof(configureOptions));
-            }
+            ArgumentNullException.ThrowIfNull(configureOptions);
 
             // Start with initial default values.
             var optionsBuilder = ClientFactory.CreateClientOptionsBuilder().WithProtocolVersion(_protocolVersion).WithTcpServer("127.0.0.1", ServerPort);
@@ -134,10 +131,7 @@ namespace MQTTnet.Tests.Mockups
 
         public async Task<IMqttClient> ConnectClient(MqttClientOptionsBuilder options, TimeSpan timeout = default)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             options = options.WithTcpServer("127.0.0.1", ServerPort);
 
@@ -160,10 +154,7 @@ namespace MQTTnet.Tests.Mockups
 
         public async Task<IMqttClient> ConnectClient(MqttClientOptions options, TimeSpan timeout = default)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             var client = CreateClient();
 

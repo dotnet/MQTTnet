@@ -14,10 +14,7 @@ public sealed class MqttClientConnectResultFactory
 {
     public MqttClientConnectResult Create(MqttConnAckPacket connAckPacket, MqttProtocolVersion protocolVersion)
     {
-        if (connAckPacket == null)
-        {
-            throw new ArgumentNullException(nameof(connAckPacket));
-        }
+        ArgumentNullException.ThrowIfNull(connAckPacket);
 
         if (protocolVersion == MqttProtocolVersion.V500)
         {
@@ -68,10 +65,8 @@ public sealed class MqttClientConnectResultFactory
 
     static MqttClientConnectResult CreateForMqtt311(MqttConnAckPacket connAckPacket)
     {
-        if (connAckPacket == null)
-        {
-            throw new ArgumentNullException(nameof(connAckPacket));
-        }
+        ArgumentNullException.ThrowIfNull(connAckPacket);
+
 
         return new MqttClientConnectResult
         {
@@ -84,10 +79,7 @@ public sealed class MqttClientConnectResultFactory
 
     static MqttClientConnectResult CreateForMqtt500(MqttConnAckPacket connAckPacket)
     {
-        if (connAckPacket == null)
-        {
-            throw new ArgumentNullException(nameof(connAckPacket));
-        }
+        ArgumentNullException.ThrowIfNull(connAckPacket);
 
         return new MqttClientConnectResult
         {

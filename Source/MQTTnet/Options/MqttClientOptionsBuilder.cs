@@ -131,10 +131,7 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithConnectionUri(Uri uri)
     {
-        if (uri == null)
-        {
-            throw new ArgumentNullException(nameof(uri));
-        }
+        ArgumentNullException.ThrowIfNull(uri);
 
         var port = uri.IsDefaultPort ? null : (int?)uri.Port;
         switch (uri.Scheme.ToLower())
@@ -286,10 +283,7 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithTcpServer(string host, int? port = null, AddressFamily addressFamily = AddressFamily.Unspecified)
     {
-        if (host == null)
-        {
-            throw new ArgumentNullException(nameof(host));
-        }
+        ArgumentNullException.ThrowIfNull(host);
 
         _tcpOptions = new MqttClientTcpOptions();
 
@@ -303,10 +297,7 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithTcpServer(Action<MqttClientTcpOptions> optionsBuilder)
     {
-        if (optionsBuilder == null)
-        {
-            throw new ArgumentNullException(nameof(optionsBuilder));
-        }
+        ArgumentNullException.ThrowIfNull(optionsBuilder);
 
         _tcpOptions = new MqttClientTcpOptions();
         optionsBuilder.Invoke(_tcpOptions);
@@ -332,10 +323,7 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithTlsOptions(Action<MqttClientTlsOptionsBuilder> configure)
     {
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        ArgumentNullException.ThrowIfNull(configure);
 
         var builder = new MqttClientTlsOptionsBuilder();
         configure.Invoke(builder);
@@ -377,10 +365,7 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithWebSocketServer(Action<MqttClientWebSocketOptionsBuilder> configure)
     {
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        ArgumentNullException.ThrowIfNull(configure);
 
         var webSocketOptionsBuilder = new MqttClientWebSocketOptionsBuilder();
         configure.Invoke(webSocketOptionsBuilder);

@@ -31,10 +31,7 @@ public class MqttServer : Disposable
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
 
-        if (adapters == null)
-        {
-            throw new ArgumentNullException(nameof(adapters));
-        }
+        ArgumentNullException.ThrowIfNull(adapters);
 
         _adapters = adapters.ToList();
 
@@ -202,15 +199,8 @@ public class MqttServer : Disposable
 
     public Task DisconnectClientAsync(string id, MqttServerClientDisconnectOptions options)
     {
-        if (id == null)
-        {
-            throw new ArgumentNullException(nameof(id));
-        }
-
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(options);
 
         ThrowIfNotStarted();
 
@@ -226,10 +216,7 @@ public class MqttServer : Disposable
 
     public Task<MqttApplicationMessage> GetRetainedMessageAsync(string topic)
     {
-        if (topic == null)
-        {
-            throw new ArgumentNullException(nameof(topic));
-        }
+        ArgumentNullException.ThrowIfNull(topic);
 
         ThrowIfNotStarted();
 
@@ -252,15 +239,8 @@ public class MqttServer : Disposable
 
     public Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage, CancellationToken cancellationToken = default)
     {
-        if (injectedApplicationMessage == null)
-        {
-            throw new ArgumentNullException(nameof(injectedApplicationMessage));
-        }
-
-        if (injectedApplicationMessage.ApplicationMessage == null)
-        {
-            throw new ArgumentNullException(nameof(injectedApplicationMessage.ApplicationMessage));
-        }
+        ArgumentNullException.ThrowIfNull(injectedApplicationMessage);
+        ArgumentNullException.ThrowIfNull(injectedApplicationMessage.ApplicationMessage);
 
         MqttTopicValidator.ThrowIfInvalid(injectedApplicationMessage.ApplicationMessage.Topic);
 
@@ -306,10 +286,7 @@ public class MqttServer : Disposable
 
     public async Task StopAsync(MqttServerStopOptions options)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         try
         {
@@ -343,15 +320,8 @@ public class MqttServer : Disposable
 
     public Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
     {
-        if (clientId == null)
-        {
-            throw new ArgumentNullException(nameof(clientId));
-        }
-
-        if (topicFilters == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilters));
-        }
+        ArgumentNullException.ThrowIfNull(clientId);
+        ArgumentNullException.ThrowIfNull(topicFilters);
 
         foreach (var topicFilter in topicFilters)
         {
@@ -366,15 +336,8 @@ public class MqttServer : Disposable
 
     public Task UnsubscribeAsync(string clientId, ICollection<string> topicFilters)
     {
-        if (clientId == null)
-        {
-            throw new ArgumentNullException(nameof(clientId));
-        }
-
-        if (topicFilters == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilters));
-        }
+        ArgumentNullException.ThrowIfNull(clientId);
+        ArgumentNullException.ThrowIfNull(topicFilters);
 
         ThrowIfDisposed();
         ThrowIfNotStarted();
@@ -384,10 +347,7 @@ public class MqttServer : Disposable
 
     public Task UpdateRetainedMessageAsync(MqttApplicationMessage retainedMessage)
     {
-        if (retainedMessage == null)
-        {
-            throw new ArgumentNullException(nameof(retainedMessage));
-        }
+        ArgumentNullException.ThrowIfNull(retainedMessage);
 
         ThrowIfDisposed();
         ThrowIfNotStarted();

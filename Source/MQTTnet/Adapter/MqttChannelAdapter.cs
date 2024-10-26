@@ -38,10 +38,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
 
         PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
 
-        if (logger == null)
-        {
-            throw new ArgumentNullException(nameof(logger));
-        }
+        ArgumentNullException.ThrowIfNull(logger);
 
         _logger = logger.WithSource(nameof(MqttChannelAdapter));
     }

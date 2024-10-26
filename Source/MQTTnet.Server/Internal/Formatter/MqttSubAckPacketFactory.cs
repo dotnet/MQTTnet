@@ -10,15 +10,8 @@ public static class MqttSubAckPacketFactory
 {
     public static MqttSubAckPacket Create(MqttSubscribePacket subscribePacket, SubscribeResult subscribeResult)
     {
-        if (subscribePacket == null)
-        {
-            throw new ArgumentNullException(nameof(subscribePacket));
-        }
-
-        if (subscribeResult == null)
-        {
-            throw new ArgumentNullException(nameof(subscribeResult));
-        }
+        ArgumentNullException.ThrowIfNull(subscribePacket);
+        ArgumentNullException.ThrowIfNull(subscribeResult);
 
         var subAckPacket = new MqttSubAckPacket
         {

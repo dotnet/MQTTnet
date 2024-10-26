@@ -11,10 +11,7 @@ public static class MqttSubscribePacketFactory
 {
     public static MqttSubscribePacket Create(MqttClientSubscribeOptions clientSubscribeOptions)
     {
-        if (clientSubscribeOptions == null)
-        {
-            throw new ArgumentNullException(nameof(clientSubscribeOptions));
-        }
+        ArgumentNullException.ThrowIfNull(clientSubscribeOptions);
 
         var packet = new MqttSubscribePacket
         {

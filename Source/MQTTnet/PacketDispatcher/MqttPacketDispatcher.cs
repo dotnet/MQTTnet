@@ -46,15 +46,12 @@ namespace MQTTnet.PacketDispatcher
 
         public void Dispose(Exception exception)
         {
-            if (exception == null)
-            {
-                throw new ArgumentNullException(nameof(exception));
-            }
+            ArgumentNullException.ThrowIfNull(exception);
 
             lock (_waiters)
             {
                 FailAll(exception);
-                
+
                 // Make sure that no task can start waiting after this instance is already disposed.
                 // This will prevent unexpected freezes.
                 _isDisposed = true;
@@ -63,10 +60,7 @@ namespace MQTTnet.PacketDispatcher
 
         public void FailAll(Exception exception)
         {
-            if (exception == null)
-            {
-                throw new ArgumentNullException(nameof(exception));
-            }
+            ArgumentNullException.ThrowIfNull(exception);
 
             lock (_waiters)
             {
@@ -81,10 +75,7 @@ namespace MQTTnet.PacketDispatcher
 
         public void RemoveAwaitable(IMqttPacketAwaitable awaitable)
         {
-            if (awaitable == null)
-            {
-                throw new ArgumentNullException(nameof(awaitable));
-            }
+            ArgumentNullException.ThrowIfNull(awaitable);
 
             lock (_waiters)
             {
@@ -94,10 +85,7 @@ namespace MQTTnet.PacketDispatcher
 
         public bool TryDispatch(MqttPacket packet)
         {
-            if (packet == null)
-            {
-                throw new ArgumentNullException(nameof(packet));
-            }
+            ArgumentNullException.ThrowIfNull(packet);
 
             ushort identifier = 0;
             if (packet is MqttPacketWithIdentifier packetWithIdentifier)
@@ -111,7 +99,7 @@ namespace MQTTnet.PacketDispatcher
             lock (_waiters)
             {
                 ThrowIfDisposed();
-                
+
                 for (var i = _waiters.Count - 1; i >= 0; i--)
                 {
                     var entry = _waiters[i];

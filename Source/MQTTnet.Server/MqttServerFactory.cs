@@ -39,10 +39,7 @@ public sealed class MqttServerFactory
 
     public MqttServer CreateMqttServer(MqttServerOptions options, IMqttNetLogger logger)
     {
-        if (logger == null)
-        {
-            throw new ArgumentNullException(nameof(logger));
-        }
+        ArgumentNullException.ThrowIfNull(logger);
 
         var serverAdapters = DefaultServerAdapters.Select(a => a.Invoke(this));
         return CreateMqttServer(options, serverAdapters, logger);
@@ -50,25 +47,15 @@ public sealed class MqttServerFactory
 
     public MqttServer CreateMqttServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> serverAdapters, IMqttNetLogger logger)
     {
-        if (serverAdapters == null)
-        {
-            throw new ArgumentNullException(nameof(serverAdapters));
-        }
-
-        if (logger == null)
-        {
-            throw new ArgumentNullException(nameof(logger));
-        }
+        ArgumentNullException.ThrowIfNull(serverAdapters);
+        ArgumentNullException.ThrowIfNull(logger);
 
         return new MqttServer(options, serverAdapters, logger);
     }
 
     public MqttServer CreateMqttServer(MqttServerOptions options, IEnumerable<IMqttServerAdapter> serverAdapters)
     {
-        if (serverAdapters == null)
-        {
-            throw new ArgumentNullException(nameof(serverAdapters));
-        }
+        ArgumentNullException.ThrowIfNull(serverAdapters);
 
         return new MqttServer(options, serverAdapters, DefaultLogger);
     }

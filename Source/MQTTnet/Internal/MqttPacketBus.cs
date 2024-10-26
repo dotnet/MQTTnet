@@ -124,10 +124,7 @@ namespace MQTTnet.Internal
 
         public void EnqueueItem(MqttPacketBusItem item, MqttPacketBusPartition partition)
         {
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
+            ArgumentNullException.ThrowIfNull(item);
 
             lock (_syncRoot)
             {

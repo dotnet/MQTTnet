@@ -161,10 +161,7 @@ namespace MQTTnet.Server.Internal
 
         public async Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
-            if (subscribePacket == null)
-            {
-                throw new ArgumentNullException(nameof(subscribePacket));
-            }
+            ArgumentNullException.ThrowIfNull(subscribePacket);
 
             var retainedApplicationMessages = await _retainedMessagesManager.GetMessages().ConfigureAwait(false);
             var result = new SubscribeResult(subscribePacket.TopicFilters.Count);
@@ -222,10 +219,7 @@ namespace MQTTnet.Server.Internal
 
         public async Task<UnsubscribeResult> Unsubscribe(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
-            if (unsubscribePacket == null)
-            {
-                throw new ArgumentNullException(nameof(unsubscribePacket));
-            }
+            ArgumentNullException.ThrowIfNull(unsubscribePacket);
 
             var result = new UnsubscribeResult();
 
@@ -440,7 +434,7 @@ namespace MQTTnet.Server.Internal
                 var retainedMessageMatch = new MqttRetainedMessageMatch(retainedMessage, createSubscriptionResult.Subscription.GrantedQualityOfServiceLevel);
                 if (retainedMessageMatch.SubscriptionQualityOfServiceLevel > retainedMessageMatch.ApplicationMessage.QualityOfServiceLevel)
                 {
-                    // UPGRADING the QoS is not allowed! 
+                    // UPGRADING the QoS is not allowed!
                     // From MQTT spec: Subscribing to a Topic Filter at QoS 2 is equivalent to saying
                     // "I would like to receive Messages matching this filter at the QoS with which they were published".
                     // This means a publisher is responsible for determining the maximum QoS a Message can be delivered at,
@@ -455,7 +449,7 @@ namespace MQTTnet.Server.Internal
 
                 subscribeResult.RetainedMessages.Add(retainedMessageMatch);
 
-                // Clear the retained message from the list because the client should receive every message only 
+                // Clear the retained message from the list because the client should receive every message only
                 // one time even if multiple subscriptions affect them.
                 retainedMessages[index] = null;
             }

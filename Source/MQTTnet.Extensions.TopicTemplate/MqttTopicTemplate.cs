@@ -41,10 +41,7 @@ public sealed class MqttTopicTemplate : IEquatable<MqttTopicTemplate>
     /// </exception>
     public MqttTopicTemplate(string topicTemplate)
     {
-        if (topicTemplate == null)
-        {
-            throw new ArgumentNullException(nameof(topicTemplate));
-        }
+        ArgumentNullException.ThrowIfNull(topicTemplate);
 
         MqttTopicValidator.ThrowIfInvalidSubscribe(topicTemplate);
 

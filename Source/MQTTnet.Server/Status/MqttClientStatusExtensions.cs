@@ -18,10 +18,7 @@ public static class MqttClientStatusExtensions
 
     public static Task DisconnectAsync(this MqttClientStatus clientStatus)
     {
-        if (clientStatus == null)
-        {
-            throw new ArgumentNullException(nameof(clientStatus));
-        }
+        ArgumentNullException.ThrowIfNull(clientStatus);
 
         return clientStatus.DisconnectAsync(DefaultDisconnectOptions);
     }

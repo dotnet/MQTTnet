@@ -101,6 +101,11 @@ public static class MqttClientOptionsValidator
         {
             Throw(nameof(options.WillUserProperties));
         }
+
+        if (options.EnhancedAuthenticationHandler != null)
+        {
+            Throw(nameof(options.EnhancedAuthenticationHandler));
+        }
     }
 
     static void Throw(string featureName)

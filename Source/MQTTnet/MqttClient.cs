@@ -288,7 +288,7 @@ public sealed class MqttClient : Disposable, IMqttClient
         }
     }
 
-    public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken = default)
+    public Task SendEnhancedAuthenticationExchangeDataAsync(MqttEnhancedAuthenticationExchangeData data, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(data);
 
@@ -437,27 +437,30 @@ public sealed class MqttClient : Disposable, IMqttClient
             var connectPacket = MqttConnectPacketFactory.Create(options);
             await Send(connectPacket, cancellationToken).ConfigureAwait(false);
 
-            var receivedPacket = await Receive(cancellationToken).ConfigureAwait(false);
-
-            switch (receivedPacket)
+            while (true)
             {
-                case MqttConnAckPacket connAckPacket:
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var receivedPacket = await Receive(cancellationToken).ConfigureAwait(false);
+
+                if (receivedPacket is MqttAuthPacket authPacket)
+                {
+                    await HandleEnhancedAuthentication(authPacket);
+                    continue;
+                }
+
+                if (receivedPacket is MqttConnAckPacket connAckPacket)
                 {
                     result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
                     break;
                 }
-                case MqttAuthPacket _:
+
+                if (receivedPacket != null)
                 {
-                    throw new NotSupportedException("Extended authentication handler is not yet supported");
+                    throw new MqttProtocolViolationException($"Received other packet than CONNACK or AUTH while connecting ({receivedPacket}).");
                 }
-                case null:
-                {
-                    throw new MqttCommunicationException("Connection closed.");
-                }
-                default:
-                {
-                    throw new InvalidOperationException($"Received an unexpected MQTT packet ({receivedPacket}).");
-                }
+
+                throw new MqttCommunicationException("Connection closed.");
             }
         }
         catch (Exception exception)
@@ -468,6 +471,12 @@ public sealed class MqttClient : Disposable, IMqttClient
         _logger.Verbose("Authenticated MQTT connection with server established.");
 
         return result;
+    }
+
+    async Task HandleEnhancedAuthentication(MqttAuthPacket authPacket)
+    {
+        var eventArgs = new MqttEnhancedAuthenticationEventArgs(authPacket, _adapter);
+        await Options.EnhancedAuthenticationHandler.HandleEnhancedAuthenticationAsync(eventArgs);
     }
 
     void Cleanup()
@@ -648,10 +657,23 @@ public sealed class MqttClient : Disposable, IMqttClient
 
     Task ProcessReceivedAuthPacket(MqttAuthPacket authPacket)
     {
-        var extendedAuthenticationExchangeHandler = Options.ExtendedAuthenticationExchangeHandler;
-        return extendedAuthenticationExchangeHandler != null
-            ? extendedAuthenticationExchangeHandler.HandleRequestAsync(new MqttExtendedAuthenticationExchangeContext(authPacket, this))
-            : CompletedTask.Instance;
+        if (Options.EnhancedAuthenticationHandler == null)
+        {
+            // From RFC: If the re-authentication fails, the Client or Server SHOULD send DISCONNECT with an appropriate Reason Code
+            // as described in section 4.13, and MUST close the Network Connection [MQTT-4.12.1-2].
+            //
+            // Since we have no handler there is no chance to fulfil the re-authentication request.
+            _ = DisconnectAsync(new MqttClientDisconnectOptions
+            {
+                Reason = MqttClientDisconnectOptionsReason.ImplementationSpecificError,
+                ReasonString = "Unable to handle AUTH packet"
+            });
+
+            return CompletedTask.Instance;
+        }
+
+        var eventArgs = new MqttEnhancedAuthenticationEventArgs(authPacket, _adapter);
+        return Options.EnhancedAuthenticationHandler.HandleEnhancedAuthenticationAsync(eventArgs);
     }
 
     Task ProcessReceivedDisconnectPacket(MqttDisconnectPacket disconnectPacket)

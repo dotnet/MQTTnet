@@ -98,7 +98,7 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data)
+    public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data = null)
     {
         _options.AuthenticationMethod = method;
         _options.AuthenticationData = data;
@@ -205,9 +205,9 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedAuthenticationExchangeHandler handler)
+    public MqttClientOptionsBuilder WithEnhancedAuthenticationHandler(IMqttEnhancedAuthenticationHandler handler)
     {
-        _options.ExtendedAuthenticationExchangeHandler = handler;
+        _options.EnhancedAuthenticationHandler = handler;
         return this;
     }
 

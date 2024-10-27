@@ -13,7 +13,7 @@ namespace MQTTnet.Formatter.V5
 {
     public sealed class MqttV5PacketDecoder
     {
-        readonly MqttBufferReader _bufferReader = new MqttBufferReader();
+        readonly MqttBufferReader _bufferReader = new();
 
         public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
         {

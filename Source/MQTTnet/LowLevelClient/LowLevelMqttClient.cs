@@ -54,7 +54,7 @@ namespace MQTTnet.LowLevelClient
                 packetInspector = new MqttPacketInspector(_inspectPacketEvent, _rootLogger);
             }
 
-            var newAdapter = _clientAdapterFactory.CreateClientAdapter(options, packetInspector, _rootLogger);
+            var newAdapter = await _clientAdapterFactory.CreateClientAdapterAsync(options, packetInspector, _rootLogger);
 
             try
             {

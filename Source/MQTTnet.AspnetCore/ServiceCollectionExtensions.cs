@@ -2,18 +2,25 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Server;
 using MQTTnet.Server.Internal.Adapter;
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace MQTTnet.AspNetCore;
 
 public static class ServiceCollectionExtensions
 {
+    const string SocketConnectionFactoryTypeName = "Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionFactory";
+    const string SocketConnectionFactoryAssemblyName = "Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets";
+
     public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, MqttServerOptions options)
     {
         ArgumentNullException.ThrowIfNull(services);
@@ -104,6 +111,17 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<MqttWebSocketServerAdapter>();
         services.AddSingleton<IMqttServerAdapter>(s => s.GetService<MqttWebSocketServerAdapter>());
 
+        return services;
+    }
+
+
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, SocketConnectionFactoryTypeName, SocketConnectionFactoryAssemblyName)]
+    public static IServiceCollection AddMqttClientConnectionContextFactory(this IServiceCollection services)
+    {
+        var socketConnectionFactoryType = Assembly.Load(SocketConnectionFactoryAssemblyName).GetType(SocketConnectionFactoryTypeName);
+        services.AddSingleton(typeof(IConnectionFactory), socketConnectionFactoryType);
+        services.TryAddSingleton<MqttClientConnectionContextFactory>();
+        services.TryAddSingleton<IMqttClientAdapterFactory>(serviceProvider => serviceProvider.GetRequiredService<MqttClientConnectionContextFactory>());
         return services;
     }
 }

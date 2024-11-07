@@ -2,13 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Buffers;
-using System.IO.Pipelines;
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.Http.Features;
@@ -17,6 +10,13 @@ using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
+using System;
+using System.Buffers;
+using System.IO.Pipelines;
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
@@ -25,19 +25,15 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
     readonly ConnectionContext _connection;
     readonly AsyncLock _writerLock = new();
 
-    PipeReader _input;
-    PipeWriter _output;
+    readonly PipeReader _input;
+    readonly PipeWriter _output;
 
     public MqttConnectionContext(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
     {
         PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
-
-        if (!(_connection is SocketConnection tcp) || tcp.IsConnected)
-        {
-            _input = connection.Transport.Input;
-            _output = connection.Transport.Output;
-        }
+        _input = connection.Transport.Input;
+        _output = connection.Transport.Output;
     }
 
     public long BytesReceived { get; private set; }
@@ -106,15 +102,9 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
-    public async Task ConnectAsync(CancellationToken cancellationToken)
+    public Task ConnectAsync(CancellationToken cancellationToken)
     {
-        if (_connection is SocketConnection tcp && !tcp.IsConnected)
-        {
-            await tcp.StartAsync().ConfigureAwait(false);
-        }
-
-        _input = _connection.Transport.Input;
-        _output = _connection.Transport.Output;
+        return Task.CompletedTask;
     }
 
     public Task DisconnectAsync(CancellationToken cancellationToken)
@@ -126,7 +116,7 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
     }
 
     public void Dispose()
-    {
+    { 
         _writerLock.Dispose();
     }
 

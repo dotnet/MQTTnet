@@ -6,12 +6,13 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.AspNetCore;
 using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
     public class MessageProcessingMqttConnectionContextBenchmark : BaseBenchmark
     {
@@ -24,20 +25,26 @@ namespace MQTTnet.Benchmarks
         {
             _host = WebHost.CreateDefaultBuilder()
                    .UseKestrel(o => o.ListenAnyIP(1883, l => l.UseMqtt()))
-                   .ConfigureServices(services => {
-                        services
-                            .AddHostedMqttServer(mqttServerOptions => mqttServerOptions.WithoutDefaultEndpoint())
-                            .AddMqttConnectionHandler();
+                   .ConfigureServices(services =>
+                   {
+                       services
+                           .AddHostedMqttServer(mqttServerOptions => mqttServerOptions.WithoutDefaultEndpoint())
+                           .AddMqttConnectionHandler()
+                           .AddMqttClientConnectionContextFactory();
                    })
-                   .Configure(app => {
-                       app.UseMqttServer(s => {
+                   .Configure(app =>
+                   {
+                       app.UseMqttServer(s =>
+                       {
 
                        });
                    })
                    .Build();
 
+
             var factory = new MqttClientFactory();
-            _mqttClient = factory.CreateMqttClient(new MqttNetEventLogger(), new MqttClientConnectionContextFactory());
+            var mqttClientConnectionContextFactory = _host.Services.GetRequiredService<MqttClientConnectionContextFactory>();
+            _mqttClient = factory.CreateMqttClient(new MqttNetEventLogger(), mqttClientConnectionContextFactory);
 
             _host.StartAsync().GetAwaiter().GetResult();
 

@@ -2,10 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Diagnostics.PacketInspection;
@@ -15,6 +11,10 @@ using MQTTnet.Internal;
 using MQTTnet.PacketDispatcher;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet;
 
@@ -121,7 +121,7 @@ public sealed class MqttClient : Disposable, IMqttClient
             _mqttClientAlive = new CancellationTokenSource();
             var mqttClientAliveToken = _mqttClientAlive.Token;
 
-            var adapter = _adapterFactory.CreateClientAdapter(options, new MqttPacketInspector(_events.InspectPacketEvent, _rootLogger), _rootLogger);
+            var adapter = await _adapterFactory.CreateClientAdapterAsync(options, new MqttPacketInspector(_events.InspectPacketEvent, _rootLogger), _rootLogger);
             _adapter = adapter ?? throw new InvalidOperationException("The adapter factory did not provide an adapter.");
 
             _unexpectedDisconnectPacket = null;
@@ -270,21 +270,21 @@ public sealed class MqttClient : Disposable, IMqttClient
         switch (applicationMessage.QualityOfServiceLevel)
         {
             case MqttQualityOfServiceLevel.AtMostOnce:
-            {
-                return PublishAtMostOnce(publishPacket, cancellationToken);
-            }
+                {
+                    return PublishAtMostOnce(publishPacket, cancellationToken);
+                }
             case MqttQualityOfServiceLevel.AtLeastOnce:
-            {
-                return PublishAtLeastOnce(publishPacket, cancellationToken);
-            }
+                {
+                    return PublishAtLeastOnce(publishPacket, cancellationToken);
+                }
             case MqttQualityOfServiceLevel.ExactlyOnce:
-            {
-                return PublishExactlyOnce(publishPacket, cancellationToken);
-            }
+                {
+                    return PublishExactlyOnce(publishPacket, cancellationToken);
+                }
             default:
-            {
-                throw new NotSupportedException();
-            }
+                {
+                    throw new NotSupportedException();
+                }
         }
     }
 
@@ -395,34 +395,34 @@ public sealed class MqttClient : Disposable, IMqttClient
         switch (eventArgs.PublishPacket.QualityOfServiceLevel)
         {
             case MqttQualityOfServiceLevel.AtMostOnce:
-            {
-                // no response required
-                break;
-            }
+                {
+                    // no response required
+                    break;
+                }
             case MqttQualityOfServiceLevel.AtLeastOnce:
-            {
-                if (!eventArgs.ProcessingFailed)
                 {
-                    var pubAckPacket = MqttPubAckPacketFactory.Create(eventArgs);
-                    return Send(pubAckPacket, cancellationToken);
-                }
+                    if (!eventArgs.ProcessingFailed)
+                    {
+                        var pubAckPacket = MqttPubAckPacketFactory.Create(eventArgs);
+                        return Send(pubAckPacket, cancellationToken);
+                    }
 
-                break;
-            }
+                    break;
+                }
             case MqttQualityOfServiceLevel.ExactlyOnce:
-            {
-                if (!eventArgs.ProcessingFailed)
                 {
-                    var pubRecPacket = MqttPubRecPacketFactory.Create(eventArgs);
-                    return Send(pubRecPacket, cancellationToken);
-                }
+                    if (!eventArgs.ProcessingFailed)
+                    {
+                        var pubRecPacket = MqttPubRecPacketFactory.Create(eventArgs);
+                        return Send(pubRecPacket, cancellationToken);
+                    }
 
-                break;
-            }
+                    break;
+                }
             default:
-            {
-                throw new MqttProtocolViolationException("Received a not supported QoS level.");
-            }
+                {
+                    throw new MqttProtocolViolationException("Received a not supported QoS level.");
+                }
         }
 
         return CompletedTask.Instance;
@@ -442,22 +442,22 @@ public sealed class MqttClient : Disposable, IMqttClient
             switch (receivedPacket)
             {
                 case MqttConnAckPacket connAckPacket:
-                {
-                    result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
-                    break;
-                }
+                    {
+                        result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
+                        break;
+                    }
                 case MqttAuthPacket _:
-                {
-                    throw new NotSupportedException("Extended authentication handler is not yet supported");
-                }
+                    {
+                        throw new NotSupportedException("Extended authentication handler is not yet supported");
+                    }
                 case null:
-                {
-                    throw new MqttCommunicationException("Connection closed.");
-                }
+                    {
+                        throw new MqttCommunicationException("Connection closed.");
+                    }
                 default:
-                {
-                    throw new InvalidOperationException($"Received an unexpected MQTT packet ({receivedPacket}).");
-                }
+                    {
+                        throw new InvalidOperationException($"Received an unexpected MQTT packet ({receivedPacket}).");
+                    }
             }
         }
         catch (Exception exception)
@@ -967,14 +967,14 @@ public sealed class MqttClient : Disposable, IMqttClient
                 case MqttPingReqPacket _:
                     throw new MqttProtocolViolationException("The PINGREQ Packet is sent from a client to the server only.");
                 default:
-                {
-                    if (!_packetDispatcher.TryDispatch(packet))
                     {
-                        throw new MqttProtocolViolationException($"Received packet '{packet}' at an unexpected time.");
-                    }
+                        if (!_packetDispatcher.TryDispatch(packet))
+                        {
+                            throw new MqttProtocolViolationException($"Received packet '{packet}' at an unexpected time.");
+                        }
 
-                    break;
-                }
+                        break;
+                    }
             }
         }
         catch (Exception exception)

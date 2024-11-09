@@ -116,13 +116,15 @@ m/XriWr/Cq4h/JfB7NTsezVslgkBaoU=
         {
             if (args.AuthenticationMethod == "GS2-KRB5")
             {
-                var response = await args.ExchangeEnhancedAuthenticationAsync(null, args.CancellationToken);
+                var result = await args.ExchangeEnhancedAuthenticationAsync(null, args.CancellationToken);
 
-                Console.WriteLine($"Received AUTH data from client: {Encoding.UTF8.GetString(response.AuthenticationData)}");
+                Console.WriteLine($"Received AUTH data from client: {Encoding.UTF8.GetString(result.AuthenticationData)}");
 
-                response = await args.ExchangeEnhancedAuthenticationAsync("reply context token"u8.ToArray(), args.CancellationToken);
+                var authOptions = mqttServerFactory.CreateExchangeExtendedAuthenticationOptionsBuilder().WithAuthenticationData("reply context token").Build();
 
-                Console.WriteLine($"Received AUTH data from client: {Encoding.UTF8.GetString(response.AuthenticationData)}");
+                result = await args.ExchangeEnhancedAuthenticationAsync(authOptions, args.CancellationToken);
+
+                Console.WriteLine($"Received AUTH data from client: {Encoding.UTF8.GetString(result.AuthenticationData)}");
 
                 args.ResponseAuthenticationData = "outcome of authentication"u8.ToArray();
 

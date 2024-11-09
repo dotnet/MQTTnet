@@ -185,13 +185,15 @@ namespace MQTTnet.Tests.Clients.MqttClient
             {
                 if (args.AuthenticationMethod == "GS2-KRB5")
                 {
-                    var authPacket = await args.ExchangeEnhancedAuthenticationAsync(null, args.CancellationToken);
+                    var result = await args.ExchangeEnhancedAuthenticationAsync(null, args.CancellationToken);
 
-                    Assert.AreEqual(Encoding.UTF8.GetString(authPacket.AuthenticationData), "initial context token");
+                    Assert.AreEqual(Encoding.UTF8.GetString(result.AuthenticationData), "initial context token");
 
-                    var response =  await args.ExchangeEnhancedAuthenticationAsync("reply context token"u8.ToArray(), args.CancellationToken);
+                    var authOptions = testEnvironment.ServerFactory.CreateExchangeExtendedAuthenticationOptionsBuilder().WithAuthenticationData("reply context token").Build();
 
-                    Assert.AreEqual(Encoding.UTF8.GetString(response.AuthenticationData), "");
+                    result =  await args.ExchangeEnhancedAuthenticationAsync(authOptions, args.CancellationToken);
+
+                    Assert.AreEqual(Encoding.UTF8.GetString(result.AuthenticationData), "");
 
                     args.ResponseAuthenticationData = "outcome of authentication"u8.ToArray();
                 }

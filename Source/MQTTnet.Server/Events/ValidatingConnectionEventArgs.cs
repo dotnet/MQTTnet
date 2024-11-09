@@ -11,6 +11,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server.EnhancedAuthentication;
 
 namespace MQTTnet.Server;
 
@@ -189,18 +190,25 @@ public sealed class ValidatingConnectionEventArgs : EventArgs
     /// </summary>
     public uint WillDelayInterval => _connectPacket.WillDelayInterval;
 
-    public async Task<MqttAuthPacket> ExchangeEnhancedAuthenticationAsync(byte[] authenticationData, CancellationToken cancellationToken = default)
+    public async Task<ExchangeEnhancedAuthenticationResult> ExchangeEnhancedAuthenticationAsync(
+        ExchangeEnhancedAuthenticationOptions options,
+        CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         var requestAuthPacket = new MqttAuthPacket
         {
             // From RFC: If the initial CONNECT packet included an Authentication Method property then all AUTH packets,
             // and any successful CONNACK packet MUST include an Authentication Method Property with the same value as in the CONNECT packet [MQTT-4.12.0-5].
             AuthenticationMethod = AuthenticationMethod,
-            AuthenticationData = authenticationData,
 
             // The reason code will stay at continue all the time when connecting. The server will respond with the
             // CONNACK packet when authentication is done!
-            ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication
+            ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
+
+            AuthenticationData = options.AuthenticationData,
+            ReasonString = options.ReasonString,
+            UserProperties = options.UserProperties
         };
 
         await ChannelAdapter.SendPacketAsync(requestAuthPacket, cancellationToken).ConfigureAwait(false);
@@ -214,11 +222,19 @@ public sealed class ValidatingConnectionEventArgs : EventArgs
 
         if (responsePacket is MqttAuthPacket responseAuthPacket)
         {
-            // TODO: Wrap!
-            return responseAuthPacket;
+            if (!string.Equals(AuthenticationMethod, responseAuthPacket.AuthenticationMethod, StringComparison.Ordinal))
+            {
+                throw new MqttProtocolViolationException("The authentication method cannot change while authenticating the client.");
+            }
+
+            return ExchangeEnhancedAuthenticationResultFactory.Create(responseAuthPacket);
         }
 
-        // TODO: Support DISCONNECT-
-        throw new MqttProtocolViolationException("Received other packet than AUTH while authenticating");
+        if (responsePacket is MqttDisconnectPacket disconnectPacket)
+        {
+            return ExchangeEnhancedAuthenticationResultFactory.Create(disconnectPacket);
+        }
+
+        throw new MqttProtocolViolationException("Received other packet than AUTH while authenticating.");
     }
 }

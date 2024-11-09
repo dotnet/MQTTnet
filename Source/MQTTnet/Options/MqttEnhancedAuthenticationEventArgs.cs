@@ -79,7 +79,7 @@ public class MqttEnhancedAuthenticationEventArgs : EventArgs
             throw new InvalidOperationException("The enhanced authentication handler must not wait for the CONNACK packet.");
         }
 
-        throw new MqttProtocolViolationException("Received wrong paket.");
+        throw new MqttProtocolViolationException("Received other packet than AUTH while authenticating.");
     }
 
     public Task SendAsync(byte[] authenticationData, CancellationToken cancellationToken = default)

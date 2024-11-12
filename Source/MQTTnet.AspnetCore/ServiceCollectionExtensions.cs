@@ -45,8 +45,16 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(new MqttServerFactory());
 
         services.AddSingleton<MqttHostedServer>();
+        //TODO: remove before close https://github.com/dotnet/MQTTnet/pull/2102
+        ////WIP: Fix ignored exceptions in MqttHostedServer startup #2102
+#if !HOSTEDSERVER_WITHOUT_STARTUP_YIELD
         services.AddSingleton<IHostedService>(s => s.GetService<MqttHostedServer>());
         services.AddSingleton<MqttServer>(s => s.GetService<MqttHostedServer>());
+#else
+        services.AddHostedService(s => s.GetService<MqttHostedServer>());
+        services.AddSingleton<MqttServer>(s => s.GetService<MqttHostedServer>().MqttServer);
+#endif
+
     }
 
     public static IServiceCollection AddHostedMqttServerWithServices(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configure)

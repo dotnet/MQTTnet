@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.AspNetCore.Connections;
 using MQTTnet;
 using MQTTnet.AspNetCore;
 using MQTTnet.Server;
@@ -12,10 +13,15 @@ builder.Services.AddRazorPages();
 
 // Setup MQTT stuff.
 builder.Services.AddMqttServer();
-builder.Services.AddConnections();
+
+// UseMqttEndPoint
+builder.WebHost.ConfigureKestrel((context, serverOptions) =>
+{
+    var kestrelSection = context.Configuration.GetSection("Kestrel");
+    serverOptions.Configure(kestrelSection).Endpoint("Mqtt", mqtt => mqtt.ListenOptions.UseMqtt());
+});
 
 var app = builder.Build();
-
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -29,7 +35,7 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
-// Setup MQTT stuff.
+// mqtt over websocket
 app.MapMqtt("/mqtt");
 
 app.UseMqttServer(server =>

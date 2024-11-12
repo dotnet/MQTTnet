@@ -2,18 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 using MQTTnet.Server;
+using System;
+using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-public sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
+sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
 {
     MqttServerOptions _serverOptions;
 
@@ -33,7 +33,7 @@ public sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapte
         }
 
         var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax));
-        using var adapter = new MqttConnectionContext(formatter, connection);
+        using var adapter = new AspNetCoreMqttChannelAdapter(formatter, connection);
         var clientHandler = ClientHandler;
         if (clientHandler != null)
         {

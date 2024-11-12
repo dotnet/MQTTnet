@@ -2,17 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Buffers;
-using System.Runtime.InteropServices;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
+using System;
+using System.Buffers;
+using System.Runtime.InteropServices;
 
 namespace MQTTnet.AspNetCore;
 
-public static class ReaderExtensions
+static class MqttPacketFormatterAdapterExtensions
 {
     public static bool TryDecode(
         this MqttPacketFormatterAdapter formatter,

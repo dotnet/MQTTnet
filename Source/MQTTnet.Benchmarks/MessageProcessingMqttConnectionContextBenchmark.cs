@@ -7,8 +7,11 @@ using BenchmarkDotNet.Jobs;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using MQTTnet.Adapter;
 using MQTTnet.AspNetCore;
 using MQTTnet.Diagnostics.Logger;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Builder;
 
 namespace MQTTnet.Benchmarks
 {
@@ -28,9 +31,8 @@ namespace MQTTnet.Benchmarks
                    .ConfigureServices(services =>
                    {
                        services
-                           .AddHostedMqttServer(mqttServerOptions => mqttServerOptions.WithoutDefaultEndpoint())
-                           .AddMqttConnectionHandler()
-                           .AddMqttClientConnectionContextFactory();
+                           .AddMqttServer(mqttServerOptions => mqttServerOptions.WithoutDefaultEndpoint())
+                           .AddMqttClientAdapterFactory();
                    })
                    .Configure(app =>
                    {
@@ -43,8 +45,8 @@ namespace MQTTnet.Benchmarks
 
 
             var factory = new MqttClientFactory();
-            var mqttClientConnectionContextFactory = _host.Services.GetRequiredService<MqttClientConnectionContextFactory>();
-            _mqttClient = factory.CreateMqttClient(new MqttNetEventLogger(), mqttClientConnectionContextFactory);
+            var mqttClientAdapterFactory = _host.Services.GetRequiredService<IMqttClientAdapterFactory>();
+            _mqttClient = factory.CreateMqttClient(new MqttNetEventLogger(), mqttClientAdapterFactory);
 
             _host.StartAsync().GetAwaiter().GetResult();
 

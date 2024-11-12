@@ -14,11 +14,11 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore
 {
-    public sealed class MqttClientConnectionContextFactory : IMqttClientAdapterFactory
+    sealed class AspNetCoreMqttClientAdapterFactory : IMqttClientAdapterFactory
     {
         private readonly IConnectionFactory connectionFactory;
 
-        public MqttClientConnectionContextFactory(IConnectionFactory connectionFactory)
+        public AspNetCoreMqttClientAdapterFactory(IConnectionFactory connectionFactory)
         {
             this.connectionFactory = connectionFactory;
         }
@@ -34,7 +34,7 @@ namespace MQTTnet.AspNetCore
                         var endPoint = await CreateIPEndPointAsync(tcpOptions.RemoteEndpoint);
                         var tcpConnection = await connectionFactory.ConnectAsync(endPoint);
                         var formatter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(4096, 65535));
-                        return new MqttConnectionContext(formatter, tcpConnection);
+                        return new AspNetCoreMqttChannelAdapter(formatter, tcpConnection);
                     }
                 default:
                     {

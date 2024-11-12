@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-public sealed class MqttConnectionContext : IMqttChannelAdapter
+sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
 {
     readonly ConnectionContext _connection;
     readonly AsyncLock _writerLock = new();
@@ -28,7 +28,7 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
     readonly PipeReader _input;
     readonly PipeWriter _output;
 
-    public MqttConnectionContext(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
+    public AspNetCoreMqttChannelAdapter(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
     {
         PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
@@ -116,7 +116,7 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
     }
 
     public void Dispose()
-    { 
+    {
         _writerLock.Dispose();
     }
 

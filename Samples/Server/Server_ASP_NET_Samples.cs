@@ -9,6 +9,7 @@
 // ReSharper disable MemberCanBeMadeStatic.Local
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -71,15 +72,7 @@ public static class Server_ASP_NET_Samples
         public void Configure(IApplicationBuilder app, IWebHostEnvironment environment, MqttController mqttController)
         {
             app.UseRouting();
-
-            app.UseEndpoints(
-                endpoints =>
-                {
-                    endpoints.MapConnectionHandler<MqttConnectionHandler>(
-                        "/mqtt",
-                        httpConnectionDispatcherOptions => httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector =
-                            protocolList => protocolList.FirstOrDefault() ?? string.Empty);
-                });
+            app.UseEndpoints(endpoints => endpoints.MapMqtt("/mqtt"));
 
             app.UseMqttServer(
                 server =>
@@ -95,14 +88,10 @@ public static class Server_ASP_NET_Samples
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHostedMqttServer(
-                optionsBuilder =>
-                {
-                    optionsBuilder.WithDefaultEndpoint();
-                });
-
-            services.AddMqttConnectionHandler();
-            services.AddConnections();
+            services.AddMqttServer(optionsBuilder =>
+            {
+                optionsBuilder.WithDefaultEndpoint();
+            });
 
             services.AddSingleton<MqttController>();
         }

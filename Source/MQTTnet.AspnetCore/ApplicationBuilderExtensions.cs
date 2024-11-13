@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Server;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MQTTnet.AspNetCore;
 
@@ -31,7 +32,7 @@ public static class ApplicationBuilderExtensions
     /// <typeparam name="TMQttServerWrapper"></typeparam>
     /// <param name="app"></param>
     /// <returns></returns>
-    public static IApplicationBuilder UseMqttServer<TMQttServerWrapper>(this IApplicationBuilder app)
+    public static IApplicationBuilder UseMqttServer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TMQttServerWrapper>(this IApplicationBuilder app)
     {
         ActivatorUtilities.GetServiceOrCreateInstance<TMQttServerWrapper>(app.ApplicationServices);
         return app;

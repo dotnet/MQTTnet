@@ -27,6 +27,7 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
 
     readonly PipeReader _input;
     readonly PipeWriter _output;
+    readonly IHttpContextFeature _httpContextFeature;
 
     public AspNetCoreMqttChannelAdapter(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
     {
@@ -34,7 +35,9 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         _input = connection.Transport.Input;
         _output = connection.Transport.Output;
+        _httpContextFeature = connection.Features.Get<IHttpContextFeature>();
     }
+    public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
     public long BytesReceived { get; private set; }
 
@@ -44,16 +47,13 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
     {
         get
         {
-            // mqtt over tcp
-            var tlsFeature = _connection.Features.Get<ITlsConnectionFeature>();
-            if (tlsFeature != null)
+            if (_httpContextFeature != null && _httpContextFeature.HttpContext != null)
             {
-                return tlsFeature.ClientCertificate;
+                return _httpContextFeature.HttpContext.Connection.ClientCertificate;
             }
 
-            // mqtt over websocket
-            var httpFeature = _connection.Features.Get<IHttpContextFeature>();
-            return httpFeature?.HttpContext?.Connection.ClientCertificate;
+            var tlsFeature = _connection.Features.Get<ITlsConnectionFeature>();
+            return tlsFeature?.ClientCertificate;
         }
     }
 
@@ -61,20 +61,13 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
     {
         get
         {
-            // mqtt over tcp
-            if (_connection.RemoteEndPoint != null)
+            if (_httpContextFeature != null && _httpContextFeature.HttpContext != null)
             {
-                return _connection.RemoteEndPoint.ToString();
+                var httpConnection = _httpContextFeature.HttpContext.Connection;
+                return httpConnection == null ? null : new IPEndPoint(httpConnection.RemoteIpAddress, httpConnection.RemotePort).ToString();
             }
 
-            // mqtt over websocket
-            var httpFeature = _connection.Features.Get<IHttpConnectionFeature>();
-            if (httpFeature?.RemoteIpAddress != null)
-            {
-                return new IPEndPoint(httpFeature.RemoteIpAddress, httpFeature.RemotePort).ToString();
-            }
-
-            return null;
+            return _connection.RemoteEndPoint?.ToString();
         }
     }
 
@@ -82,25 +75,16 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
     {
         get
         {
-            // mqtt over tcp
+            if (_httpContextFeature != null && _httpContextFeature.HttpContext != null)
+            {
+                return _httpContextFeature.HttpContext.Request.IsHttps;
+            }
+
             var tlsFeature = _connection.Features.Get<ITlsConnectionFeature>();
-            if (tlsFeature != null)
-            {
-                return true;
-            }
-
-            // mqtt over websocket
-            var httpFeature = _connection.Features.Get<IHttpContextFeature>();
-            if (httpFeature?.HttpContext != null)
-            {
-                return httpFeature.HttpContext.Request.IsHttps;
-            }
-
-            return false;
+            return tlsFeature != null;
         }
     }
 
-    public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
     public Task ConnectAsync(CancellationToken cancellationToken)
     {

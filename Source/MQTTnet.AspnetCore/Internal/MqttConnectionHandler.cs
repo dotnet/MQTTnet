@@ -4,8 +4,8 @@
 
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
+using Microsoft.Extensions.Options;
 using MQTTnet.Adapter;
-using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 using MQTTnet.Server;
 using System;
@@ -13,18 +13,27 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
+sealed class MqttConnectionHandler : ConnectionHandler
 {
-    MqttServerOptions _serverOptions;
+    readonly IOptions<MqttServerOptions> _serverOptions;
 
     public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
-    public void Dispose()
+    public MqttConnectionHandler(IOptions<MqttServerOptions> serverOptions)
     {
+        _serverOptions = serverOptions;
     }
 
     public override async Task OnConnectedAsync(ConnectionContext connection)
     {
+        var clientHandler = ClientHandler;
+        if (clientHandler == null)
+        {
+            // MqttServer has not been initialized yet.
+            connection.Abort();
+            return;
+        }
+
         // required for websocket transport to work
         var transferFormatFeature = connection.Features.Get<ITransferFormatFeature>();
         if (transferFormatFeature != null)
@@ -32,24 +41,9 @@ sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapter
             transferFormatFeature.ActiveFormat = TransferFormat.Binary;
         }
 
-        var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax));
+        var options = _serverOptions.Value;
+        var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(options.WriterBufferSize, options.WriterBufferSizeMax));
         using var adapter = new AspNetCoreMqttChannelAdapter(formatter, connection);
-        var clientHandler = ClientHandler;
-        if (clientHandler != null)
-        {
-            await clientHandler(adapter).ConfigureAwait(false);
-        }
-    }
-
-    public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
-    {
-        _serverOptions = options;
-
-        return Task.CompletedTask;
-    }
-
-    public Task StopAsync()
-    {
-        return Task.CompletedTask;
+        await clientHandler(adapter).ConfigureAwait(false);
     }
 }

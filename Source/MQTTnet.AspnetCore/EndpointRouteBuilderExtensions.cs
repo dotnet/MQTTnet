@@ -2,19 +2,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Routing;
-using MQTTnet.AspNetCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.AspNetCore.Builder
+namespace MQTTnet.AspNetCore
 {
     public static class EndpointRouteBuilderExtensions
     {
         /// <summary>
-        /// mqtt over websocket
+        /// Treat the obtained WebSocket as an mqtt connection
         /// </summary>
         /// <param name="endpoints"></param>
         /// <param name="pattern"></param>
@@ -32,7 +32,7 @@ namespace Microsoft.AspNetCore.Builder
         }
 
         /// <summary>
-        /// mqtt over websocket
+        /// Treat the obtained WebSocket as an mqtt connection
         /// </summary>
         /// <param name="endpoints"></param>
         /// <param name="pattern"></param>

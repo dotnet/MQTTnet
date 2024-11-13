@@ -45,6 +45,7 @@
             <Pack>True</Pack>
             <PackagePath>\</PackagePath>
         </None>
+        <None Include="Internal\AspNetCoreMqttServerAdapter.cs" />
     </ItemGroup>
 
     <ItemGroup>

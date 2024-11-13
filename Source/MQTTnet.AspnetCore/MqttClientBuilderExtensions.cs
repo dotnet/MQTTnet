@@ -1,0 +1,41 @@
+using Microsoft.AspNetCore.Connections;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using MQTTnet.Adapter;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+
+namespace MQTTnet.AspNetCore
+{
+    public static class MqttClientBuilderExtensions
+    {
+        const string SocketConnectionFactoryTypeName = "Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionFactory";
+        const string SocketConnectionFactoryAssemblyName = "Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets";
+
+        /// <summary>
+        /// Replace the implementation of IMqttClientAdapterFactory to AspNetCoreMqttClientAdapterFactory
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, SocketConnectionFactoryTypeName, SocketConnectionFactoryAssemblyName)]
+        public static IMqttClientBuilder UseAspNetCoreMqttClientAdapterFactory(this IMqttClientBuilder builder)
+        {
+            var socketConnectionFactoryType = Assembly.Load(SocketConnectionFactoryAssemblyName).GetType(SocketConnectionFactoryTypeName);
+            builder.Services.TryAddSingleton(typeof(IConnectionFactory), socketConnectionFactoryType);
+            return builder.UseMqttClientAdapterFactory<AspNetCoreMqttClientAdapterFactory>();
+        }
+
+        /// <summary>
+        /// Replace the implementation of IMqttClientAdapterFactory to TMqttClientAdapterFactory
+        /// </summary>
+        /// <typeparam name="TMqttClientAdapterFactory"></typeparam>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IMqttClientBuilder UseMqttClientAdapterFactory<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TMqttClientAdapterFactory>(this IMqttClientBuilder builder)
+            where TMqttClientAdapterFactory : class, IMqttClientAdapterFactory
+        {
+            builder.Services.Replace(ServiceDescriptor.Singleton<IMqttClientAdapterFactory, TMqttClientAdapterFactory>());
+            return builder;
+        }
+    }
+}

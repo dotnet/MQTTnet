@@ -1,12 +1,9 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace MQTTnet.AspNetCore
 {
     /// <summary>
     /// Builder of MqttServer
     /// </summary>
-    public interface IMqttServerBuilder
+    public interface IMqttServerBuilder : IMqttBuilder
     {
-        IServiceCollection Services { get; }
     }
 }

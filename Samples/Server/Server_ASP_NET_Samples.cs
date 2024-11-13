@@ -10,6 +10,8 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MQTTnet.AspNetCore;
 using MQTTnet.Server;
@@ -22,6 +24,8 @@ public static class Server_ASP_NET_Samples
     {
         var builder = WebApplication.CreateBuilder();
         builder.Services.AddMqttServer();
+        builder.Services.AddMqttClient().UseAspNetCoreMqttClientAdapterFactory();
+        builder.Services.AddHostedService<MqttClientController>();
 
         builder.WebHost.UseKestrel(kestrel =>
         {
@@ -38,21 +42,22 @@ public static class Server_ASP_NET_Samples
 
         var app = builder.Build();
         app.MapMqtt("/mqtt");
-        app.UseMqttServer<MqttController>();
+        app.UseMqttServer<MqttServerController>();
         return app.RunAsync();
     }
 
-    sealed class MqttController
+    sealed class MqttServerController
     {
-        private readonly ILogger<MqttController> _logger;
+        private readonly ILogger<MqttServerController> _logger;
 
-        public MqttController(
+        public MqttServerController(
             MqttServer mqttServer,
-            ILogger<MqttController> logger)
+            ILogger<MqttServerController> logger)
         {
+            _logger = logger;
+
             mqttServer.ValidatingConnectionAsync += ValidateConnection;
             mqttServer.ClientConnectedAsync += OnClientConnected;
-            _logger = logger;
         }
 
         public Task OnClientConnected(ClientConnectedEventArgs eventArgs)
@@ -65,6 +70,24 @@ public static class Server_ASP_NET_Samples
         {
             _logger.LogInformation($"Client '{eventArgs.ClientId}' wants to connect. Accepting!");
             return Task.CompletedTask;
+        }
+    }
+
+    sealed class MqttClientController : BackgroundService
+    {
+        private readonly IMqttClientFactory _mqttClientFactory;
+
+        public MqttClientController(IMqttClientFactory mqttClientFactory)
+        {
+            _mqttClientFactory = mqttClientFactory;
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            await Task.Delay(3000);
+            using var client = _mqttClientFactory.CreateMqttClient();
+            var options = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
+            await client.ConnectAsync(options, stoppingToken);
         }
     }
 }

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Server;
 using MQTTnet.Server.Internal.Adapter;
 using System;
@@ -8,18 +7,7 @@ using System;
 namespace MQTTnet.AspNetCore
 {
     public static class MqttServerBuilderExtensions
-    {
-        /// <summary>
-        /// Disable logging
-        /// </summary>
-        /// <param name="builder"></param>
-        /// <returns></returns>
-        public static IMqttServerBuilder UseNullLogger(this IMqttServerBuilder builder)
-        {
-            builder.Services.Replace(ServiceDescriptor.Singleton<IMqttNetLogger>(MqttNetNullLogger.Instance));
-            return builder;
-        }
-
+    {        
         /// <summary>
         /// Configure MqttServerOptionsBuilder
         /// </summary>

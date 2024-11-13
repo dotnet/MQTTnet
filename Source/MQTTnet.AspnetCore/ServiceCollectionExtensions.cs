@@ -2,23 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore.Internal;
 using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Implementations;
 using MQTTnet.Server;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 
 namespace MQTTnet.AspNetCore;
 
 public static class ServiceCollectionExtensions
 {
-    const string SocketConnectionFactoryTypeName = "Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionFactory";
-    const string SocketConnectionFactoryAssemblyName = "Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets";
-
     /// <summary>
     /// Register MqttServer as a singleton service
     /// </summary>
@@ -28,9 +23,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddOptions();
         services.AddConnections();
-        services.AddLogging();
-        services.TryAddSingleton<IMqttNetLogger, AspNetCoreMqttNetLogger>();
-
         services.TryAddSingleton<MqttConnectionHandler>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IMqttServerAdapter, AspNetCoreMqttServerAdapter>());
 
@@ -38,25 +30,29 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<AspNetCoreMqttHostedServer>();
         services.TryAddSingleton<MqttServer>(s => s.GetRequiredService<AspNetCoreMqttServer>());
 
-        return new MqttServerBuilder(services);
+        return services.AddMqtt();
     }
 
     /// <summary>
-    /// Register IMqttClientAdapterFactory as a service
+    /// Register IMqttClientFactory as a singleton service
     /// </summary>
     /// <param name="services"></param>
     /// <returns></returns>
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, SocketConnectionFactoryTypeName, SocketConnectionFactoryAssemblyName)]
-    public static IServiceCollection AddMqttClientAdapterFactory(this IServiceCollection services)
+    public static IMqttClientBuilder AddMqttClient(this IServiceCollection services)
     {
-        var socketConnectionFactoryType = Assembly.Load(SocketConnectionFactoryAssemblyName).GetType(SocketConnectionFactoryTypeName);
-        services.TryAddSingleton(typeof(IConnectionFactory), socketConnectionFactoryType);
-        services.TryAddSingleton<IMqttClientAdapterFactory, AspNetCoreMqttClientAdapterFactory>();
-        return services;
+        services.TryAddSingleton<IMqttClientAdapterFactory, MqttClientAdapterFactory>();
+        services.TryAddSingleton<IMqttClientFactory, AspNetCoreMqttClientFactory>();
+        return services.AddMqtt();
     }
 
+    private static MqttBuilder AddMqtt(this IServiceCollection services)
+    {
+        services.AddLogging();
+        services.TryAddSingleton<IMqttNetLogger, AspNetCoreMqttNetLogger>();
+        return new MqttBuilder(services);
+    }
 
-    private class MqttServerBuilder(IServiceCollection services) : IMqttServerBuilder
+    private class MqttBuilder(IServiceCollection services) : IMqttServerBuilder, IMqttClientBuilder
     {
         public IServiceCollection Services { get; } = services;
     }

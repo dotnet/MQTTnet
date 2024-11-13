@@ -24,4 +24,16 @@ public static class ApplicationBuilderExtensions
         configure(server);
         return app;
     }
+
+    /// <summary>
+    /// Use MqttServer's wrapper service
+    /// </summary>
+    /// <typeparam name="TWrapper"></typeparam>
+    /// <param name="app"></param>
+    /// <returns></returns>
+    public static IApplicationBuilder UseMqttServer<TWrapper>(this IApplicationBuilder app)
+    {
+        app.ApplicationServices.GetRequiredService<TWrapper>();
+        return app;
+    }
 }

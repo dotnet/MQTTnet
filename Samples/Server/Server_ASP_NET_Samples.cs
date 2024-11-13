@@ -9,10 +9,9 @@
 // ReSharper disable MemberCanBeMadeStatic.Local
 
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MQTTnet.AspNetCore;
 using MQTTnet.Server;
 
@@ -22,78 +21,52 @@ public static class Server_ASP_NET_Samples
 {
     public static Task Start_Server_With_WebSockets_Support()
     {
-        /*
-         * This sample starts a minimal ASP.NET Webserver including a hosted MQTT server.
-         */
-        var host = Host.CreateDefaultBuilder(Array.Empty<string>())
-            .ConfigureWebHostDefaults(
-                webBuilder =>
-                {
-                    webBuilder.UseKestrel(
-                        o =>
-                        {
-                            // This will allow MQTT connections based on TCP port 1883.
-                            o.ListenAnyIP(1883, l => l.UseMqtt());
+        var builder = WebApplication.CreateBuilder();
+        builder.Services.AddMqttServer();
+        builder.Services.AddSingleton<MqttController>();
 
-                            // This will allow MQTT connections based on HTTP WebSockets with URI "localhost:5000/mqtt"
-                            // See code below for URI configuration.
-                            o.ListenAnyIP(5000); // Default HTTP pipeline
-                        });
+        builder.WebHost.UseKestrel(kestrel =>
+        {
+            // mqtt over tcp
+            kestrel.ListenAnyIP(1883, l => l.UseMqtt());
 
-                    webBuilder.UseStartup<Startup>();
-                });
+            // mqtt over tls over tcp
+            kestrel.ListenAnyIP(1884, l => l.UseHttps().UseMqtt());
 
-        return host.RunConsoleAsync();
+            // This will allow MQTT connections based on HTTP WebSockets with URI "localhost:5000/mqtt"
+            // See code below for URI configuration.
+            kestrel.ListenAnyIP(5000); // Default HTTP pipeline
+        });
+
+        var app = builder.Build();
+        app.MapMqtt("/mqtt");
+        app.UseMqttServer<MqttController>();
+        return app.RunAsync();
     }
 
     sealed class MqttController
     {
-        public MqttController()
+        private readonly ILogger<MqttController> _logger;
+
+        public MqttController(
+            MqttServer mqttServer,
+            ILogger<MqttController> logger)
         {
-            // Inject other services via constructor.
+            mqttServer.ValidatingConnectionAsync += ValidateConnection;
+            mqttServer.ClientConnectedAsync += OnClientConnected;
+            _logger = logger;
         }
 
         public Task OnClientConnected(ClientConnectedEventArgs eventArgs)
         {
-            Console.WriteLine($"Client '{eventArgs.ClientId}' connected.");
+            _logger.LogInformation($"Client '{eventArgs.ClientId}' connected.");
             return Task.CompletedTask;
         }
-
 
         public Task ValidateConnection(ValidatingConnectionEventArgs eventArgs)
         {
-            Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Accepting!");
+            _logger.LogInformation($"Client '{eventArgs.ClientId}' wants to connect. Accepting!");
             return Task.CompletedTask;
-        }
-    }
-
-    sealed class Startup
-    {
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment environment, MqttController mqttController)
-        {
-            app.UseRouting();
-            app.UseEndpoints(endpoints => endpoints.MapMqtt("/mqtt"));
-
-            app.UseMqttServer(
-                server =>
-                {
-                    /*
-                     * Attach event handlers etc. if required.
-                     */
-
-                    server.ValidatingConnectionAsync += mqttController.ValidateConnection;
-                    server.ClientConnectedAsync += mqttController.OnClientConnected;
-                });
-        }
-
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddMqttServer(optionsBuilder =>
-            {
-                optionsBuilder.WithDefaultEndpoint();
-            });
-
-            services.AddSingleton<MqttController>();
         }
     }
 }

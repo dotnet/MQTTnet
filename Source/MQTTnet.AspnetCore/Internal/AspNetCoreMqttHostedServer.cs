@@ -8,15 +8,22 @@ namespace MQTTnet.AspNetCore.Internal
     {
         private readonly AspNetCoreMqttServer _aspNetCoreMqttServer;
 
-        public AspNetCoreMqttHostedServer(AspNetCoreMqttServer aspNetCoreMqttServer)
+        public AspNetCoreMqttHostedServer(
+            AspNetCoreMqttServer aspNetCoreMqttServer,
+            IHostApplicationLifetime hostApplicationLifetime)
         {
             _aspNetCoreMqttServer = aspNetCoreMqttServer;
+            hostApplicationLifetime.ApplicationStarted.Register(ApplicationStarted);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            // We need to set up ClientHandler for MqttConnectionHandler as soon as possible.
-            return _aspNetCoreMqttServer.StartAsync();
+            return Task.CompletedTask;
+        }
+
+        private void ApplicationStarted()
+        {
+            _ = _aspNetCoreMqttServer.StartAsync();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

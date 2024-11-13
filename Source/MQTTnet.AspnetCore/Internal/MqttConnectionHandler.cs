@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.Extensions.Options;
 using MQTTnet.Adapter;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 using MQTTnet.Server;
 using System;
@@ -15,12 +16,16 @@ namespace MQTTnet.AspNetCore;
 
 sealed class MqttConnectionHandler : ConnectionHandler
 {
+    readonly IMqttNetLogger _logger;
     readonly IOptions<MqttServerOptions> _serverOptions;
 
     public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
-    public MqttConnectionHandler(IOptions<MqttServerOptions> serverOptions)
+    public MqttConnectionHandler(
+        IMqttNetLogger logger,
+        IOptions<MqttServerOptions> serverOptions)
     {
+        _logger = logger;
         _serverOptions = serverOptions;
     }
 
@@ -29,8 +34,8 @@ sealed class MqttConnectionHandler : ConnectionHandler
         var clientHandler = ClientHandler;
         if (clientHandler == null)
         {
-            // MqttServer has not been started yet.
             connection.Abort();
+            _logger.Publish(MqttNetLogLevel.Warning, nameof(MqttConnectionHandler), "MqttServer has not been started yet.", null, null);
             return;
         }
 

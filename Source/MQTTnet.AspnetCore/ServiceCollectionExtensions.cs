@@ -58,6 +58,7 @@ public static class ServiceCollectionExtensions
     /// <returns></returns>
     public static IServiceCollection AddMqttServer(this IServiceCollection services)
     {
+        services.AddOptions();
         services.AddConnections();
         services.TryAddSingleton<IMqttNetLogger>(MqttNetNullLogger.Instance);
 
@@ -65,10 +66,10 @@ public static class ServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IMqttServerAdapter, AspNetCoreMqttServerAdapter>());
 
         services.TryAddSingleton<AspNetCoreMqttServer>();
-        services.TryAddSingleton<MqttServer>(s => s.GetRequiredService<AspNetCoreMqttServer>());
         services.AddHostedService<AspNetCoreMqttHostedServer>();
+        services.TryAddSingleton<MqttServer>(s => s.GetRequiredService<AspNetCoreMqttServer>());
 
-        return services.AddOptions();
+        return services;
     }
 
     /// <summary>
@@ -91,9 +92,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddMqttClientAdapterFactory(this IServiceCollection services)
     {
         var socketConnectionFactoryType = Assembly.Load(SocketConnectionFactoryAssemblyName).GetType(SocketConnectionFactoryTypeName);
-        services.AddSingleton(typeof(IConnectionFactory), socketConnectionFactoryType);
-        services.TryAddSingleton<AspNetCoreMqttClientAdapterFactory>();
-        services.TryAddSingleton<IMqttClientAdapterFactory>(s => s.GetRequiredService<AspNetCoreMqttClientAdapterFactory>());
+        services.TryAddSingleton(typeof(IConnectionFactory), socketConnectionFactoryType);
+        services.TryAddSingleton<IMqttClientAdapterFactory, AspNetCoreMqttClientAdapterFactory>();
         return services;
     }
 }

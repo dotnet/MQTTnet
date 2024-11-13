@@ -26,14 +26,14 @@ public static class ApplicationBuilderExtensions
     }
 
     /// <summary>
-    /// Use MqttServer's wrapper service
+    /// Active MqttServer's wrapper service
     /// </summary>
-    /// <typeparam name="TWrapper"></typeparam>
+    /// <typeparam name="TMQttServerWrapper"></typeparam>
     /// <param name="app"></param>
     /// <returns></returns>
-    public static IApplicationBuilder UseMqttServer<TWrapper>(this IApplicationBuilder app)
+    public static IApplicationBuilder UseMqttServer<TMQttServerWrapper>(this IApplicationBuilder app)
     {
-        app.ApplicationServices.GetRequiredService<TWrapper>();
+        ActivatorUtilities.GetServiceOrCreateInstance<TMQttServerWrapper>(app.ApplicationServices);
         return app;
     }
 }

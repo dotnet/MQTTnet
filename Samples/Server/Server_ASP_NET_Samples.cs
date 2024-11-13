@@ -10,7 +10,6 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet.AspNetCore;
 using MQTTnet.Server;
@@ -23,7 +22,6 @@ public static class Server_ASP_NET_Samples
     {
         var builder = WebApplication.CreateBuilder();
         builder.Services.AddMqttServer();
-        builder.Services.AddSingleton<MqttController>();
 
         builder.WebHost.UseKestrel(kestrel =>
         {

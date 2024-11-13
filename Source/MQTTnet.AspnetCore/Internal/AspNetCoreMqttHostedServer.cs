@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.AspNetCore.Internal
+namespace MQTTnet.AspNetCore
 {
     sealed class AspNetCoreMqttHostedServer : IHostedService
     {

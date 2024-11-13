@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using MQTTnet.Diagnostics.Logger;
 using System;
 
-namespace MQTTnet.AspNetCore.Internal
+namespace MQTTnet.AspNetCore
 {
     sealed class AspNetCoreMqttNetLogger : IMqttNetLogger
     {

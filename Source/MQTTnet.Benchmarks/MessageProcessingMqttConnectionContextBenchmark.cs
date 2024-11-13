@@ -10,8 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore;
 using MQTTnet.Diagnostics.Logger;
-using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.Builder;
 
 namespace MQTTnet.Benchmarks
 {
@@ -31,16 +29,9 @@ namespace MQTTnet.Benchmarks
                    .ConfigureServices(services =>
                    {
                        services
-                           .AddMqttServer(mqttServerOptions => mqttServerOptions.WithoutDefaultEndpoint())
-                           .AddMqttClientAdapterFactory();
-                   })
-                   .Configure(app =>
-                   {
-                       app.UseMqttServer(s =>
-                       {
-
-                       });
-                   })
+                            .AddMqttClientAdapterFactory()
+                            .AddMqttServer();
+                   })                  
                    .Build();
 
 

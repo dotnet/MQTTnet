@@ -60,7 +60,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddOptions();
         services.AddConnections();
-        services.TryAddSingleton<IMqttNetLogger>(MqttNetNullLogger.Instance);
+        services.AddLogging();
+        services.TryAddSingleton<IMqttNetLogger, AspNetCoreMqttNetLogger>();
 
         services.TryAddSingleton<MqttConnectionHandler>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IMqttServerAdapter, AspNetCoreMqttServerAdapter>());

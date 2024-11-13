@@ -13,8 +13,8 @@ public static class ApplicationBuilderExtensions
 {
     /// <summary>
     /// Get and use MqttServer
-    /// Also, you can inject MqttServer into your service
     /// </summary>
+    /// <remarks>Also, you can inject MqttServer into your service</remarks>
     /// <param name="app"></param>
     /// <param name="configure"></param>
     /// <returns></returns>

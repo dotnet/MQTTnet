@@ -29,7 +29,7 @@ sealed class MqttConnectionHandler : ConnectionHandler
         var clientHandler = ClientHandler;
         if (clientHandler == null)
         {
-            // MqttServer has not been initialized yet.
+            // MqttServer has not been started yet.
             connection.Abort();
             return;
         }

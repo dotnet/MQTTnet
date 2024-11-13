@@ -73,8 +73,9 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Register MqttTcpServerAdapter as a IMqttServerAdapter
+    /// Register MqttTcpServerAdapter as a IMqttServerAdapter    
     /// </summary>
+    /// <remarks>We recommend using ListenOptions.UseMqtt() instead of using MqttTcpServerAdapter in an AspNetCore environment</remarks>
     /// <param name="services"></param>
     /// <returns></returns>
     public static IServiceCollection AddMqttTcpServerAdapter(this IServiceCollection services)

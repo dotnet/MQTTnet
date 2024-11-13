@@ -16,11 +16,11 @@ namespace MQTTnet.AspNetCore
 {
     sealed class AspNetCoreMqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        private readonly IConnectionFactory connectionFactory;
+        private readonly IConnectionFactory _connectionFactory;
 
         public AspNetCoreMqttClientAdapterFactory(IConnectionFactory connectionFactory)
         {
-            this.connectionFactory = connectionFactory;
+            _connectionFactory = connectionFactory;
         }
 
         public async ValueTask<IMqttChannelAdapter> CreateClientAdapterAsync(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
@@ -32,7 +32,7 @@ namespace MQTTnet.AspNetCore
                 case MqttClientTcpOptions tcpOptions:
                     {
                         var endPoint = await CreateIPEndPointAsync(tcpOptions.RemoteEndpoint);
-                        var tcpConnection = await connectionFactory.ConnectAsync(endPoint);
+                        var tcpConnection = await _connectionFactory.ConnectAsync(endPoint);
                         var formatter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(4096, 65535));
                         return new AspNetCoreMqttChannelAdapter(formatter, tcpConnection);
                     }

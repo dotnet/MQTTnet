@@ -15,6 +15,7 @@ namespace MQTTnet.AspNetCore.Internal
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            // We need to set up ClientHandler for MqttConnectionHandler as soon as possible.
             return _aspNetCoreMqttServer.StartAsync();
         }
 

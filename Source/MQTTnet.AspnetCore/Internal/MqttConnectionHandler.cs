@@ -17,16 +17,16 @@ namespace MQTTnet.AspNetCore;
 sealed class MqttConnectionHandler : ConnectionHandler
 {
     readonly IMqttNetLogger _logger;
-    readonly IOptions<MqttServerOptions> _serverOptions;
+    readonly MqttServerOptions _serverOptions;
 
     public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
     public MqttConnectionHandler(
         IMqttNetLogger logger,
-        IOptions<MqttServerOptions> serverOptions)
+        IOptions<MqttServerOptionsBuilder> serverOptions)
     {
         _logger = logger;
-        _serverOptions = serverOptions;
+        _serverOptions = serverOptions.Value.Build();
     }
 
     public override async Task OnConnectedAsync(ConnectionContext connection)
@@ -35,7 +35,7 @@ sealed class MqttConnectionHandler : ConnectionHandler
         if (clientHandler == null)
         {
             connection.Abort();
-            _logger.Publish(MqttNetLogLevel.Warning, nameof(MqttConnectionHandler), "MqttServer has not been started yet.", null, null);
+            _logger.Publish(MqttNetLogLevel.Warning, nameof(MqttConnectionHandler), $"{nameof(MqttServer)} has not been started yet.", null, null);
             return;
         }
 
@@ -46,8 +46,7 @@ sealed class MqttConnectionHandler : ConnectionHandler
             transferFormatFeature.ActiveFormat = TransferFormat.Binary;
         }
 
-        var options = _serverOptions.Value;
-        var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(options.WriterBufferSize, options.WriterBufferSizeMax));
+        var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax));
         using var adapter = new AspNetCoreMqttChannelAdapter(formatter, connection);
         await clientHandler(adapter).ConfigureAwait(false);
     }

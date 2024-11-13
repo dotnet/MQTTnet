@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MQTTnet.Adapter;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 
 namespace MQTTnet.AspNetCore
@@ -20,8 +21,12 @@ namespace MQTTnet.AspNetCore
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, SocketConnectionFactoryTypeName, SocketConnectionFactoryAssemblyName)]
         public static IMqttClientBuilder UseAspNetCoreMqttClientAdapterFactory(this IMqttClientBuilder builder)
         {
-            var socketConnectionFactoryType = Assembly.Load(SocketConnectionFactoryAssemblyName).GetType(SocketConnectionFactoryTypeName);
-            builder.Services.TryAddSingleton(typeof(IConnectionFactory), socketConnectionFactoryType);
+            if (!builder.Services.Any(s => s.ServiceType == typeof(IConnectionFactory)))
+            {
+                var socketConnectionFactoryType = Assembly.Load(SocketConnectionFactoryAssemblyName).GetType(SocketConnectionFactoryTypeName);
+                builder.Services.AddSingleton(typeof(IConnectionFactory), socketConnectionFactoryType);
+            }
+
             return builder.UseMqttClientAdapterFactory<AspNetCoreMqttClientAdapterFactory>();
         }
 

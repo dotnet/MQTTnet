@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
+sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
 {
     readonly ConnectionContext _connection;
     readonly AsyncLock _writerLock = new();
@@ -30,8 +30,9 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
 
     public AspNetCoreMqttChannelAdapter(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
     {
-        PacketFormatterAdapter = packetFormatterAdapter ?? throw new ArgumentNullException(nameof(packetFormatterAdapter));
-        _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+        PacketFormatterAdapter = packetFormatterAdapter;
+        _connection = connection;
+
         _input = connection.Transport.Input;
         _output = connection.Transport.Output;
         _httpContextFeature = connection.Features.Get<IHttpContextFeature>();
@@ -103,6 +104,13 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
     public void Dispose()
     {
         _writerLock.Dispose();
+        _connection.DisposeAsync().GetAwaiter().GetResult();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _writerLock.Dispose();
+        await _connection.DisposeAsync();
     }
 
     public async Task<MqttPacket?> ReceivePacketAsync(CancellationToken cancellationToken)

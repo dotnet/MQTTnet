@@ -47,7 +47,7 @@ sealed class MqttConnectionHandler : ConnectionHandler
         }
 
         var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax));
-        using var adapter = new AspNetCoreMqttChannelAdapter(formatter, connection);
+        await using var adapter = new AspNetCoreMqttChannelAdapter(formatter, connection);
         await clientHandler(adapter).ConfigureAwait(false);
     }
 }

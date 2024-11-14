@@ -33,7 +33,7 @@ public static class Server_ASP_NET_Samples
             kestrel.ListenAnyIP(1883, l => l.UseMqtt());
 
             // mqtt over tls over tcp
-            kestrel.ListenAnyIP(1884, l => l.UseHttps().UseMqtt());
+            kestrel.ListenLocalhost(1884, l => l.UseHttps().UseMqtt());
 
             // This will allow MQTT connections based on HTTP WebSockets with URI "localhost:5000/mqtt"
             // See code below for URI configuration.
@@ -86,7 +86,7 @@ public static class Server_ASP_NET_Samples
         {
             await Task.Delay(3000);
             using var client = _mqttClientFactory.CreateMqttClient();
-            var options = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
+            var options = new MqttClientOptionsBuilder().WithConnectionUri("mqtt://localhost:1883").Build();
             await client.ConnectAsync(options, stoppingToken);
         }
     }

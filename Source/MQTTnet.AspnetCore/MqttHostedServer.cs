@@ -27,10 +27,8 @@ public sealed class MqttHostedServer : BackgroundService
     }
 
     public MqttServer MqttServer { get; }
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        await MqttServer.StartAsync();
-    }
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        => MqttServer.StartAsync();
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         await MqttServer.StopAsync(_mqttFactory.CreateMqttServerStopOptionsBuilder().Build());

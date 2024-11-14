@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MQTTnet.Adapter;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -27,7 +28,12 @@ namespace MQTTnet.AspNetCore
         {
             if (!builder.Services.Any(s => s.ServiceType == typeof(IConnectionFactory)))
             {
-                var socketConnectionFactoryType = Assembly.Load(SocketConnectionFactoryAssemblyName).GetType(SocketConnectionFactoryTypeName);
+                var assembly = Assembly.Load(SocketConnectionFactoryAssemblyName);
+                var socketConnectionFactoryType = assembly.GetType(SocketConnectionFactoryTypeName);
+                if (socketConnectionFactoryType == null)
+                {
+                    throw new TypeLoadException($"Cannot find type {SocketConnectionFactoryTypeName} in assembly {SocketConnectionFactoryAssemblyName}");
+                }
                 builder.Services.AddSingleton(typeof(IConnectionFactory), socketConnectionFactoryType);
             }
 

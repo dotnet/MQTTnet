@@ -8,6 +8,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace MQTTnet.AspNetCore;
@@ -17,7 +18,7 @@ static class MqttPacketFormatterAdapterExtensions
     public static bool TryDecode(
         this MqttPacketFormatterAdapter formatter,
         in ReadOnlySequence<byte> input,
-        out MqttPacket packet,
+        [MaybeNullWhen(false)] out MqttPacket packet,
         out SequencePosition consumed,
         out SequencePosition observed,
         out int bytesRead)

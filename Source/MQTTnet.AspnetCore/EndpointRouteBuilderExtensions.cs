@@ -21,13 +21,12 @@ namespace MQTTnet.AspNetCore
         /// <returns></returns>
         public static ConnectionEndpointRouteBuilder MapMqtt(this IEndpointRouteBuilder endpoints, string pattern)
         {
-            ArgumentNullException.ThrowIfNull(endpoints);
             return endpoints.MapMqtt(pattern, options => options.WebSockets.SubProtocolSelector = SelectSubProtocol);
 
             static string SelectSubProtocol(IList<string> requestedSubProtocolValues)
             {
                 // Order the protocols to also match "mqtt", "mqttv-3.1", "mqttv-3.11" etc.
-                return requestedSubProtocolValues.OrderByDescending(p => p.Length).FirstOrDefault(p => p.ToLower().StartsWith("mqtt"));
+                return requestedSubProtocolValues.OrderByDescending(p => p.Length).FirstOrDefault(p => p.ToLower().StartsWith("mqtt"))!;
             }
         }
 
@@ -40,7 +39,6 @@ namespace MQTTnet.AspNetCore
         /// <returns></returns>
         public static ConnectionEndpointRouteBuilder MapMqtt(this IEndpointRouteBuilder endpoints, string pattern, Action<HttpConnectionDispatcherOptions> options)
         {
-            ArgumentNullException.ThrowIfNull(endpoints);
             return endpoints.MapConnectionHandler<MqttConnectionHandler>(pattern, options);
         }
     }

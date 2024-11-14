@@ -13,7 +13,6 @@ using MQTTnet.Packets;
 using System;
 using System.Buffers;
 using System.IO.Pipelines;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +26,7 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
 
     readonly PipeReader _input;
     readonly PipeWriter _output;
-    readonly IHttpContextFeature _httpContextFeature;
+    readonly IHttpContextFeature? _httpContextFeature;
 
     public AspNetCoreMqttChannelAdapter(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
     {
@@ -37,13 +36,14 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
         _output = connection.Transport.Output;
         _httpContextFeature = connection.Features.Get<IHttpContextFeature>();
     }
+
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
     public long BytesReceived { get; private set; }
 
     public long BytesSent { get; private set; }
 
-    public X509Certificate2 ClientCertificate
+    public X509Certificate2? ClientCertificate
     {
         get
         {
@@ -57,14 +57,15 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
         }
     }
 
-    public string Endpoint
+    public string? Endpoint
     {
         get
         {
             if (_httpContextFeature != null && _httpContextFeature.HttpContext != null)
             {
                 var httpConnection = _httpContextFeature.HttpContext.Connection;
-                return httpConnection == null ? null : new IPEndPoint(httpConnection.RemoteIpAddress, httpConnection.RemotePort).ToString();
+                var remoteAddress = httpConnection.RemoteIpAddress;
+                return remoteAddress == null ? null : $"{remoteAddress}:{httpConnection.RemotePort}";
             }
 
             return _connection.RemoteEndPoint?.ToString();
@@ -93,8 +94,8 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
 
     public Task DisconnectAsync(CancellationToken cancellationToken)
     {
-        _input?.Complete();
-        _output?.Complete();
+        _input.Complete();
+        _output.Complete();
 
         return Task.CompletedTask;
     }
@@ -104,7 +105,7 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
         _writerLock.Dispose();
     }
 
-    public async Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken)
+    public async Task<MqttPacket?> ReceivePacketAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -153,8 +154,8 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
         catch (Exception exception)
         {
             // completing the channel makes sure that there is no more data read after a protocol error
-            _input?.Complete(exception);
-            _output?.Complete(exception);
+            _input.Complete(exception);
+            _output.Complete(exception);
 
             throw;
         }
@@ -206,7 +207,7 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter
         var span = output.GetSpan(buffer.Length);
 
         buffer.Packet.AsSpan().CopyTo(span);
-        int offset = buffer.Packet.Count;
+        var offset = buffer.Packet.Count;
         buffer.Payload.CopyTo(destination: span.Slice(offset));
         output.Advance(buffer.Length);
     }

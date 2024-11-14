@@ -20,13 +20,13 @@ namespace MQTTnet.AspNetCore
             _loggerFactory = loggerFactory;
         }
 
-        public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
+        public void Publish(MqttNetLogLevel logLevel, string? source, string? message, object[]? parameters, Exception? exception)
         {
             var logger = _loggerFactory.CreateLogger($"{categoryNamePrefix}{source}");
-            logger.Log(CastLogLevel(logLevel), exception, message, parameters);
+            logger.Log(ConvertLogLevel(logLevel), exception, message, parameters ?? []);
         }
 
-        private static LogLevel CastLogLevel(MqttNetLogLevel level)
+        private static LogLevel ConvertLogLevel(MqttNetLogLevel? level)
         {
             return level switch
             {

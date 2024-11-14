@@ -14,7 +14,7 @@ sealed class AspNetCoreMqttServerAdapter : IMqttServerAdapter
 {
     readonly MqttConnectionHandler _connectionHandler;
 
-    public Func<IMqttChannelAdapter, Task> ClientHandler
+    public Func<IMqttChannelAdapter, Task>? ClientHandler
     {
         get => _connectionHandler.ClientHandler;
         set => _connectionHandler.ClientHandler = value;

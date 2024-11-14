@@ -19,7 +19,7 @@ sealed class MqttConnectionHandler : ConnectionHandler
     readonly IMqttNetLogger _logger;
     readonly MqttServerOptions _serverOptions;
 
-    public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
+    public Func<IMqttChannelAdapter, Task>? ClientHandler { get; set; }
 
     public MqttConnectionHandler(
         IMqttNetLogger logger,

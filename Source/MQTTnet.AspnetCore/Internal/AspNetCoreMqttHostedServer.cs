@@ -8,29 +8,38 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore
 {
-    sealed class AspNetCoreMqttHostedServer : IHostedService
+    sealed class AspNetCoreMqttHostedServer : BackgroundService
     {
         private readonly AspNetCoreMqttServer _aspNetCoreMqttServer;
+        private readonly Task _applicationStartedTask;
 
         public AspNetCoreMqttHostedServer(
             AspNetCoreMqttServer aspNetCoreMqttServer,
             IHostApplicationLifetime hostApplicationLifetime)
         {
             _aspNetCoreMqttServer = aspNetCoreMqttServer;
-            hostApplicationLifetime.ApplicationStarted.Register(ApplicationStarted);
+            _applicationStartedTask = WaitApplicationStartedAsync(hostApplicationLifetime);
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        private static Task WaitApplicationStartedAsync(IHostApplicationLifetime hostApplicationLifetime)
         {
-            return Task.CompletedTask;
+            var taskCompletionSource = new TaskCompletionSource();
+            hostApplicationLifetime.ApplicationStarted.Register(OnApplicationStarted);
+            return taskCompletionSource.Task;
+
+            void OnApplicationStarted()
+            {
+                taskCompletionSource.TrySetResult();
+            }
         }
 
-        private void ApplicationStarted()
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _ = _aspNetCoreMqttServer.StartAsync();
+            await _applicationStartedTask.WaitAsync(stoppingToken);
+            await _aspNetCoreMqttServer.StartAsync();
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
             return _aspNetCoreMqttServer.StopAsync();
         }

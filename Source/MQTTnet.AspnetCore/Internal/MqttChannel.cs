@@ -12,6 +12,7 @@ using MQTTnet.Packets;
 using System;
 using System.Buffers;
 using System.IO.Pipelines;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,22 +21,9 @@ namespace MQTTnet.AspNetCore;
 
 sealed class MqttChannel : IDisposable
 {
-    readonly ConnectionContext _connection;
     readonly AsyncLock _writerLock = new();
-
     readonly PipeReader _input;
     readonly PipeWriter _output;
-    readonly IHttpContextFeature? _httpContextFeature;
-
-    public MqttChannel(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
-    {
-        PacketFormatterAdapter = packetFormatterAdapter;
-        _connection = connection;
-
-        _input = connection.Transport.Input;
-        _output = connection.Transport.Output;
-        _httpContextFeature = connection.Features.Get<IHttpContextFeature>();
-    }
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
@@ -43,48 +31,52 @@ sealed class MqttChannel : IDisposable
 
     public long BytesSent { get; private set; }
 
-    public X509Certificate2? ClientCertificate
-    {
-        get
-        {
-            if (_httpContextFeature != null && _httpContextFeature.HttpContext != null)
-            {
-                return _httpContextFeature.HttpContext.Connection.ClientCertificate;
-            }
+    public X509Certificate2? ClientCertificate { get; }
 
-            var tlsFeature = _connection.Features.Get<ITlsConnectionFeature>();
-            return tlsFeature?.ClientCertificate;
-        }
+    public string? Endpoint { get; }
+
+    public bool IsSecureConnection { get; }
+
+
+    public MqttChannel(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
+    {
+        var httpContextFeature = connection.Features.Get<IHttpContextFeature>();
+        var tlsConnectionFeature = connection.Features.Get<ITlsConnectionFeature>();
+
+        PacketFormatterAdapter = packetFormatterAdapter;
+        Endpoint = GetRemoteEndPoint(httpContextFeature, connection.RemoteEndPoint);
+        IsSecureConnection = IsTlsConnection(httpContextFeature, tlsConnectionFeature);
+        ClientCertificate = GetClientCertificate(httpContextFeature, tlsConnectionFeature);
+
+        _input = connection.Transport.Input;
+        _output = connection.Transport.Output;
     }
 
-    public string? Endpoint
+    private static string? GetRemoteEndPoint(IHttpContextFeature? _httpContextFeature, EndPoint? remoteEndPoint)
     {
-        get
+        if (_httpContextFeature != null && _httpContextFeature.HttpContext != null)
         {
-            if (_httpContextFeature != null && _httpContextFeature.HttpContext != null)
-            {
-                var httpConnection = _httpContextFeature.HttpContext.Connection;
-                var remoteAddress = httpConnection.RemoteIpAddress;
-                return remoteAddress == null ? null : $"{remoteAddress}:{httpConnection.RemotePort}";
-            }
-
-            return _connection.RemoteEndPoint?.ToString();
+            var httpConnection = _httpContextFeature.HttpContext.Connection;
+            var remoteAddress = httpConnection.RemoteIpAddress;
+            return remoteAddress == null ? null : $"{remoteAddress}:{httpConnection.RemotePort}";
         }
+        return remoteEndPoint?.ToString();
     }
 
-    public bool IsSecureConnection
+    private static bool IsTlsConnection(IHttpContextFeature? _httpContextFeature, ITlsConnectionFeature? tlsConnectionFeature)
     {
-        get
-        {
-            if (_httpContextFeature != null && _httpContextFeature.HttpContext != null)
-            {
-                return _httpContextFeature.HttpContext.Request.IsHttps;
-            }
-
-            var tlsFeature = _connection.Features.Get<ITlsConnectionFeature>();
-            return tlsFeature != null;
-        }
+        return _httpContextFeature != null && _httpContextFeature.HttpContext != null
+            ? _httpContextFeature.HttpContext.Request.IsHttps
+            : tlsConnectionFeature != null;
     }
+
+    private static X509Certificate2? GetClientCertificate(IHttpContextFeature? _httpContextFeature, ITlsConnectionFeature? tlsConnectionFeature)
+    {
+        return _httpContextFeature != null && _httpContextFeature.HttpContext != null
+            ? _httpContextFeature.HttpContext.Connection.ClientCertificate
+            : tlsConnectionFeature?.ClientCertificate;
+    }
+
 
     public async Task DisconnectAsync()
     {

@@ -121,7 +121,7 @@ public sealed class MqttClient : Disposable, IMqttClient
             _mqttClientAlive = new CancellationTokenSource();
             var mqttClientAliveToken = _mqttClientAlive.Token;
 
-            var adapter = await _adapterFactory.CreateClientAdapterAsync(options, new MqttPacketInspector(_events.InspectPacketEvent, _rootLogger), _rootLogger);
+            var adapter = _adapterFactory.CreateClientAdapter(options, new MqttPacketInspector(_events.InspectPacketEvent, _rootLogger), _rootLogger);
             _adapter = adapter ?? throw new InvalidOperationException("The adapter factory did not provide an adapter.");
 
             _unexpectedDisconnectPacket = null;

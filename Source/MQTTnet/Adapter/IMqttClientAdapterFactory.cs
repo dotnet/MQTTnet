@@ -3,11 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Diagnostics.Logger;
-using System.Threading.Tasks;
 
 namespace MQTTnet.Adapter;
 
 public interface IMqttClientAdapterFactory
 {
-    ValueTask<IMqttChannelAdapter> CreateClientAdapterAsync(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger);
+    IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger);
 }

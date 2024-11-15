@@ -86,8 +86,9 @@ public static class Server_ASP_NET_Samples
         {
             await Task.Delay(3000);
             using var client = _mqttClientFactory.CreateMqttClient();
-            var options = new MqttClientOptionsBuilder().WithConnectionUri("mqtt://localhost:1883").Build();
+            var options = new MqttClientOptionsBuilder().WithConnectionUri("mqtts://localhost:1884").WithTlsOptions(x => x.WithIgnoreCertificateChainErrors()).Build();
             await client.ConnectAsync(options, stoppingToken);
+            await client.DisconnectAsync();
         }
     }
 }

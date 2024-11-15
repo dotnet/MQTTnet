@@ -30,7 +30,7 @@ namespace MQTTnet.Tests.ASP
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
-            var ctx = new AspNetCoreMqttChannelAdapter(serializer, connection);
+            var ctx = new MqttServerChannelAdapter(serializer, connection);
 
             await pipe.Receive.Writer.WriteAsync(writer.AddMqttHeader(MqttControlPacketType.Connect, Array.Empty<byte>()));
 
@@ -98,7 +98,7 @@ namespace MQTTnet.Tests.ASP
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
-            var ctx = new AspNetCoreMqttChannelAdapter(serializer, connection);
+            var ctx = new MqttServerChannelAdapter(serializer, connection);
 
             await ctx.SendPacketAsync(new MqttPublishPacket { PayloadSegment = new byte[20_000] }, CancellationToken.None).ConfigureAwait(false);
 
@@ -113,7 +113,7 @@ namespace MQTTnet.Tests.ASP
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
-            var ctx = new AspNetCoreMqttChannelAdapter(serializer, connection);
+            var ctx = new MqttServerChannelAdapter(serializer, connection);
 
             pipe.Receive.Writer.Complete();
 

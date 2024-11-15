@@ -5,7 +5,6 @@
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.Http.Features;
-using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -19,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
+sealed class MqttChannel : IDisposable
 {
     readonly ConnectionContext _connection;
     readonly AsyncLock _writerLock = new();
@@ -28,7 +27,7 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter, IAsyncDisposabl
     readonly PipeWriter _output;
     readonly IHttpContextFeature? _httpContextFeature;
 
-    public AspNetCoreMqttChannelAdapter(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
+    public MqttChannel(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
     {
         PacketFormatterAdapter = packetFormatterAdapter;
         _connection = connection;
@@ -87,30 +86,15 @@ sealed class AspNetCoreMqttChannelAdapter : IMqttChannelAdapter, IAsyncDisposabl
         }
     }
 
-
-    public Task ConnectAsync(CancellationToken cancellationToken)
+    public async Task DisconnectAsync()
     {
-        return Task.CompletedTask;
-    }
-
-    public Task DisconnectAsync(CancellationToken cancellationToken)
-    {
-        _input.Complete();
-        _output.Complete();
-
-        return Task.CompletedTask;
+        await _input.CompleteAsync();
+        await _output.CompleteAsync();
     }
 
     public void Dispose()
     {
         _writerLock.Dispose();
-        _connection.DisposeAsync().GetAwaiter().GetResult();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        _writerLock.Dispose();
-        await _connection.DisposeAsync();
     }
 
     public async Task<MqttPacket?> ReceivePacketAsync(CancellationToken cancellationToken)

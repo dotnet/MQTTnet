@@ -7,13 +7,12 @@ using MQTTnet.Channel;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 using System;
-using System.Threading.Tasks;
 
 namespace MQTTnet.Implementations
 {
     public sealed class MqttClientAdapterFactory : IMqttClientAdapterFactory
     {
-        public ValueTask<IMqttChannelAdapter> CreateClientAdapterAsync(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
+        public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
         {
             ArgumentNullException.ThrowIfNull(options);
 
@@ -41,12 +40,11 @@ namespace MQTTnet.Implementations
             var bufferWriter = new MqttBufferWriter(options.WriterBufferSize, options.WriterBufferSizeMax);
             var packetFormatterAdapter = new MqttPacketFormatterAdapter(options.ProtocolVersion, bufferWriter);
 
-            IMqttChannelAdapter adapter = new MqttChannelAdapter(channel, packetFormatterAdapter, logger)
+            return new MqttChannelAdapter(channel, packetFormatterAdapter, logger)
             {
                 AllowPacketFragmentation = options.AllowPacketFragmentation,
                 PacketInspector = packetInspector
             };
-            return ValueTask.FromResult(adapter);
         }
     }
 }

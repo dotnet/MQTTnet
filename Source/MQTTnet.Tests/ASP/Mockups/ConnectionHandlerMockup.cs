@@ -16,7 +16,7 @@ namespace MQTTnet.Tests.ASP.Mockups;
 public sealed class ConnectionHandlerMockup : IMqttServerAdapter
 {
     public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
-    TaskCompletionSource<AspNetCoreMqttChannelAdapter> Context { get; } = new();
+    TaskCompletionSource<MqttServerChannelAdapter> Context { get; } = new();
 
     public void Dispose()
     {
@@ -27,7 +27,7 @@ public sealed class ConnectionHandlerMockup : IMqttServerAdapter
         try
         {
             var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
-            var context = new AspNetCoreMqttChannelAdapter(formatter, connection);
+            var context = new MqttServerChannelAdapter(formatter, connection);
             Context.TrySetResult(context);
 
             await ClientHandler(context);

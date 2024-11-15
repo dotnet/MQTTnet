@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Features;
 using System;
@@ -147,14 +151,9 @@ namespace MQTTnet.AspNetCore.Internal
         }
 
 
-        private class WebSocketStream : Stream
+        private class WebSocketStream(WebSocket webSocket) : Stream
         {
-            private readonly WebSocket _webSocket;
-
-            public WebSocketStream(WebSocket webSocket)
-            {
-                _webSocket = webSocket;
-            }
+            private readonly WebSocket _webSocket = webSocket;
 
             public override bool CanRead => true;
             public override bool CanSeek => false;
@@ -174,7 +173,7 @@ namespace MQTTnet.AspNetCore.Internal
 
             public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
             {
-                return _webSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, cancellationToken);
+                return _webSocket.SendAsync(buffer, WebSocketMessageType.Binary, false, cancellationToken);
             }
 
             public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)

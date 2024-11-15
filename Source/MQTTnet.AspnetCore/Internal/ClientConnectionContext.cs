@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Http.Features;
@@ -17,6 +21,8 @@ namespace MQTTnet.AspNetCore.Internal
         private readonly Stream _stream;
         private readonly CancellationTokenSource _connectionCloseSource = new();
 
+        private IDictionary<object, object?>? _items;
+
         public override IDuplexPipe Transport { get; set; }
 
         public override CancellationToken ConnectionClosed
@@ -25,11 +31,15 @@ namespace MQTTnet.AspNetCore.Internal
             set => throw new InvalidOperationException();
         }
 
-        public override string ConnectionId { get; set; } = Guid.NewGuid().ToString();
+        public override string ConnectionId { get; set; } = string.Empty;
 
         public override IFeatureCollection Features { get; } = new FeatureCollection();
 
-        public override IDictionary<object, object?> Items { get; set; } = new Dictionary<object, object?>();
+        public override IDictionary<object, object?> Items
+        {
+            get => _items ??= new Dictionary<object, object?>();
+            set => _items = value;
+        }
 
         public ClientConnectionContext(Stream stream)
         {
@@ -50,7 +60,7 @@ namespace MQTTnet.AspNetCore.Internal
             _connectionCloseSource.Cancel();
         }
 
-         
+
         private class StreamTransport(Stream stream) : IDuplexPipe
         {
             public PipeReader Input { get; } = PipeReader.Create(stream, new StreamPipeReaderOptions(leaveOpen: true));

@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-sealed class MqttChannel : IDisposable
+class MqttChannel : IDisposable
 {
     readonly AsyncLock _writerLock = new();
     readonly PipeReader _input;

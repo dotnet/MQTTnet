@@ -13,20 +13,10 @@ namespace MQTTnet.AspNetCore
     {
         public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            switch (options.ChannelOptions)
-            {
-                case MqttClientTcpOptions tcpOptions:
-                    {
-                        var formatter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(4096, 65535));
-                        return new MqttClientChannelAdapter(formatter, tcpOptions);
-                    }
-                default:
-                    {
-                        throw new NotSupportedException();
-                    }
-            }
+            ArgumentNullException.ThrowIfNull(nameof(options));
+            var bufferWriter = new MqttBufferWriter(options.WriterBufferSize, options.WriterBufferSizeMax);
+            var formatter = new MqttPacketFormatterAdapter(options.ProtocolVersion, bufferWriter);
+            return new MqttClientChannelAdapter(formatter, options.ChannelOptions);
         }
     }
 }

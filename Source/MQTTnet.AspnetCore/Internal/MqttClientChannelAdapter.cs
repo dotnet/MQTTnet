@@ -21,12 +21,12 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
     private ConnectionContext? _connection;
     private MqttChannel? _channel;
     private readonly MqttPacketFormatterAdapter _packetFormatterAdapter;
-    private readonly MqttClientTcpOptions _tcpOptions;
+    private readonly IMqttClientChannelOptions _channelOptions;
 
-    public MqttClientChannelAdapter(MqttPacketFormatterAdapter packetFormatterAdapter, MqttClientTcpOptions tcpOptions)
+    public MqttClientChannelAdapter(MqttPacketFormatterAdapter packetFormatterAdapter, IMqttClientChannelOptions channelOptions)
     {
         _packetFormatterAdapter = packetFormatterAdapter;
-        _tcpOptions = tcpOptions;
+        _channelOptions = channelOptions;
     }
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter => GetChannel().PacketFormatterAdapter;
@@ -44,16 +44,18 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        _connection = await ClientConnectionContext.CreateAsync(_tcpOptions, cancellationToken);
+        _connection = _channelOptions switch
+        {
+            MqttClientTcpOptions tcpOptions => await ClientConnectionContext.CreateAsync(tcpOptions, cancellationToken),
+            MqttClientWebSocketOptions webSocketOptions => await ClientConnectionContext.CreateAsync(webSocketOptions, cancellationToken),
+            _ => throw new NotSupportedException(),
+        };
         _channel = new MqttChannel(_packetFormatterAdapter, _connection);
     }
 
     public async Task DisconnectAsync(CancellationToken cancellationToken)
     {
-        if (_channel != null)
-        {
-            await _channel.DisconnectAsync();
-        }
+        await GetChannel().DisconnectAsync();
     }
 
     public async ValueTask DisposeAsync()

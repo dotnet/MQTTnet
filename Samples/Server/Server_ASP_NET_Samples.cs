@@ -84,9 +84,9 @@ public static class Server_ASP_NET_Samples
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Task.Delay(3000);
+            await Task.Delay(1000);
             using var client = _mqttClientFactory.CreateMqttClient();
-            var options = new MqttClientOptionsBuilder().WithConnectionUri("mqtts://localhost:1884").WithTlsOptions(x => x.WithIgnoreCertificateChainErrors()).Build();
+            var options = new MqttClientOptionsBuilder().WithConnectionUri("ws://localhost:5000/mqtt").Build();
             await client.ConnectAsync(options, stoppingToken);
             await client.DisconnectAsync();
         }

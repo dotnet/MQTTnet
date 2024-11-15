@@ -60,7 +60,10 @@ class MqttChannel : IDisposable
             var remoteAddress = httpConnection.RemoteIpAddress;
             return remoteAddress == null ? null : $"{remoteAddress}:{httpConnection.RemotePort}";
         }
-        return remoteEndPoint?.ToString();
+
+        return remoteEndPoint is DnsEndPoint dnsEndPoint
+            ? $"{dnsEndPoint.Host}:{dnsEndPoint.Port}"
+            : remoteEndPoint?.ToString();
     }
 
     private static bool IsTlsConnection(IHttpContextFeature? _httpContextFeature, ITlsConnectionFeature? tlsConnectionFeature)
@@ -84,7 +87,7 @@ class MqttChannel : IDisposable
         await _output.CompleteAsync();
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         _writerLock.Dispose();
     }

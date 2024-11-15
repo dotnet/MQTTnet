@@ -4,6 +4,7 @@
 
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
+using MQTTnet.LowLevelClient;
 
 namespace MQTTnet.AspNetCore
 {
@@ -23,6 +24,11 @@ namespace MQTTnet.AspNetCore
         public IMqttClient CreateMqttClient()
         {
             return new MqttClient(_mqttClientAdapterFactory, _logger);
+        }
+
+        public ILowLevelMqttClient CreateLowLevelMqttClient()
+        {
+            return new LowLevelMqttClient(_mqttClientAdapterFactory, _logger);
         }
     }
 }

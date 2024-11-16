@@ -13,11 +13,33 @@ namespace MQTTnet.AspNetCore
     public static class MqttBuilderExtensions
     {
         /// <summary>
-        /// Disable logging
+        /// Use AspNetCoreMqttNetLogger as IMqttNetLogger
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="configure"></param>
+        /// <returns></returns>
+        public static IMqttBuilder UseAspNetCoreMqttNetLogger(this IMqttBuilder builder, Action<AspNetCoreMqttNetLoggerOptions> configure)
+        {
+            builder.Services.Configure(configure);
+            return builder.UseAspNetCoreMqttNetLogger();
+        }
+
+        /// <summary>
+        /// Use AspNetCoreMqttNetLogger as IMqttNetLogger
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
-        public static IMqttBuilder UseNullLogger(this IMqttBuilder builder)
+        public static IMqttBuilder UseAspNetCoreMqttNetLogger(this IMqttBuilder builder)
+        {
+            return builder.UseLogger<AspNetCoreMqttNetLogger>();
+        }
+
+        /// <summary>
+        /// Use MqttNetNullLogger as IMqttNetLogger
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IMqttBuilder UseMqttNetNullLogger(this IMqttBuilder builder)
         {
             return builder.UseLogger<MqttNetNullLogger>();
         }

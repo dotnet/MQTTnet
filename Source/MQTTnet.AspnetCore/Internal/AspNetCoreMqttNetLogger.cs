@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MQTTnet.Diagnostics.Logger;
 using System;
 
@@ -11,31 +12,24 @@ namespace MQTTnet.AspNetCore
     sealed class AspNetCoreMqttNetLogger : IMqttNetLogger
     {
         private readonly ILoggerFactory _loggerFactory;
-        private const string categoryNamePrefix = "MQTTnet.AspNetCore.";
+        private readonly AspNetCoreMqttNetLoggerOptions _loggerOptions;
 
         public bool IsEnabled => true;
 
-        public AspNetCoreMqttNetLogger(ILoggerFactory loggerFactory)
+        public AspNetCoreMqttNetLogger(
+            ILoggerFactory loggerFactory,
+            IOptions<AspNetCoreMqttNetLoggerOptions> loggerOptions)
         {
             _loggerFactory = loggerFactory;
+            _loggerOptions = loggerOptions.Value;
         }
 
         public void Publish(MqttNetLogLevel logLevel, string? source, string? message, object[]? parameters, Exception? exception)
         {
-            var logger = _loggerFactory.CreateLogger($"{categoryNamePrefix}{source}");
-            logger.Log(ConvertLogLevel(logLevel), exception, message, parameters ?? []);
-        }
-
-        private static LogLevel ConvertLogLevel(MqttNetLogLevel? level)
-        {
-            return level switch
-            {
-                MqttNetLogLevel.Verbose => LogLevel.Trace,
-                MqttNetLogLevel.Info => LogLevel.Information,
-                MqttNetLogLevel.Warning => LogLevel.Warning,
-                MqttNetLogLevel.Error => LogLevel.Error,
-                _ => LogLevel.None
-            };
+            var categoryName = $"{_loggerOptions.CategoryNamePrefix}{source}";
+            var logger = _loggerFactory.CreateLogger(categoryName);
+            var level = _loggerOptions.LogLevelConverter(logLevel);
+            logger.Log(level, exception, message, parameters ?? []);
         }
     }
 }

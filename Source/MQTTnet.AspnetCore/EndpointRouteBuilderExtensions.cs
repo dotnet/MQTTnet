@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +40,7 @@ namespace MQTTnet.AspNetCore
         /// <returns></returns>
         public static ConnectionEndpointRouteBuilder MapMqtt(this IEndpointRouteBuilder endpoints, string pattern, Action<HttpConnectionDispatcherOptions> options)
         {
+            endpoints.ServiceProvider.GetRequiredService<MqttConnectionHandler>().MapFlag = true;
             return endpoints.MapConnectionHandler<MqttConnectionHandler>(pattern, options);
         }
     }

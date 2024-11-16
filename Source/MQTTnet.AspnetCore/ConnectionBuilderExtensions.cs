@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.AspNetCore.Connections;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MQTTnet.AspNetCore
 {
@@ -15,6 +16,7 @@ namespace MQTTnet.AspNetCore
         /// <returns></returns>
         public static IConnectionBuilder UseMqtt(this IConnectionBuilder builder)
         {
+            builder.ApplicationServices.GetRequiredService<MqttConnectionHandler>().UseFlag = true;
             return builder.UseConnectionHandler<MqttConnectionHandler>();
         }
     }

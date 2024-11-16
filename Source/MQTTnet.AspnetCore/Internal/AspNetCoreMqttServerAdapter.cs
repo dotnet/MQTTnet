@@ -13,7 +13,6 @@ namespace MQTTnet.AspNetCore;
 sealed class AspNetCoreMqttServerAdapter : IMqttServerAdapter
 {
     readonly MqttConnectionHandler _connectionHandler;
-
     public Func<IMqttChannelAdapter, Task>? ClientHandler
     {
         get => _connectionHandler.ClientHandler;
@@ -27,6 +26,18 @@ sealed class AspNetCoreMqttServerAdapter : IMqttServerAdapter
 
     public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
     {
+        if (options.DefaultEndpointOptions.IsEnabled)
+        {
+            var message = "DefaultEndpoint is ignored because the listener is implemented by the Asp.Net Core Server.";
+            logger.Publish(MqttNetLogLevel.Warning, nameof(AspNetCoreMqttServerAdapter), message, null, null);
+        }
+
+        if (options.TlsEndpointOptions.IsEnabled)
+        {
+            var message = "EncryptedEndpoint is ignored because the the listener and TLS middleware are implemented by Asp.NetCore's Server.";
+            logger.Publish(MqttNetLogLevel.Warning, nameof(AspNetCoreMqttServerAdapter), message, null, null);
+        }
+
         return Task.CompletedTask;
     }
 

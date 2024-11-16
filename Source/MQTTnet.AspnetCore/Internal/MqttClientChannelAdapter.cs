@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Connections;
 using MQTTnet.Adapter;
-using MQTTnet.AspNetCore.Internal;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using System;

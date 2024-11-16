@@ -14,7 +14,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.AspNetCore.Internal
+namespace MQTTnet.AspNetCore
 {
     sealed partial class ClientConnectionContext : ConnectionContext
     {

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Features;
 using System;
 using System.IO;
@@ -11,11 +10,11 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.AspNetCore.Internal
+namespace MQTTnet.AspNetCore
 {
-    partial class ClientConnectionContext : ConnectionContext
+    partial class ClientConnectionContext
     {
-        public static async Task<ConnectionContext> CreateAsync(MqttClientWebSocketOptions options, CancellationToken cancellationToken)
+        public static async Task<ClientConnectionContext> CreateAsync(MqttClientWebSocketOptions options, CancellationToken cancellationToken)
         {
             var uri = new UriBuilder(new Uri(options.Uri, UriKind.Absolute))
             {

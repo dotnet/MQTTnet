@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Http.Features;
 using System;
@@ -13,13 +12,53 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.AspNetCore.Internal
+namespace MQTTnet.AspNetCore
 {
-    partial class ClientConnectionContext : ConnectionContext
-    {        
-        public static async Task<ConnectionContext> CreateAsync(MqttClientTcpOptions options, CancellationToken cancellationToken)
+    partial class ClientConnectionContext
+    {
+        public static async Task<ClientConnectionContext> CreateAsync(MqttClientTcpOptions options, CancellationToken cancellationToken)
         {
-            var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            Socket socket;
+            if (options.RemoteEndpoint is UnixDomainSocketEndPoint)
+            {
+                socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+            }
+            else if (options.AddressFamily == AddressFamily.Unspecified)
+            {
+                socket = new Socket(SocketType.Stream, options.ProtocolType);
+            }
+            else
+            {
+                socket = new Socket(options.AddressFamily, SocketType.Stream, options.ProtocolType);
+            }
+
+            if (options.LocalEndpoint != null)
+            {
+                socket.Bind(options.LocalEndpoint);
+            }
+
+            socket.ReceiveBufferSize = options.BufferSize;
+            socket.SendBufferSize = options.BufferSize;
+
+            if (options.ProtocolType == ProtocolType.Tcp && options.RemoteEndpoint is not UnixDomainSocketEndPoint)
+            {
+                // Other protocol types do not support the Nagle algorithm.
+                socket.NoDelay = options.NoDelay;
+            }
+
+            if (options.LingerState != null)
+            {
+                socket.LingerState = options.LingerState;
+            }
+
+            if (options.DualMode.HasValue)
+            {
+                // It is important to avoid setting the flag if no specific value is set by the user
+                // because on IPv4 only networks the setter will always throw an exception. Regardless
+                // of the actual value.
+                socket.DualMode = options.DualMode.Value;
+            }
+
             try
             {
                 await socket.ConnectAsync(options.RemoteEndpoint, cancellationToken).ConfigureAwait(false);
@@ -146,6 +185,6 @@ namespace MQTTnet.AspNetCore.Internal
             {
                 return options.TlsOptions.ClientCertificatesProvider?.GetCertificates();
             }
-        } 
+        }
     }
 }

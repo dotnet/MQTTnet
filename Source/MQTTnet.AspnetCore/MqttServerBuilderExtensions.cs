@@ -7,11 +7,12 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MQTTnet.Server;
 using MQTTnet.Server.Internal.Adapter;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MQTTnet.AspNetCore
 {
     public static class MqttServerBuilderExtensions
-    {        
+    {
         /// <summary>
         /// Configure MqttServerOptionsBuilder
         /// </summary>
@@ -39,12 +40,33 @@ namespace MQTTnet.AspNetCore
         /// <summary>
         /// Add MqttTcpServerAdapter to MqttServer   
         /// </summary>
-        /// <remarks>We recommend using ListenOptions.UseMqtt() instead of using MqttTcpServerAdapter in an AspNetCore environment</remarks>
         /// <param name="builder"></param>
         /// <returns></returns>
         public static IMqttServerBuilder AddMqttTcpServerAdapter(this IMqttServerBuilder builder)
         {
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMqttServerAdapter, MqttTcpServerAdapter>());
+            return builder.AddMqttServerAdapter<MqttTcpServerAdapter>();
+        }
+
+        /// <summary>
+        /// Add AspNetCoreMqttServerAdapter to MqttServer   
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IMqttServerBuilder AddAspNetCoreMqttServerAdapter(this IMqttServerBuilder builder)
+        {
+            return builder.AddMqttServerAdapter<AspNetCoreMqttServerAdapter>();
+        }
+
+        /// <summary>
+        /// Add an IMqttServerAdapter to MqttServer
+        /// </summary>
+        /// <typeparam name="TMqttServerAdapter"></typeparam>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IMqttServerBuilder AddMqttServerAdapter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TMqttServerAdapter>(this IMqttServerBuilder builder)
+            where TMqttServerAdapter : class, IMqttServerAdapter
+        {
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMqttServerAdapter, TMqttServerAdapter>());
             return builder;
         }
     }

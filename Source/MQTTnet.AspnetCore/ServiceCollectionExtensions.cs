@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
-using MQTTnet.Implementations;
 using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore;
@@ -39,7 +38,7 @@ public static class ServiceCollectionExtensions
     /// <returns></returns>
     public static IMqttClientBuilder AddMqttClient(this IServiceCollection services)
     {
-        services.TryAddSingleton<IMqttClientAdapterFactory, MqttClientAdapterFactory>();
+        services.TryAddSingleton<IMqttClientAdapterFactory, AspNetCoreMqttClientAdapterFactory>();
         services.TryAddSingleton<IMqttClientFactory, AspNetCoreMqttClientFactory>();
         return services.AddMqtt();
     }

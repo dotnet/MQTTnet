@@ -5,6 +5,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MQTTnet.Adapter;
+using MQTTnet.Implementations;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -12,6 +13,16 @@ namespace MQTTnet.AspNetCore
 {
     public static class MqttClientBuilderExtensions
     {
+        /// <summary>
+        /// Replace the implementation of IMqttClientAdapterFactory to MQTTnet.Implementations.MqttClientAdapterFactory
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IMqttClientBuilder UseMQTTnetMqttClientAdapterFactory(this IMqttClientBuilder builder)
+        {
+            return builder.UseMqttClientAdapterFactory<MqttClientAdapterFactory>();
+        }
+
         /// <summary>
         /// Replace the implementation of IMqttClientAdapterFactory to AspNetCoreMqttClientAdapterFactory
         /// </summary>

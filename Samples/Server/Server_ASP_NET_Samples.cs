@@ -24,7 +24,7 @@ public static class Server_ASP_NET_Samples
     {
         var builder = WebApplication.CreateBuilder();
         builder.Services.AddMqttServer();
-        builder.Services.AddMqttClient().UseAspNetCoreMqttClientAdapterFactory();
+        builder.Services.AddMqttClient();
         builder.Services.AddHostedService<MqttClientController>();
 
         builder.WebHost.UseKestrel(kestrel =>

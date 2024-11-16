@@ -27,7 +27,7 @@ namespace MQTTnet.Benchmarks
                    .ConfigureServices(services =>
                    {
                        services.AddMqttServer();
-                       services.AddMqttClient().UseAspNetCoreMqttClientAdapterFactory();
+                       services.AddMqttClient();
                    })
                    .Build();
 

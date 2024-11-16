@@ -55,11 +55,6 @@ namespace MQTTnet.AspNetCore
         {
             builder.Services.Replace(ServiceDescriptor.Singleton<IMqttNetLogger, TLogger>());
             return builder;
-        }
-
-        private class MqttBuilder(IServiceCollection services) : IMqttBuilder
-        {
-            public IServiceCollection Services { get; } = services;
-        }
+        } 
     }
 }

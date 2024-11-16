@@ -22,6 +22,9 @@ public static class ServiceCollectionExtensions
         services.AddOptions();
         services.AddConnections();
         services.TryAddSingleton<MqttConnectionHandler>();
+        services.TryAddSingleton<AspNetCoreMqttOptionsBuilder>();
+        services.TryAddSingleton(s => s.GetRequiredService<AspNetCoreMqttOptionsBuilder>().BuildServerOptions());
+        services.TryAddSingleton(s => s.GetRequiredService<AspNetCoreMqttOptionsBuilder>().BuildServerStopOptions());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IMqttServerAdapter, AspNetCoreMqttServerAdapter>());
 
         services.TryAddSingleton<AspNetCoreMqttServer>();

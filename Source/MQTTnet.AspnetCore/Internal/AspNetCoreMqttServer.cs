@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Extensions.Options;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Server;
@@ -16,15 +15,15 @@ namespace MQTTnet.AspNetCore;
 sealed class AspNetCoreMqttServer : MqttServer
 {
     private readonly MqttConnectionHandler _connectionHandler;
-    private readonly IOptions<MqttServerStopOptionsBuilder> _stopOptions;
+    private readonly MqttServerStopOptions _stopOptions;
     private readonly IEnumerable<IMqttServerAdapter> _adapters;
 
     public AspNetCoreMqttServer(
         MqttConnectionHandler connectionHandler,
-        IOptions<MqttServerOptionsBuilder> serverOptions,
-        IOptions<MqttServerStopOptionsBuilder> stopOptions,
+        MqttServerOptions serverOptions,
+        MqttServerStopOptions stopOptions,
         IEnumerable<IMqttServerAdapter> adapters,
-        IMqttNetLogger logger) : base(serverOptions.Value.Build(), adapters, logger)
+        IMqttNetLogger logger) : base(serverOptions, adapters, logger)
     {
         _connectionHandler = connectionHandler;
         _stopOptions = stopOptions;
@@ -45,6 +44,6 @@ sealed class AspNetCoreMqttServer : MqttServer
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        return base.StopAsync(_stopOptions.Value.Build());
+        return base.StopAsync(_stopOptions);
     }
 }

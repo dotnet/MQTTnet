@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
-using Microsoft.Extensions.Options;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
@@ -27,10 +26,10 @@ sealed class MqttConnectionHandler : ConnectionHandler
 
     public MqttConnectionHandler(
         IMqttNetLogger logger,
-        IOptions<MqttServerOptionsBuilder> serverOptions)
+        MqttServerOptions serverOptions)
     {
         _logger = logger;
-        _serverOptions = serverOptions.Value.Build();
+        _serverOptions = serverOptions;
     }
 
     public override async Task OnConnectedAsync(ConnectionContext connection)

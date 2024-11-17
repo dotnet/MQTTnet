@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace MQTTnet.AspNetCore
@@ -20,7 +21,7 @@ namespace MQTTnet.AspNetCore
         /// <param name="endpoints"></param>
         /// <param name="pattern"></param>
         /// <returns></returns>
-        public static ConnectionEndpointRouteBuilder MapMqtt(this IEndpointRouteBuilder endpoints, string pattern)
+        public static ConnectionEndpointRouteBuilder MapMqtt(this IEndpointRouteBuilder endpoints, [StringSyntax("Route")] string pattern)
         {
             return endpoints.MapMqtt(pattern, options => options.WebSockets.SubProtocolSelector = SelectSubProtocol);
 
@@ -38,7 +39,7 @@ namespace MQTTnet.AspNetCore
         /// <param name="pattern"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ConnectionEndpointRouteBuilder MapMqtt(this IEndpointRouteBuilder endpoints, string pattern, Action<HttpConnectionDispatcherOptions> options)
+        public static ConnectionEndpointRouteBuilder MapMqtt(this IEndpointRouteBuilder endpoints, [StringSyntax("Route")] string pattern, Action<HttpConnectionDispatcherOptions> options)
         {
             endpoints.ServiceProvider.GetRequiredService<MqttConnectionHandler>().MapFlag = true;
             return endpoints.MapConnectionHandler<MqttConnectionHandler>(pattern, options);

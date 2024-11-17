@@ -78,39 +78,36 @@ namespace MQTTnet.AspNetCore
                 {
                     if (endpoint is MqttServerTlsTcpEndpointOptions tlsEndPoint)
                     {
-                        var httpsOptions = CreateHttpsOptions(tlsEndPoint);
-                        tlsConfigure?.Invoke(httpsOptions);
-                        listenOptions.UseHttps(httpsOptions);
+                        listenOptions.UseHttps(httpsOptions =>
+                        {
+                            tlsEndPoint.AdaptTo(httpsOptions);
+                            tlsConfigure?.Invoke(httpsOptions);
+                        });
                     }
                     listenOptions.UseMqtt();
                 }
             }
         }
 
-        private static HttpsConnectionAdapterOptions CreateHttpsOptions(MqttServerTlsTcpEndpointOptions tlsEndPoint)
+        private static void AdaptTo(this MqttServerTlsTcpEndpointOptions tlsEndPoint, HttpsConnectionAdapterOptions httpsOptions)
         {
-            var options = new HttpsConnectionAdapterOptions
-            {
-                SslProtocols = tlsEndPoint.SslProtocol,
-                CheckCertificateRevocation = tlsEndPoint.CheckCertificateRevocation,
-            };
+            httpsOptions.SslProtocols = tlsEndPoint.SslProtocol;
+            httpsOptions.CheckCertificateRevocation = tlsEndPoint.CheckCertificateRevocation;
 
             if (tlsEndPoint.ClientCertificateRequired)
             {
-                options.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+                httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
             }
 
             if (tlsEndPoint.CertificateProvider != null)
             {
-                options.ServerCertificateSelector = (context, host) => tlsEndPoint.CertificateProvider.GetCertificate();
+                httpsOptions.ServerCertificateSelector = (context, host) => tlsEndPoint.CertificateProvider.GetCertificate();
             }
 
             if (tlsEndPoint.RemoteCertificateValidationCallback != null)
             {
-                options.ClientCertificateValidation = (cert, chain, errors) => tlsEndPoint.RemoteCertificateValidationCallback(tlsEndPoint, cert, chain, errors);
+                httpsOptions.ClientCertificateValidation = (cert, chain, errors) => tlsEndPoint.RemoteCertificateValidationCallback(tlsEndPoint, cert, chain, errors);
             }
-
-            return options;
         }
     }
 }

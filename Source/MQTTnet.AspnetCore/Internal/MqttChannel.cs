@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.Http.Features;
+using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -24,6 +25,7 @@ class MqttChannel : IDisposable
     readonly AsyncLock _writerLock = new();
     readonly PipeReader _input;
     readonly PipeWriter _output;
+    readonly MqttPacketInspector? _packetInspector;
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
@@ -38,12 +40,16 @@ class MqttChannel : IDisposable
     public bool IsSecureConnection { get; }
 
 
-    public MqttChannel(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection)
+    public MqttChannel(
+        MqttPacketFormatterAdapter packetFormatterAdapter,
+        ConnectionContext connection,
+        MqttPacketInspector? packetInspector = null)
     {
+        PacketFormatterAdapter = packetFormatterAdapter;
+        _packetInspector = packetInspector;
+
         var httpContextFeature = connection.Features.Get<IHttpContextFeature>();
         var tlsConnectionFeature = connection.Features.Get<ITlsConnectionFeature>();
-
-        PacketFormatterAdapter = packetFormatterAdapter;
         Endpoint = GetRemoteEndPoint(httpContextFeature, connection.RemoteEndPoint);
         IsSecureConnection = IsTlsConnection(httpContextFeature, tlsConnectionFeature);
         ClientCertificate = GetClientCertificate(httpContextFeature, tlsConnectionFeature);
@@ -96,6 +102,8 @@ class MqttChannel : IDisposable
     {
         try
         {
+            _packetInspector?.BeginReceivePacket();
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 ReadResult readResult;
@@ -121,6 +129,11 @@ class MqttChannel : IDisposable
                         if (PacketFormatterAdapter.TryDecode(buffer, out var packet, out consumed, out observed, out var received))
                         {
                             BytesReceived += received;
+
+                            if (_packetInspector != null)
+                            {
+                                await _packetInspector.EndReceivePacket().ConfigureAwait(false);
+                            }
                             return packet;
                         }
                     }
@@ -164,6 +177,10 @@ class MqttChannel : IDisposable
             try
             {
                 var buffer = PacketFormatterAdapter.Encode(packet);
+                if (_packetInspector != null)
+                {
+                    await _packetInspector.BeginSendPacket(buffer).ConfigureAwait(false);
+                }
 
                 if (buffer.Payload.Length == 0)
                 {

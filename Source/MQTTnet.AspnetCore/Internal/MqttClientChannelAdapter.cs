@@ -21,11 +21,16 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
     private MqttChannel? _channel;
     private readonly MqttPacketFormatterAdapter _packetFormatterAdapter;
     private readonly IMqttClientChannelOptions _channelOptions;
+    private readonly MqttPacketInspector? _packetInspector;
 
-    public MqttClientChannelAdapter(MqttPacketFormatterAdapter packetFormatterAdapter, IMqttClientChannelOptions channelOptions)
+    public MqttClientChannelAdapter(
+        MqttPacketFormatterAdapter packetFormatterAdapter,
+        IMqttClientChannelOptions channelOptions,
+        MqttPacketInspector? packetInspector)
     {
         _packetFormatterAdapter = packetFormatterAdapter;
         _channelOptions = channelOptions;
+        _packetInspector = packetInspector;
     }
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter => GetChannel().PacketFormatterAdapter;
@@ -49,7 +54,7 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
             MqttClientWebSocketOptions webSocketOptions => await ClientConnectionContext.CreateAsync(webSocketOptions, cancellationToken),
             _ => throw new NotSupportedException(),
         };
-        _channel = new MqttChannel(_packetFormatterAdapter, _connection);
+        _channel = new MqttChannel(_packetFormatterAdapter, _connection, _packetInspector);
     }
 
     public async Task DisconnectAsync(CancellationToken cancellationToken)

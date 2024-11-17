@@ -16,7 +16,7 @@ namespace MQTTnet.AspNetCore
             ArgumentNullException.ThrowIfNull(nameof(options));
             var bufferWriter = new MqttBufferWriter(options.WriterBufferSize, options.WriterBufferSizeMax);
             var formatter = new MqttPacketFormatterAdapter(options.ProtocolVersion, bufferWriter);
-            return new MqttClientChannelAdapter(formatter, options.ChannelOptions);
+            return new MqttClientChannelAdapter(formatter, options.ChannelOptions, packetInspector);
         }
     }
 }

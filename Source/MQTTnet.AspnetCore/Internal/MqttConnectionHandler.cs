@@ -49,7 +49,8 @@ sealed class MqttConnectionHandler : ConnectionHandler
             transferFormatFeature.ActiveFormat = TransferFormat.Binary;
         }
 
-        var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax));
+        var bufferWriter = new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax);
+        var formatter = new MqttPacketFormatterAdapter(bufferWriter);
         using var adapter = new MqttServerChannelAdapter(formatter, connection);
         await clientHandler(adapter).ConfigureAwait(false);
     }

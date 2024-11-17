@@ -32,11 +32,12 @@ sealed class AspNetCoreMqttServer : MqttServer
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        if (!_connectionHandler.UseFlag &&
+        if (!_connectionHandler.ListenFlag &&
+            !_connectionHandler.UseFlag &&
             !_connectionHandler.MapFlag &&
             _adapters.All(item => item.GetType() == typeof(AspNetCoreMqttServerAdapter)))
         {
-            throw new MqttConfigurationException("UseMqtt() or MapMqtt() must be called in at least one place");
+            throw new MqttConfigurationException("ListenMqtt() or UseMqtt() or MapMqtt() must be called in at least one place");
         }
 
         return base.StartAsync();

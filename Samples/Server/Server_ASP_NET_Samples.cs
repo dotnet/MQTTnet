@@ -23,17 +23,18 @@ public static class Server_ASP_NET_Samples
     public static Task Start_Server_With_WebSockets_Support()
     {
         var builder = WebApplication.CreateBuilder();
-        builder.Services.AddMqttServer();
+        builder.Services.AddMqttServer().ConfigureMqttServer(s => s.WithDefaultEndpoint().WithEncryptedEndpoint());
         builder.Services.AddMqttClient();
         builder.Services.AddHostedService<MqttClientController>();
 
         builder.WebHost.UseKestrel(kestrel =>
         {
-            // mqtt over tcp
-            kestrel.ListenAnyIP(1883, l => l.UseMqtt());
+            // Need ConfigureMqttServer(s => s.WithDefaultEndpoint().WithEncryptedEndpoint())
+            kestrel.ListenMqtt();
 
-            // mqtt over tls over tcp
-            kestrel.ListenLocalhost(1884, l => l.UseHttps().UseMqtt());
+            // We can also manually listen to a specific port without ConfigureMqttServer()
+            // kestrel.ListenAnyIP(1883, l => l.UseMqtt());  // mqtt over tcp          
+            // kestrel.ListenAnyIP(8883, l => l.UseHttps().UseMqtt());   // mqtt over tls over tcp
 
             // This will allow MQTT connections based on HTTP WebSockets with URI "localhost:5000/mqtt"
             // See code below for URI configuration.
@@ -86,7 +87,7 @@ public static class Server_ASP_NET_Samples
         {
             await Task.Delay(1000);
             using var client = _mqttClientFactory.CreateMqttClient();
-            var options = new MqttClientOptionsBuilder().WithConnectionUri("ws://localhost:5000/mqtt").Build();
+            var options = new MqttClientOptionsBuilder().WithConnectionUri("mqtt://127.0.0.1:1883").Build();
             await client.ConnectAsync(options, stoppingToken);
             await client.DisconnectAsync();
         }

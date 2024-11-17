@@ -5,7 +5,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MQTTnet.Server;
-using MQTTnet.Server.Internal.Adapter;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -36,27 +35,7 @@ namespace MQTTnet.AspNetCore
             builder.Services.Configure(configure);
             return builder;
         }
-
-        /// <summary>
-        /// Add MqttTcpServerAdapter to MqttServer   
-        /// </summary>
-        /// <param name="builder"></param>
-        /// <returns></returns>
-        public static IMqttServerBuilder AddMqttTcpServerAdapter(this IMqttServerBuilder builder)
-        {
-            return builder.AddMqttServerAdapter<MqttTcpServerAdapter>();
-        }
-
-        /// <summary>
-        /// Add AspNetCoreMqttServerAdapter to MqttServer   
-        /// </summary>
-        /// <param name="builder"></param>
-        /// <returns></returns>
-        public static IMqttServerBuilder AddAspNetCoreMqttServerAdapter(this IMqttServerBuilder builder)
-        {
-            return builder.AddMqttServerAdapter<AspNetCoreMqttServerAdapter>();
-        }
-
+         
         /// <summary>
         /// Add an IMqttServerAdapter to MqttServer
         /// </summary>

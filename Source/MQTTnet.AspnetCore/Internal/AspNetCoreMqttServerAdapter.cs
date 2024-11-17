@@ -26,16 +26,19 @@ sealed class AspNetCoreMqttServerAdapter : IMqttServerAdapter
 
     public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
     {
-        if (options.DefaultEndpointOptions.IsEnabled)
+        if (!_connectionHandler.ListenFlag)
         {
-            var message = "DefaultEndpoint is ignored because the listener is implemented by the Asp.Net Core Server.";
-            logger.Publish(MqttNetLogLevel.Warning, nameof(AspNetCoreMqttServerAdapter), message, null, null);
-        }
+            if (options.DefaultEndpointOptions.IsEnabled)
+            {
+                var message = "DefaultEndpointOptions has been ignored because the user called UseMqtt() on the specified listener.";
+                logger.Publish(MqttNetLogLevel.Warning, nameof(AspNetCoreMqttServerAdapter), message, null, null);
+            }
 
-        if (options.TlsEndpointOptions.IsEnabled)
-        {
-            var message = "EncryptedEndpoint is ignored because the the listener and TLS middleware are implemented by Asp.NetCore's Server.";
-            logger.Publish(MqttNetLogLevel.Warning, nameof(AspNetCoreMqttServerAdapter), message, null, null);
+            if (options.TlsEndpointOptions.IsEnabled)
+            {
+                var message = "TlsEndpointOptions has been ignored because the user called UseMqtt() on the specified listener.";
+                logger.Publish(MqttNetLogLevel.Warning, nameof(AspNetCoreMqttServerAdapter), message, null, null);
+            }
         }
 
         return Task.CompletedTask;

@@ -22,6 +22,8 @@ sealed class MqttConnectionHandler : ConnectionHandler
 
     public bool MapFlag { get; set; }
 
+    public bool ListenFlag { get; set; }
+
     public Func<IMqttChannelAdapter, Task>? ClientHandler { get; set; }
 
     public MqttConnectionHandler(

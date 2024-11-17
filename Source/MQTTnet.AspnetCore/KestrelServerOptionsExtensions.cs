@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
@@ -14,53 +18,47 @@ namespace MQTTnet.AspNetCore
     {
         /// <summary>
         /// Listen all endponts in MqttServerOptions
-        /// <para>• The properties of the DefaultEndpointOptions will be ignored except for the BoundInterNetworkAddress and port</para>
-        /// <para>• The properties of the TlsEndpointOptions will be ignored except for the BoundInterNetworkAddress and port</para>
         /// </summary>
         /// <param name="kestrel"></param>
         /// <exception cref="MqttConfigurationException"></exception>
         /// <returns></returns>
         public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel)
         {
-            return kestrel.ListenMqtt(tls => { });
+            return kestrel.ListenMqtt(default(Action<HttpsConnectionAdapterOptions>));
         }
 
         /// <summary>
         /// Listen all endponts in MqttServerOptions
-        /// <para>• The properties of the DefaultEndpointOptions will be ignored except for the BoundInterNetworkAddress and port</para>
-        /// <para>• The properties of the TlsEndpointOptions will be ignored except for the BoundInterNetworkAddress and port</para>
         /// </summary>
         /// <param name="kestrel"></param>
         /// <param name="serverCertificate"></param>
         /// <exception cref="MqttConfigurationException"></exception>
         /// <returns></returns>
-        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, X509Certificate2 serverCertificate)
+        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, X509Certificate2? serverCertificate)
         {
             return kestrel.ListenMqtt(tls => tls.ServerCertificate = serverCertificate);
         }
 
         /// <summary>
         /// Listen all endponts in MqttServerOptions
-        /// <para>• The properties of the DefaultEndpointOptions will be ignored except for the BoundInterNetworkAddress and port</para>
-        /// <para>• The properties of the TlsEndpointOptions will be ignored except for the BoundInterNetworkAddress and port</para>
         /// </summary>
         /// <param name="kestrel"></param>
         /// <param name="tlsConfigure"></param>
         /// <exception cref="MqttConfigurationException"></exception>
         /// <returns></returns>
-        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, Action<HttpsConnectionAdapterOptions> tlsConfigure)
+        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, Action<HttpsConnectionAdapterOptions>? tlsConfigure)
         {
             var serverOptions = kestrel.ApplicationServices.GetRequiredService<MqttServerOptions>();
             var connectionHandler = kestrel.ApplicationServices.GetRequiredService<MqttConnectionHandler>();
 
-            Listen(serverOptions.DefaultEndpointOptions, useTls: false);
-            Listen(serverOptions.TlsEndpointOptions, useTls: true);
+            Listen(serverOptions.DefaultEndpointOptions);
+            Listen(serverOptions.TlsEndpointOptions);
 
             return connectionHandler.ListenFlag
                 ? kestrel
                 : throw new MqttConfigurationException("None of the MqttServerOptions Endpoints are enabled.");
 
-            void Listen(MqttServerTcpEndpointBaseOptions endpoint, bool useTls)
+            void Listen(MqttServerTcpEndpointBaseOptions endpoint)
             {
                 if (!endpoint.IsEnabled)
                 {
@@ -78,13 +76,41 @@ namespace MQTTnet.AspNetCore
 
                 void UseMiddleware(ListenOptions listenOptions)
                 {
-                    if (useTls)
+                    if (endpoint is MqttServerTlsTcpEndpointOptions tlsEndPoint)
                     {
-                        listenOptions.UseHttps(tlsConfigure);
+                        var httpsOptions = CreateHttpsOptions(tlsEndPoint);
+                        tlsConfigure?.Invoke(httpsOptions);
+                        listenOptions.UseHttps(httpsOptions);
                     }
                     listenOptions.UseMqtt();
                 }
             }
+        }
+
+        private static HttpsConnectionAdapterOptions CreateHttpsOptions(MqttServerTlsTcpEndpointOptions tlsEndPoint)
+        {
+            var options = new HttpsConnectionAdapterOptions
+            {
+                SslProtocols = tlsEndPoint.SslProtocol,
+                CheckCertificateRevocation = tlsEndPoint.CheckCertificateRevocation,
+            };
+
+            if (tlsEndPoint.ClientCertificateRequired)
+            {
+                options.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+            }
+
+            if (tlsEndPoint.CertificateProvider != null)
+            {
+                options.ServerCertificateSelector = (context, host) => tlsEndPoint.CertificateProvider.GetCertificate();
+            }
+
+            if (tlsEndPoint.RemoteCertificateValidationCallback != null)
+            {
+                options.ClientCertificateValidation = (cert, chain, errors) => tlsEndPoint.RemoteCertificateValidationCallback(tlsEndPoint, cert, chain, errors);
+            }
+
+            return options;
         }
     }
 }

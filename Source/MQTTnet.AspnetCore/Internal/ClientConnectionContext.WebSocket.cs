@@ -43,7 +43,7 @@ namespace MQTTnet.AspNetCore
 
             if (uri.Scheme == Uri.UriSchemeWss)
             {
-                connection.Features.Set<ITlsConnectionFeature>(TlsConnectionFeature.Instance);
+                connection.Features.Set<ITlsConnectionFeature>(TlsConnectionFeature.Default);
             }
             return connection;
         }

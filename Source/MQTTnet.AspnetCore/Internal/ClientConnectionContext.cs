@@ -70,13 +70,18 @@ namespace MQTTnet.AspNetCore
 
         private class TlsConnectionFeature : ITlsConnectionFeature
         {
-            public static readonly TlsConnectionFeature Instance = new();
+            public static readonly TlsConnectionFeature Default = new(null);
 
             public X509Certificate2? ClientCertificate { get; set; }
 
             public Task<X509Certificate2?> GetClientCertificateAsync(CancellationToken cancellationToken)
             {
                 return Task.FromResult(ClientCertificate);
+            }
+
+            public TlsConnectionFeature(X509Certificate? clientCertificate)
+            {
+                ClientCertificate = clientCertificate as X509Certificate2;
             }
         }
 

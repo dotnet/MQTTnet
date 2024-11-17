@@ -142,8 +142,9 @@ namespace MQTTnet.AspNetCore
                 LocalEndPoint = socket.LocalEndPoint,
                 RemoteEndPoint = socket.RemoteEndPoint,
             };
-            connection.Features.Set<ITlsConnectionFeature>(TlsConnectionFeature.Instance);
+
             connection.Features.Set<IConnectionSocketFeature>(new ConnectionSocketFeature(socket));
+            connection.Features.Set<ITlsConnectionFeature>(new TlsConnectionFeature(sslStream.LocalCertificate));
             return connection;
 
 

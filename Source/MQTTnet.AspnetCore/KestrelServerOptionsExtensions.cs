@@ -53,33 +53,38 @@ namespace MQTTnet.AspNetCore
             var serverOptions = kestrel.ApplicationServices.GetRequiredService<MqttServerOptions>();
             var connectionHandler = kestrel.ApplicationServices.GetRequiredService<MqttConnectionHandler>();
 
-            if (serverOptions.DefaultEndpointOptions.IsEnabled)
+            Listen(serverOptions.DefaultEndpointOptions, useTls: false);
+            Listen(serverOptions.TlsEndpointOptions, useTls: true);
+
+            return connectionHandler.ListenFlag
+                ? kestrel
+                : throw new MqttConfigurationException("None of the MqttServerOptions Endpoints are enabled.");
+
+            void Listen(MqttServerTcpEndpointBaseOptions endpoint, bool useTls)
             {
-                var endpoint = serverOptions.DefaultEndpointOptions;
-                kestrel.Listen(endpoint.BoundInterNetworkV6Address, endpoint.Port, o => o.UseMqtt());
+                if (!endpoint.IsEnabled)
+                {
+                    return;
+                }
+
+                // No need to listen any IPv4 when has IPv6Any
                 if (!IPAddress.IPv6Any.Equals(endpoint.BoundInterNetworkV6Address))
                 {
-                    kestrel.Listen(endpoint.BoundInterNetworkAddress, endpoint.Port, o => o.UseMqtt());
+                    kestrel.Listen(endpoint.BoundInterNetworkAddress, endpoint.Port, UseMiddleware);
                 }
+                kestrel.Listen(endpoint.BoundInterNetworkV6Address, endpoint.Port, UseMiddleware);
                 connectionHandler.ListenFlag = true;
-            }
 
-            if (serverOptions.TlsEndpointOptions.IsEnabled)
-            {
-                var endpoint = serverOptions.TlsEndpointOptions;
-                kestrel.Listen(endpoint.BoundInterNetworkV6Address, endpoint.Port, o => o.UseHttps(tlsConfigure).UseMqtt());
-                if (!IPAddress.IPv6Any.Equals(endpoint.BoundInterNetworkV6Address))
+
+                void UseMiddleware(ListenOptions listenOptions)
                 {
-                    kestrel.Listen(endpoint.BoundInterNetworkAddress, endpoint.Port, o => o.UseHttps(tlsConfigure).UseMqtt());
+                    if (useTls)
+                    {
+                        listenOptions.UseHttps(tlsConfigure);
+                    }
+                    listenOptions.UseMqtt();
                 }
-                connectionHandler.ListenFlag = true;
             }
-
-            if (!connectionHandler.ListenFlag)
-            {
-                throw new MqttConfigurationException("None of the MqttServerOptions Endpoints are enabled.");
-            }
-            return kestrel;
         }
     }
 }

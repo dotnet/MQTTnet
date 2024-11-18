@@ -20,8 +20,12 @@ namespace MQTTnet.Samples.Server;
 
 public static class Server_ASP_NET_Samples
 {
+    static readonly string unixSocketPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "mqtt.socks");
+
     public static Task Start_Server_With_WebSockets_Support()
     {
+        File.Delete(unixSocketPath);
+
         var builder = WebApplication.CreateBuilder();
         builder.Services.AddMqttServer(s => s.WithDefaultEndpoint().WithEncryptedEndpoint());
         builder.Services.AddMqttClient();
@@ -33,8 +37,9 @@ public static class Server_ASP_NET_Samples
             kestrel.ListenMqtt();
 
             // We can also manually listen to a specific port without ConfigureMqttServer()
+            kestrel.ListenUnixSocket(unixSocketPath, l => l.UseMqtt());
             // kestrel.ListenAnyIP(1883, l => l.UseMqtt());  // mqtt over tcp          
-            // kestrel.ListenLocalhost(8883, l => l.UseHttps().UseMqtt());   // mqtt over tls over tcp
+            // kestrel.ListenAnyIP(8883, l => l.UseHttps().UseMqtt());   // mqtt over tls over tcp
         });
 
         var app = builder.Build();
@@ -90,6 +95,7 @@ public static class Server_ASP_NET_Samples
             var wssMqttUri = "wss://localhost:8883/mqtt";
 
             var options = new MqttClientOptionsBuilder()
+                //.WithEndPoint(new UnixDomainSocketEndPoint(unixSocketPath))
                 .WithConnectionUri(wssMqttUri)
                 .Build();
 

@@ -22,7 +22,7 @@ namespace MQTTnet.Server
 
         public bool CheckCertificateRevocation { get; set; }
 
-        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.None;
 
         public System.Net.Security.CipherSuitesPolicy CipherSuitesPolicy { get; set; }
     }

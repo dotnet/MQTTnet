@@ -5,7 +5,6 @@
 using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.Server;
-using System;
 
 namespace MQTTnet.AspNetCore
 {
@@ -21,23 +20,10 @@ namespace MQTTnet.AspNetCore
         {
             // check services.AddMqttServer()
             builder.ApplicationServices.GetRequiredService<MqttServer>();
-
             builder.ApplicationServices.GetRequiredService<MqttConnectionHandler>().UseFlag = true;
-            if (protocols == MqttProtocols.Mqtt)
-            {
-                return builder.UseConnectionHandler<MqttConnectionHandler>();
-            }
-            else if (protocols == MqttProtocols.WebSocket)
-            {
-                return builder;
-            }
-            else if (protocols == MqttProtocols.MqttAndWebSocket)
-            {
-                var middleware = builder.ApplicationServices.GetRequiredService<MqttConnectionMiddleware>();
-                return builder.Use(next => context => middleware.InvokeAsync(next, context));
-            }
 
-            throw new NotSupportedException(protocols.ToString());
+            var middleware = builder.ApplicationServices.GetRequiredService<MqttConnectionMiddleware>();
+            return builder.Use(next => context => middleware.InvokeAsync(next, context, protocols));
         }
     }
 }

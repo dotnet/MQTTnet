@@ -1,15 +1,15 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Formatter;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using MQTTnet.Formatter;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet;
 
@@ -138,20 +138,22 @@ public sealed class MqttClientOptionsBuilder
         {
             case "tcp":
             case "mqtt":
-                WithTcpServer(uri.Host, port);
+                WithTcpServer(uri.Host, port)
+                    .WithTlsOptions(default(MqttClientTlsOptions));
                 break;
 
             case "mqtts":
                 WithTcpServer(uri.Host, port)
-                    .WithTlsOptions(
-                        o =>
-                        {
-                        });
+                    .WithTlsOptions(o => { });
                 break;
 
             case "ws":
+                WithWebSocketServer(o => o.WithUri(uri.ToString()))
+                    .WithTlsOptions(default(MqttClientTlsOptions));
+                break;
             case "wss":
-                WithWebSocketServer(o => o.WithUri(uri.ToString()));
+                WithWebSocketServer(o => o.WithUri(uri.ToString()))
+                    .WithTlsOptions(o => { });
                 break;
 
             default:

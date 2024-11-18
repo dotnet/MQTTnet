@@ -139,22 +139,38 @@ public sealed class MqttClientOptionsBuilder
             case "tcp":
             case "mqtt":
                 WithTcpServer(uri.Host, port)
+                    .WithAddressFamily(AddressFamily.Unspecified)
+                    .WithProtocolType(ProtocolType.Tcp)
                     .WithTlsOptions(o => o.UseTls(false));
                 break;
 
             case "mqtts":
                 WithTcpServer(uri.Host, port)
+                    .WithAddressFamily(AddressFamily.Unspecified)
+                    .WithProtocolType(ProtocolType.Tcp)
                     .WithTlsOptions(o => o.UseTls(true));
                 break;
 
             case "ws":
                 WithWebSocketServer(o => o.WithUri(uri.ToString()))
+                    .WithAddressFamily(AddressFamily.Unspecified)
+                    .WithProtocolType(ProtocolType.Tcp)
                     .WithTlsOptions(o => o.UseTls(false));
                 break;
 
             case "wss":
                 WithWebSocketServer(o => o.WithUri(uri.ToString()))
+                    .WithAddressFamily(AddressFamily.Unspecified)
+                    .WithProtocolType(ProtocolType.Tcp)
                     .WithTlsOptions(o => o.UseTls(true));
+                break;
+
+            // unix:///path/to/socket
+            case "unix":
+                WithEndPoint(new UnixDomainSocketEndPoint(uri.AbsolutePath))
+                    .WithAddressFamily(AddressFamily.Unix)
+                    .WithProtocolType(ProtocolType.Unspecified)
+                    .WithTlsOptions(o => o.UseTls(false));
                 break;
 
             default:

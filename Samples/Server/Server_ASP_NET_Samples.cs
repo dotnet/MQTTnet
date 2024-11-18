@@ -85,7 +85,7 @@ public static class Server_ASP_NET_Samples
             using var client = _mqttClientFactory.CreateMqttClient();
 
             // var mqttUri = "mqtt://localhost:1883";
-            // var mqttsUri = "mqtt://localhost:8883";
+            // var mqttsUri = "mqtts://localhost:8883";
             // var wsMqttUri = "ws://localhost:1883/mqtt";
             var wssMqttUri = "wss://localhost:8883/mqtt";
 

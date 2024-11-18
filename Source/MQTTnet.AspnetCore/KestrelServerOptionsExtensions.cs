@@ -23,7 +23,7 @@ namespace MQTTnet.AspNetCore
         /// <param name="protocols"></param>
         /// <exception cref="MqttConfigurationException"></exception>
         /// <returns></returns>
-        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, MqttProtocols protocols = MqttProtocols.MqttAndHttp)
+        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, MqttProtocols protocols = MqttProtocols.MqttAndWebSocket)
         {
             return kestrel.ListenMqtt(protocols, default(Action<HttpsConnectionAdapterOptions>));
         }

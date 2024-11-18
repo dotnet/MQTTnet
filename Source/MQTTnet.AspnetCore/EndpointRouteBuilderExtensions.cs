@@ -16,7 +16,7 @@ namespace MQTTnet.AspNetCore
     public static class EndpointRouteBuilderExtensions
     {
         /// <summary>
-        /// Treat the obtained WebSocket as an mqtt connection
+        /// Specify the matching path for mqtt-over-websocket
         /// </summary>
         /// <param name="endpoints"></param>
         /// <param name="pattern"></param>
@@ -33,7 +33,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Treat the obtained WebSocket as an mqtt connection
+        /// Specify the matching path for mqtt-over-websocket
         /// </summary>
         /// <param name="endpoints"></param>
         /// <param name="pattern"></param>

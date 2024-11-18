@@ -16,7 +16,7 @@ builder.Services.AddMqttServer(s => s.WithDefaultEndpoint().WithDefaultEndpointP
 // ListenMqtt 
 builder.WebHost.UseKestrel(kestrel =>
 {
-    kestrel.ListenMqtt();
+    kestrel.ListenMqtt(MqttProtocols.WebSocket);
 });
 
 var app = builder.Build();

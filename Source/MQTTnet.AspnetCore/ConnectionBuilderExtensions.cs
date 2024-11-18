@@ -16,14 +16,18 @@ namespace MQTTnet.AspNetCore
         /// <param name="builder"></param>
         /// <param name="protocols"></param>
         /// <returns></returns>
-        public static IConnectionBuilder UseMqtt(this IConnectionBuilder builder, MqttProtocols protocols = MqttProtocols.MqttAndHttp)
+        public static IConnectionBuilder UseMqtt(this IConnectionBuilder builder, MqttProtocols protocols = MqttProtocols.MqttAndWebSocket)
         {
             builder.ApplicationServices.GetRequiredService<MqttConnectionHandler>().UseFlag = true;
             if (protocols == MqttProtocols.Mqtt)
             {
                 return builder.UseConnectionHandler<MqttConnectionHandler>();
             }
-            else if (protocols == MqttProtocols.MqttAndHttp)
+            else if (protocols == MqttProtocols.WebSocket)
+            {
+                return builder;
+            }
+            else if (protocols == MqttProtocols.MqttAndWebSocket)
             {
                 var middleware = builder.ApplicationServices.GetRequiredService<MqttConnectionMiddleware>();
                 return builder.Use(next => context => middleware.InvokeAsync(next, context));

@@ -7,13 +7,18 @@ namespace MQTTnet.AspNetCore
     public enum MqttProtocols
     {
         /// <summary>
-        /// Only support Mqtt connection
+        /// Only support Mqtt
         /// </summary>
         Mqtt,
 
         /// <summary>
-        /// Support both Mqtt and Mqtt over WebSocket connection     
+        /// Only support Mqtt-over-WebSocket        
         /// </summary>
-        MqttAndHttp
+        WebSocket,
+
+        /// <summary>
+        /// Support both Mqtt and Mqtt-over-WebSocket     
+        /// </summary>
+        MqttAndWebSocket
     }
 }

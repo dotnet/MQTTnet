@@ -2,15 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Adapter;
+using MQTTnet.Exceptions;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using MQTTnet.Adapter;
-using MQTTnet.Exceptions;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V3
 {
@@ -279,7 +279,7 @@ namespace MQTTnet.Formatter.V3
 
             if (!_bufferReader.EndOfStream)
             {
-                packet.PayloadSegment = new ArraySegment<byte>(_bufferReader.ReadRemainingData());
+                packet.PayloadSegment = _bufferReader.ReadRemainingDataSegment();
             }
 
             return packet;

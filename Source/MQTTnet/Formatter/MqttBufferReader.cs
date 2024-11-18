@@ -2,12 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Runtime.CompilerServices;
-using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
+using System;
 using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 
 namespace MQTTnet.Formatter
@@ -72,6 +72,12 @@ namespace MQTTnet.Formatter
             _position += bufferLength;
 
             return buffer;
+        }
+
+        public ArraySegment<byte> ReadRemainingDataSegment()
+        {
+            var bufferLength = BytesLeft;
+            return bufferLength == 0 ? EmptyBuffer.ArraySegment : new ArraySegment<byte>(_buffer, _position, bufferLength);
         }
 
         public string ReadString()

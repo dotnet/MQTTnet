@@ -51,6 +51,9 @@ namespace MQTTnet.AspNetCore
         /// <returns></returns>
         public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, MqttProtocols protocols, Action<HttpsConnectionAdapterOptions>? tlsConfigure)
         {
+            // check services.AddMqttServer()
+            kestrel.ApplicationServices.GetRequiredService<MqttServer>();
+
             var connectionHandler = kestrel.ApplicationServices.GetRequiredService<MqttConnectionHandler>();
             var serverOptions = kestrel.ApplicationServices.GetRequiredService<MqttServerOptions>();
 

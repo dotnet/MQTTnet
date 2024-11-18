@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.AspNetCore.Http.Features;
+using MQTTnet.Exceptions;
 using System;
 using System.IO;
 using System.Net;
@@ -16,13 +17,21 @@ namespace MQTTnet.AspNetCore
     {
         public static async Task<ClientConnectionContext> CreateAsync(MqttClientWebSocketOptions options, CancellationToken cancellationToken)
         {
-            var clientWebSocket = new ClientWebSocket();
             var uri = new Uri(options.Uri, UriKind.Absolute);
-            var useTls = options.TlsOptions?.UseTls == true || uri.Scheme == Uri.UriSchemeWss;
+            if (uri.Scheme != Uri.UriSchemeWs && uri.Scheme != Uri.UriSchemeWss)
+            {
+                throw new MqttConfigurationException("The scheme of the WebSocket Uri must be ws or wss.");
+            }
 
+            // Patching TlsOptions
+            options.TlsOptions ??= new MqttClientTlsOptions();
+            // Scheme decides whether to use TLS
+            options.TlsOptions.UseTls = uri.Scheme == Uri.UriSchemeWss;
+
+            var clientWebSocket = new ClientWebSocket();
             try
             {
-                SetupClientWebSocket(clientWebSocket.Options, options, useTls);
+                SetupClientWebSocket(clientWebSocket.Options, options);
                 await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
             }
             catch
@@ -46,7 +55,7 @@ namespace MQTTnet.AspNetCore
             return connection;
         }
 
-        private static void SetupClientWebSocket(ClientWebSocketOptions webSocketOptions, MqttClientWebSocketOptions options, bool useTls)
+        private static void SetupClientWebSocket(ClientWebSocketOptions webSocketOptions, MqttClientWebSocketOptions options)
         {
             if (options.ProxyOptions != null)
             {
@@ -74,9 +83,9 @@ namespace MQTTnet.AspNetCore
                 webSocketOptions.Cookies = options.CookieContainer;
             }
 
-            if (useTls)
+            if (options.TlsOptions.UseTls)
             {
-                var certificates = options.TlsOptions?.ClientCertificatesProvider?.GetCertificates();
+                var certificates = options.TlsOptions.ClientCertificatesProvider?.GetCertificates();
                 if (certificates?.Count > 0)
                 {
                     webSocketOptions.ClientCertificates = certificates;
@@ -100,7 +109,7 @@ namespace MQTTnet.AspNetCore
                 webSocketOptions.Credentials = options.Credentials;
             }
 
-            var certificateValidationHandler = options.TlsOptions?.CertificateValidationHandler;
+            var certificateValidationHandler = options.TlsOptions.CertificateValidationHandler;
             if (certificateValidationHandler != null)
             {
                 webSocketOptions.RemoteCertificateValidationCallback = (_, certificate, chain, sslPolicyErrors) =>
@@ -110,7 +119,7 @@ namespace MQTTnet.AspNetCore
                     return certificateValidationHandler(context);
                 };
 
-                var certificateSelectionHandler = options.TlsOptions?.CertificateSelectionHandler;
+                var certificateSelectionHandler = options.TlsOptions.CertificateSelectionHandler;
                 if (certificateSelectionHandler != null)
                 {
                     throw new NotSupportedException("Remote certificate selection callback is not supported for WebSocket connections.");
@@ -148,7 +157,7 @@ namespace MQTTnet.AspNetCore
         }
 
 
-        private class WebSocketStream(WebSocket webSocket) : Stream
+        private sealed class WebSocketStream(WebSocket webSocket) : Stream
         {
             private readonly WebSocket _webSocket = webSocket;
 

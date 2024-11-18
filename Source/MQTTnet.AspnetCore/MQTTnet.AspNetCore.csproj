@@ -1,4 +1,3 @@
-
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
@@ -47,7 +46,6 @@
             <Pack>True</Pack>
             <PackagePath>\</PackagePath>
         </None>
-        <None Include="Internal\AspNetCoreMqttServerAdapter.cs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -55,12 +53,8 @@
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release'">
-    </PropertyGroup>
-
     <ItemGroup>
         <ProjectReference Include="..\MQTTnet.Server\MQTTnet.Server.csproj" />
-        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
     </ItemGroup>
 
 </Project>

@@ -4,10 +4,13 @@
 
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using MQTTnet.AspNetCore;
+using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Server.Internal.Adapter;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Benchmarks
 {
@@ -15,53 +18,67 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class MessageProcessingMqttConnectionContextBenchmark : BaseBenchmark
     {
-        IWebHost _host;
-        IMqttClient _mqttClient;
+        WebApplication _app;
+        IMqttClient _aspNetCoreMqttClient;
+        IMqttClient _mqttNetMqttClient;
         MqttApplicationMessage _message;
 
+        [Params(1 * 1024, 8 * 1024, 64 * 1024)]
+        public int PayloadSize { get; set; }
+
+
         [GlobalSetup]
-        public void Setup()
+        public async Task Setup()
         {
-            _host = WebHost.CreateDefaultBuilder()
-                   .UseKestrel(o => o.ListenAnyIP(1883, l => l.UseMqtt()))
-                   .ConfigureServices(services =>
-                   {
-                       services.AddMqttServer();
-                       services.AddMqttClient();
-                   })
-                   .Build();
+            var builder = WebApplication.CreateBuilder();
 
-            var factory = _host.Services.GetRequiredService<IMqttClientFactory>();
-            _mqttClient = factory.CreateMqttClient();
+            builder.Services.AddMqttServer(s => s.WithDefaultEndpoint()).AddMqttServerAdapter<MqttTcpServerAdapter>().UseMqttNetNullLogger();
+            builder.Services.AddMqttClient();
+            builder.WebHost.UseKestrel(o =>
+            {
+                o.ListenAnyIP(1884, l => l.UseMqtt(MqttProtocols.Mqtt));
+            });
 
-            _host.StartAsync().GetAwaiter().GetResult();
-
-            var clientOptions = new MqttClientOptionsBuilder()
-                .WithTcpServer("localhost").Build();
-
-            _mqttClient.ConnectAsync(clientOptions).GetAwaiter().GetResult();
+            _app = builder.Build();
+            await _app.StartAsync();
 
             _message = new MqttApplicationMessageBuilder()
                 .WithTopic("A")
+                .WithPayload(new byte[PayloadSize])
                 .Build();
+
+            _aspNetCoreMqttClient = _app.Services.GetRequiredService<IMqttClientFactory>().CreateMqttClient();
+            var clientOptions = new MqttClientOptionsBuilder().WithConnectionUri("mqtt://localhost:1884").Build();
+            await _aspNetCoreMqttClient.ConnectAsync(clientOptions);
+
+            clientOptions = new MqttClientOptionsBuilder().WithConnectionUri("mqtt://localhost:1883").Build();
+            _mqttNetMqttClient = new MqttClientFactory().CreateMqttClient(MqttNetNullLogger.Instance);
+            await _mqttNetMqttClient.ConnectAsync(clientOptions);
         }
 
         [GlobalCleanup]
-        public void Cleanup()
+        public async Task Cleanup()
         {
-            _mqttClient.DisconnectAsync().GetAwaiter().GetResult();
-            _mqttClient.Dispose();
+            await _aspNetCoreMqttClient.DisconnectAsync();
+            _aspNetCoreMqttClient.Dispose();
+            await _app.StopAsync();
+        }
 
-            _host.StopAsync().GetAwaiter().GetResult();
-            _host.Dispose();
+        [Benchmark(Baseline = true)]
+        public async Task AspNetCore_Send_1000_Messages()
+        {
+            for (var i = 0; i < 1000; i++)
+            {
+                await _aspNetCoreMqttClient.PublishAsync(_message);
+            }
         }
 
         [Benchmark]
-        public void Send_10000_Messages()
+        public async Task MQTTnet_Send_1000_Messages()
         {
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < 1000; i++)
             {
-                _mqttClient.PublishAsync(_message).GetAwaiter().GetResult();
+                await _mqttNetMqttClient.PublishAsync(_message);
             }
         }
     }

@@ -139,21 +139,22 @@ public sealed class MqttClientOptionsBuilder
             case "tcp":
             case "mqtt":
                 WithTcpServer(uri.Host, port)
-                    .WithTlsOptions(default(MqttClientTlsOptions));
+                    .WithTlsOptions(o => o.UseTls(false));
                 break;
 
             case "mqtts":
                 WithTcpServer(uri.Host, port)
-                    .WithTlsOptions(o => { });
+                    .WithTlsOptions(o => o.UseTls(true));
                 break;
 
             case "ws":
                 WithWebSocketServer(o => o.WithUri(uri.ToString()))
-                    .WithTlsOptions(default(MqttClientTlsOptions));
+                    .WithTlsOptions(o => o.UseTls(false));
                 break;
+
             case "wss":
                 WithWebSocketServer(o => o.WithUri(uri.ToString()))
-                    .WithTlsOptions(o => { });
+                    .WithTlsOptions(o => o.UseTls(true));
                 break;
 
             default:
